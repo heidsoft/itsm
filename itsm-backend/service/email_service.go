@@ -31,11 +31,11 @@ type EmailService struct {
 
 // EmailMessage 邮件消息
 type EmailMessage struct {
-	To          []string       // 收件人列表
-	CC          []string       // 抄送人列表
-	Subject     string         // 邮件主题
-	Body        string         // 邮件正文（HTML）
-	BodyText    string         // 邮件正文（纯文本）
+	To          []string          // 收件人列表
+	CC          []string          // 抄送人列表
+	Subject     string            // 邮件主题
+	Body        string            // 邮件正文（HTML）
+	BodyText    string            // 邮件正文（纯文本）
 	Attachments []EmailAttachment // 附件
 }
 

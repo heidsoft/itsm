@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )

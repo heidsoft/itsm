@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 // intToPtr converts int to *int
@@ -39,27 +40,27 @@ func ToReleaseResponse(release *ent.Release) *ReleaseResponse {
 		return nil
 	}
 	return &ReleaseResponse{
-		ID:                  release.ID,
-		ReleaseNumber:       release.ReleaseNumber,
-		Title:               release.Title,
-		Description:         release.Description,
-		Type:                release.Type,
-		Status:              release.Status,
-		Severity:            release.Severity,
-		Environment:         release.Environment,
-		ChangeID:            release.ChangeID,
-		OwnerID:             release.OwnerID,
-		CreatedBy:           release.CreatedBy,
+		ID:                 release.ID,
+		ReleaseNumber:      release.ReleaseNumber,
+		Title:              release.Title,
+		Description:        release.Description,
+		Type:               release.Type,
+		Status:             release.Status,
+		Severity:           release.Severity,
+		Environment:        release.Environment,
+		ChangeID:           release.ChangeID,
+		OwnerID:            release.OwnerID,
+		CreatedBy:          release.CreatedBy,
 		TenantID:           release.TenantID,
-		PlannedReleaseDate:  timeToPtr(release.PlannedReleaseDate),
-		ActualReleaseDate:   timeToPtr(release.ActualReleaseDate),
-		PlannedStartDate:    timeToPtr(release.PlannedStartDate),
-		PlannedEndDate:      timeToPtr(release.PlannedEndDate),
-		ReleaseNotes:        release.ReleaseNotes,
-		RollbackProcedure:   release.RollbackProcedure,
-		ValidationCriteria:  release.ValidationCriteria,
-		AffectedSystems:     release.AffectedSystems,
-		AffectedComponents:  release.AffectedComponents,
+		PlannedReleaseDate: timeToPtr(release.PlannedReleaseDate),
+		ActualReleaseDate:  timeToPtr(release.ActualReleaseDate),
+		PlannedStartDate:   timeToPtr(release.PlannedStartDate),
+		PlannedEndDate:     timeToPtr(release.PlannedEndDate),
+		ReleaseNotes:       release.ReleaseNotes,
+		RollbackProcedure:  release.RollbackProcedure,
+		ValidationCriteria: release.ValidationCriteria,
+		AffectedSystems:    release.AffectedSystems,
+		AffectedComponents: release.AffectedComponents,
 		DeploymentSteps:    release.DeploymentSteps,
 		Tags:               release.Tags,
 		IsEmergency:        release.IsEmergency,
@@ -110,7 +111,7 @@ func ToAssetResponse(asset *ent.Asset) *AssetResponse {
 		LocationID:     intToPtr(asset.LocationID),
 		SerialNumber:   asset.SerialNumber,
 		Model:          asset.Model,
-		Manufacturer:  asset.Manufacturer,
+		Manufacturer:   asset.Manufacturer,
 		Vendor:         asset.Vendor,
 		PurchaseDate:   asset.PurchaseDate,
 		PurchasePrice:  float64ToPtr(asset.PurchasePrice),
@@ -120,10 +121,10 @@ func ToAssetResponse(asset *ent.Asset) *AssetResponse {
 		Department:     asset.Department,
 		ParentAssetID:  intToPtr(asset.ParentAssetID),
 		Specifications: asset.Specifications,
-		CustomFields:  asset.CustomFields,
-		Tags:          asset.Tags,
-		CreatedAt:     asset.CreatedAt,
-		UpdatedAt:     asset.UpdatedAt,
+		CustomFields:   asset.CustomFields,
+		Tags:           asset.Tags,
+		CreatedAt:      asset.CreatedAt,
+		UpdatedAt:      asset.UpdatedAt,
 	}
 }
 
@@ -154,29 +155,29 @@ func ToLicenseResponse(license *ent.AssetLicense) *LicenseResponse {
 		return nil
 	}
 	return &LicenseResponse{
-		ID:              license.ID,
-		LicenseKey:      license.LicenseKey,
-		Name:            license.Name,
-		Description:     license.Description,
-		Vendor:          license.Vendor,
-		LicenseType:     license.LicenseType,
-		TotalQuantity:   license.TotalQuantity,
-		UsedQuantity:    license.UsedQuantity,
+		ID:                license.ID,
+		LicenseKey:        license.LicenseKey,
+		Name:              license.Name,
+		Description:       license.Description,
+		Vendor:            license.Vendor,
+		LicenseType:       license.LicenseType,
+		TotalQuantity:     license.TotalQuantity,
+		UsedQuantity:      license.UsedQuantity,
 		AvailableQuantity: license.TotalQuantity - license.UsedQuantity,
-		TenantID:        license.TenantID,
-		AssetID:         intToPtr(license.AssetID),
-		PurchaseDate:    license.PurchaseDate,
-		PurchasePrice:   float64ToPtr(license.PurchasePrice),
-		ExpiryDate:      license.ExpiryDate,
-		SupportVendor:   license.SupportVendor,
-		SupportContact:  license.SupportContact,
-		RenewalCost:     license.RenewalCost,
-		Status:          license.Status,
-		Notes:           license.Notes,
-		Users:           license.Users,
-		Tags:            license.Tags,
-		CreatedAt:       license.CreatedAt,
-		UpdatedAt:       license.UpdatedAt,
+		TenantID:          license.TenantID,
+		AssetID:           intToPtr(license.AssetID),
+		PurchaseDate:      license.PurchaseDate,
+		PurchasePrice:     float64ToPtr(license.PurchasePrice),
+		ExpiryDate:        license.ExpiryDate,
+		SupportVendor:     license.SupportVendor,
+		SupportContact:    license.SupportContact,
+		RenewalCost:       license.RenewalCost,
+		Status:            license.Status,
+		Notes:             license.Notes,
+		Users:             license.Users,
+		Tags:              license.Tags,
+		CreatedAt:         license.CreatedAt,
+		UpdatedAt:         license.UpdatedAt,
 	}
 }
 

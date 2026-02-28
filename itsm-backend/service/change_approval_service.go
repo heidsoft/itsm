@@ -49,7 +49,7 @@ func (s *ChangeApprovalService) CreateChangeApproval(ctx context.Context, req *d
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at
 	`
-	
+
 	var id int
 	var createdAt time.Time
 	err = s.rawDB.QueryRowContext(ctx, query,
@@ -60,7 +60,6 @@ func (s *ChangeApprovalService) CreateChangeApproval(ctx context.Context, req *d
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create change approval", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create change approval: %w", err)
@@ -90,12 +89,12 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 		WHERE id = $5
 		RETURNING id, change_id, approver_id, status, comment, approved_at, created_at
 	`
-	
+
 	var id, changeID, approverID int
 	var status, comment string
 	var approvedAt *time.Time
 	var createdAt time.Time
-	
+
 	err := s.rawDB.QueryRowContext(ctx, query,
 		string(req.Status),
 		req.Comment,
@@ -103,7 +102,6 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 		time.Now(),
 		approvalID,
 	).Scan(&id, &changeID, &approverID, &status, &comment, &approvedAt, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to update change approval", "error", err, "approval_id", approvalID)
 		return nil, fmt.Errorf("failed to update change approval: %w", err)
@@ -172,7 +170,7 @@ func (s *ChangeApprovalService) CreateChangeApprovalWorkflow(ctx context.Context
 			INSERT INTO change_approval_chains (change_id, level, approver_id, role, status, is_required, created_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 		`
-		
+
 		_, err = tx.ExecContext(ctx, query,
 			req.ChangeID,
 			item.Level,
@@ -211,7 +209,7 @@ func (s *ChangeApprovalService) GetChangeApprovalSummary(ctx context.Context, ch
 		WHERE change_id = $1 
 		ORDER BY level
 	`
-	
+
 	chainRows, err := s.rawDB.QueryContext(ctx, chainQuery, changeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query approval chains: %w", err)
@@ -271,7 +269,7 @@ func (s *ChangeApprovalService) GetChangeApprovalSummary(ctx context.Context, ch
 		WHERE change_id = $1 
 		ORDER BY created_at
 	`
-	
+
 	historyRows, err := s.rawDB.QueryContext(ctx, historyQuery, changeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query approval history: %w", err)
@@ -326,13 +324,13 @@ func (s *ChangeApprovalService) GetChangeApprovalSummary(ctx context.Context, ch
 	}
 
 	summary := &dto.ChangeApprovalSummary{
-		ChangeID:          changeID,
-		CurrentLevel:      currentLevel,
-		TotalLevels:       totalLevels,
-		ApprovalStatus:    approvalStatus,
-		NextApprover:      nextApprover,
-		ApprovalHistory:   approvalHistory,
-		PendingApprovals:  pendingApprovals,
+		ChangeID:         changeID,
+		CurrentLevel:     currentLevel,
+		TotalLevels:      totalLevels,
+		ApprovalStatus:   approvalStatus,
+		NextApprover:     nextApprover,
+		ApprovalHistory:  approvalHistory,
+		PendingApprovals: pendingApprovals,
 	}
 
 	return summary, nil
@@ -356,7 +354,7 @@ func (s *ChangeApprovalService) CreateChangeRiskAssessment(ctx context.Context, 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at
 	`
-	
+
 	var id int
 	var createdAt time.Time
 	err = s.rawDB.QueryRowContext(ctx, query,
@@ -371,7 +369,6 @@ func (s *ChangeApprovalService) CreateChangeRiskAssessment(ctx context.Context, 
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create risk assessment", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create risk assessment: %w", err)
@@ -412,7 +409,7 @@ func (s *ChangeApprovalService) GetChangeRiskAssessment(ctx context.Context, cha
 		FROM change_risk_assessments 
 		WHERE change_id = $1
 	`
-	
+
 	var id int
 	var riskLevel, riskDescription, impactAnalysis, mitigationMeasures, contingencyPlan, riskOwner string
 	var riskReviewDate *time.Time
@@ -423,7 +420,6 @@ func (s *ChangeApprovalService) GetChangeRiskAssessment(ctx context.Context, cha
 		&mitigationMeasures, &contingencyPlan, &riskOwner, &riskReviewDate,
 		&createdAt, &updatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("risk assessment not found")
@@ -471,7 +467,7 @@ func (s *ChangeApprovalService) CreateChangeImplementationPlan(ctx context.Conte
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 		RETURNING id, created_at
 	`
-	
+
 	var id int
 	var createdAt time.Time
 	err = s.rawDB.QueryRowContext(ctx, query,
@@ -489,7 +485,6 @@ func (s *ChangeApprovalService) CreateChangeImplementationPlan(ctx context.Conte
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create implementation plan", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create implementation plan: %w", err)
@@ -538,7 +533,7 @@ func (s *ChangeApprovalService) CreateChangeRollbackPlan(ctx context.Context, re
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, created_at
 	`
-	
+
 	var id int
 	var createdAt time.Time
 	err = s.rawDB.QueryRowContext(ctx, query,
@@ -553,7 +548,6 @@ func (s *ChangeApprovalService) CreateChangeRollbackPlan(ctx context.Context, re
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create rollback plan", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create rollback plan: %w", err)
@@ -609,7 +603,7 @@ func (s *ChangeApprovalService) ExecuteChangeRollback(ctx context.Context, chang
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, created_at
 	`
-	
+
 	var id int
 	var createdAt time.Time
 	err = s.rawDB.QueryRowContext(ctx, query,
@@ -622,7 +616,6 @@ func (s *ChangeApprovalService) ExecuteChangeRollback(ctx context.Context, chang
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create rollback execution", "error", err, "change_id", changeID)
 		return nil, fmt.Errorf("failed to create rollback execution: %w", err)
@@ -655,7 +648,7 @@ func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, 
 		FROM change_approval_chains 
 		WHERE change_id = $1 AND is_required = true
 	`
-	
+
 	var totalRequired, approvedCount int
 	err := s.rawDB.QueryRowContext(ctx, query, changeID).Scan(&totalRequired, &approvedCount)
 	if err != nil {
@@ -668,7 +661,6 @@ func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, 
 			Where(change.ID(changeID)).
 			SetStatus(string(dto.ChangeStatusApproved)).
 			Save(ctx)
-		
 		if err != nil {
 			return fmt.Errorf("failed to update change status: %w", err)
 		}

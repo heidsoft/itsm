@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"strconv"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -323,4 +324,3 @@ func (tc *TicketWorkflowController) GetTicketWorkflowState(c *gin.Context) {
 
 	common.Success(c, state)
 }
-

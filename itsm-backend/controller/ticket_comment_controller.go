@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"strconv"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -12,13 +13,13 @@ import (
 
 type TicketCommentController struct {
 	commentService *service.TicketCommentService
-	logger          *zap.SugaredLogger
+	logger         *zap.SugaredLogger
 }
 
 func NewTicketCommentController(commentService *service.TicketCommentService, logger *zap.SugaredLogger) *TicketCommentController {
 	return &TicketCommentController{
 		commentService: commentService,
-		logger:          logger,
+		logger:         logger,
 	}
 }
 
@@ -151,4 +152,3 @@ func (tcc *TicketCommentController) DeleteTicketComment(c *gin.Context) {
 
 	common.Success(c, nil)
 }
-

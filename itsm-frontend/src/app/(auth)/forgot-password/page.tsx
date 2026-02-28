@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, ArrowLeft, CheckCircle, AlertCircle, Shield } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle, Shield } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/useI18n';
 import {
-  Typography, Form, Input, Button, Card, ConfigProvider, message, Divider
+  Typography, Form, Input, Button, Card, ConfigProvider, message, Divider, Alert
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
@@ -18,22 +19,27 @@ const { Text, Title } = Typography;
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [form] = Form.useForm();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = async (values: { email: string }) => {
     setLoading(true);
     setEmail(values.email);
+    setError('');
 
     try {
       const success = await AuthService.forgotPassword(values.email);
       if (success) {
         setSubmitted(true);
+      } else {
+        setError(t('auth.forgotPassword.sendFailed'));
       }
     } catch (err) {
       logger.error('发送失败:', err);
-      message.error('发送失败，请稍后重试');
+      setError(t('auth.forgotPassword.sendFailed'));
     } finally {
       setLoading(false);
     }
@@ -44,10 +50,10 @@ export default function ForgotPasswordPage() {
     try {
       const success = await AuthService.forgotPassword(email);
       if (success) {
-        message.success('密码重置链接已重新发送');
+        message.success(t('auth.forgotPassword.sendSuccess'));
       }
     } catch (err) {
-      message.error('发送失败，请稍后重试');
+      message.error(t('auth.forgotPassword.sendFailed'));
     } finally {
       setLoading(false);
     }
@@ -84,22 +90,11 @@ export default function ForgotPasswordPage() {
                   </ul>
                 </div>
 
-                <Button
-                  type='link'
-                  className="mb-4"
-                  onClick={() => setSubmitted(false)}
-                  icon={<ArrowLeft size={14} />}
-                >
-                  返回
+                <Button type='link' className="mb-4" onClick={() => setSubmitted(false)} icon={<ArrowLeft size={14} />}>
+                  {t('auth.forgotPassword.backToLogin')}
                 </Button>
 
-                <Button
-                  type='primary'
-                  size='large'
-                  className="w-full h-10 rounded-md text-sm"
-                  loading={loading}
-                  onClick={handleResend}
-                >
+                <Button type='primary' size='large' className="w-full h-10 rounded-md text-sm" loading={loading} onClick={handleResend}>
                   重新发送
                 </Button>
 
@@ -107,7 +102,7 @@ export default function ForgotPasswordPage() {
                   <Text className="text-gray-400 text-xs">
                     记起密码了？{' '}
                     <a href="/login" className="text-blue-600 hover:underline">
-                      立即登录
+                      {t('auth.register.loginNow')}
                     </a>
                   </Text>
                 </div>
@@ -126,39 +121,37 @@ export default function ForgotPasswordPage() {
           <Card className="rounded-xl shadow-xl border-none" styles={{ body: { padding: '40px' } }}>
             <div className="text-center mb-6">
               <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
-                忘记密码？
+                {t('auth.forgotPassword.title')}
               </Title>
               <Text className="!text-gray-500 !text-sm">
-                请输入您的注册邮箱，我们将发送密码重置链接
+                {t('auth.forgotPassword.subtitle')}
               </Text>
             </div>
+
+            {error && (
+              <Alert message={t('auth.forgotPassword.sendFailed')} description={error} type="error" className="mb-4" showIcon />
+            )}
 
             <Form form={form} layout='vertical' size='middle' onFinish={handleSubmit}>
               <Form.Item
                 name='email'
-                label='邮箱地址'
+                label={t('auth.forgotPassword.emailLabel')}
                 rules={[
-                  { required: true, message: '请输入邮箱' },
-                  { type: 'email', message: '请输入有效的邮箱地址' }
+                  { required: true, message: t('auth.forgotPassword.emailRequired') },
+                  { type: 'email', message: t('auth.forgotPassword.emailInvalid') }
                 ]}
               >
                 <Input
                   prefix={<Mail size={14} className="text-gray-400" />}
-                  placeholder='请输入注册时的邮箱'
+                  placeholder={t('auth.forgotPassword.emailPlaceholder')}
                   size='large'
                   disabled={loading}
                 />
               </Form.Item>
 
               <Form.Item>
-                <Button
-                  type='primary'
-                  htmlType='submit'
-                  size='large'
-                  className="w-full h-10 rounded-md text-sm font-semibold"
-                  loading={loading}
-                >
-                  发送重置链接
+                <Button type='primary' htmlType='submit' size='large' className="w-full h-10 rounded-md text-sm font-semibold" loading={loading}>
+                  {loading ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.sendButton')}
                 </Button>
               </Form.Item>
             </Form>
@@ -167,21 +160,16 @@ export default function ForgotPasswordPage() {
               <Text className="text-gray-400 text-xs">
                 记起密码了？{' '}
                 <a href="/login" className="text-blue-600 hover:underline">
-                  立即登录
+                  {t('auth.register.loginNow')}
                 </a>
               </Text>
             </div>
 
             <Divider className="my-5">
-              <Text className="text-gray-400 text-xs">或</Text>
+              <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
             </Divider>
 
-            <Button
-              size='middle'
-              className="w-full h-10 rounded-md text-sm"
-              disabled={loading}
-              icon={<Shield size={14} />}
-            >
+            <Button size='middle' className="w-full h-10 rounded-md text-sm" disabled={loading} icon={<Shield size={14} />}>
               SSO 企业登录
             </Button>
           </Card>

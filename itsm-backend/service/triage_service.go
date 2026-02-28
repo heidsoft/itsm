@@ -30,26 +30,26 @@ type TriageService struct {
 
 // Category priority mapping
 var defaultPriorities = map[string]string{
-	"database":      "high",
-	"network":       "high",
-	"server":        "medium",
-	"application":   "medium",
-	"security":      "critical",
-	"storage":       "high",
-	"user_access":   "medium",
-	"general":       "low",
+	"database":    "high",
+	"network":     "high",
+	"server":      "medium",
+	"application": "medium",
+	"security":    "critical",
+	"storage":     "high",
+	"user_access": "medium",
+	"general":     "low",
 }
 
 // Default assignee IDs by category
 var defaultAssignees = map[string]int{
-	"database":      101,
-	"network":       102,
-	"server":        103,
-	"application":   104,
-	"security":      100,
-	"storage":       105,
-	"user_access":   106,
-	"general":       0,
+	"database":    101,
+	"network":     102,
+	"server":      103,
+	"application": 104,
+	"security":    100,
+	"storage":     105,
+	"user_access": 106,
+	"general":     0,
 }
 
 // NewTriageService creates a new LLM-powered triage service
@@ -250,7 +250,8 @@ func (t *TriageService) BatchSuggest(ctx context.Context, tickets []struct {
 }) ([]struct {
 	ID     int
 	Result TriageResult
-}, error) {
+}, error,
+) {
 	results := make([]struct {
 		ID     int
 		Result TriageResult
@@ -271,10 +272,10 @@ func (t *TriageService) BatchSuggest(ctx context.Context, tickets []struct {
 
 // TriageWithMetadata includes timing and method information
 type TriageWithMetadata struct {
-	Result  TriageResult   `json:"result"`
-	Method  string         `json:"method"`
-	Latency time.Duration  `json:"latency_ms"`
-	Model   string         `json:"model,omitempty"`
+	Result  TriageResult  `json:"result"`
+	Method  string        `json:"method"`
+	Latency time.Duration `json:"latency_ms"`
+	Model   string        `json:"model,omitempty"`
 }
 
 // SuggestWithMetadata returns triage result with additional metadata

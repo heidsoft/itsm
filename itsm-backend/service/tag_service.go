@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/tag"
 )
@@ -53,7 +53,7 @@ func (s *TagService) BindTagToEntity(ctx context.Context, tagID int, entityType 
 	default:
 		return fmt.Errorf("unsupported entity type: %s", entityType)
 	}
-	
+
 	return update.Exec(ctx)
 }
 

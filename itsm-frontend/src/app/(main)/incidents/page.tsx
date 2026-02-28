@@ -59,7 +59,6 @@ export default function IncidentsPage() {
   const fetchStats = async () => {
     try {
       const stats = await IncidentAPI.getIncidentMetrics() as unknown as Record<string, unknown>;
-      console.log('Incident stats response:', stats);
       // Transform snake_case to camelCase for IncidentStats component
       setMetrics({
         totalIncidents: Number(stats.total_incidents) || 0,
@@ -79,11 +78,9 @@ export default function IncidentsPage() {
   }, [page, pageSize]);
 
   const handleEdit = (incident: Incident) => {
-    console.log('Edit incident:', incident);
   };
 
   const handleView = (incident: Incident) => {
-    console.log('View incident:', incident);
   };
 
   return (

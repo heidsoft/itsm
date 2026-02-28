@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"testing"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -38,14 +39,14 @@ func TestAssetLicenseService_CreateLicense(t *testing.T) {
 		{
 			name: "成功创建许可证",
 			request: &dto.CreateLicenseRequest{
-				Name:           "Office 365 许可证",
-				Description:    "企业版许可证",
-				Vendor:         "Microsoft",
-				LicenseType:    "subscription",
-				TotalQuantity:  100,
-				PurchaseDate:   "2024-01-01",
-				ExpiryDate:     "2025-01-01",
-				PurchasePrice:  func() *float64 { v := 5000.0; return &v }(),
+				Name:          "Office 365 许可证",
+				Description:   "企业版许可证",
+				Vendor:        "Microsoft",
+				LicenseType:   "subscription",
+				TotalQuantity: 100,
+				PurchaseDate:  "2024-01-01",
+				ExpiryDate:    "2025-01-01",
+				PurchasePrice: func() *float64 { v := 5000.0; return &v }(),
 			},
 			tenantID:      testTenant.ID,
 			expectedError: false,
@@ -107,9 +108,9 @@ func TestAssetLicenseService_GetLicenseByID(t *testing.T) {
 
 	// 创建测试许可证
 	license, err := licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:        "测试许可证",
-		Vendor:      "Microsoft",
-		LicenseType: "subscription",
+		Name:          "测试许可证",
+		Vendor:        "Microsoft",
+		LicenseType:   "subscription",
 		TotalQuantity: 50,
 	}, testTenant.ID)
 	require.NoError(t, err)
@@ -150,16 +151,16 @@ func TestAssetLicenseService_ListLicenses(t *testing.T) {
 
 	// 创建多个测试许可证
 	_, _ = licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:         "许可证1",
-		Vendor:       "Microsoft",
-		LicenseType:  "subscription",
+		Name:          "许可证1",
+		Vendor:        "Microsoft",
+		LicenseType:   "subscription",
 		TotalQuantity: 100,
 	}, testTenant.ID)
 
 	_, _ = licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:         "许可证2",
-		Vendor:       "Adobe",
-		LicenseType:  "perpetual",
+		Name:          "许可证2",
+		Vendor:        "Adobe",
+		LicenseType:   "perpetual",
 		TotalQuantity: 50,
 	}, testTenant.ID)
 
@@ -211,8 +212,8 @@ func TestAssetLicenseService_UpdateLicense(t *testing.T) {
 
 	// 创建测试许可证
 	license, err := licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:         "原始名称",
-		LicenseType:  "subscription",
+		Name:          "原始名称",
+		LicenseType:   "subscription",
 		TotalQuantity: 100,
 	}, testTenant.ID)
 	require.NoError(t, err)
@@ -266,8 +267,8 @@ func TestAssetLicenseService_DeleteLicense(t *testing.T) {
 
 	// 创建测试许可证
 	license, err := licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:         "待删除许可证",
-		LicenseType:  "subscription",
+		Name:          "待删除许可证",
+		LicenseType:   "subscription",
 		TotalQuantity: 10,
 	}, testTenant.ID)
 	require.NoError(t, err)
@@ -303,8 +304,8 @@ func TestAssetLicenseService_AssignUsers(t *testing.T) {
 
 	// 创建测试许可证 (可用数量为10)
 	license, err := licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:         "测试许可证",
-		LicenseType:  "subscription",
+		Name:          "测试许可证",
+		LicenseType:   "subscription",
 		TotalQuantity: 10,
 	}, testTenant.ID)
 	require.NoError(t, err)
@@ -322,8 +323,8 @@ func TestAssetLicenseService_AssignUsers(t *testing.T) {
 	t.Run("分配超过可用数量", func(t *testing.T) {
 		// 先创建一个新许可证，可用数量为2
 		license2, _ := licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-			Name:         "限量许可证",
-			LicenseType:  "subscription",
+			Name:          "限量许可证",
+			LicenseType:   "subscription",
 			TotalQuantity: 2,
 		}, testTenant.ID)
 
@@ -355,14 +356,14 @@ func TestAssetLicenseService_GetLicenseStats(t *testing.T) {
 
 	// 创建多个测试许可证
 	_, _ = licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:         "许可证1",
-		LicenseType:  "subscription",
+		Name:          "许可证1",
+		LicenseType:   "subscription",
 		TotalQuantity: 100,
 	}, testTenant.ID)
 
 	_, _ = licenseService.CreateLicense(ctx, &dto.CreateLicenseRequest{
-		Name:         "许可证2",
-		LicenseType:  "perpetual",
+		Name:          "许可证2",
+		LicenseType:   "perpetual",
 		TotalQuantity: 50,
 	}, testTenant.ID)
 

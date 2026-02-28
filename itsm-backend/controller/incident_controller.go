@@ -187,12 +187,12 @@ func (c *IncidentController) ListIncidents(ctx *gin.Context) {
 
 	// 返回前端期望的格式
 	common.Success(ctx, gin.H{
-		"incidents":  incidents,
-		"items":     incidents, // 保持向后兼容
-		"total":     total,
-		"page":      page,
-		"page_size": size,
-		"pageSize": size, // 保持向后兼容
+		"incidents":   incidents,
+		"items":       incidents, // 保持向后兼容
+		"total":       total,
+		"page":        page,
+		"page_size":   size,
+		"pageSize":    size, // 保持向后兼容
 		"total_pages": totalPages,
 	})
 }

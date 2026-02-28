@@ -26,14 +26,14 @@ func (s *ReportExportService) ExportToExcel(ctx context.Context, data *dto.DeepA
 
 	// 设置标题样式
 	titleStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Size: 14},
-		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#4472C4"}},
+		Font:      &excelize.Font{Bold: true, Size: 14},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#4472C4"}},
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
 
 	headerStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Size: 11},
-		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#D9E2F3"}},
+		Font:      &excelize.Font{Bold: true, Size: 11},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#D9E2F3"}},
 		Alignment: &excelize.Alignment{Horizontal: "center"},
 	})
 
@@ -190,7 +190,7 @@ func (s *ReportExportService) ExportToPDF(ctx context.Context, data *dto.DeepAna
 	content.WriteString(fmt.Sprintf("%d\n", content.Len()))
 	content.WriteString("endobj\n")
 
-	//xref
+	// xref
 	content.WriteString("xref\n")
 	content.WriteString("0 6\n")
 	content.WriteString("0000000000 65535 f \n")
@@ -215,8 +215,8 @@ func (s *ReportExportService) ExportPredictionToExcel(ctx context.Context, predi
 	sheet := "Sheet1"
 
 	titleStyle, _ := f.NewStyle(&excelize.Style{
-		Font: &excelize.Font{Bold: true, Size: 14},
-		Fill: excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#4472C4"}},
+		Font:      &excelize.Font{Bold: true, Size: 14},
+		Fill:      excelize.Fill{Type: "pattern", Pattern: 1, Color: []string{"#4472C4"}},
 		Alignment: &excelize.Alignment{Horizontal: "center", Vertical: "center"},
 	})
 

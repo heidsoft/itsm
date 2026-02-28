@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
+	"testing"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -45,41 +46,41 @@ func TestReleaseService_CreateRelease(t *testing.T) {
 		name          string
 		request       *dto.CreateReleaseRequest
 		tenantID      int
-		createdBy    int
+		createdBy     int
 		expectedError bool
 	}{
 		{
 			name: "成功创建发布",
 			request: &dto.CreateReleaseRequest{
 				ReleaseNumber: "REL-20260222-001",
-				Title:        "测试发布",
-				Description:  "这是一个测试发布",
-				Type:         "minor",
-				Environment:  "staging",
-				Severity:     "medium",
+				Title:         "测试发布",
+				Description:   "这是一个测试发布",
+				Type:          "minor",
+				Environment:   "staging",
+				Severity:      "medium",
 			},
 			tenantID:      testTenant.ID,
-			createdBy:    testUser.ID,
+			createdBy:     testUser.ID,
 			expectedError: false,
 		},
 		{
 			name: "发布编号为空",
 			request: &dto.CreateReleaseRequest{
 				ReleaseNumber: "",
-				Title:        "测试发布",
+				Title:         "测试发布",
 			},
 			tenantID:      testTenant.ID,
-			createdBy:    testUser.ID,
+			createdBy:     testUser.ID,
 			expectedError: true,
 		},
 		{
 			name: "标题为空",
 			request: &dto.CreateReleaseRequest{
 				ReleaseNumber: "REL-001",
-				Title:        "",
+				Title:         "",
 			},
 			tenantID:      testTenant.ID,
-			createdBy:    testUser.ID,
+			createdBy:     testUser.ID,
 			expectedError: true,
 		},
 	}

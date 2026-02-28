@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/workflowversion"
 
@@ -66,7 +67,6 @@ func (wvs *WorkflowVersionService) CreateVersion(ctx context.Context, workflowID
 		SetChangeLog(changeLog).
 		SetIsCurrent(true).
 		Save(ctx)
-
 	if err != nil {
 		wvs.logger.Errorw("Failed to create workflow version", "error", err)
 		return nil, fmt.Errorf("failed to create workflow version: %w", err)
@@ -90,7 +90,6 @@ func (wvs *WorkflowVersionService) DeployVersion(ctx context.Context, workflowID
 		Where(workflowversion.WorkflowID(workflowID)).
 		Where(workflowversion.Version(version)).
 		Only(ctx)
-
 	if err != nil {
 		return fmt.Errorf("version not found: %w", err)
 	}
@@ -106,7 +105,6 @@ func (wvs *WorkflowVersionService) DeployVersion(ctx context.Context, workflowID
 		SetStatus("active").
 		SetIsCurrent(true).
 		Save(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to deploy version: %w", err)
 	}
@@ -125,7 +123,6 @@ func (wvs *WorkflowVersionService) GetVersion(ctx context.Context, workflowID in
 		Where(workflowversion.WorkflowID(workflowID)).
 		Where(workflowversion.Version(version)).
 		Only(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("version not found: %w", err)
 	}
@@ -139,7 +136,6 @@ func (wvs *WorkflowVersionService) GetCurrentVersion(ctx context.Context, workfl
 		Where(workflowversion.WorkflowID(workflowID)).
 		Where(workflowversion.IsCurrent(true)).
 		Only(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("current version not found: %w", err)
 	}
@@ -154,7 +150,6 @@ func (wvs *WorkflowVersionService) ListVersions(ctx context.Context, workflowID 
 		Where(workflowversion.TenantID(tenantID)).
 		Order(ent.Desc(workflowversion.FieldCreatedAt)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to list versions: %w", err)
 	}
@@ -168,7 +163,6 @@ func (wvs *WorkflowVersionService) DeleteVersion(ctx context.Context, workflowID
 		Where(workflowversion.WorkflowID(workflowID)).
 		Where(workflowversion.Version(version)).
 		Only(ctx)
-
 	if err != nil {
 		return fmt.Errorf("version not found: %w", err)
 	}
@@ -178,7 +172,6 @@ func (wvs *WorkflowVersionService) DeleteVersion(ctx context.Context, workflowID
 	}
 
 	err = wvs.client.WorkflowVersion.DeleteOne(ver).Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to delete version: %w", err)
 	}

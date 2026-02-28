@@ -3,13 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
+	"strings"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/tickettag"
-	"sort"
-	"strings"
-	"time"
 )
 
 // KnowledgeIntegrationService 知识库集成服务
@@ -184,7 +185,6 @@ func (s *KnowledgeIntegrationService) searchKnowledgeArticles(ctx context.Contex
 		Order(ent.Desc(knowledgearticle.FieldUpdatedAt)).
 		Limit(limit).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("搜索知识库文章失败: %w", err)
 	}
@@ -288,7 +288,6 @@ func (s *KnowledgeIntegrationService) addKnowledgeTagToTicket(ctx context.Contex
 	_, err := s.client.TicketTag.Query().
 		Where(tickettag.NameEQ(tagName)).
 		First(ctx)
-
 	if err != nil {
 		// 创建新标签
 		_, err = s.client.TicketTag.Create().

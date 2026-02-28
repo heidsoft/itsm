@@ -14,7 +14,7 @@ import (
 
 // ReleaseController 发布管理控制器
 type ReleaseController struct {
-	logger        *zap.SugaredLogger
+	logger         *zap.SugaredLogger
 	releaseService *service.ReleaseService
 }
 

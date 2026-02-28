@@ -34,12 +34,12 @@ func main() {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		
+
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(204)
 			return
 		}
-		
+
 		c.Next()
 	})
 
@@ -104,7 +104,6 @@ func main() {
 					SetCriticality("medium").
 					SetTenantID(1).
 					Save(context.Background())
-
 				if err != nil {
 					c.JSON(500, gin.H{"success": false, "message": err.Error()})
 					return

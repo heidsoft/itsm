@@ -15,10 +15,10 @@ import (
 
 // ChangeService 变更管理服务
 type ChangeService struct {
-	client               *ent.Client
-	logger               *zap.SugaredLogger
+	client                *ent.Client
+	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
-	approvalService      *ApprovalService
+	approvalService       *ApprovalService
 }
 
 // NewChangeService 创建变更管理服务
@@ -58,7 +58,6 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		SetNillablePlannedStartDate(req.PlannedStartDate).
 		SetNillablePlannedEndDate(req.PlannedEndDate).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create change", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create change: %w", err)
@@ -155,7 +154,6 @@ func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*d
 	changeEntity, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("change not found")
@@ -250,7 +248,6 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		All(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to list changes", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to list changes: %w", err)
@@ -324,7 +321,6 @@ func (s *ChangeService) UpdateChange(ctx context.Context, id int, req *dto.Updat
 	changeEntity, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("change not found")
@@ -397,7 +393,6 @@ func (s *ChangeService) DeleteChange(ctx context.Context, id int, tenantID int) 
 	exists, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		Exist(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to check change existence", "error", err, "change_id", id, "tenant_id", tenantID)
 		return fmt.Errorf("failed to check change existence: %w", err)
@@ -495,7 +490,6 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 	exists, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		Exist(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to check change existence", "error", err, "change_id", id, "tenant_id", tenantID)
 		return fmt.Errorf("failed to check change existence: %w", err)
@@ -526,16 +520,16 @@ func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID i
 
 	// 构建流程变量
 	variables := map[string]interface{}{
-		"change_id":      ch.ID,
-		"title":         ch.Title,
-		"description":   ch.Description,
-		"type":          ch.Type,
-		"priority":      ch.Priority,
-		"status":        ch.Status,
-		"impact_scope":  ch.ImpactScope,
-		"risk_level":    ch.RiskLevel,
-		"created_by":    ch.CreatedBy,
-		"assignee_id":   ch.AssigneeID,
+		"change_id":    ch.ID,
+		"title":        ch.Title,
+		"description":  ch.Description,
+		"type":         ch.Type,
+		"priority":     ch.Priority,
+		"status":       ch.Status,
+		"impact_scope": ch.ImpactScope,
+		"risk_level":   ch.RiskLevel,
+		"created_by":   ch.CreatedBy,
+		"assignee_id":  ch.AssigneeID,
 	}
 
 	// 根据变更类型选择不同的流程
@@ -547,12 +541,12 @@ func (s *ChangeService) triggerWorkflowForChange(ctx context.Context, changeID i
 	// 触发流程
 	triggerReq := &dto.ProcessTriggerRequest{
 		BusinessType:         dto.BusinessTypeChange,
-		BusinessID:        changeID,
+		BusinessID:           changeID,
 		ProcessDefinitionKey: processKey,
-		Variables:         variables,
-		TriggeredBy:      fmt.Sprintf("%d", ch.CreatedBy),
-		TriggeredAt:       time.Now(),
-		TenantID:         tenantID,
+		Variables:            variables,
+		TriggeredBy:          fmt.Sprintf("%d", ch.CreatedBy),
+		TriggeredAt:          time.Now(),
+		TenantID:             tenantID,
 	}
 
 	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
@@ -596,12 +590,12 @@ func (s *ChangeService) GetWorkflowStatus(ctx context.Context, changeID int, ten
 		ProcessInstanceID:     processInstance.ID,
 		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
 		ProcessDefinitionName: processDefName,
-		BusinessKey:          processInstance.BusinessKey,
-		Status:               s.mapProcessStatus(processInstance.Status),
+		BusinessKey:           processInstance.BusinessKey,
+		Status:                s.mapProcessStatus(processInstance.Status),
 		CurrentActivityID:     processInstance.CurrentActivityID,
 		CurrentActivityName:   processInstance.CurrentActivityName,
-		StartTime:            processInstance.StartTime,
-		EndTime:              &processInstance.EndTime,
+		StartTime:             processInstance.StartTime,
+		EndTime:               &processInstance.EndTime,
 	}, nil
 }
 

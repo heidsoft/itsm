@@ -1,11 +1,12 @@
 package schema
 
 import (
+	"time"
+
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/index"
-	"time"
 )
 
 // CIRelationshipType CI关系类型枚举
@@ -45,9 +46,9 @@ type RelationshipStrength string
 
 const (
 	StrengthCritical RelationshipStrength = "critical" // 关键依赖
-	StrengthHigh     RelationshipStrength = "high"      // 强依赖
-	StrengthMedium   RelationshipStrength = "medium"     // 中等依赖
-	StrengthLow      RelationshipStrength = "low"        // 弱依赖
+	StrengthHigh     RelationshipStrength = "high"     // 强依赖
+	StrengthMedium   RelationshipStrength = "medium"   // 中等依赖
+	StrengthLow      RelationshipStrength = "low"      // 弱依赖
 )
 
 // ImpactLevel 影响程度

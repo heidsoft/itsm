@@ -125,19 +125,19 @@ const (
 // Notification Type Constants
 // ===================================
 const (
-	NotificationTypeEmail  = "email"
-	NotificationTypeSMS    = "sms"
+	NotificationTypeEmail   = "email"
+	NotificationTypeSMS     = "sms"
 	NotificationTypeWebhook = "webhook"
-	NotificationTypeInApp  = "in_app"
+	NotificationTypeInApp   = "in_app"
 )
 
 // ===================================
 // CMDB CI Status Constants
 // ===================================
 const (
-	CIStatusActive     = "active"
-	CIStatusInactive   = "inactive"
-	CIStatusRetired    = "retired"
+	CIStatusActive      = "active"
+	CIStatusInactive    = "inactive"
+	CIStatusRetired     = "retired"
 	CIStatusMaintenance = "maintenance"
 )
 
@@ -171,9 +171,9 @@ const (
 // Request Size Limits
 // ===================================
 const (
-	MaxRequestSize       = 10 * 1024 * 1024 // 10MB
-	MaxUploadSize        = 50 * 1024 * 1024 // 50MB
-	MaxJSONPayloadSize   = 5 * 1024 * 1024  // 5MB
+	MaxRequestSize     = 10 * 1024 * 1024 // 10MB
+	MaxUploadSize      = 50 * 1024 * 1024 // 50MB
+	MaxJSONPayloadSize = 5 * 1024 * 1024  // 5MB
 )
 
 // ===================================
@@ -224,14 +224,14 @@ const (
 // Validation Constants
 // ===================================
 const (
-	MinUsernameLength = 3
-	MaxUsernameLength = 50
-	MinPasswordLength = 6
-	MaxPasswordLength = 128
-	MaxNameLength     = 100
-	MaxEmailLength    = 255
-	MinTitleLength    = 1
-	MaxTitleLength    = 200
+	MinUsernameLength    = 3
+	MaxUsernameLength    = 50
+	MinPasswordLength    = 6
+	MaxPasswordLength    = 128
+	MaxNameLength        = 100
+	MaxEmailLength       = 255
+	MinTitleLength       = 1
+	MaxTitleLength       = 200
 	MaxDescriptionLength = 10000
 )
 
@@ -248,10 +248,10 @@ const (
 // Feature Flags
 // ===================================
 const (
-	FeatureAI              = "ai_enabled"
+	FeatureAI               = "ai_enabled"
 	FeatureAdvancedWorkflow = "advanced_workflow"
-	FeatureVectorSearch    = "vector_search"
-	FeatureNotifications   = "notifications"
+	FeatureVectorSearch     = "vector_search"
+	FeatureNotifications    = "notifications"
 )
 
 // ===================================
@@ -323,4 +323,3 @@ const (
 	DefaultTenant  = "default"
 	SuperAdminUser = "admin"
 )
-

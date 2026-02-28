@@ -45,18 +45,18 @@ const (
 
 // EventDefinition 事件定义
 type EventDefinition struct {
-	ID          string      `json:"id"`
-	Type        EventType   `json:"type"`
-	Trigger     EventTrigger `json:"trigger"`
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Position    Position    `json:"position"`
-	Incoming    []string    `json:"incoming"`  // 入向流ID列表
-	Outgoing    []string    `json:"outgoing"`  // 出向流ID列表
-	Properties  map[string]interface{} `json:"properties"` // 事件属性
-	Handler     string      `json:"handler,omitempty"`     // 事件处理器
-	Timeout     string      `json:"timeout,omitempty"`     // 超时设置
-	RetryPolicy *RetryPolicy `json:"retry_policy,omitempty"` // 重试策略
+	ID          string                 `json:"id"`
+	Type        EventType              `json:"type"`
+	Trigger     EventTrigger           `json:"trigger"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	Position    Position               `json:"position"`
+	Incoming    []string               `json:"incoming"`               // 入向流ID列表
+	Outgoing    []string               `json:"outgoing"`               // 出向流ID列表
+	Properties  map[string]interface{} `json:"properties"`             // 事件属性
+	Handler     string                 `json:"handler,omitempty"`      // 事件处理器
+	Timeout     string                 `json:"timeout,omitempty"`      // 超时设置
+	RetryPolicy *RetryPolicy           `json:"retry_policy,omitempty"` // 重试策略
 }
 
 // Position 位置信息
@@ -67,10 +67,10 @@ type Position struct {
 
 // RetryPolicy 重试策略
 type RetryPolicy struct {
-	MaxAttempts     int           `json:"max_attempts"`     // 最大重试次数
-	InitialDelay    time.Duration `json:"initial_delay"`    // 初始延迟
-	MaxDelay        time.Duration `json:"max_delay"`        // 最大延迟
-	BackoffMultiplier float64     `json:"backoff_multiplier"` // 退避乘数
+	MaxAttempts       int           `json:"max_attempts"`       // 最大重试次数
+	InitialDelay      time.Duration `json:"initial_delay"`      // 初始延迟
+	MaxDelay          time.Duration `json:"max_delay"`          // 最大延迟
+	BackoffMultiplier float64       `json:"backoff_multiplier"` // 退避乘数
 }
 
 // EventInstance 事件实例
@@ -417,13 +417,13 @@ type ListEventInstancesRequest struct {
 func (s *BPMNEventService) GetEventStatistics(ctx context.Context, tenantID int, timeRange string) (map[string]interface{}, error) {
 	// 获取事件统计信息
 	stats := map[string]interface{}{
-		"total_events":     0,
-		"start_events":     0,
-		"end_events":       0,
+		"total_events":        0,
+		"start_events":        0,
+		"end_events":          0,
 		"intermediate_events": 0,
-		"boundary_events":  0,
-		"by_trigger":       map[string]int{},
-		"by_status":        map[string]int{},
+		"boundary_events":     0,
+		"by_trigger":          map[string]int{},
+		"by_status":           map[string]int{},
 	}
 
 	return stats, nil

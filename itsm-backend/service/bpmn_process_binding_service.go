@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
-	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -246,12 +247,12 @@ func (s *ProcessBindingService) toBindingResponse(entity *ent.ProcessBinding) *d
 		BusinessSubType:      entity.BusinessSubType,
 		ProcessDefinitionKey: entity.ProcessDefinitionKey,
 		ProcessVersion:       entity.ProcessVersion,
-		IsDefault:           entity.IsDefault,
+		IsDefault:            entity.IsDefault,
 		Priority:             entity.Priority,
-		IsActive:            entity.IsActive,
-		TenantID:            entity.TenantID,
-		CreatedAt:           entity.CreatedAt,
-		UpdatedAt:           entity.UpdatedAt,
+		IsActive:             entity.IsActive,
+		TenantID:             entity.TenantID,
+		CreatedAt:            entity.CreatedAt,
+		UpdatedAt:            entity.UpdatedAt,
 	}
 }
 
@@ -260,56 +261,56 @@ func (s *ProcessBindingService) InitDefaultBindings(ctx context.Context, tenantI
 	defaultBindings := []dto.ProcessBinding{
 		// 工单流程
 		{
-			BusinessType:     dto.BusinessTypeTicket,
-			BusinessSubType:  "general",
+			BusinessType:         dto.BusinessTypeTicket,
+			BusinessSubType:      "general",
 			ProcessDefinitionKey: "ticket_general_flow",
-			Priority:         10,
-			IsDefault:        true,
-			IsActive:         true,
+			Priority:             10,
+			IsDefault:            true,
+			IsActive:             true,
 		},
 		// 事件流程
 		{
-			BusinessType:     dto.BusinessTypeIncident,
-			BusinessSubType:  "",
+			BusinessType:         dto.BusinessTypeIncident,
+			BusinessSubType:      "",
 			ProcessDefinitionKey: "incident_emergency_flow",
-			Priority:         10,
-			IsDefault:        true,
-			IsActive:         true,
+			Priority:             10,
+			IsDefault:            true,
+			IsActive:             true,
 		},
 		// 变更流程
 		{
-			BusinessType:     dto.BusinessTypeChange,
-			BusinessSubType:  "normal",
+			BusinessType:         dto.BusinessTypeChange,
+			BusinessSubType:      "normal",
 			ProcessDefinitionKey: "change_normal_flow",
-			Priority:         10,
-			IsDefault:        true,
-			IsActive:         true,
+			Priority:             10,
+			IsDefault:            true,
+			IsActive:             true,
 		},
 		{
-			BusinessType:     dto.BusinessTypeChange,
-			BusinessSubType:  "emergency",
+			BusinessType:         dto.BusinessTypeChange,
+			BusinessSubType:      "emergency",
 			ProcessDefinitionKey: "change_emergency_flow",
-			Priority:         20,
-			IsDefault:        false,
-			IsActive:         true,
+			Priority:             20,
+			IsDefault:            false,
+			IsActive:             true,
 		},
 		// 服务请求流程
 		{
-			BusinessType:     dto.BusinessTypeServiceRequest,
-			BusinessSubType:  "",
+			BusinessType:         dto.BusinessTypeServiceRequest,
+			BusinessSubType:      "",
 			ProcessDefinitionKey: "service_request_flow",
-			Priority:         10,
-			IsDefault:        true,
-			IsActive:         true,
+			Priority:             10,
+			IsDefault:            true,
+			IsActive:             true,
 		},
 		// 问题管理流程
 		{
-			BusinessType:     dto.BusinessTypeProblem,
-			BusinessSubType:  "",
+			BusinessType:         dto.BusinessTypeProblem,
+			BusinessSubType:      "",
 			ProcessDefinitionKey: "problem_management_flow",
-			Priority:         10,
-			IsDefault:        true,
-			IsActive:         true,
+			Priority:             10,
+			IsDefault:            true,
+			IsActive:             true,
 		},
 	}
 

@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 type LoginRequest struct {
@@ -57,14 +58,14 @@ type UserTenantsResponse struct {
 
 // RegisterRequest 用户注册请求
 type RegisterRequest struct {
-	Username    string `json:"username" binding:"required,min=3,max=20,alphanum"`
-	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required,min=8"`
-	FullName    string `json:"full_name" binding:"required"`
-	Phone       string `json:"phone" binding:"omitempty"`
-	Company     string `json:"company,omitempty"`
-	Role        string `json:"role" binding:"omitempty"`
-	TenantCode  string `json:"tenant_code,omitempty"`
+	Username   string `json:"username" binding:"required,min=3,max=20,alphanum"`
+	Email      string `json:"email" binding:"required,email"`
+	Password   string `json:"password" binding:"required,min=8"`
+	FullName   string `json:"full_name" binding:"required"`
+	Phone      string `json:"phone" binding:"omitempty"`
+	Company    string `json:"company,omitempty"`
+	Role       string `json:"role" binding:"omitempty"`
+	TenantCode string `json:"tenant_code,omitempty"`
 }
 
 // RegisterResponse 用户注册响应
@@ -88,9 +89,9 @@ type ForgotPasswordResponse struct {
 
 // PasswordResetRequest 密码重置请求（用于忘记密码流程）
 type PasswordResetRequest struct {
-	Token          string `json:"token" binding:"required"`
-	Email          string `json:"email" binding:"required,email"`
-	Password       string `json:"password" binding:"required,min=8"`
+	Token           string `json:"token" binding:"required"`
+	Email           string `json:"email" binding:"required,email"`
+	Password        string `json:"password" binding:"required,min=8"`
 	PasswordConfirm string `json:"password_confirm" binding:"required"`
 }
 
@@ -101,8 +102,8 @@ type PasswordResetResponse struct {
 
 // ValidateResetTokenRequest 验证重置令牌请求
 type ValidateResetTokenRequest struct {
-	Token  string `json:"token" binding:"required"`
-	Email  string `json:"email" binding:"required,email"`
+	Token string `json:"token" binding:"required"`
+	Email string `json:"email" binding:"required,email"`
 }
 
 // ValidateResetTokenResponse 验证重置令牌响应

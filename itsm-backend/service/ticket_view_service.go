@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticketview"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -256,4 +257,3 @@ func (s *TicketViewService) ShareTicketView(
 
 	return nil
 }
-

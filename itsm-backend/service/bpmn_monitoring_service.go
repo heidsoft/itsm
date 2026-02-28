@@ -60,13 +60,11 @@ type TaskMetrics struct {
 	AverageDuration     time.Duration      `json:"average_duration"`
 	SuccessRate         float64            `json:"success_rate"`
 	AssigneePerformance map[string]float64 `json:"assignee_performance"`
-	WaitTime            time.Duration      `json:"wait_time"`           // 等待时间
-	ProcessingTime      time.Duration      `json:"processing_time"`    // 处理时间
-	QueueLength         int                `json:"queue_length"`       // 队列长度
-	Priority            string             `json:"priority"`           // 优先级
+	WaitTime            time.Duration      `json:"wait_time"`       // 等待时间
+	ProcessingTime      time.Duration      `json:"processing_time"` // 处理时间
+	QueueLength         int                `json:"queue_length"`    // 队列长度
+	Priority            string             `json:"priority"`        // 优先级
 }
-
-
 
 // BottleneckAnalysis 瓶颈分析
 type BottleneckAnalysis struct {
@@ -102,13 +100,13 @@ type SlowestPath struct {
 
 // ResourceConstraint 资源约束
 type ResourceConstraint struct {
-	ResourceType    string  `json:"resource_type"`    // human, system, external
-	ResourceName    string  `json:"resource_name"`
-	Utilization     float64 `json:"utilization"`      // 0-100
-	Capacity        int     `json:"capacity"`
-	CurrentLoad     int     `json:"current_load"`
-	ConstraintType  string  `json:"constraint_type"`  // capacity, skill, availability
-	Impact          string  `json:"impact"`           // low, medium, high
+	ResourceType   string  `json:"resource_type"` // human, system, external
+	ResourceName   string  `json:"resource_name"`
+	Utilization    float64 `json:"utilization"` // 0-100
+	Capacity       int     `json:"capacity"`
+	CurrentLoad    int     `json:"current_load"`
+	ConstraintType string  `json:"constraint_type"` // capacity, skill, availability
+	Impact         string  `json:"impact"`          // low, medium, high
 }
 
 // ProcessInstanceStatus 流程实例状态
@@ -120,7 +118,7 @@ type ProcessInstanceStatus struct {
 	StartTime         time.Time              `json:"start_time"`
 	ExpectedEndTime   *time.Time             `json:"expected_end_time"`
 	Variables         map[string]interface{} `json:"variables"`
-	Progress          float64                 `json:"progress"`
+	Progress          float64                `json:"progress"`
 	TenantID          int                    `json:"tenant_id"`
 	EstimatedDuration time.Duration          `json:"estimated_duration"`
 	RiskLevel         string                 `json:"risk_level"` // low, medium, high
@@ -142,38 +140,38 @@ type AuditLogEntry struct {
 
 // RealTimeMetrics 实时指标
 type RealTimeMetrics struct {
-	ActiveInstances    int                     `json:"active_instances"`
-	ActiveTasks        int                     `json:"active_tasks"`
-	QueueLength        int                     `json:"queue_length"`
-	Throughput         float64                 `json:"throughput"`
-	ErrorRate          float64                 `json:"error_rate"`
-	ResponseTime       time.Duration           `json:"response_time"`
-	ResourceUsage      map[string]float64      `json:"resource_usage"`
-	Alerts             []*PerformanceAlert     `json:"alerts"`
-	LastUpdated        time.Time               `json:"last_updated"`
+	ActiveInstances int                 `json:"active_instances"`
+	ActiveTasks     int                 `json:"active_tasks"`
+	QueueLength     int                 `json:"queue_length"`
+	Throughput      float64             `json:"throughput"`
+	ErrorRate       float64             `json:"error_rate"`
+	ResponseTime    time.Duration       `json:"response_time"`
+	ResourceUsage   map[string]float64  `json:"resource_usage"`
+	Alerts          []*PerformanceAlert `json:"alerts"`
+	LastUpdated     time.Time           `json:"last_updated"`
 }
 
 // PerformanceAlert 性能告警
 type PerformanceAlert struct {
-	ID          string    `json:"id"`
-	Type        string    `json:"type"`        // performance, bottleneck, error
-	Severity    string    `json:"severity"`    // info, warning, error, critical
-	Message     string    `json:"message"`
-	Timestamp   time.Time `json:"timestamp"`
-	ResourceID  string    `json:"resource_id"`
-	ResourceType string   `json:"resource_type"`
-	Value       float64   `json:"value"`
-	Threshold   float64   `json:"threshold"`
-	Status      string    `json:"status"`      // active, resolved, acknowledged
+	ID           string    `json:"id"`
+	Type         string    `json:"type"`     // performance, bottleneck, error
+	Severity     string    `json:"severity"` // info, warning, error, critical
+	Message      string    `json:"message"`
+	Timestamp    time.Time `json:"timestamp"`
+	ResourceID   string    `json:"resource_id"`
+	ResourceType string    `json:"resource_type"`
+	Value        float64   `json:"value"`
+	Threshold    float64   `json:"threshold"`
+	Status       string    `json:"status"` // active, resolved, acknowledged
 }
 
 // ProcessMetricsRequest 流程指标请求
 type ProcessMetricsRequest struct {
 	ProcessDefinitionKey string     `json:"process_definition_key"`
-	TenantID            int        `json:"tenant_id"`
-	TimeRange           string     `json:"time_range"`
-	StartTime           *time.Time `json:"start_time"`
-	EndTime             *time.Time `json:"end_time"`
+	TenantID             int        `json:"tenant_id"`
+	TimeRange            string     `json:"time_range"`
+	StartTime            *time.Time `json:"start_time"`
+	EndTime              *time.Time `json:"end_time"`
 }
 
 // calculateAverageDuration 计算平均持续时间
@@ -629,22 +627,22 @@ func (s *BPMNMonitoringService) determineBottleneckType(duration, waitTime time.
 // calculateImpactScore 计算影响分数
 func (s *BPMNMonitoringService) calculateImpactScore(duration, waitTime time.Duration, queueLength int) float64 {
 	score := 0.0
-	
+
 	// 处理时间影响 (40%)
 	if duration > time.Minute*30 {
 		score += 40 * math.Min(float64(duration.Minutes())/30, 1.0)
 	}
-	
+
 	// 等待时间影响 (30%)
 	if waitTime > time.Minute*15 {
 		score += 30 * math.Min(float64(waitTime.Minutes())/15, 1.0)
 	}
-	
+
 	// 队列长度影响 (30%)
 	if queueLength > 10 {
 		score += 30 * math.Min(float64(queueLength)/10, 1.0)
 	}
-	
+
 	return math.Min(score, 100.0)
 }
 
@@ -683,13 +681,13 @@ func (s *BPMNMonitoringService) identifyResourceConstraints(ctx context.Context,
 	// 这里实现资源约束分析逻辑
 	return []*ResourceConstraint{
 		{
-			ResourceType:    "human",
-			ResourceName:    "审批人员",
-			Utilization:     85.0,
-			Capacity:        10,
-			CurrentLoad:     8,
-			ConstraintType:  "capacity",
-			Impact:          "medium",
+			ResourceType:   "human",
+			ResourceName:   "审批人员",
+			Utilization:    85.0,
+			Capacity:       10,
+			CurrentLoad:    8,
+			ConstraintType: "capacity",
+			Impact:         "medium",
 		},
 	}, nil
 }
@@ -874,17 +872,17 @@ func (s *BPMNMonitoringService) GetProcessMetrics(ctx context.Context, req *Proc
 			LatencyPercentile95: 0.0,
 			LatencyPercentile99: 0.0,
 		},
-		TaskMetrics:        make(map[string]*TaskMetrics),
+		TaskMetrics: make(map[string]*TaskMetrics),
 		BottleneckAnalysis: &BottleneckAnalysis{
 			BottleneckTasks:     []*BottleneckTask{},
 			SlowestPaths:        []*SlowestPath{},
-			ResourceConstraints:  []*ResourceConstraint{},
+			ResourceConstraints: []*ResourceConstraint{},
 			Recommendations:     []string{},
 			Severity:            "low",
 		},
 		TenantID:  req.TenantID,
 		TimeRange: req.TimeRange,
 	}
-	
+
 	return metrics, nil
 }

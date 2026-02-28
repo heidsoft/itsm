@@ -33,7 +33,6 @@ export const usePerformance = (componentName: string) => {
 
     // 开发环境下输出性能指标
     if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING === 'true') {
-      console.log(`[Performance] ${componentName} mounted in ${mountTime}ms`);
     }
   }, [componentName]);
 

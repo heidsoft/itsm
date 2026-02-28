@@ -41,12 +41,12 @@ const (
 
 // GatewayExecutionRequest 网关执行请求
 type GatewayExecutionRequest struct {
-	ProcessInstanceID       string                 `json:"process_instance_id" binding:"required"`
-	ProcessDefinitionKey    string                 `json:"process_definition_key" binding:"required"`
-	GatewayID               string                 `json:"gateway_id" binding:"required"`
-	GatewayType             GatewayType            `json:"gateway_type" binding:"required"`
-	Variables               map[string]interface{} `json:"variables"`
-	TenantID                int                    `json:"tenant_id" binding:"required"`
+	ProcessInstanceID    string                 `json:"process_instance_id" binding:"required"`
+	ProcessDefinitionKey string                 `json:"process_definition_key" binding:"required"`
+	GatewayID            string                 `json:"gateway_id" binding:"required"`
+	GatewayType          GatewayType            `json:"gateway_type" binding:"required"`
+	Variables            map[string]interface{} `json:"variables"`
+	TenantID             int                    `json:"tenant_id" binding:"required"`
 }
 
 // GatewayExecutionResult 网关执行结果
@@ -393,7 +393,6 @@ func (e *GatewayEngine) recordGatewayExecution(ctx context.Context, req *Gateway
 		SetTenantID(req.TenantID).
 		SetTimestamp(time.Now()).
 		Save(ctx)
-
 	if err != nil {
 		e.logger.Warnw("Failed to save execution history", "error", err)
 		// 不返回错误，避免影响主流程
@@ -417,7 +416,6 @@ func (e *GatewayEngine) GetGatewayExecutionHistory(ctx context.Context, processI
 		Where(processexecutionhistory.ActivityType("gateway")).
 		Order(ent.Asc(processexecutionhistory.FieldTimestamp)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to query execution history: %w", err)
 	}
@@ -426,16 +424,16 @@ func (e *GatewayEngine) GetGatewayExecutionHistory(ctx context.Context, processI
 	result := make([]map[string]interface{}, len(histories))
 	for i, h := range histories {
 		result[i] = map[string]interface{}{
-			"history_id":           h.HistoryID,
-			"process_instance_id":  h.ProcessInstanceID,
+			"history_id":             h.HistoryID,
+			"process_instance_id":    h.ProcessInstanceID,
 			"process_definition_key": h.ProcessDefinitionKey,
-			"activity_id":          h.ActivityID,
-			"activity_type":        h.ActivityType,
-			"event_type":           h.EventType,
-			"event_detail":         h.EventDetail,
-			"variables":            h.Variables,
-			"timestamp":            h.Timestamp,
-			"tenant_id":            h.TenantID,
+			"activity_id":            h.ActivityID,
+			"activity_type":          h.ActivityType,
+			"event_type":             h.EventType,
+			"event_detail":           h.EventDetail,
+			"variables":              h.Variables,
+			"timestamp":              h.Timestamp,
+			"tenant_id":              h.TenantID,
 		}
 	}
 

@@ -54,7 +54,7 @@ export function ApprovalChainFilters({
   );
 
   const handleDateRangeChange = useCallback(
-    (dates: any, dateStrings: [string, string]) => {
+    (dates: [dayjs.Dayjs, dayjs.Dayjs] | null, dateStrings: [string, string]) => {
       const newFilters = {
         ...localFilters,
         dateRange: dates

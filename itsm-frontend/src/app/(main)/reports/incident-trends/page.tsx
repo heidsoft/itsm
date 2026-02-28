@@ -194,9 +194,9 @@ const IncidentTrendsPage = () => {
               </Select>
               <RangePicker
                 value={dateRange}
-                onChange={(dates) => {
+                onChange={(dates: [dayjs.Dayjs, dayjs.Dayjs] | null) => {
                   if (dates) {
-                    setDateRange([dates[0]!, dates[1]!]);
+                    setDateRange(dates);
                   }
                 }}
               />

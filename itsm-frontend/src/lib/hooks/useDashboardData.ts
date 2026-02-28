@@ -181,7 +181,6 @@ export const useDashboardData = () => {
       const cacheAge = now - cachedData.timestamp;
 
       if (cacheAge < CACHE_DURATION) {
-        console.log('使用缓存数据，缓存年龄:', Math.round(cacheAge / 1000), '秒');
         setData(cachedData.data);
         setLastUpdated(new Date(cachedData.timestamp));
         setLoading(false);

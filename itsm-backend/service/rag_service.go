@@ -15,45 +15,45 @@ import (
 
 // RAGService provides retrieval augmented generation over Knowledge Base
 type RAGService struct {
-	client        *ent.Client
-	vectors       *VectorStore
-	embedder      Embedder
-	logger        *zap.SugaredLogger
-	useVector     bool // Whether to use vector search
-	useKeyword    bool // Whether to use keyword fallback
-	hybridSearch  bool // Whether to use hybrid (vector + keyword) search
+	client       *ent.Client
+	vectors      *VectorStore
+	embedder     Embedder
+	logger       *zap.SugaredLogger
+	useVector    bool // Whether to use vector search
+	useKeyword   bool // Whether to use keyword fallback
+	hybridSearch bool // Whether to use hybrid (vector + keyword) search
 }
 
 // RAGConfig holds RAG service configuration
 type RAGConfig struct {
-	UseVector          bool
-	UseKeyword         bool
-	HybridSearch       bool
+	UseVector           bool
+	UseKeyword          bool
+	HybridSearch        bool
 	SimilarityThreshold float64
-	MaxResults         int
+	MaxResults          int
 }
 
 // DefaultRAGConfig returns default RAG configuration
 func DefaultRAGConfig() RAGConfig {
 	return RAGConfig{
-		UseVector:          true,
-		UseKeyword:         true,
-		HybridSearch:       true,
+		UseVector:           true,
+		UseKeyword:          true,
+		HybridSearch:        true,
 		SimilarityThreshold: 0.7,
-		MaxResults:         5,
+		MaxResults:          5,
 	}
 }
 
 // NewRAGService creates a new RAG service with configuration
 func NewRAGService(client *ent.Client, vectors *VectorStore, embedder Embedder, logger *zap.SugaredLogger, cfg RAGConfig) *RAGService {
 	return &RAGService{
-		client:        client,
-		vectors:       vectors,
-		embedder:      embedder,
-		logger:        logger,
-		useVector:     cfg.UseVector && vectors != nil && embedder != nil,
-		useKeyword:    cfg.UseKeyword,
-		hybridSearch:  cfg.HybridSearch,
+		client:       client,
+		vectors:      vectors,
+		embedder:     embedder,
+		logger:       logger,
+		useVector:    cfg.UseVector && vectors != nil && embedder != nil,
+		useKeyword:   cfg.UseKeyword,
+		hybridSearch: cfg.HybridSearch,
 	}
 }
 

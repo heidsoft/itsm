@@ -128,4 +128,3 @@ func (c *RootCauseController) ResolveRootCause(ctx *gin.Context) {
 
 	common.Success(ctx, map[string]string{"message": "根因已标记为已解决"})
 }
-

@@ -175,7 +175,6 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
       } else {
         // 回退方案：仅在前端更新状态，或调用通用更新接口
         // await KnowledgeBaseApi.updateComment(commentId, { resolved: true });
-        console.log('API暂不支持后端解决评论，仅前端更新');
       }
 
       setComments(

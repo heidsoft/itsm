@@ -199,7 +199,7 @@ type OllamaChatRequest struct {
 		Role    string `json:"role"`
 		Content string `json:"content"`
 	} `json:"messages"`
-	Stream  bool   `json:"stream"`
+	Stream  bool `json:"stream"`
 	Options struct {
 		Temperature float64 `json:"temperature"`
 		TopK        int     `json:"top_k"`
@@ -218,7 +218,7 @@ type OllamaChatResponse struct {
 
 func (p *LocalProvider) Chat(ctx context.Context, model string, messages []LLMMessage) (string, error) {
 	req := OllamaChatRequest{
-		Model: model,
+		Model:  model,
 		Stream: false,
 	}
 	for _, m := range messages {
@@ -262,12 +262,12 @@ func (p *LocalProvider) Chat(ctx context.Context, model string, messages []LLMMe
 
 // ProviderConfig holds LLM configuration
 type ProviderConfig struct {
-	Provider    string
-	Model       string
-	APIKey      string
-	Endpoint    string
-	Deployment  string
-	TokenCap    int
+	Provider   string
+	Model      string
+	APIKey     string
+	Endpoint   string
+	Deployment string
+	TokenCap   int
 }
 
 // LoadLLMConfig loads LLM configuration from viper

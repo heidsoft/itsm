@@ -6,6 +6,9 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/processinstance"
@@ -15,8 +18,6 @@ import (
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/user"
-	"strings"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -158,7 +159,6 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	}
 
 	ticket, err := createBuilder.Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket", "error", err)
 		return nil, fmt.Errorf("failed to create ticket: %w", err)
@@ -422,6 +422,7 @@ func (s *TicketService) SyncTicketStatusWithWorkflow(ctx context.Context, ticket
 
 	return nil
 }
+
 func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto.UpdateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Updating ticket", "ticket_id", ticketID, "tenant_id", tenantID)
 
@@ -825,7 +826,6 @@ func (s *TicketService) BatchDeleteTickets(ctx context.Context, ticketIDs []int,
 	count, err := s.client.Ticket.Query().
 		Where(ticket.IDIn(ticketIDs...), ticket.TenantID(tenantID)).
 		Count(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to validate tickets: %w", err)
 	}
@@ -836,7 +836,6 @@ func (s *TicketService) BatchDeleteTickets(ctx context.Context, ticketIDs []int,
 
 	// 批量硬删除（注意：生产环境通常建议软删除）
 	_, err = s.client.Ticket.Delete().Where(ticket.IDIn(ticketIDs...)).Exec(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to batch delete tickets", "error", err)
 		return fmt.Errorf("failed to batch delete tickets: %w", err)
@@ -950,7 +949,6 @@ func (s *TicketService) calculateSLADeadline(ctx context.Context, tenantID int, 
 			sladefinition.IsActive(true),
 		).
 		First(ctx)
-
 	if err != nil {
 		// 如果找不到精确匹配，尝试查找默认SLA（不带优先级）
 		if ent.IsNotFound(err) {
@@ -1015,7 +1013,6 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 		SetAssigneeID(assigneeID).
 		SetStatus("assigned").
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to assign ticket", "error", err)
 		return nil, fmt.Errorf("failed to assign ticket: %w", err)
@@ -1059,7 +1056,6 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 		SetAssigneeID(newAssignee).
 		SetStatus("escalated").
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to escalate ticket", "error", err)
 		return nil, fmt.Errorf("failed to escalate ticket: %w", err)
@@ -1089,7 +1085,6 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 		Where(ticket.TenantID(tenantID)).
 		SetStatus("resolved").
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to resolve ticket", "error", err)
 		return nil, fmt.Errorf("failed to resolve ticket: %w", err)
@@ -1121,7 +1116,6 @@ func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, feedback 
 		Where(ticket.TenantID(tenantID)).
 		SetStatus("closed").
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to close ticket", "error", err)
 		return nil, fmt.Errorf("failed to close ticket: %w", err)
@@ -1170,7 +1164,6 @@ func (s *TicketService) SearchTickets(ctx context.Context, searchTerm string, te
 		Order(ent.Desc(ticket.FieldCreatedAt)).
 		Limit(100). // 限制搜索结果
 		All(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to search tickets", "error", err)
 		return nil, fmt.Errorf("failed to search tickets: %w", err)
@@ -1194,7 +1187,6 @@ func (s *TicketService) GetOverdueTickets(ctx context.Context, tenantID int) ([]
 		).
 		Order(ent.Desc(ticket.FieldCreatedAt)).
 		All(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to get overdue tickets", "error", err)
 		return nil, fmt.Errorf("failed to get overdue tickets: %w", err)
@@ -1215,7 +1207,6 @@ func (s *TicketService) GetTicketsByAssignee(ctx context.Context, assigneeID int
 		).
 		Order(ent.Desc(ticket.FieldCreatedAt)).
 		All(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to get tickets by assignee", "error", err)
 		return nil, fmt.Errorf("failed to get tickets by assignee: %w", err)

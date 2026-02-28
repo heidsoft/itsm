@@ -3,20 +3,21 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticketassignmentrule"
-	"sort"
-	"time"
 
 	"go.uber.org/zap"
 )
 
 type TicketAssignmentSmartService struct {
-	client              *ent.Client
-	logger              *zap.SugaredLogger
-	assignmentService   *TicketAssignmentService
-	ruleService         *TicketAssignmentRuleService
+	client            *ent.Client
+	logger            *zap.SugaredLogger
+	assignmentService *TicketAssignmentService
+	ruleService       *TicketAssignmentRuleService
 }
 
 func NewTicketAssignmentSmartService(
@@ -267,4 +268,3 @@ func joinStrings(strs []string, sep string) string {
 	}
 	return result
 }
-

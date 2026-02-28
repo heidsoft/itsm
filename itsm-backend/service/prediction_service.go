@@ -101,13 +101,13 @@ func (s *PredictionService) predictVolume(tickets []*ent.Ticket, startTime, endT
 	for current.Before(endTime) || current.Equal(endTime) {
 		dateStr := current.Format("2006-01-02")
 		predictedValue := float64(avgCount) * (1.0 + float64(current.Month()-startTime.Month())*0.05) // 简单线性增长
-		
+
 		predictions = append(predictions, dto.PredictionDataPoint{
-			Date:          dateStr,
+			Date:           dateStr,
 			PredictedValue: predictedValue,
-			LowerBound:    predictedValue * 0.85,
-			UpperBound:    predictedValue * 1.15,
-			Confidence:    0.85,
+			LowerBound:     predictedValue * 0.85,
+			UpperBound:     predictedValue * 1.15,
+			Confidence:     0.85,
 		})
 
 		current = current.AddDate(0, 0, 7) // 每周一个预测点
@@ -285,22 +285,22 @@ func (s *PredictionService) ExportPredictionReport(ctx context.Context, req *dto
 // exportPredictionToCSV 导出预测为CSV格式
 func (s *PredictionService) exportPredictionToCSV(response *dto.TrendPredictionResponse) ([]byte, string, error) {
 	var csvData string
-	
+
 	// CSV头部
 	csvData = "日期,预测值,下限,上限,置信度\n"
-	
+
 	// 数据行
 	for _, point := range response.Predictions {
-		csvData += fmt.Sprintf("%s,%.2f,%.2f,%.2f,%.2f\n", 
+		csvData += fmt.Sprintf("%s,%.2f,%.2f,%.2f,%.2f\n",
 			point.Date, point.PredictedValue, point.LowerBound, point.UpperBound, point.Confidence)
 	}
-	
+
 	// 添加汇总信息
 	csvData += "\n预测信息\n"
 	csvData += fmt.Sprintf("模型,%s\n", response.Model)
 	csvData += fmt.Sprintf("整体置信度,%.2f\n", response.Confidence)
 	csvData += fmt.Sprintf("生成时间,%s\n", response.GeneratedAt.Format("2006-01-02 15:04:05"))
-	
+
 	filename := fmt.Sprintf("prediction_%s.csv", time.Now().Format("20060102_150405"))
 	return []byte(csvData), filename, nil
 }
@@ -324,13 +324,12 @@ func (s *PredictionService) exportPredictionToPDF(response *dto.TrendPredictionR
 			return points
 		}(),
 		Summary: dto.AnalyticsSummary{
-			Total:            0,
-			Resolved:         0,
-			AvgResponseTime:  0,
-			AvgResolutionTime: 0,
-			SLACompliance:    response.Confidence * 100,
+			Total:                0,
+			Resolved:             0,
+			AvgResponseTime:      0,
+			AvgResolutionTime:    0,
+			SLACompliance:        response.Confidence * 100,
 			CustomerSatisfaction: 0,
 		},
 	})
 }
-

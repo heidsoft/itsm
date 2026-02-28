@@ -14,16 +14,16 @@ type SystemConfigRequest struct {
 
 // SystemConfigResponse 响应
 type SystemConfigResponse struct {
-	ID          int        `json:"id"`
-	Key         string     `json:"key"`
-	Value       string     `json:"value"`
-	ValueType   string     `json:"value_type"`
-	Category    string     `json:"category"`
-	Description string     `json:"description"`
-	CreatedBy   string     `json:"created_by"`
-	TenantID    int        `json:"tenant_id"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
+	ID          int       `json:"id"`
+	Key         string    `json:"key"`
+	Value       string    `json:"value"`
+	ValueType   string    `json:"value_type"`
+	Category    string    `json:"category"`
+	Description string    `json:"description"`
+	CreatedBy   string    `json:"created_by"`
+	TenantID    int       `json:"tenant_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // SystemConfigListResponse 列表响应

@@ -7,8 +7,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/slaalerthistory"
+	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
 
@@ -16,9 +16,9 @@ import (
 )
 
 type SLAAlertService struct {
-	client            *ent.Client
-	logger            *zap.SugaredLogger
-	notificationSvc   *TicketNotificationService
+	client          *ent.Client
+	logger          *zap.SugaredLogger
+	notificationSvc *TicketNotificationService
 }
 
 func NewSLAAlertService(client *ent.Client, logger *zap.SugaredLogger) *SLAAlertService {
@@ -544,35 +544,35 @@ func (s *SLAAlertService) toAlertRuleResponse(rule *ent.SLAAlertRule) *dto.SLAAl
 	}
 
 	return &dto.SLAAlertRuleResponse{
-		ID:                  rule.ID,
-		Name:                rule.Name,
-		SLADefinitionID:     rule.SLADefinitionID,
-		AlertLevel:          rule.AlertLevel,
-		ThresholdPercentage: rule.ThresholdPercentage,
+		ID:                   rule.ID,
+		Name:                 rule.Name,
+		SLADefinitionID:      rule.SLADefinitionID,
+		AlertLevel:           rule.AlertLevel,
+		ThresholdPercentage:  rule.ThresholdPercentage,
 		NotificationChannels: rule.NotificationChannels,
-		EscalationEnabled:   rule.EscalationEnabled,
-		EscalationLevels:    escalationLevels,
-		IsActive:            rule.IsActive,
-		TenantID:            rule.TenantID,
-		CreatedAt:           rule.CreatedAt,
-		UpdatedAt:           rule.UpdatedAt,
+		EscalationEnabled:    rule.EscalationEnabled,
+		EscalationLevels:     escalationLevels,
+		IsActive:             rule.IsActive,
+		TenantID:             rule.TenantID,
+		CreatedAt:            rule.CreatedAt,
+		UpdatedAt:            rule.UpdatedAt,
 	}
 }
 
 func (s *SLAAlertService) toAlertHistoryResponse(history *ent.SLAAlertHistory) *dto.SLAAlertHistoryResponse {
 	response := &dto.SLAAlertHistoryResponse{
-		ID:                 history.ID,
-		TicketID:           history.TicketID,
-		TicketNumber:       history.TicketNumber,
-		TicketTitle:        history.TicketTitle,
-		AlertRuleID:        history.AlertRuleID,
-		AlertRuleName:      history.AlertRuleName,
-		AlertLevel:         history.AlertLevel,
+		ID:                  history.ID,
+		TicketID:            history.TicketID,
+		TicketNumber:        history.TicketNumber,
+		TicketTitle:         history.TicketTitle,
+		AlertRuleID:         history.AlertRuleID,
+		AlertRuleName:       history.AlertRuleName,
+		AlertLevel:          history.AlertLevel,
 		ThresholdPercentage: history.ThresholdPercentage,
-		ActualPercentage:   history.ActualPercentage,
-		NotificationSent:   history.NotificationSent,
-		EscalationLevel:    history.EscalationLevel,
-		CreatedAt:          history.CreatedAt,
+		ActualPercentage:    history.ActualPercentage,
+		NotificationSent:    history.NotificationSent,
+		EscalationLevel:     history.EscalationLevel,
+		CreatedAt:           history.CreatedAt,
 	}
 
 	if !history.ResolvedAt.IsZero() {
@@ -581,4 +581,3 @@ func (s *SLAAlertService) toAlertHistoryResponse(history *ent.SLAAlertHistory) *
 
 	return response
 }
-

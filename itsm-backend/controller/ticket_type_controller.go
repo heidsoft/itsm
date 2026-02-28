@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"strconv"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -181,4 +182,3 @@ func (tc *TicketTypeController) DeleteTicketType(c *gin.Context) {
 
 	common.Success(c, gin.H{"message": "工单类型删除成功"})
 }
-

@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/user"
-	"strings"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -56,22 +57,21 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		return nil, fmt.Errorf("密码加密失败: %w", err)
 	}
 
-    // 创建用户
-    uc := s.client.User.Create().
-        SetUsername(req.Username).
-        SetEmail(req.Email).
-        SetName(req.Name).
-        SetDepartment(req.Department).
-        SetPhone(req.Phone).
-        SetPasswordHash(string(hashedPassword)).
-        SetActive(true).
-        SetTenantID(req.TenantID)
-    // 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）
-    if strings.TrimSpace(req.Role) != "" {
-        uc = uc.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
-    }
-    userEntity, err := uc.Save(ctx)
-
+	// 创建用户
+	uc := s.client.User.Create().
+		SetUsername(req.Username).
+		SetEmail(req.Email).
+		SetName(req.Name).
+		SetDepartment(req.Department).
+		SetPhone(req.Phone).
+		SetPasswordHash(string(hashedPassword)).
+		SetActive(true).
+		SetTenantID(req.TenantID)
+	// 如果请求中提供了角色，则设置角色；否则使用Schema默认值（end_user）
+	if strings.TrimSpace(req.Role) != "" {
+		uc = uc.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
+	}
+	userEntity, err := uc.Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("创建用户失败: %w", err)
 	}
@@ -126,7 +126,6 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest) 
 		Offset((req.Page - 1) * req.PageSize).
 		Order(ent.Desc(user.FieldCreatedAt)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("查询用户列表失败: %w", err)
 	}
@@ -142,11 +141,11 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest) 
 			Department: u.Department,
 			Phone:      u.Phone,
 			Active:     u.Active,
-            TenantID:   u.TenantID,
-            Role:       string(u.Role),
-            CreatedAt:  u.CreatedAt,
-            UpdatedAt:  u.UpdatedAt,
-        })
+			TenantID:   u.TenantID,
+			Role:       string(u.Role),
+			CreatedAt:  u.CreatedAt,
+			UpdatedAt:  u.UpdatedAt,
+		})
 	}
 
 	response := &dto.PagedUsersResponse{
@@ -239,9 +238,9 @@ func (s *UserService) UpdateUser(ctx context.Context, id int, req *dto.UpdateUse
 		update = update.SetPhone(req.Phone)
 	}
 	// 角色更新（仅在提供时设置），管理员权限由RBAC控制
-    if strings.TrimSpace(req.Role) != "" {
-        update = update.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))) )
-    }
+	if strings.TrimSpace(req.Role) != "" {
+		update = update.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
+	}
 
 	userEntity, err := update.Save(ctx)
 	if err != nil {
@@ -266,7 +265,6 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 	err = s.client.User.UpdateOneID(id).
 		SetActive(false).
 		Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("删除用户失败: %w", err)
 	}
@@ -288,7 +286,6 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool)
 	err = s.client.User.UpdateOneID(id).
 		SetActive(active).
 		Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("更改用户状态失败: %w", err)
 	}
@@ -316,7 +313,6 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 	err = s.client.User.UpdateOneID(id).
 		SetPasswordHash(string(hashedPassword)).
 		Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("重置密码失败: %w", err)
 	}
@@ -422,7 +418,6 @@ func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersReque
 		Limit(req.Limit).
 		Order(ent.Asc(user.FieldName)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("搜索用户失败: %w", err)
 	}
@@ -438,11 +433,11 @@ func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersReque
 			Department: u.Department,
 			Phone:      u.Phone,
 			Active:     u.Active,
-            TenantID:   u.TenantID,
-            Role:       string(u.Role),
-            CreatedAt:  u.CreatedAt,
-            UpdatedAt:  u.UpdatedAt,
-        })
+			TenantID:   u.TenantID,
+			Role:       string(u.Role),
+			CreatedAt:  u.CreatedAt,
+			UpdatedAt:  u.UpdatedAt,
+		})
 	}
 
 	s.logger.Infof("用户搜索成功: found=%d", len(users))

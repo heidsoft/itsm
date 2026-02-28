@@ -40,5 +40,3 @@ func (ProvisioningTask) Indexes() []ent.Index {
 		index.Fields("tenant_id", "status", "created_at"),
 	}
 }
-
-

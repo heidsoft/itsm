@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -91,7 +92,6 @@ func (s *TicketTypeService) CreateTicketType(ctx context.Context, req *dto.Creat
 		notificationConfigJSON, permissionConfigJSON,
 		userID, tenantID, time.Now(), time.Now(),
 	).Scan(&id)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create ticket type", "error", err)
 		return nil, fmt.Errorf("failed to create ticket type: %w", err)
@@ -484,4 +484,3 @@ func joinWhereClausesAnd(clauses []string) string {
 	}
 	return result
 }
-

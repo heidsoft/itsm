@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -201,8 +202,8 @@ func (s *TicketRatingService) GetRatingStats(
 	totalRatings := len(ratedTickets)
 	if totalRatings == 0 {
 		return &dto.RatingStatsResponse{
-			TotalRatings:      0,
-			AverageRating:     0,
+			TotalRatings:       0,
+			AverageRating:      0,
 			RatingDistribution: make(map[int]int),
 		}, nil
 	}
@@ -242,7 +243,7 @@ func (s *TicketRatingService) GetRatingStats(
 
 		assigneeStats[assigneeID] = &dto.AssigneeRatingStats{
 			AssigneeID:    assigneeID,
-			AssigneeName:   assigneeName,
+			AssigneeName:  assigneeName,
 			TotalRatings:  len(ratings),
 			AverageRating: avg,
 		}
@@ -281,11 +282,10 @@ func (s *TicketRatingService) GetRatingStats(
 	}
 
 	return &dto.RatingStatsResponse{
-		TotalRatings:      totalRatings,
-		AverageRating:     averageRating,
+		TotalRatings:       totalRatings,
+		AverageRating:      averageRating,
 		RatingDistribution: ratingDistribution,
-		ByAssignee:       assigneeStats,
-		ByCategory:       categoryStats,
+		ByAssignee:         assigneeStats,
+		ByCategory:         categoryStats,
 	}, nil
 }
-

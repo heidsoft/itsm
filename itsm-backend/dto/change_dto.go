@@ -55,18 +55,18 @@ const (
 
 // CreateChangeRequest 创建变更请求
 type CreateChangeRequest struct {
-	Title              string         `json:"title" binding:"required"` // 变更标题
-	Description        string         `json:"description"`               // 变更描述
-	Justification      string         `json:"justification"`             // 变更理由
-	Type               string         `json:"type"`                      // 变更类型: normal, standard, emergency
-	Priority           string         `json:"priority"`                  // 优先级: low, medium, high, critical
-	ImpactScope        string         `json:"impact_scope"`              // 影响范围: low, medium, high
-	RiskLevel          string         `json:"risk_level"`                // 风险等级: low, medium, high
-	PlannedStartDate   *time.Time     `json:"planned_start_date"`        // 计划开始时间
-	PlannedEndDate     *time.Time     `json:"planned_end_date"`          // 计划结束时间
-	ImplementationPlan string         `json:"implementation_plan"`       // 实施计划
-	RollbackPlan       string         `json:"rollback_plan"`             // 回滚计划
-	AffectedCIs        []string       `json:"affected_cis"`              // 受影响的配置项
+	Title              string     `json:"title" binding:"required"` // 变更标题
+	Description        string     `json:"description"`              // 变更描述
+	Justification      string     `json:"justification"`            // 变更理由
+	Type               string     `json:"type"`                     // 变更类型: normal, standard, emergency
+	Priority           string     `json:"priority"`                 // 优先级: low, medium, high, critical
+	ImpactScope        string     `json:"impact_scope"`             // 影响范围: low, medium, high
+	RiskLevel          string     `json:"risk_level"`               // 风险等级: low, medium, high
+	PlannedStartDate   *time.Time `json:"planned_start_date"`       // 计划开始时间
+	PlannedEndDate     *time.Time `json:"planned_end_date"`         // 计划结束时间
+	ImplementationPlan string     `json:"implementation_plan"`      // 实施计划
+	RollbackPlan       string     `json:"rollback_plan"`            // 回滚计划
+	AffectedCIs        []string   `json:"affected_cis"`             // 受影响的配置项
 }
 
 // UpdateChangeRequest 更新变更请求

@@ -1,11 +1,12 @@
 package middleware
 
 import (
+	"strings"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"itsm-backend/common"
-	"strings"
-	"time"
 )
 
 type Claims struct {

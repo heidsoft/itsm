@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketcomment"
 
 	"go.uber.org/zap"
 )
@@ -124,7 +125,7 @@ func (s *TicketCommentService) ListTicketComments(ctx context.Context, ticketID,
 
 	// 判断当前用户是否有权限查看内部备注
 	// 只有工单处理人、申请人或管理员可以查看内部备注
-	canViewInternal := currentUserID == ticketInfo.RequesterID || 
+	canViewInternal := currentUserID == ticketInfo.RequesterID ||
 		(currentUserID == ticketInfo.AssigneeID && ticketInfo.AssigneeID > 0)
 
 	// 转换为 DTO
@@ -174,7 +175,7 @@ func (s *TicketCommentService) UpdateTicketComment(ctx context.Context, ticketID
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	canEdit := comment.UserID == userID || 
+	canEdit := comment.UserID == userID ||
 		(ticketInfo.AssigneeID > 0 && ticketInfo.AssigneeID == userID)
 	if !canEdit {
 		return nil, fmt.Errorf("permission denied: only comment author or ticket assignee can edit")
@@ -233,7 +234,7 @@ func (s *TicketCommentService) DeleteTicketComment(ctx context.Context, ticketID
 		return fmt.Errorf("failed to get ticket: %w", err)
 	}
 
-	canDelete := comment.UserID == userID || 
+	canDelete := comment.UserID == userID ||
 		(ticketInfo.AssigneeID > 0 && ticketInfo.AssigneeID == userID)
 	if !canDelete {
 		return fmt.Errorf("permission denied: only comment author or ticket assignee can delete")
@@ -248,4 +249,3 @@ func (s *TicketCommentService) DeleteTicketComment(ctx context.Context, ticketID
 
 	return nil
 }
-

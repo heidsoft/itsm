@@ -8,8 +8,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"itsm-backend/ent/role"
 	"itsm-backend/ent/permission"
+	"itsm-backend/ent/role"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"

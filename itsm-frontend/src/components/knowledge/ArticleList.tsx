@@ -76,7 +76,6 @@ const ArticleList: React.FC = () => {
         ...values,
         categoryId: (values as any).category || undefined,
       });
-      console.log('Knowledge API response:', resp);
       // HTTP client already extracts data, so resp is ListKnowledgeArticlesResponse
       const articles = resp?.articles || [];
       const total = resp?.total || 0;

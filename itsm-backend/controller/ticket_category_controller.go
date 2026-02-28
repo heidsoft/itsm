@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"strconv"
+
 	"itsm-backend/common"
 	"itsm-backend/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -149,12 +150,12 @@ func (tc *TicketCategoryController) ListCategories(c *gin.Context) {
 	}
 
 	req := &service.ListCategoriesRequest{
-		Page:      1,
-		PageSize:  100,
-		ParentID:  parentID,
-		Level:     level,
-		IsActive:  active,
-		TenantID:  tenantID,
+		Page:     1,
+		PageSize: 100,
+		ParentID: parentID,
+		Level:    level,
+		IsActive: active,
+		TenantID: tenantID,
 	}
 
 	categories, total, err := tc.categoryService.ListCategories(c.Request.Context(), req)

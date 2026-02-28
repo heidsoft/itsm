@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"strconv"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -208,4 +209,3 @@ func (tnc *TicketNotificationController) UpdateNotificationPreferences(c *gin.Co
 
 	common.Success(c, preferences)
 }
-

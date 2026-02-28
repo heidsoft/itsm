@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"strconv"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -26,7 +27,13 @@ func NewTicketAutomationRuleController(
 }
 
 // ListAutomationRules 获取自动化规则列表
-// GET /api/v1/tickets/automation-rules
+// @Summary 获取自动化规则列表
+// @Description 获取当前租户的自动化规则列表
+// @Tags 自动化规则
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.ListAutomationRulesResponse
+// @Router /api/v1/tickets/automation-rules [get]
 func (tarc *TicketAutomationRuleController) ListAutomationRules(c *gin.Context) {
 	tenantID := c.GetInt("tenant_id")
 
@@ -44,7 +51,14 @@ func (tarc *TicketAutomationRuleController) ListAutomationRules(c *gin.Context) 
 }
 
 // GetAutomationRule 获取自动化规则详情
-// GET /api/v1/tickets/automation-rules/:id
+// @Summary 获取自动化规则详情
+// @Description 根据 ID 获取自动化规则详细信息
+// @Tags 自动化规则
+// @Accept json
+// @Produce json
+// @Param id path int true "规则 ID"
+// @Success 200 {object} dto.AutomationRuleResponse
+// @Router /api/v1/tickets/automation-rules/{id} [get]
 func (tarc *TicketAutomationRuleController) GetAutomationRule(c *gin.Context) {
 	ruleID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -65,7 +79,14 @@ func (tarc *TicketAutomationRuleController) GetAutomationRule(c *gin.Context) {
 }
 
 // CreateAutomationRule 创建自动化规则
-// POST /api/v1/tickets/automation-rules
+// @Summary 创建自动化规则
+// @Description 创建新的工单自动化规则
+// @Tags 自动化规则
+// @Accept json
+// @Produce json
+// @Param request body dto.CreateAutomationRuleRequest true "创建自动化规则请求"
+// @Success 200 {object} dto.AutomationRuleResponse
+// @Router /api/v1/tickets/automation-rules [post]
 func (tarc *TicketAutomationRuleController) CreateAutomationRule(c *gin.Context) {
 	var req dto.CreateAutomationRuleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -87,7 +108,15 @@ func (tarc *TicketAutomationRuleController) CreateAutomationRule(c *gin.Context)
 }
 
 // UpdateAutomationRule 更新自动化规则
-// PUT /api/v1/tickets/automation-rules/:id
+// @Summary 更新自动化规则
+// @Description 更新现有自动化规则的配置
+// @Tags 自动化规则
+// @Accept json
+// @Produce json
+// @Param id path int true "规则 ID"
+// @Param request body dto.UpdateAutomationRuleRequest true "更新自动化规则请求"
+// @Success 200 {object} dto.AutomationRuleResponse
+// @Router /api/v1/tickets/automation-rules/{id} [put]
 func (tarc *TicketAutomationRuleController) UpdateAutomationRule(c *gin.Context) {
 	ruleID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -114,7 +143,14 @@ func (tarc *TicketAutomationRuleController) UpdateAutomationRule(c *gin.Context)
 }
 
 // DeleteAutomationRule 删除自动化规则
-// DELETE /api/v1/tickets/automation-rules/:id
+// @Summary 删除自动化规则
+// @Description 根据 ID 删除自动化规则
+// @Tags 自动化规则
+// @Accept json
+// @Produce json
+// @Param id path int true "规则 ID"
+// @Success 200 {object} common.Response
+// @Router /api/v1/tickets/automation-rules/{id} [delete]
 func (tarc *TicketAutomationRuleController) DeleteAutomationRule(c *gin.Context) {
 	ruleID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -135,7 +171,15 @@ func (tarc *TicketAutomationRuleController) DeleteAutomationRule(c *gin.Context)
 }
 
 // TestAutomationRule 测试自动化规则
-// POST /api/v1/tickets/automation-rules/:id/test
+// @Summary 测试自动化规则
+// @Description 使用模拟工单数据测试自动化规则的执行效果
+// @Tags 自动化规则
+// @Accept json
+// @Produce json
+// @Param id path int true "规则 ID"
+// @Param request body dto.TestAutomationRuleRequest true "测试请求（包含模拟工单数据）"
+// @Success 200 {object} dto.TestAutomationRuleResponse
+// @Router /api/v1/tickets/automation-rules/{id}/test [post]
 func (tarc *TicketAutomationRuleController) TestAutomationRule(c *gin.Context) {
 	ruleID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {

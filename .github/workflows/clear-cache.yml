@@ -1,0 +1,14 @@
+name: Clear CI Cache
+
+on:
+  workflow_dispatch:
+
+jobs:
+  clear-cache:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clear npm cache
+        run: |
+          echo "Clearing npm cache..."
+          npm cache clean --force || true
+          echo "Cache cleared!"

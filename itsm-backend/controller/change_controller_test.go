@@ -141,7 +141,7 @@ func TestChangeController_ListChanges(t *testing.T) {
 			// 设置租户上下文
 			tenantCtx := &middleware.TenantContext{
 				TenantID: tenant.ID,
-				Tenant: tenant,
+				Tenant:   tenant,
 			}
 			c.Set(middleware.TenantContextKey, tenantCtx)
 
@@ -180,7 +180,7 @@ func TestChangeController_CreateChange(t *testing.T) {
 			name: "成功创建变更",
 			request: dto.CreateChangeRequest{
 				Title:       title1,
-				Description:  desc1,
+				Description: desc1,
 				Type:        "standard",
 				Priority:    "high",
 				RiskLevel:   "medium",
@@ -192,7 +192,7 @@ func TestChangeController_CreateChange(t *testing.T) {
 			name: "标题为空",
 			request: dto.CreateChangeRequest{
 				Title:       title2,
-				Description:  desc2,
+				Description: desc2,
 				Type:        "standard",
 				Priority:    "low",
 			},
@@ -220,7 +220,7 @@ func TestChangeController_CreateChange(t *testing.T) {
 			// 设置租户上下文
 			tenantCtx := &middleware.TenantContext{
 				TenantID: tenant.ID,
-				Tenant: tenant,
+				Tenant:   tenant,
 			}
 			c.Set(middleware.TenantContextKey, tenantCtx)
 			c.Set("user_id", user.ID)

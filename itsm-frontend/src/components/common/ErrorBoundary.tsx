@@ -113,7 +113,6 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       .writeText(JSON.stringify(errorReport, null, 2))
       .then(() => {
         // 这里可以集成错误上报服务
-        console.log('Error report copied to clipboard:', errorReport);
       })
       .catch(err => {
         console.error('Failed to copy error report:', err);

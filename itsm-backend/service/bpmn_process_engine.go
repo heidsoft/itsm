@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"itsm-backend/ent"
-	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/user"
@@ -80,11 +80,11 @@ type TaskService interface {
 // CustomProcessEngine 是ProcessEngine接口的实现
 // 充当领域服务(Domain Service)，协调流程定义、实例和任务实体的生命周期
 type CustomProcessEngine struct {
-	client          *ent.Client
-	logger          *zap.SugaredLogger
-	parser          *BPMNParser       // 使用自定义的BPMN解析器
-	exprEngine      *ExpressionEngine // 表达式引擎
-	expressionVars  map[string]interface{} // 表达式变量
+	client         *ent.Client
+	logger         *zap.SugaredLogger
+	parser         *BPMNParser            // 使用自定义的BPMN解析器
+	exprEngine     *ExpressionEngine      // 表达式引擎
+	expressionVars map[string]interface{} // 表达式变量
 	// 内部服务
 	processDefinitionService *bpmnProcessDefinitionService
 	processInstanceService   *bpmnProcessInstanceService
@@ -94,11 +94,11 @@ type CustomProcessEngine struct {
 // NewCustomProcessEngine 创建自定义流程引擎实例
 func NewCustomProcessEngine(client *ent.Client, logger *zap.SugaredLogger) ProcessEngine {
 	engine := &CustomProcessEngine{
-		client:          client,
-		logger:          logger,
-		parser:          NewBPMNParser(),
-		exprEngine:      NewExpressionEngine(),
-		expressionVars:  make(map[string]interface{}),
+		client:         client,
+		logger:         logger,
+		parser:         NewBPMNParser(),
+		exprEngine:     NewExpressionEngine(),
+		expressionVars: make(map[string]interface{}),
 	}
 	engine.processDefinitionService = &bpmnProcessDefinitionService{client: client, logger: logger}
 	engine.processInstanceService = &bpmnProcessInstanceService{client: client, logger: logger}
@@ -559,9 +559,11 @@ func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *
 func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanceID string, reason string) error {
 	return nil
 }
+
 func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstanceID string) error {
 	return nil
 }
+
 func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInstanceID string, reason string) error {
 	return nil
 }
@@ -646,11 +648,11 @@ type InstanceStatisticsRequest struct {
 
 // InstanceStatistics 实例统计
 type InstanceStatistics struct {
-	Total      int            `json:"total"`
-	Running    int            `json:"running"`
-	Completed  int            `json:"completed"`
-	Suspended  int            `json:"suspended"`
-	Terminated int            `json:"terminated"`
+	Total      int `json:"total"`
+	Running    int `json:"running"`
+	Completed  int `json:"completed"`
+	Suspended  int `json:"suspended"`
+	Terminated int `json:"terminated"`
 }
 
 // CounterSignStatus 会签状态
@@ -667,8 +669,8 @@ type CounterSignStatus struct {
 // CounterSignRequest 会签请求
 type CounterSignRequest struct {
 	ApprovalType string   `json:"approval_type"` // serial, parallel
-	Approvers   []string `json:"approvers"`
-	Threshold   int      `json:"threshold"`
+	Approvers    []string `json:"approvers"`
+	Threshold    int      `json:"threshold"`
 }
 
 // VoteRequest 投票请求
@@ -740,7 +742,6 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		SetDeploymentID(deployment.ID).
 		SetDeploymentName(deployment.DeploymentName).
 		Save(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("创建流程定义失败: %w", err)
 	}
@@ -756,7 +757,6 @@ func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key s
 		Where(processdefinition.TenantID(tenantID)).
 		Order(ent.Desc("version")).
 		First(ctx)
-
 	if err != nil {
 		// 没有版本，返回初始版本
 		return "1.0.0"
@@ -804,7 +804,6 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.Version(version)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -815,7 +814,6 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 // GetProcessDefinitionByID 根据ID获取流程定义
 func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Context, id int) (*ent.ProcessDefinition, error) {
 	definition, err := s.client.ProcessDefinition.Get(ctx, id)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -828,7 +826,6 @@ func (s *bpmnProcessDefinitionService) GetLatestProcessDefinition(ctx context.Co
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.IsLatest(true)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取最新流程定义失败: %w", err)
 	}
@@ -936,7 +933,6 @@ func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, pro
 	instance, err := s.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1074,7 +1070,6 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 	task, err := s.client.ProcessTask.Query().
 		Where(processtask.TaskID(taskID)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}
@@ -1402,10 +1397,10 @@ func (s *bpmnTaskService) CreateCounterSignTasks(ctx context.Context, parentTask
 		SetTaskVariables(map[string]interface{}{
 			"approval_type": req.ApprovalType,
 			"threshold":     threshold,
-			"total":          len(req.Approvers),
-			"completed":      0,
-			"approved":       0,
-			"rejected":       0,
+			"total":         len(req.Approvers),
+			"completed":     0,
+			"approved":      0,
+			"rejected":      0,
 		}).
 		Save(ctx)
 	if err != nil {

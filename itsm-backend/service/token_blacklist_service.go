@@ -14,10 +14,10 @@ import (
 
 // JWTClaims JWT Token Claims
 type JWTClaims struct {
-	UserID    int    `json:"user_id"`
-	Username  string `json:"username"`
-	Role      string `json:"role"`
-	TenantID  int    `json:"tenant_id"`
+	UserID   int    `json:"user_id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
+	TenantID int    `json:"tenant_id"`
 	jwt.RegisteredClaims
 }
 
@@ -169,7 +169,6 @@ func (s *TokenBlacklistService) parseToken(tokenString string) (*JWTClaims, erro
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte("your-secret-key"), nil // 实际应该从配置获取
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}

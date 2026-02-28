@@ -14,7 +14,7 @@ var validate *validator.Validate
 
 func init() {
 	validate = validator.New()
-	
+
 	// 注册自定义验证规则
 	validate.RegisterValidation("priority", validatePriority)
 	validate.RegisterValidation("status", validateStatus)
@@ -32,11 +32,11 @@ func ValidateAndBindJSON(c *gin.Context, obj interface{}) error {
 	if err := c.ShouldBindJSON(obj); err != nil {
 		return NewBusinessError(ParamErrorCode, "请求参数格式错误", err.Error())
 	}
-	
+
 	if err := ValidateStruct(obj); err != nil {
 		return NewBusinessError(ValidationError, "参数验证失败", formatValidationError(err))
 	}
-	
+
 	return nil
 }
 
@@ -45,11 +45,11 @@ func ValidateAndBindQuery(c *gin.Context, obj interface{}) error {
 	if err := c.ShouldBindQuery(obj); err != nil {
 		return NewBusinessError(ParamErrorCode, "查询参数格式错误", err.Error())
 	}
-	
+
 	if err := ValidateStruct(obj); err != nil {
 		return NewBusinessError(ValidationError, "参数验证失败", formatValidationError(err))
 	}
-	
+
 	return nil
 }
 
@@ -71,7 +71,7 @@ func getValidationMessage(e validator.FieldError) string {
 	field := e.Field()
 	tag := e.Tag()
 	param := e.Param()
-	
+
 	switch tag {
 	case "required":
 		return fmt.Sprintf("%s 是必填字段", field)
@@ -100,7 +100,7 @@ func getValidationMessage(e validator.FieldError) string {
 func validatePriority(fl validator.FieldLevel) bool {
 	priority := fl.Field().String()
 	validPriorities := []string{"low", "medium", "high", "critical"}
-	
+
 	for _, valid := range validPriorities {
 		if priority == valid {
 			return true
@@ -113,7 +113,7 @@ func validatePriority(fl validator.FieldLevel) bool {
 func validateStatus(fl validator.FieldLevel) bool {
 	status := fl.Field().String()
 	validStatuses := []string{"open", "in_progress", "resolved", "closed", "pending", "cancelled"}
-	
+
 	for _, valid := range validStatuses {
 		if status == valid {
 			return true
@@ -136,12 +136,12 @@ func validateChineseName(fl validator.FieldLevel) bool {
 	if name == "" {
 		return false
 	}
-	
+
 	// 检查长度（2-10个字符）
 	if utf8.RuneCountInString(name) < 2 || utf8.RuneCountInString(name) > 10 {
 		return false
 	}
-	
+
 	// 检查是否包含中文字符
 	chineseRegex := regexp.MustCompile(`[\p{Han}]+`)
 	return chineseRegex.MatchString(name)

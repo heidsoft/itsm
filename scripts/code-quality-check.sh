@@ -200,6 +200,57 @@ check_backend_code() {
         fi
         TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
     fi
+    
+    # P2-06: 大文件检查 (>500 行警告)
+    log_info "检查大文件 (>500 行警告)..."
+    local large_files=$(find . -name "*.go" -not -path "./vendor/*" -not -path "./ent/*" | while read f; do
+        lines=$(wc -l < "$f")
+        if [ "$lines" -gt 500 ]; then
+            echo "$f ($lines lines)"
+        fi
+    done)
+    if [ -z "$large_files" ]; then
+        log_success "✓ 无超大文件 (>500 行)"
+        PASSED_CHECKS=$((PASSED_CHECKS + 1))
+    else
+        log_warning "⚠ 发现超大文件 (>500 行)，建议拆分:\n$large_files"
+        FAILED_CHECKS=$((FAILED_CHECKS + 1))
+    fi
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
+    
+    # P2-07: 函数长度检查 (>50 行警告)
+    log_info "检查长函数 (>50 行警告)..."
+    local long_funcs=$(find . -name "*.go" -not -path "./vendor/*" -not -path "./ent/*" -not -path "./.git/*" | while read f; do
+        awk '
+        /^[[:space:]]*func[[:space:]]+/ {
+            func_name = $0
+            gsub(/^[[:space:]]*func[[:space:]]+/, "", func_name)
+            gsub(/\(.*/, "", func_name)
+            gsub(/\{.*/, "", func_name)
+            gsub(/[[:space:]]+$/, "", func_name)
+            start_line = NR
+            brace_count = 0
+            in_func = 1
+        }
+        in_func && /\{/ { brace_count += gsub(/\{/, "{") }
+        in_func && /\}/ { brace_count -= gsub(/\}/, "}") }
+        in_func && brace_count == 0 {
+            func_len = NR - start_line + 1
+            if (func_len > 50) {
+                printf "%s:%s (%d lines)\n", FILENAME, func_name, func_len
+            }
+            in_func = 0
+        }
+        ' "$f"
+    done | head -20)
+    if [ -z "$long_funcs" ]; then
+        log_success "✓ 无超长函数 (>50 行)"
+        PASSED_CHECKS=$((PASSED_CHECKS + 1))
+    else
+        log_warning "⚠ 发现超长函数 (>50 行)，建议拆分:\n$long_funcs"
+        FAILED_CHECKS=$((FAILED_CHECKS + 1))
+    fi
+    TOTAL_CHECKS=$((TOTAL_CHECKS + 1))
 }
 
 # 性能检查

@@ -301,4 +301,3 @@ func (h *Handler) GetCategories(c *gin.Context) {
 
 	common.Success(c, list)
 }
-

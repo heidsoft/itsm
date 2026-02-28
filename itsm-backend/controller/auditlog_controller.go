@@ -1,22 +1,22 @@
 package controller
 
 import (
-    "itsm-backend/common"
-    "itsm-backend/dto"
-    "itsm-backend/middleware"
-    "itsm-backend/service"
+	"itsm-backend/common"
+	"itsm-backend/dto"
+	"itsm-backend/middleware"
+	"itsm-backend/service"
 
-    "github.com/gin-gonic/gin"
-    "go.uber.org/zap"
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type AuditLogController struct {
-    service *service.AuditLogService
-    logger  *zap.SugaredLogger
+	service *service.AuditLogService
+	logger  *zap.SugaredLogger
 }
 
 func NewAuditLogController(s *service.AuditLogService, logger *zap.SugaredLogger) *AuditLogController {
-    return &AuditLogController{service: s, logger: logger}
+	return &AuditLogController{service: s, logger: logger}
 }
 
 // ListAuditLogs godoc
@@ -39,23 +39,23 @@ func NewAuditLogController(s *service.AuditLogService, logger *zap.SugaredLogger
 // @Success 200 {object} common.Response
 // @Router /api/v1/audit-logs [get]
 func (c *AuditLogController) ListAuditLogs(ctx *gin.Context) {
-    var req dto.ListAuditLogsRequest
-    if err := ctx.ShouldBindQuery(&req); err != nil {
-        common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
-        return
-    }
+	var req dto.ListAuditLogsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
+		return
+	}
 
-    tenantID, err := middleware.GetTenantID(ctx)
-    if err != nil || tenantID <= 0 {
-        common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
-        return
-    }
+	tenantID, err := middleware.GetTenantID(ctx)
+	if err != nil || tenantID <= 0 {
+		common.Fail(ctx, common.AuthFailedCode, "租户信息缺失")
+		return
+	}
 
-    resp, err := c.service.ListAuditLogs(ctx, &req, tenantID)
-    if err != nil {
-        c.logger.Errorw("Failed to list audit logs", "error", err, "tenant_id", tenantID)
-        common.Fail(ctx, common.InternalErrorCode, err.Error())
-        return
-    }
-    common.Success(ctx, resp)
+	resp, err := c.service.ListAuditLogs(ctx, &req, tenantID)
+	if err != nil {
+		c.logger.Errorw("Failed to list audit logs", "error", err, "tenant_id", tenantID)
+		common.Fail(ctx, common.InternalErrorCode, err.Error())
+		return
+	}
+	common.Success(ctx, resp)
 }

@@ -53,7 +53,6 @@ func (s *AssetService) CreateAsset(ctx context.Context, req *dto.CreateAssetRequ
 		SetSpecifications(req.Specifications).
 		SetCustomFields(req.CustomFields).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create asset", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create asset: %w", err)
@@ -75,7 +74,6 @@ func (s *AssetService) GetAssetByID(ctx context.Context, id, tenantID int) (*dto
 	assetEntity, err := s.client.Asset.Query().
 		Where(asset.IDEQ(id), asset.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -133,7 +131,6 @@ func (s *AssetService) UpdateAsset(ctx context.Context, id, tenantID int, req *d
 	assetEntity, err := s.client.Asset.Query().
 		Where(asset.IDEQ(id), asset.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -225,7 +222,6 @@ func (s *AssetService) UpdateAssetStatus(ctx context.Context, id, tenantID int, 
 	assetEntity, err := s.client.Asset.Query().
 		Where(asset.IDEQ(id), asset.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -255,7 +251,6 @@ func (s *AssetService) DeleteAsset(ctx context.Context, id, tenantID int) error 
 	_, err := s.client.Asset.Delete().
 		Where(asset.IDEQ(id), asset.TenantIDEQ(tenantID)).
 		Exec(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to delete asset", "error", err, "asset_id", id)
 		return fmt.Errorf("failed to delete asset: %w", err)
@@ -297,7 +292,6 @@ func (s *AssetService) AssignAsset(ctx context.Context, id, tenantID, userID int
 	assetEntity, err := s.client.Asset.Query().
 		Where(asset.IDEQ(id), asset.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -310,7 +304,6 @@ func (s *AssetService) AssignAsset(ctx context.Context, id, tenantID, userID int
 		SetAssignedTo(userID).
 		SetStatus(string(dto.AssetStatusInUse)).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to assign asset", "error", err, "asset_id", id, "user_id", userID)
 		return nil, fmt.Errorf("failed to assign asset: %w", err)
@@ -325,7 +318,6 @@ func (s *AssetService) RetireAsset(ctx context.Context, id, tenantID int, reason
 	assetEntity, err := s.client.Asset.Query().
 		Where(asset.IDEQ(id), asset.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -337,7 +329,6 @@ func (s *AssetService) RetireAsset(ctx context.Context, id, tenantID int, reason
 	updated, err := assetEntity.Update().
 		SetStatus(string(dto.AssetStatusRetired)).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to retire asset", "error", err, "asset_id", id)
 		return nil, fmt.Errorf("failed to retire asset: %w", err)

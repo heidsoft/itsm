@@ -3,10 +3,11 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"itsm-backend/dto"
 	"net/http"
 	"sync"
 	"time"
+
+	"itsm-backend/dto"
 
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -28,14 +29,14 @@ type WebSocketMessage struct {
 
 // WebSocketClient WebSocket客户端
 type WebSocketClient struct {
-	ID        string
-	UserID    int
-	TenantID  int
-	Conn      *websocket.Conn
-	Send      chan []byte
-	Hub       *WebSocketHub
-	mu        sync.Mutex
-	IsClosed  bool
+	ID       string
+	UserID   int
+	TenantID int
+	Conn     *websocket.Conn
+	Send     chan []byte
+	Hub      *WebSocketHub
+	mu       sync.Mutex
+	IsClosed bool
 }
 
 // WebSocketHub WebSocket中心

@@ -3,19 +3,20 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processinstance"
-	"time"
 
 	"go.uber.org/zap"
 )
 
 // ProblemService 问题管理服务
 type ProblemService struct {
-	client              *ent.Client
-	logger              *zap.SugaredLogger
+	client                *ent.Client
+	logger                *zap.SugaredLogger
 	processTriggerService ProcessTriggerServiceInterface
 }
 
@@ -45,7 +46,6 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 		SetTenantID(tenantID).
 		SetCreatedBy(createdBy).
 		Save(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("创建问题失败: %v", err)
 	}
@@ -69,7 +69,6 @@ func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (
 	problem, err := s.client.Problem.Query().
 		Where(problem.ID(id), problem.TenantID(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取问题失败: %v", err)
 	}
@@ -119,7 +118,6 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 		Limit(pageSize).
 		Order(ent.Desc(problem.FieldCreatedAt)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取问题列表失败: %v", err)
 	}
@@ -168,7 +166,6 @@ func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.Upd
 		SetImpact(req.Impact).
 		SetUpdatedAt(time.Now()).
 		Save(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("更新问题失败: %v", err)
 	}
@@ -240,7 +237,7 @@ func (s *ProblemService) triggerWorkflowForProblem(ctx context.Context, problemI
 
 	// 构建流程变量
 	variables := map[string]interface{}{
-		"problem_id":   p.ID,
+		"problem_id":  p.ID,
 		"title":       p.Title,
 		"description": p.Description,
 		"priority":    p.Priority,
@@ -254,12 +251,12 @@ func (s *ProblemService) triggerWorkflowForProblem(ctx context.Context, problemI
 	// 触发问题管理流程
 	triggerReq := &dto.ProcessTriggerRequest{
 		BusinessType:         dto.BusinessTypeProblem,
-		BusinessID:          problemID,
+		BusinessID:           problemID,
 		ProcessDefinitionKey: "problem_management_flow",
-		Variables:           variables,
-		TriggeredBy:        fmt.Sprintf("%d", p.CreatedBy),
-		TriggeredAt:         time.Now(),
-		TenantID:           tenantID,
+		Variables:            variables,
+		TriggeredBy:          fmt.Sprintf("%d", p.CreatedBy),
+		TriggeredAt:          time.Now(),
+		TenantID:             tenantID,
 	}
 
 	resp, err := s.processTriggerService.TriggerProcess(ctx, triggerReq)
@@ -302,12 +299,12 @@ func (s *ProblemService) GetWorkflowStatus(ctx context.Context, problemID int, t
 		ProcessInstanceID:     processInstance.ID,
 		ProcessDefinitionKey:  processInstance.ProcessDefinitionKey,
 		ProcessDefinitionName: processDefName,
-		BusinessKey:          processInstance.BusinessKey,
-		Status:               s.mapProcessStatus(processInstance.Status),
+		BusinessKey:           processInstance.BusinessKey,
+		Status:                s.mapProcessStatus(processInstance.Status),
 		CurrentActivityID:     processInstance.CurrentActivityID,
 		CurrentActivityName:   processInstance.CurrentActivityName,
-		StartTime:            processInstance.StartTime,
-		EndTime:              &processInstance.EndTime,
+		StartTime:             processInstance.StartTime,
+		EndTime:               &processInstance.EndTime,
 	}, nil
 }
 

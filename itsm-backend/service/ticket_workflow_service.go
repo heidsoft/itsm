@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -274,8 +275,8 @@ func (s *TicketWorkflowService) ApproveTicket(ctx context.Context, req *dto.Appr
 		SET status = $1, action = $2, comment = $3, processed_at = $4, updated_at = $5
 		WHERE id = $6 AND tenant_id = $7
 	`
-	_, err = s.rawDB.ExecContext(ctx, updateApprovalQuery, 
-		newApprovalStatus, req.Action, req.Comment, time.Now(), time.Now(), 
+	_, err = s.rawDB.ExecContext(ctx, updateApprovalQuery,
+		newApprovalStatus, req.Action, req.Comment, time.Now(), time.Now(),
 		req.ApprovalID, tenantID)
 	if err != nil {
 		return fmt.Errorf("failed to update approval: %w", err)
@@ -395,8 +396,8 @@ func (s *TicketWorkflowService) ResolveTicket(ctx context.Context, req *dto.Reso
 		SET status = 'resolved', resolution = $1, resolution_category = $2, resolved_at = $3, updated_at = $4
 		WHERE id = $5 AND tenant_id = $6
 	`
-	_, err = s.rawDB.ExecContext(ctx, updateQuery, 
-		req.Resolution, req.ResolutionCategory, time.Now(), time.Now(), 
+	_, err = s.rawDB.ExecContext(ctx, updateQuery,
+		req.Resolution, req.ResolutionCategory, time.Now(), time.Now(),
 		req.TicketID, tenantID)
 	if err != nil {
 		return fmt.Errorf("failed to resolve ticket: %w", err)
@@ -523,19 +524,19 @@ func (s *TicketWorkflowService) GetTicketWorkflowState(ctx context.Context, tick
 	defer rows.Close()
 
 	var approvals []struct {
-		ID          int
-		Level       int
-		LevelName   string
-		Status      string
-		ApproverID  int
+		ID         int
+		Level      int
+		LevelName  string
+		Status     string
+		ApproverID int
 	}
 	for rows.Next() {
 		var a struct {
-			ID          int
-			Level       int
-			LevelName   string
-			Status      string
-			ApproverID  int
+			ID         int
+			Level      int
+			LevelName  string
+			Status     string
+			ApproverID int
 		}
 		if err := rows.Scan(&a.ID, &a.Level, &a.LevelName, &a.Status, &a.ApproverID); err != nil {
 			s.logger.Warnw("Failed to scan approval row", "error", err)
@@ -654,39 +655,40 @@ func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantI
 	Status      string
 	RequesterID int
 	AssigneeID  *int
-}, error) {
+}, error,
+) {
 	query := "SELECT id, status, requester_id, assignee_id FROM tickets WHERE id = $1 AND tenant_id = $2"
-	
+
 	var ticket struct {
 		ID          int
 		Status      string
 		RequesterID int
 		AssigneeID  *int
 	}
-	
+
 	err := s.rawDB.QueryRowContext(ctx, query, ticketID, tenantID).Scan(
 		&ticket.ID, &ticket.Status, &ticket.RequesterID, &ticket.AssigneeID)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("工单不存在")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get ticket: %w", err)
 	}
-	
+
 	return &ticket, nil
 }
 
 func (s *TicketWorkflowService) createWorkflowRecord(ctx context.Context, record *dto.TicketWorkflowRecord, tenantID int) error {
 	metadataJSON := SafeMarshal(record.Metadata)
-	
+
 	query := `
 		INSERT INTO ticket_workflow_records (
 			ticket_id, action, from_status, to_status, operator_id, from_user_id, to_user_id,
 			comment, reason, metadata, tenant_id, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
-	
+
 	var fromUserID, toUserID *int
 	if record.FromUser != nil {
 		fromUserID = &record.FromUser.ID
@@ -694,14 +696,14 @@ func (s *TicketWorkflowService) createWorkflowRecord(ctx context.Context, record
 	if record.ToUser != nil {
 		toUserID = &record.ToUser.ID
 	}
-	
+
 	_, err := s.rawDB.ExecContext(ctx, query,
 		record.TicketID, record.Action, record.FromStatus, record.ToStatus,
 		record.Operator.ID, fromUserID, toUserID,
 		record.Comment, record.Reason, metadataJSON,
 		tenantID, record.CreatedAt,
 	)
-	
+
 	return err
 }
 

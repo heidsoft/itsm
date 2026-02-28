@@ -14,8 +14,8 @@ import (
 
 // AssetLicenseController 许可证管理控制器
 type AssetLicenseController struct {
-	logger            *zap.SugaredLogger
-	licenseService    *service.AssetLicenseService
+	logger         *zap.SugaredLogger
+	licenseService *service.AssetLicenseService
 }
 
 // NewAssetLicenseController 创建许可证管理控制器

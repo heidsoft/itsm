@@ -5,12 +5,13 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"itsm-backend/ent"
-	"itsm-backend/ent/processdefinition"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"itsm-backend/ent"
+	"itsm-backend/ent/processdefinition"
 
 	"github.com/pkg/errors"
 )
@@ -133,7 +134,6 @@ func (s *BPMNTemplateService) listTemplates() ([]*TemplateInfo, error) {
 		templates = append(templates, info)
 		return nil
 	})
-
 	if err != nil {
 		return nil, errors.Wrap(err, "遍历模板目录失败")
 	}
@@ -149,7 +149,6 @@ func (s *BPMNTemplateService) isTemplateDeployed(ctx context.Context, templateID
 			processdefinition.TenantID(tenantID),
 		).
 		Count(ctx)
-
 	if err != nil {
 		return false, errors.Wrap(err, "查询流程定义失败")
 	}
@@ -194,7 +193,6 @@ func (s *BPMNTemplateService) deployTemplate(ctx context.Context, tmpl *Template
 		SetDeploymentID(deployment.ID).
 		SetDeployedAt(now).
 		Save(ctx)
-
 	if err != nil {
 		return errors.Wrap(err, "保存流程定义失败")
 	}
@@ -237,11 +235,10 @@ func (s *BPMNTemplateService) ExportTemplateToFile(ctx context.Context, key stri
 			processdefinition.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		return errors.Wrap(err, "查询流程定义失败")
 	}
 
 	// 写入文件
-	return os.WriteFile(outputPath, definition.BpmnXML, 0644)
+	return os.WriteFile(outputPath, definition.BpmnXML, 0o644)
 }

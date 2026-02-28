@@ -218,7 +218,6 @@ const TicketApprovalWorkflowPage = () => {
   };
 
   const handleSaveWorkflow = (workflowData: any) => {
-    console.log("保存工作流数据:", workflowData);
 
     // 显示保存模态框
     setSaveModalVisible(true);

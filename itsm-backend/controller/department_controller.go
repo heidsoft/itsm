@@ -149,5 +149,3 @@ func (c *DepartmentController) DeleteDepartment(ctx *gin.Context) {
 
 	common.Success(ctx, gin.H{"message": "删除成功"})
 }
-
-

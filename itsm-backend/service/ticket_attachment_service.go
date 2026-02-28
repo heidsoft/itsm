@@ -4,30 +4,31 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"itsm-backend/dto"
-	"itsm-backend/ent"
-	"itsm-backend/ent/ticket"
-	"itsm-backend/ent/ticketattachment"
 	"mime"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"itsm-backend/dto"
+	"itsm-backend/ent"
+	"itsm-backend/ent/ticket"
+	"itsm-backend/ent/ticketattachment"
+
 	"go.uber.org/zap"
 )
 
 type TicketAttachmentService struct {
-	client      *ent.Client
-	logger      *zap.SugaredLogger
-	uploadDir   string
-	maxFileSize int64 // 最大文件大小（字节），默认10MB
+	client       *ent.Client
+	logger       *zap.SugaredLogger
+	uploadDir    string
+	maxFileSize  int64    // 最大文件大小（字节），默认10MB
 	allowedTypes []string // 允许的文件类型
 }
 
 func NewTicketAttachmentService(client *ent.Client, logger *zap.SugaredLogger) *TicketAttachmentService {
 	uploadDir := "uploads/tickets"
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+	if err := os.MkdirAll(uploadDir, 0o755); err != nil {
 		logger.Warnw("Failed to create upload directory", "error", err, "dir", uploadDir)
 	}
 
@@ -310,7 +311,7 @@ type AttachmentFile struct {
 func (s *TicketAttachmentService) saveFile(fileHeader *FileHeader, filePath string) error {
 	// 确保目录存在
 	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -355,4 +356,3 @@ func (s *TicketAttachmentService) isAllowedType(mimeType string) bool {
 
 	return false
 }
-

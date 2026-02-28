@@ -3,21 +3,22 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketnotification"
 	"itsm-backend/ent/user"
-	"time"
 
 	"go.uber.org/zap"
 )
 
 type TicketNotificationService struct {
-	client         *ent.Client
-	logger         *zap.SugaredLogger
-	emailService   *EmailService
-	smsService     *SMSService
+	client       *ent.Client
+	logger       *zap.SugaredLogger
+	emailService *EmailService
+	smsService   *SMSService
 }
 
 // NewTicketNotificationService 创建通知服务
@@ -254,7 +255,7 @@ func (s *TicketNotificationService) NotifyTicketCommented(
 	if ticket.AssigneeID > 0 && ticket.AssigneeID != commenterID {
 		userIDs = append(userIDs, ticket.AssigneeID)
 	}
-	
+
 	// 添加被@的用户（排除评论者自己）
 	for _, userID := range mentionedUserIDs {
 		if userID != commenterID {
@@ -615,4 +616,3 @@ func (s *TicketNotificationService) getUserNotificationPreferences(
 	}
 	return prefs, nil
 }
-

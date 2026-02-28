@@ -23,12 +23,13 @@ jwt:
   refresh_expire_time: 604800  # 7天 (refresh token)
 
 log:
-  level: "${LOG_LEVEL:info}"  # debug, info, warn, error
+  level: "${LOG_LEVEL:error}"  # debug, info, warn, error (production default: error)
   path: ./logs                # 日志文件目录
-  max_size: 100               # 单个日志文件最大大小(MB)
-  max_backups: 30            # 保留的旧日志文件数量
+  max_size: 200               # 单个日志文件最大大小(MB)
+  max_backups: 20             # 保留的旧日志文件数量 - 优化存储 (200MB * 20 = 4GB)
   max_age: 90                # 日志文件保留天数
   compress: true              # 是否压缩旧日志文件
+  local_time: false           # 日志文件名是否使用本地时间 (默认 UTC)
   development: false          # 开发模式(输出到console)
 
 llm:
@@ -73,3 +74,16 @@ admin:
   username: "admin"
   password: "${ADMIN_PASSWORD}"  # Required: set ADMIN_PASSWORD env var
   email: "admin@example.com"
+
+# SMTP Email Configuration
+# Used for sending notifications, SLA alerts, and system emails
+smtp:
+  enabled: false  # Set to true to enable email notifications
+  host: "${SMTP_HOST:smtp.example.com}"      # SMTP server host
+  port: "${SMTP_PORT:587}"                   # SMTP port (587 for TLS, 465 for SSL)
+  username: "${SMTP_USERNAME:}"              # SMTP username (email address)
+  password: "${SMTP_PASSWORD:}"              # SMTP password or app-specific password
+  from_email: "${SMTP_FROM_EMAIL:noreply@example.com}"  # Sender email address
+  from_name: "${SMTP_FROM_NAME:ITSM System}" # Sender name
+  encryption: "${SMTP_ENCRYPTION:tls}"       # tls, ssl, or none
+  skip_verify: "${SMTP_SKIP_VERIFY:false}"   # Skip TLS certificate verification (dev only)

@@ -206,8 +206,6 @@ type GetBottlenecksRequest struct {
 	Limit      int       `json:"limit"`
 }
 
-
-
 // CreateAlertRuleRequest 创建告警规则请求
 type CreateAlertRuleRequest struct {
 	Name        string  `json:"name" binding:"required"`

@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"itsm-backend/ent"
-	"itsm-backend/ent/configurationitem"
 	"itsm-backend/ent/cirelationship"
+	"itsm-backend/ent/configurationitem"
 )
 
 type CMDBService struct {
@@ -26,7 +26,7 @@ func (s *CMDBService) CreateCI(ctx context.Context, req *CreateCIRequest) (*ent.
 		SetEnvironment(req.Environment).
 		SetCriticality(req.Criticality).
 		SetTenantID(1) // 默认租户ID
-	
+
 	if req.AssetTag != nil {
 		create = create.SetAssetTag(*req.AssetTag)
 	}
@@ -48,7 +48,7 @@ func (s *CMDBService) CreateCI(ctx context.Context, req *CreateCIRequest) (*ent.
 	if req.Attributes != nil {
 		create = create.SetAttributes(*req.Attributes)
 	}
-	
+
 	return create.Save(ctx)
 }
 
@@ -65,7 +65,7 @@ func (s *CMDBService) GetCI(ctx context.Context, id int) (*ent.ConfigurationItem
 // ListCIs 列出配置项
 func (s *CMDBService) ListCIs(ctx context.Context, req *ListCIsRequest) ([]*ent.ConfigurationItem, error) {
 	query := s.client.ConfigurationItem.Query()
-	
+
 	if req.CiType != "" {
 		query = query.Where(configurationitem.CiType(req.CiType))
 	}
@@ -75,7 +75,7 @@ func (s *CMDBService) ListCIs(ctx context.Context, req *ListCIsRequest) ([]*ent.
 	if req.Environment != "" {
 		query = query.Where(configurationitem.Environment(req.Environment))
 	}
-	
+
 	return query.
 		Offset(req.Offset).
 		Limit(req.Limit).
@@ -122,7 +122,7 @@ func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, depth int) (*
 	}
 
 	topology := &CITopology{
-		CI: ci,
+		CI:       ci,
 		Children: make([]*CITopology, 0),
 	}
 
@@ -146,23 +146,23 @@ func (s *CMDBService) GetCITopology(ctx context.Context, ciID int, depth int) (*
 			}
 		}
 	}
-	
+
 	return topology, nil
 }
 
 // 请求结构体
 type CreateCIRequest struct {
-	Name            string                 `json:"name"`
-	CiType          string                 `json:"ci_type"`
-	Status          string                 `json:"status"`
-	Environment     string                 `json:"environment"`
-	Criticality     string                 `json:"criticality"`
-	AssetTag        *string                `json:"asset_tag,omitempty"`
-	SerialNumber    *string                `json:"serial_number,omitempty"`
-	Location        *string                `json:"location,omitempty"`
-	AssignedTo      *string                `json:"assigned_to,omitempty"`
-	OwnedBy         *string                `json:"owned_by,omitempty"`
-	DiscoverySource *string                `json:"discovery_source,omitempty"`
+	Name            string                  `json:"name"`
+	CiType          string                  `json:"ci_type"`
+	Status          string                  `json:"status"`
+	Environment     string                  `json:"environment"`
+	Criticality     string                  `json:"criticality"`
+	AssetTag        *string                 `json:"asset_tag,omitempty"`
+	SerialNumber    *string                 `json:"serial_number,omitempty"`
+	Location        *string                 `json:"location,omitempty"`
+	AssignedTo      *string                 `json:"assigned_to,omitempty"`
+	OwnedBy         *string                 `json:"owned_by,omitempty"`
+	DiscoverySource *string                 `json:"discovery_source,omitempty"`
 	Attributes      *map[string]interface{} `json:"attributes,omitempty"`
 }
 

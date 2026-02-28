@@ -1,4 +1,125 @@
 definitions:
+  application.AttachmentInfo:
+    properties:
+      file_size:
+        type: integer
+      filename:
+        type: string
+      id:
+        type: string
+      mime_type:
+        type: string
+      uploaded_at:
+        type: string
+      uploaded_by:
+        type: string
+      url:
+        type: string
+    type: object
+  application.CommentInfo:
+    properties:
+      author_id:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      is_private:
+        type: boolean
+    type: object
+  application.CreateTicketResult:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      status:
+        type: string
+      ticket_number:
+        type: string
+    type: object
+  application.SearchTicketsResult:
+    properties:
+      page:
+        type: integer
+      page_size:
+        type: integer
+      tickets:
+        items:
+          $ref: '#/definitions/application.TicketSummary'
+        type: array
+      total_count:
+        type: integer
+    type: object
+  application.TicketAssignmentInfo:
+    properties:
+      assigned_at:
+        type: string
+      assigned_by:
+        type: string
+      assigned_to:
+        type: string
+      instructions:
+        type: string
+      team_id:
+        type: string
+    type: object
+  application.TicketDetails:
+    properties:
+      assignment:
+        $ref: '#/definitions/application.TicketAssignmentInfo'
+      attachments:
+        items:
+          $ref: '#/definitions/application.AttachmentInfo'
+        type: array
+      category:
+        type: string
+      comments:
+        items:
+          $ref: '#/definitions/application.CommentInfo'
+        type: array
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      priority:
+        type: string
+      status:
+        type: string
+      ticket_number:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  application.TicketSummary:
+    properties:
+      assigned_to:
+        type: string
+      category:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      priority:
+        type: string
+      status:
+        type: string
+      ticket_number:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
   common.Response:
     properties:
       code:
@@ -89,6 +210,8 @@ definitions:
         description: equals, not_equals, greater_than, less_than
         type: string
       value: {}
+    type: object
+  dto.ApprovalNodeRequest:
     type: object
   dto.ApprovalRecord:
     properties:
@@ -209,6 +332,43 @@ definitions:
       url:
         type: string
     type: object
+  dto.AutomationRuleResponse:
+    properties:
+      actions:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      conditions:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      created_at:
+        type: string
+      created_by:
+        type: integer
+      creator:
+        $ref: '#/definitions/dto.UserResponse'
+      description:
+        type: string
+      execution_count:
+        type: integer
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_executed_at:
+        type: string
+      name:
+        type: string
+      priority:
+        type: integer
+      tenant_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
   dto.BatchUpdateUsersRequest:
     properties:
       action:
@@ -228,6 +388,41 @@ definitions:
     - action
     - user_ids
     type: object
+  dto.BusinessImpact:
+    properties:
+      affected_users:
+        type: integer
+      revenue_impact:
+        type: number
+      service_availability:
+        type: number
+    type: object
+  dto.BusinessType:
+    enum:
+    - ticket
+    - change
+    - incident
+    - service_request
+    - problem
+    type: string
+    x-enum-comments:
+      BusinessTypeChange: 变更
+      BusinessTypeIncident: 事件
+      BusinessTypeProblem: 问题
+      BusinessTypeServiceRequest: 服务请求
+      BusinessTypeTicket: 工单
+    x-enum-descriptions:
+    - 工单
+    - 变更
+    - 事件
+    - 服务请求
+    - 问题
+    x-enum-varnames:
+    - BusinessTypeTicket
+    - BusinessTypeChange
+    - BusinessTypeIncident
+    - BusinessTypeServiceRequest
+    - BusinessTypeProblem
   dto.CCTicketRequest:
     properties:
       cc_users:
@@ -242,161 +437,6 @@ definitions:
     required:
     - cc_users
     - ticket_id
-    type: object
-  dto.CIAttributeDefinitionRequest:
-    properties:
-      ci_type_id:
-        type: integer
-      data_type:
-        enum:
-        - string
-        - integer
-        - float
-        - boolean
-        - date
-        - datetime
-        - json
-        - enum
-        - reference
-        type: string
-      default_value:
-        type: string
-      description:
-        type: string
-      display_name:
-        type: string
-      display_order:
-        type: integer
-      enum_values:
-        items:
-          type: string
-        type: array
-      is_required:
-        type: boolean
-      is_searchable:
-        type: boolean
-      is_unique:
-        type: boolean
-      name:
-        type: string
-      reference_type:
-        type: string
-      validation_rules:
-        additionalProperties: true
-        type: object
-    required:
-    - ci_type_id
-    - data_type
-    - display_name
-    - name
-    type: object
-  dto.CIAttributeDefinitionResponse:
-    properties:
-      ci_type_id:
-        type: integer
-      created_at:
-        type: string
-      data_type:
-        type: string
-      default_value:
-        type: string
-      description:
-        type: string
-      display_name:
-        type: string
-      display_order:
-        type: integer
-      enum_values:
-        items:
-          type: string
-        type: array
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      is_required:
-        type: boolean
-      is_searchable:
-        type: boolean
-      is_system:
-        description: 添加这个字段
-        type: boolean
-      is_unique:
-        type: boolean
-      name:
-        type: string
-      reference_type:
-        type: string
-      tenant_id:
-        type: integer
-      updated_at:
-        type: string
-      validation_rules:
-        additionalProperties: true
-        type: object
-    type: object
-  dto.CIAttributeSearchRequest:
-    properties:
-      attributes:
-        additionalProperties: true
-        type: object
-      ci_type_id:
-        type: integer
-      limit:
-        type: integer
-      offset:
-        type: integer
-    required:
-    - attributes
-    type: object
-  dto.CIResponse:
-    properties:
-      attributes:
-        additionalProperties: true
-        type: object
-      ci_type_id:
-        type: integer
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: integer
-      name:
-        type: string
-      status:
-        type: string
-      tenant_id:
-        type: integer
-      updated_at:
-        type: string
-    type: object
-  dto.CITypeWithAttributesResponse:
-    properties:
-      attribute_definitions:
-        items:
-          $ref: '#/definitions/dto.CIAttributeDefinitionResponse'
-        type: array
-      category:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      display_name:
-        type: string
-      icon:
-        type: string
-      id:
-        type: integer
-      is_active:
-        type: boolean
-      is_system:
-        type: boolean
-      name:
-        type: string
-      updated_at:
-        type: string
     type: object
   dto.ChangeApprovalChainItem:
     properties:
@@ -754,36 +794,118 @@ definitions:
         type: string
       close_reason:
         type: string
+      feedback:
+        type: string
       ticket_id:
         type: integer
-    required:
-    - ticket_id
     type: object
-  dto.CreateCIRequest:
+  dto.CreateApprovalWorkflowRequest:
+    type: object
+  dto.CreateAssetRequest:
     properties:
-      attributes:
-        additionalProperties: true
-        type: object
-      ci_type_id:
+      asset_number:
+        description: 资产编号
+        type: string
+      assigned_to:
+        description: 分配给的用户ID
         type: integer
+      category:
+        description: 资产分类
+        type: string
+      ci_id:
+        description: 关联CMDB配置项ID
+        type: integer
+      custom_fields:
+        additionalProperties:
+          type: string
+        description: 自定义字段
+        type: object
+      department:
+        description: 所属部门
+        type: string
       description:
+        description: 资产描述
+        type: string
+      location:
+        description: 物理位置
+        type: string
+      location_id:
+        description: 位置ID
+        type: integer
+      manufacturer:
+        description: 制造商
+        type: string
+      model:
+        description: 型号
         type: string
       name:
-        maxLength: 255
+        description: 资产名称
         type: string
-      status:
-        enum:
-        - active
-        - inactive
-        - maintenance
+      parent_asset_id:
+        description: 父资产ID
+        type: integer
+      purchase_date:
+        description: 采购日期
         type: string
-      tenant_id:
+      purchase_price:
+        description: 采购价格
+        type: number
+      serial_number:
+        description: 序列号
+        type: string
+      specifications:
+        additionalProperties:
+          type: string
+        description: 规格参数
+        type: object
+      subcategory:
+        description: 资产子分类
+        type: string
+      support_expiry:
+        description: 支持期到期
+        type: string
+      tags:
+        description: 标签
+        items:
+          type: string
+        type: array
+      type:
+        description: 资产类型
+        type: string
+      vendor:
+        description: 供应商
+        type: string
+      warranty_expiry:
+        description: 保修期到期
+        type: string
+    required:
+    - asset_number
+    - name
+    type: object
+  dto.CreateAutomationRuleRequest:
+    properties:
+      actions:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      conditions:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      priority:
         type: integer
     required:
-    - ci_type_id
+    - actions
+    - conditions
     - name
-    - status
-    - tenant_id
     type: object
   dto.CreateChangeApprovalRequest:
     properties:
@@ -1018,18 +1140,32 @@ definitions:
         example: "2024-01-01T00:00:00Z"
         type: string
       impact_analysis:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/dto.ImpactAnalysis'
       metadata:
         additionalProperties: true
         type: object
       priority:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         example: high
         type: string
       severity:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         example: high
         type: string
       source:
+        enum:
+        - manual
+        - monitoring
+        - system
+        - user
         example: monitoring
         type: string
       subcategory:
@@ -1037,6 +1173,15 @@ definitions:
         type: string
       title:
         example: 服务器CPU使用率过高
+        type: string
+      type:
+        description: 事件类型
+        enum:
+        - incident
+        - service_request
+        - security_event
+        - alert
+        example: incident
         type: string
     required:
     - title
@@ -1057,11 +1202,61 @@ definitions:
     - category
     - title
     type: object
+  dto.CreateProblemRequest:
+    properties:
+      category:
+        type: string
+      description:
+        maxLength: 5000
+        minLength: 10
+        type: string
+      impact:
+        type: string
+      impact_scope:
+        description: 影响范围
+        type: string
+      priority:
+        type: string
+      root_cause:
+        type: string
+      title:
+        maxLength: 200
+        minLength: 2
+        type: string
+    required:
+    - description
+    - priority
+    - title
+    type: object
+  dto.CreateRoleRequest:
+    properties:
+      code:
+        description: Optional - auto-generated if empty
+        type: string
+      description:
+        type: string
+      is_system:
+        type: boolean
+      name:
+        type: string
+      permissions:
+        items:
+          type: string
+        type: array
+      status:
+        type: string
+    required:
+    - name
+    type: object
   dto.CreateServiceCatalogRequest:
     properties:
       category:
         maxLength: 100
         type: string
+      ci_type_id:
+        type: integer
+      cloud_service_id:
+        type: integer
       delivery_time:
         maxLength: 50
         type: string
@@ -1086,8 +1281,33 @@ definitions:
       catalog_id:
         minimum: 1
         type: integer
+      compliance_ack:
+        type: boolean
+      cost_center:
+        maxLength: 100
+        type: string
+      data_classification:
+        enum:
+        - public
+        - internal
+        - confidential
+        type: string
+      expire_at:
+        type: string
+      form_data:
+        additionalProperties: {}
+        type: object
+      needs_public_ip:
+        type: boolean
       reason:
         maxLength: 500
+        type: string
+      source_ip_whitelist:
+        items:
+          type: string
+        type: array
+      title:
+        maxLength: 255
         type: string
     required:
     - catalog_id
@@ -1122,6 +1342,86 @@ definitions:
     - code
     - name
     - type
+    type: object
+  dto.CreateTicketCommentRequest:
+    properties:
+      attachments:
+        description: 附件ID列表（后续实现）
+        items:
+          type: integer
+        type: array
+      content:
+        maxLength: 5000
+        minLength: 1
+        type: string
+      is_internal:
+        description: 是否内部备注
+        type: boolean
+      mentions:
+        description: '@的用户ID列表'
+        items:
+          type: integer
+        type: array
+    required:
+    - content
+    type: object
+  dto.CreateTicketRequest:
+    properties:
+      assignee_id:
+        type: integer
+      attachments:
+        items:
+          type: string
+        type: array
+      category:
+        description: 分类名称（可选，前端传入）
+        type: string
+      category_id:
+        description: 分类ID（优先使用）
+        type: integer
+      description:
+        maxLength: 5000
+        minLength: 10
+        type: string
+      form_fields:
+        additionalProperties: true
+        type: object
+      parent_ticket_id:
+        type: integer
+      priority:
+        type: string
+      requester_id:
+        description: 从认证上下文中获取，前端可不传
+        type: integer
+      tag_ids:
+        description: 标签ID列表
+        items:
+          type: integer
+        type: array
+      tags:
+        description: 标签名称列表（兼容旧格式）
+        items:
+          type: string
+        type: array
+      template_id:
+        description: 模板ID
+        type: integer
+      title:
+        maxLength: 200
+        minLength: 2
+        type: string
+      type:
+        description: 工单类型
+        enum:
+        - incident
+        - service_request
+        - change
+        - ticket
+        type: string
+    required:
+    - description
+    - priority
+    - title
     type: object
   dto.CreateTicketTypeRequest:
     properties:
@@ -1186,6 +1486,7 @@ definitions:
         - manager
         - agent
         - technician
+        - security
         - end_user
         type: string
       tenant_id:
@@ -1314,6 +1615,58 @@ definitions:
           $ref: '#/definitions/dto.ResourceHealthData'
         type: array
     type: object
+  dto.DeepAnalyticsRequest:
+    properties:
+      chart_type:
+        enum:
+        - line
+        - bar
+        - pie
+        - area
+        - table
+        example: bar
+        type: string
+      dimensions:
+        example:
+        - '["status"'
+        - '"priority"]'
+        items:
+          type: string
+        minItems: 1
+        type: array
+      filters:
+        additionalProperties: true
+        type: object
+      group_by:
+        example: status
+        type: string
+      metrics:
+        example:
+        - '["count"'
+        - '"response_time"]'
+        items:
+          type: string
+        minItems: 1
+        type: array
+      page:
+        example: 1
+        type: integer
+      page_size:
+        example: 20
+        type: integer
+      time_range:
+        example:
+        - '["2024-01-01"'
+        - '"2024-01-31"]'
+        items:
+          type: string
+        type: array
+    required:
+    - chart_type
+    - dimensions
+    - metrics
+    - time_range
+    type: object
   dto.ForwardTicketRequest:
     properties:
       comment:
@@ -1328,6 +1681,17 @@ definitions:
     - comment
     - ticket_id
     - to_user_id
+    type: object
+  dto.ImpactAnalysis:
+    properties:
+      affected_users:
+        type: integer
+      business_impact:
+        $ref: '#/definitions/dto.BusinessImpact'
+      technical_impact:
+        type: string
+      time_impact:
+        $ref: '#/definitions/dto.TimeImpact'
     type: object
   dto.IncidentAlertResponse:
     properties:
@@ -1627,8 +1991,7 @@ definitions:
         example: 1
         type: integer
       impact_analysis:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/dto.ImpactAnalysis'
       incident_number:
         example: INC-000001
         type: string
@@ -1646,15 +2009,13 @@ definitions:
         type: integer
       resolution_steps:
         items:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/dto.ResolutionStep'
         type: array
       resolved_at:
         example: "2024-01-01T12:00:00Z"
         type: string
       root_cause:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/dto.RootCause'
       severity:
         example: high
         type: string
@@ -1736,11 +2097,11 @@ definitions:
       views:
         type: integer
     type: object
-  dto.ListCIsResponse:
+  dto.ListAutomationRulesResponse:
     properties:
-      cis:
+      rules:
         items:
-          $ref: '#/definitions/dto.CIResponse'
+          $ref: '#/definitions/dto.AutomationRuleResponse'
         type: array
       total:
         type: integer
@@ -1824,6 +2185,59 @@ definitions:
           type: string
         type: array
     type: object
+  dto.ProcessTriggerRequest:
+    properties:
+      business_id:
+        type: integer
+      business_type:
+        allOf:
+        - $ref: '#/definitions/dto.BusinessType'
+        description: 业务标识
+      process_definition_key:
+        description: 流程定义（可选，如果不传则根据业务类型自动匹配）
+        type: string
+      process_version:
+        type: integer
+      tenant_id:
+        type: integer
+      triggered_at:
+        type: string
+      triggered_by:
+        description: 触发者信息
+        type: string
+      variables:
+        additionalProperties: true
+        description: 流程变量
+        type: object
+    required:
+    - business_id
+    - business_type
+    type: object
+  dto.ProvisioningTaskResponse:
+    properties:
+      created_at:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: integer
+      payload:
+        additionalProperties: {}
+        type: object
+      provider:
+        type: string
+      resource_type:
+        type: string
+      result:
+        additionalProperties: {}
+        type: object
+      service_request_id:
+        type: integer
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.RejectTicketRequest:
     properties:
       comment:
@@ -1857,19 +2271,34 @@ definitions:
     required:
     - new_password
     type: object
+  dto.ResolutionStep:
+    properties:
+      description:
+        type: string
+      executed_at:
+        type: string
+      executed_by:
+        type: string
+      status:
+        description: pending, in_progress, completed, failed
+        type: string
+      step:
+        type: integer
+    type: object
   dto.ResolveTicketRequest:
     properties:
       resolution:
+        description: 解决方案（可选，兼容前端发送 solution）
         type: string
       resolution_category:
+        type: string
+      solution:
+        description: 兼容前端字段名
         type: string
       ticket_id:
         type: integer
       work_notes:
         type: string
-    required:
-    - resolution
-    - ticket_id
     type: object
   dto.ResourceHealthData:
     properties:
@@ -1877,6 +2306,27 @@ definitions:
         type: string
       value:
         type: integer
+    type: object
+  dto.RootCause:
+    properties:
+      analysis_method:
+        type: string
+      contributing_factors:
+        items:
+          type: string
+        type: array
+      evidence:
+        items:
+          type: string
+        type: array
+      preventive_actions:
+        items:
+          type: string
+        type: array
+      root_cause:
+        type: string
+      status:
+        type: string
     type: object
   dto.ServiceCatalogListResponse:
     properties:
@@ -1895,6 +2345,10 @@ definitions:
     properties:
       category:
         type: string
+      ci_type_id:
+        type: integer
+      cloud_service_id:
+        type: integer
       created_at:
         type: string
       delivery_time:
@@ -1909,6 +2363,59 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  dto.ServiceRequestApprovalActionRequest:
+    properties:
+      action:
+        enum:
+        - approve
+        - reject
+        type: string
+      comment:
+        maxLength: 2000
+        type: string
+    required:
+    - action
+    type: object
+  dto.ServiceRequestApprovalResponse:
+    properties:
+      action:
+        type: string
+      approver_id:
+        type: integer
+      approver_name:
+        type: string
+      comment:
+        type: string
+      created_at:
+        type: string
+      delegated_to_id:
+        description: 转交审批人ID
+        type: integer
+      due_at:
+        description: 到期时间
+        type: string
+      escalation_reason:
+        description: 升级原因
+        type: string
+      id:
+        type: integer
+      is_escalated:
+        description: 是否已升级
+        type: boolean
+      level:
+        type: integer
+      processed_at:
+        type: string
+      service_request_id:
+        type: integer
+      status:
+        type: string
+      step:
+        type: string
+      timeout_hours:
+        description: V1 新增字段
+        type: integer
     type: object
   dto.ServiceRequestListResponse:
     properties:
@@ -1925,22 +2432,58 @@ definitions:
     type: object
   dto.ServiceRequestResponse:
     properties:
+      approvals:
+        items:
+          $ref: '#/definitions/dto.ServiceRequestApprovalResponse'
+        type: array
       catalog:
         $ref: '#/definitions/dto.ServiceCatalogResponse'
       catalog_id:
         type: integer
+      ci_id:
+        type: integer
+      compliance_ack:
+        type: boolean
+      cost_center:
+        type: string
       created_at:
         type: string
+      current_level:
+        type: integer
+      data_classification:
+        type: string
+      expire_at:
+        type: string
+      form_data:
+        additionalProperties: {}
+        type: object
       id:
         type: integer
+      needs_public_ip:
+        type: boolean
       reason:
         type: string
       requester:
         $ref: '#/definitions/dto.UserResponse'
       requester_id:
         type: integer
+      source_ip_whitelist:
+        items:
+          type: string
+        type: array
       status:
         type: string
+      title:
+        type: string
+      total_levels:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  dto.StartProvisioningResponse:
+    properties:
+      task:
+        $ref: '#/definitions/dto.ProvisioningTaskResponse'
     type: object
   dto.TenantListResponse:
     properties:
@@ -1980,6 +2523,29 @@ definitions:
       type:
         type: string
       updated_at:
+        type: string
+    type: object
+  dto.TestAutomationRuleRequest:
+    properties:
+      rule_id:
+        type: integer
+      ticket_id:
+        type: integer
+    required:
+    - rule_id
+    - ticket_id
+    type: object
+  dto.TestAutomationRuleResponse:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      error:
+        type: string
+      matched:
+        type: boolean
+      reason:
         type: string
     type: object
   dto.TicketTypeDefinition:
@@ -2137,17 +2703,54 @@ definitions:
       total_approval_levels:
         type: integer
     type: object
-  dto.UpdateCIRequest:
+  dto.TimeImpact:
     properties:
-      attributes:
-        additionalProperties: true
-        type: object
+      hours_since_creation:
+        type: integer
+      is_overdue:
+        type: boolean
+      resolution_deadline:
+        type: string
+      response_deadline:
+        type: string
+    type: object
+  dto.UpdateApprovalWorkflowRequest:
+    properties:
       description:
         type: string
+      is_active:
+        type: boolean
       name:
         type: string
-      status:
+      nodes:
+        items:
+          $ref: '#/definitions/dto.ApprovalNodeRequest'
+        type: array
+      priority:
         type: string
+      ticket_type:
+        type: string
+    type: object
+  dto.UpdateAutomationRuleRequest:
+    properties:
+      actions:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      conditions:
+        items:
+          additionalProperties: true
+          type: object
+        type: array
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      priority:
+        type: integer
     type: object
   dto.UpdateChangeApprovalRequest:
     properties:
@@ -2170,24 +2773,39 @@ definitions:
       description:
         type: string
       impact_analysis:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/dto.ImpactAnalysis'
       metadata:
         additionalProperties: true
         type: object
       priority:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         type: string
       resolution_steps:
         items:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/dto.ResolutionStep'
         type: array
       root_cause:
-        additionalProperties: true
-        type: object
+        $ref: '#/definitions/dto.RootCause'
       severity:
+        enum:
+        - low
+        - medium
+        - high
+        - critical
         type: string
       status:
+        enum:
+        - new
+        - assigned
+        - in_progress
+        - on_hold
+        - resolved
+        - closed
+        - cancelled
         type: string
       subcategory:
         type: string
@@ -2214,6 +2832,10 @@ definitions:
       category:
         maxLength: 100
         type: string
+      ci_type_id:
+        type: integer
+      cloud_service_id:
+        type: integer
       delivery_time:
         maxLength: 50
         type: string
@@ -2233,13 +2855,49 @@ definitions:
     properties:
       status:
         enum:
-        - pending
-        - in_progress
-        - completed
+        - submitted
+        - manager_approved
+        - it_approved
+        - security_approved
+        - provisioning
+        - delivered
+        - failed
         - rejected
+        - cancelled
         type: string
     required:
     - status
+    type: object
+  dto.UpdateTenantRequest:
+    properties:
+      domain:
+        maxLength: 100
+        type: string
+      expires_at:
+        type: string
+      name:
+        maxLength: 100
+        type: string
+      quota:
+        additionalProperties: true
+        type: object
+      settings:
+        additionalProperties: true
+        type: object
+      status:
+        enum:
+        - active
+        - suspended
+        - expired
+        - deleted
+        type: string
+      type:
+        enum:
+        - trial
+        - standard
+        - professional
+        - enterprise
+        type: string
     type: object
   dto.UpdateTicketTypeRequest:
     properties:
@@ -2298,6 +2956,7 @@ definitions:
         - manager
         - agent
         - technician
+        - security
         - end_user
         type: string
       username:
@@ -2352,33 +3011,6 @@ definitions:
       total:
         type: integer
     type: object
-  dto.ValidateCIAttributesRequest:
-    properties:
-      attributes:
-        additionalProperties: true
-        type: object
-      ci_type_id:
-        type: integer
-    required:
-    - attributes
-    - ci_type_id
-    type: object
-  dto.ValidateCIAttributesResponse:
-    properties:
-      errors:
-        additionalProperties:
-          type: string
-        type: object
-      is_valid:
-        type: boolean
-      normalized_attributes:
-        additionalProperties: true
-        type: object
-      warnings:
-        additionalProperties:
-          type: string
-        type: object
-    type: object
   dto.WithdrawTicketRequest:
     properties:
       reason:
@@ -2420,12 +3052,21 @@ definitions:
       created_at:
         description: 创建时间
         type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.KnowledgeArticleEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the KnowledgeArticleQuery when eager-loading is set.
       id:
         description: ID of the ent.
         type: integer
       is_published:
         description: 是否发布
         type: boolean
+      like_count:
+        description: 点赞次数
+        type: integer
       tags:
         description: 标签
         type: string
@@ -2438,6 +3079,48 @@ definitions:
       updated_at:
         description: 更新时间
         type: string
+      view_count:
+        description: 浏览次数
+        type: integer
+    type: object
+  ent.KnowledgeArticleEdges:
+    properties:
+      user_likes:
+        description: UserLikes holds the value of the user_likes edge.
+        items:
+          $ref: '#/definitions/ent.KnowledgeArticleLike'
+        type: array
+    type: object
+  ent.KnowledgeArticleLike:
+    properties:
+      article_id:
+        description: 文章ID
+        type: integer
+      created_at:
+        description: 点赞时间
+        type: string
+      edges:
+        allOf:
+        - $ref: '#/definitions/ent.KnowledgeArticleLikeEdges'
+        description: |-
+          Edges holds the relations/edges for other nodes in the graph.
+          The values are being populated by the KnowledgeArticleLikeQuery when eager-loading is set.
+      id:
+        description: ID of the ent.
+        type: integer
+      tenant_id:
+        description: 租户ID
+        type: integer
+      user_id:
+        description: 用户ID
+        type: integer
+    type: object
+  ent.KnowledgeArticleLikeEdges:
+    properties:
+      article:
+        allOf:
+        - $ref: '#/definitions/ent.KnowledgeArticle'
+        description: Article holds the value of the article edge.
     type: object
   handlers.DashboardOverview:
     properties:
@@ -2621,6 +3304,111 @@ definitions:
       resolved:
         type: integer
     type: object
+  interfaces.AddCommentRequest:
+    properties:
+      content:
+        maxLength: 2000
+        type: string
+      is_private:
+        type: boolean
+    required:
+    - content
+    type: object
+  interfaces.AssignTicketRequest:
+    properties:
+      assigned_to:
+        type: string
+      instructions:
+        type: string
+      team_id:
+        type: string
+    required:
+    - assigned_to
+    type: object
+  interfaces.BaseResponse:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/interfaces.ErrorDetails'
+      success:
+        type: boolean
+    type: object
+  interfaces.CreateTicketRequest:
+    properties:
+      category:
+        type: string
+      description:
+        maxLength: 2000
+        type: string
+      priority:
+        enum:
+        - low
+        - normal
+        - high
+        - urgent
+        - critical
+        type: string
+      title:
+        maxLength: 200
+        type: string
+    required:
+    - category
+    - priority
+    - title
+    type: object
+  interfaces.CreateTicketResponse:
+    properties:
+      data:
+        $ref: '#/definitions/application.CreateTicketResult'
+      error:
+        $ref: '#/definitions/interfaces.ErrorDetails'
+      success:
+        type: boolean
+    type: object
+  interfaces.ErrorDetails:
+    properties:
+      code:
+        type: string
+      details:
+        type: string
+      message:
+        type: string
+    type: object
+  interfaces.SearchTicketsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/application.SearchTicketsResult'
+      error:
+        $ref: '#/definitions/interfaces.ErrorDetails'
+      success:
+        type: boolean
+    type: object
+  interfaces.TicketDetailsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/application.TicketDetails'
+      error:
+        $ref: '#/definitions/interfaces.ErrorDetails'
+      success:
+        type: boolean
+    type: object
+  interfaces.UpdateStatusRequest:
+    properties:
+      reason:
+        type: string
+      status:
+        enum:
+        - new
+        - open
+        - in_progress
+        - pending
+        - resolved
+        - closed
+        - cancelled
+        type: string
+    required:
+    - status
+    type: object
   service.AIRecommendation:
     properties:
       confidence:
@@ -2650,6 +3438,50 @@ definitions:
     required:
     - article_id
     - association_type
+    type: object
+  service.CreateCategoryRequest:
+    properties:
+      code:
+        type: string
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      parent_id:
+        type: integer
+      sort_order:
+        type: integer
+      tenant_id:
+        type: integer
+    required:
+    - code
+    - name
+    - tenant_id
+    type: object
+  service.CreateWorkflowRequest:
+    properties:
+      definition:
+        additionalProperties: true
+        type: object
+      description:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+      tenant_id:
+        type: integer
+      type:
+        type: string
+      version:
+        type: string
+    required:
+    - definition
+    - name
+    - tenant_id
+    - type
     type: object
   service.KnowledgeAssociation:
     properties:
@@ -3045,6 +3877,268 @@ paths:
       summary: 获取相关文章
       tags:
       - 知识库集成
+  /api/v1/analytics/deep:
+    post:
+      consumes:
+      - application/json
+      description: 获取深度分析数据，支持多维度聚合
+      parameters:
+      - description: 分析请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeepAnalyticsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取深度分析数据
+      tags:
+      - 数据分析
+  /api/v1/analytics/export:
+    post:
+      consumes:
+      - application/json
+      description: 导出分析数据为CSV格式
+      parameters:
+      - description: 导出请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeepAnalyticsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 导出分析数据
+      tags:
+      - 数据分析
+  /api/v1/applications:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有应用列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取应用列表
+      tags:
+      - 应用管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的应用
+      parameters:
+      - description: 应用信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建应用
+      tags:
+      - 应用管理
+  /api/v1/approval-workflows:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有审批工作流，支持分页和过滤
+      parameters:
+      - description: 工单类型
+        in: query
+        name: ticket_type
+        type: string
+      - description: 优先级
+        in: query
+        name: priority
+        type: string
+      - description: 是否激活
+        in: query
+        name: is_active
+        type: boolean
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取审批工作流列表
+      tags:
+      - 审批管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的审批工作流定义
+      parameters:
+      - description: 工作流信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateApprovalWorkflowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建审批工作流
+      tags:
+      - 审批管理
+  /api/v1/approval-workflows/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的审批工作流
+      parameters:
+      - description: 工作流ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除审批工作流
+      tags:
+      - 审批管理
+    put:
+      consumes:
+      - application/json
+      description: 更新已有的审批工作流定义
+      parameters:
+      - description: 工作流ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 工作流信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateApprovalWorkflowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新审批工作流
+      tags:
+      - 审批管理
+  /api/v1/assets:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有资产的列表，支持分页和筛选
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 资产类型
+        in: query
+        name: type
+        type: string
+      - description: 资产状态
+        in: query
+        name: status
+        type: string
+      - description: 资产分类
+        in: query
+        name: category
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取资产列表
+      tags:
+      - 资产管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的资产记录
+      parameters:
+      - description: 创建资产请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAssetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建资产
+      tags:
+      - 资产管理
+  /api/v1/assets/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 根据ID获取资产的详细信息
+      parameters:
+      - description: 资产ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取资产详情
+      tags:
+      - 资产管理
   /api/v1/audit-logs:
     get:
       consumes:
@@ -3105,13 +4199,45 @@ paths:
       summary: 列出审计日志
       tags:
       - AuditLogs
-  /api/v1/changes/{changeId}/approval-summary:
+  /api/v1/changes:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有变更的列表，支持分页和筛选
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 状态筛选
+        in: query
+        name: status
+        type: string
+      - description: 关键词搜索
+        in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取变更列表
+      tags:
+      - 变更管理
+  /api/v1/changes/{id}/approval-summary:
     get:
       description: 获取指定变更的审批摘要信息
       parameters:
       - description: 变更ID
         in: path
-        name: changeId
+        name: id
         required: true
         type: integer
       produces:
@@ -3132,13 +4258,13 @@ paths:
       summary: 获取变更审批摘要
       tags:
       - 变更审批
-  /api/v1/changes/{changeId}/risk-assessment:
+  /api/v1/changes/{id}/risk-assessment:
     get:
       description: 获取指定变更的风险评估信息
       parameters:
       - description: 变更ID
         in: path
-        name: changeId
+        name: id
         required: true
         type: integer
       produces:
@@ -3159,7 +4285,7 @@ paths:
       summary: 获取变更风险评估
       tags:
       - 变更风险评估
-  /api/v1/changes/{changeId}/rollback-plans/{rollbackPlanId}/execute:
+  /api/v1/changes/{id}/rollback-plans/{rollbackPlanId}/execute:
     post:
       consumes:
       - application/json
@@ -3167,7 +4293,7 @@ paths:
       parameters:
       - description: 变更ID
         in: path
-        name: changeId
+        name: id
         required: true
         type: integer
       - description: 回滚计划ID
@@ -3385,367 +4511,6 @@ paths:
       summary: 创建变更回滚计划
       tags:
       - 变更回滚计划
-  /api/v1/cmdb/ci-attributes/validate:
-    post:
-      consumes:
-      - application/json
-      description: 根据CI类型的属性定义验证提供的属性值
-      parameters:
-      - description: 验证请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.ValidateCIAttributesRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ValidateCIAttributesResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 验证CI属性
-      tags:
-      - CMDB
-  /api/v1/cmdb/ci-types/{id}/attributes:
-    get:
-      consumes:
-      - application/json
-      description: 获取指定CI类型的详细信息及其所有属性定义
-      parameters:
-      - description: CI类型ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CITypeWithAttributesResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 获取CI类型及其属性定义
-      tags:
-      - CMDB
-  /api/v1/cmdb/ci-types/attributes:
-    post:
-      consumes:
-      - application/json
-      description: 为指定的CI类型创建新的属性定义
-      parameters:
-      - description: 属性定义信息
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CIAttributeDefinitionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CIAttributeDefinitionResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 创建CI属性定义
-      tags:
-      - CMDB
-  /api/v1/cmdb/cis/search-by-attributes:
-    post:
-      consumes:
-      - application/json
-      description: 使用动态属性条件搜索配置项
-      parameters:
-      - description: 搜索条件
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CIAttributeSearchRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ListCIsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 根据属性搜索CI
-      tags:
-      - CMDB
-  /api/v1/cmdb/configuration-items:
-    get:
-      description: 分页获取配置项列表，支持多种过滤条件
-      parameters:
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 10
-        description: 每页数量
-        in: query
-        name: size
-        type: integer
-      - description: 配置项类型
-        enum:
-        - server
-        - database
-        - application
-        - network
-        - storage
-        in: query
-        name: type
-        type: string
-      - description: 状态
-        enum:
-        - active
-        - inactive
-        - maintenance
-        in: query
-        name: status
-        type: string
-      - description: 业务服务
-        in: query
-        name: business_service
-        type: string
-      - description: 负责人
-        in: query
-        name: owner
-        type: string
-      - description: 环境
-        enum:
-        - production
-        - staging
-        - development
-        in: query
-        name: environment
-        type: string
-      - description: 搜索关键词
-        in: query
-        name: search
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.ListCIsResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 获取配置项列表
-      tags:
-      - CMDB
-    post:
-      consumes:
-      - application/json
-      description: 创建新的配置项
-      parameters:
-      - description: 创建配置项请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateCIRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CIResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 创建配置项
-      tags:
-      - CMDB
-  /api/v1/cmdb/configuration-items/{id}:
-    delete:
-      description: 删除指定的配置项
-      parameters:
-      - description: 配置项ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/common.Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 删除配置项
-      tags:
-      - CMDB
-    get:
-      description: 根据ID获取配置项详情
-      parameters:
-      - description: 配置项ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CIResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 获取配置项详情
-      tags:
-      - CMDB
-    put:
-      consumes:
-      - application/json
-      description: 更新配置项信息
-      parameters:
-      - description: 配置项ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: 更新配置项请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateCIRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/common.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.CIResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.Response'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/common.Response'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.Response'
-      summary: 更新配置项
-      tags:
-      - CMDB
   /api/v1/dashboard/incident-distribution:
     get:
       consumes:
@@ -3903,6 +4668,25 @@ paths:
       summary: 获取SLA数据
       tags:
       - Dashboard
+  /api/v1/dashboard/stats:
+    get:
+      consumes:
+      - application/json
+      description: 获取仪表盘核心统计数据
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.DashboardOverview'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: 获取仪表盘统计数据
+      tags:
+      - Dashboard
   /api/v1/dashboard/ticket-trend:
     get:
       consumes:
@@ -3930,6 +4714,70 @@ paths:
       summary: 获取工单趋势
       tags:
       - Dashboard
+  /api/v1/departments:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的部门
+      parameters:
+      - description: 部门信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建部门
+      tags:
+      - 部门管理
+  /api/v1/departments/{id}:
+    put:
+      consumes:
+      - application/json
+      description: 更新部门信息
+      parameters:
+      - description: 部门ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 部门信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新部门
+      tags:
+      - 部门管理
+  /api/v1/departments/tree:
+    get:
+      consumes:
+      - application/json
+      description: 获取部门层级树形结构
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取部门树
+      tags:
+      - 部门管理
   /api/v1/incidents:
     get:
       description: 分页获取事件列表，支持筛选
@@ -4815,6 +5663,278 @@ paths:
       summary: 获取知识库分类列表
       tags:
       - 知识库
+  /api/v1/notifications:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的所有通知，支持分页和状态过滤
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: size
+        type: integer
+      - description: 已读状态
+        in: query
+        name: is_read
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取通知列表
+      tags:
+      - 通知管理
+  /api/v1/notifications/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的通知
+      parameters:
+      - description: 通知ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除通知
+      tags:
+      - 通知管理
+  /api/v1/notifications/{id}/read:
+    post:
+      consumes:
+      - application/json
+      description: 将指定通知标记为已读状态
+      parameters:
+      - description: 通知ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 标记通知为已读
+      tags:
+      - 通知管理
+  /api/v1/notifications/read-all:
+    post:
+      consumes:
+      - application/json
+      description: 将当前用户的所有未读通知标记为已读
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 标记所有通知为已读
+      tags:
+      - 通知管理
+  /api/v1/problems:
+    get:
+      consumes:
+      - application/json
+      description: 获取问题列表，支持分页和状态过滤
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      - description: 问题状态
+        in: query
+        name: status
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取问题列表
+      tags:
+      - 问题管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的问题记录
+      parameters:
+      - description: 问题信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProblemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建问题
+      tags:
+      - 问题管理
+  /api/v1/problems/{id}:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定问题的详细信息
+      parameters:
+      - description: 问题ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取问题详情
+      tags:
+      - 问题管理
+  /api/v1/process-trigger:
+    post:
+      consumes:
+      - application/json
+      description: 根据业务类型和业务ID触发对应的流程
+      parameters:
+      - description: 流程触发请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ProcessTriggerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 触发流程
+      tags:
+      - BPMN-ProcessTrigger
+  /api/v1/projects:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有项目列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取项目列表
+      tags:
+      - 项目管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的项目
+      parameters:
+      - description: 项目信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建项目
+      tags:
+      - 项目管理
+  /api/v1/provisioning-tasks/{id}/execute:
+    post:
+      parameters:
+      - description: 交付任务ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProvisioningTaskResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 执行交付任务
+      tags:
+      - 交付
+  /api/v1/roles:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的角色
+      parameters:
+      - description: 角色信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建角色
+      tags:
+      - 角色管理
   /api/v1/service-catalogs:
     get:
       consumes:
@@ -5021,6 +6141,157 @@ paths:
       summary: 获取服务请求详情
       tags:
       - 服务请求
+  /api/v1/service-requests/{id}/approvals:
+    get:
+      consumes:
+      - application/json
+      description: 返回指定服务请求的审批记录列表
+      parameters:
+      - description: 服务请求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ServiceRequestApprovalResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取服务请求审批记录
+      tags:
+      - 服务请求
+    post:
+      consumes:
+      - application/json
+      description: 对当前步骤执行 approve/reject（V0：默认三段审批）
+      parameters:
+      - description: 服务请求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 审批动作
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ServiceRequestApprovalActionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceRequestResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 服务请求审批
+      tags:
+      - 服务请求
+  /api/v1/service-requests/{id}/provision:
+    post:
+      parameters:
+      - description: 服务请求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.StartProvisioningResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 启动交付
+      tags:
+      - 交付
+  /api/v1/service-requests/{id}/provisioning-tasks:
+    get:
+      parameters:
+      - description: 服务请求ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.ProvisioningTaskResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取交付任务列表
+      tags:
+      - 交付
   /api/v1/service-requests/{id}/status:
     put:
       consumes:
@@ -5065,6 +6336,47 @@ paths:
       security:
       - BearerAuth: []
       summary: 更新服务请求状态
+      tags:
+      - 服务请求
+  /api/v1/service-requests/approvals/pending:
+    get:
+      consumes:
+      - application/json
+      description: 根据当前用户角色返回需要其处理的服务请求列表（V0：默认三段审批）
+      parameters:
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/common.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ServiceRequestListResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.Response'
+      security:
+      - BearerAuth: []
+      summary: 获取审批待办
       tags:
       - 服务请求
   /api/v1/service-requests/me:
@@ -5117,6 +6429,135 @@ paths:
       summary: 获取当前用户的服务请求列表
       tags:
       - 服务请求
+  /api/v1/simple/notifications:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前用户的通知列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取通知列表
+      tags:
+      - 通知管理
+  /api/v1/simple/notifications/{id}/read:
+    post:
+      consumes:
+      - application/json
+      description: 将指定通知标记为已读
+      parameters:
+      - description: 通知ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 标记通知为已读
+      tags:
+      - 通知管理
+  /api/v1/tags:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的标签
+      parameters:
+      - description: 标签信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建标签
+      tags:
+      - 标签管理
+  /api/v1/teams:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的团队
+      parameters:
+      - description: 团队信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建团队
+      tags:
+      - 团队管理
+  /api/v1/ticket-categories:
+    post:
+      consumes:
+      - application/json
+      description: 创建新的工单分类
+      parameters:
+      - description: 分类信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建工单分类
+      tags:
+      - 工单分类
+  /api/v1/ticket-categories/{id}:
+    put:
+      consumes:
+      - application/json
+      description: 更新工单分类信息
+      parameters:
+      - description: 分类ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 分类信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新工单分类
+      tags:
+      - 工单分类
   /api/v1/ticket-types:
     get:
       consumes:
@@ -5266,6 +6707,114 @@ paths:
       summary: 更新工单类型
       tags:
       - 工单类型
+  /api/v1/tickets:
+    get:
+      description: Search tickets with various filters
+      parameters:
+      - collectionFormat: csv
+        description: Status filter
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      - collectionFormat: csv
+        description: Priority filter
+        in: query
+        items:
+          type: string
+        name: priority
+        type: array
+      - description: Assigned to filter
+        in: query
+        name: assigned_to
+        type: string
+      - description: Created by filter
+        in: query
+        name: created_by
+        type: string
+      - description: Category filter
+        in: query
+        name: category
+        type: string
+      - description: Keywords search
+        in: query
+        name: keywords
+        type: string
+      - description: Date from filter
+        in: query
+        name: date_from
+        type: string
+      - description: Date to filter
+        in: query
+        name: date_to
+        type: string
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 20
+        description: Page size
+        in: query
+        name: page_size
+        type: integer
+      - description: Sort by field
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: Sort order
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.SearchTicketsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+      summary: Search tickets
+      tags:
+      - tickets
+    post:
+      consumes:
+      - application/json
+      description: Create a new support ticket
+      parameters:
+      - description: Ticket creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.CreateTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/interfaces.CreateTicketResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.CreateTicketResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.CreateTicketResponse'
+      summary: Create a new ticket
+      tags:
+      - tickets
   /api/v1/tickets/:id/workflow/state:
     get:
       consumes:
@@ -5292,6 +6841,321 @@ paths:
       summary: 获取工单流转状态
       tags:
       - 工单流转
+  /api/v1/tickets/{id}:
+    get:
+      description: Retrieve a ticket with all its details
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.TicketDetailsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+      summary: Get a ticket by ID
+      tags:
+      - tickets
+  /api/v1/tickets/{id}/assign:
+    put:
+      consumes:
+      - application/json
+      description: Assign a ticket to a user or team
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Assignment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.AssignTicketRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+      summary: Assign a ticket
+      tags:
+      - tickets
+  /api/v1/tickets/{id}/attachments:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定工单的所有附件
+      parameters:
+      - description: 工单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取工单附件列表
+      tags:
+      - 工单附件
+  /api/v1/tickets/{id}/comments:
+    get:
+      consumes:
+      - application/json
+      description: 获取指定工单的所有评论
+      parameters:
+      - description: 工单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取工单评论列表
+      tags:
+      - 工单评论
+    post:
+      consumes:
+      - application/json
+      description: Add a comment to a ticket
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Comment request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.AddCommentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+      summary: Add a comment to a ticket
+      tags:
+      - tickets
+  /api/v1/tickets/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Update the status of a ticket
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/interfaces.UpdateStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/interfaces.BaseResponse'
+      summary: Update ticket status
+      tags:
+      - tickets
+  /api/v1/tickets/automation-rules:
+    get:
+      consumes:
+      - application/json
+      description: 获取当前租户的自动化规则列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ListAutomationRulesResponse'
+      summary: 获取自动化规则列表
+      tags:
+      - 自动化规则
+    post:
+      consumes:
+      - application/json
+      description: 创建新的工单自动化规则
+      parameters:
+      - description: 创建自动化规则请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateAutomationRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AutomationRuleResponse'
+      summary: 创建自动化规则
+      tags:
+      - 自动化规则
+  /api/v1/tickets/automation-rules/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 根据 ID 删除自动化规则
+      parameters:
+      - description: 规则 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除自动化规则
+      tags:
+      - 自动化规则
+    get:
+      consumes:
+      - application/json
+      description: 根据 ID 获取自动化规则详细信息
+      parameters:
+      - description: 规则 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AutomationRuleResponse'
+      summary: 获取自动化规则详情
+      tags:
+      - 自动化规则
+    put:
+      consumes:
+      - application/json
+      description: 更新现有自动化规则的配置
+      parameters:
+      - description: 规则 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新自动化规则请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateAutomationRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AutomationRuleResponse'
+      summary: 更新自动化规则
+      tags:
+      - 自动化规则
+  /api/v1/tickets/automation-rules/{id}/test:
+    post:
+      consumes:
+      - application/json
+      description: 使用模拟工单数据测试自动化规则的执行效果
+      parameters:
+      - description: 规则 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 测试请求（包含模拟工单数据）
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TestAutomationRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TestAutomationRuleResponse'
+      summary: 测试自动化规则
+      tags:
+      - 自动化规则
   /api/v1/tickets/workflow/accept:
     post:
       consumes:
@@ -5904,4 +7768,138 @@ paths:
       summary: 获取用户统计
       tags:
       - 用户管理
+  /api/v1/webhooks/alert:
+    post:
+      consumes:
+      - application/json
+      description: 接收外部监控系统发送的告警，自动创建事件工单
+      parameters:
+      - description: 告警信息
+        in: body
+        name: request
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 接收监控告警
+      tags:
+      - Webhook
+  /api/v1/workflows:
+    get:
+      consumes:
+      - application/json
+      description: 获取所有工作流列表，支持分页
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取工作流列表
+      tags:
+      - 工作流管理
+    post:
+      consumes:
+      - application/json
+      description: 创建新的工作流定义
+      parameters:
+      - description: 工作流信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateWorkflowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 创建工作流
+      tags:
+      - 工作流管理
+  /api/v1/workflows/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除指定的工作流
+      parameters:
+      - description: 工作流ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 删除工作流
+      tags:
+      - 工作流管理
+    get:
+      consumes:
+      - application/json
+      description: 获取指定工作流的详细信息
+      parameters:
+      - description: 工作流ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 获取工作流详情
+      tags:
+      - 工作流管理
+    put:
+      consumes:
+      - application/json
+      description: 更新已有的工作流定义
+      parameters:
+      - description: 工作流ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 工作流信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/service.CreateWorkflowRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/common.Response'
+      summary: 更新工作流
+      tags:
+      - 工作流管理
 swagger: "2.0"

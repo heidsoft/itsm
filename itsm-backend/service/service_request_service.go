@@ -37,7 +37,7 @@ func NewServiceRequestService(client *ent.Client, logger *zap.SugaredLogger, app
 	return &ServiceRequestService{
 		client:          client,
 		logger:          logger,
-		notificationSvc:  notificationSvc,
+		notificationSvc: notificationSvc,
 		approvalService: approvalService,
 	}
 }
@@ -112,7 +112,6 @@ func (s *ServiceRequestService) CreateServiceRequest(ctx context.Context, req *d
 	}
 
 	request, err := create.Save(ctx)
-
 	if err != nil {
 		s.logger.Errorf("创建服务请求失败: %v", err)
 		return nil, fmt.Errorf("创建服务请求失败: %w", err) // Keep fmt.Errorf for internal errors for now
@@ -197,11 +196,11 @@ func (s *ServiceRequestService) sendNewRequestNotification(ctx context.Context, 
 	// 给所有审批人发送通知
 	for _, approver := range approvers {
 		_, _ = s.notificationSvc.CreateNotification(ctx, &dto.CreateNotificationRequest{
-			UserID:  approver.ID,
+			UserID:   approver.ID,
 			TenantID: tenantID,
-			Title:   title,
-			Message: message,
-			Type:    "info",
+			Title:    title,
+			Message:  message,
+			Type:     "info",
 		})
 	}
 }
@@ -304,7 +303,6 @@ func (s *ServiceRequestService) GetServiceRequest(ctx context.Context, id, tenan
 		Where(servicerequest.ID(id)).
 		Where(servicerequest.TenantID(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		s.logger.Errorf("获取服务请求失败: %v", err)
 		return nil, fmt.Errorf("获取服务请求失败: %w", err)
@@ -365,7 +363,6 @@ func (s *ServiceRequestService) ListServiceRequests(ctx context.Context, req *dt
 		Offset((req.Page - 1) * req.Size).
 		Limit(req.Size).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取服务请求列表失败: %w", err)
 	}
@@ -391,7 +388,6 @@ func (s *ServiceRequestService) UpdateServiceRequestStatus(ctx context.Context, 
 		Where(servicerequest.TenantID(tenantID)).
 		SetStatus(status).
 		Exec(ctx)
-
 	if err != nil {
 		s.logger.Errorf("更新服务请求状态失败: %v", err)
 		return fmt.Errorf("更新服务请求状态失败: %w", err)
@@ -539,11 +535,11 @@ func (s *ServiceRequestService) sendApprovalNotification(ctx context.Context, re
 
 	// 发送站内通知
 	_, _ = s.notificationSvc.CreateNotification(ctx, &dto.CreateNotificationRequest{
-		UserID:    requesterID,
-		TenantID:  tenantID,
-		Title:     title,
-		Message:   message,
-		Type:      "info",
+		UserID:   requesterID,
+		TenantID: tenantID,
+		Title:    title,
+		Message:  message,
+		Type:     "info",
 	})
 }
 

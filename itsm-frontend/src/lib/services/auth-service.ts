@@ -80,7 +80,6 @@ export class AuthService {
   // 直接使用fetch进行HTTP请求，避免循环依赖
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    console.log('makeRequest called with:', { url, method: options.method, body: options.body });
     
     const response = await fetch(url, {
       headers: {
@@ -90,15 +89,12 @@ export class AuthService {
       ...options,
     });
 
-    console.log('makeRequest response status:', response.status);
-    console.log('makeRequest response headers:', response.headers);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const responseData = await response.json() as { code: number; message: string; data: T };
-    console.log('makeRequest response data:', responseData);
     
     // 检查响应码
     if (responseData.code !== 0) {
@@ -155,7 +151,6 @@ export class AuthService {
   // 修改login方法
   static async login(username: string, password: string, tenantCode?: string): Promise<boolean> {
     try {
-      console.log('AuthService.login called with:', { username, password: '***', tenantCode });
       
       const data = await this.makeRequest<{
         access_token: string;
@@ -170,14 +165,12 @@ export class AuthService {
         }),
       });
       
-      console.log('AuthService.login response data:', data);
       
       // 存储tokens
       this.setTokens(data.access_token, data.refresh_token);
       
       // 使用store管理登录状态
       const { login } = useAuthStore.getState();
-      console.log('AuthService.login - 调用Zustand login方法');
       const u = data.user as any;
       login(
         {
@@ -206,9 +199,7 @@ export class AuthService {
       
       // 验证状态是否正确设置
       const { isAuthenticated } = useAuthStore.getState();
-      console.log('AuthService.login - 登录后Zustand状态:', { isAuthenticated });
       
-      console.log('AuthService.login completed successfully');
       return true;
     } catch (error) {
       console.error('Login failed:', error);
@@ -227,7 +218,6 @@ export class AuthService {
     role?: string;
   }): Promise<boolean> {
     try {
-      console.log('AuthService.register called with:', { username: params.username, email: params.email });
 
       await this.makeRequest<{ id: number; username: string; email: string; message: string }>(
         '/api/v1/auth/register',
@@ -245,7 +235,6 @@ export class AuthService {
         }
       );
 
-      console.log('AuthService.register completed successfully');
       return true;
     } catch (error) {
       console.error('Registration failed:', error);
@@ -256,7 +245,6 @@ export class AuthService {
   // 发送密码重置邮件
   static async forgotPassword(email: string, tenantCode?: string): Promise<boolean> {
     try {
-      console.log('AuthService.forgotPassword called with:', { email });
 
       await this.makeRequest<{ message: string }>('/api/v1/auth/forgot-password', {
         method: 'POST',
@@ -266,7 +254,6 @@ export class AuthService {
         }),
       });
 
-      console.log('AuthService.forgotPassword completed successfully');
       return true;
     } catch (error) {
       console.error('Forgot password request failed:', error);
@@ -282,7 +269,6 @@ export class AuthService {
     passwordConfirm: string;
   }): Promise<boolean> {
     try {
-      console.log('AuthService.resetPassword called with:', { email: params.email });
 
       await this.makeRequest<{ message: string }>('/api/v1/auth/reset-password', {
         method: 'POST',
@@ -294,7 +280,6 @@ export class AuthService {
         }),
       });
 
-      console.log('AuthService.resetPassword completed successfully');
       return true;
     } catch (error) {
       console.error('Reset password failed:', error);
@@ -305,7 +290,6 @@ export class AuthService {
   // 验证重置令牌
   static async validateResetToken(token: string, email: string): Promise<boolean> {
     try {
-      console.log('AuthService.validateResetToken called with:', { email });
 
       const result = await this.makeRequest<{ valid: boolean; email: string }>(
         '/api/v1/auth/validate-reset-token',
@@ -318,7 +302,6 @@ export class AuthService {
         }
       );
 
-      console.log('AuthService.validateResetToken result:', result);
       return result.valid;
     } catch (error) {
       console.error('Validate reset token failed:', error);

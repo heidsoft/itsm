@@ -480,19 +480,19 @@ func (p *BPMNParser) ExtractProcessInfo(definitions *BPMNDefinitions) map[string
 		"dataStores":         len(process.DataStores),
 	}
 	info := map[string]interface{}{
-		"id":                 process.ID,
-		"name":               process.Name,
-		"processType":        process.ProcessType,
-		"isExecutable":       process.IsExecutable,
-		"isClosed":           process.IsClosed,
+		"id":           process.ID,
+		"name":         process.Name,
+		"processType":  process.ProcessType,
+		"isExecutable": process.IsExecutable,
+		"isClosed":     process.IsClosed,
 		// 向后兼容：保留顶层计数，同时新增 elements 聚合
-		"startEvents":   len(process.StartEvents),
-		"endEvents":     len(process.EndEvents),
-		"userTasks":     len(process.UserTasks),
-		"serviceTasks":  len(process.ServiceTasks),
+		"startEvents":       len(process.StartEvents),
+		"endEvents":         len(process.EndEvents),
+		"userTasks":         len(process.UserTasks),
+		"serviceTasks":      len(process.ServiceTasks),
 		"exclusiveGateways": len(process.ExclusiveGateways),
-		"sequenceFlows": len(process.SequenceFlows),
-		"elements":      elements,
+		"sequenceFlows":     len(process.SequenceFlows),
+		"elements":          elements,
 	}
 
 	return info

@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 // CreateTicketViewRequest 创建工单视图请求
@@ -43,7 +44,7 @@ type TicketViewResponse struct {
 	GroupConfig map[string]interface{} `json:"group_config"`
 	IsShared    bool                   `json:"is_shared"`
 	CreatedBy   int                    `json:"created_by"`
-	Creator     *UserResponse           `json:"creator,omitempty"`
+	Creator     *UserResponse          `json:"creator,omitempty"`
 	TenantID    int                    `json:"tenant_id"`
 	CreatedAt   time.Time              `json:"created_at"`
 	UpdatedAt   time.Time              `json:"updated_at"`
@@ -89,4 +90,3 @@ func ToTicketViewResponse(view *ent.TicketView, creator *ent.User) *TicketViewRe
 
 	return response
 }
-

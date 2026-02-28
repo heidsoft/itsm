@@ -1,23 +1,24 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 // TicketAttachmentResponse 工单附件响应
 type TicketAttachmentResponse struct {
-	ID          int       `json:"id"`
-	TicketID    int       `json:"ticket_id"`
-	FileName    string    `json:"file_name"`
-	FilePath    string    `json:"file_path"`
-	FileURL     string    `json:"file_url"`
-	FileSize    int       `json:"file_size"`
-	FileType    string    `json:"file_type"`
-	MimeType    string    `json:"mime_type"`
-	UploadedBy  int       `json:"uploaded_by"`
-	Uploader    *UserInfo `json:"uploader,omitempty"` // 上传人信息
-	CreatedAt   time.Time `json:"created_at"`
+	ID         int       `json:"id"`
+	TicketID   int       `json:"ticket_id"`
+	FileName   string    `json:"file_name"`
+	FilePath   string    `json:"file_path"`
+	FileURL    string    `json:"file_url"`
+	FileSize   int       `json:"file_size"`
+	FileType   string    `json:"file_type"`
+	MimeType   string    `json:"mime_type"`
+	UploadedBy int       `json:"uploaded_by"`
+	Uploader   *UserInfo `json:"uploader,omitempty"` // 上传人信息
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // ListTicketAttachmentsResponse 工单附件列表响应
@@ -56,4 +57,3 @@ func ToTicketAttachmentResponse(attachment *ent.TicketAttachment, uploader *ent.
 
 	return resp
 }
-

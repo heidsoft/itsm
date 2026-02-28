@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
-	"strings"
 
 	"go.uber.org/zap"
 )
@@ -44,7 +45,6 @@ func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKn
 		SetTags(tagsStr).
 		SetTenantID(tenantID).
 		Save(ctx)
-
 	if err != nil {
 		ks.logger.Errorf("创建知识库文章失败: %v", err)
 		return nil, fmt.Errorf("创建文章失败: %w", err)
@@ -62,7 +62,6 @@ func (ks *KnowledgeService) GetArticle(ctx context.Context, id, tenantID int) (*
 			knowledgearticle.TenantID(tenantID),
 		).
 		Only(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("文章不存在")
@@ -111,7 +110,6 @@ func (ks *KnowledgeService) ListArticles(ctx context.Context, req *dto.ListKnowl
 		Offset((req.Page - 1) * req.PageSize).
 		Limit(req.PageSize).
 		All(ctx)
-
 	if err != nil {
 		return nil, 0, fmt.Errorf("获取文章列表失败: %w", err)
 	}
@@ -155,7 +153,6 @@ func (ks *KnowledgeService) DeleteArticle(ctx context.Context, id, tenantID int)
 	err := ks.client.KnowledgeArticle.DeleteOneID(id).
 		Where(knowledgearticle.TenantID(tenantID)).
 		Exec(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return fmt.Errorf("文章不存在")
@@ -172,7 +169,6 @@ func (ks *KnowledgeService) GetCategories(ctx context.Context, tenantID int) ([]
 		Where(knowledgearticle.TenantID(tenantID)).
 		GroupBy(knowledgearticle.FieldCategory).
 		Strings(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取分类列表失败: %w", err)
 	}
@@ -189,7 +185,6 @@ func (ks *KnowledgeService) LikeArticle(ctx context.Context, id, userID, tenantI
 			knowledgearticle.TenantID(tenantID),
 		).
 		Exist(ctx)
-
 	if err != nil {
 		return fmt.Errorf("检查文章失败: %w", err)
 	}

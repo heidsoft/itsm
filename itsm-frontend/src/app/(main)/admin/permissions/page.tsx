@@ -253,7 +253,6 @@ const PermissionConfiguration = () => {
       const permissions = await RoleAPI.getPermissions();
       // 如果API返回权限列表，可以用来更新配置
       if (permissions && permissions.length > 0) {
-        console.log('Loaded permissions from API:', permissions);
       }
     } catch (error) {
       console.error('Failed to load permissions:', error);

@@ -6,15 +6,15 @@ import (
 
 // NotificationPreferenceRequest 通知偏好请求
 type NotificationPreferenceRequest struct {
-	EventType        string  `json:"event_type" binding:"required"`
-	EmailEnabled     *bool   `json:"email_enabled"`
-	SMSEnabled       *bool   `json:"sms_enabled"`
-	InAppEnabled     *bool   `json:"in_app_enabled"`
-	PushEnabled      *bool   `json:"push_enabled"`
-	Frequency        string  `json:"frequency"`
-	QuietHoursStart  *string `json:"quiet_hours_start"`
-	QuietHoursEnd    *string `json:"quiet_hours_end"`
-	Timezone         string  `json:"timezone"`
+	EventType       string  `json:"event_type" binding:"required"`
+	EmailEnabled    *bool   `json:"email_enabled"`
+	SMSEnabled      *bool   `json:"sms_enabled"`
+	InAppEnabled    *bool   `json:"in_app_enabled"`
+	PushEnabled     *bool   `json:"push_enabled"`
+	Frequency       string  `json:"frequency"`
+	QuietHoursStart *string `json:"quiet_hours_start"`
+	QuietHoursEnd   *string `json:"quiet_hours_end"`
+	Timezone        string  `json:"timezone"`
 }
 
 // NotificationPreferenceResponse 通知偏好响应

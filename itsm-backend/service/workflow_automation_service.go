@@ -3,9 +3,10 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/workflowtask"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -395,7 +396,6 @@ func (was *WorkflowAutomationService) applyDefaultAssignment(ctx context.Context
 		SetAssignee(defaultAssignee).
 		SetStatus("pending").
 		Save(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to apply default assignment: %w", err)
 	}

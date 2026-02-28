@@ -9,9 +9,9 @@ import (
 )
 
 type CMDBController struct {
-	cmdbService             *service.CMDBService
-	ciRelationshipService   *service.CIRelationshipService
-	auditLogService         *service.AuditLogService
+	cmdbService           *service.CMDBService
+	ciRelationshipService *service.CIRelationshipService
+	auditLogService       *service.AuditLogService
 }
 
 func NewCMDBController(cmdbService *service.CMDBService, ciRelationshipService *service.CIRelationshipService, auditLogService *service.AuditLogService) *CMDBController {
@@ -60,17 +60,17 @@ func (c *CMDBController) GetCI(ctx *gin.Context) {
 // ListCIs 列出配置项
 func (c *CMDBController) ListCIs(ctx *gin.Context) {
 	var req service.ListCIsRequest
-	
+
 	req.CiType = ctx.Query("ci_type")
 	req.Status = ctx.Query("status")
 	req.Environment = ctx.Query("environment")
-	
+
 	if offset := ctx.Query("offset"); offset != "" {
 		if o, err := strconv.Atoi(offset); err == nil {
 			req.Offset = o
 		}
 	}
-	
+
 	if limit := ctx.Query("limit"); limit != "" {
 		if l, err := strconv.Atoi(limit); err == nil {
 			req.Limit = l

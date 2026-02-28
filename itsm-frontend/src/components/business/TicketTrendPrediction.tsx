@@ -257,7 +257,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
         <Space className='mb-4' wrap>
           <RangePicker
             value={timeRange}
-            onChange={(dates) => {
+            onChange={(dates: [string, string] | null) => {
               if (dates && dates[0] && dates[1]) {
                 setTimeRange([dates[0], dates[1]]);
               }

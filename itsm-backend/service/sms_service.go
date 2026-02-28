@@ -22,22 +22,22 @@ import (
 
 // SMSConfig 短信配置
 type SMSConfig struct {
-	Provider      string // 短信提供商: aliyun, tencent, mock
-	AccessKey     string // 访问密钥
-	SecretKey     string // 密钥
-	SignName      string // 签名名称
-	Region        string // 区域
-	Endpoint      string // API端点
-	Timeout       int    // 超时时间（秒）
+	Provider  string // 短信提供商: aliyun, tencent, mock
+	AccessKey string // 访问密钥
+	SecretKey string // 密钥
+	SignName  string // 签名名称
+	Region    string // 区域
+	Endpoint  string // API端点
+	Timeout   int    // 超时时间（秒）
 }
 
 // SMSMessage 短信消息
 type SMSMessage struct {
-	PhoneNumbers []string       // 手机号列表
-	TemplateCode string         // 模板ID
+	PhoneNumbers  []string          // 手机号列表
+	TemplateCode  string            // 模板ID
 	TemplateParam map[string]string // 模板参数
-	SignName     string         // 签名（覆盖配置）
-	Content      string         // 短信内容（当不使用模板时）
+	SignName      string            // 签名（覆盖配置）
+	Content       string            // 短信内容（当不使用模板时）
 }
 
 // SMSService 短信服务
@@ -205,9 +205,9 @@ func (s *SMSService) sendTencent(ctx context.Context, msg *SMSMessage) error {
 
 	// 构建请求体
 	reqBody := map[string]interface{}{
-		"tel":    tel,
+		"tel":      tel,
 		"sdkappid": s.config.Region, // 使用 Region 字段存储 AppID
-		"time":    time.Now().Unix(),
+		"time":     time.Now().Unix(),
 	}
 
 	// 模板短信
@@ -445,11 +445,11 @@ func (s *SMSService) SendAliyunTemplate(ctx context.Context, phoneNumbers []stri
 
 // TencentSMSRequest 腾讯云短信请求结构
 type TencentSMSRequest struct {
-	Tel    map[string]string `json:"tel"`
-	Sig    string            `json:"sig"`
-	Time   int64             `json:"time"`
-	Type   int               `json:"type"`
-	Msg    string            `json:"msg"`
+	Tel  map[string]string `json:"tel"`
+	Sig  string            `json:"sig"`
+	Time int64             `json:"time"`
+	Type int               `json:"type"`
+	Msg  string            `json:"msg"`
 }
 
 // SendTencentTemplate 发送腾讯云模板短信
@@ -466,9 +466,9 @@ func (s *SMSService) SendTencentTemplate(ctx context.Context, phoneNumbers []str
 // GetProviderInfo 获取短信提供商信息
 func (s *SMSService) GetProviderInfo() map[string]string {
 	return map[string]string{
-		"provider":   s.config.Provider,
-		"region":     s.config.Region,
-		"sign_name":  s.config.SignName,
-		"endpoint":   s.config.Endpoint,
+		"provider":  s.config.Provider,
+		"region":    s.config.Region,
+		"sign_name": s.config.SignName,
+		"endpoint":  s.config.Endpoint,
 	}
 }

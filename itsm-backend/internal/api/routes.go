@@ -1,8 +1,9 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 	"itsm-backend/common"
 )
 
@@ -46,11 +47,11 @@ func SetupRoutes(router *gin.Engine) {
 	{
 		// 添加API版本中间件
 		v1.Use(APIMiddleware())
-		
+
 		// 健康检查
 		v1.GET("/health", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{
-				"status": "healthy",
+				"status":  "healthy",
 				"version": "v1",
 			})
 		})
@@ -63,12 +64,12 @@ func APIMiddleware() gin.HandlerFunc {
 		// 设置API版本头
 		c.Header("API-Version", "v1")
 		c.Header("Content-Type", "application/json")
-		
+
 		// 处理CORS
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-CSRF-Token")
-		
+
 		// 请求ID追踪
 		requestID := c.GetHeader("X-Request-ID")
 		if requestID == "" {
@@ -76,7 +77,7 @@ func APIMiddleware() gin.HandlerFunc {
 		}
 		c.Set("request_id", requestID)
 		c.Header("X-Request-ID", requestID)
-		
+
 		c.Next()
 	}
 }
@@ -92,9 +93,9 @@ type StandardResponse struct {
 
 // 标准化分页响应
 type PaginatedResponse struct {
-	Code      int         `json:"code"`
-	Message   string      `json:"message"`
-	Data      struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
 		Items      interface{} `json:"items"`
 		Total      int         `json:"total"`
 		Page       int         `json:"page"`
@@ -107,11 +108,11 @@ type PaginatedResponse struct {
 
 // 批量操作响应
 type BatchResponse struct {
-	Code      int `json:"code"`
-	Message   string `json:"message"`
-	Success   int `json:"success"`
-	Failed    int `json:"failed"`
-	Errors    []struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Success int    `json:"success"`
+	Failed  int    `json:"failed"`
+	Errors  []struct {
 		ID    int    `json:"id"`
 		Error string `json:"error"`
 	} `json:"errors,omitempty"`
@@ -146,7 +147,7 @@ func Success(c *gin.Context, data interface{}) {
 func SuccessWithPagination(c *gin.Context, items interface{}, total, page, pageSize int) {
 	traceID, _ := c.Get("request_id")
 	totalPages := (total + pageSize - 1) / pageSize
-	
+
 	responseData := struct {
 		Items      interface{} `json:"items"`
 		Total      int         `json:"total"`
@@ -160,7 +161,7 @@ func SuccessWithPagination(c *gin.Context, items interface{}, total, page, pageS
 		PageSize:   pageSize,
 		TotalPages: totalPages,
 	}
-	
+
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:    common.SuccessCode,
 		Message: "success",
@@ -172,18 +173,18 @@ func SuccessWithPagination(c *gin.Context, items interface{}, total, page, pageS
 // 错误响应辅助函数
 func Error(c *gin.Context, code int, message string, details ...map[string]interface{}) {
 	traceID, _ := c.Get("request_id")
-	
+
 	response := ErrorResponse{
 		Code:      code,
 		Message:   message,
 		Timestamp: common.GetTimestamp(),
 		TraceID:   traceID.(string),
 	}
-	
+
 	if len(details) > 0 {
 		response.Details = details[0]
 	}
-	
+
 	c.JSON(getHTTPStatus(code), response)
 }
 
@@ -191,9 +192,10 @@ func Error(c *gin.Context, code int, message string, details ...map[string]inter
 func BatchOperationResponse(c *gin.Context, success, failed int, errors []struct {
 	ID    int    `json:"id"`
 	Error string `json:"error"`
-}, data interface{}) {
+}, data interface{},
+) {
 	traceID, _ := c.Get("request_id")
-	
+
 	response := BatchResponse{
 		Code:      common.SuccessCode,
 		Message:   "batch operation completed",
@@ -203,11 +205,11 @@ func BatchOperationResponse(c *gin.Context, success, failed int, errors []struct
 		Timestamp: common.GetTimestamp(),
 		TraceID:   traceID.(string),
 	}
-	
+
 	if len(errors) > 0 {
 		response.Errors = errors
 	}
-	
+
 	c.JSON(http.StatusOK, response)
 }
 

@@ -2,10 +2,11 @@ package controller
 
 import (
 	"io"
+	"strconv"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -211,4 +212,3 @@ func (tac *TicketAttachmentController) DeleteAttachment(c *gin.Context) {
 
 	common.Success(c, nil)
 }
-

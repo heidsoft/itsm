@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tickettag"
-	"time"
 )
 
 // TicketAssociationService 工单关联服务
@@ -23,36 +24,36 @@ func NewTicketAssociationService(client *ent.Client) *TicketAssociationService {
 
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
-	Title         string                 `json:"title"`
-	Description   string                 `json:"description"`
-	Priority      string                 `json:"priority"`
-	CategoryID    *int                   `json:"category_id,omitempty"`
-	TemplateID    *int                   `json:"template_id,omitempty"`
-	ParentID      *int                   `json:"parent_id,omitempty"`
-	RelatedIDs    []int                  `json:"related_ids,omitempty"`
-	TagIDs        []int                  `json:"tag_ids,omitempty"`
-	TenantID      int                    `json:"tenant_id"`
-	AssignedTo    *int                   `json:"assigned_to,omitempty"`
-	CustomFields  map[string]interface{} `json:"custom_fields,omitempty"`
+	Title        string                 `json:"title"`
+	Description  string                 `json:"description"`
+	Priority     string                 `json:"priority"`
+	CategoryID   *int                   `json:"category_id,omitempty"`
+	TemplateID   *int                   `json:"template_id,omitempty"`
+	ParentID     *int                   `json:"parent_id,omitempty"`
+	RelatedIDs   []int                  `json:"related_ids,omitempty"`
+	TagIDs       []int                  `json:"tag_ids,omitempty"`
+	TenantID     int                    `json:"tenant_id"`
+	AssignedTo   *int                   `json:"assigned_to,omitempty"`
+	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
 }
 
 // TicketResponse 工单响应
 type TicketResponse struct {
-	ID            int                    `json:"id"`
-	Title         string                 `json:"title"`
-	Description   string                 `json:"description"`
-	Priority      string                 `json:"priority"`
-	Status        string                 `json:"status"`
-	CategoryID    *int                   `json:"category_id,omitempty"`
-	TemplateID    *int                   `json:"template_id,omitempty"`
-	ParentID      *int                   `json:"parent_id,omitempty"`
-	RelatedIDs    []int                  `json:"related_ids,omitempty"`
-	TagIDs        []int                  `json:"tag_ids,omitempty"`
-	TenantID      int                    `json:"tenant_id"`
-	AssignedTo    *int                   `json:"assigned_to,omitempty"`
-	CustomFields  map[string]interface{} `json:"custom_fields,omitempty"`
-	CreatedAt     time.Time              `json:"created_at"`
-	UpdatedAt     time.Time              `json:"updated_at"`
+	ID           int                    `json:"id"`
+	Title        string                 `json:"title"`
+	Description  string                 `json:"description"`
+	Priority     string                 `json:"priority"`
+	Status       string                 `json:"status"`
+	CategoryID   *int                   `json:"category_id,omitempty"`
+	TemplateID   *int                   `json:"template_id,omitempty"`
+	ParentID     *int                   `json:"parent_id,omitempty"`
+	RelatedIDs   []int                  `json:"related_ids,omitempty"`
+	TagIDs       []int                  `json:"tag_ids,omitempty"`
+	TenantID     int                    `json:"tenant_id"`
+	AssignedTo   *int                   `json:"assigned_to,omitempty"`
+	CustomFields map[string]interface{} `json:"custom_fields,omitempty"`
+	CreatedAt    time.Time              `json:"created_at"`
+	UpdatedAt    time.Time              `json:"updated_at"`
 }
 
 // CreateTicket 创建工单
@@ -320,9 +321,9 @@ func (s *TicketAssociationService) GetTicketDependencies(ctx context.Context, ti
 
 // UpdateAssociationsRequest 更新关联关系请求
 type UpdateAssociationsRequest struct {
-	ParentID   *int   `json:"parent_id,omitempty"`
-	RelatedIDs []int  `json:"related_ids,omitempty"`
-	TagIDs     []int  `json:"tag_ids,omitempty"`
+	ParentID   *int  `json:"parent_id,omitempty"`
+	RelatedIDs []int `json:"related_ids,omitempty"`
+	TagIDs     []int `json:"tag_ids,omitempty"`
 }
 
 // TicketHierarchy 工单层级结构
@@ -333,22 +334,22 @@ type TicketHierarchy struct {
 
 // TicketDependencies 工单依赖关系
 type TicketDependencies struct {
-	ParentChain    []*TicketResponse   `json:"parent_chain"`
-	ChildrenTree   []*TicketResponse   `json:"children_tree"`
-	RelatedTickets []*TicketResponse   `json:"related_tickets"`
+	ParentChain    []*TicketResponse `json:"parent_chain"`
+	ChildrenTree   []*TicketResponse `json:"children_tree"`
+	RelatedTickets []*TicketResponse `json:"related_tickets"`
 }
 
 // buildTicketResponse 构建工单响应
 func (s *TicketAssociationService) buildTicketResponse(ticket *ent.Ticket) *TicketResponse {
 	response := &TicketResponse{
-		ID:           ticket.ID,
-		Title:        ticket.Title,
-		Description:  ticket.Description,
-		Priority:     ticket.Priority,
-		Status:       ticket.Status,
-		TenantID:     ticket.TenantID,
-		CreatedAt:    ticket.CreatedAt,
-		UpdatedAt:    ticket.UpdatedAt,
+		ID:          ticket.ID,
+		Title:       ticket.Title,
+		Description: ticket.Description,
+		Priority:    ticket.Priority,
+		Status:      ticket.Status,
+		TenantID:    ticket.TenantID,
+		CreatedAt:   ticket.CreatedAt,
+		UpdatedAt:   ticket.UpdatedAt,
 	}
 
 	if ticket.CategoryID != 0 {
@@ -363,8 +364,6 @@ func (s *TicketAssociationService) buildTicketResponse(ticket *ent.Ticket) *Tick
 	if ticket.AssigneeID != 0 {
 		response.AssignedTo = &ticket.AssigneeID
 	}
-
-
 
 	// 处理标签
 	if ticket.Edges.Tags != nil {
@@ -429,11 +428,11 @@ func (s *TicketAssociationService) getChildrenTree(ctx context.Context, ticketID
 	var tree []*TicketResponse
 	for _, child := range children {
 		childResponse := s.buildTicketResponse(child)
-		
+
 		// 递归获取子工单的子工单
 		// 这里可以扩展结构来支持树形显示
 		// 暂时只返回扁平列表
-		
+
 		tree = append(tree, childResponse)
 	}
 
