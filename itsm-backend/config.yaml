@@ -2,7 +2,7 @@ database:
   host: localhost
   port: 5432
   user: dev
-  password: "${DB_PASSWORD:StrongPassword123!}"  # Use env: DB_PASSWORD, default for dev
+  password: "${DB_PASSWORD}"  # Required: set DB_PASSWORD env var
   dbname: itsm
   sslmode: disable
 
@@ -18,7 +18,7 @@ server:
   mode: "${SERVER_MODE:release}"  # Use env: SERVER_MODE, default release
 
 jwt:
-  secret: "${JWT_SECRET:ChangeThisToARandomSecretInProduction!}"  # Use env: JWT_SECRET
+  secret: "${JWT_SECRET}"  # Required: set JWT_SECRET env var
   expire_time: 900        # 15分钟 (access token)
   refresh_expire_time: 604800  # 7天 (refresh token)
 
@@ -71,5 +71,5 @@ security:
 # Admin user settings
 admin:
   username: "admin"
-  password: "${ADMIN_PASSWORD:CHANGE_THIS_PASSWORD_IMMEDIATELY}" # 生产环境请务必修改
+  password: "${ADMIN_PASSWORD}"  # Required: set ADMIN_PASSWORD env var
   email: "admin@example.com"

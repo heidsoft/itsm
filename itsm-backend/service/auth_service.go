@@ -2,6 +2,8 @@ package service
 
 import (
     "context"
+    "crypto/rand"
+    "encoding/hex"
     "fmt"
     "itsm-backend/dto"
     "itsm-backend/ent"
@@ -572,14 +574,14 @@ func (s *AuthService) ValidateResetToken(ctx context.Context, req *dto.ValidateR
 	}, nil
 }
 
-// generateResetToken 生成密码重置令牌
+// generateResetToken generates a cryptographically secure password reset token
 func generateResetToken() string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	token := make([]byte, 32)
-	for i := range token {
-		token[i] = charset[time.Now().UnixNano()%int64(len(charset))]
-	}
-	return string(token)
+    bytes := make([]byte, 32)
+    if _, err := rand.Read(bytes); err != nil {
+        // Fallback to panic on crypto failure - this should never happen
+        panic("failed to generate random token: " + err.Error())
+    }
+    return hex.EncodeToString(bytes)
 }
 
 // CleanupExpiredTokens 清理过期的重置令牌

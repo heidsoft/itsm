@@ -12,7 +12,7 @@ func SetupAuthRoutes(r *gin.RouterGroup, authController *controller.AuthControll
 	// 公共路由（无需认证）
 	public := r.Group("/auth")
 	{
-		public.POST("/login", authController.Login)
+		public.POST("/login", middleware.LoginRateLimiter(), authController.Login)
 		public.POST("/refresh", authController.RefreshToken) // 兼容前端 /api/v1/auth/refresh
 		public.POST("/refresh-token", authController.RefreshToken)
 		public.POST("/register", authController.Register)
