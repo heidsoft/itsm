@@ -472,7 +472,7 @@ export default function NotificationsPage() {
         <RangePicker
           style={{ width: '100%' }}
           value={dateRange}
-          onChange={dates => setDateRange(dates as [dayjs.Dayjs, dayjs.Dayjs] | null)}
+          onChange={(dates: [dayjs.Dayjs, dayjs.Dayjs] | null) => setDateRange(dates)}
         />
       </Col>
       <Col xs={24} md={2}>

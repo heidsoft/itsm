@@ -82,7 +82,7 @@ export function deepMergeDefaults<T extends object>(
  * 验证props类型
  */
 export function validatePropType<T>(
-  value: any,
+  value: unknown,
   expectedType: string,
   propName: string,
   componentName: string
@@ -119,7 +119,7 @@ export function safeGet<T, K extends keyof T>(
  * 安全获取深度嵌套属性
  */
 export function safeGetNested<T>(
-  obj: any,
+  obj: unknown,
   path: string,
   defaultValue?: T
 ): T | undefined {
@@ -261,11 +261,11 @@ export function withPropsValidation<P extends object>(
 /**
  * 创建安全的事件处理器
  */
-export function createSafeHandler<T extends (...args: any[]) => any>(
+export function createSafeHandler<T extends (...args: unknown[]) => unknown>(
   handler: T | undefined,
   fallback?: T
 ): T {
-  return (((...args: any[]) => {
+  return (((...args: unknown[]) => {
     try {
       if (handler && typeof handler === 'function') {
         return handler(...args);
