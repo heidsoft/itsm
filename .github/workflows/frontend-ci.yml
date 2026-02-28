@@ -10,6 +10,7 @@ on:
 env:
   NEXT_TELEMETRY_DISABLED: 1
   CI: true
+  NODE_ENV: test
 
 jobs:
   lint:
@@ -19,6 +20,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -26,6 +29,11 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: itsm-frontend/package-lock.json
+
+      - name: Clear npm cache
+        run: npm cache clean --force
+        working-directory: ./itsm-frontend
+        continue-on-error: true
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
@@ -36,6 +44,14 @@ jobs:
         run: npm run lint:check
         continue-on-error: true
 
+      - name: Upload lint results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lint-results
+          path: itsm-frontend/*.log
+          retention-days: 3
+
   type-check:
     name: Type Check
     runs-on: ubuntu-latest
@@ -43,6 +59,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -50,6 +68,11 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: itsm-frontend/package-lock.json
+
+      - name: Clear npm cache
+        run: npm cache clean --force
+        working-directory: ./itsm-frontend
+        continue-on-error: true
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
@@ -59,6 +82,14 @@ jobs:
         working-directory: ./itsm-frontend
         run: npm run type-check
 
+      - name: Upload type check results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: type-check-results
+          path: itsm-frontend/*.log
+          retention-days: 3
+
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
@@ -66,6 +97,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -74,21 +107,27 @@ jobs:
           cache: 'npm'
           cache-dependency-path: itsm-frontend/package-lock.json
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+        working-directory: ./itsm-frontend
+        continue-on-error: true
+
       - name: Install dependencies
         working-directory: ./itsm-frontend
         run: npm ci --legacy-peer-deps
 
       - name: Run unit tests
         working-directory: ./itsm-frontend
-        run: npm run test:unit -- --passWithNoTests
+        run: npm run test:unit -- --passWithNoTests --coverage=false
         continue-on-error: true
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          directory: ./itsm-frontend/coverage
-          fail_ci_if_error: false
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
         if: always()
+        with:
+          name: unit-test-results
+          path: itsm-frontend/junit.xml
+          retention-days: 7
 
   integration-tests:
     name: Integration Tests
@@ -97,6 +136,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -105,14 +146,27 @@ jobs:
           cache: 'npm'
           cache-dependency-path: itsm-frontend/package-lock.json
 
+      - name: Clear npm cache
+        run: npm cache clean --force
+        working-directory: ./itsm-frontend
+        continue-on-error: true
+
       - name: Install dependencies
         working-directory: ./itsm-frontend
         run: npm ci --legacy-peer-deps
 
       - name: Run integration tests
         working-directory: ./itsm-frontend
-        run: npm run test:integration -- --passWithNoTests
+        run: npm run test:integration -- --passWithNoTests --coverage=false
         continue-on-error: true
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: itsm-frontend/junit.xml
+          retention-days: 7
 
   build:
     name: Build
@@ -122,6 +176,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -129,6 +185,11 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: itsm-frontend/package-lock.json
+
+      - name: Clear npm cache
+        run: npm cache clean --force
+        working-directory: ./itsm-frontend
+        continue-on-error: true
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
@@ -143,11 +204,21 @@ jobs:
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
+        if: success()
         with:
           name: frontend-build
-          path: itsm-frontend/.next
+          path: |
+            itsm-frontend/.next
+            itsm-frontend/public
           retention-days: 7
+
+      - name: Upload build stats
+        uses: actions/upload-artifact@v4
         if: always()
+        with:
+          name: build-stats
+          path: itsm-frontend/.next/stats.json
+          retention-days: 7
 
   # E2E tests skipped in CI - require running backend server
   # To run E2E tests locally: npm run test:e2e
