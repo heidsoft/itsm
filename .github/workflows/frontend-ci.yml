@@ -27,11 +27,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clear npm cache
-        run: npm cache clean --force
-        working-directory: ./itsm-frontend
-        continue-on-error: true
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
@@ -64,11 +61,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clear npm cache
-        run: npm cache clean --force
-        working-directory: ./itsm-frontend
-        continue-on-error: true
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
@@ -100,11 +94,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clear npm cache
-        run: npm cache clean --force
-        working-directory: ./itsm-frontend
-        continue-on-error: true
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
@@ -137,11 +128,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clear npm cache
-        run: npm cache clean --force
-        working-directory: ./itsm-frontend
-        continue-on-error: true
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
@@ -175,11 +163,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      - name: Clear npm cache
-        run: npm cache clean --force
-        working-directory: ./itsm-frontend
-        continue-on-error: true
+          cache: 'npm'
+          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: ./itsm-frontend
