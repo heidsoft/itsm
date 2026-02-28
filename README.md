@@ -5,9 +5,15 @@
   <img src="https://img.shields.io/badge/Next.js-15-000000" alt="Next.js">
   <img src="https://img.shields.io/badge/TypeScript-5-3178C6" alt="TypeScript">
   <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License">
+  <img src="https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml/badge.svg?branch=main" alt="Frontend CI">
+  <img src="https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml/badge.svg?branch=main" alt="Backend CI">
 </p>
 
 A modern, full-featured IT Service Management (ITSM) platform built with Go/Gin backend and Next.js/React frontend. Supports ITIL best practices with AI-powered features.
+
+> **Latest Release**: [v1.0.0](https://github.com/heidsoft/itsm/releases/tag/v1.0.0) | 
+> **Status**: 🚧 Active Development |
+> **Docs**: [Documentation](./docs/)
 
 ## Features
 
@@ -45,7 +51,41 @@ A modern, full-featured IT Service Management (ITSM) platform built with Go/Gin 
 | AI/ML | OpenAI API, pgvector (optional) |
 | State Management | Zustand, TanStack Query |
 
-## Quick Start
+## 📊 Project Status
+
+### Current Phase: Code Quality Optimization
+
+- ✅ **Phase 1**: Dependency Management
+  - ✅ Removed legacy-peer-deps conflicts
+  - ✅ Generated complete package-lock.json
+  - ✅ Optimized CI/CD pipeline
+
+- 🔄 **Phase 2**: TypeScript Type Fixes (In Progress)
+  - ✅ Fixed dates parameter types (11 files)
+  - ✅ Added @ant-design/charts type declarations
+  - 🔄 Fixing remaining type errors
+
+- ⏳ **Phase 3**: Test Coverage (Upcoming)
+  - ⏳ Unit tests
+  - ⏳ Integration tests
+  - ⏳ E2E tests
+
+### Build Status
+
+| Component | Status | Last Build |
+|-----------|--------|------------|
+| Frontend CI | 🔄 Fixing | [View](https://github.com/heidsoft/itsm/actions/workflows/frontend-ci.yml) |
+| Backend CI | ✅ Ready | [View](https://github.com/heidsoft/itsm/actions/workflows/backend-ci.yml) |
+| Release | ✅ v1.0.0 | [Download](https://github.com/heidsoft/itsm/releases/tag/v1.0.0) |
+
+## 📚 Documentation
+
+- **[CI Optimization Guide](./docs/CI_OPTIMIZATION_SUMMARY.md)** - CI/CD optimization details
+- **[Code Optimization Plan](./docs/CODE_OPTIMIZATION_PLAN.md)** - 4-phase optimization strategy
+- **[Cron Optimization Plan](./docs/CRON_OPTIMIZATION_PLAN.md)** - Scheduled task optimization
+- **[Release Guide](./skills/itsm-release-guide/SKILL.md)** - Release process documentation
+
+## 🚀 Quick Start
 
 ### Prerequisites
 - Go 1.24+
@@ -175,19 +215,78 @@ Custom BPMN 2.0 workflow engine with:
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+We welcome contributions! Here's how you can help:
 
-## License
+### Development Workflow
+
+1. **Fork** the repository
+2. **Create** your feature branch (`git checkout -b feature/AmazingFeature`)
+3. **Develop** with tests and documentation
+4. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`)
+5. **Push** to the branch (`git push origin feature/AmazingFeature`)
+6. **Open** a Pull Request
+
+### Code Quality Requirements
+
+Before submitting a PR, ensure:
+- [ ] All TypeScript type checks pass (`npm run type-check`)
+- [ ] ESLint passes with no errors (`npm run lint`)
+- [ ] Unit tests pass (`npm run test:unit`)
+- [ ] Integration tests pass (`npm run test:integration`)
+- [ ] Build succeeds (`npm run build`)
+
+### Documentation
+
+- Update relevant documentation in `./docs/`
+- Add comments to new code
+- Update API documentation if applicable
+
+## 📈 Roadmap
+
+### Q1 2026
+- [x] v1.0.0 Release
+- [x] CI/CD Optimization
+- [ ] Complete TypeScript migration
+- [ ] Test coverage > 60%
+
+### Q2 2026
+- [ ] E2E testing framework
+- [ ] Performance optimization
+- [ ] Mobile responsiveness
+- [ ] Advanced analytics
+
+## 🤝 Community
+
+- **Discussions**: Share ideas and ask questions
+- **Issues**: Report bugs and request features
+- **Releases**: Stay updated with latest versions
+
+## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
+## 👥 Maintainers
 
-- Create an issue for bug reports
-- Discussions for questions and ideas
-- Wiki for documentation
-- openclaw
+- **@刘彬** - Initial work & Project Lead
+- **@heidsoft** - Core Development
+
+## 📞 Support
+
+- **Bug Reports**: [Create an issue](https://github.com/heidsoft/itsm/issues)
+- **Questions**: [GitHub Discussions](https://github.com/heidsoft/itsm/discussions)
+- **Documentation**: [Wiki](https://github.com/heidsoft/itsm/wiki)
+- **Email**: [Contact Maintainers](mailto:heidsoft@qq.com)
+
+## 🙏 Acknowledgments
+
+- [Ant Design](https://ant.design/) - UI Component Library
+- [Next.js](https://nextjs.org/) - React Framework
+- [Gin](https://gin-gonic.com/) - Go Web Framework
+- [BPMN.js](https://bpmn.io/) - BPMN Workflow Designer
+- All our amazing contributors!
+
+---
+
+<p align="center">
+  <strong>⭐ Star this repo if you find it helpful!</strong>
+</p>
