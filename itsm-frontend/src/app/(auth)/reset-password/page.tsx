@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Lock, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/useI18n';
 import {
   Typography, Form, Input, Button, Card, Row, Col, Flex,
   ConfigProvider, message
@@ -13,14 +14,11 @@ import { logger } from '@/lib/env';
 
 const { Text, Title } = Typography;
 
-/**
- * 重置密码内容组件
- * 包含useSearchParams使用，需要Suspense包装
- */
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [tokenValid, setTokenValid] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -29,13 +27,11 @@ function ResetPasswordContent() {
   const email = searchParams.get('email');
 
   useEffect(() => {
-    // 验证 token 是否存在
     if (!token) {
       setTokenValid(false);
       return;
     }
 
-    // 验证 token 是否有效
     const validateToken = async () => {
       try {
         const isValid = await AuthService.validateResetToken(token, email || '');
@@ -76,16 +72,14 @@ function ResetPasswordContent() {
 
       if (success) {
         setSuccess(true);
-        message.success('密码重置成功！');
-
-        // 3秒后跳转到登录页
+        message.success(t('auth.resetPassword.resetSuccess'));
         setTimeout(() => {
           router.push('/login');
         }, 3000);
       }
     } catch (err) {
       logger.error('重置密码失败:', err);
-      message.error(err instanceof Error ? err.message : '重置失败，请稍后重试');
+      message.error(err instanceof Error ? err.message : t('auth.resetPassword.resetFailed'));
     } finally {
       setLoading(false);
     }
@@ -111,12 +105,7 @@ function ResetPasswordContent() {
                   请重新发起密码重置请求
                 </Text>
 
-                <Button
-                  type='primary'
-                  size='large'
-                  className="w-full h-10 rounded-md text-sm font-semibold"
-                  onClick={() => router.push('/forgot-password')}
-                >
+                <Button type='primary' size='large' className="w-full h-10 rounded-md text-sm font-semibold" onClick={() => router.push('/forgot-password')}>
                   重新发送请求
                 </Button>
 
@@ -124,7 +113,7 @@ function ResetPasswordContent() {
                   <Text className="text-gray-400 text-xs">
                     记起密码了？{' '}
                     <a href="/login" className="text-blue-600 hover:underline">
-                      立即登录
+                      {t('auth.register.loginNow')}
                     </a>
                   </Text>
                 </div>
@@ -148,7 +137,7 @@ function ResetPasswordContent() {
                 </div>
 
                 <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-                  密码重置成功
+                  {t('auth.resetPassword.resetSuccess')}
                 </Title>
 
                 <Text className="!text-gray-500 !text-sm block !mb-6">
@@ -156,13 +145,8 @@ function ResetPasswordContent() {
                   正在跳转到登录页...
                 </Text>
 
-                <Button
-                  type='primary'
-                  size='large'
-                  className="w-full h-10 rounded-md text-sm font-semibold"
-                  onClick={() => router.push('/login')}
-                >
-                  立即登录
+                <Button type='primary' size='large' className="w-full h-10 rounded-md text-sm font-semibold" onClick={() => router.push('/login')}>
+                  {t('auth.login.loginButton')}
                 </Button>
               </div>
             </Card>
@@ -184,10 +168,10 @@ function ResetPasswordContent() {
           <Card className="rounded-xl shadow-xl border-none" styles={{ body: { padding: '40px' } }}>
             <div className="text-center mb-6">
               <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
-                设置新密码
+                {t('auth.resetPassword.title')}
               </Title>
               <Text className="!text-gray-500 !text-sm">
-                请输入您的新密码
+                {t('auth.resetPassword.subtitle')}
               </Text>
               {email && (
                 <Text className="!text-gray-400 !text-xs block !mt-1">
@@ -199,15 +183,15 @@ function ResetPasswordContent() {
             <Form form={form} layout='vertical' size='middle' onFinish={handleReset}>
               <Form.Item
                 name='password'
-                label='新密码'
+                label={t('auth.resetPassword.newPasswordLabel')}
                 rules={[
-                  { required: true, message: '请输入新密码' },
-                  { min: 8, message: '密码至少8个字符' }
+                  { required: true, message: t('auth.resetPassword.newPasswordRequired') },
+                  { min: 8, message: t('auth.resetPassword.newPasswordMinLength') }
                 ]}
               >
                 <Input.Password
                   prefix={<Lock size={14} className="text-gray-400" />}
-                  placeholder='请输入新密码'
+                  placeholder={t('auth.resetPassword.newPasswordPlaceholder')}
                   size='large'
                   disabled={loading}
                 />
@@ -234,23 +218,23 @@ function ResetPasswordContent() {
 
               <Form.Item
                 name='confirmPassword'
-                label='确认新密码'
+                label={t('auth.resetPassword.confirmPasswordLabel')}
                 dependencies={['password']}
                 rules={[
-                  { required: true, message: '请确认新密码' },
+                  { required: true, message: t('auth.resetPassword.confirmPasswordRequired') },
                   ({ getFieldValue }) => ({
                     validator(_, value) {
                       if (!value || getFieldValue('password') === value) {
                         return Promise.resolve();
                       }
-                      return Promise.reject(new Error('两次输入的密码不一致'));
+                      return Promise.reject(new Error(t('auth.resetPassword.passwordMismatch')));
                     },
                   }),
                 ]}
               >
                 <Input.Password
                   prefix={<Lock size={14} className="text-gray-400" />}
-                  placeholder='请再次输入新密码'
+                  placeholder={t('auth.resetPassword.confirmPasswordPlaceholder')}
                   size='large'
                   disabled={loading}
                 />
@@ -262,7 +246,7 @@ function ResetPasswordContent() {
                     密码要求：
                   </Text>
                   <ul className="!text-gray-500 !text-xs list-disc list-inside space-y-0.5">
-                    <li>至少8个字符</li>
+                    <li>至少 8 个字符</li>
                     <li>包含大小写字母</li>
                     <li>包含数字或特殊字符</li>
                   </ul>
@@ -270,15 +254,8 @@ function ResetPasswordContent() {
               </Form.Item>
 
               <Form.Item>
-                <Button
-                  type='primary'
-                  htmlType='submit'
-                  size='large'
-                  className="w-full h-10 rounded-md text-sm font-semibold"
-                  loading={loading}
-                  icon={<ArrowRight size={14} />}
-                >
-                  {loading ? '重置中...' : '确认重置'}
+                <Button type='primary' htmlType='submit' size='large' className="w-full h-10 rounded-md text-sm font-semibold" loading={loading} icon={<ArrowRight size={14} />}>
+                  {loading ? t('auth.resetPassword.resetting') : t('auth.resetPassword.resetButton')}
                 </Button>
               </Form.Item>
             </Form>
@@ -287,7 +264,7 @@ function ResetPasswordContent() {
               <Text className="text-gray-400 text-xs">
                 记起密码了？{' '}
                 <a href="/login" className="text-blue-600 hover:underline">
-                  立即登录
+                  {t('auth.register.loginNow')}
                 </a>
               </Text>
             </div>
@@ -298,9 +275,6 @@ function ResetPasswordContent() {
   );
 }
 
-/**
- * 重置密码页面组件
- */
 export default function ResetPasswordPage() {
   return (
     <Suspense fallback={

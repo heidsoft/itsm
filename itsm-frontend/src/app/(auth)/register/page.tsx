@@ -6,9 +6,10 @@ import {
   Mail, Lock, User, Building2, Phone, ArrowRight,
   CheckCircle, AlertCircle, Shield
 } from 'lucide-react';
+import { useI18n } from '@/lib/i18n/useI18n';
 import {
   Typography, Form, Input, Button, Card, Row, Col, Flex,
-  Divider, ConfigProvider, message, Select
+  Divider, ConfigProvider, message, Select, Alert
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
@@ -22,9 +23,10 @@ const { Text, Title } = Typography;
 export default function RegisterPage() {
   const router = useRouter();
   const [form] = Form.useForm();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState(1); // 1: 基本信息, 2: 详细信息
+  const [step, setStep] = useState(1);
 
   const handleNextStep = async () => {
     try {
@@ -51,20 +53,19 @@ export default function RegisterPage() {
       });
 
       if (success) {
-        message.success('注册成功！请前往登录');
+        message.success(t('auth.register.registerSuccess'));
         router.push('/login');
       } else {
-        setError('注册失败，请稍后重试');
+        setError(t('auth.register.registerFailed'));
       }
     } catch (err) {
       logger.error('注册错误:', err);
-      setError(err instanceof Error ? err.message : '注册失败，请重试');
+      setError(err instanceof Error ? err.message : t('auth.register.registerFailed'));
     } finally {
       setLoading(false);
     }
   };
 
-  // 密码强度检查
   const getPasswordStrength = (password: string) => {
     let strength = 0;
     if (password.length >= 8) strength++;
@@ -87,246 +88,143 @@ export default function RegisterPage() {
           <Card className="rounded-xl shadow-xl border-none" styles={{ body: { padding: '40px' } }}>
             <div className="text-center mb-6">
               <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
-                创建账户
+                {t('auth.register.title')}
               </Title>
               <Text className="!text-gray-500 !text-sm">
-                立即注册，体验智能IT服务管理
+                {t('auth.register.subtitle')}
               </Text>
             </div>
 
             {error && (
-              <AlertCircle className="mb-4 text-red-500 w-full" />
+              <Alert message={t('auth.register.registerFailed')} description={error} type="error" className="mb-4" showIcon />
             )}
 
-            <Form form={form} layout='vertical' size='middle' onFinish={handleRegister}>
-              {step === 1 ? (
-                <>
+            {step === 1 && (
+              <>
+                <Form form={form} onFinish={handleRegister} layout='vertical' size='middle'>
                   <Form.Item
                     name='username'
-                    label='用户名'
+                    label={t('auth.register.usernameLabel')}
                     rules={[
-                      { required: true, message: '请输入用户名' },
-                      { min: 3, message: '用户名至少3个字符' },
-                      { max: 20, message: '用户名最多20个字符' },
-                      { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名只能包含字母、数字和下划线' }
+                      { required: true, message: t('auth.register.usernameRequired') },
+                      { min: 3, message: t('auth.register.usernameMinLength') },
                     ]}
                   >
-                    <Input
-                      prefix={<User size={14} className="text-gray-400" />}
-                      placeholder='请输入用户名'
-                      disabled={loading}
-                    />
+                    <Input prefix={<User size={14} className="text-gray-400" />} placeholder={t('auth.register.usernamePlaceholder')} disabled={loading} />
                   </Form.Item>
 
                   <Form.Item
                     name='email'
-                    label='邮箱'
+                    label={t('auth.register.emailLabel')}
                     rules={[
-                      { required: true, message: '请输入邮箱' },
-                      { type: 'email', message: '请输入有效的邮箱地址' }
+                      { required: true, message: t('auth.register.emailRequired') },
+                      { type: 'email', message: t('auth.register.emailInvalid') },
                     ]}
                   >
-                    <Input
-                      prefix={<Mail size={14} className="text-gray-400" />}
-                      placeholder='请输入邮箱'
-                      disabled={loading}
-                    />
+                    <Input prefix={<Mail size={14} className="text-gray-400" />} placeholder={t('auth.register.emailPlaceholder')} disabled={loading} />
                   </Form.Item>
 
                   <Form.Item
                     name='password'
-                    label='密码'
+                    label={t('auth.register.passwordLabel')}
                     rules={[
-                      { required: true, message: '请输入密码' },
-                      { min: 8, message: '密码至少8个字符' }
+                      { required: true, message: t('auth.register.passwordRequired') },
+                      { min: 8, message: t('auth.register.passwordMinLength') },
                     ]}
                   >
-                    <Input.Password
-                      prefix={<Lock size={14} className="text-gray-400" />}
-                      placeholder='请输入密码'
-                      disabled={loading}
-                    />
+                    <Input.Password prefix={<Lock size={14} className="text-gray-400" />} placeholder={t('auth.register.passwordPlaceholder')} disabled={loading} />
                   </Form.Item>
-
-                  {password && password.length > 0 && (
-                    <div className="mb-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all duration-300"
-                            style={{
-                              width: `${(strength / 5) * 100}%`,
-                              backgroundColor: strengthColors[strength - 1] || '#ff4d4f'
-                            }}
-                          />
-                        </div>
-                        <Text className="text-xs" style={{ color: strengthColors[strength - 1] || '#ff4d4f' }}>
-                          {strengthLabels[strength - 1] || '非常弱'}
-                        </Text>
-                      </div>
-                    </div>
-                  )}
 
                   <Form.Item
                     name='confirmPassword'
-                    label='确认密码'
+                    label={t('auth.register.confirmPasswordLabel')}
                     dependencies={['password']}
                     rules={[
-                      { required: true, message: '请确认密码' },
+                      { required: true, message: t('auth.register.confirmPasswordRequired') },
                       ({ getFieldValue }) => ({
                         validator(_, value) {
                           if (!value || getFieldValue('password') === value) {
                             return Promise.resolve();
                           }
-                          return Promise.reject(new Error('两次输入的密码不一致'));
+                          return Promise.reject(new Error(t('auth.register.passwordMismatch')));
                         },
                       }),
                     ]}
                   >
-                    <Input.Password
-                      prefix={<Lock size={14} className="text-gray-400" />}
-                      placeholder='请再次输入密码'
-                      disabled={loading}
-                    />
+                    <Input.Password prefix={<Lock size={14} className="text-gray-400" />} placeholder={t('auth.register.confirmPasswordPlaceholder')} disabled={loading} />
                   </Form.Item>
 
                   <Form.Item>
-                    <Button
-                      type='primary'
-                      htmlType='button'
-                      size='large'
-                      className="w-full h-10 rounded-md text-sm font-semibold"
-                      icon={<ArrowRight size={14} />}
-                      onClick={handleNextStep}
-                      disabled={loading}
-                    >
+                    <Button type='primary' onClick={handleNextStep} className="w-full" icon={<ArrowRight size={14} />}>
                       下一步
                     </Button>
                   </Form.Item>
-                </>
-              ) : (
-                <>
+                </Form>
+
+                <Divider className="my-4">
+                  <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
+                </Divider>
+
+                <div className="text-center">
+                  <Text className="text-gray-400 text-xs">
+                    {t('auth.register.hasAccount')}{' '}
+                    <Button type='link' className="p-0 h-auto text-xs" onClick={() => router.push('/login')}>
+                      {t('auth.register.loginNow')}
+                    </Button>
+                  </Text>
+                </div>
+              </>
+            )}
+
+            {step === 2 && (
+              <>
+                <Form form={form} onFinish={handleRegister} layout='vertical' size='middle'>
                   <Form.Item
                     name='fullName'
-                    label='姓名'
-                    rules={[{ required: true, message: '请输入姓名' }]}
+                    label={t('auth.register.nameLabel')}
+                    rules={[{ required: true, message: t('auth.register.nameRequired') }]}
                   >
-                    <Input
-                      prefix={<User size={14} className="text-gray-400" />}
-                      placeholder='请输入您的姓名'
-                      disabled={loading}
-                    />
+                    <Input prefix={<User size={14} className="text-gray-400" />} placeholder={t('auth.register.namePlaceholder')} disabled={loading} />
                   </Form.Item>
 
                   <Form.Item
                     name='phone'
-                    label='手机号'
-                    rules={[
-                      { required: true, message: '请输入手机号' },
-                      { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号' }
-                    ]}
+                    label={t('auth.register.phoneLabel')}
+                    rules={[{ required: true, message: t('auth.register.phoneRequired') }]}
                   >
-                    <Input
-                      prefix={<Phone size={14} className="text-gray-400" />}
-                      placeholder='请输入手机号'
-                      disabled={loading}
-                    />
+                    <Input prefix={<Phone size={14} className="text-gray-400" />} placeholder={t('auth.register.phonePlaceholder')} disabled={loading} />
                   </Form.Item>
 
-                  <Form.Item
-                    name='company'
-                    label='公司名称'
-                  >
-                    <Input
-                      prefix={<Building2 size={14} className="text-gray-400" />}
-                      placeholder='请输入公司名称（选填）'
-                      disabled={loading}
-                    />
+                  <Form.Item name='company' label={t('auth.register.companyLabel')}>
+                    <Input prefix={<Building2 size={14} className="text-gray-400" />} placeholder={t('auth.register.companyPlaceholder')} disabled={loading} />
                   </Form.Item>
 
                   <Form.Item
                     name='role'
-                    label='角色'
-                    initialValue='end_user'
+                    label={t('auth.register.roleLabel')}
+                    rules={[{ required: true, message: t('auth.register.roleRequired') }]}
                   >
-                    <Select
-                      placeholder="请选择您的角色"
-                      options={[
-                        { value: 'end_user', label: '普通用户' },
-                        { value: 'it_admin', label: 'IT管理员' },
-                        { value: 'manager', label: '经理' },
-                      ]}
-                    />
-                  </Form.Item>
-
-                  <Form.Item
-                    name='terms'
-                    valuePropName='checked'
-                    rules={[
-                      {
-                        validator: (_, value) =>
-                          value ? Promise.resolve() : Promise.reject(new Error('请同意服务条款')),
-                      },
-                    ]}
-                  >
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" id="terms" />
-                      <label htmlFor="terms" className="text-sm text-gray-600">
-                        我已阅读并同意
-                        <a href="#" className="text-blue-600 hover:underline"> 服务条款</a>
-                        和
-                        <a href="#" className="text-blue-600 hover:underline"> 隐私政策</a>
-                      </label>
-                    </div>
+                    <Select placeholder={t('auth.register.rolePlaceholder')} disabled={loading}>
+                      <Select.Option value="developer">开发人员</Select.Option>
+                      <Select.Option value="manager">项目经理</Select.Option>
+                      <Select.Option value="admin">系统管理员</Select.Option>
+                      <Select.Option value="user">普通用户</Select.Option>
+                    </Select>
                   </Form.Item>
 
                   <Form.Item>
-                    <Flex gap={12}>
-                      <Button
-                        size='large'
-                        className="flex-1 h-10 rounded-md text-sm"
-                        onClick={() => setStep(1)}
-                        disabled={loading}
-                      >
-                        返回
+                    <Flex gap={8}>
+                      <Button onClick={() => setStep(1)} className="flex-1" disabled={loading}>
+                        上一步
                       </Button>
-                      <Button
-                        type='primary'
-                        htmlType='submit'
-                        size='large'
-                        className="flex-1 h-10 rounded-md text-sm font-semibold"
-                        loading={loading}
-                        icon={<CheckCircle size={14} />}
-                      >
-                        {loading ? '注册中...' : '立即注册'}
+                      <Button type='primary' htmlType='submit' loading={loading} className="flex-1" icon={<CheckCircle size={14} />}>
+                        {loading ? t('auth.register.registering') : t('auth.register.registerButton')}
                       </Button>
                     </Flex>
                   </Form.Item>
-                </>
-              )}
-            </Form>
-
-            <Divider className="my-5">
-              <Text className="text-gray-400 text-xs">或</Text>
-            </Divider>
-
-            <Button
-              size='middle'
-              className="w-full h-10 rounded-md text-sm"
-              disabled={loading}
-              icon={<Shield size={14} />}
-            >
-              SSO 企业登录
-            </Button>
-
-            <div className="text-center mt-5">
-              <Text className="text-gray-400 text-xs">
-                已有账户？{' '}
-                <a href="/login" className="text-blue-600 hover:underline">
-                  立即登录
-                </a>
-              </Text>
-            </div>
+                </Form>
+              </>
+            )}
           </Card>
         </div>
       </div>
