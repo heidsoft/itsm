@@ -34,6 +34,48 @@ jobs:
         working-directory: ./itsm-frontend
         run: npm ci
 
+      - name: Code quality checks (file size & function length)
+        run: |
+          echo "=== File Size Check (>500 lines warning) ==="
+          large_files=$(find itsm-frontend/src -name "*.ts" -o -name "*.tsx" | while read f; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt 500 ]; then
+              echo "  WARNING: $f ($lines lines)"
+            fi
+          done | head -10)
+          if [ -n "$large_files" ]; then
+            echo "$large_files"
+            echo "::warning::Found large files (>500 lines). Consider refactoring."
+          else
+            echo "✓ No large files found"
+          fi
+          
+          echo "=== Function Length Check (>50 lines warning) ==="
+          # Simple function length check for TypeScript
+          long_funcs=$(find itsm-frontend/src -name "*.ts" -o -name "*.tsx" -exec awk '
+          /^[[:space:]]*(export[[:space:]]+)?(async[[:space:]]+)?function[[:space:]]+/ || /^[[:space:]]*(const|let|var)[[:space:]]+[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*=[[:space:]]*(async[[:space:]]*)?\(/ {
+              func_name = $0
+              gsub(/^[[:space:]]*(export[[:space:]]+)?(async[[:space:]]+)?function[[:space:]]+/, "", func_name)
+              gsub(/^[[:space:]]*(const|let|var)[[:space:]]+/, "", func_name)
+              gsub(/[[:space:]]*=.*/, "", func_name)
+              gsub(/\(.*/, "", func_name)
+              start = NR; braces = 0; in_func = 1
+          }
+          in_func && /\{/ { braces += gsub(/\{/, "{") }
+          in_func && /\}/ { braces -= gsub(/\}/, "}") }
+          in_func && braces == 0 {
+              len = NR - start + 1
+              if (len > 50) printf "  WARNING: %s:%s (%d lines)\n", FILENAME, func_name, len
+              in_func = 0
+          }
+          ' {} \; | head -10)
+          if [ -n "$long_funcs" ]; then
+            echo "$long_funcs"
+            echo "::warning::Found long functions (>50 lines). Consider refactoring."
+          else
+            echo "✓ No long functions found"
+          fi
+
       - name: Run lint
         working-directory: ./itsm-frontend
         run: npm run lint:check
