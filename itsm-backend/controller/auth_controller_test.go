@@ -638,3 +638,512 @@ func BenchmarkAuthController_RefreshToken(b *testing.B) {
 		r.ServeHTTP(w, req)
 	}
 }
+
+// ==================== Token 刷新机制补充测试 ====================
+
+func TestAuthController_RefreshTokenWithInactiveUser(t *testing.T) {
+	r, client, _ := setupTestAuthController(t)
+	defer client.Close()
+
+	ctx := context.Background()
+	uniqueID := uniqueTestID()
+
+	// 创建测试租户
+	tenant, err := client.Tenant.Create().
+		SetName("Test Tenant").
+		SetCode("TEST" + uniqueID).
+		SetDomain("test.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 创建密码哈希
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+
+	// 创建活跃用户
+	user, err := client.User.Create().
+		SetUsername("testuser" + uniqueID).
+		SetEmail("test" + uniqueID + "@example.com").
+		SetPasswordHash(string(hashedPassword)).
+		SetName("Test User").
+		SetDepartment("IT").
+		SetPhone("1234567890").
+		SetActive(true).
+		SetTenantID(tenant.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 首先登录获取 refresh token
+	loginRequest := dto.LoginRequest{
+		Username: user.Username,
+		Password: "password123",
+	}
+
+	loginBody, err := json.Marshal(loginRequest)
+	require.NoError(t, err)
+
+	loginReq, err := http.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(loginBody))
+	require.NoError(t, err)
+	loginReq.Header.Set("Content-Type", "application/json")
+
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+
+	require.Equal(t, http.StatusOK, loginW.Code)
+
+	var loginResponse common.Response
+	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
+	require.NoError(t, err)
+
+	loginData, ok := loginResponse.Data.(map[string]interface{})
+	require.True(t, ok)
+	refreshToken := loginData["refresh_token"].(string)
+
+	// 将用户设置为非活跃
+	_, err = client.User.UpdateOneID(user.ID).
+		SetActive(false).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 尝试用被禁用的用户刷新 token
+	refreshRequest := dto.RefreshTokenRequest{
+		RefreshToken: refreshToken,
+	}
+
+	requestBody, err := json.Marshal(refreshRequest)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// 验证响应
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response common.Response
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+
+	// 被禁用的用户应该刷新失败
+	assert.Equal(t, common.AuthFailedCode, response.Code)
+	assert.Contains(t, response.Message, "用户已被禁用")
+}
+
+func TestAuthController_RefreshTokenWithExpiredToken(t *testing.T) {
+	r, client, _ := setupTestAuthController(t)
+	defer client.Close()
+
+	// 创建测试数据
+	_, user := createTestTenantAndUser(t, client)
+
+	// 首先登录获取 refresh token
+	loginRequest := dto.LoginRequest{
+		Username: user.Username,
+		Password: "password123",
+	}
+
+	loginBody, err := json.Marshal(loginRequest)
+	require.NoError(t, err)
+
+	loginReq, err := http.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(loginBody))
+	require.NoError(t, err)
+	loginReq.Header.Set("Content-Type", "application/json")
+
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+
+	require.Equal(t, http.StatusOK, loginW.Code)
+
+	var loginResponse common.Response
+	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
+	require.NoError(t, err)
+
+	loginData, ok := loginResponse.Data.(map[string]interface{})
+	require.True(t, ok)
+	refreshToken := loginData["refresh_token"].(string)
+
+	// 使用过期的 token 格式（模拟过期 token）
+	expiredToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjB9.expired"
+
+	refreshRequest := dto.RefreshTokenRequest{
+		RefreshToken: expiredToken,
+	}
+
+	requestBody, err := json.Marshal(refreshRequest)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// 验证响应
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response common.Response
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+
+	// 过期的 token 应该刷新失败
+	assert.Equal(t, common.AuthFailedCode, response.Code)
+}
+
+func TestAuthController_RefreshTokenMultipleTimes(t *testing.T) {
+	r, client, _ := setupTestAuthController(t)
+	defer client.Close()
+
+	// 创建测试数据
+	_, user := createTestTenantAndUser(t, client)
+
+	// 首先登录获取 refresh token
+	loginRequest := dto.LoginRequest{
+		Username: user.Username,
+		Password: "password123",
+	}
+
+	loginBody, err := json.Marshal(loginRequest)
+	require.NoError(t, err)
+
+	loginReq, err := http.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(loginBody))
+	require.NoError(t, err)
+	loginReq.Header.Set("Content-Type", "application/json")
+
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+
+	require.Equal(t, http.StatusOK, loginW.Code)
+
+	var loginResponse common.Response
+	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
+	require.NoError(t, err)
+
+	loginData, ok := loginResponse.Data.(map[string]interface{})
+	require.True(t, ok)
+	refreshToken := loginData["refresh_token"].(string)
+
+	// 第一次刷新
+	refreshRequest := dto.RefreshTokenRequest{
+		RefreshToken: refreshToken,
+	}
+
+	requestBody, err := json.Marshal(refreshRequest)
+	require.NoError(t, err)
+
+	req1, err := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody))
+	require.NoError(t, err)
+	req1.Header.Set("Content-Type", "application/json")
+
+	w1 := httptest.NewRecorder()
+	r.ServeHTTP(w1, req1)
+
+	assert.Equal(t, http.StatusOK, w1.Code)
+
+	var response1 common.Response
+	err = json.Unmarshal(w1.Body.Bytes(), &response1)
+	require.NoError(t, err)
+	assert.Equal(t, common.SuccessCode, response1.Code)
+
+	response1Data, ok := response1.Data.(map[string]interface{})
+	require.True(t, ok)
+	newAccessToken1 := response1Data["access_token"].(string)
+	assert.NotEmpty(t, newAccessToken1)
+
+	// 第二次刷新（使用同一个 refresh token）
+	req2, err := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody))
+	require.NoError(t, err)
+	req2.Header.Set("Content-Type", "application/json")
+
+	w2 := httptest.NewRecorder()
+	r.ServeHTTP(w2, req2)
+
+	assert.Equal(t, http.StatusOK, w2.Code)
+
+	var response2 common.Response
+	err = json.Unmarshal(w2.Body.Bytes(), &response2)
+	require.NoError(t, err)
+	assert.Equal(t, common.SuccessCode, response2.Code)
+
+	response2Data, ok := response2.Data.(map[string]interface{})
+	require.True(t, ok)
+	newAccessToken2 := response2Data["access_token"].(string)
+	assert.NotEmpty(t, newAccessToken2)
+
+	// 两次刷新返回的 access token 可能不同（因为时间戳不同）
+	assert.NotEmpty(t, newAccessToken1)
+	assert.NotEmpty(t, newAccessToken2)
+}
+
+func TestAuthController_RefreshTokenConcurrent(t *testing.T) {
+	r, client, _ := setupTestAuthController(t)
+	defer client.Close()
+
+	// 创建测试数据
+	_, user := createTestTenantAndUser(t, client)
+
+	// 首先登录获取 refresh token
+	loginRequest := dto.LoginRequest{
+		Username: user.Username,
+		Password: "password123",
+	}
+
+	loginBody, err := json.Marshal(loginRequest)
+	require.NoError(t, err)
+
+	loginReq, err := http.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(loginBody))
+	require.NoError(t, err)
+	loginReq.Header.Set("Content-Type", "application/json")
+
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+
+	require.Equal(t, http.StatusOK, loginW.Code)
+
+	var loginResponse common.Response
+	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
+	require.NoError(t, err)
+
+	loginData, ok := loginResponse.Data.(map[string]interface{})
+	require.True(t, ok)
+	refreshToken := loginData["refresh_token"].(string)
+
+	// 并发刷新请求
+	numRequests := 5
+	results := make(chan struct {
+		status int
+		code   int
+	}, numRequests)
+
+	for i := 0; i < numRequests; i++ {
+		go func() {
+			refreshRequest := dto.RefreshTokenRequest{
+				RefreshToken: refreshToken,
+			}
+
+			requestBody, _ := json.Marshal(refreshRequest)
+			req, _ := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody))
+			req.Header.Set("Content-Type", "application/json")
+
+			w := httptest.NewRecorder()
+			r.ServeHTTP(w, req)
+
+			var response common.Response
+			json.Unmarshal(w.Body.Bytes(), &response)
+
+			results <- struct {
+				status int
+				code   int
+			}{
+				status: w.Code,
+				code:   response.Code,
+			}
+		}()
+	}
+
+	// 收集结果
+	successCount := 0
+	for i := 0; i < numRequests; i++ {
+		result := <-results
+		if result.status == http.StatusOK && result.code == common.SuccessCode {
+			successCount++
+		}
+	}
+
+	// 所有并发请求都应该成功
+	assert.Equal(t, numRequests, successCount, "所有并发刷新请求都应该成功")
+}
+
+func TestAuthController_RefreshTokenResponseFormat(t *testing.T) {
+	r, client, _ := setupTestAuthController(t)
+	defer client.Close()
+
+	// 创建测试数据
+	_, user := createTestTenantAndUser(t, client)
+
+	// 首先登录获取 refresh token
+	loginRequest := dto.LoginRequest{
+		Username: user.Username,
+		Password: "password123",
+	}
+
+	loginBody, err := json.Marshal(loginRequest)
+	require.NoError(t, err)
+
+	loginReq, err := http.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(loginBody))
+	require.NoError(t, err)
+	loginReq.Header.Set("Content-Type", "application/json")
+
+	loginW := httptest.NewRecorder()
+	r.ServeHTTP(loginW, loginReq)
+
+	require.Equal(t, http.StatusOK, loginW.Code)
+
+	var loginResponse common.Response
+	err = json.Unmarshal(loginW.Body.Bytes(), &loginResponse)
+	require.NoError(t, err)
+
+	loginData, ok := loginResponse.Data.(map[string]interface{})
+	require.True(t, ok)
+	refreshToken := loginData["refresh_token"].(string)
+
+	// 刷新 token
+	refreshRequest := dto.RefreshTokenRequest{
+		RefreshToken: refreshToken,
+	}
+
+	requestBody, err := json.Marshal(refreshRequest)
+	require.NoError(t, err)
+
+	req, err := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response common.Response
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+
+	// 验证响应格式
+	assert.Equal(t, common.SuccessCode, response.Code)
+	assert.Equal(t, "success", response.Status)
+	assert.NotEmpty(t, response.Message)
+	assert.NotNil(t, response.Data)
+
+	// 验证返回的数据结构
+	data, ok := response.Data.(map[string]interface{})
+	require.True(t, ok)
+
+	// RefreshTokenResponse 仅返回 access_token
+	assert.NotEmpty(t, data["access_token"])
+	// 不应该返回 refresh_token（不做轮换）
+	_, hasRefreshToken := data["refresh_token"]
+	assert.False(t, hasRefreshToken, "RefreshTokenResponse 不应该返回新的 refresh_token")
+}
+
+func TestAuthController_RefreshTokenWithDifferentUserTokens(t *testing.T) {
+	r, client, _ := setupTestAuthController(t)
+	defer client.Close()
+
+	ctx := context.Background()
+	uniqueID1 := uniqueTestID()
+	uniqueID2 := uniqueTestID()
+
+	// 创建两个租户
+	tenant1, err := client.Tenant.Create().
+		SetName("Tenant 1").
+		SetCode("T1" + uniqueID1).
+		SetDomain("t1.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	tenant2, err := client.Tenant.Create().
+		SetName("Tenant 2").
+		SetCode("T2" + uniqueID2).
+		SetDomain("t2.com").
+		SetStatus("active").
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 创建密码哈希
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
+	require.NoError(t, err)
+
+	// 创建两个用户
+	user1, err := client.User.Create().
+		SetUsername("user1" + uniqueID1).
+		SetEmail("user1" + uniqueID1 + "@example.com").
+		SetPasswordHash(string(hashedPassword)).
+		SetName("User 1").
+		SetDepartment("IT").
+		SetPhone("1234567890").
+		SetActive(true).
+		SetTenantID(tenant1.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	user2, err := client.User.Create().
+		SetUsername("user2" + uniqueID2).
+		SetEmail("user2" + uniqueID2 + "@example.com").
+		SetPasswordHash(string(hashedPassword)).
+		SetName("User 2").
+		SetDepartment("IT").
+		SetPhone("1234567890").
+		SetActive(true).
+		SetTenantID(tenant2.ID).
+		Save(ctx)
+	require.NoError(t, err)
+
+	// 用户 1 登录
+	loginRequest1 := dto.LoginRequest{
+		Username: user1.Username,
+		Password: "password123",
+	}
+
+	loginBody1, _ := json.Marshal(loginRequest1)
+	loginReq1, _ := http.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(loginBody1))
+	loginReq1.Header.Set("Content-Type", "application/json")
+
+	loginW1 := httptest.NewRecorder()
+	r.ServeHTTP(loginW1, loginReq1)
+
+	var loginResponse1 common.Response
+	json.Unmarshal(loginW1.Body.Bytes(), &loginResponse1)
+	loginData1 := loginResponse1.Data.(map[string]interface{})
+	refreshToken1 := loginData1["refresh_token"].(string)
+
+	// 用户 2 登录
+	loginRequest2 := dto.LoginRequest{
+		Username: user2.Username,
+		Password: "password123",
+	}
+
+	loginBody2, _ := json.Marshal(loginRequest2)
+	loginReq2, _ := http.NewRequest("POST", "/api/v1/login", bytes.NewBuffer(loginBody2))
+	loginReq2.Header.Set("Content-Type", "application/json")
+
+	loginW2 := httptest.NewRecorder()
+	r.ServeHTTP(loginW2, loginReq2)
+
+	var loginResponse2 common.Response
+	json.Unmarshal(loginW2.Body.Bytes(), &loginResponse2)
+	loginData2 := loginResponse2.Data.(map[string]interface{})
+	refreshToken2 := loginData2["refresh_token"].(string)
+
+	// 用用户 1 的 refresh token 刷新，应该成功
+	refreshRequest1 := dto.RefreshTokenRequest{
+		RefreshToken: refreshToken1,
+	}
+
+	requestBody1, _ := json.Marshal(refreshRequest1)
+	req1, _ := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody1))
+	req1.Header.Set("Content-Type", "application/json")
+
+	w1 := httptest.NewRecorder()
+	r.ServeHTTP(w1, req1)
+
+	assert.Equal(t, http.StatusOK, w1.Code)
+
+	// 用用户 2 的 refresh token 刷新，应该成功
+	refreshRequest2 := dto.RefreshTokenRequest{
+		RefreshToken: refreshToken2,
+	}
+
+	requestBody2, _ := json.Marshal(refreshRequest2)
+	req2, _ := http.NewRequest("POST", "/api/v1/refresh-token", bytes.NewBuffer(requestBody2))
+	req2.Header.Set("Content-Type", "application/json")
+
+	w2 := httptest.NewRecorder()
+	r.ServeHTTP(w2, req2)
+
+	assert.Equal(t, http.StatusOK, w2.Code)
+}
