@@ -419,7 +419,6 @@ func (s *ApprovalService) handleApprovalApproved(ctx context.Context, record *en
 			approvalrecord.StatusEQ("pending"),
 		).
 		Count(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to count remaining approvals: %w", err)
 	}
@@ -533,7 +532,6 @@ func (s *ApprovalService) handleApprovalDelegated(ctx context.Context, record *e
 		SetNillableDueDate(record.DueDate).
 		SetTenantID(record.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return fmt.Errorf("failed to create delegated approval record: %w", err)
 	}
@@ -732,7 +730,6 @@ func (s *ApprovalService) TriggerApproval(ctx context.Context, req *ApprovalTrig
 			SetTenantID(req.TenantID).
 			SetCreatedAt(time.Now()).
 			Save(ctx)
-
 		if err != nil {
 			s.logger.Errorw("Failed to create approval record", "error", err, "node", i)
 			continue

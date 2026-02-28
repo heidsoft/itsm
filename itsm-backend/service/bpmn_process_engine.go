@@ -559,9 +559,11 @@ func (e *CustomProcessEngine) findServiceTask(process *BPMNProcess, id string) *
 func (e *CustomProcessEngine) SuspendProcess(ctx context.Context, processInstanceID string, reason string) error {
 	return nil
 }
+
 func (e *CustomProcessEngine) ResumeProcess(ctx context.Context, processInstanceID string) error {
 	return nil
 }
+
 func (e *CustomProcessEngine) TerminateProcess(ctx context.Context, processInstanceID string, reason string) error {
 	return nil
 }
@@ -740,7 +742,6 @@ func (s *bpmnProcessDefinitionService) CreateProcessDefinition(ctx context.Conte
 		SetDeploymentID(deployment.ID).
 		SetDeploymentName(deployment.DeploymentName).
 		Save(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("创建流程定义失败: %w", err)
 	}
@@ -756,7 +757,6 @@ func (s *bpmnProcessDefinitionService) getNextVersion(ctx context.Context, key s
 		Where(processdefinition.TenantID(tenantID)).
 		Order(ent.Desc("version")).
 		First(ctx)
-
 	if err != nil {
 		// 没有版本，返回初始版本
 		return "1.0.0"
@@ -804,7 +804,6 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.Version(version)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -815,7 +814,6 @@ func (s *bpmnProcessDefinitionService) GetProcessDefinition(ctx context.Context,
 // GetProcessDefinitionByID 根据ID获取流程定义
 func (s *bpmnProcessDefinitionService) GetProcessDefinitionByID(ctx context.Context, id int) (*ent.ProcessDefinition, error) {
 	definition, err := s.client.ProcessDefinition.Get(ctx, id)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取流程定义失败: %w", err)
 	}
@@ -828,7 +826,6 @@ func (s *bpmnProcessDefinitionService) GetLatestProcessDefinition(ctx context.Co
 		Where(processdefinition.Key(key)).
 		Where(processdefinition.IsLatest(true)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取最新流程定义失败: %w", err)
 	}
@@ -936,7 +933,6 @@ func (s *bpmnProcessInstanceService) GetProcessInstance(ctx context.Context, pro
 	instance, err := s.client.ProcessInstance.Query().
 		Where(processinstance.ProcessInstanceID(processInstanceID)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取流程实例失败: %w", err)
 	}
@@ -1074,7 +1070,6 @@ func (s *bpmnTaskService) GetTask(ctx context.Context, taskID string) (*ent.Proc
 	task, err := s.client.ProcessTask.Query().
 		Where(processtask.TaskID(taskID)).
 		First(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取任务失败: %w", err)
 	}

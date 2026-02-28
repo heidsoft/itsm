@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticketassignmentrule"
-	"sort"
-	"time"
 
 	"go.uber.org/zap"
 )

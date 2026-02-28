@@ -60,7 +60,6 @@ func (s *ChangeApprovalService) CreateChangeApproval(ctx context.Context, req *d
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create change approval", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create change approval: %w", err)
@@ -103,7 +102,6 @@ func (s *ChangeApprovalService) UpdateChangeApproval(ctx context.Context, approv
 		time.Now(),
 		approvalID,
 	).Scan(&id, &changeID, &approverID, &status, &comment, &approvedAt, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to update change approval", "error", err, "approval_id", approvalID)
 		return nil, fmt.Errorf("failed to update change approval: %w", err)
@@ -371,7 +369,6 @@ func (s *ChangeApprovalService) CreateChangeRiskAssessment(ctx context.Context, 
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create risk assessment", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create risk assessment: %w", err)
@@ -423,7 +420,6 @@ func (s *ChangeApprovalService) GetChangeRiskAssessment(ctx context.Context, cha
 		&mitigationMeasures, &contingencyPlan, &riskOwner, &riskReviewDate,
 		&createdAt, &updatedAt,
 	)
-
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fmt.Errorf("risk assessment not found")
@@ -489,7 +485,6 @@ func (s *ChangeApprovalService) CreateChangeImplementationPlan(ctx context.Conte
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create implementation plan", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create implementation plan: %w", err)
@@ -553,7 +548,6 @@ func (s *ChangeApprovalService) CreateChangeRollbackPlan(ctx context.Context, re
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create rollback plan", "error", err, "change_id", req.ChangeID)
 		return nil, fmt.Errorf("failed to create rollback plan: %w", err)
@@ -622,7 +616,6 @@ func (s *ChangeApprovalService) ExecuteChangeRollback(ctx context.Context, chang
 		time.Now(),
 		time.Now(),
 	).Scan(&id, &createdAt)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create rollback execution", "error", err, "change_id", changeID)
 		return nil, fmt.Errorf("failed to create rollback execution: %w", err)
@@ -668,7 +661,6 @@ func (s *ChangeApprovalService) checkAndUpdateChangeStatus(ctx context.Context, 
 			Where(change.ID(changeID)).
 			SetStatus(string(dto.ChangeStatusApproved)).
 			Save(ctx)
-
 		if err != nil {
 			return fmt.Errorf("failed to update change status: %w", err)
 		}

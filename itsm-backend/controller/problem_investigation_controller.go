@@ -1,12 +1,13 @@
 package controller
 
 import (
+	"strconv"
+	"strings"
+
 	"itsm-backend/common"
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/service"
-	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -426,7 +427,6 @@ func (pc *ProblemInvestigationController) CreateKnowledgeArticle(c *gin.Context)
 		SetTags(tagsStr).
 		SetTenantID(tenantID).
 		Save(c.Request.Context())
-
 	if err != nil {
 		pc.logger.Errorw("Create knowledge article failed", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "创建知识库文章失败: "+err.Error())
@@ -469,7 +469,6 @@ func (pc *ProblemInvestigationController) GetProblemKnowledgeArticles(c *gin.Con
 	articles, err := entClient.KnowledgeArticle.Query().
 		Order(ent.Desc("created_at")).
 		All(c.Request.Context())
-
 	if err != nil {
 		pc.logger.Errorw("Get knowledge articles failed", "error", err, "tenant_id", tenantID)
 		common.Fail(c, common.InternalErrorCode, "获取知识库文章列表失败")

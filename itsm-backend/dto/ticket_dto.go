@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 // UserBasicInfo 用户基本信息

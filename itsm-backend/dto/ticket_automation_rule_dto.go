@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 // CreateAutomationRuleRequest 创建自动化规则请求

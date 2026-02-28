@@ -1,9 +1,10 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"itsm-backend/common"
-	"net/http"
 )
 
 // API版本常量
@@ -191,7 +192,8 @@ func Error(c *gin.Context, code int, message string, details ...map[string]inter
 func BatchOperationResponse(c *gin.Context, success, failed int, errors []struct {
 	ID    int    `json:"id"`
 	Error string `json:"error"`
-}, data interface{}) {
+}, data interface{},
+) {
 	traceID, _ := c.Get("request_id")
 
 	response := BatchResponse{

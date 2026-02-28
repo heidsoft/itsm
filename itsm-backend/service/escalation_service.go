@@ -141,7 +141,6 @@ func (e *EscalationService) escalateToLevel(ctx context.Context, alert *ent.SLAA
 				Channel: "in_app",
 				Content: content,
 			}, tenantID)
-
 			if err != nil {
 				e.logger.Errorw("Failed to send SLA escalation notification", "user_id", userID, "error", err)
 			}

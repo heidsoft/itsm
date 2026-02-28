@@ -781,7 +781,6 @@ func (s *DashboardService) getSLADataForDashboard(ctx context.Context, tenantID 
 	slaDefinitions, err := s.client.SLADefinition.Query().
 		Where(sladefinition.TenantIDEQ(tenantID)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to query SLA definitions: %w", err)
 	}
@@ -816,7 +815,6 @@ func (s *DashboardService) calculateActualSLAPerformance(ctx context.Context, sl
 			ticket.CreatedAtGTE(thirtyDaysAgo),
 		).
 		Count(ctx)
-
 	if err != nil {
 		return 0, err
 	}
@@ -833,7 +831,6 @@ func (s *DashboardService) calculateActualSLAPerformance(ctx context.Context, sl
 			ticket.StatusIn("resolved", "closed"),
 		).
 		Count(ctx)
-
 	if err != nil {
 		return 0, err
 	}

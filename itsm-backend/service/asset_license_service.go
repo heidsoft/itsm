@@ -47,7 +47,6 @@ func (s *AssetLicenseService) CreateLicense(ctx context.Context, req *dto.Create
 		SetNotes(req.Notes).
 		SetUsers(req.Users).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create license", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create license: %w", err)
@@ -69,7 +68,6 @@ func (s *AssetLicenseService) GetLicenseByID(ctx context.Context, id, tenantID i
 	licenseEntity, err := s.client.AssetLicense.Query().
 		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -124,7 +122,6 @@ func (s *AssetLicenseService) UpdateLicense(ctx context.Context, id, tenantID in
 	licenseEntity, err := s.client.AssetLicense.Query().
 		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -198,7 +195,6 @@ func (s *AssetLicenseService) DeleteLicense(ctx context.Context, id, tenantID in
 	_, err := s.client.AssetLicense.Delete().
 		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
 		Exec(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to delete license", "error", err, "license_id", id)
 		return fmt.Errorf("failed to delete license: %w", err)
@@ -243,7 +239,6 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 	licenseEntity, err := s.client.AssetLicense.Query().
 		Where(assetlicense.IDEQ(id), assetlicense.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -264,7 +259,6 @@ func (s *AssetLicenseService) AssignUsers(ctx context.Context, id, tenantID int,
 		SetUsers(newUsers).
 		SetUsedQuantity(len(newUsers)).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to assign users to license", "error", err, "license_id", id)
 		return nil, fmt.Errorf("failed to assign users: %w", err)

@@ -205,7 +205,6 @@ func TestTicketController_CreateTicket(t *testing.T) {
 			// 验证响应
 			var response common.Response
 			err = json.Unmarshal(w.Body.Bytes(), &response)
-
 			// 如果无法解析响应，至少检查状态码
 			if err != nil {
 				// 可能是因为上下文未正确设置

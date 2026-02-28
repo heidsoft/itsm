@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 // CreateTicketViewRequest 创建工单视图请求

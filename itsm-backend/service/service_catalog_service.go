@@ -49,7 +49,6 @@ func (s *ServiceCatalogService) ListServiceCatalogs(ctx context.Context, req *dt
 		Offset((req.Page - 1) * req.Size).
 		Limit(req.Size).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取服务目录列表失败: %w", err)
 	}
@@ -86,7 +85,6 @@ func (s *ServiceCatalogService) CreateServiceCatalog(ctx context.Context, req *d
 		SetStatus(req.Status).
 		SetTenantID(tenantID).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorf("创建服务目录失败: %v", err)
 		return nil, fmt.Errorf("创建服务目录失败: %w", err)

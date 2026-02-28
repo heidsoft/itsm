@@ -3,11 +3,12 @@ package service
 import (
 	"context"
 	"fmt"
+	"sort"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
-	"sort"
-	"time"
 )
 
 // TicketAssignmentService 工单智能分配和路由服务

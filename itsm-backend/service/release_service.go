@@ -49,7 +49,6 @@ func (s *ReleaseService) CreateRelease(ctx context.Context, req *dto.CreateRelea
 		SetIsEmergency(req.IsEmergency).
 		SetRequiresApproval(req.RequiresApproval).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create release", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create release: %w", err)
@@ -88,7 +87,6 @@ func (s *ReleaseService) GetReleaseByID(ctx context.Context, id, tenantID int) (
 	releaseEntity, err := s.client.Release.Query().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -161,7 +159,6 @@ func (s *ReleaseService) UpdateRelease(ctx context.Context, id, tenantID int, re
 	releaseEntity, err := s.client.Release.Query().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -248,7 +245,6 @@ func (s *ReleaseService) UpdateReleaseStatus(ctx context.Context, id, tenantID i
 	releaseEntity, err := s.client.Release.Query().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, nil
@@ -280,7 +276,6 @@ func (s *ReleaseService) DeleteRelease(ctx context.Context, id, tenantID int) er
 	_, err := s.client.Release.Delete().
 		Where(release.IDEQ(id), release.TenantIDEQ(tenantID)).
 		Exec(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to delete release", "error", err, "release_id", id)
 		return fmt.Errorf("failed to delete release: %w", err)

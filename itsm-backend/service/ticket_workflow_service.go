@@ -4,9 +4,10 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
-	"time"
 
 	"go.uber.org/zap"
 )
@@ -654,7 +655,8 @@ func (s *TicketWorkflowService) getTicket(ctx context.Context, ticketID, tenantI
 	Status      string
 	RequesterID int
 	AssigneeID  *int
-}, error) {
+}, error,
+) {
 	query := "SELECT id, status, requester_id, assignee_id FROM tickets WHERE id = $1 AND tenant_id = $2"
 
 	var ticket struct {

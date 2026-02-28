@@ -3,6 +3,10 @@ package seeder
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/asset"
 	"itsm-backend/ent/assetlicense"
@@ -13,9 +17,6 @@ import (
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
-	"os"
-	"path/filepath"
-	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"

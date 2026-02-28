@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/tickettemplate"
-	"time"
 )
 
 // TicketTemplateService 工单模板服务
@@ -55,7 +56,6 @@ func (s *TicketTemplateService) CreateTemplate(ctx context.Context, req *CreateT
 		SetIsActive(req.IsActive).
 		SetTenantID(req.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return nil, err
 	}

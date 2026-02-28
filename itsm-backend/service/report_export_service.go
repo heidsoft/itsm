@@ -190,7 +190,7 @@ func (s *ReportExportService) ExportToPDF(ctx context.Context, data *dto.DeepAna
 	content.WriteString(fmt.Sprintf("%d\n", content.Len()))
 	content.WriteString("endobj\n")
 
-	//xref
+	// xref
 	content.WriteString("xref\n")
 	content.WriteString("0 6\n")
 	content.WriteString("0000000000 65535 f \n")

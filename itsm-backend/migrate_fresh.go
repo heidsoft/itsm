@@ -7,11 +7,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
+	"time"
+
 	"itsm-backend/config"
 	"itsm-backend/database"
 	"itsm-backend/ent"
-	"log"
-	"time"
 
 	_ "github.com/lib/pq"
 )

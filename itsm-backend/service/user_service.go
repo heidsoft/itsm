@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"itsm-backend/dto"
 	"itsm-backend/ent"
 	"itsm-backend/ent/user"
-	"strings"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
@@ -71,7 +72,6 @@ func (s *UserService) CreateUser(ctx context.Context, req *dto.CreateUserRequest
 		uc = uc.SetRole(user.Role(strings.ToLower(strings.TrimSpace(req.Role))))
 	}
 	userEntity, err := uc.Save(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("创建用户失败: %w", err)
 	}
@@ -126,7 +126,6 @@ func (s *UserService) ListUsers(ctx context.Context, req *dto.ListUsersRequest) 
 		Offset((req.Page - 1) * req.PageSize).
 		Order(ent.Desc(user.FieldCreatedAt)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("查询用户列表失败: %w", err)
 	}
@@ -266,7 +265,6 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 	err = s.client.User.UpdateOneID(id).
 		SetActive(false).
 		Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("删除用户失败: %w", err)
 	}
@@ -288,7 +286,6 @@ func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool)
 	err = s.client.User.UpdateOneID(id).
 		SetActive(active).
 		Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("更改用户状态失败: %w", err)
 	}
@@ -316,7 +313,6 @@ func (s *UserService) ResetPassword(ctx context.Context, id int, newPassword str
 	err = s.client.User.UpdateOneID(id).
 		SetPasswordHash(string(hashedPassword)).
 		Exec(ctx)
-
 	if err != nil {
 		return fmt.Errorf("重置密码失败: %w", err)
 	}
@@ -422,7 +418,6 @@ func (s *UserService) SearchUsers(ctx context.Context, req *dto.SearchUsersReque
 		Limit(req.Limit).
 		Order(ent.Asc(user.FieldName)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("搜索用户失败: %w", err)
 	}

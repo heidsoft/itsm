@@ -104,7 +104,6 @@ func main() {
 					SetCriticality("medium").
 					SetTenantID(1).
 					Save(context.Background())
-
 				if err != nil {
 					c.JSON(500, gin.H{"success": false, "message": err.Error()})
 					return

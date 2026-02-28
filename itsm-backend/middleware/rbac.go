@@ -2,15 +2,16 @@ package middleware
 
 import (
 	"context"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
+
 	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
-	"net/http"
-	"strconv"
-	"strings"
-	"sync"
 
 	"github.com/gin-gonic/gin"
 )

@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/workflow"
 	"itsm-backend/ent/workflowinstance"
-	"time"
 )
 
 // WorkflowService 工作流服务
@@ -42,7 +43,6 @@ func (s *WorkflowService) CreateWorkflow(ctx context.Context, req *CreateWorkflo
 		SetIsActive(req.IsActive).
 		SetTenantID(req.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +192,6 @@ func (s *WorkflowService) StartWorkflow(ctx context.Context, req *StartWorkflowR
 		SetEntityType(req.EntityType).
 		SetTenantID(req.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return nil, err
 	}

@@ -2,12 +2,13 @@ package middleware
 
 import (
 	"errors"
-	"itsm-backend/ent"
-	"itsm-backend/ent/tenant"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"itsm-backend/ent"
+	"itsm-backend/ent/tenant"
 
 	"github.com/gin-gonic/gin"
 )

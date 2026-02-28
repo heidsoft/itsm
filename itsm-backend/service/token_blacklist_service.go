@@ -169,7 +169,6 @@ func (s *TokenBlacklistService) parseToken(tokenString string) (*JWTClaims, erro
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte("your-secret-key"), nil // 实际应该从配置获取
 	})
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse token: %w", err)
 	}

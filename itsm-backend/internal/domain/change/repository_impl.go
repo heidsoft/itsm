@@ -71,7 +71,6 @@ func (r *EntRepository) Create(ctx context.Context, c *Change) (*Change, error) 
 		SetAffectedCis(c.AffectedCIs).
 		SetRelatedTickets(c.RelatedTickets).
 		Save(ctx)
-
 	if err != nil {
 		return nil, err
 	}

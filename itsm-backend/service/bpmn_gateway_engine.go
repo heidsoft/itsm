@@ -393,7 +393,6 @@ func (e *GatewayEngine) recordGatewayExecution(ctx context.Context, req *Gateway
 		SetTenantID(req.TenantID).
 		SetTimestamp(time.Now()).
 		Save(ctx)
-
 	if err != nil {
 		e.logger.Warnw("Failed to save execution history", "error", err)
 		// 不返回错误，避免影响主流程
@@ -417,7 +416,6 @@ func (e *GatewayEngine) GetGatewayExecutionHistory(ctx context.Context, processI
 		Where(processexecutionhistory.ActivityType("gateway")).
 		Order(ent.Asc(processexecutionhistory.FieldTimestamp)).
 		All(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to query execution history: %w", err)
 	}

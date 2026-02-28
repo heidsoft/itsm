@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"itsm-backend/config"
 	"itsm-backend/database"
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
-	"log"
-	"time"
 )
 
 func main() {

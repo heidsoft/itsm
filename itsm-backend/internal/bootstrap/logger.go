@@ -38,7 +38,7 @@ func initLogger(cfg *config.LogConfig) *zap.Logger {
 
 	// 确保日志目录存在
 	if cfg.Path != "" {
-		if err := os.MkdirAll(cfg.Path, 0755); err != nil {
+		if err := os.MkdirAll(cfg.Path, 0o755); err != nil {
 			fmt.Printf("Failed to create log directory: %v\n", err)
 		}
 	}

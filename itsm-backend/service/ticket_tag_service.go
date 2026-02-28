@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/tickettag"
-	"time"
 )
 
 // TicketTagService 工单标签服务
@@ -40,7 +41,6 @@ func (s *TicketTagService) CreateTag(ctx context.Context, req *CreateTagRequest)
 		SetIsActive(req.IsActive).
 		SetTenantID(req.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return nil, err
 	}

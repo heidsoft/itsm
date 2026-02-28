@@ -161,7 +161,6 @@ func (s *BPMNVariableService) CreateVariable(ctx context.Context, req *CreateVar
 		SetIsTransient(req.IsTransient).
 		SetTenantID(req.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("创建流程变量失败: %w", err)
 	}
@@ -177,7 +176,6 @@ func (s *BPMNVariableService) GetVariable(ctx context.Context, id string, tenant
 		Where(processvariable.VariableID(id)).
 		Where(processvariable.TenantID(tenantID)).
 		Only(ctx)
-
 	if err != nil {
 		return nil, fmt.Errorf("获取流程变量失败: %w", err)
 	}
@@ -432,7 +430,6 @@ func (s *BPMNVariableService) DeleteVariablesByScope(ctx context.Context, scope 
 		_, err = s.client.ProcessVariable.Delete().
 			Where(processvariable.VariableIDIn(ids...)).
 			Exec(ctx)
-
 		if err != nil {
 			return fmt.Errorf("批量删除变量失败: %w", err)
 		}

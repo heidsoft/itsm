@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"itsm-backend/common"
-	"itsm-backend/service"
 	"strconv"
 	"time"
+
+	"itsm-backend/common"
+	"itsm-backend/service"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

@@ -1,8 +1,9 @@
 package dto
 
 import (
-	"itsm-backend/ent"
 	"time"
+
+	"itsm-backend/ent"
 )
 
 // intToPtr converts int to *int

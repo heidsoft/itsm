@@ -3,10 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"time"
+
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketcategory"
-	"time"
 )
 
 // TicketCategoryService 工单分类服务
@@ -52,7 +53,6 @@ func (s *TicketCategoryService) CreateCategory(ctx context.Context, req *CreateC
 		SetIsActive(req.IsActive).
 		SetTenantID(req.TenantID).
 		Save(ctx)
-
 	if err != nil {
 		return nil, err
 	}

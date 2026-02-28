@@ -250,7 +250,8 @@ func (t *TriageService) BatchSuggest(ctx context.Context, tickets []struct {
 }) ([]struct {
 	ID     int
 	Result TriageResult
-}, error) {
+}, error,
+) {
 	results := make([]struct {
 		ID     int
 		Result TriageResult

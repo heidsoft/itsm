@@ -3,13 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+
 	"itsm-backend/controller"
 	"itsm-backend/ent"
 	"itsm-backend/ent/citype"
 	"itsm-backend/service"
-	"log"
-	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

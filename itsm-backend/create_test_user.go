@@ -7,13 +7,14 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"log"
+	"os"
+	"time"
+
 	"itsm-backend/config"
 	"itsm-backend/database"
 	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
-	"log"
-	"os"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )

@@ -58,7 +58,6 @@ func (s *ChangeService) CreateChange(ctx context.Context, req *dto.CreateChangeR
 		SetNillablePlannedStartDate(req.PlannedStartDate).
 		SetNillablePlannedEndDate(req.PlannedEndDate).
 		Save(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to create change", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to create change: %w", err)
@@ -155,7 +154,6 @@ func (s *ChangeService) GetChange(ctx context.Context, id int, tenantID int) (*d
 	changeEntity, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("change not found")
@@ -250,7 +248,6 @@ func (s *ChangeService) ListChanges(ctx context.Context, tenantID int, page, pag
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		All(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to list changes", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("failed to list changes: %w", err)
@@ -324,7 +321,6 @@ func (s *ChangeService) UpdateChange(ctx context.Context, id int, req *dto.Updat
 	changeEntity, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		First(ctx)
-
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return nil, fmt.Errorf("change not found")
@@ -397,7 +393,6 @@ func (s *ChangeService) DeleteChange(ctx context.Context, id int, tenantID int) 
 	exists, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		Exist(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to check change existence", "error", err, "change_id", id, "tenant_id", tenantID)
 		return fmt.Errorf("failed to check change existence: %w", err)
@@ -495,7 +490,6 @@ func (s *ChangeService) UpdateChangeStatus(ctx context.Context, id int, status d
 	exists, err := s.client.Change.Query().
 		Where(change.ID(id), change.TenantID(tenantID)).
 		Exist(ctx)
-
 	if err != nil {
 		s.logger.Errorw("Failed to check change existence", "error", err, "change_id", id, "tenant_id", tenantID)
 		return fmt.Errorf("failed to check change existence: %w", err)
