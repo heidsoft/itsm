@@ -23,7 +23,7 @@ jwt:
   refresh_expire_time: 604800  # 7天 (refresh token)
 
 log:
-  level: "${LOG_LEVEL:info}"  # debug, info, warn, error
+  level: "${LOG_LEVEL:error}"  # debug, info, warn, error (production default: error)
   path: ./logs                # 日志文件目录
   max_size: 200               # 单个日志文件最大大小(MB)
   max_backups: 20             # 保留的旧日志文件数量 - 优化存储 (200MB * 20 = 4GB)
