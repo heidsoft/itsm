@@ -27,8 +27,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Clear npm cache
         run: npm cache clean --force
@@ -66,8 +64,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Clear npm cache
         run: npm cache clean --force
@@ -104,8 +100,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Clear npm cache
         run: npm cache clean --force
@@ -143,8 +137,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Clear npm cache
         run: npm cache clean --force
@@ -183,8 +175,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: itsm-frontend/package-lock.json
 
       - name: Clear npm cache
         run: npm cache clean --force
