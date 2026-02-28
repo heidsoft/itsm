@@ -221,8 +221,8 @@ jobs:
       - name: Generate Summary
         if: always()
         run: |
-          echo "## Test Summary" >> $GITHUB_ST          echo "- API Tests: CompletedEP_SUMMARY
-" >> $GITHUB_STEP_SUMMARY
+          echo "## Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- API Tests: Completed" >> $GITHUB_STEP_SUMMARY
           echo "- Database Tests: Completed" >> $GITHUB_STEP_SUMMARY
 
   test-report:
