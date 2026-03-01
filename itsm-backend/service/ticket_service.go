@@ -31,13 +31,22 @@ type TicketService struct {
 	processTriggerService ProcessTriggerServiceInterface
 	// 审批服务
 	approvalService *ApprovalService
+	// 子服务
+	lifecycleService  *TicketLifecycleService
+	assignmentService *TicketAssignmentService
+	slaService        *TicketSLAService
 }
 
 func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketService {
-	return &TicketService{
+	svc := &TicketService{
 		client: client,
 		logger: logger,
 	}
+	// 初始化子服务
+	svc.lifecycleService = NewTicketLifecycleService(client, logger)
+	svc.assignmentService = NewTicketAssignmentService(client, logger)
+	svc.slaService = NewTicketSLAService(client, logger)
+	return svc
 }
 
 // SetNotificationService 设置通知服务（用于依赖注入）
@@ -58,6 +67,24 @@ func (s *TicketService) SetProcessTriggerService(triggerService ProcessTriggerSe
 // SetApprovalService 设置审批服务
 func (s *TicketService) SetApprovalService(approvalService *ApprovalService) {
 	s.approvalService = approvalService
+}
+
+// SetLifecycleService 设置生命周期服务
+func (s *TicketService) SetLifecycleService(lifecycleService *TicketLifecycleService) {
+	s.lifecycleService = lifecycleService
+	if lifecycleService != nil && s.notificationService != nil {
+		lifecycleService.SetNotificationService(s.notificationService)
+	}
+}
+
+// SetAssignmentService 设置分配服务
+func (s *TicketService) SetAssignmentService(assignmentService *TicketAssignmentService) {
+	s.assignmentService = assignmentService
+}
+
+// SetSLAService 设置SLA服务
+func (s *TicketService) SetSLAService(slaService *TicketSLAService) {
+	s.slaService = slaService
 }
 
 // CreateTicket 创建工单
@@ -92,14 +119,16 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	if ticketType == "" {
 		ticketType = "ticket" // 默认类型
 	}
-	slaResult, err := s.calculateSLADeadline(ctx, tenantID, ticketType, req.Priority)
+	slaResult, err := s.slaService.CalculateSLADeadlineFromRequest(ctx, tenantID, ticketType, req.Priority)
 	if err != nil {
 		s.logger.Warnw("Failed to calculate SLA deadline", "error", err)
-		// SLA计算失败不阻止工单创建
+		// SLA计算失败不阻止工单创建，使用默认值
+		defaultRespDeadline := time.Now().Add(8 * time.Hour)
+		defaultResDeadline := time.Now().Add(24 * time.Hour)
 		slaResult = &SLADeadlineResult{
 			SLADefinitionID:    0,
-			ResponseDeadline:   time.Now().Add(8 * time.Hour),
-			ResolutionDeadline: time.Now().Add(24 * time.Hour),
+			ResponseDeadline:   &defaultRespDeadline,
+			ResolutionDeadline: &defaultResDeadline,
 		}
 	}
 
@@ -108,6 +137,19 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	if err != nil {
 		s.logger.Errorw("Failed to generate ticket number", "error", err)
 		return nil, fmt.Errorf("failed to generate ticket number: %w", err)
+	}
+
+	// 处理 SLA 截止时间指针
+	var respDeadline, resDeadline time.Time
+	if slaResult.ResponseDeadline != nil {
+		respDeadline = *slaResult.ResponseDeadline
+	} else {
+		respDeadline = time.Now().Add(8 * time.Hour)
+	}
+	if slaResult.ResolutionDeadline != nil {
+		resDeadline = *slaResult.ResolutionDeadline
+	} else {
+		resDeadline = time.Now().Add(24 * time.Hour)
 	}
 
 	createBuilder := s.client.Ticket.Create().
@@ -120,8 +162,8 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		SetTicketNumber(ticketNumber).
 		SetTenantID(tenantID).
 		SetRequesterID(req.RequesterID).
-		SetSLAResponseDeadline(slaResult.ResponseDeadline).
-		SetSLAResolutionDeadline(slaResult.ResolutionDeadline)
+		SetSLAResponseDeadline(respDeadline).
+		SetSLAResolutionDeadline(resDeadline)
 
 	// 只在指定了有效的分配人ID时设置（避免SQLite FK约束问题）
 	if req.AssigneeID > 0 {
@@ -899,103 +941,30 @@ func (s *TicketService) GetTicketStats(ctx context.Context, tenantID int) (*dto.
 		return nil, fmt.Errorf("failed to count high priority tickets: %w", err)
 	}
 
+	// 获取逾期工单数（使用SLA服务）
+	overdueCount := 0
+	if s.slaService != nil {
+		overdueTickets, err := s.slaService.GetOverdueTickets(ctx, tenantID)
+		if err == nil {
+			overdueCount = len(overdueTickets)
+		}
+	}
+
 	return &dto.TicketStatsResponse{
 		Total:        totalTickets,
 		Open:         submittedTickets,
 		InProgress:   inProgressTickets,
 		Resolved:     closedTickets,
 		HighPriority: highPriorityTickets,
-		Overdue:      0, // 暂时设为0，因为需要SLA计算
+		Overdue:      overdueCount,
 	}, nil
 }
 
-// SLADeadlineResult contains response and resolution deadlines
-type SLADeadlineResult struct {
+// TicketSLADeadlineResult 工单SLA截止时间结果（用于工单创建）
+type TicketSLADeadlineResult struct {
 	SLADefinitionID    int       `json:"sla_definition_id"`
 	ResponseDeadline   time.Time `json:"response_deadline"`
 	ResolutionDeadline time.Time `json:"resolution_deadline"`
-}
-
-// calculateSLADeadline 计算SLA截止时间（从数据库读取SLA定义）
-func (s *TicketService) calculateSLADeadline(ctx context.Context, tenantID int, ticketType, priority string) (*SLADeadlineResult, error) {
-	now := time.Now()
-
-	// 确定service_type
-	var serviceType string
-	switch ticketType {
-	case "incident":
-		serviceType = "incident"
-	case "service_request":
-		serviceType = "service_request"
-	case "change":
-		serviceType = "change"
-	default:
-		// 默认为incident类型
-		serviceType = "incident"
-	}
-
-	// 标准化优先级
-	normalizedPriority := strings.ToLower(priority)
-	if normalizedPriority == "urgent" {
-		normalizedPriority = "critical"
-	}
-
-	// 从数据库查找匹配的SLA定义
-	sla, err := s.client.SLADefinition.Query().
-		Where(
-			sladefinition.TenantID(tenantID),
-			sladefinition.ServiceType(serviceType),
-			sladefinition.Priority(normalizedPriority),
-			sladefinition.IsActive(true),
-		).
-		First(ctx)
-	if err != nil {
-		// 如果找不到精确匹配，尝试查找默认SLA（不带优先级）
-		if ent.IsNotFound(err) {
-			sla, err = s.client.SLADefinition.Query().
-				Where(
-					sladefinition.TenantID(tenantID),
-					sladefinition.ServiceType(serviceType),
-					sladefinition.IsActive(true),
-				).
-				First(ctx)
-		}
-
-		if err != nil || sla == nil {
-			// 如果还是找不到，返回默认值
-			s.logger.Warnw("No SLA definition found, using defaults", "service_type", serviceType, "priority", normalizedPriority)
-			return &SLADeadlineResult{
-				SLADefinitionID:    0,
-				ResponseDeadline:   now.Add(8 * time.Hour),
-				ResolutionDeadline: now.Add(24 * time.Hour),
-			}, nil
-		}
-	}
-
-	// 计算截止时间（单位是分钟）
-	responseDeadline := now.Add(time.Duration(sla.ResponseTime) * time.Minute)
-	resolutionDeadline := now.Add(time.Duration(sla.ResolutionTime) * time.Minute)
-
-	// 考虑工作时间（简单实现：延后到下一个工作日）
-	responseDeadline = s.adjustToBusinessHours(responseDeadline)
-	resolutionDeadline = s.adjustToBusinessHours(resolutionDeadline)
-
-	return &SLADeadlineResult{
-		SLADefinitionID:    sla.ID,
-		ResponseDeadline:   responseDeadline,
-		ResolutionDeadline: resolutionDeadline,
-	}, nil
-}
-
-// adjustToBusinessHours 调整时间到工作时间（简单实现：延后到周一）
-func (s *TicketService) adjustToBusinessHours(t time.Time) time.Time {
-	// 如果是周末，延后到周一
-	if t.Weekday() == time.Saturday {
-		return t.AddDate(0, 0, 2)
-	} else if t.Weekday() == time.Sunday {
-		return t.AddDate(0, 0, 1)
-	}
-	return t
 }
 
 // canUpdateTicket 检查是否可以更新工单
@@ -1008,6 +977,7 @@ func (s *TicketService) canUpdateTicket(ticket *ent.Ticket, userID int) bool {
 func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assigneeID int, tenantID int, assignedBy int) (*ent.Ticket, error) {
 	s.logger.Infow("Assigning ticket", "ticket_id", ticketID, "assignee_id", assigneeID, "tenant_id", tenantID)
 
+	// 直接更新工单分配信息
 	ticket, err := s.client.Ticket.UpdateOneID(ticketID).
 		Where(ticket.TenantID(tenantID)).
 		SetAssigneeID(assigneeID).
@@ -1039,6 +1009,11 @@ func (s *TicketService) AssignTicket(ctx context.Context, ticketID int, assignee
 // EscalateTicket 升级工单
 func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason string, tenantID int, escalatedBy int) (*ent.Ticket, error) {
 	s.logger.Infow("Escalating ticket", "ticket_id", ticketID, "reason", reason, "tenant_id", tenantID)
+
+	// 如果有生命周期服务，委托给它
+	if s.lifecycleService != nil {
+		return s.lifecycleService.EscalateTicket(ctx, ticketID, reason, tenantID, escalatedBy)
+	}
 
 	// 获取当前工单信息
 	currentTicket, err := s.GetTicket(ctx, ticketID, tenantID)
@@ -1081,6 +1056,11 @@ func (s *TicketService) EscalateTicket(ctx context.Context, ticketID int, reason
 func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolution string, tenantID int, resolvedBy int) (*ent.Ticket, error) {
 	s.logger.Infow("Resolving ticket", "ticket_id", ticketID, "tenant_id", tenantID)
 
+	// 如果有生命周期服务，委托给它
+	if s.lifecycleService != nil {
+		return s.lifecycleService.ResolveTicket(ctx, ticketID, resolution, tenantID, resolvedBy)
+	}
+
 	ticket, err := s.client.Ticket.UpdateOneID(ticketID).
 		Where(ticket.TenantID(tenantID)).
 		SetStatus("resolved").
@@ -1111,6 +1091,11 @@ func (s *TicketService) ResolveTicket(ctx context.Context, ticketID int, resolut
 // CloseTicket 关闭工单
 func (s *TicketService) CloseTicket(ctx context.Context, ticketID int, feedback string, tenantID int, closedBy int) (*ent.Ticket, error) {
 	s.logger.Infow("Closing ticket", "ticket_id", ticketID, "tenant_id", tenantID)
+
+	// 如果有生命周期服务，委托给它
+	if s.lifecycleService != nil {
+		return s.lifecycleService.CloseTicket(ctx, ticketID, feedback, tenantID, closedBy)
+	}
 
 	ticket, err := s.client.Ticket.UpdateOneID(ticketID).
 		Where(ticket.TenantID(tenantID)).
@@ -1176,6 +1161,11 @@ func (s *TicketService) SearchTickets(ctx context.Context, searchTerm string, te
 func (s *TicketService) GetOverdueTickets(ctx context.Context, tenantID int) ([]*ent.Ticket, error) {
 	s.logger.Infow("Getting overdue tickets", "tenant_id", tenantID)
 
+	// 如果有SLA服务，委托给它
+	if s.slaService != nil {
+		return s.slaService.GetOverdueTickets(ctx, tenantID)
+	}
+
 	now := time.Now()
 
 	// 查找创建时间超过SLA时限的工单（简化逻辑）
@@ -1198,6 +1188,11 @@ func (s *TicketService) GetOverdueTickets(ctx context.Context, tenantID int) ([]
 // GetTicketsByAssignee 获取指定处理人的工单
 func (s *TicketService) GetTicketsByAssignee(ctx context.Context, assigneeID int, tenantID int) ([]*ent.Ticket, error) {
 	s.logger.Infow("Getting tickets by assignee", "assignee_id", assigneeID, "tenant_id", tenantID)
+
+	// 如果有分配服务，委托给它
+	if s.assignmentService != nil {
+		return s.assignmentService.GetTicketsByAssignee(ctx, assigneeID, tenantID)
+	}
 
 	tickets, err := s.client.Ticket.Query().
 		Where(
@@ -1513,6 +1508,11 @@ func (s *TicketService) ImportTickets(ctx context.Context, tenantID int, data []
 
 // AssignTickets 批量分配工单
 func (s *TicketService) AssignTickets(ctx context.Context, tenantID int, ticketIDs []int, assigneeID int) error {
+	// 如果有分配服务，委托给它
+	if s.assignmentService != nil {
+		return s.assignmentService.AssignTickets(ctx, tenantID, ticketIDs, assigneeID)
+	}
+
 	// 验证分配者是否存在
 	_, err := s.client.User.Get(ctx, assigneeID)
 	if err != nil {

@@ -138,7 +138,7 @@ func NewApplication() *Application {
 	ticketViewService := service.NewTicketViewService(client, sugar)
 	ticketViewController := controller.NewTicketViewController(ticketViewService, sugar)
 
-	ticketAssignmentService := service.NewTicketAssignmentService(client)
+	ticketAssignmentService := service.NewTicketAssignmentService(client, sugar)
 	ticketAssignmentRuleService := service.NewTicketAssignmentRuleService(client, sugar)
 	ticketAssignmentSmartService := service.NewTicketAssignmentSmartService(client, sugar, ticketAssignmentService, ticketAssignmentRuleService)
 	ticketAssignmentSmartController := controller.NewTicketAssignmentSmartController(ticketAssignmentSmartService, ticketAssignmentRuleService, sugar)

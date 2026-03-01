@@ -616,3 +616,48 @@ func (s *TicketNotificationService) getUserNotificationPreferences(
 	}
 	return prefs, nil
 }
+
+// SendAssignmentNotification 发送工单分配通知
+func (s *TicketNotificationService) SendAssignmentNotification(ticketID, assigneeID, assignedBy int) {
+	if s == nil {
+		return
+	}
+	ctx := context.Background()
+	content := fmt.Sprintf("您被分配了工单 #%d", ticketID)
+	_ = s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+		UserIDs: []int{assigneeID},
+		Type:    "assigned",
+		Channel: "in_app",
+		Content: content,
+	}, 0)
+}
+
+// SendEscalationNotification 发送工单升级通知
+func (s *TicketNotificationService) SendEscalationNotification(ticketID, newAssignee, escalatedBy int, reason string) {
+	if s == nil {
+		return
+	}
+	ctx := context.Background()
+	content := fmt.Sprintf("工单 #%d 已被升级，新处理人: %d", ticketID, newAssignee)
+	_ = s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+		UserIDs: []int{newAssignee},
+		Type:    "escalated",
+		Channel: "in_app",
+		Content: content,
+	}, 0)
+}
+
+// SendResolutionNotification 发送工单解决通知
+func (s *TicketNotificationService) SendResolutionNotification(ticketID, requesterID, resolvedBy int) {
+	if s == nil {
+		return
+	}
+	ctx := context.Background()
+	content := fmt.Sprintf("工单 #%d 已被解决", ticketID)
+	_ = s.SendNotification(ctx, ticketID, &dto.SendTicketNotificationRequest{
+		UserIDs: []int{requesterID},
+		Type:    "resolved",
+		Channel: "in_app",
+		Content: content,
+	}, 0)
+}

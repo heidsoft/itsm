@@ -9,18 +9,21 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/user"
+
+	"go.uber.org/zap"
 )
 
 // TicketAssignmentService 工单智能分配和路由服务
 type TicketAssignmentService struct {
 	client *ent.Client
-	logger interface{} // 可选：如果需要日志
+	logger *zap.SugaredLogger
 }
 
 // NewTicketAssignmentService 创建工单分配服务实例
-func NewTicketAssignmentService(client *ent.Client) *TicketAssignmentService {
+func NewTicketAssignmentService(client *ent.Client, logger *zap.SugaredLogger) *TicketAssignmentService {
 	return &TicketAssignmentService{
 		client: client,
+		logger: logger,
 	}
 }
 
@@ -534,6 +537,48 @@ func (s *TicketAssignmentService) LoadBalance(ctx context.Context, tenantID int)
 					continue
 				}
 			}
+		}
+	}
+
+	return nil
+}
+
+// GetTicketsByAssignee 根据处理人ID获取工单列表
+func (s *TicketAssignmentService) GetTicketsByAssignee(ctx context.Context, assigneeID int, tenantID int) ([]*ent.Ticket, error) {
+	tickets, err := s.client.Ticket.Query().
+		Where(
+			ticket.TenantID(tenantID),
+			ticket.AssigneeID(assigneeID),
+			ticket.StatusNotIn("closed"),
+		).
+		Order(ent.Desc(ticket.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取处理人工单失败: %w", err)
+	}
+	return tickets, nil
+}
+
+// AssignTickets 批量分配工单
+func (s *TicketAssignmentService) AssignTickets(ctx context.Context, tenantID int, ticketIDs []int, assigneeID int) error {
+	if len(ticketIDs) == 0 {
+		return nil
+	}
+
+	// 验证用户是否存在
+	_, err := s.client.User.Get(ctx, assigneeID)
+	if err != nil {
+		return fmt.Errorf("用户不存在: %w", err)
+	}
+
+	// 批量更新工单分配人
+	for _, ticketID := range ticketIDs {
+		err := s.client.Ticket.UpdateOneID(ticketID).
+			SetAssigneeID(assigneeID).
+			Exec(ctx)
+		if err != nil {
+			s.logger.Errorw("Failed to assign ticket", "ticketID", ticketID, "error", err)
+			continue
 		}
 	}
 

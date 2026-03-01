@@ -6,6 +6,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { message, notification } from 'antd';
 import { debounce, throttle } from 'lodash-es';
+import { logger } from '@/lib/env';
 
 // 防抖Hook
 export const useDebounce = <T>(value: T, delay: number): T => {
@@ -93,7 +94,7 @@ export const useLocalStorage = <T>(
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
+      logger.error(`Error reading localStorage key "${key}":`, error);
       return initialValue;
     }
   });
@@ -107,7 +108,7 @@ export const useLocalStorage = <T>(
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
+      logger.error(`Error setting localStorage key "${key}":`, error);
     }
   }, [key, storedValue]);
 
@@ -128,7 +129,7 @@ export const useSessionStorage = <T>(
       const item = window.sessionStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`Error reading sessionStorage key "${key}":`, error);
+      logger.error(`Error reading sessionStorage key "${key}":`, error);
       return initialValue;
     }
   });
@@ -142,7 +143,7 @@ export const useSessionStorage = <T>(
         window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
-      console.error(`Error setting sessionStorage key "${key}":`, error);
+      logger.error(`Error setting sessionStorage key "${key}":`, error);
     }
   }, [key, storedValue]);
 
@@ -326,7 +327,7 @@ export const useClipboard = () => {
       
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error('复制失败:', error);
+      logger.error('复制失败:', error);
       message.error('复制失败');
     }
   }, []);

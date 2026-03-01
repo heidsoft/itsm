@@ -214,21 +214,27 @@ export const ChangeList: React.FC<ChangeListProps> = ({
             icon={<Eye size={16} />}
             className='text-blue-600 hover:text-blue-800 hover:bg-blue-50'
             title='查看详情'
-            onClick={() => console.log('查看变更', record.id)}
+            onClick={() => {
+              // 查看详情处理逻辑
+            }}
           />
           <Button
             type='text'
             icon={<Edit size={16} />}
             className='text-green-600 hover:text-green-800 hover:bg-green-50'
             title='编辑变更'
-            onClick={() => console.log('编辑变更', record.id)}
+            onClick={() => {
+              // 编辑变更处理逻辑
+            }}
           />
           <Button
             type='text'
             icon={<MoreHorizontal size={16} />}
             className='text-gray-600 hover:text-gray-800 hover:bg-gray-50'
             title='更多操作'
-            onClick={() => console.log('更多操作', record.id)}
+            onClick={() => {
+              // 更多操作处理逻辑
+            }}
           />
         </Space>
       ),

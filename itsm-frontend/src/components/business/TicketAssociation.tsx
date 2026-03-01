@@ -389,7 +389,9 @@ export const TicketAssociation: React.FC = () => {
             value={searchKeyword}
             onChange={(e) => setSearchKeyword(e.target.value)}
             style={{ width: 300 }}
-            onSearch={(value) => console.log("搜索:", value)}
+            onSearch={(value) => {
+              // 可以在这里添加搜索逻辑
+            }}
           />
         </div>
 

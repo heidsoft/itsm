@@ -3,6 +3,7 @@
  * 提供实时通知推送功能
  */
 
+import { logger } from '@/lib/env';
 import { TicketNotification } from '@/lib/api/ticket-notification-api';
 
 export interface NotificationWSMessage {
@@ -41,7 +42,7 @@ class NotificationWSService {
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
-          console.log('[NotificationWS] Connected');
+          logger.info('[NotificationWS] Connected');
           this.reconnectAttempts = 0;
           this.startHeartbeat();
           this.notifyConnectionStatus(true);
@@ -53,17 +54,17 @@ class NotificationWSService {
             const message: NotificationWSMessage = JSON.parse(event.data);
             this.handleMessage(message);
           } catch (error) {
-            console.error('[NotificationWS] Failed to parse message:', error);
+            logger.error('[NotificationWS] Failed to parse message:', error);
           }
         };
 
         this.ws.onerror = (error) => {
-          console.error('[NotificationWS] Error:', error);
+          logger.error('[NotificationWS] Error:', error);
           reject(error);
         };
 
         this.ws.onclose = (event) => {
-          console.log('[NotificationWS] Disconnected:', event.code, event.reason);
+          logger.info('[NotificationWS] Disconnected:', event.code, event.reason);
           this.stopHeartbeat();
           this.notifyConnectionStatus(false);
           this.handleReconnect();
@@ -88,7 +89,7 @@ class NotificationWSService {
         // 心跳响应
         break;
       case 'error':
-        console.error('[NotificationWS] Server error:', message.message);
+        logger.error('[NotificationWS] Server error:', message.message);
         break;
     }
   }
@@ -127,14 +128,14 @@ class NotificationWSService {
   private handleReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`[NotificationWS] Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      logger.info(`[NotificationWS] Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
       setTimeout(() => {
         if (this.userId && this.token) {
           this.connect(this.userId, this.token).catch(() => {});
         }
       }, this.reconnectDelay);
     } else {
-      console.log('[NotificationWS] Max reconnection attempts reached');
+      logger.warn('[NotificationWS] Max reconnection attempts reached');
     }
   }
 

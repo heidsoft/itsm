@@ -115,6 +115,14 @@ var (
 		[]string{"process_definition", "tenant_id"},
 	)
 
+	BPMNPendingInstances = promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "itsm_bpmn_pending_instances",
+			Help: "Number of pending BPMN instances waiting for execution",
+		},
+		[]string{"process_definition", "tenant_id"},
+	)
+
 	// API metrics - API 指标
 	HTTPRequestDuration = promauto.NewHistogramVec(
 		prometheus.HistogramOpts{

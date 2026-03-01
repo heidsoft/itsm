@@ -35,18 +35,6 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
       return 0;
     }
     const clampedPercent = Math.max(0, Math.min(1, percent));
-    // 仅在开发环境输出调试日志
-    if (
-      process.env.NODE_ENV === 'development' &&
-      process.env.NEXT_PUBLIC_DEBUG_DASHBOARD === 'true'
-    ) {
-      console.log('SLA Debug:', {
-        averageSLA,
-        percent,
-        clampedPercent,
-        validData,
-      });
-    }
     return clampedPercent;
   })();
 
