@@ -18,6 +18,12 @@ import TicketAdvancedSearch, {
   type AdvancedSearchFilters,
 } from '@/components/ticket/TicketAdvancedSearch';
 import type { TicketQueryFilters } from '@/lib/hooks/useTickets';
+import {
+  saveFilters,
+  restoreFilters,
+  clearFilters,
+  getDefaultFilters,
+} from '@/lib/utils/filter-persistence';
 
 const { Title, Text } = Typography;
 
@@ -26,7 +32,13 @@ export default function TicketsPage() {
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('list');
   const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-  const [advancedFilters, setAdvancedFilters] = useState<Partial<TicketQueryFilters>>({});
+
+  // 从 localStorage 恢复筛选条件
+  const [advancedFilters, setAdvancedFilters] = useState<Partial<TicketQueryFilters>>(() => {
+    const defaults = getDefaultFilters('tickets') as Partial<TicketQueryFilters>;
+    return restoreFilters('tickets', defaults);
+  });
+
   const [ticketStats, setTicketStats] = useState({
     total: 0,
     open: 0,
@@ -34,7 +46,12 @@ export default function TicketsPage() {
     today: 0,
   });
 
-  // 从URL参数获取当前标签页
+  // 保存筛选条件到 localStorage
+  useEffect(() => {
+    saveFilters('tickets', advancedFilters);
+  }, [advancedFilters]);
+
+  // 从 URL 参数获取当前标签页
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['list', 'kanban', 'analytics', 'search'].includes(tab)) {
@@ -51,7 +68,7 @@ export default function TicketsPage() {
         total: stats.total,
         open: stats.open,
         overdue: stats.overdue || 0,
-        today: 0, // 暂时没有今日新增的API
+        today: 0, // 暂时没有今日新增的 API
       });
     } catch (error) {
       console.error('Failed to fetch ticket stats:', error);
@@ -120,6 +137,7 @@ export default function TicketsPage() {
   };
 
   const handleSearchReset = () => {
+    clearFilters('tickets');
     setAdvancedFilters({});
   };
 
@@ -134,7 +152,7 @@ export default function TicketsPage() {
                 工单管理
               </Title>
               <Text type='secondary'>
-                统一的工单处理平台，支持多维度视图切换、全生命周期管理、SLA监控与智能分派
+                统一的工单处理平台，支持多维度视图切换、全生命周期管理、SLA 监控与智能分派
               </Text>
             </div>
             <Space>
@@ -145,7 +163,7 @@ export default function TicketsPage() {
                 高级搜索
               </Button>
               <Badge count={ticketStats.overdue} size='small'>
-                <Button icon={<BellOutlined />}>SLA预警</Button>
+                <Button icon={<BellOutlined />}>SLA 预警</Button>
               </Badge>
               <Link href='/tickets/create'>
                 <Button type='primary' icon={<PlusOutlined />}>
