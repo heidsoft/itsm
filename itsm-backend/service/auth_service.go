@@ -576,12 +576,12 @@ func (s *AuthService) ValidateResetToken(ctx context.Context, req *dto.ValidateR
 
 // generateResetToken generates a cryptographically secure password reset token
 func generateResetToken() string {
-    bytes := make([]byte, 32)
-    if _, err := rand.Read(bytes); err != nil {
-        // Fallback to panic on crypto failure - this should never happen
-        panic("failed to generate random token: " + err.Error())
-    }
-    return hex.EncodeToString(bytes)
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		// Fallback to panic on crypto failure - this should never happen
+		panic("failed to generate random token: " + err.Error())
+	}
+	return hex.EncodeToString(bytes)
 }
 
 // CleanupExpiredTokens 清理过期的重置令牌

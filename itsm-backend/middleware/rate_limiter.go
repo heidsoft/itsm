@@ -35,9 +35,9 @@ func LoginRateLimiter() gin.HandlerFunc {
 
 		if !context.Reached {
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"code":       1001,
-				"message":    "登录请求过于频繁，请稍后再试",
-				"remaining":  context.Remaining,
+				"code":      1001,
+				"message":   "登录请求过于频繁，请稍后再试",
+				"remaining": context.Remaining,
 			})
 			c.Abort()
 			return
