@@ -16,17 +16,17 @@ import (
 // WebhookHandler Webhook服务任务处理器
 type WebhookHandler struct {
 	HandlerBase
-	client *ent.Client
-	logger *zap.SugaredLogger
+	client     *ent.Client
+	logger     *zap.SugaredLogger
 	httpClient *http.Client
 }
 
 // NewWebhookHandler 创建Webhook处理器
 func NewWebhookHandler(client *ent.Client, logger *zap.SugaredLogger) *WebhookHandler {
 	return &WebhookHandler{
-		client:      client,
-		logger:      logger,
-		httpClient:  &http.Client{},
+		client:     client,
+		logger:     logger,
+		httpClient: &http.Client{},
 	}
 }
 

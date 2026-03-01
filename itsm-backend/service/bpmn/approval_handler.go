@@ -92,7 +92,7 @@ func (h *ApprovalHandler) submitApproval(ctx context.Context, variables map[stri
 		Success: true,
 		Message: fmt.Sprintf("审批已提交，业务ID: %d，类型: %s", businessID, businessType),
 		OutputVars: map[string]interface{}{
-			"business_id":    businessID,
+			"business_id":   businessID,
 			"business_type": businessType,
 			"status":        "pending",
 		},
@@ -123,7 +123,7 @@ func (h *ApprovalHandler) approve(ctx context.Context, variables map[string]inte
 		Message: fmt.Sprintf("审批已通过，审批ID: %d", approvalID),
 		OutputVars: map[string]interface{}{
 			"approval_id": approvalID,
-			"status":       "approved",
+			"status":      "approved",
 			"approved_at": time.Now(),
 		},
 	}, nil
@@ -152,10 +152,10 @@ func (h *ApprovalHandler) reject(ctx context.Context, variables map[string]inter
 		Success: true,
 		Message: fmt.Sprintf("审批已驳回，审批ID: %d，原因: %s", approvalID, reason),
 		OutputVars: map[string]interface{}{
-			"approval_id":  approvalID,
-			"status":       "rejected",
+			"approval_id":   approvalID,
+			"status":        "rejected",
 			"reject_reason": reason,
-			"rejected_at":  time.Now(),
+			"rejected_at":   time.Now(),
 		},
 	}, nil
 }
@@ -176,10 +176,10 @@ func (h *ApprovalHandler) delegate(ctx context.Context, variables map[string]int
 	}
 
 	h.logger.Infow("Approval delegated via BPMN",
-		"approval_id",  approvalID,
+		"approval_id", approvalID,
 		"from_user_id", fromUserID,
-		"to_user_id",   toUserID,
-		"reason",       reason,
+		"to_user_id", toUserID,
+		"reason", reason,
 	)
 
 	// 这里应该调用审批服务委托审批
@@ -189,7 +189,7 @@ func (h *ApprovalHandler) delegate(ctx context.Context, variables map[string]int
 		Success: true,
 		Message: fmt.Sprintf("审批已委托，从用户 %d 到用户 %d", fromUserID, toUserID),
 		OutputVars: map[string]interface{}{
-			"approval_id":    approvalID,
+			"approval_id":     approvalID,
 			"delegate_to":     toUserID,
 			"delegate_reason": reason,
 		},
@@ -211,9 +211,9 @@ func (h *ApprovalHandler) escalateApproval(ctx context.Context, variables map[st
 	}
 
 	h.logger.Infow("Approval escalated via BPMN",
-		"approval_id",  approvalID,
-		"escalate_to",  escalateTo,
-		"reason",       reason,
+		"approval_id", approvalID,
+		"escalate_to", escalateTo,
+		"reason", reason,
 	)
 
 	// 这里应该调用审批服务升级审批
@@ -223,8 +223,8 @@ func (h *ApprovalHandler) escalateApproval(ctx context.Context, variables map[st
 		Success: true,
 		Message: fmt.Sprintf("审批已升级到用户 %d", escalateTo),
 		OutputVars: map[string]interface{}{
-			"approval_id":    approvalID,
-			"escalated_to":   escalateTo,
+			"approval_id":       approvalID,
+			"escalated_to":      escalateTo,
 			"escalation_reason": reason,
 		},
 	}, nil

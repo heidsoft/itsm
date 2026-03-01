@@ -29,15 +29,15 @@ func (d *DefaultTicketNotificationService) SendNotification(ctx context.Context,
 // TicketServiceTaskHandler 工单服务任务处理器
 type TicketServiceTaskHandler struct {
 	HandlerBase
-	client             *ent.Client
-	logger             *zap.SugaredLogger
+	client              *ent.Client
+	logger              *zap.SugaredLogger
 	notificationService TicketNotificationServiceInterface
 }
 
 // NewTicketServiceTaskHandler 创建工单处理器
 func NewTicketServiceTaskHandler(client *ent.Client, logger *zap.SugaredLogger) *TicketServiceTaskHandler {
 	handler := &TicketServiceTaskHandler{
-		client:               client,
+		client:              client,
 		logger:              logger,
 		notificationService: &DefaultTicketNotificationService{},
 	}
