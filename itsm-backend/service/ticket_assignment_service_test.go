@@ -74,10 +74,10 @@ func TestTicketAssignmentService_AssignTicket(t *testing.T) {
 		{
 			name: "手动分配给指定用户",
 			request: &AssignmentRequest{
-				TicketID:     testTicket.ID,
-				TenantID:     testTenant.ID,
-				Priority:     "medium",
-				AutoAssign:   false,
+				TicketID:      testTicket.ID,
+				TenantID:      testTenant.ID,
+				Priority:      "medium",
+				AutoAssign:    false,
 				PreferredUser: &assignee.ID,
 			},
 			expectedError: false,
@@ -244,7 +244,7 @@ func TestTicketAssignmentService_GetTeamWorkload(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		_, err := client.User.Create().
 			SetUsername("agent" + string(rune('a'+i))).
-			SetEmail("agent"+string(rune('a'+i))+"@example.com").
+			SetEmail("agent" + string(rune('a'+i)) + "@example.com").
 			SetName("Agent User").
 			SetPasswordHash("hashedpassword").
 			SetRole("agent").
@@ -360,7 +360,7 @@ func TestTicketAssignmentService_GetTicketsByAssignee(t *testing.T) {
 			SetDescription("测试描述").
 			SetPriority("medium").
 			SetStatus("open").
-			SetTicketNumber("TICKET-00"+string(rune('1'+i))).
+			SetTicketNumber("TICKET-00" + string(rune('1'+i))).
 			SetAssigneeID(testUser.ID).
 			SetRequesterID(testUser.ID).
 			SetTenantID(testTenant.ID).
@@ -397,9 +397,9 @@ func TestTicketAssignmentService_CalculateSkillScore(t *testing.T) {
 
 	tests := []struct {
 		name           string
-		userSkills    []string
+		userSkills     []string
 		requiredSkills []string
-		expectedScore float64
+		expectedScore  float64
 	}{
 		{
 			name:           "完全匹配",
@@ -443,11 +443,11 @@ func TestTicketAssignmentService_CalculateWorkloadScore(t *testing.T) {
 	assignmentService := NewTicketAssignmentService(client, logger)
 
 	tests := []struct {
-		name           string
-		activeTickets  int
-		avgResolution  time.Duration
-		minExpected    float64
-		maxExpected    float64
+		name          string
+		activeTickets int
+		avgResolution time.Duration
+		minExpected   float64
+		maxExpected   float64
 	}{
 		{
 			name:          "低负载用户",
@@ -537,7 +537,7 @@ func TestTicketAssignmentService_AssignTickets(t *testing.T) {
 			SetDescription("测试描述").
 			SetPriority("medium").
 			SetStatus("open").
-			SetTicketNumber("BATCH-00"+string(rune('1'+i))).
+			SetTicketNumber("BATCH-00" + string(rune('1'+i))).
 			SetRequesterID(testUser.ID).
 			SetTenantID(testTenant.ID).
 			Save(ctx)

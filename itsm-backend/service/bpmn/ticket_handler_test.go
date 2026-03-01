@@ -54,15 +54,15 @@ func TestTicketServiceTaskHandler_UpdateTicketStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		ticketID      int
-		variables     map[string]interface{}
+		name           string
+		ticketID       int
+		variables      map[string]interface{}
 		expectedStatus string
 		expectedError  bool
 	}{
 		{
-			name:      "更新状态为 in_progress",
-			ticketID:  testTicket.ID,
+			name:     "更新状态为 in_progress",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "update_status",
@@ -72,8 +72,8 @@ func TestTicketServiceTaskHandler_UpdateTicketStatus(t *testing.T) {
 			expectedError:  false,
 		},
 		{
-			name:      "更新状态为 resolved",
-			ticketID:  testTicket.ID,
+			name:     "更新状态为 resolved",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "update_status",
@@ -83,8 +83,8 @@ func TestTicketServiceTaskHandler_UpdateTicketStatus(t *testing.T) {
 			expectedError:  false,
 		},
 		{
-			name:      "使用默认状态",
-			ticketID:  testTicket.ID,
+			name:     "使用默认状态",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "update_status",
@@ -156,15 +156,15 @@ func TestTicketServiceTaskHandler_EscalateTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		ticketID      int
-		variables     map[string]interface{}
+		name             string
+		ticketID         int
+		variables        map[string]interface{}
 		expectedPriority string
-		expectedError  bool
+		expectedError    bool
 	}{
 		{
-			name:      "升级工单到 high",
-			ticketID:  testTicket.ID,
+			name:     "升级工单到 high",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id":       testTicket.ID,
 				"action":            "escalate",
@@ -175,8 +175,8 @@ func TestTicketServiceTaskHandler_EscalateTicket(t *testing.T) {
 			expectedError:    false,
 		},
 		{
-			name:      "升级工单到 critical",
-			ticketID:  testTicket.ID,
+			name:     "升级工单到 critical",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id":       testTicket.ID,
 				"action":            "escalate",
@@ -187,8 +187,8 @@ func TestTicketServiceTaskHandler_EscalateTicket(t *testing.T) {
 			expectedError:    false,
 		},
 		{
-			name:      "使用默认升级优先级",
-			ticketID:  testTicket.ID,
+			name:     "使用默认升级优先级",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "escalate",
@@ -276,15 +276,15 @@ func TestTicketServiceTaskHandler_AssignTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		ticketID      int
-		variables     map[string]interface{}
+		name               string
+		ticketID           int
+		variables          map[string]interface{}
 		expectedAssigneeID int
-		expectedError  bool
+		expectedError      bool
 	}{
 		{
-			name:      "分配工单给处理人",
-			ticketID:  testTicket.ID,
+			name:     "分配工单给处理人",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "assign",
@@ -294,8 +294,8 @@ func TestTicketServiceTaskHandler_AssignTicket(t *testing.T) {
 			expectedError:      false,
 		},
 		{
-			name:      "使用 int 类型分配",
-			ticketID:  testTicket.ID,
+			name:     "使用 int 类型分配",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "assign",
@@ -305,14 +305,14 @@ func TestTicketServiceTaskHandler_AssignTicket(t *testing.T) {
 			expectedError:      false,
 		},
 		{
-			name:      "未指定处理人",
-			ticketID:  testTicket.ID,
+			name:     "未指定处理人",
+			ticketID: testTicket.ID,
 			variables: map[string]interface{}{
 				"business_id": testTicket.ID,
 				"action":      "assign",
 			},
 			expectedAssigneeID: 0,
-			expectedError:     true,
+			expectedError:      true,
 		},
 	}
 

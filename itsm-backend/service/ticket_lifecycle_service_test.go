@@ -52,19 +52,19 @@ func TestTicketLifecycleService_ResolveTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		ticketID      int
-		tenantID      int
-		resolution    string
-		resolvedBy    int
-		expectedError bool
+		name           string
+		ticketID       int
+		tenantID       int
+		resolution     string
+		resolvedBy     int
+		expectedError  bool
 		expectedStatus string
 	}{
 		{
 			name:           "成功解决工单",
 			ticketID:       testTicket.ID,
 			tenantID:       testTenant.ID,
-			resolution:      "问题已解决",
+			resolution:     "问题已解决",
 			resolvedBy:     testUser.ID,
 			expectedError:  false,
 			expectedStatus: "resolved",
@@ -73,7 +73,7 @@ func TestTicketLifecycleService_ResolveTicket(t *testing.T) {
 			name:           "工单不存在",
 			ticketID:       99999,
 			tenantID:       testTenant.ID,
-			resolution:      "问题已解决",
+			resolution:     "问题已解决",
 			resolvedBy:     testUser.ID,
 			expectedError:  true,
 			expectedStatus: "",
@@ -82,7 +82,7 @@ func TestTicketLifecycleService_ResolveTicket(t *testing.T) {
 			name:           "租户不匹配",
 			ticketID:       testTicket.ID,
 			tenantID:       99999,
-			resolution:      "问题已解决",
+			resolution:     "问题已解决",
 			resolvedBy:     testUser.ID,
 			expectedError:  true,
 			expectedStatus: "",
@@ -144,13 +144,13 @@ func TestTicketLifecycleService_CloseTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		setupStatus   string
-		ticketTitle   string
-		tenantID      int
-		closedBy      int
-		feedback      string
-		expectedError bool
+		name           string
+		setupStatus    string
+		ticketTitle    string
+		tenantID       int
+		closedBy       int
+		feedback       string
+		expectedError  bool
 		expectedStatus string
 	}{
 		{
@@ -254,12 +254,12 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		ticketID      int
-		newStatus    string
-		tenantID      int
-		operatorID   int
-		expectedError bool
+		name           string
+		ticketID       int
+		newStatus      string
+		tenantID       int
+		operatorID     int
+		expectedError  bool
 		expectedStatus string
 	}{
 		{
@@ -267,7 +267,7 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 			ticketID:       testTicket.ID,
 			newStatus:      "in_progress",
 			tenantID:       testTenant.ID,
-			operatorID:    testUser.ID,
+			operatorID:     testUser.ID,
 			expectedError:  false,
 			expectedStatus: "in_progress",
 		},
@@ -276,7 +276,7 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 			ticketID:       testTicket.ID,
 			newStatus:      "resolved",
 			tenantID:       testTenant.ID,
-			operatorID:    testUser.ID,
+			operatorID:     testUser.ID,
 			expectedError:  false,
 			expectedStatus: "resolved",
 		},
@@ -285,7 +285,7 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 			ticketID:       testTicket.ID,
 			newStatus:      "open",
 			tenantID:       testTenant.ID,
-			operatorID:    testUser.ID,
+			operatorID:     testUser.ID,
 			expectedError:  true,
 			expectedStatus: "",
 		},
@@ -294,7 +294,7 @@ func TestTicketLifecycleService_UpdateTicketStatus(t *testing.T) {
 			ticketID:       99999,
 			newStatus:      "in_progress",
 			tenantID:       testTenant.ID,
-			operatorID:    testUser.ID,
+			operatorID:     testUser.ID,
 			expectedError:  true,
 			expectedStatus: "",
 		},
@@ -367,53 +367,53 @@ func TestTicketLifecycleService_EscalateTicket(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name           string
-		ticketID       int
-		tenantID       int
-		escalatedBy    int
-		reason         string
-		initialPriority string
-		expectedError  bool
+		name             string
+		ticketID         int
+		tenantID         int
+		escalatedBy      int
+		reason           string
+		initialPriority  string
+		expectedError    bool
 		expectedPriority string
 	}{
 		{
-			name:            "成功升级工单 low -> medium",
-			ticketID:        testTicket.ID,
-			tenantID:        testTenant.ID,
-			escalatedBy:     testUser.ID,
-			reason:          "需要更快处理",
-			initialPriority: "low",
-			expectedError:   false,
+			name:             "成功升级工单 low -> medium",
+			ticketID:         testTicket.ID,
+			tenantID:         testTenant.ID,
+			escalatedBy:      testUser.ID,
+			reason:           "需要更快处理",
+			initialPriority:  "low",
+			expectedError:    false,
 			expectedPriority: "medium",
 		},
 		{
-			name:            "成功升级工单 medium -> high",
-			ticketID:        testTicket.ID,
-			tenantID:        testTenant.ID,
-			escalatedBy:     testUser.ID,
-			reason:          "需要更快处理",
-			initialPriority: "medium",
-			expectedError:   false,
+			name:             "成功升级工单 medium -> high",
+			ticketID:         testTicket.ID,
+			tenantID:         testTenant.ID,
+			escalatedBy:      testUser.ID,
+			reason:           "需要更快处理",
+			initialPriority:  "medium",
+			expectedError:    false,
 			expectedPriority: "high",
 		},
 		{
-			name:            "成功升级工单 high -> critical",
-			ticketID:        testTicket.ID,
-			tenantID:        testTenant.ID,
-			escalatedBy:     testUser.ID,
-			reason:          "需要更快处理",
-			initialPriority: "high",
-			expectedError:   false,
+			name:             "成功升级工单 high -> critical",
+			ticketID:         testTicket.ID,
+			tenantID:         testTenant.ID,
+			escalatedBy:      testUser.ID,
+			reason:           "需要更快处理",
+			initialPriority:  "high",
+			expectedError:    false,
 			expectedPriority: "critical",
 		},
 		{
-			name:            "critical 优先级不再升级",
-			ticketID:        testTicket.ID,
-			tenantID:        testTenant.ID,
-			escalatedBy:     testUser.ID,
-			reason:          "需要更快处理",
-			initialPriority: "critical",
-			expectedError:   false,
+			name:             "critical 优先级不再升级",
+			ticketID:         testTicket.ID,
+			tenantID:         testTenant.ID,
+			escalatedBy:      testUser.ID,
+			reason:           "需要更快处理",
+			initialPriority:  "critical",
+			expectedError:    false,
 			expectedPriority: "critical",
 		},
 	}
@@ -449,8 +449,8 @@ func TestTicketLifecycleService_isValidStatusTransition(t *testing.T) {
 
 	tests := []struct {
 		currentStatus string
-		newStatus    string
-		expected     bool
+		newStatus     string
+		expected      bool
 	}{
 		{"open", "in_progress", true},
 		{"open", "pending", true},
@@ -485,7 +485,7 @@ func TestTicketLifecycleService_mapProcessStatus(t *testing.T) {
 	lifecycleService := NewTicketLifecycleService(client, logger)
 
 	tests := []struct {
-		processStatus string
+		processStatus        string
 		expectedTicketStatus string
 	}{
 		{"completed", "resolved"},

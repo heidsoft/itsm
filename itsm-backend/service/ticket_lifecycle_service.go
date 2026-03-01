@@ -77,8 +77,8 @@ func (s *TicketLifecycleService) ResolveTicket(ctx context.Context, ticketID int
 
 	// 记录审计日志
 	s.logAuditEvent(ctx, "ticket_resolved", ticketID, tenantID, map[string]interface{}{
-		"resolvedBy":    resolvedBy,
-		"resolution":   resolution,
+		"resolvedBy":     resolvedBy,
+		"resolution":     resolution,
 		"previousStatus": t.Status,
 	})
 
@@ -163,11 +163,11 @@ func (s *TicketLifecycleService) EscalateTicket(ctx context.Context, ticketID in
 
 	// 记录审计日志
 	s.logAuditEvent(ctx, "ticket_escalated", ticketID, tenantID, map[string]interface{}{
-		"escalatedBy":     escalatedBy,
-		"reason":          reason,
+		"escalatedBy":      escalatedBy,
+		"reason":           reason,
 		"previousPriority": t.Priority,
-		"newPriority":     newPriority,
-		"newAssignee":     newAssigneeID,
+		"newPriority":      newPriority,
+		"newAssignee":      newAssigneeID,
 	})
 
 	// 发送升级通知
@@ -212,9 +212,9 @@ func (s *TicketLifecycleService) UpdateTicketStatus(ctx context.Context, ticketI
 
 	// 记录审计日志
 	s.logAuditEvent(ctx, "ticket_status_updated", ticketID, tenantID, map[string]interface{}{
-		"operatorID":      operatorID,
-		"previousStatus":  t.Status,
-		"newStatus":       status,
+		"operatorID":     operatorID,
+		"previousStatus": t.Status,
+		"newStatus":      status,
 	})
 
 	s.logger.Infow("Ticket status updated", "ticketID", ticketID, "newStatus", status, "operatorID", operatorID)
@@ -318,11 +318,11 @@ func (s *TicketLifecycleService) mapProcessStatus(status string) string {
 // isValidStatusTransition 检查状态转换是否合法
 func (s *TicketLifecycleService) isValidStatusTransition(currentStatus, newStatus string) bool {
 	validTransitions := map[string][]string{
-		common.TicketStatusOpen:         {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed},
-		common.TicketStatusInProgress:   {common.TicketStatusResolved, common.TicketStatusPending, common.TicketStatusOpen},
-		common.TicketStatusPending:      {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen},
-		common.TicketStatusResolved:     {common.TicketStatusClosed, common.TicketStatusOpen},
-		common.TicketStatusClosed:        {}, // 已关闭的工单不能转换到其他状态
+		common.TicketStatusOpen:       {common.TicketStatusInProgress, common.TicketStatusPending, common.TicketStatusClosed},
+		common.TicketStatusInProgress: {common.TicketStatusResolved, common.TicketStatusPending, common.TicketStatusOpen},
+		common.TicketStatusPending:    {common.TicketStatusInProgress, common.TicketStatusResolved, common.TicketStatusOpen},
+		common.TicketStatusResolved:   {common.TicketStatusClosed, common.TicketStatusOpen},
+		common.TicketStatusClosed:     {}, // 已关闭的工单不能转换到其他状态
 	}
 
 	allowed, ok := validTransitions[currentStatus]

@@ -106,10 +106,10 @@ func (s *TicketSLAService) GetTicketSLAInfo(ctx context.Context, ticketID int, t
 		s.logger.Warnw("Failed to get SLA definition", "error", err)
 		// 返回没有SLA信息的结果
 		return &TicketSLAInfoResult{
-			TicketID:            t.ID,
-			TicketNumber:        t.TicketNumber,
-			Priority:            t.Priority,
-			TicketType:          t.Type,
+			TicketID:           t.ID,
+			TicketNumber:       t.TicketNumber,
+			Priority:           t.Priority,
+			TicketType:         t.Type,
 			ResponseTimeUsed:   responseTimeUsed,
 			ResolutionTimeUsed: resolutionTimeUsed,
 			SLAStatus:          "unknown",
@@ -312,7 +312,7 @@ func (s *TicketSLAService) getSLADefinition(ctx context.Context, tenantID int, t
 
 	// 如果没有匹配的类型，返回默认SLA
 	return &ent.SLADefinition{
-		ResponseTime: 60,   // 默认1小时响应
+		ResponseTime:   60,  // 默认1小时响应
 		ResolutionTime: 480, // 默认8小时解决
 	}, nil
 }
