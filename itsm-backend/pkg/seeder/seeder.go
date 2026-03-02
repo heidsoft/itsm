@@ -38,6 +38,8 @@ func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger) *Seeder {
 
 // SeedAll runs all seeding operations
 func (s *Seeder) SeedAll(ctx context.Context) {
+	// 首先确保 default 租户存在
+	s.seedDefaultTenant(ctx)
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
@@ -50,6 +52,32 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedAssets(ctx)
 	s.seedAssetLicenses(ctx)
 	s.seedReleases(ctx)
+}
+
+// seedDefaultTenant ensures default tenant exists
+func (s *Seeder) seedDefaultTenant(ctx context.Context) {
+	// 检查是否已有 default 租户
+	existing, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err == nil && existing != nil {
+		s.sugar.Infow("default tenant already exists", "tenant_id", existing.ID)
+		return
+	}
+
+	// 创建 default 租户
+	defaultTenant, err := s.client.Tenant.Create().
+		SetName("Default Tenant").
+		SetCode("default").
+		SetDomain("localhost").
+		SetStatus("active").
+		SetType("enterprise").
+		SetCreatedAt(time.Now()).
+		SetUpdatedAt(time.Now()).
+		Save(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to create default tenant", "error", err)
+		return
+	}
+	s.sugar.Infow("default tenant created", "tenant_id", defaultTenant.ID)
 }
 
 // seedAdmin seeds default admin user with password admin123

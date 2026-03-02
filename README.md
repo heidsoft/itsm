@@ -19,7 +19,23 @@
 
 ## 📖 项目简介
 
-ITSM 是一个现代化的企业级 IT 服务管理平台，采用 Go/Gin 后端和 Next.js/React 前端构建。支持 ITIL 最佳实践，集成 AI 智能功能，帮助企业高效管理 IT 服务。
+ITSM 是一个现代化的企业级 IT 服务管理(ITSMB)平台，基于 Go/Gin 后端和 Next.js/React 前端构建。遵循 ITIL 最佳实践，集成 AI 智能功能，帮助企业高效管理 IT 服务。
+
+### 什么是 ITSM?
+
+ITSM(IT Service Management)是一种通过服务生命周期管理 IT 服务的方法，包括设计、交付、管理和改进 IT 服务。本项目实现了:
+- **服务台**: 用户请求的统一入口
+- **事件管理**: 快速恢复服务，减少业务中断
+- **问题管理**: 找到根本原因，防止事件重复发生
+- **变更管理**: 安全、可控地进行系统变更
+- **知识库**: 积累和共享组织知识
+
+### 目标用户
+
+- IT 运维团队
+- 服务台工程师
+- IT 经理
+- 开发团队(自建工单系统需求)
 
 ### ✨ 核心特性
 
@@ -36,36 +52,34 @@ ITSM 是一个现代化的企业级 IT 服务管理平台，采用 Go/Gin 后端
 
 ## 🚀 快速开始
 
-### 方式一：Docker Compose（推荐）
+### 方式一：Docker Compose（推荐，5分钟内启动）
 
 ```bash
-# 克隆项目
+# 1. 克隆项目
 git clone https://github.com/heidsoft/itsm.git
 cd itsm
 
-# 启动所有服务
+# 2. 启动所有服务（包含 PostgreSQL、Redis、后端和前端）
 docker-compose up -d
 
-# 访问应用
+# 3. 等待服务启动（约1-2分钟），然后访问：
 # 前端：http://localhost:3000
 # 后端：http://localhost:8080
-# API 文档：http://localhost:8080/swagger/index.html
+# API 文档：http://localhost:8080/swagger
 ```
+
+> **首次登录**: 用户名 `admin`，密码 `admin123`
 
 ### 方式二：本地开发
 
-#### 1. 环境准备
+#### 1. 环境要求
 
-```bash
-# 安装 Go 1.25+
-# https://go.dev/dl/
-
-# 安装 Node.js 22+
-# https://nodejs.org/
-
-# 安装 PostgreSQL 14+
-# https://www.postgresql.org/download/
-```
+| 工具 | 版本 | 安装链接 |
+|------|------|----------|
+| Go | 1.25+ | [go.dev/dl](https://go.dev/dl/) |
+| Node.js | 22+ | [nodejs.org](https://nodejs.org/) |
+| PostgreSQL | 14+ | [postgresql.org](https://www.postgresql.org/download/) |
+| Redis | 7+ | [redis.io](https://redis.io/download/) |
 
 #### 2. 后端启动
 
@@ -75,17 +89,20 @@ cd itsm-backend
 # 安装依赖
 go mod download
 
-# 配置数据库（编辑 config.yaml）
-vim config.yaml
+# 配置数据库连接（config.yaml 已包含默认配置）
+# 默认配置：localhost:5432, 用户 postgres, 密码 postgres
 
-# 运行数据库迁移
-go run -tags migrate main.go
-
-# 启动后端服务
+# 启动后端服务（自动创建数据库表和初始数据）
 go run main.go
-
 # 后端运行在 http://localhost:8080
 ```
+
+> **注意**: 后端启动时会自动：
+> - 创建数据库表结构
+> - 创建默认租户（tenant）
+> - 创建默认管理员用户 admin/admin123
+> - 创建示例部门和团队数据
+> - 创建其他初始测试用户（user1/user123, security1/security123）
 
 #### 3. 前端启动
 
@@ -95,15 +112,71 @@ cd itsm-frontend
 # 安装依赖
 npm install
 
-# 配置环境变量
-cp .env.example .env.local
-# 编辑 .env.local，设置 API 地址
-
-# 启动开发服务器
+# 启动开发服务器（无需额外配置）
 npm run dev
-
 # 前端运行在 http://localhost:3000
 ```
+
+> **注意**: 前端默认连接 `http://localhost:8080` 作为后端 API 地址。如需修改，编辑 `.env.local` 文件。
+
+### 快速验证
+
+服务启动后，验证各组件是否正常运行:
+
+```bash
+# 后端健康检查
+curl http://localhost:8080/health
+
+# 访问 API 文档
+# 浏览器打开: http://localhost:8080/swagger
+
+# 前端页面
+# 浏览器打开: http://localhost:3000
+```
+
+---
+
+## 📡 API 接口规范
+
+### 响应格式
+
+所有 API 返回统一的 JSON 格式:
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": { ... }
+}
+```
+
+| 状态码 | 说明 |
+|--------|------|
+| `code: 0` | 成功 |
+| `code: 1001+` | 参数错误 |
+| `code: 2001` | 认证失败 |
+| `code: 5001` | 服务器内部错误 |
+
+### 常用端点
+
+| 模块 | 端点前缀 | 说明 |
+|------|----------|------|
+| 认证 | `/api/v1/auth` | 登录、注册、令牌刷新 |
+| 工单 | `/api/v1/tickets` | 工单 CRUD 操作 |
+| 事件 | `/api/v1/incidents` | 事件管理 |
+| 问题 | `/api/v1/problems` | 问题管理 |
+| 变更 | `/api/v1/changes` | 变更管理 |
+| 知识库 | `/api/v1/knowledge` | 知识文章 |
+| 工作流 | `/api/v1/workflows` | BPMN 流程 |
+
+### 认证方式
+
+```bash
+# 使用 Bearer Token
+curl -H "Authorization: Bearer <token>" http://localhost:8080/api/v1/tickets
+```
+
+启动后访问 `http://localhost:8080/swagger` 查看完整 API 文档。
 
 ---
 
@@ -213,6 +286,61 @@ itsm/
 
 ---
 
+## ❓ 常见问题
+
+### Q1: 启动时数据库连接失败
+
+**问题**: `dial tcp localhost:5432: connect: connection refused`
+
+**解决**:
+- 确认 PostgreSQL 已启动: `pg_ctl -D /usr/local/var/postgres start`
+- 或使用 Docker: `docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:14`
+
+### Q2: 前端无法连接后端 API
+
+**问题**: `Network Error` 或 `CORS` 错误
+
+**解决**:
+- 确认后端已启动在 http://localhost:8080
+- 检查浏览器控制台是否有 CORS 错误
+- 确认 `.env.local` 中 `NEXT_PUBLIC_API_URL=http://localhost:8080`
+
+### Q3: Redis 连接失败
+
+**问题**: `dial tcp localhost:6379: connect: connection refused`
+
+**解决**:
+- 启动 Redis: `redis-server`
+- 或使用 Docker: `docker run -d -p 6379:6379 redis:7`
+
+### Q4: 数据库迁移失败
+
+**问题**: `pq: password authentication failed`
+
+**解决**:
+- 编辑 `itsm-backend/config.yaml`，修改数据库密码
+- 或修改 PostgreSQL 配置允许密码登录
+
+### Q5: 如何运行单个模块的测试?
+
+```bash
+# 后端 - 只测试 tickets 模块
+cd itsm-backend
+go test ./service/ticket_service_test.go ./service/ticket_service.go -v
+
+# 前端 - 只测试某个组件
+cd itsm-frontend
+npm test -- --testPathPattern=TicketList
+```
+
+### Q6: 贡献代码需要了解什么?
+
+- 后端遵循 Go 标准项目结构，参考 [CLAUDE.md](./CLAUDE.md)
+- 前端使用 Next.js App Router + TypeScript
+- 提交前请运行: `go test ./...` (后端) 和 `npm run type-check` (前端)
+
+---
+
 ## 📚 文档导航
 
 ### 开发文档
@@ -236,12 +364,22 @@ itsm/
 
 ## 🤝 贡献指南
 
+我们欢迎所有形式的贡献！无论是 bug 修复、新功能开发还是文档完善。
+
+### 新手友好任务
+
+如果你初次贡献，可以从以下任务开始:
+
+- [ ] 改进文档（README、代码注释）
+- [ ] 添加单元测试覆盖
+- [ ] 修复简单 bug（拼写错误、样式问题）
+- [ ] 翻译界面文本
+- [ ] 添加新的 UI 组件
+
 ### 开发流程
 
 1. **Fork 项目**
-   ```bash
-   # 在 GitHub 上 Fork 项目
-   ```
+   点击 GitHub 页面右上角的 Fork 按钮
 
 2. **克隆项目**
    ```bash
@@ -249,23 +387,39 @@ itsm/
    cd itsm
    ```
 
-3. **创建分支**
+3. **添加上游仓库**
    ```bash
-   git checkout -b feature/your-feature
+   git remote add upstream https://github.com/heidsoft/itsm.git
    ```
 
-4. **开发并提交**
+4. **创建功能分支**
+   ```bash
+   git checkout -b feature/your-feature
+   # 或修复 bug
+   git checkout -b fix/issue-description
+   ```
+
+5. **开发并提交**
    ```bash
    # 开发完成后
-   git add -A
+   git add .
    git commit -m "feat: add your feature"
    ```
 
-5. **推送并创建 PR**
+6. **保持分支更新**
+   ```bash
+   git fetch upstream
+   git rebase upstream/main
+   ```
+
+7. **推送并创建 PR**
    ```bash
    git push origin feature/your-feature
    # 在 GitHub 上创建 Pull Request
    ```
+
+8. **等待 Code Review**
+   维护者会尽快审核您的 PR，请耐心等待
 
 ### 代码规范
 
@@ -311,26 +465,46 @@ chore: 构建/工具
 
 ## 🧪 测试
 
-### 运行测试
+### 快速测试
 
 ```bash
-# 后端测试
+# 后端 - 运行所有测试
 cd itsm-backend
 go test ./... -v
 
-# 前端测试
+# 前端 - 运行所有测试
 cd itsm-frontend
 npm test
+```
+
+### 单元测试 vs 集成测试
+
+```bash
+# 后端单元测试
+cd itsm-backend
+go test ./service/... -v
+
+# 前端单元测试
+cd itsm-frontend
+npm run test:unit
+
+# 前端集成测试
+npm run test:integration
+
+# E2E 测试（需要后端运行）
+npm run test:e2e
 ```
 
 ### 测试覆盖率
 
 ```bash
-# 后端覆盖率
+# 后端覆盖率报告
+cd itsm-backend
 go test ./... -coverprofile=coverage.out
 go tool cover -html=coverage.out
 
 # 前端覆盖率
+cd itsm-frontend
 npm run test:coverage
 ```
 
