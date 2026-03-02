@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 验证提交信息格式
+# 格式：<type>(<scope>): <subject>
+# type: feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert
+# scope: 可选的模块范围
+# subject: 简短描述 (不超过 72 字符)
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# 正则表达式匹配提交信息格式
+if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([a-zA-Z0-9_-]+\))?: .{1,72}"; then
+  echo ""
+  echo "❌ 提交信息格式不正确!"
+  echo ""
+  echo "期望格式：<type>(<scope>): <subject>"
+  echo ""
+  echo "type 可选值:"
+  echo "  feat:     新功能"
+  echo "  fix:      修复 bug"
+  echo "  docs:     文档更新"
+  echo "  style:    代码格式 (不影响代码运行)"
+  echo "  refactor: 代码重构 (非新功能或 bug 修复)"
+  echo "  test:     添加或修改测试"
+  echo "  chore:    构建过程或辅助工具变动"
+  echo "  perf:     性能优化"
+  echo "  ci:       CI 配置"
+  echo "  build:    构建系统或外部依赖"
+  echo "  revert:   回滚提交"
+  echo ""
+  echo "示例:"
+  echo "  feat(auth): 添加用户登录功能"
+  echo "  fix(api): 修复工单创建接口错误"
+  echo "  docs: 更新 API 文档"
+  echo ""
+  exit 1
+fi
+
+echo "✓ Commit message format validated"
