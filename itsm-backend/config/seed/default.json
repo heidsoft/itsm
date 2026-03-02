@@ -99,7 +99,10 @@
     {"business_type": "problem", "process_definition_key": "problem_process", "is_default": true},
     {"business_type": "change", "process_definition_key": "change_process", "is_default": true},
     {"business_type": "service_request", "process_definition_key": "service_request_process", "is_default": true},
-    {"business_type": "improvement", "process_definition_key": "improvement_process", "is_default": true}
+    {"business_type": "improvement", "process_definition_key": "improvement_process", "is_default": true},
+    {"business_type": "cloud_public_ops", "process_definition_key": "cloud_public_ops", "is_default": false},
+    {"business_type": "cloud_private_ops", "process_definition_key": "cloud_private_ops", "is_default": false},
+    {"business_type": "cloud_security_scan", "process_definition_key": "cloud_security_scan", "is_default": false}
   ],
   "ticket_views": [
     {"name": "我的待办工单", "description": "分配给我的未关闭工单", "is_shared": false, "columns": ["id", "title", "priority", "status", "assignee", "created_at"]},

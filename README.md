@@ -89,12 +89,12 @@ cd itsm-backend
 # 安装依赖
 go mod download
 
-# 配置数据库连接（config.yaml 已包含默认配置）
-# 默认配置：localhost:5432, 用户 postgres, 密码 postgres
+# 配置环境变量（开发环境使用 trust 认证，无需密码）
+cp .env.example .env
 
 # 启动后端服务（自动创建数据库表和初始数据）
 go run main.go
-# 后端运行在 http://localhost:8080
+# 后端运行在 http://localhost:8090
 ```
 
 > **注意**: 后端启动时会自动：
@@ -103,6 +103,22 @@ go run main.go
 > - 创建默认管理员用户 admin/admin123
 > - 创建示例部门和团队数据
 > - 创建其他初始测试用户（user1/user123, security1/security123）
+
+#### 2.1 PostgreSQL 配置（首次部署）
+
+如果首次部署，需要先创建数据库：
+
+```bash
+# macOS (Homebrew 安装)
+brew services start postgresql@14
+
+# 创建数据库
+psql -U postgres -c "CREATE DATABASE itsm;"
+# 或使用 trust 认证（开发环境）
+psql -U postgres -c "CREATE DATABASE itsm OWNER dev;"
+```
+
+> **生产环境提示**: 生产部署时需要配置强密码，并修改 `config.yaml` 或设置环境变量 `DB_PASSWORD`
 
 #### 3. 前端启动
 
@@ -117,7 +133,7 @@ npm run dev
 # 前端运行在 http://localhost:3000
 ```
 
-> **注意**: 前端默认连接 `http://localhost:8080` 作为后端 API 地址。如需修改，编辑 `.env.local` 文件。
+> **注意**: 前端默认连接 `http://localhost:8090` 作为后端 API 地址。如需修改，编辑 `.env.local` 文件。
 
 ### 快速验证
 
@@ -125,10 +141,15 @@ npm run dev
 
 ```bash
 # 后端健康检查
-curl http://localhost:8080/health
+curl http://localhost:8090/health
+
+# 测试登录
+curl -X POST http://localhost:8090/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
 
 # 访问 API 文档
-# 浏览器打开: http://localhost:8080/swagger
+# 浏览器打开: http://localhost:8090/swagger
 
 # 前端页面
 # 浏览器打开: http://localhost:3000

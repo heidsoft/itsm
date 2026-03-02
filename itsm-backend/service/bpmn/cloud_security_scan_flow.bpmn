@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" id="Definitions_CloudSecurity" targetNamespace="http://bpmn.io/schema/bpmn" exporter="ITSM Platform" exporterVersion="1.0">
+  <process id="cloud_security_scan" name="云安全扫描与漏洞修复流程" isExecutable="true" camunda:versionTag="1.0">
+    <documentation>云环境安全扫描、漏洞修复、合规检查流程</documentation>
+
+    <!-- 开始事件 -->
+    <startEvent id="StartEvent_1" name="开始">
+      <outgoing>Flow_1</outgoing>
+    </startEvent>
+
+    <!-- 触发安全扫描 -->
+    <userTask id="Task_TriggerScan" name="触发安全扫描">
+      <incoming>Flow_1</incoming>
+      <outgoing>Flow_2</outgoing>
+    </userTask>
+
+    <!-- 自动执行扫描 (Service Task) -->
+    <serviceTask id="Task_AutoScan" name="自动安全扫描" camunda:type="external" camunda:topic="security-scan">
+      <incoming>Flow_2</incoming>
+      <outgoing>Flow_3</outgoing>
+    </serviceTask>
+
+    <!-- 分析扫描结果 -->
+    <userTask id="Task_AnalyzeResult" name="分析扫描结果">
+      <incoming>Flow_3</incoming>
+      <outgoing>Flow_4</outgoing>
+    </userTask>
+
+    <!-- 判断风险等级 -->
+    <exclusiveGateway id="Gateway_Risk" name="风险等级判定" default="Flow_6">
+      <incoming>Flow_4</incoming>
+      <outgoing>Flow_5</outgoing>
+      <outgoing>Flow_6</outgoing>
+      <outgoing>Flow_7</outgoing>
+    </exclusiveGateway>
+
+    <!-- 高风险：立即处置 -->
+    <userTask id="Task_HighRisk" name="高风险立即处置">
+      <incoming>Flow_5</incoming>
+      <outgoing>Flow_8</outgoing>
+    </userTask>
+
+    <!-- 中风险：计划修复 -->
+    <userTask id="Task_MediumRisk" name="计划修复">
+      <incoming>Flow_6</incoming>
+      <outgoing>Flow_9</outgoing>
+    </userTask>
+
+    <!-- 低风险：记录监控 -->
+    <userTask id="Task_LowRisk" name="记录并持续监控">
+      <incoming>Flow_7</incoming>
+      <outgoing>Flow_10</outgoing>
+    </userTask>
+
+    <!-- 修复验证 -->
+    <userTask id="Task_VerifyFix" name="修复验证">
+      <incoming>Flow_8</incoming>
+      <incoming>Flow_9</incoming>
+      <outgoing>Flow_11</outgoing>
+    </userTask>
+
+    <!-- 生成报告 -->
+    <userTask id="Task_Report" name="生成安全报告">
+      <incoming>Flow_10</incoming>
+      <incoming>Flow_11</incoming>
+      <outgoing>Flow_12</outgoing>
+    </userTask>
+
+    <!-- 结束 -->
+    <endEvent id="EndEvent_1" name="结束">
+      <incoming>Flow_12</incoming>
+    </endEvent>
+
+    <!-- 连线 -->
+    <sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_TriggerScan"/>
+    <sequenceFlow id="Flow_2" sourceRef="Task_TriggerScan" targetRef="Task_AutoScan"/>
+    <sequenceFlow id="Flow_3" sourceRef="Task_AutoScan" targetRef="Task_AnalyzeResult"/>
+    <sequenceFlow id="Flow_4" sourceRef="Task_AnalyzeResult" targetRef="Gateway_Risk"/>
+    <sequenceFlow id="Flow_5" sourceRef="Gateway_Risk" name="高风险" targetRef="Task_HighRisk">
+      <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${riskLevel == 'high'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="Flow_6" sourceRef="Gateway_Risk" name="中风险" targetRef="Task_MediumRisk">
+      <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${riskLevel == 'medium'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="Flow_7" sourceRef="Gateway_Risk" name="低风险" targetRef="Task_LowRisk">
+      <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${riskLevel == 'low'}</conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="Flow_8" sourceRef="Task_HighRisk" targetRef="Task_VerifyFix"/>
+    <sequenceFlow id="Flow_9" sourceRef="Task_MediumRisk" targetRef="Task_VerifyFix"/>
+    <sequenceFlow id="Flow_10" sourceRef="Task_LowRisk" targetRef="Task_Report"/>
+    <sequenceFlow id="Flow_11" sourceRef="Task_VerifyFix" targetRef="Task_Report"/>
+    <sequenceFlow id="Flow_12" sourceRef="Task_Report" targetRef="EndEvent_1"/>
+  </process>
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="cloud_security_scan">
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1">
+        <dc:Bounds x="180" y="150" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_TriggerScan_di" bpmnElement="Task_TriggerScan">
+        <dc:Bounds x="260" y="128" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AutoScan_di" bpmnElement="Task_AutoScan">
+        <dc:Bounds x="400" y="128" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AnalyzeResult_di" bpmnElement="Task_AnalyzeResult">
+        <dc:Bounds x="540" y="128" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Risk_di" bpmnElement="Gateway_Risk" isMarkerVisible="true">
+        <dc:Bounds x="680" y="145" width="50" height="50"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_HighRisk_di" bpmnElement="Task_HighRisk">
+        <dc:Bounds x="770" y="60" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MediumRisk_di" bpmnElement="Task_MediumRisk">
+        <dc:Bounds x="770" y="170" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_LowRisk_di" bpmnElement="Task_LowRisk">
+        <dc:Bounds x="770" y="280" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_VerifyFix_di" bpmnElement="Task_VerifyFix">
+        <dc:Bounds x="910" y="128" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Report_di" bpmnElement="Task_Report">
+        <dc:Bounds x="1050" y="128" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_1_di" bpmnElement="EndEvent_1">
+        <dc:Bounds x="1190" y="150" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
