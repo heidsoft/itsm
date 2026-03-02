@@ -55,15 +55,13 @@ export default function PendingApprovalsPage() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <Space orientation="vertical" size={16} className="w-full">
-        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-          <div className="flex items-center justify-between w-full">
+    <div className='max-w-6xl mx-auto p-6'>
+      <Space orientation='vertical' size={16} className='w-full'>
+        <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
+          <div className='flex items-center justify-between w-full'>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-0">
-                我的待办审批
-              </h2>
-              <p className="text-gray-500 mt-1 mb-0">V0：按角色返回当前需要我处理的服务请求</p>
+              <h2 className='text-2xl font-bold text-gray-900 mb-0'>我的待办审批</h2>
+              <p className='text-gray-500 mt-1 mb-0'>V0：按角色返回当前需要我处理的服务请求</p>
             </div>
             <Button icon={<ReloadOutlined />} onClick={() => load(page, size)} loading={loading}>
               刷新
@@ -71,20 +69,17 @@ export default function PendingApprovalsPage() {
           </div>
         </Card>
 
-        <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
           {rows.length === 0 && !loading ? (
-            <Empty
-              description='暂无待审批事项'
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            >
-              <div className="text-center">
-                <CheckCircleOutlined className="text-4xl text-green-500 mb-4" />
-                <p className="text-gray-500">所有审批事项已处理完成</p>
+            <Empty description='暂无待审批事项' image={Empty.PRESENTED_IMAGE_SIMPLE}>
+              <div className='text-center'>
+                <CheckCircleOutlined className='text-4xl text-green-500 mb-4' />
+                <p className='text-gray-500'>所有审批事项已处理完成</p>
               </div>
             </Empty>
           ) : (
             <Table<ServiceRequest>
-              rowKey="id"
+              rowKey='id'
               loading={loading}
               dataSource={rows}
               pagination={{
@@ -95,45 +90,42 @@ export default function PendingApprovalsPage() {
                 onChange: (p, s) => load(p, s),
               }}
               columns={[
-              {
-                title: 'ID',
-                dataIndex: 'id',
-                width: 90,
-              },
-              {
-                title: '标题',
-                key: 'title',
-                render: (_, r) => r.title || r.catalog?.name || '-',
-              },
-              {
-                title: '状态',
-                dataIndex: 'status',
-                width: 180,
-                render: (v: string) => statusTag(String(v)),
-              },
-              {
-                title: '申请人',
-                key: 'requester',
-                width: 160,
-                render: (_, r) => r.requester?.name || r.requester?.username || String(r.requester_id || '-'),
-              },
-              {
-                title: '创建时间',
-                dataIndex: 'created_at',
-                width: 220,
-                render: (v: string) => (v ? new Date(v).toLocaleString() : '-'),
-              },
-              {
-                title: '操作',
-                key: 'actions',
-                width: 160,
-                render: (_, r) => (
-                  <Link href={`/my-requests/${r.id}`}>
-                    查看并处理
-                  </Link>
-                ),
-              },
-            ]}
+                {
+                  title: 'ID',
+                  dataIndex: 'id',
+                  width: 90,
+                },
+                {
+                  title: '标题',
+                  key: 'title',
+                  render: (_, r) => r.title || r.catalog?.name || '-',
+                },
+                {
+                  title: '状态',
+                  dataIndex: 'status',
+                  width: 180,
+                  render: (v: string) => statusTag(String(v)),
+                },
+                {
+                  title: '申请人',
+                  key: 'requester',
+                  width: 160,
+                  render: (_, r) =>
+                    r.requester?.name || r.requester?.username || String(r.requester_id || '-'),
+                },
+                {
+                  title: '创建时间',
+                  dataIndex: 'created_at',
+                  width: 220,
+                  render: (v: string) => (v ? new Date(v).toLocaleString() : '-'),
+                },
+                {
+                  title: '操作',
+                  key: 'actions',
+                  width: 160,
+                  render: (_, r) => <Link href={`/my-requests/${r.id}`}>查看并处理</Link>,
+                },
+              ]}
             />
           )}
         </Card>
@@ -141,5 +133,3 @@ export default function PendingApprovalsPage() {
     </div>
   );
 }
-
-

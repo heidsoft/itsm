@@ -34,7 +34,6 @@ import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { TicketAttachmentApi, TicketAttachment } from '@/lib/api/ticket-attachment-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
-import { useI18n } from '@/lib/i18n';
 
 const { Text } = Typography;
 
@@ -56,7 +55,6 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
   onAttachmentUploaded,
   onAttachmentDeleted,
 }) => {
-  const { t } = useI18n();
   const { message: antMessage } = App.useApp();
   const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -73,6 +71,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       const response = await TicketAttachmentApi.listAttachments(ticketId);
       setAttachments(response.attachments || []);
     } catch (error) {
+      console.error('Failed to load attachments:', error);
       antMessage.error('加载附件列表失败');
     } finally {
       setLoading(false);
@@ -86,7 +85,12 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
   }, [ticketId]);
 
   // 上传文件
-  const handleUpload: UploadProps['customRequest'] = async ({ file, onSuccess, onError, onProgress }) => {
+  const handleUpload: UploadProps['customRequest'] = async ({
+    file,
+    onSuccess,
+    onError,
+    onProgress,
+  }) => {
     const uploadFile = file as File;
     setUploading(true);
 
@@ -94,11 +98,11 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       const attachment = await TicketAttachmentApi.uploadAttachment(
         ticketId,
         uploadFile,
-        (progress) => {
+        progress => {
           if (onProgress) {
             onProgress({ percent: progress });
           }
-          setUploadProgress((prev) => ({
+          setUploadProgress(prev => ({
             ...prev,
             [uploadFile.name]: progress,
           }));
@@ -114,6 +118,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
         onSuccess(attachment);
       }
     } catch (error: any) {
+      console.error('Failed to upload attachment:', error);
       antMessage.error(error.message || '附件上传失败');
       if (onError) {
         onError(error);
@@ -131,6 +136,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       await loadAttachments();
       onAttachmentDeleted?.(attachment.id);
     } catch (error: any) {
+      console.error('Failed to delete attachment:', error);
       antMessage.error(error.message || '附件删除失败');
     }
   };
@@ -187,7 +193,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
     onChange: ({ fileList: newFileList }) => {
       setFileList(newFileList);
     },
-    beforeUpload: (file) => {
+    beforeUpload: file => {
       // 检查文件大小（10MB）
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
@@ -204,27 +210,29 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
   };
 
   return (
-    <div className="space-y-4">
+    <div className='space-y-4'>
       {/* 上传区域 */}
       {canUpload && (
-        <Card title="上传附件" size="small">
+        <Card title='上传附件' size='small'>
           <Upload.Dragger {...uploadProps} disabled={uploading}>
-            <p className="ant-upload-drag-icon">
+            <p className='ant-upload-drag-icon'>
               <UploadOutlined style={{ fontSize: 48, color: '#1890ff' }} />
             </p>
-            <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
-            <p className="ant-upload-hint">
+            <p className='ant-upload-text'>点击或拖拽文件到此区域上传</p>
+            <p className='ant-upload-hint'>
               支持多文件上传，单个文件最大10MB。支持图片、PDF、Office文档等格式
             </p>
           </Upload.Dragger>
 
           {/* 上传进度 */}
           {Object.keys(uploadProgress).length > 0 && (
-            <div className="mt-4 space-y-2">
+            <div className='mt-4 space-y-2'>
               {Object.entries(uploadProgress).map(([fileName, progress]) => (
                 <div key={fileName}>
-                  <Text type="secondary" className="text-xs">{fileName}</Text>
-                  <Progress percent={progress} size="small" />
+                  <Text type='secondary' className='text-xs'>
+                    {fileName}
+                  </Text>
+                  <Progress percent={progress} size='small' />
                 </div>
               ))}
             </div>
@@ -233,39 +241,39 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       )}
 
       {/* 附件列表 */}
-      <Card title={`附件列表 (${attachments.length})`} size="small" loading={loading}>
+      <Card title={`附件列表 (${attachments.length})`} size='small' loading={loading}>
         {attachments.length === 0 ? (
-          <Empty description="暂无附件" />
+          <Empty description='暂无附件' />
         ) : (
           <List
             dataSource={attachments}
-            renderItem={(attachment) => (
+            renderItem={attachment => (
               <List.Item
                 actions={[
-                  <Tooltip title="预览" key="preview">
+                  <Tooltip title='预览' key='preview'>
                     <Button
-                      type="text"
+                      type='text'
                       icon={<EyeOutlined />}
                       onClick={() => handlePreview(attachment)}
                     />
                   </Tooltip>,
-                  <Tooltip title="下载" key="download">
+                  <Tooltip title='下载' key='download'>
                     <Button
-                      type="text"
+                      type='text'
                       icon={<DownloadOutlined />}
                       onClick={() => handleDownload(attachment)}
                     />
                   </Tooltip>,
                   canDelete(attachment) && (
                     <Popconfirm
-                      key="delete"
-                      title={t('common.confirmDeleteContent')}
+                      key='delete'
+                      title='确定要删除这个附件吗？'
                       onConfirm={() => handleDelete(attachment)}
-                      okText={t('common.confirm')}
-                      cancelText={t('common.cancel')}
+                      okText='确定'
+                      cancelText='取消'
                     >
-                      <Tooltip title={t('common.delete')}>
-                        <Button type="text" danger icon={<DeleteOutlined />} />
+                      <Tooltip title='删除'>
+                        <Button type='text' danger icon={<DeleteOutlined />} />
                       </Tooltip>
                     </Popconfirm>
                   ),
@@ -276,17 +284,17 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
                   title={
                     <Space>
                       <Text strong>{attachment.file_name}</Text>
-                      <Tag color="blue">
+                      <Tag color='blue'>
                         {TicketAttachmentApi.formatFileSize(attachment.file_size)}
                       </Tag>
                     </Space>
                   }
                   description={
                     <Space split={<span>•</span>}>
-                      <Text type="secondary" className="text-xs">
+                      <Text type='secondary' className='text-xs'>
                         {attachment.uploader?.name || '未知用户'}
                       </Text>
-                      <Text type="secondary" className="text-xs">
+                      <Text type='secondary' className='text-xs'>
                         {new Date(attachment.created_at).toLocaleString('zh-CN')}
                       </Text>
                     </Space>
@@ -308,7 +316,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       >
         {previewAttachment && (
           <div>
-            <Text strong className="block mb-4">
+            <Text strong className='block mb-4'>
               {previewAttachment.file_name}
             </Text>
             <Image
@@ -322,4 +330,3 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
     </div>
   );
 };
-

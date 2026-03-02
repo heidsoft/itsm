@@ -63,7 +63,7 @@ export type TicketType = 'incident' | 'problem' | 'change' | 'service_request';
 
 export interface Ticket {
   id: number;
-  ticketNumber: string;  // 后端返回 snake_case，前端自动转换为 camelCase
+  ticketNumber: string; // 后端返回 snake_case，前端自动转换为 camelCase
   title: string;
   description: string;
   priority: TicketPriority;
@@ -144,7 +144,13 @@ export interface SLAInfo {
 // ==================== 事件相关类型 ====================
 
 export type IncidentSeverity = 'critical' | 'high' | 'medium' | 'low';
-export type IncidentStatus = 'new' | 'investigating' | 'identified' | 'monitoring' | 'resolved' | 'closed';
+export type IncidentStatus =
+  | 'new'
+  | 'investigating'
+  | 'identified'
+  | 'monitoring'
+  | 'resolved'
+  | 'closed';
 
 export interface Incident {
   id: number;
@@ -167,7 +173,15 @@ export interface Incident {
 // ==================== 变更相关类型 ====================
 
 export type ChangeType = 'normal' | 'standard' | 'emergency';
-export type ChangeStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'in_progress' | 'completed' | 'rolled_back' | 'cancelled';
+export type ChangeStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'in_progress'
+  | 'completed'
+  | 'rolled_back'
+  | 'cancelled';
 export type ChangePriority = 'low' | 'medium' | 'high' | 'critical';
 export type ChangeRisk = 'low' | 'medium' | 'high' | 'critical';
 
@@ -465,7 +479,9 @@ export const API_URLS = {
   INCIDENT: (id: number) => `/api/v1/incidents/${id}`,
 };
 
-export function normalizePaginationParams(params: Record<string, unknown>): Record<string, unknown> {
+export function normalizePaginationParams(
+  params: Record<string, unknown>
+): Record<string, unknown> {
   const normalized: Record<string, unknown> = {};
   if (params.page !== undefined) normalized.page = params.page;
   if (params.pageSize !== undefined) normalized.page_size = params.pageSize;

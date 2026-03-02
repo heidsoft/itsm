@@ -24,7 +24,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   onView,
 }) => {
   const { t } = useI18n();
-  
+
   const statusConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
     open: {
       color: '#fa8c16',
@@ -48,29 +48,28 @@ export const IncidentList: React.FC<IncidentListProps> = ({
     },
   };
 
-  const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> =
-    {
-      low: {
-        color: '#52c41a',
-        text: t('incidents.priorityLow'),
-        backgroundColor: '#f6ffed',
-      },
-      medium: {
-        color: '#1890ff',
-        text: t('incidents.priorityMedium'),
-        backgroundColor: '#e6f7ff',
-      },
-      high: {
-        color: '#fa8c16',
-        text: t('incidents.priorityHigh'),
-        backgroundColor: '#fff7e6',
-      },
-      critical: {
-        color: '#ff4d4f',
-        text: t('incidents.priorityCritical'),
-        backgroundColor: '#fff2f0',
-      },
-    };
+  const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
+    low: {
+      color: '#52c41a',
+      text: t('incidents.priorityLow'),
+      backgroundColor: '#f6ffed',
+    },
+    medium: {
+      color: '#1890ff',
+      text: t('incidents.priorityMedium'),
+      backgroundColor: '#e6f7ff',
+    },
+    high: {
+      color: '#fa8c16',
+      text: t('incidents.priorityHigh'),
+      backgroundColor: '#fff7e6',
+    },
+    critical: {
+      color: '#ff4d4f',
+      text: t('incidents.priorityCritical'),
+      backgroundColor: '#fff2f0',
+    },
+  };
 
   const columns = [
     {

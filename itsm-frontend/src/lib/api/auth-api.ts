@@ -101,7 +101,7 @@ class AuthApiClient {
   async login(loginData: LoginRequest): Promise<LoginResponse> {
     try {
       // 获取CSRF Token（如果没有提供）
-      const csrfToken = loginData.csrfToken || await this.getCsrfToken();
+      const csrfToken = loginData.csrfToken || (await this.getCsrfToken());
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), this.timeout);
@@ -150,7 +150,7 @@ class AuthApiClient {
       };
     } catch (error) {
       console.error('Login error:', error);
-      
+
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
           return {
@@ -158,7 +158,7 @@ class AuthApiClient {
             error: 'Request timeout',
           };
         }
-        
+
         return {
           success: false,
           error: error.message,
@@ -185,7 +185,7 @@ class AuthApiClient {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${refreshToken}`,
+          Authorization: `Bearer ${refreshToken}`,
         },
         signal: controller.signal,
       });
@@ -220,13 +220,13 @@ class AuthApiClient {
   async logout(): Promise<{ success: boolean; error?: string }> {
     try {
       const token = getAccessToken();
-      
+
       const response = await fetch(`${this.baseURL}${API_ENDPOINTS.LOGOUT}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          ...(token && { 'Authorization': `Bearer ${token}` }),
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
 
@@ -244,10 +244,10 @@ class AuthApiClient {
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
-      
+
       // 即使请求失败，也要清除本地token（统一清理，包含历史键名）
       clearAuthStorage();
-      
+
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Network error',
@@ -332,7 +332,9 @@ class AuthApiClient {
   /**
    * SSO登录重定向
    */
-  async initiateSSOLogin(provider: string = 'default'): Promise<{ success: boolean; redirectUrl?: string; error?: string }> {
+  async initiateSSOLogin(
+    provider: string = 'default'
+  ): Promise<{ success: boolean; redirectUrl?: string; error?: string }> {
     try {
       const response = await fetch(`${this.baseURL}${API_ENDPOINTS.SSO_INITIATE}`, {
         method: 'POST',
@@ -371,7 +373,7 @@ class AuthApiClient {
   async validateToken(): Promise<{ valid: boolean; user?: WebAuthnUser; error?: string }> {
     try {
       const token = getAccessToken();
-      
+
       if (!token) {
         return { valid: false, error: 'No token found' };
       }
@@ -380,7 +382,7 @@ class AuthApiClient {
         method: 'GET',
         credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

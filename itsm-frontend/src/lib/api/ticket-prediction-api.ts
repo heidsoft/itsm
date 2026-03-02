@@ -50,10 +50,12 @@ export class TicketPredictionApi {
   }
 
   // 导出预测报告
-  static async exportPredictionReport(params: PredictionRequest, format: 'excel' | 'pdf'): Promise<Blob> {
+  static async exportPredictionReport(
+    params: PredictionRequest,
+    format: 'excel' | 'pdf'
+  ): Promise<Blob> {
     return httpClient.post<Blob>(`/api/v1/tickets/prediction/export?format=${format}`, params, {
       responseType: 'blob',
     });
   }
 }
-

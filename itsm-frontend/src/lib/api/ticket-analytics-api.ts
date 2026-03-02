@@ -45,10 +45,12 @@ export class TicketAnalyticsApi {
   }
 
   // 导出分析数据
-  static async exportAnalytics(config: AnalyticsConfig, format: 'excel' | 'pdf' | 'csv'): Promise<Blob> {
+  static async exportAnalytics(
+    config: AnalyticsConfig,
+    format: 'excel' | 'pdf' | 'csv'
+  ): Promise<Blob> {
     return httpClient.post<Blob>(`/api/v1/tickets/analytics/export?format=${format}`, config, {
       responseType: 'blob',
     });
   }
 }
-

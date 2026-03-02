@@ -354,4 +354,3 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
     </>
   );
 };
-

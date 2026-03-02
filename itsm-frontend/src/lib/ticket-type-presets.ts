@@ -161,7 +161,7 @@ export const ticketTypePresets: TicketTypePreset[] = [
         required: true,
         options: [
           { label: 'MySQL', value: 'mysql' },
-           { label: 'PostgreSQL', value: 'postgresql' },
+          { label: 'PostgreSQL', value: 'postgresql' },
           { label: 'MongoDB', value: 'mongodb' },
           { label: '业务系统', value: 'business' },
         ],

@@ -1,12 +1,22 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { Form, Input as AntInput, Checkbox, Button, Typography, Alert, Space, Divider, theme } from 'antd';
+import {
+  Form,
+  Input as AntInput,
+  Checkbox,
+  Button,
+  Typography,
+  Alert,
+  Space,
+  Divider,
+  theme,
+} from 'antd';
 // import { PasswordInput, Input as CustomInput } from '@/components/ui';  // 已删除，使用Ant Design
 import { cn } from '@/lib/utils';
 
-const { Password: PasswordInput } = AntInput;  // 使用Ant Design的Password
-const CustomInput = AntInput;  // 使用Ant Design的Input
+const { Password: PasswordInput } = AntInput; // 使用Ant Design的Password
+const CustomInput = AntInput; // 使用Ant Design的Input
 const { token } = theme.useToken();
 
 /**
@@ -177,11 +187,11 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       case 'password':
         return (
           <PasswordInput
-            {...commonProps as any}  // 使用any避免类型错误
+            {...(commonProps as any)} // 使用any避免类型错误
           />
         );
       default:
-        return <CustomInput {...commonProps as any} type={field.type} />;  // 使用any避免类型错误
+        return <CustomInput {...(commonProps as any)} type={field.type} />; // 使用any避免类型错误
     }
   };
 

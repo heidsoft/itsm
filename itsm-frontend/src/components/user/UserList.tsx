@@ -41,7 +41,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
 import type { UserRole, UserStatus, UserFilters } from '@/types/user';
-import { UserApi, type User } from '@/lib/api/user-api';  // 从UserApi导入User类型
+import { UserApi, type User } from '@/lib/api/user-api'; // 从UserApi导入User类型
 
 const { Search } = Input;
 const { Option } = Select;
@@ -77,9 +77,10 @@ const UserList: React.FC<UserListProps> = ({
     async (params?: { page?: number; pageSize?: number; filters?: UserFilters }) => {
       try {
         setLoading(true);
-        const response = await UserApi.getUsers({  // 改为 getUsers
+        const response = await UserApi.getUsers({
+          // 改为 getUsers
           page: params?.page,
-          page_size: params?.pageSize,  // 改为 page_size
+          page_size: params?.pageSize, // 改为 page_size
           // filters: params?.filters,  // 移除filters，不在ListUsersParams中
         });
 
@@ -164,8 +165,8 @@ const UserList: React.FC<UserListProps> = ({
       },
       {
         key: 'status',
-        icon: record.active ? <LockOutlined /> : <UnlockOutlined />,  // 改为 active
-        label: record.active ? '禁用用户' : '启用用户',  // 改为 active
+        icon: record.active ? <LockOutlined /> : <UnlockOutlined />, // 改为 active
+        label: record.active ? '禁用用户' : '启用用户', // 改为 active
         onClick: () => handleToggleStatus(record),
       },
       {
@@ -201,8 +202,8 @@ const UserList: React.FC<UserListProps> = ({
 
   const handleToggleStatus = async (user: User) => {
     try {
-      const newStatus = user.active;  // 改为 active
-      await UserApi.changeUserStatus(user.id, !newStatus);  // 传入boolean
+      const newStatus = user.active; // 改为 active
+      await UserApi.changeUserStatus(user.id, !newStatus); // 传入boolean
       message.success(`用户${!newStatus ? '启用' : '禁用'}成功`);
       fetchUsers();
     } catch {
@@ -221,7 +222,7 @@ const UserList: React.FC<UserListProps> = ({
         try {
           // 生成随机密码并重置
           const newPassword = Math.random().toString(36).slice(-8);
-          await UserApi.resetPassword(user.id, newPassword);  // 修正参数
+          await UserApi.resetPassword(user.id, newPassword); // 修正参数
           message.success(`密码重置成功，新密码：${newPassword}（已发送到用户邮箱）`);
         } catch {
           message.error('密码重置失败');
@@ -303,7 +304,7 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'left',
       render: (_, record) => (
         <Space>
-          <Avatar size='small' icon={<UserOutlined />} />  {/* 移除src={record.avatar} */}
+          <Avatar size='small' icon={<UserOutlined />} /> {/* 移除src={record.avatar} */}
           <div>
             <div>
               <Button

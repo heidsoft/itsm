@@ -59,7 +59,7 @@ export class TicketAttachmentApi {
       const xhr = new XMLHttpRequest();
 
       // 监听上传进度
-      xhr.upload.addEventListener('progress', (event) => {
+      xhr.upload.addEventListener('progress', event => {
         if (event.lengthComputable && onProgress) {
           const progress = (event.loaded / event.total) * 100;
           onProgress(progress);
@@ -131,7 +131,7 @@ export class TicketAttachmentApi {
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   }
 
   /**
@@ -149,4 +149,3 @@ export class TicketAttachmentApi {
     return 'file';
   }
 }
-

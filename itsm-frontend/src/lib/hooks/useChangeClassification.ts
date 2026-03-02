@@ -10,11 +10,9 @@ import type { ClassificationQuery } from '@/types/change-classification';
 export const CHANGE_CLASSIFICATION_KEYS = {
   all: ['change-classifications'] as const,
   lists: () => [...CHANGE_CLASSIFICATION_KEYS.all, 'list'] as const,
-  list: (query?: ClassificationQuery) =>
-    [...CHANGE_CLASSIFICATION_KEYS.lists(), query] as const,
+  list: (query?: ClassificationQuery) => [...CHANGE_CLASSIFICATION_KEYS.lists(), query] as const,
   details: () => [...CHANGE_CLASSIFICATION_KEYS.all, 'detail'] as const,
-  detail: (id: string) =>
-    [...CHANGE_CLASSIFICATION_KEYS.details(), id] as const,
+  detail: (id: string) => [...CHANGE_CLASSIFICATION_KEYS.details(), id] as const,
   suggestion: (changeId: number) =>
     [...CHANGE_CLASSIFICATION_KEYS.all, 'suggestion', changeId] as const,
   rules: () => [...CHANGE_CLASSIFICATION_KEYS.all, 'rules'] as const,
@@ -40,14 +38,10 @@ export function useClassificationQuery(id: string, enabled = true) {
   });
 }
 
-export function useClassificationSuggestionQuery(
-  changeId: number,
-  enabled = true
-) {
+export function useClassificationSuggestionQuery(changeId: number, enabled = true) {
   return useQuery({
     queryKey: CHANGE_CLASSIFICATION_KEYS.suggestion(changeId),
-    queryFn: () =>
-      ChangeClassificationApi.getClassificationSuggestion(changeId),
+    queryFn: () => ChangeClassificationApi.getClassificationSuggestion(changeId),
     enabled: enabled && !!changeId,
     staleTime: 60000,
   });
@@ -64,8 +58,7 @@ export function useClassificationRulesQuery() {
 export function useChangeTemplatesQuery(classificationId?: string) {
   return useQuery({
     queryKey: CHANGE_CLASSIFICATION_KEYS.templates(classificationId),
-    queryFn: () =>
-      ChangeClassificationApi.getChangeTemplates({ classificationId }),
+    queryFn: () => ChangeClassificationApi.getChangeTemplates({ classificationId }),
     staleTime: 300000,
   });
 }
@@ -127,17 +120,8 @@ export function useAnalyzeImpactMutation() {
 export function useApplyClassificationMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      changeId,
-      classificationId,
-    }: {
-      changeId: number;
-      classificationId: string;
-    }) =>
-      ChangeClassificationApi.applyClassificationSuggestion(
-        changeId,
-        classificationId
-      ),
+    mutationFn: ({ changeId, classificationId }: { changeId: number; classificationId: string }) =>
+      ChangeClassificationApi.applyClassificationSuggestion(changeId, classificationId),
     onSuccess: () => {
       message.success('分类已应用');
       queryClient.invalidateQueries({ queryKey: ['changes'] });
@@ -159,4 +143,3 @@ const ChangeClassificationHooks = {
 };
 
 export default ChangeClassificationHooks;
-

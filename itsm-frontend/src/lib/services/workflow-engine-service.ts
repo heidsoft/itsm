@@ -115,7 +115,11 @@ export class WorkflowEngineService {
     return res.data;
   }
 
-  async updateWorkflowDefinition(key: string, version: string, data: Partial<WorkflowDefinition>): Promise<WorkflowDefinition> {
+  async updateWorkflowDefinition(
+    key: string,
+    version: string,
+    data: Partial<WorkflowDefinition>
+  ): Promise<WorkflowDefinition> {
     const response = await fetch(`${this.baseUrl}/process-definitions/${key}?version=${version}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -127,11 +131,14 @@ export class WorkflowEngineService {
   }
 
   async setWorkflowDefinitionActive(key: string, version: string, active: boolean): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/process-definitions/${key}/active?version=${version}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ active }),
-    });
+    const response = await fetch(
+      `${this.baseUrl}/process-definitions/${key}/active?version=${version}`,
+      {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ active }),
+      }
+    );
     if (!response.ok) throw new Error('Failed to set workflow definition status');
   }
 
@@ -140,7 +147,8 @@ export class WorkflowEngineService {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.pageSize) query.append('page_size', params.pageSize.toString());
-    if (params?.processDefinitionKey) query.append('process_definition_key', params.processDefinitionKey);
+    if (params?.processDefinitionKey)
+      query.append('process_definition_key', params.processDefinitionKey);
     if (params?.status) query.append('status', params.status);
 
     const response = await fetch(`${this.baseUrl}/process-instances?${query.toString()}`);
@@ -148,7 +156,11 @@ export class WorkflowEngineService {
     return response.json();
   }
 
-  async startWorkflowInstance(processDefinitionKey: string, businessKey: string, variables?: Record<string, any>): Promise<WorkflowInstance> {
+  async startWorkflowInstance(
+    processDefinitionKey: string,
+    businessKey: string,
+    variables?: Record<string, any>
+  ): Promise<WorkflowInstance> {
     const response = await fetch(`${this.baseUrl}/process-instances`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

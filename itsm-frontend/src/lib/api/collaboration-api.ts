@@ -32,21 +32,16 @@ export class CollaborationApi {
   /**
    * 获取工单评论列表
    */
-  static async getComments(
-    query: CommentListQuery
-  ): Promise<CommentListResponse> {
-    return httpClient.get<CommentListResponse>(
-      `/api/v1/tickets/${query.ticketId}/comments`,
-      {
-        type: query.type,
-        includeDeleted: query.includeDeleted,
-        includeInternal: query.includeInternal,
-        sortBy: query.sortBy,
-        sortOrder: query.sortOrder,
-        page: query.page,
-        pageSize: query.pageSize,
-      }
-    );
+  static async getComments(query: CommentListQuery): Promise<CommentListResponse> {
+    return httpClient.get<CommentListResponse>(`/api/v1/tickets/${query.ticketId}/comments`, {
+      type: query.type,
+      includeDeleted: query.includeDeleted,
+      includeInternal: query.includeInternal,
+      sortBy: query.sortBy,
+      sortOrder: query.sortOrder,
+      page: query.page,
+      pageSize: query.pageSize,
+    });
   }
 
   /**
@@ -60,23 +55,14 @@ export class CollaborationApi {
    * 创建评论
    */
   static async createComment(request: CreateCommentRequest): Promise<Comment> {
-    return httpClient.post<Comment>(
-      `/api/v1/tickets/${request.ticketId}/comments`,
-      request
-    );
+    return httpClient.post<Comment>(`/api/v1/tickets/${request.ticketId}/comments`, request);
   }
 
   /**
    * 更新评论
    */
-  static async updateComment(
-    commentId: string,
-    request: UpdateCommentRequest
-  ): Promise<Comment> {
-    return httpClient.put<Comment>(
-      `/api/v1/comments/${commentId}`,
-      request
-    );
+  static async updateComment(commentId: string, request: UpdateCommentRequest): Promise<Comment> {
+    return httpClient.put<Comment>(`/api/v1/comments/${commentId}`, request);
   }
 
   /**
@@ -118,18 +104,14 @@ export class CollaborationApi {
    * 获取评论回复
    */
   static async getCommentReplies(commentId: string): Promise<Comment[]> {
-    return httpClient.get<Comment[]>(
-      `/api/v1/comments/${commentId}/replies`
-    );
+    return httpClient.get<Comment[]>(`/api/v1/comments/${commentId}/replies`);
   }
 
   /**
    * 获取评论统计
    */
   static async getCommentStats(ticketId: number): Promise<CommentStats> {
-    return httpClient.get<CommentStats>(
-      `/api/v1/tickets/${ticketId}/comments/stats`
-    );
+    return httpClient.get<CommentStats>(`/api/v1/tickets/${ticketId}/comments/stats`);
   }
 
   // ==================== @提及 ====================
@@ -143,10 +125,7 @@ export class CollaborationApi {
     types?: string[];
     limit?: number;
   }): Promise<MentionSuggestion[]> {
-    return httpClient.get<MentionSuggestion[]>(
-      '/api/v1/mentions/suggestions',
-      params
-    );
+    return httpClient.get<MentionSuggestion[]>('/api/v1/mentions/suggestions', params);
   }
 
   /**
@@ -177,22 +156,15 @@ export class CollaborationApi {
   /**
    * 获取通知列表
    */
-  static async getNotifications(
-    query: NotificationListQuery
-  ): Promise<NotificationListResponse> {
-    return httpClient.get<NotificationListResponse>(
-      '/api/v1/notifications',
-      query
-    );
+  static async getNotifications(query: NotificationListQuery): Promise<NotificationListResponse> {
+    return httpClient.get<NotificationListResponse>('/api/v1/notifications', query);
   }
 
   /**
    * 获取未读通知数量
    */
   static async getUnreadCount(): Promise<{ count: number }> {
-    return httpClient.get<{ count: number }>(
-      '/api/v1/notifications/unread-count'
-    );
+    return httpClient.get<{ count: number }>('/api/v1/notifications/unread-count');
   }
 
   /**
@@ -227,9 +199,7 @@ export class CollaborationApi {
    * 获取通知设置
    */
   static async getNotificationSettings(): Promise<NotificationSettings> {
-    return httpClient.get<NotificationSettings>(
-      '/api/v1/notifications/settings'
-    );
+    return httpClient.get<NotificationSettings>('/api/v1/notifications/settings');
   }
 
   /**
@@ -238,10 +208,7 @@ export class CollaborationApi {
   static async updateNotificationSettings(
     settings: Partial<NotificationSettings>
   ): Promise<NotificationSettings> {
-    return httpClient.put<NotificationSettings>(
-      '/api/v1/notifications/settings',
-      settings
-    );
+    return httpClient.put<NotificationSettings>('/api/v1/notifications/settings', settings);
   }
 
   // ==================== 协作历史 ====================
@@ -250,17 +217,14 @@ export class CollaborationApi {
    * 获取工单活动流
    */
   static async getActivities(query: ActivityQuery): Promise<ActivityFeed> {
-    return httpClient.get<ActivityFeed>(
-      `/api/v1/tickets/${query.ticketId}/activities`,
-      {
-        types: query.types,
-        actorId: query.actorId,
-        startDate: query.startDate,
-        endDate: query.endDate,
-        cursor: query.cursor,
-        limit: query.limit,
-      }
-    );
+    return httpClient.get<ActivityFeed>(`/api/v1/tickets/${query.ticketId}/activities`, {
+      types: query.types,
+      actorId: query.actorId,
+      startDate: query.startDate,
+      endDate: query.endDate,
+      cursor: query.cursor,
+      limit: query.limit,
+    });
   }
 
   /**
@@ -279,14 +243,11 @@ export class CollaborationApi {
     endDate?: string;
     limit?: number;
   }): Promise<Activity[]> {
-    return httpClient.get<Activity[]>(
-      `/api/v1/users/${params.userId}/activities`,
-      {
-        startDate: params.startDate,
-        endDate: params.endDate,
-        limit: params.limit,
-      }
-    );
+    return httpClient.get<Activity[]>(`/api/v1/users/${params.userId}/activities`, {
+      startDate: params.startDate,
+      endDate: params.endDate,
+      limit: params.limit,
+    });
   }
 
   // ==================== 观察者管理 ====================
@@ -295,40 +256,30 @@ export class CollaborationApi {
    * 获取观察者列表
    */
   static async getWatchers(ticketId: number): Promise<Watcher[]> {
-    return httpClient.get<Watcher[]>(
-      `/api/v1/tickets/${ticketId}/watchers`
-    );
+    return httpClient.get<Watcher[]>(`/api/v1/tickets/${ticketId}/watchers`);
   }
 
   /**
    * 添加观察者
    */
-  static async addWatcher(data: {
-    ticketId: number;
-    userId: number;
-  }): Promise<Watcher> {
-    return httpClient.post<Watcher>(
-      `/api/v1/tickets/${data.ticketId}/watchers`,
-      { userId: data.userId }
-    );
+  static async addWatcher(data: { ticketId: number; userId: number }): Promise<Watcher> {
+    return httpClient.post<Watcher>(`/api/v1/tickets/${data.ticketId}/watchers`, {
+      userId: data.userId,
+    });
   }
 
   /**
    * 移除观察者
    */
   static async removeWatcher(ticketId: number, watcherId: string): Promise<void> {
-    return httpClient.delete(
-      `/api/v1/tickets/${ticketId}/watchers/${watcherId}`
-    );
+    return httpClient.delete(`/api/v1/tickets/${ticketId}/watchers/${watcherId}`);
   }
 
   /**
    * 添加自己为观察者
    */
   static async watchTicket(ticketId: number): Promise<Watcher> {
-    return httpClient.post<Watcher>(
-      `/api/v1/tickets/${ticketId}/watch`
-    );
+    return httpClient.post<Watcher>(`/api/v1/tickets/${ticketId}/watch`);
   }
 
   /**
@@ -343,12 +294,8 @@ export class CollaborationApi {
   /**
    * 获取协作统计
    */
-  static async getCollaborationStats(
-    ticketId: number
-  ): Promise<CollaborationStats> {
-    return httpClient.get<CollaborationStats>(
-      `/api/v1/tickets/${ticketId}/collaboration-stats`
-    );
+  static async getCollaborationStats(ticketId: number): Promise<CollaborationStats> {
+    return httpClient.get<CollaborationStats>(`/api/v1/tickets/${ticketId}/collaboration-stats`);
   }
 
   /**
@@ -363,9 +310,7 @@ export class CollaborationApi {
       lastActivityAt: Date;
     }>
   > {
-    return httpClient.get(
-      `/api/v1/tickets/${ticketId}/participants`
-    );
+    return httpClient.get(`/api/v1/tickets/${ticketId}/participants`);
   }
 
   // ==================== 实时协作 ====================
@@ -374,10 +319,7 @@ export class CollaborationApi {
    * 获取在线状态
    */
   static async getOnlinePresence(userIds: number[]): Promise<OnlinePresence[]> {
-    return httpClient.post<OnlinePresence[]>(
-      '/api/v1/presence/batch',
-      { userIds }
-    );
+    return httpClient.post<OnlinePresence[]>('/api/v1/presence/batch', { userIds });
   }
 
   /**
@@ -401,9 +343,7 @@ export class CollaborationApi {
    * 获取正在输入的用户
    */
   static async getTypingUsers(ticketId: number): Promise<TypingIndicator[]> {
-    return httpClient.get<TypingIndicator[]>(
-      `/api/v1/tickets/${ticketId}/typing`
-    );
+    return httpClient.get<TypingIndicator[]>(`/api/v1/tickets/${ticketId}/typing`);
   }
 
   // ==================== 附件管理 ====================
@@ -428,15 +368,11 @@ export class CollaborationApi {
       formData.append('commentId', data.commentId);
     }
 
-    return httpClient.post(
-      `/api/v1/tickets/${data.ticketId}/attachments`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    return httpClient.post(`/api/v1/tickets/${data.ticketId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 
   /**
@@ -465,9 +401,7 @@ export class CollaborationApi {
   /**
    * 批量标记通知为已读
    */
-  static async batchMarkNotificationsAsRead(
-    notificationIds: string[]
-  ): Promise<void> {
+  static async batchMarkNotificationsAsRead(notificationIds: string[]): Promise<void> {
     return httpClient.post('/api/v1/notifications/batch-read', {
       notificationIds,
     });
@@ -487,10 +421,7 @@ export class CollaborationApi {
     page?: number;
     pageSize?: number;
   }): Promise<CommentListResponse> {
-    return httpClient.get<CommentListResponse>(
-      '/api/v1/comments/search',
-      params
-    );
+    return httpClient.get<CommentListResponse>('/api/v1/comments/search', params);
   }
 
   /**
@@ -519,4 +450,3 @@ export default CollaborationApi;
 
 // 导出别名
 export const CollaborationAPI = CollaborationApi;
-

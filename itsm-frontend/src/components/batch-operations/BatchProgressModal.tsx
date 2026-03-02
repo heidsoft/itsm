@@ -6,19 +6,7 @@
 'use client';
 
 import React from 'react';
-import {
-  Modal,
-  Progress,
-  Space,
-  Button,
-  Alert,
-  Statistic,
-  Row,
-  Col,
-  List,
-  Tag,
-  Spin,
-} from 'antd';
+import { Modal, Progress, Space, Button, Alert, Statistic, Row, Col, List, Tag, Spin } from 'antd';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -41,13 +29,10 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
   operationId,
   onClose,
 }) => {
-  const { data: progress, isLoading } = useBatchOperationProgressQuery(
-    operationId,
-    {
-      enabled: visible,
-      refetchInterval: 2000,
-    }
-  );
+  const { data: progress, isLoading } = useBatchOperationProgressQuery(operationId, {
+    enabled: visible,
+    refetchInterval: 2000,
+  });
 
   const getStatusColor = () => {
     switch (progress?.status) {
@@ -90,51 +75,45 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
 
   return (
     <Modal
-      title="批量操作进度"
+      title='批量操作进度'
       open={visible}
       onCancel={onClose}
       width={700}
       footer={[
-        <Button key="close" type="primary" onClick={onClose} disabled={isRunning && !isPaused}>
+        <Button key='close' type='primary' onClick={onClose} disabled={isRunning && !isPaused}>
           {isCompleted || isFailed ? '关闭' : '后台运行'}
         </Button>,
       ]}
     >
       {isLoading || !progress ? (
-        <div className="flex justify-center items-center py-12">
-          <Spin size="large" />
+        <div className='flex justify-center items-center py-12'>
+          <Spin size='large' />
         </div>
       ) : (
-        <Space orientation="vertical" size="large" className="w-full">
+        <Space orientation='vertical' size='large' className='w-full'>
           {/* 进度条 */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-base font-semibold">
-                {getStatusText()}
-              </span>
-              <span className="text-gray-600">
+            <div className='flex items-center justify-between mb-2'>
+              <span className='text-base font-semibold'>{getStatusText()}</span>
+              <span className='text-gray-600'>
                 {progress.processedCount} / {progress.totalCount}
               </span>
             </div>
-            <Progress
-              percent={progress.percentage}
-              status={getStatusColor()}
-              strokeWidth={12}
-            />
+            <Progress percent={progress.percentage} status={getStatusColor()} strokeWidth={12} />
           </div>
 
           {/* 统计信息 */}
           <Row gutter={16}>
             <Col span={8}>
               <Statistic
-                title="总数"
+                title='总数'
                 value={progress.totalCount}
                 prefix={<CheckCircleOutlined />}
               />
             </Col>
             <Col span={8}>
               <Statistic
-                title="成功"
+                title='成功'
                 value={progress.successCount}
                 styles={{ content: { color: '#3f8600' } }}
                 prefix={<CheckCircleOutlined />}
@@ -142,7 +121,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
             </Col>
             <Col span={8}>
               <Statistic
-                title="失败"
+                title='失败'
                 value={progress.failedCount}
                 styles={{ content: { color: '#cf1322' } }}
                 prefix={<CloseCircleOutlined />}
@@ -153,9 +132,9 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
           {/* 当前处理工单 */}
           {isRunning && progress.currentTicket && (
             <Alert
-              message="正在处理"
+              message='正在处理'
               description={`工单 #${progress.currentTicket.ticketNumber}`}
-              type="info"
+              type='info'
               showIcon
             />
           )}
@@ -163,11 +142,9 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
           {/* 完成提示 */}
           {isCompleted && (
             <Alert
-              message="批量操作完成"
+              message='批量操作完成'
               description={`成功处理 ${progress.successCount} 个工单${
-                progress.failedCount > 0
-                  ? `，失败 ${progress.failedCount} 个`
-                  : ''
+                progress.failedCount > 0 ? `，失败 ${progress.failedCount} 个` : ''
               }`}
               type={progress.failedCount > 0 ? 'warning' : 'success'}
               showIcon
@@ -177,16 +154,16 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
           {/* 失败提示 */}
           {isFailed && (
             <Alert
-              message="批量操作失败"
-              description="请查看错误日志了解详情"
-              type="error"
+              message='批量操作失败'
+              description='请查看错误日志了解详情'
+              type='error'
               showIcon
             />
           )}
 
           {/* 预计完成时间 */}
           {isRunning && progress.estimatedCompletionTime && (
-            <div className="text-sm text-gray-500">
+            <div className='text-sm text-gray-500'>
               预计完成时间：
               {new Date(progress.estimatedCompletionTime).toLocaleTimeString()}
             </div>
@@ -212,4 +189,3 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
 };
 
 export default BatchProgressModal;
-

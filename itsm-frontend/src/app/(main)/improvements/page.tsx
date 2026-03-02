@@ -19,9 +19,9 @@ interface Improvement {
 }
 
 const statusColors: Record<ImprovementStatus, string> = {
-  '进行中': 'blue',
-  '待评估': 'gold',
-  '已完成': 'green',
+  进行中: 'blue',
+  待评估: 'gold',
+  已完成: 'green',
 };
 
 const ImprovementListPage = () => {
@@ -49,7 +49,7 @@ const ImprovementListPage = () => {
         status: mapStatus(ticket.status),
         owner: ticket.assignee?.name || '未分配',
         target: ticket.description || '无目标描述',
-        createdAt: ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'
+        createdAt: ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-',
       }));
 
       setImprovements(mappedImprovements);
@@ -63,11 +63,15 @@ const ImprovementListPage = () => {
 
   const mapStatus = (ticketStatus: string): ImprovementStatus => {
     switch (ticketStatus) {
-      case 'open': return '待评估';
-      case 'in_progress': return '进行中';
+      case 'open':
+        return '待评估';
+      case 'in_progress':
+        return '进行中';
       case 'resolved':
-      case 'closed': return '已完成';
-      default: return '待评估';
+      case 'closed':
+        return '已完成';
+      default:
+        return '待评估';
     }
   };
 
@@ -99,9 +103,7 @@ const ImprovementListPage = () => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: ImprovementStatus) => (
-        <Tag color={statusColors[status]}>{status}</Tag>
-      ),
+      render: (status: ImprovementStatus) => <Tag color={statusColors[status]}>{status}</Tag>,
     },
     {
       title: '负责人',
@@ -135,7 +137,11 @@ const ImprovementListPage = () => {
             <Button icon={<ReloadOutlined />} onClick={loadImprovements} loading={loading}>
               刷新
             </Button>
-            <Button type='primary' icon={<PlusOutlined />} onClick={() => router.push('/improvements/new')}>
+            <Button
+              type='primary'
+              icon={<PlusOutlined />}
+              onClick={() => router.push('/improvements/new')}
+            >
               新建改进计划
             </Button>
           </Space>
@@ -174,7 +180,7 @@ const ImprovementListPage = () => {
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `共 ${total} 条记录`,
+              showTotal: total => `共 ${total} 条记录`,
             }}
           />
         )}

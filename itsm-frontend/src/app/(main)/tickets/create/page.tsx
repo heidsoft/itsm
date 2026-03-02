@@ -101,8 +101,7 @@ export default function CreateTicketPage() {
           .map(field => {
             const value = values[field.name];
             if (value) {
-              const optionLabel =
-                field.options?.find(opt => opt.value === value)?.label || value;
+              const optionLabel = field.options?.find(opt => opt.value === value)?.label || value;
               return `${field.label}: ${optionLabel}`;
             }
             return null;
@@ -262,20 +261,38 @@ export default function CreateTicketPage() {
                         <div className='font-medium'>{selectedType.name}</div>
                         <Text type='secondary'>{selectedType.description}</Text>
                       </div>
-                      <Button
-                        type='link'
-                        size='small'
-                        onClick={() => setSelectedType(null)}
-                      >
+                      <Button type='link' size='small' onClick={() => setSelectedType(null)}>
                         更换
                       </Button>
                     </Space>
                     {/* 关联的工作流信息 */}
                     {selectedType.workflowTemplateId && (
-                      <div style={{ marginTop: 8, padding: '8px 12px', background: '#fff', borderRadius: 4, border: `1px solid ${selectedType.color}30` }}>
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: '8px 12px',
+                          background: '#fff',
+                          borderRadius: 4,
+                          border: `1px solid ${selectedType.color}30`,
+                        }}
+                      >
                         <Space>
-                          <Tag color={selectedType.priority === 'urgent' ? 'red' : selectedType.priority === 'high' ? 'orange' : 'blue'}>
-                            {selectedType.priority === 'urgent' ? '紧急' : selectedType.priority === 'high' ? '高' : selectedType.priority === 'medium' ? '中' : '低'}
+                          <Tag
+                            color={
+                              selectedType.priority === 'urgent'
+                                ? 'red'
+                                : selectedType.priority === 'high'
+                                  ? 'orange'
+                                  : 'blue'
+                            }
+                          >
+                            {selectedType.priority === 'urgent'
+                              ? '紧急'
+                              : selectedType.priority === 'high'
+                                ? '高'
+                                : selectedType.priority === 'medium'
+                                  ? '中'
+                                  : '低'}
                           </Tag>
                           <Text type='secondary'>审批流程: </Text>
                           <Text strong>{selectedType.workflowTemplateId}</Text>
@@ -289,10 +306,7 @@ export default function CreateTicketPage() {
               {/* 智能显示表单：已选类型有字段→自定义表单 | 已选类型无字段或未选择→基础表单 */}
               {selectedType?.fields && selectedType.fields.length > 0 ? (
                 /* 有自定义字段：只显示自定义表单（已包含所有必要信息） */
-                <Card
-                  title={`${selectedType.name} - 详细信息`}
-                  style={{ marginBottom: 16 }}
-                >
+                <Card title={`${selectedType.name} - 详细信息`} style={{ marginBottom: 16 }}>
                   <Row gutter={[16, 0]}>
                     {selectedType.fields.map(field => (
                       <Col span={24} key={field.name}>
@@ -343,10 +357,7 @@ export default function CreateTicketPage() {
                       { min: 10, message: '描述至少需要10个字符' },
                     ]}
                   >
-                    <TextArea
-                      rows={6}
-                      placeholder='请详细描述问题/需求与影响范围...'
-                    />
+                    <TextArea rows={6} placeholder='请详细描述问题/需求与影响范围...' />
                   </Form.Item>
 
                   <Row gutter={16}>
@@ -368,11 +379,7 @@ export default function CreateTicketPage() {
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item
-                        name='category'
-                        label='分类'
-                        initialValue='技术支持'
-                      >
+                      <Form.Item name='category' label='分类' initialValue='技术支持'>
                         <Select
                           options={[
                             { label: '技术支持', value: '技术支持' },

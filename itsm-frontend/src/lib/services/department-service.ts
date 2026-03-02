@@ -11,7 +11,7 @@ export interface Department {
   created_at?: string;
   updated_at?: string;
   // Frontend specific helper
-  key?: number; 
+  key?: number;
   title?: string;
   value?: number;
 }
@@ -42,7 +42,7 @@ class DepartmentService {
   async createDepartment(data: CreateDepartmentRequest): Promise<Department> {
     return httpClient.post<Department>(this.baseUrl, data);
   }
-  
+
   async updateDepartment(id: number, data: UpdateDepartmentRequest): Promise<Department> {
     return httpClient.put<Department>(`${this.baseUrl}/${id}`, data);
   }
@@ -53,4 +53,3 @@ class DepartmentService {
 }
 
 export const departmentService = new DepartmentService();
-

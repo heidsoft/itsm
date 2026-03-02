@@ -62,15 +62,15 @@ export default function WorkflowToolbar({
   const getStatusIcon = (status: string): React.ReactNode => {
     switch (status) {
       case 'active':
-        return <CheckCircle className="w-4 h-4" />;
+        return <CheckCircle className='w-4 h-4' />;
       case 'draft':
-        return <Edit3 className="w-4 h-4" />;
+        return <Edit3 className='w-4 h-4' />;
       case 'inactive':
-        return <Clock className="w-4 h-4" />;
+        return <Clock className='w-4 h-4' />;
       case 'archived':
-        return <AlertCircle className="w-4 h-4" />;
+        return <AlertCircle className='w-4 h-4' />;
       default:
-        return <Clock className="w-4 h-4" />;
+        return <Clock className='w-4 h-4' />;
     }
   };
 
@@ -91,34 +91,34 @@ export default function WorkflowToolbar({
   };
 
   return (
-    <div className="bg-white px-6 border-b border-gray-100 flex items-center justify-between h-16 leading-none">
-      <div className="flex items-center justify-between w-full h-full">
+    <div className='bg-white px-6 border-b border-gray-100 flex items-center justify-between h-16 leading-none'>
+      <div className='flex items-center justify-between w-full h-full'>
         {/* 左侧 - 返回按钮和工作流信息 */}
-        <div className="flex items-center">
+        <div className='flex items-center'>
           <Button
-            type="text"
-            icon={<ArrowLeft className="w-4 h-4" />}
+            type='text'
+            icon={<ArrowLeft className='w-4 h-4' />}
             onClick={() => router.back()}
-            className="mr-4"
+            className='mr-4'
           >
             返回
           </Button>
           <div>
-            <Title level={4} className="!mb-0 !text-base">
+            <Title level={4} className='!mb-0 !text-base'>
               {workflow?.name || '工作流设计器'}
             </Title>
-            <div className="flex items-center gap-2 mt-1">
-              <Tag color={getStatusColor(workflow?.status || 'draft')} className="mr-0">
-                <span className="flex items-center gap-1">
+            <div className='flex items-center gap-2 mt-1'>
+              <Tag color={getStatusColor(workflow?.status || 'draft')} className='mr-0'>
+                <span className='flex items-center gap-1'>
                   {getStatusIcon(workflow?.status || 'draft')}
                   {getStatusText(workflow?.status || 'draft')}
                 </span>
               </Tag>
-              <Text type="secondary" className="text-xs">
+              <Text type='secondary' className='text-xs'>
                 版本 {workflow?.version}
               </Text>
               {workflow?.category && (
-                <Tag color="blue" className="ml-2">
+                <Tag color='blue' className='ml-2'>
                   {workflow.category}
                 </Tag>
               )}
@@ -128,22 +128,18 @@ export default function WorkflowToolbar({
 
         {/* 右侧 - 操作按钮 */}
         <Space>
-          <Button icon={<GitBranch className="w-4 h-4" />}>
-            版本管理
-          </Button>
-          <Button icon={<Settings className="w-4 h-4" />}>
-            流程设置
-          </Button>
+          <Button icon={<GitBranch className='w-4 h-4' />}>版本管理</Button>
+          <Button icon={<Settings className='w-4 h-4' />}>流程设置</Button>
           <Button
-            icon={<Save className="w-4 h-4" />}
+            icon={<Save className='w-4 h-4' />}
             loading={saving}
             onClick={() => onSave(currentXML)}
           >
             保存
           </Button>
           <Button
-            type="primary"
-            icon={<PlayCircle className="w-4 h-4" />}
+            type='primary'
+            icon={<PlayCircle className='w-4 h-4' />}
             loading={saving || deploying}
             onClick={() => onSaveAndDeploy(currentXML)}
             disabled={!workflow}
@@ -151,7 +147,7 @@ export default function WorkflowToolbar({
             保存并部署
           </Button>
           <Button
-            icon={<PlayCircle className="w-4 h-4" />}
+            icon={<PlayCircle className='w-4 h-4' />}
             loading={deploying}
             onClick={onDeploy}
             disabled={!workflow || workflow.status === 'active'}

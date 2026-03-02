@@ -734,7 +734,10 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
               <div className='mb-4'>
                 <Text strong>升级级别</Text>
                 <div className='mt-1'>
-                  <Badge count={incident.escalation_level ?? 0} style={{ backgroundColor: '#f50' }} />
+                  <Badge
+                    count={incident.escalation_level ?? 0}
+                    style={{ backgroundColor: '#f50' }}
+                  />
                 </div>
               </div>
             </Col>
@@ -1293,7 +1296,7 @@ const IncidentMonitoringPanel: React.FC<{
                 }
               />
             ) : (
-              <Alert title="暂无严重事件" type='success' showIcon />
+              <Alert title='暂无严重事件' type='success' showIcon />
             )}
           </Card>
         </div>

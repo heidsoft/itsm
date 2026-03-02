@@ -44,7 +44,11 @@ import {
   ThumbsDown,
 } from 'lucide-react';
 // AppLayout is handled by parent layout
-import { WorkflowAPI, WorkflowInstance as ApiWorkflowInstance, WorkflowTask as ApiWorkflowTask } from '@/lib/api/workflow-api';
+import {
+  WorkflowAPI,
+  WorkflowInstance as ApiWorkflowInstance,
+  WorkflowTask as ApiWorkflowTask,
+} from '@/lib/api/workflow-api';
 
 const { Option } = Select;
 
@@ -74,15 +78,20 @@ const WorkflowInstancesPage = () => {
   const { message } = App.useApp();
   const [instances, setInstances] = useState<WorkflowInstanceRecord[]>([]);
   const [tasks, setTasks] = useState<WorkflowTaskRecord[]>([]);
-  const [counterSignStatus, setCounterSignStatus] = useState<Record<string, {
-    parent_task_id: string;
-    total: number;
-    completed: number;
-    approved: number;
-    rejected: number;
-    pending: number;
-    status: 'pending' | 'approved' | 'rejected';
-  }>>({});
+  const [counterSignStatus, setCounterSignStatus] = useState<
+    Record<
+      string,
+      {
+        parent_task_id: string;
+        total: number;
+        completed: number;
+        approved: number;
+        rejected: number;
+        pending: number;
+        status: 'pending' | 'approved' | 'rejected';
+      }
+    >
+  >({});
   const [loading, setLoading] = useState(false);
   const [votingTaskId, setVotingTaskId] = useState<string | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
@@ -190,7 +199,7 @@ const WorkflowInstancesPage = () => {
 
     try {
       const tasksResponse = await WorkflowAPI.listWorkflowTasks(instance.id);
-      const normalized = (tasksResponse as any[]).map((task) => ({
+      const normalized = (tasksResponse as any[]).map(task => ({
         ...task,
         name: task.name || task.nodeName,
         activity_id: task.activity_id || task.nodeId,
@@ -219,7 +228,11 @@ const WorkflowInstancesPage = () => {
   };
 
   // 创建会签任务
-  const handleCreateCounterSign = async (taskId: string, approvers: string[], approvalType: 'serial' | 'parallel' = 'parallel') => {
+  const handleCreateCounterSign = async (
+    taskId: string,
+    approvers: string[],
+    approvalType: 'serial' | 'parallel' = 'parallel'
+  ) => {
     try {
       await WorkflowAPI.createCounterSignTasks(taskId, approvers, approvalType);
       message.success('会签任务创建成功');
@@ -228,7 +241,7 @@ const WorkflowInstancesPage = () => {
       // 刷新任务列表
       if (selectedInstance) {
         const tasksResponse = await WorkflowAPI.listWorkflowTasks(selectedInstance.id);
-        const normalized = (tasksResponse as any[]).map((task) => ({
+        const normalized = (tasksResponse as any[]).map(task => ({
           ...task,
           name: task.name || task.nodeName,
           activity_id: task.activity_id || task.nodeId,
@@ -260,7 +273,7 @@ const WorkflowInstancesPage = () => {
       // 刷新任务列表
       if (selectedInstance) {
         const tasksResponse = await WorkflowAPI.listWorkflowTasks(selectedInstance.id);
-        const normalized = (tasksResponse as any[]).map((t) => ({
+        const normalized = (tasksResponse as any[]).map(t => ({
           ...t,
           name: t.name || t.nodeName,
           activity_id: t.activity_id || t.nodeId,
@@ -504,14 +517,26 @@ const WorkflowInstancesPage = () => {
         // 如果是会签任务，显示投票按钮
         if (record.activity_id && record.status === 'pending') {
           return (
-            <Space direction="vertical" size="small">
+            <Space direction='vertical' size='small'>
               {/* 会签状态显示 */}
               {csStatus && (
-                <div className="text-xs">
-                  <Tag color={csStatus.status === 'approved' ? 'green' : csStatus.status === 'rejected' ? 'red' : 'blue'}>
-                    {csStatus.status === 'approved' ? '已通过' : csStatus.status === 'rejected' ? '已拒绝' : '会签中'}
+                <div className='text-xs'>
+                  <Tag
+                    color={
+                      csStatus.status === 'approved'
+                        ? 'green'
+                        : csStatus.status === 'rejected'
+                          ? 'red'
+                          : 'blue'
+                    }
+                  >
+                    {csStatus.status === 'approved'
+                      ? '已通过'
+                      : csStatus.status === 'rejected'
+                        ? '已拒绝'
+                        : '会签中'}
                   </Tag>
-                  <span className="ml-1">
+                  <span className='ml-1'>
                     {csStatus.completed}/{csStatus.total}
                   </span>
                 </div>
@@ -519,9 +544,9 @@ const WorkflowInstancesPage = () => {
               {/* 投票按钮 */}
               <Space>
                 <Button
-                  type="primary"
-                  size="small"
-                  icon={<ThumbsUp className="w-3 h-3" />}
+                  type='primary'
+                  size='small'
+                  icon={<ThumbsUp className='w-3 h-3' />}
                   onClick={() => handleVote(record.id, true)}
                   loading={votingTaskId === record.id}
                   disabled={csStatus?.status !== 'pending'}
@@ -529,9 +554,9 @@ const WorkflowInstancesPage = () => {
                   通过
                 </Button>
                 <Button
-                  size="small"
+                  size='small'
                   danger
-                  icon={<ThumbsDown className="w-3 h-3" />}
+                  icon={<ThumbsDown className='w-3 h-3' />}
                   onClick={() => handleVote(record.id, false)}
                   loading={votingTaskId === record.id}
                   disabled={csStatus?.status !== 'pending'}
@@ -548,8 +573,8 @@ const WorkflowInstancesPage = () => {
           <Space>
             {record.status === 'pending' && (
               <Button
-                type="link"
-                size="small"
+                type='link'
+                size='small'
                 onClick={() => {
                   // TODO: 完成任务的处理
                   message.info('完成任务功能开发中');
@@ -661,7 +686,10 @@ const WorkflowInstancesPage = () => {
           </Col>
           <Col xs={24} sm={12} md={10}>
             <Space>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={() => loadInstances(pagination.current, pagination.pageSize)}>
+              <Button
+                icon={<RefreshCw className='w-4 h-4' />}
+                onClick={() => loadInstances(pagination.current, pagination.pageSize)}
+              >
                 刷新
               </Button>
               <Button icon={<BarChart3 className='w-4 h-4' />}>统计报告</Button>
@@ -718,7 +746,9 @@ const WorkflowInstancesPage = () => {
                     {selectedInstance.priority || '-'}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label='启动人'>{selectedInstance.started_by || '-'}</Descriptions.Item>
+                <Descriptions.Item label='启动人'>
+                  {selectedInstance.started_by || '-'}
+                </Descriptions.Item>
                 <Descriptions.Item label='启动时间'>
                   {selectedInstance.started_at
                     ? new Date(selectedInstance.started_at).toLocaleString('zh-CN')

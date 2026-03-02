@@ -1,22 +1,26 @@
-"use client";
+'use client';
 
-import React, { Component, ErrorInfo, ReactNode, useState } from "react";
-import { Spin, Alert, Button, Result } from "antd";
+import React, { Component, ErrorInfo, ReactNode, useState } from 'react';
+import { Spin, Alert, Button, Result } from 'antd';
 
 interface LoadingWrapperProps {
   loading: boolean;
   children: ReactNode;
   tip?: string;
-  size?: "small" | "default" | "large";
+  size?: 'small' | 'default' | 'large';
 }
 
 export function LoadingWrapper({
   loading,
   children,
-  tip = "加载中...",
-  size = "default",
+  tip = '加载中...',
+  size = 'default',
 }: LoadingWrapperProps) {
-  return <Spin spinning={loading} tip={tip} size={size}>{children}</Spin>;
+  return (
+    <Spin spinning={loading} tip={tip} size={size}>
+      {children}
+    </Spin>
+  );
 }
 
 interface AsyncDataWrapperProps<T> {
@@ -39,18 +43,18 @@ export function AsyncDataWrapper<T>({
   emptyFallback,
 }: AsyncDataWrapperProps<T>) {
   if (isLoading) {
-    return <>{loadingFallback ?? <Spin tip="加载中..." spinning />}</>;
+    return <>{loadingFallback ?? <Spin tip='加载中...' spinning />}</>;
   }
 
   if (error) {
     return (
       errorFallback ?? (
         <Alert
-          type="error"
-          message="加载失败"
+          type='error'
+          message='加载失败'
           description={error.message}
           action={
-            <Button size="small" danger onClick={() => window.location.reload()}>
+            <Button size='small' danger onClick={() => window.location.reload()}>
               刷新
             </Button>
           }
@@ -85,7 +89,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("[ErrorBoundary]", error, errorInfo);
+    console.error('[ErrorBoundary]', error, errorInfo);
     this.props.onError?.(error, errorInfo);
   }
 
@@ -94,14 +98,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         this.props.fallback ?? (
           <Result
-            status="error"
-            title="出错了"
-            subTitle={this.state.error?.message || "未知错误"}
+            status='error'
+            title='出错了'
+            subTitle={this.state.error?.message || '未知错误'}
             extra={[
-              <Button key="retry" onClick={() => this.setState({ hasError: false, error: null })}>
+              <Button key='retry' onClick={() => this.setState({ hasError: false, error: null })}>
                 重试
               </Button>,
-              <Button key="reload" type="primary" onClick={() => window.location.reload()}>
+              <Button key='reload' type='primary' onClick={() => window.location.reload()}>
                 刷新页面
               </Button>,
             ]}

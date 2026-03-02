@@ -167,7 +167,7 @@ const ServiceRequestDetail: React.FC = () => {
     <div style={{ padding: '24px' }}>
       <Space orientation='vertical' size='large' style={{ width: '100%' }}>
         {/* 头部信息 */}
-        <Card variant="borderless">
+        <Card variant='borderless'>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <Title level={3}>{request.title || '服务请求'}</Title>
@@ -192,7 +192,7 @@ const ServiceRequestDetail: React.FC = () => {
         <div style={{ display: 'flex', gap: '24px' }}>
           {/* 左侧：详情 */}
           <div style={{ flex: 2 }}>
-            <Card title='请求详情' variant="borderless">
+            <Card title='请求详情' variant='borderless'>
               <Descriptions column={1} bordered>
                 <Descriptions.Item label='服务名称'>{request.catalog?.name}</Descriptions.Item>
                 <Descriptions.Item label='申请原因'>{request.reason}</Descriptions.Item>
@@ -216,7 +216,7 @@ const ServiceRequestDetail: React.FC = () => {
 
           {/* 右侧：审批流 & 操作 */}
           <div style={{ flex: 1 }}>
-            <Card title='审批流程' variant="borderless">
+            <Card title='审批流程' variant='borderless'>
               {renderApprovalTimeline()}
 
               {/* 审批操作区 */}

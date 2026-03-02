@@ -18,6 +18,8 @@ import {
   Select,
   Switch,
   Alert,
+  Statistic,
+  Progress,
   Tag,
 } from 'antd';
 import { User, Mail, Phone, Building, Shield, Bell, Key, Camera, Save, Edit } from 'lucide-react';
@@ -25,7 +27,6 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
-import { useSearchParams } from 'next/navigation';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -56,7 +57,6 @@ interface UserStats {
 export default function ProfilePage() {
   const { t } = useI18n();
   const { user } = useAuthStore();
-  const searchParams = useSearchParams();
   // 手动触发 auth store 的 hydration
   useAuthStoreHydration();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -64,18 +64,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('profile');
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [preferencesForm] = Form.useForm();
-
-  // 从 URL 参数获取初始标签页
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab && ['profile', 'security', 'preferences'].includes(tab)) {
-      setActiveTab(tab);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     loadProfile();
@@ -137,7 +128,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('加载用户信息失败:', error);
-      message.error(t('profile.loadProfileFailed'));
+      message.error('加载用户信息失败');
     } finally {
       setLoading(false);
     }
@@ -168,12 +159,12 @@ export default function ProfilePage() {
         phone: values.phone as string,
         department: values.department as string,
       });
-      message.success(t('profile.updateProfileSuccess'));
+      message.success('个人信息更新成功');
       setEditing(false);
       await loadProfile();
     } catch (error) {
       console.error('更新个人信息失败:', error);
-      message.error(t('profile.updateProfileFailed'));
+      message.error('更新个人信息失败');
     } finally {
       setLoading(false);
     }
@@ -183,11 +174,11 @@ export default function ProfilePage() {
     try {
       setLoading(true);
       // 调用 API 更改密码
-      message.success(t('profile.changePasswordSuccess'));
+      message.success('密码修改成功');
       passwordForm.resetFields();
     } catch (error) {
       console.error('修改密码失败:', error);
-      message.error(t('profile.changePasswordFailed'));
+      message.error('修改密码失败');
     } finally {
       setLoading(false);
     }
@@ -196,10 +187,10 @@ export default function ProfilePage() {
   const handlePreferencesUpdate = async (values: Record<string, unknown>) => {
     try {
       // 保存用户偏好设置
-      message.success(t('profile.preferencesSaved'));
+      message.success('偏好设置已保存');
     } catch (error) {
       console.error('保存偏好设置失败:', error);
-      message.error(t('profile.preferencesSaveFailed'));
+      message.error('保存偏好设置失败');
     }
   };
 
@@ -231,13 +222,15 @@ export default function ProfilePage() {
 
   return (
     <div className='max-w-6xl mx-auto p-6'>
-      <div className="flex justify-between items-center mb-6">
+      <div className='flex justify-between items-center mb-6'>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('profile.title') || '个人资料'}</h1>
-          <p className="text-gray-500 mt-1">{t('profile.subtitle') || '管理您的个人信息和偏好设置'}</p>
+          <h1 className='text-2xl font-bold text-gray-900'>{t('profile.title') || '个人资料'}</h1>
+          <p className='text-gray-500 mt-1'>
+            {t('profile.subtitle') || '管理您的个人信息和偏好设置'}
+          </p>
         </div>
         <Button
-          icon={editing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+          icon={editing ? <Save className='w-4 h-4' /> : <Edit className='w-4 h-4' />}
           type={editing ? 'primary' : 'default'}
           onClick={() => setEditing(!editing)}
         >
@@ -247,22 +240,24 @@ export default function ProfilePage() {
 
       <Row gutter={[24, 24]}>
         {/* 左侧：个人信息 */}
-        <Col xs={24}>
-          <Tabs 
-            activeKey={activeTab}
-            onChange={setActiveTab}
+        <Col xs={24} lg={16}>
+          <Tabs
+            defaultActiveKey='profile'
             size='large'
             items={[
               {
                 key: 'profile',
                 label: (
-                  <span className="flex items-center">
+                  <span className='flex items-center'>
                     <User size={16} className='mr-2' />
                     {t('profile.basicInfo')}
                   </span>
                 ),
                 children: (
-                  <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+                  <Card
+                    className='rounded-lg shadow-sm border border-gray-200'
+                    variant='borderless'
+                  >
                     <Form
                       form={profileForm}
                       layout='vertical'
@@ -304,7 +299,10 @@ export default function ProfilePage() {
                             label={t('profile.name')}
                             rules={[{ required: true, message: t('profile.enterName') }]}
                           >
-                            <Input prefix={<User size={16} className="text-gray-400" />} placeholder={t('profile.enterName')} />
+                            <Input
+                              prefix={<User size={16} className='text-gray-400' />}
+                              placeholder={t('profile.enterName')}
+                            />
                           </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -313,7 +311,10 @@ export default function ProfilePage() {
                             label={t('profile.username')}
                             rules={[{ required: true, message: t('profile.enterUsername') }]}
                           >
-                            <Input prefix={<User size={16} className="text-gray-400" />} placeholder={t('profile.enterUsername')} />
+                            <Input
+                              prefix={<User size={16} className='text-gray-400' />}
+                              placeholder={t('profile.enterUsername')}
+                            />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -328,7 +329,10 @@ export default function ProfilePage() {
                               { type: 'email', message: t('profile.validEmail') },
                             ]}
                           >
-                            <Input prefix={<Mail size={16} className="text-gray-400" />} placeholder={t('profile.enterEmail')} />
+                            <Input
+                              prefix={<Mail size={16} className='text-gray-400' />}
+                              placeholder={t('profile.enterEmail')}
+                            />
                           </Form.Item>
                         </Col>
                         <Col span={12}>
@@ -337,7 +341,10 @@ export default function ProfilePage() {
                             label={t('profile.phone')}
                             rules={[{ required: true, message: t('profile.enterPhone') }]}
                           >
-                            <Input prefix={<Phone size={16} className="text-gray-400" />} placeholder={t('profile.enterPhone')} />
+                            <Input
+                              prefix={<Phone size={16} className='text-gray-400' />}
+                              placeholder={t('profile.enterPhone')}
+                            />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -349,9 +356,9 @@ export default function ProfilePage() {
                             label={t('profile.department')}
                             rules={[{ required: true, message: t('profile.selectDepartment') }]}
                           >
-                            <Select 
+                            <Select
                               placeholder={t('profile.selectDepartment')}
-                              suffixIcon={<Building size={16} className="text-gray-400" />}
+                              suffixIcon={<Building size={16} className='text-gray-400' />}
                             >
                               <Option value='IT支持部'>IT支持部</Option>
                               <Option value='系统运维部'>系统运维部</Option>
@@ -362,7 +369,10 @@ export default function ProfilePage() {
                         </Col>
                         <Col span={12}>
                           <Form.Item label={t('profile.tenant')} name='tenant'>
-                            <Input prefix={<Building size={16} className="text-gray-400" />} disabled />
+                            <Input
+                              prefix={<Building size={16} className='text-gray-400' />}
+                              disabled
+                            />
                           </Form.Item>
                         </Col>
                       </Row>
@@ -379,18 +389,21 @@ export default function ProfilePage() {
                       )}
                     </Form>
                   </Card>
-                )
+                ),
               },
               {
                 key: 'security',
                 label: (
-                  <span className="flex items-center">
+                  <span className='flex items-center'>
                     <Key size={16} className='mr-2' />
                     {t('profile.securitySettings')}
                   </span>
                 ),
                 children: (
-                  <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+                  <Card
+                    className='rounded-lg shadow-sm border border-gray-200'
+                    variant='borderless'
+                  >
                     <Form form={passwordForm} layout='vertical' onFinish={handlePasswordChange}>
                       <Alert
                         message={t('profile.passwordHint')}
@@ -406,7 +419,7 @@ export default function ProfilePage() {
                         rules={[{ required: true, message: t('profile.enterCurrentPassword') }]}
                       >
                         <Input.Password
-                          prefix={<Key size={16} className="text-gray-400" />}
+                          prefix={<Key size={16} className='text-gray-400' />}
                           placeholder={t('profile.enterCurrentPassword')}
                           visibilityToggle={{
                             visible: passwordVisible,
@@ -424,7 +437,7 @@ export default function ProfilePage() {
                         ]}
                       >
                         <Input.Password
-                          prefix={<Key size={16} className="text-gray-400" />}
+                          prefix={<Key size={16} className='text-gray-400' />}
                           placeholder={t('profile.enterNewPassword')}
                           visibilityToggle={{
                             visible: passwordVisible,
@@ -450,7 +463,7 @@ export default function ProfilePage() {
                         ]}
                       >
                         <Input.Password
-                          prefix={<Key size={16} className="text-gray-400" />}
+                          prefix={<Key size={16} className='text-gray-400' />}
                           placeholder={t('profile.confirmNewPassword')}
                           visibilityToggle={{
                             visible: passwordVisible,
@@ -466,19 +479,26 @@ export default function ProfilePage() {
                       </div>
                     </Form>
                   </Card>
-                )
+                ),
               },
               {
                 key: 'preferences',
                 label: (
-                  <span className="flex items-center">
+                  <span className='flex items-center'>
                     <Bell size={16} className='mr-2' />
                     {t('profile.preferences')}
                   </span>
                 ),
                 children: (
-                  <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-                    <Form form={preferencesForm} layout='vertical' onFinish={handlePreferencesUpdate}>
+                  <Card
+                    className='rounded-lg shadow-sm border border-gray-200'
+                    variant='borderless'
+                  >
+                    <Form
+                      form={preferencesForm}
+                      layout='vertical'
+                      onFinish={handlePreferencesUpdate}
+                    >
                       <Form.Item
                         name='notifications'
                         label={t('profile.notificationSettings')}
@@ -512,41 +532,115 @@ export default function ProfilePage() {
                       </div>
                     </Form>
                   </Card>
-                )
-              }
+                ),
+              },
             ]}
           />
         </Col>
 
-        {/* 右侧：账户状态（简洁版） */}
-        <Col xs={24}>
-          <Card className="mb-4" variant="borderless" styles={{ body: { padding: '16px 20px' } }}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Avatar
-                  size={56}
-                  style={{
-                    background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
-                    fontSize: '24px',
-                    fontWeight: 600
-                  }}
-                >
-                  {profile.name?.charAt(0) || profile.username?.charAt(0) || 'U'}
-                </Avatar>
-                <div>
-                  <div className="text-base font-semibold text-gray-900">{profile.name || profile.username}</div>
-                  <div className="text-sm text-gray-500">{profile.email}</div>
-                  <Tag color="green" className="mt-1">活跃</Tag>
+        {/* 右侧：统计信息和账户状态 */}
+        <Col xs={24} lg={8}>
+          <div className='space-y-6'>
+            {/* 账户状态 */}
+            <Card
+              title={t('profile.accountStatus')}
+              className='rounded-lg shadow-sm border border-gray-200'
+              variant='borderless'
+            >
+              <div className='space-y-4'>
+                <div className='flex items-center justify-between'>
+                  <Text>{t('profile.accountStatus')}</Text>
+                  <Tag color='success'>{t('profile.active')}</Tag>
+                </div>
+                <div className='flex items-center justify-between'>
+                  <Text>{t('profile.registrationTime')}</Text>
+                  <Text>{profile.created_at}</Text>
+                </div>
+                <div className='flex items-center justify-between'>
+                  <Text>{t('profile.lastLogin') || '最后登录'}</Text>
+                  <Text>{profile.last_login || '从未登录'}</Text>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-500">注册时间</div>
-                <div className="text-sm font-medium text-gray-700">{profile.created_at?.split('T')[0] || '-'}</div>
-                <div className="text-sm text-gray-500 mt-2">最后登录</div>
-                <div className="text-sm font-medium text-gray-700">{profile.last_login?.split('T')[0] || '首次'}</div>
+            </Card>
+
+            {/* 工作统计 */}
+            {stats && (
+              <Card
+                title={t('profile.workStats')}
+                className='rounded-lg shadow-sm border border-gray-200'
+                variant='borderless'
+              >
+                <div className='space-y-4'>
+                  <div className='text-center'>
+                    <Statistic
+                      title={t('profile.totalTickets')}
+                      value={stats.totalTickets}
+                      prefix={<User size={16} />}
+                    />
+                  </div>
+                  <div className='text-center'>
+                    <Statistic
+                      title={t('profile.resolvedTickets')}
+                      value={stats.resolvedTickets}
+                      prefix={<User size={16} />}
+                      suffix={`/ ${stats.totalTickets}`}
+                    />
+                    <Progress
+                      percent={Math.round((stats.resolvedTickets / stats.totalTickets) * 100)}
+                      size='small'
+                      className='mt-2'
+                    />
+                  </div>
+                  <div className='text-center'>
+                    <Statistic
+                      title={t('profile.avgResolutionTime')}
+                      value={stats.avgResolutionTime}
+                      suffix='h'
+                    />
+                  </div>
+                  <div className='text-center'>
+                    <Statistic
+                      title={t('profile.satisfactionScore')}
+                      value={stats.satisfactionScore}
+                      precision={1}
+                      suffix='/5.0'
+                      styles={{
+                        content: {
+                          color: getSatisfactionColor(stats.satisfactionScore),
+                        },
+                      }}
+                    />
+                  </div>
+                  <div className='text-center'>
+                    <Statistic
+                      title={t('profile.responseRate')}
+                      value={stats.responseRate}
+                      suffix='%'
+                    />
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* 快速操作 */}
+            <Card
+              title={t('profile.quickActions')}
+              className='rounded-lg shadow-sm border border-gray-200'
+              variant='borderless'
+            >
+              <div className='space-y-2'>
+                <Button block icon={<Shield size={16} />}>
+                  {t('profile.viewPermissions')}
+                </Button>
+                <Button block icon={<Bell size={16} />}>
+                  {t('profile.notificationSettings')}
+                </Button>
+                <Button block icon={<User size={16} />}>
+                  {t('profile.switchAccount')}
+                </Button>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
         </Col>
       </Row>
     </div>

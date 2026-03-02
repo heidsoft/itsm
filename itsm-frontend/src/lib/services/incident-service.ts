@@ -6,7 +6,7 @@ export enum IncidentStatus {
   IN_PROGRESS = 'in_progress',
   RESOLVED = 'resolved',
   CLOSED = 'closed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 // 事件优先级枚举
@@ -14,7 +14,7 @@ export enum IncidentPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // 事件来源枚举
@@ -23,7 +23,7 @@ export enum IncidentSource {
   PHONE = 'phone',
   PORTAL = 'portal',
   MONITORING = 'monitoring',
-  API = 'api'
+  API = 'api',
 }
 
 // 事件接口定义
@@ -153,12 +153,17 @@ class IncidentService {
   }
 
   // 创建事件
-  async createIncident(data: CreateIncidentRequest): Promise<{ message: string; incident_id: number }> {
+  async createIncident(
+    data: CreateIncidentRequest
+  ): Promise<{ message: string; incident_id: number }> {
     return httpClient.post<{ message: string; incident_id: number }>(this.baseUrl, data);
   }
 
   // 更新事件
-  async updateIncident(id: number, data: UpdateIncidentRequest): Promise<{ message: string; incident_id: number }> {
+  async updateIncident(
+    id: number,
+    data: UpdateIncidentRequest
+  ): Promise<{ message: string; incident_id: number }> {
     return httpClient.put<{ message: string; incident_id: number }>(`${this.baseUrl}/${id}`, data);
   }
 
@@ -275,4 +280,3 @@ class IncidentService {
 
 export const incidentService = new IncidentService();
 export default IncidentService;
-

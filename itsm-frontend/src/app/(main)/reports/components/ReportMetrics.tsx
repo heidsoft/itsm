@@ -80,12 +80,14 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
             value={metrics?.slaCompliance}
             prefix={<CheckCircleOutlined style={{ color: '#1890ff' }} />}
             suffix='%'
-            styles={{ content: {
-              color:
-                getSLAStatus(metrics?.slaCompliance || 0).color === 'success'
-                  ? '#52c41a'
-                  : '#1890ff',
-            }}}
+            styles={{
+              content: {
+                color:
+                  getSLAStatus(metrics?.slaCompliance || 0).color === 'success'
+                    ? '#52c41a'
+                    : '#1890ff',
+              },
+            }}
           />
           <div className='mt-2'>
             <Progress

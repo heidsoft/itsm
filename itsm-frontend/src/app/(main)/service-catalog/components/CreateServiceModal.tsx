@@ -20,7 +20,7 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
   onConfirm,
   form,
 }) => {
-    const { t } = useI18n();
+  const { t } = useI18n();
   return (
     <Modal
       title={
@@ -39,7 +39,9 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
           >
             <PlusCircle size={18} style={{ color: '#fff' }} />
           </div>
-          <span style={{ fontSize: 'large', fontWeight: 'medium' }}>{t('serviceCatalog.newService')}</span>
+          <span style={{ fontSize: 'large', fontWeight: 'medium' }}>
+            {t('serviceCatalog.newService')}
+          </span>
         </div>
       }
       open={visible}
@@ -76,7 +78,11 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
           <Input placeholder={t('serviceCatalog.deliveryTimePlaceholder')} />
         </Form.Item>
 
-        <Form.Item label={t('serviceCatalog.status')} name='status' rules={[{ required: true, message: t('serviceCatalog.serviceStatusRequired') }]}>
+        <Form.Item
+          label={t('serviceCatalog.status')}
+          name='status'
+          rules={[{ required: true, message: t('serviceCatalog.serviceStatusRequired') }]}
+        >
           <Select placeholder={t('serviceCatalog.status')}>
             <Option value='enabled'>{t('serviceCatalog.enabled')}</Option>
             <Option value='disabled'>{t('serviceCatalog.disabled')}</Option>
@@ -84,7 +90,10 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
         </Form.Item>
 
         <Form.Item label={t('serviceCatalog.serviceDescription')} name='description'>
-          <Input.TextArea placeholder={t('serviceCatalog.serviceDescriptionPlaceholder')} rows={4} />
+          <Input.TextArea
+            placeholder={t('serviceCatalog.serviceDescriptionPlaceholder')}
+            rows={4}
+          />
         </Form.Item>
       </Form>
     </Modal>

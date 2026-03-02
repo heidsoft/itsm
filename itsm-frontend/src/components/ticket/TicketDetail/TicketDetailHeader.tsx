@@ -1,30 +1,42 @@
 'use client';
 
 import React from 'react';
-import {
-  User,
-  Calendar,
-  Clock,
-  AlertTriangle,
-  Edit,
-  FileText,
-} from 'lucide-react';
-import {
-  Typography,
-  Badge,
-  Tag as AntTag,
-} from 'antd';
+import { User, Calendar, Clock, AlertTriangle, Edit, FileText } from 'lucide-react';
+import { Typography, Badge, Tag as AntTag } from 'antd';
 import { Ticket } from '@/lib/api/api-config';
 
 const { Title, Text } = Typography;
 
 // 优先级配置
 export const getPriorityConfig = (priority: string) => {
-  const configs: Record<string, { color: string; bgColor: string; textColor: string; borderColor: string }> = {
-    紧急: { color: 'red', bgColor: 'bg-red-100', textColor: 'text-red-800', borderColor: 'border-red-300' },
-    高: { color: 'orange', bgColor: 'bg-orange-100', textColor: 'text-orange-800', borderColor: 'border-orange-300' },
-    中: { color: 'yellow', bgColor: 'bg-yellow-100', textColor: 'text-yellow-800', borderColor: 'border-yellow-300' },
-    低: { color: 'blue', bgColor: 'bg-blue-100', textColor: 'text-blue-800', borderColor: 'border-blue-300' },
+  const configs: Record<
+    string,
+    { color: string; bgColor: string; textColor: string; borderColor: string }
+  > = {
+    紧急: {
+      color: 'red',
+      bgColor: 'bg-red-100',
+      textColor: 'text-red-800',
+      borderColor: 'border-red-300',
+    },
+    高: {
+      color: 'orange',
+      bgColor: 'bg-orange-100',
+      textColor: 'text-orange-800',
+      borderColor: 'border-orange-300',
+    },
+    中: {
+      color: 'yellow',
+      bgColor: 'bg-yellow-100',
+      textColor: 'text-yellow-800',
+      borderColor: 'border-yellow-300',
+    },
+    低: {
+      color: 'blue',
+      bgColor: 'bg-blue-100',
+      textColor: 'text-blue-800',
+      borderColor: 'border-blue-300',
+    },
   };
   return configs[priority] || configs['中'];
 };
@@ -111,8 +123,8 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
               ticket.status === 'open'
                 ? 'processing'
                 : ticket.status === 'closed'
-                ? 'success'
-                : 'warning'
+                  ? 'success'
+                  : 'warning'
             }
             text={<Text strong>{ticket.status || '待处理'}</Text>}
           />
@@ -134,9 +146,7 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
               {tag}
             </AntTag>
           ))}
-          {ticket.tags && ticket.tags.length > 3 && (
-            <AntTag>+{ticket.tags.length - 3}</AntTag>
-          )}
+          {ticket.tags && ticket.tags.length > 3 && <AntTag>+{ticket.tags.length - 3}</AntTag>}
         </div>
 
         {/* 次要信息：快速查看 */}

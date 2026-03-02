@@ -219,9 +219,7 @@ export function WorkflowDesignerProvider({
   };
 
   return (
-    <WorkflowDesignerContext.Provider value={value}>
-      {children}
-    </WorkflowDesignerContext.Provider>
+    <WorkflowDesignerContext.Provider value={value}>{children}</WorkflowDesignerContext.Provider>
   );
 }
 

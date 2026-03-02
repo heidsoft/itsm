@@ -17,16 +17,12 @@ import {
   Tooltip,
   message,
 } from 'antd';
+import { Send, Edit, Trash2, User, AtSign, Lock, MessageSquare } from 'lucide-react';
 import {
-  Send,
-  Edit,
-  Trash2,
-  User,
-  AtSign,
-  Lock,
-  MessageSquare,
-} from 'lucide-react';
-import { TicketCommentApi, TicketComment, CreateTicketCommentRequest } from '@/lib/api/ticket-comment-api';
+  TicketCommentApi,
+  TicketComment,
+  CreateTicketCommentRequest,
+} from '@/lib/api/ticket-comment-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useI18n } from '@/lib/i18n';
 
@@ -130,9 +126,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       const updated = await TicketCommentApi.updateComment(ticketId, commentId, {
         content: editingContent.trim(),
       });
-      setComments(prev =>
-        prev.map(c => (c.id === commentId ? updated : c))
-      );
+      setComments(prev => prev.map(c => (c.id === commentId ? updated : c)));
       setEditingId(null);
       setEditingContent('');
       message.success(t('comments.updateSuccess') || '评论更新成功');
@@ -366,4 +360,3 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
     </div>
   );
 };
-

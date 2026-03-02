@@ -38,7 +38,7 @@ export function createListPage<T extends DataItem>(config: {
       try {
         const result = await config.fetchApi(pagination);
         setData(result.list);
-        setPagination((p) => ({ ...p, total: result.total }));
+        setPagination(p => ({ ...p, total: result.total }));
       } finally {
         setLoading(false);
       }
@@ -57,7 +57,7 @@ export function createListPage<T extends DataItem>(config: {
         title: '操作',
         render: (_: unknown, record: T) => (
           <Space>
-            <Button size="small" danger onClick={() => handleDelete(record.id)}>
+            <Button size='small' danger onClick={() => handleDelete(record.id)}>
               删除
             </Button>
           </Space>
@@ -70,8 +70,10 @@ export function createListPage<T extends DataItem>(config: {
         title={`${config.name}管理`}
         extra={
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={loadData}>刷新</Button>
-            <Button type="primary" icon={<PlusOutlined />}>
+            <Button icon={<ReloadOutlined />} onClick={loadData}>
+              刷新
+            </Button>
+            <Button type='primary' icon={<PlusOutlined />}>
               新建{config.name}
             </Button>
           </Space>
@@ -80,14 +82,13 @@ export function createListPage<T extends DataItem>(config: {
         <Table<T>
           loading={loading}
           dataSource={data}
-          rowKey="id"
+          rowKey='id'
           columns={columns}
           pagination={{
             current: pagination.page,
             pageSize: pagination.pageSize,
             total: pagination.total,
-            onChange: (page, pageSize) =>
-              setPagination((p) => ({ ...p, page, pageSize })),
+            onChange: (page, pageSize) => setPagination(p => ({ ...p, page, pageSize })),
           }}
         />
       </Card>

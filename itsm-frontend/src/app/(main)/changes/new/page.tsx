@@ -23,28 +23,28 @@ const CreateChangePage = () => {
 
     // 转换表单字段为API请求格式
     const typeMap: Record<string, string> = {
-      '普通变更': 'normal',
-      '标准变更': 'standard',
-      '紧急变更': 'emergency'
+      普通变更: 'normal',
+      标准变更: 'standard',
+      紧急变更: 'emergency',
     };
 
     const priorityMap: Record<string, string> = {
-      '紧急': 'critical',
-      '高': 'high',
-      '中': 'medium',
-      '低': 'low'
+      紧急: 'critical',
+      高: 'high',
+      中: 'medium',
+      低: 'low',
     };
 
     const impactMap: Record<string, string> = {
       '高 (影响核心业务)': 'high',
       '中 (影响部分业务或用户)': 'medium',
-      '低 (影响较小或无影响)': 'low'
+      '低 (影响较小或无影响)': 'low',
     };
 
     const riskMap: Record<string, string> = {
-      '高': 'high',
-      '中': 'medium',
-      '低': 'low'
+      高: 'high',
+      中: 'medium',
+      低: 'low',
     };
 
     const changeData: ChangeRequest = {
@@ -52,17 +52,23 @@ const CreateChangePage = () => {
       description: formData.get('description') as string,
       justification: formData.get('justification') as string,
       type: (typeMap[formData.get('type') as string] || 'normal') as ChangeRequest['type'],
-      priority: (priorityMap[formData.get('priority') as string] || 'medium') as ChangeRequest['priority'],
-      impact_scope: (impactMap[formData.get('impactScope') as string] || 'medium') as ChangeRequest['impact_scope'],
-      risk_level: (riskMap[formData.get('riskLevel') as string] || 'medium') as ChangeRequest['risk_level'],
-      planned_start_date: formData.get('plannedStartDate') as string || undefined,
-      planned_end_date: formData.get('plannedEndDate') as string || undefined,
+      priority: (priorityMap[formData.get('priority') as string] ||
+        'medium') as ChangeRequest['priority'],
+      impact_scope: (impactMap[formData.get('impactScope') as string] ||
+        'medium') as ChangeRequest['impact_scope'],
+      risk_level: (riskMap[formData.get('riskLevel') as string] ||
+        'medium') as ChangeRequest['risk_level'],
+      planned_start_date: (formData.get('plannedStartDate') as string) || undefined,
+      planned_end_date: (formData.get('plannedEndDate') as string) || undefined,
       implementation_plan: formData.get('implementationPlan') as string,
       rollback_plan: formData.get('rollbackPlan') as string,
-      affected_cis: (formData.get('affectedCIs') as string)?.split(',').map(ci => ci.trim()).filter(Boolean) || [],
-      related_tickets: []
+      affected_cis:
+        (formData.get('affectedCIs') as string)
+          ?.split(',')
+          .map(ci => ci.trim())
+          .filter(Boolean) || [],
+      related_tickets: [],
     };
-
 
     try {
       await ChangeApi.createChange(changeData);

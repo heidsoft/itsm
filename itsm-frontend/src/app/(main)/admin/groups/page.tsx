@@ -47,7 +47,7 @@ const GroupManagement = () => {
     try {
       const { RoleAPI } = await import('@/lib/api/role-api');
       const response = await RoleAPI.getRoles({ size: 100 }); // 获取所有角色
-      
+
       const mappedGroups: Group[] = response.roles.map((role: any) => ({
         id: role.id,
         name: role.name,
@@ -57,9 +57,9 @@ const GroupManagement = () => {
         permissions: role.permissions || [],
         createdAt: role.createdAt,
         updatedAt: role.updatedAt,
-        status: role.status || 'active'
+        status: role.status || 'active',
       }));
-      
+
       setGroups(mappedGroups);
     } catch (error) {
       message.error('加载用户组失败');

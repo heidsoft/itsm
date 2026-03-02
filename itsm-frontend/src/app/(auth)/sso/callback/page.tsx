@@ -60,7 +60,7 @@ function SSOCallbackContent() {
           name: 'SSO 用户',
           email: 'sso@example.com',
           role: 'admin',
-          department: 'IT部门'
+          department: 'IT部门',
         };
 
         const mockAccessToken = 'sso_mock_token_' + Date.now();
@@ -78,7 +78,7 @@ function SSOCallbackContent() {
             name: mockUser.name,
             tenantId: 1,
             department: mockUser.department,
-            permissions: ['admin', 'ticket.*', 'incident.*', 'change.*', 'problem.*']
+            permissions: ['admin', 'ticket.*', 'incident.*', 'change.*', 'problem.*'],
           },
           mockAccessToken,
           {
@@ -88,7 +88,7 @@ function SSOCallbackContent() {
             type: 'standard',
             status: 'active',
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
           } as Tenant
         );
 
@@ -99,7 +99,6 @@ function SSOCallbackContent() {
         setTimeout(() => {
           router.push('/dashboard');
         }, 1500);
-
       } catch (err) {
         logger.error('SSO回调处理失败:', err);
         setStatus('error');
@@ -113,26 +112,36 @@ function SSOCallbackContent() {
   if (status === 'loading') {
     return (
       <ConfigProvider theme={antdTheme}>
-        <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
-          <Card className="rounded-xl shadow-xl border-none w-full max-w-[400px]" styles={{ body: { padding: '48px' } }}>
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                <Loader2 size={32} className="text-blue-600 animate-spin" />
+        <div className='min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50'>
+          <Card
+            className='rounded-xl shadow-xl border-none w-full max-w-[400px]'
+            styles={{ body: { padding: '48px' } }}
+          >
+            <div className='text-center'>
+              <div className='w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center'>
+                <Loader2 size={32} className='text-blue-600 animate-spin' />
               </div>
 
-              <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
+              <Title level={3} className='!mb-2 !text-gray-900 !text-xl'>
                 正在处理SSO登录
               </Title>
 
-              <Text className="!text-gray-500 !text-sm block">
-                请稍候，正在验证您的身份...
-              </Text>
+              <Text className='!text-gray-500 !text-sm block'>请稍候，正在验证您的身份...</Text>
 
-              <Flex justify='center' className="mt-6">
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <Flex justify='center' className='mt-6'>
+                <div className='flex gap-2'>
+                  <div
+                    className='w-2 h-2 bg-blue-600 rounded-full animate-bounce'
+                    style={{ animationDelay: '0ms' }}
+                  />
+                  <div
+                    className='w-2 h-2 bg-blue-600 rounded-full animate-bounce'
+                    style={{ animationDelay: '150ms' }}
+                  />
+                  <div
+                    className='w-2 h-2 bg-blue-600 rounded-full animate-bounce'
+                    style={{ animationDelay: '300ms' }}
+                  />
                 </div>
               </Flex>
             </div>
@@ -145,26 +154,36 @@ function SSOCallbackContent() {
   if (status === 'success') {
     return (
       <ConfigProvider theme={antdTheme}>
-        <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
-          <Card className="rounded-xl shadow-xl border-none w-full max-w-[400px]" styles={{ body: { padding: '48px' } }}>
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle size={32} className="text-green-600" />
+        <div className='min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50'>
+          <Card
+            className='rounded-xl shadow-xl border-none w-full max-w-[400px]'
+            styles={{ body: { padding: '48px' } }}
+          >
+            <div className='text-center'>
+              <div className='w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center'>
+                <CheckCircle size={32} className='text-green-600' />
               </div>
 
-              <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
+              <Title level={3} className='!mb-2 !text-gray-900 !text-xl'>
                 SSO登录成功
               </Title>
 
-              <Text className="!text-gray-500 !text-sm block">
-                正在跳转到仪表盘...
-              </Text>
+              <Text className='!text-gray-500 !text-sm block'>正在跳转到仪表盘...</Text>
 
-              <Flex justify='center' className="mt-6">
-                <div className="flex gap-2">
-                  <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+              <Flex justify='center' className='mt-6'>
+                <div className='flex gap-2'>
+                  <div
+                    className='w-2 h-2 bg-green-600 rounded-full animate-bounce'
+                    style={{ animationDelay: '0ms' }}
+                  />
+                  <div
+                    className='w-2 h-2 bg-green-600 rounded-full animate-bounce'
+                    style={{ animationDelay: '150ms' }}
+                  />
+                  <div
+                    className='w-2 h-2 bg-green-600 rounded-full animate-bounce'
+                    style={{ animationDelay: '300ms' }}
+                  />
                 </div>
               </Flex>
             </div>
@@ -177,24 +196,27 @@ function SSOCallbackContent() {
   // Error state
   return (
     <ConfigProvider theme={antdTheme}>
-      <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
-        <Card className="rounded-xl shadow-xl border-none w-full max-w-[400px]" styles={{ body: { padding: '48px' } }}>
-          <div className="text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-              <AlertCircle size={32} className="text-red-600" />
+      <div className='min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50'>
+        <Card
+          className='rounded-xl shadow-xl border-none w-full max-w-[400px]'
+          styles={{ body: { padding: '48px' } }}
+        >
+          <div className='text-center'>
+            <div className='w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center'>
+              <AlertCircle size={32} className='text-red-600' />
             </div>
 
-            <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
+            <Title level={3} className='!mb-2 !text-gray-900 !text-xl'>
               SSO登录失败
             </Title>
 
-            <Text className="!text-gray-500 !text-sm block !mb-6">
+            <Text className='!text-gray-500 !text-sm block !mb-6'>
               {errorMessage || 'SSO登录过程中出现错误'}
             </Text>
 
             <button
               onClick={() => router.push('/login')}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+              className='px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium'
             >
               返回登录页
             </button>
@@ -211,22 +233,27 @@ function SSOCallbackContent() {
  */
 export default function SSOCallbackPage() {
   return (
-    <Suspense fallback={
-      <ConfigProvider theme={antdTheme}>
-        <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
-          <Card className="rounded-xl shadow-xl border-none w-full max-w-[400px]" styles={{ body: { padding: '48px' } }}>
-            <div className="text-center">
-              <div className="w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                <Loader2 size={32} className="text-blue-600 animate-spin" />
+    <Suspense
+      fallback={
+        <ConfigProvider theme={antdTheme}>
+          <div className='min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50'>
+            <Card
+              className='rounded-xl shadow-xl border-none w-full max-w-[400px]'
+              styles={{ body: { padding: '48px' } }}
+            >
+              <div className='text-center'>
+                <div className='w-16 h-16 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center'>
+                  <Loader2 size={32} className='text-blue-600 animate-spin' />
+                </div>
+                <Title level={3} className='!mb-2 !text-gray-900 !text-xl'>
+                  正在加载...
+                </Title>
               </div>
-              <Title level={3} className="!mb-2 !text-gray-900 !text-xl">
-                正在加载...
-              </Title>
-            </div>
-          </Card>
-        </div>
-      </ConfigProvider>
-    }>
+            </Card>
+          </div>
+        </ConfigProvider>
+      }
+    >
       <SSOCallbackContent />
     </Suspense>
   );

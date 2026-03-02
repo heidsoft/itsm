@@ -32,7 +32,7 @@ export default function CloudResourcePage() {
   const provider = Form.useWatch('provider', form);
 
   const serviceMap = useMemo(() => {
-    return new Map(services.map((service) => [service.id, service]));
+    return new Map(services.map(service => [service.id, service]));
   }, [services]);
 
   const loadServices = async () => {
@@ -89,7 +89,7 @@ export default function CloudResourcePage() {
       width: 110,
       render: (serviceId: number) => {
         const providerValue = serviceMap.get(serviceId)?.provider;
-        return providerOptions.find((p) => p.value === providerValue)?.label || providerValue || '-';
+        return providerOptions.find(p => p.value === providerValue)?.label || providerValue || '-';
       },
     },
     {
@@ -131,9 +131,7 @@ export default function CloudResourcePage() {
       title: '状态',
       dataIndex: 'status',
       width: 110,
-      render: (value?: string) => (
-        <Tag color={value ? 'green' : 'default'}>{value || '未知'}</Tag>
-      ),
+      render: (value?: string) => <Tag color={value ? 'green' : 'default'}>{value || '未知'}</Tag>,
     },
     {
       title: '最近发现',
@@ -147,11 +145,14 @@ export default function CloudResourcePage() {
       width: 120,
       render: (_: unknown, record: CloudResource) => (
         <Space>
-          <Button type="link" onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}>
+          <Button
+            type='link'
+            onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}
+          >
             新建CI
           </Button>
           <Button
-            type="link"
+            type='link'
             onClick={() => {
               setBinding(record);
               bindForm.resetFields();
@@ -196,7 +197,7 @@ export default function CloudResourcePage() {
   };
 
   return (
-    <Card variant="borderless">
+    <Card variant='borderless'>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
@@ -207,21 +208,27 @@ export default function CloudResourcePage() {
         ]}
       />
 
-      <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
-        <Form.Item name="provider">
-          <Select placeholder="云厂商" style={{ width: 160 }} allowClear>
-            {providerOptions.map((item) => (
+      <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
+        <Form.Item name='provider'>
+          <Select placeholder='云厂商' style={{ width: 160 }} allowClear>
+            {providerOptions.map(item => (
               <Option key={item.value} value={item.value}>
                 {item.label}
               </Option>
             ))}
           </Select>
         </Form.Item>
-        <Form.Item name="service_id">
-          <Select placeholder="云服务" style={{ width: 200 }} allowClear showSearch optionFilterProp="label">
+        <Form.Item name='service_id'>
+          <Select
+            placeholder='云服务'
+            style={{ width: 200 }}
+            allowClear
+            showSearch
+            optionFilterProp='label'
+          >
             {services
-              .filter((service) => !provider || service.provider === provider)
-              .map((service) => (
+              .filter(service => !provider || service.provider === provider)
+              .map(service => (
                 <Option
                   key={service.id}
                   value={service.id}
@@ -232,21 +239,19 @@ export default function CloudResourcePage() {
               ))}
           </Select>
         </Form.Item>
-        <Form.Item name="region">
-          <Input placeholder="Region" style={{ width: 140 }} allowClear />
+        <Form.Item name='region'>
+          <Input placeholder='Region' style={{ width: 140 }} allowClear />
         </Form.Item>
         <Form.Item>
           <Space>
-            <Button onClick={loadResources}>
-              查询
-            </Button>
+            <Button onClick={loadResources}>查询</Button>
             <Button onClick={loadResources}>刷新</Button>
           </Space>
         </Form.Item>
       </Form>
 
       <Table
-        rowKey="id"
+        rowKey='id'
         loading={loading}
         dataSource={resources}
         columns={columns as any}
@@ -254,20 +259,20 @@ export default function CloudResourcePage() {
       />
 
       <Modal
-        title="绑定已有配置项"
+        title='绑定已有配置项'
         open={Boolean(binding)}
         onCancel={() => setBinding(null)}
         onOk={handleBindExisting}
         confirmLoading={bindSubmitting}
         destroyOnClose
       >
-        <Form form={bindForm} layout="vertical">
+        <Form form={bindForm} layout='vertical'>
           <Form.Item
-            name="ci_id"
-            label="配置项ID"
+            name='ci_id'
+            label='配置项ID'
             rules={[{ required: true, message: '请输入配置项ID' }]}
           >
-            <Input placeholder="请输入已存在的配置项ID" />
+            <Input placeholder='请输入已存在的配置项ID' />
           </Form.Item>
           {binding && (
             <div style={{ color: '#888' }}>

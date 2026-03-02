@@ -15,12 +15,7 @@ import {
   List,
   Space,
 } from 'antd';
-import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  XCircle,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { ReloadOutlined } from '@ant-design/icons';
 import {
   BarChart,
@@ -35,7 +30,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { problemService, ProblemStatsResponse, Problem, ProblemStatus, ProblemPriority } from '@/lib/services/problem-service';
+import {
+  problemService,
+  ProblemStatsResponse,
+  Problem,
+  ProblemStatus,
+  ProblemPriority,
+} from '@/lib/services/problem-service';
 
 const { Title, Text } = Typography;
 
@@ -195,9 +196,12 @@ const ProblemEfficiencyPage = () => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-800">{`${payload[0].name}`}</p>
-          <p className="text-sm" style={{ color: payload[0].color }}>{`数量: ${payload[0].value}`}</p>
+        <div className='bg-white p-3 rounded-lg shadow-lg border border-gray-200'>
+          <p className='font-semibold text-gray-800'>{`${payload[0].name}`}</p>
+          <p
+            className='text-sm'
+            style={{ color: payload[0].color }}
+          >{`数量: ${payload[0].value}`}</p>
         </div>
       );
     }
@@ -205,17 +209,17 @@ const ProblemEfficiencyPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-full">
-      <header className="mb-6">
+    <div className='p-6 bg-gray-50 min-h-full'>
+      <header className='mb-6'>
         <Title level={2}>问题管理效率报表</Title>
-        <p className="text-gray-500 mt-1">展示问题管理的处理效率和处理趋势</p>
+        <p className='text-gray-500 mt-1'>展示问题管理的处理效率和处理趋势</p>
       </header>
 
       {/* 控制栏 */}
-      <Card className="mb-6">
-        <Row justify="space-between" align="middle">
+      <Card className='mb-6'>
+        <Row justify='space-between' align='middle'>
           <Col>
-            <Text className="text-gray-600">问题处理效率监控</Text>
+            <Text className='text-gray-600'>问题处理效率监控</Text>
           </Col>
           <Col>
             <Button icon={<ReloadOutlined />} onClick={loadData}>
@@ -226,17 +230,17 @@ const ProblemEfficiencyPage = () => {
       </Card>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Spin size="large" tip="加载报表数据..." />
+        <div className='flex items-center justify-center h-64'>
+          <Spin size='large' tip='加载报表数据...' />
         </div>
       ) : (
         <>
           {/* 统计卡片 */}
-          <Row gutter={[16, 16]} className="mb-6">
+          <Row gutter={[16, 16]} className='mb-6'>
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="问题总数"
+                  title='问题总数'
                   value={stats?.total || 0}
                   prefix={<AlertTriangle size={20} style={{ color: '#1890ff' }} />}
                 />
@@ -245,7 +249,7 @@ const ProblemEfficiencyPage = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="已解决问题"
+                  title='已解决问题'
                   value={stats?.resolved || 0}
                   styles={{ content: { color: '#52c41a' } }}
                   prefix={<CheckCircle size={20} />}
@@ -255,7 +259,7 @@ const ProblemEfficiencyPage = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="处理中"
+                  title='处理中'
                   value={stats?.in_progress || 0}
                   styles={{ content: { color: '#faad14' } }}
                   prefix={<Clock size={20} />}
@@ -265,7 +269,7 @@ const ProblemEfficiencyPage = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title="高优先级"
+                  title='高优先级'
                   value={stats?.high_priority || 0}
                   styles={{ content: { color: '#ff4d4f' } }}
                   prefix={<XCircle size={20} />}
@@ -275,11 +279,14 @@ const ProblemEfficiencyPage = () => {
           </Row>
 
           {/* 效率指标 */}
-          <Row gutter={[16, 16]} className="mb-6">
+          <Row gutter={[16, 16]} className='mb-6'>
             <Col xs={24} lg={8}>
-              <Card title="解决率">
-                <div className="text-center py-4">
-                  <div className="text-4xl font-bold mb-2" style={{ color: resolutionRate >= 70 ? '#52c41a' : '#faad14' }}>
+              <Card title='解决率'>
+                <div className='text-center py-4'>
+                  <div
+                    className='text-4xl font-bold mb-2'
+                    style={{ color: resolutionRate >= 70 ? '#52c41a' : '#faad14' }}
+                  >
                     {resolutionRate.toFixed(1)}%
                   </div>
                   <Progress
@@ -287,41 +294,37 @@ const ProblemEfficiencyPage = () => {
                     strokeColor={resolutionRate >= 70 ? '#52c41a' : '#faad14'}
                     showInfo={false}
                   />
-                  <Text type="secondary" className="mt-2 block">
+                  <Text type='secondary' className='mt-2 block'>
                     已解决 {stats?.resolved || 0} / 总数 {stats?.total || 0}
                   </Text>
                 </div>
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card title="处理中比例">
-                <div className="text-center py-4">
-                  <div className="text-4xl font-bold mb-2" style={{ color: '#1890ff' }}>
+              <Card title='处理中比例'>
+                <div className='text-center py-4'>
+                  <div className='text-4xl font-bold mb-2' style={{ color: '#1890ff' }}>
                     {inProgressRate.toFixed(1)}%
                   </div>
-                  <Progress
-                    percent={inProgressRate}
-                    strokeColor="#1890ff"
-                    showInfo={false}
-                  />
-                  <Text type="secondary" className="mt-2 block">
+                  <Progress percent={inProgressRate} strokeColor='#1890ff' showInfo={false} />
+                  <Text type='secondary' className='mt-2 block'>
                     处理中 {stats?.in_progress || 0} / 总数 {stats?.total || 0}
                   </Text>
                 </div>
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card title="高优先级占比">
-                <div className="text-center py-4">
-                  <div className="text-4xl font-bold mb-2" style={{ color: '#ff4d4f' }}>
+              <Card title='高优先级占比'>
+                <div className='text-center py-4'>
+                  <div className='text-4xl font-bold mb-2' style={{ color: '#ff4d4f' }}>
                     {stats ? ((stats.high_priority / stats.total) * 100).toFixed(1) : 0}%
                   </div>
                   <Progress
                     percent={stats ? (stats.high_priority / stats.total) * 100 : 0}
-                    strokeColor="#ff4d4f"
+                    strokeColor='#ff4d4f'
                     showInfo={false}
                   />
-                  <Text type="secondary" className="mt-2 block">
+                  <Text type='secondary' className='mt-2 block'>
                     高优先级 {stats?.high_priority || 0} / 总数 {stats?.total || 0}
                   </Text>
                 </div>
@@ -330,18 +333,18 @@ const ProblemEfficiencyPage = () => {
           </Row>
 
           {/* 图表区域 */}
-          <Row gutter={[16, 16]} className="mb-6">
+          <Row gutter={[16, 16]} className='mb-6'>
             <Col xs={24} lg={12}>
-              <Card title="问题状态分布">
-                <ResponsiveContainer width="100%" height={300}>
+              <Card title='问题状态分布'>
+                <ResponsiveContainer width='100%' height={300}>
                   <PieChart>
                     <Pie
                       data={problemsByStatus}
-                      cx="50%"
-                      cy="50%"
+                      cx='50%'
+                      cy='50%'
                       outerRadius={100}
-                      dataKey="value"
-                      nameKey="name"
+                      dataKey='value'
+                      nameKey='name'
                       label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                     >
                       {problemsByStatus.map((entry, index) => (
@@ -355,15 +358,15 @@ const ProblemEfficiencyPage = () => {
               </Card>
             </Col>
             <Col xs={24} lg={12}>
-              <Card title="问题优先级分布">
-                <ResponsiveContainer width="100%" height={300}>
+              <Card title='问题优先级分布'>
+                <ResponsiveContainer width='100%' height={300}>
                   <BarChart data={problemsByPriority}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='name' />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Bar dataKey="value" name="问题数量" fill="#1890ff">
+                    <Bar dataKey='value' name='问题数量' fill='#1890ff'>
                       {problemsByPriority.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -376,18 +379,18 @@ const ProblemEfficiencyPage = () => {
 
           {/* 问题列表 */}
           {problems.length > 0 && (
-            <Card title="最新问题列表" className="mb-6">
+            <Card title='最新问题列表' className='mb-6'>
               <List
                 dataSource={problems}
-                renderItem={(problem) => (
+                renderItem={problem => (
                   <List.Item>
-                    <div className="w-full">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-3">
-                          <span className="font-medium text-blue-600">#{problem.id}</span>
-                          <span className="font-medium">{problem.title}</span>
+                    <div className='w-full'>
+                      <div className='flex items-center justify-between mb-2'>
+                        <div className='flex items-center gap-3'>
+                          <span className='font-medium text-blue-600'>#{problem.id}</span>
+                          <span className='font-medium'>{problem.title}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className='flex items-center gap-2'>
                           <Tag color={getStatusColor(problem.status)}>
                             {problemService.getStatusLabel(problem.status)}
                           </Tag>
@@ -396,7 +399,7 @@ const ProblemEfficiencyPage = () => {
                           </Tag>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between text-sm text-gray-500">
+                      <div className='flex items-center justify-between text-sm text-gray-500'>
                         <span>处理人: {problem.assignee?.name || '未分配'}</span>
                         <span>创建时间: {new Date(problem.created_at).toLocaleDateString()}</span>
                       </div>

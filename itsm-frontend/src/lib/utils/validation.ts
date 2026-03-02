@@ -33,14 +33,15 @@ export interface FormValidationConfig {
 export class Validator {
   // 必填验证
   static required(value: unknown): ValidationResult {
-    const isEmpty = value === null || 
-                   value === undefined || 
-                   (typeof value === 'string' && value.trim() === '') ||
-                   (Array.isArray(value) && value.length === 0);
-    
+    const isEmpty =
+      value === null ||
+      value === undefined ||
+      (typeof value === 'string' && value.trim() === '') ||
+      (Array.isArray(value) && value.length === 0);
+
     return {
       isValid: !isEmpty,
-      message: isEmpty ? '此字段为必填项' : undefined
+      message: isEmpty ? '此字段为必填项' : undefined,
     };
   }
 
@@ -50,20 +51,20 @@ export class Validator {
       return { isValid: true };
     }
 
-    const length = typeof value === 'string' ? value.length : 
-                  Array.isArray(value) ? value.length : 0;
+    const length =
+      typeof value === 'string' ? value.length : Array.isArray(value) ? value.length : 0;
 
     if (min !== undefined && length < min) {
       return {
         isValid: false,
-        message: `长度不能少于${min}个字符`
+        message: `长度不能少于${min}个字符`,
       };
     }
 
     if (max !== undefined && length > max) {
       return {
         isValid: false,
-        message: `长度不能超过${max}个字符`
+        message: `长度不能超过${max}个字符`,
       };
     }
 
@@ -81,7 +82,7 @@ export class Validator {
 
     return {
       isValid,
-      message: isValid ? undefined : (message || '格式不正确')
+      message: isValid ? undefined : message || '格式不正确',
     };
   }
 
@@ -95,21 +96,21 @@ export class Validator {
     if (isNaN(numValue)) {
       return {
         isValid: false,
-        message: '必须是有效数字'
+        message: '必须是有效数字',
       };
     }
 
     if (min !== undefined && numValue < min) {
       return {
         isValid: false,
-        message: `数值不能小于${min}`
+        message: `数值不能小于${min}`,
       };
     }
 
     if (max !== undefined && numValue > max) {
       return {
         isValid: false,
-        message: `数值不能大于${max}`
+        message: `数值不能大于${max}`,
       };
     }
 
@@ -140,14 +141,15 @@ export class Validator {
     } catch {
       return {
         isValid: false,
-        message: '请输入有效的URL地址'
+        message: '请输入有效的URL地址',
       };
     }
   }
 
   // 身份证验证
   static idCard(value: unknown): ValidationResult {
-    const idCardRegex = /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
+    const idCardRegex =
+      /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
     return Validator.pattern(value, idCardRegex, '请输入有效的身份证号码');
   }
 }
@@ -188,13 +190,13 @@ export class FormValidator {
       }
 
       // 长度验证
-       if (rule.minLength !== undefined || rule.maxLength !== undefined) {
-         result = Validator.validateLength(value, rule.minLength, rule.maxLength);
-         if (!result.isValid && result.message) {
-           errors.push(result.message);
-           if (this.config.stopOnFirstError) break;
-         }
-       }
+      if (rule.minLength !== undefined || rule.maxLength !== undefined) {
+        result = Validator.validateLength(value, rule.minLength, rule.maxLength);
+        if (!result.isValid && result.message) {
+          errors.push(result.message);
+          if (this.config.stopOnFirstError) break;
+        }
+      }
 
       // 正则验证
       if (rule.pattern) {
@@ -233,7 +235,7 @@ export class FormValidator {
 
     return {
       isValid: errors.length === 0,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
     };
   }
 
@@ -251,7 +253,7 @@ export class FormValidator {
 
     return {
       isValid: allErrors.length === 0,
-      errors: allErrors.length > 0 ? allErrors : undefined
+      errors: allErrors.length > 0 ? allErrors : undefined,
     };
   }
 
@@ -286,42 +288,26 @@ export class FormValidator {
 // 预定义验证规则
 export const ValidationRules = {
   // 用户名规则
-  username: [
-    { required: true },
-    { minLength: 3, maxLength: 20 },
-    { pattern: /^[a-zA-Z0-9_]+$/ }
-  ],
+  username: [{ required: true }, { minLength: 3, maxLength: 20 }, { pattern: /^[a-zA-Z0-9_]+$/ }],
 
   // 密码规则
   password: [
     { required: true },
     { minLength: 8, maxLength: 50 },
-    { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/ }
+    { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/ },
   ],
 
   // 邮箱规则
-  email: [
-    { required: true },
-    { custom: Validator.email }
-  ],
+  email: [{ required: true }, { custom: Validator.email }],
 
   // 手机号规则
-  phone: [
-    { required: true },
-    { custom: Validator.phone }
-  ],
+  phone: [{ required: true }, { custom: Validator.phone }],
 
   // 工单标题规则
-  ticketTitle: [
-    { required: true },
-    { minLength: 5, maxLength: 100 }
-  ],
+  ticketTitle: [{ required: true }, { minLength: 5, maxLength: 100 }],
 
   // 工单描述规则
-  ticketDescription: [
-    { required: true },
-    { minLength: 10, maxLength: 2000 }
-  ]
+  ticketDescription: [{ required: true }, { minLength: 10, maxLength: 2000 }],
 };
 
 // 异步验证器接口
@@ -353,19 +339,19 @@ export class AsyncFormValidator {
     }
 
     // 防抖处理
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const debounceMs = validator.debounceMs || 300;
-      
+
       this.debounceTimers[fieldName] = setTimeout(async () => {
         try {
           const result = await validator.validate(value);
           resolve(result);
         } catch {
-           resolve({
-             isValid: false,
-             message: '验证过程中发生错误'
-           });
-         }
+          resolve({
+            isValid: false,
+            message: '验证过程中发生错误',
+          });
+        }
       }, debounceMs);
     });
   }
@@ -390,16 +376,16 @@ export const AsyncValidators = {
 
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // 这里应该调用实际的API
       const isUnique = !['admin', 'root', 'test'].includes(value.toLowerCase());
-      
+
       return {
         isValid: isUnique,
-        message: isUnique ? undefined : '用户名已存在'
+        message: isUnique ? undefined : '用户名已存在',
       };
     },
-    debounceMs: 500
+    debounceMs: 500,
   },
 
   // 邮箱唯一性验证
@@ -417,17 +403,17 @@ export const AsyncValidators = {
 
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // 这里应该调用实际的API
       const isUnique = !value.includes('test@');
-      
+
       return {
         isValid: isUnique,
-        message: isUnique ? undefined : '邮箱已被注册'
+        message: isUnique ? undefined : '邮箱已被注册',
       };
     },
-    debounceMs: 500
-  }
+    debounceMs: 500,
+  },
 };
 
 // 验证工具函数
@@ -438,14 +424,14 @@ export const ValidationUtils = {
       fields,
       validateOnChange: true,
       validateOnBlur: true,
-      stopOnFirstError: false
+      stopOnFirstError: false,
     });
   },
 
   // 验证单个值
   validateValue: (value: unknown, rules: ValidationRule[]): ValidationResult => {
     const validator = new FormValidator({
-      fields: { temp: rules }
+      fields: { temp: rules },
     });
     return validator.validateField('temp', value);
   },
@@ -469,7 +455,7 @@ export const ValidationUtils = {
 
     return {
       isValid,
-      errors: allErrors.length > 0 ? allErrors : undefined
+      errors: allErrors.length > 0 ? allErrors : undefined,
     };
-  }
+  },
 };

@@ -1,7 +1,21 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Modal, Form, Input, Select, Button, Row, Col, DatePicker, Avatar, Steps, Card, Alert, Upload, message } from 'antd';
+import {
+  Modal,
+  Form,
+  Input,
+  Select,
+  Button,
+  Row,
+  Col,
+  DatePicker,
+  Avatar,
+  Steps,
+  Card,
+  Alert,
+  Upload,
+} from 'antd';
 import { Plus, Edit, BookOpen, FileText, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { App } from 'antd';
 import {
@@ -10,7 +24,6 @@ import {
   TicketPriority,
   TicketType,
 } from '../../lib/services/ticket-service';
-import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 
@@ -34,7 +47,6 @@ const TicketForm: React.FC<{
   isEditing?: boolean;
 }> = React.memo(({ form, onSubmit, loading = false, isEditing = false }) => {
   const { message: antMessage } = App.useApp();
-  const { t } = useI18n();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<any>({});
 
@@ -74,17 +86,17 @@ const TicketForm: React.FC<{
       // 验证当前步骤的字段
       const fieldsToValidate = getFieldsForStep(currentStep);
       await form.validateFields(fieldsToValidate);
-      
+
       // 保存当前步骤数据
       const values = form.getFieldsValue();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       setFormData((prev: any) => ({ ...prev, ...values }));
-      
+
       if (currentStep < steps.length - 1) {
         setCurrentStep(currentStep + 1);
       }
     } catch (error) {
-      message.error('表单验证失败');
+      console.error('Validation failed:', error);
     }
   }, [currentStep, form, steps.length]);
 
@@ -329,7 +341,7 @@ const TicketForm: React.FC<{
       setFormData({});
       setCurrentStep(0);
     } catch (error) {
-      message.error('提交失败');
+      console.error('Submit failed:', error);
     }
   }, [formData, form, onSubmit]);
 
@@ -338,101 +350,98 @@ const TicketForm: React.FC<{
     return (
       <Form layout='vertical' form={form} onFinish={onSubmit} style={{ marginTop: 20 }}>
         <Row gutter={24}>
-        <Col span={12}>
-          <Form.Item
-            label='标题'
-            name='title'
-            rules={[{ required: true, message: '请输入工单标题' }]}
-          >
-            <Input placeholder='请输入工单标题' size='large' />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            label='类型'
-            name='type'
-            rules={[{ required: true, message: '请选择工单类型' }]}
-          >
-            <Select placeholder='请选择工单类型' size='large'>
-              <Option value={TicketType.INCIDENT}>事件</Option>
-              <Option value={TicketType.SERVICE_REQUEST}>服务请求</Option>
-              <Option value={TicketType.PROBLEM}>问题</Option>
-              <Option value={TicketType.CHANGE}>变更</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-      </Row>
+          <Col span={12}>
+            <Form.Item
+              label='标题'
+              name='title'
+              rules={[{ required: true, message: '请输入工单标题' }]}
+            >
+              <Input placeholder='请输入工单标题' size='large' />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label='类型'
+              name='type'
+              rules={[{ required: true, message: '请选择工单类型' }]}
+            >
+              <Select placeholder='请选择工单类型' size='large'>
+                <Option value={TicketType.INCIDENT}>事件</Option>
+                <Option value={TicketType.SERVICE_REQUEST}>服务请求</Option>
+                <Option value={TicketType.PROBLEM}>问题</Option>
+                <Option value={TicketType.CHANGE}>变更</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
-      <Row gutter={24}>
-        <Col span={12}>
-          <Form.Item
-            label='分类'
-            name='category'
-            rules={[{ required: true, message: '请选择工单分类' }]}
-          >
-            <Select placeholder='请选择工单分类' size='large'>
-              <Option value='System Access'>系统访问</Option>
-              <Option value='Hardware Equipment'>硬件设备</Option>
-              <Option value='Software Services'>软件服务</Option>
-              <Option value='Network Services'>网络服务</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            label='优先级'
-            name='priority'
-            rules={[{ required: true, message: '请选择优先级' }]}
-          >
-            <Select placeholder='请选择优先级' size='large'>
-              <Option value={TicketPriority.LOW}>低</Option>
-              <Option value={TicketPriority.MEDIUM}>中</Option>
-              <Option value={TicketPriority.HIGH}>高</Option>
-              <Option value={TicketPriority.URGENT}>紧急</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-      </Row>
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item
+              label='分类'
+              name='category'
+              rules={[{ required: true, message: '请选择工单分类' }]}
+            >
+              <Select placeholder='请选择工单分类' size='large'>
+                <Option value='System Access'>系统访问</Option>
+                <Option value='Hardware Equipment'>硬件设备</Option>
+                <Option value='Software Services'>软件服务</Option>
+                <Option value='Network Services'>网络服务</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label='优先级'
+              name='priority'
+              rules={[{ required: true, message: '请选择优先级' }]}
+            >
+              <Select placeholder='请选择优先级' size='large'>
+                <Option value={TicketPriority.LOW}>低</Option>
+                <Option value={TicketPriority.MEDIUM}>中</Option>
+                <Option value={TicketPriority.HIGH}>高</Option>
+                <Option value={TicketPriority.URGENT}>紧急</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
-      <Row gutter={24}>
-        <Col span={12}>
-          <Form.Item label='处理人' name='assignee_id'>
-            <Select placeholder='请选择处理人' allowClear size='large'>
-              {userList.map(user => (
-                <Option key={user.id} value={user.id}>
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <Avatar size='small' style={{ backgroundColor: '#1890ff', marginRight: 8 }}>
-                      {user.avatar}
-                    </Avatar>
-                    <span>{user.name}</span>
-                    <span style={{ color: '#666', marginLeft: 8 }}>({user.role})</span>
-                  </div>
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item label='预计完成时间' name='estimated_time'>
-            <DatePicker
-              showTime
-              placeholder='请选择预计完成时间'
-              size='large'
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-        </Col>
-      </Row>
+        <Row gutter={24}>
+          <Col span={12}>
+            <Form.Item label='处理人' name='assignee_id'>
+              <Select placeholder='请选择处理人' allowClear size='large'>
+                {userList.map(user => (
+                  <Option key={user.id} value={user.id}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <Avatar size='small' style={{ backgroundColor: '#1890ff', marginRight: 8 }}>
+                        {user.avatar}
+                      </Avatar>
+                      <span>{user.name}</span>
+                      <span style={{ color: '#666', marginLeft: 8 }}>({user.role})</span>
+                    </div>
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item label='预计完成时间' name='estimated_time'>
+              <DatePicker
+                showTime
+                placeholder='请选择预计完成时间'
+                size='large'
+                style={{ width: '100%' }}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
 
         <Form.Item
           label='描述'
           name='description'
           rules={[{ required: true, message: '请输入工单描述' }]}
         >
-          <Input.TextArea
-            rows={6}
-            placeholder='请详细描述工单内容、问题、预期结果等...'
-          />
+          <Input.TextArea rows={6} placeholder='请详细描述工单内容、问题、预期结果等...' />
         </Form.Item>
 
         <Form.Item style={{ marginBottom: 0 }}>
@@ -464,10 +473,8 @@ const TicketForm: React.FC<{
   return (
     <Form layout='vertical' form={form} style={{ marginTop: 20 }}>
       <Steps current={currentStep} items={steps} className='mb-8' />
-      
-      <div className='min-h-[400px]'>
-        {renderStepContent()}
-      </div>
+
+      <div className='min-h-[400px]'>{renderStepContent()}</div>
 
       <div className='flex justify-between items-center pt-6 mt-6 border-t border-gray-100'>
         <div>
@@ -526,7 +533,6 @@ TicketForm.displayName = 'TicketForm';
 
 export const TicketModal: React.FC<TicketModalProps> = React.memo(
   ({ visible, editingTicket, onCancel, onSubmit, loading = false }) => {
-    const { t } = useI18n();
     const [form] = Form.useForm();
 
     // 当编辑工单时，初始化表单数据
@@ -572,10 +578,10 @@ export const TicketModal: React.FC<TicketModalProps> = React.memo(
             </div>
             <div>
               <h3 className='text-lg font-semibold text-gray-900'>
-                {editingTicket ? t('tickets.edit') : t('tickets.create')}
+                {editingTicket ? '编辑工单' : '创建工单'}
               </h3>
               <p className='text-sm text-gray-500'>
-                {editingTicket ? t('tickets.editDescription') || '修改工单信息' : t('tickets.createDescription') || '填写工单详细信息'}
+                {editingTicket ? '修改工单信息' : '填写工单详细信息'}
               </p>
             </div>
           </div>
@@ -586,10 +592,10 @@ export const TicketModal: React.FC<TicketModalProps> = React.memo(
         width={900}
         className='[&_.ant-modal-content]:rounded-xl [&_.ant-modal-content]:shadow-2xl [&_.ant-modal-header]:border-0 [&_.ant-modal-header]:pb-0 [&_.ant-modal-body]:pt-6'
       >
-        <TicketForm 
-          form={form} 
-          onSubmit={handleSubmit} 
-          loading={loading} 
+        <TicketForm
+          form={form}
+          onSubmit={handleSubmit}
+          loading={loading}
           isEditing={!!editingTicket}
         />
       </Modal>
@@ -643,9 +649,7 @@ export const TicketTemplateModal: React.FC<TicketTemplateModalProps> = React.mem
             </div>
             <div>
               <h3 className='text-lg font-semibold text-gray-900'>工单模板管理</h3>
-              <p className='text-sm text-gray-500'>
-                管理和配置工单模板，提高工作效率
-              </p>
+              <p className='text-sm text-gray-500'>管理和配置工单模板，提高工作效率</p>
             </div>
           </div>
         }
@@ -665,9 +669,7 @@ export const TicketTemplateModal: React.FC<TicketTemplateModalProps> = React.mem
             }}
           >
             <div>
-              <p style={{ color: '#666' }}>
-                管理所有可用的工单模板，提高工单创建效率
-              </p>
+              <p style={{ color: '#666' }}>管理所有可用的工单模板，提高工单创建效率</p>
             </div>
             <Button type='primary' icon={<Plus size={16} />}>
               新建模板

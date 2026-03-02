@@ -42,11 +42,21 @@ export async function aiTriage(title: string, description: string): Promise<Tria
 }
 
 export async function aiSearchKB(query: string, limit = 5): Promise<{ answers: RagAnswer[] }> {
-  return httpClient.post<{ answers: RagAnswer[] }>(`/api/v1/ai/search`, { query, limit, type: 'kb' });
+  return httpClient.post<{ answers: RagAnswer[] }>(`/api/v1/ai/search`, {
+    query,
+    limit,
+    type: 'kb',
+  });
 }
 
-export async function aiSimilarIncidents(query: string, limit = 5): Promise<{ incidents: RagAnswer[] }> {
-  return httpClient.post<{ incidents: RagAnswer[] }>(`/api/v1/ai/similar-incidents`, { query, limit });
+export async function aiSimilarIncidents(
+  query: string,
+  limit = 5
+): Promise<{ incidents: RagAnswer[] }> {
+  return httpClient.post<{ incidents: RagAnswer[] }>(`/api/v1/ai/similar-incidents`, {
+    query,
+    limit,
+  });
 }
 
 export async function aiSummarize(text: string, maxLen = 200): Promise<{ summary: string }> {
@@ -68,7 +78,11 @@ export class AIApi {
     return aiTriage(title, description);
   }
 
-  static async chat(params: { query: string; conversation_id?: number; limit?: number }): Promise<any> {
+  static async chat(params: {
+    query: string;
+    conversation_id?: number;
+    limit?: number;
+  }): Promise<any> {
     return aiSearchKB(params.query, params.limit);
   }
 
@@ -92,5 +106,3 @@ export class AIApi {
     return aiGetMetrics(days);
   }
 }
-
-

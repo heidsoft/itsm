@@ -83,9 +83,7 @@ export interface ListProps {
   children: TemplateDef;
 }
 
-export type ChildrenDef =
-  | { explicitList: string[] }
-  | { template: TemplateDef };
+export type ChildrenDef = { explicitList: string[] } | { template: TemplateDef };
 
 export interface TemplateDef {
   dataBinding: string; // JSON Pointer 路径，如 /products
@@ -160,9 +158,7 @@ export type ValueDef =
   | { path: string }; // JSON Pointer 路径
 
 // 选项定义
-export type OptionsDef =
-  | { explicitList: OptionItem[] }
-  | { dataBinding: string }; // 从数据模型加载选项
+export type OptionsDef = { explicitList: OptionItem[] } | { dataBinding: string }; // 从数据模型加载选项
 
 export interface OptionItem {
   id: string;
@@ -275,7 +271,14 @@ export interface A2UIActionResponse {
 export const A2UI_COMPONENT_TYPES = {
   LAYOUT: ['Column', 'Row', 'List'],
   DISPLAY: ['Text', 'Image', 'Icon', 'Divider'],
-  INTERACTIVE: ['Button', 'TextField', 'TextAreaField', 'PickerSelect', 'Checkbox', 'DateTimeInput'],
+  INTERACTIVE: [
+    'Button',
+    'TextField',
+    'TextAreaField',
+    'PickerSelect',
+    'Checkbox',
+    'DateTimeInput',
+  ],
   CONTAINER: ['Card', 'Tabs', 'Modal'],
 } as const;
 

@@ -12,7 +12,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   children,
   layout = 'vertical',
   labelWidth = '120px',
-  className = ''
+  className = '',
 }) => {
   const fieldId = `field-${name}`;
   const hasError = Boolean(error);
@@ -27,44 +27,45 @@ export const FormField: React.FC<FormFieldProps> = ({
       style={layout === 'horizontal' ? { width: labelWidth } : undefined}
     >
       {label}
-      {required && <span className="text-red-500 ml-1">*</span>}
+      {required && <span className='text-red-500 ml-1'>*</span>}
     </label>
   );
 
   const fieldContent = (
-    <div className="flex-1">
-      <div className="relative">
+    <div className='flex-1'>
+      <div className='relative'>
         {React.isValidElement(children)
-          ? React.cloneElement(children as React.ReactElement<{ id?: string; name?: string; className?: string }>, {
-              id: fieldId,
-              name,
-              className: `${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`
-            })
+          ? React.cloneElement(
+              children as React.ReactElement<{ id?: string; name?: string; className?: string }>,
+              {
+                id: fieldId,
+                name,
+                className: `${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`,
+              }
+            )
           : children}
       </div>
-      
+
       {/* 错误信息 */}
       {hasError && (
-        <div className="mt-1">
+        <div className='mt-1'>
           {errorMessages.map((msg, index) => (
-            <p key={index} className="text-sm text-red-600">
+            <p key={index} className='text-sm text-red-600'>
               {msg}
             </p>
           ))}
         </div>
       )}
-      
+
       {/* 帮助信息 */}
-      {help && !hasError && (
-        <p className="mt-1 text-sm text-gray-500">{help}</p>
-      )}
+      {help && !hasError && <p className='mt-1 text-sm text-gray-500'>{help}</p>}
     </div>
   );
 
   return (
     <div className={`form-field ${className}`}>
       {layout === 'horizontal' ? (
-        <div className="flex items-start space-x-4">
+        <div className='flex items-start space-x-4'>
           {labelElement}
           {fieldContent}
         </div>

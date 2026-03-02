@@ -466,19 +466,19 @@ const NotificationCenter: React.FC<{
             record.type === 'error'
               ? 'red'
               : record.type === 'warning'
-              ? 'orange'
-              : record.type === 'success'
-              ? 'green'
-              : 'blue'
+                ? 'orange'
+                : record.type === 'success'
+                  ? 'green'
+                  : 'blue'
           }
         >
           {record.type === 'error'
             ? '错误'
             : record.type === 'warning'
-            ? '警告'
-            : record.type === 'success'
-            ? '成功'
-            : '信息'}
+              ? '警告'
+              : record.type === 'success'
+                ? '成功'
+                : '信息'}
         </Tag>
       ),
     },
@@ -492,10 +492,10 @@ const NotificationCenter: React.FC<{
           {record.status === 'sent'
             ? '已发送'
             : record.status === 'pending'
-            ? '待发送'
-            : record.status === 'failed'
-            ? '发送失败'
-            : '已读'}
+              ? '待发送'
+              : record.status === 'failed'
+                ? '发送失败'
+                : '已读'}
         </Tag>
       ),
     },
@@ -545,19 +545,19 @@ const NotificationCenter: React.FC<{
             record.type === 'error'
               ? 'red'
               : record.type === 'warning'
-              ? 'orange'
-              : record.type === 'success'
-              ? 'green'
-              : 'blue'
+                ? 'orange'
+                : record.type === 'success'
+                  ? 'green'
+                  : 'blue'
           }
         >
           {record.type === 'error'
             ? '错误'
             : record.type === 'warning'
-            ? '警告'
-            : record.type === 'success'
-            ? '成功'
-            : '信息'}
+              ? '警告'
+              : record.type === 'success'
+                ? '成功'
+                : '信息'}
         </Tag>
       ),
     },
@@ -573,10 +573,10 @@ const NotificationCenter: React.FC<{
               {channel === 'email'
                 ? '邮件'
                 : channel === 'sms'
-                ? '短信'
-                : channel === 'webhook'
-                ? 'Webhook'
-                : '站内信'}
+                  ? '短信'
+                  : channel === 'webhook'
+                    ? 'Webhook'
+                    : '站内信'}
             </Tag>
           ))}
         </div>
@@ -636,10 +636,10 @@ const NotificationCenter: React.FC<{
             {record.type === 'email'
               ? 'SMTP邮件服务'
               : record.type === 'sms'
-              ? '短信服务'
-              : record.type === 'webhook'
-              ? 'Webhook回调'
-              : '站内通知'}
+                ? '短信服务'
+                : record.type === 'webhook'
+                  ? 'Webhook回调'
+                  : '站内通知'}
           </div>
         </div>
       ),
@@ -658,15 +658,15 @@ const NotificationCenter: React.FC<{
               record.status === 'connected'
                 ? 'success'
                 : record.status === 'error'
-                ? 'error'
-                : 'default'
+                  ? 'error'
+                  : 'default'
             }
           >
             {record.status === 'connected'
               ? '已连接'
               : record.status === 'disconnected'
-              ? '未连接'
-              : '连接错误'}
+                ? '未连接'
+                : '连接错误'}
           </Tag>
         </div>
       ),
@@ -716,7 +716,7 @@ const NotificationCenter: React.FC<{
         </div>
       }
       placement='right'
-      size="large"
+      size='large'
       style={{ width: 800 }}
       open={open}
       onClose={onClose}

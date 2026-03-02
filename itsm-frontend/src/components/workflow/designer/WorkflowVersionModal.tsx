@@ -6,7 +6,6 @@
 import React from 'react';
 import { Modal, Alert, Typography, Tag } from 'antd';
 import type { WorkflowDefinition } from './WorkflowTypes';
-import { useI18n } from '@/lib/i18n';
 
 const { Text } = Typography;
 
@@ -23,33 +22,32 @@ export default function WorkflowVersionModal({
   onCreate,
   workflow,
 }: WorkflowVersionModalProps) {
-  const { t } = useI18n();
   return (
     <Modal
-      title="创建新版本"
+      title='创建新版本'
       open={visible}
       onOk={onCreate}
       onCancel={onClose}
-      okText={t('common.create')}
-      cancelText={t('common.cancel')}
+      okText='创建'
+      cancelText='取消'
     >
-      <div className="space-y-4">
+      <div className='space-y-4'>
         <Alert
-          message="版本管理"
-          description="创建新版本将保存当前的设计状态，不会影响已部署的版本。"
-          type="info"
+          message='版本管理'
+          description='创建新版本将保存当前的设计状态，不会影响已部署的版本。'
+          type='info'
           showIcon
         />
         <div>
           <Text strong>当前版本</Text>
-          <div className="mt-1">
-            <Tag color="blue">{workflow?.version}</Tag>
+          <div className='mt-1'>
+            <Tag color='blue'>{workflow?.version}</Tag>
           </div>
         </div>
         <div>
           <Text strong>新版本号</Text>
-          <div className="mt-1">
-            <Tag color="green">
+          <div className='mt-1'>
+            <Tag color='green'>
               {workflow ? `${parseFloat(workflow.version) + 0.1}`.slice(0, 3) : '1.1'}
             </Tag>
           </div>

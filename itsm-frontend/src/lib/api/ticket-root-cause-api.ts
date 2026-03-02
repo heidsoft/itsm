@@ -48,12 +48,17 @@ export interface RootCauseAnalysisReport {
 export class TicketRootCauseApi {
   // 执行根因分析
   static async analyzeTicket(ticketId: number): Promise<RootCauseAnalysisReport> {
-    return httpClient.post<RootCauseAnalysisReport>(`/api/tickets/${ticketId}/root-cause/analyze`, {});
+    return httpClient.post<RootCauseAnalysisReport>(
+      `/api/tickets/${ticketId}/root-cause/analyze`,
+      {}
+    );
   }
 
   // 获取根因分析报告
   static async getAnalysisReport(ticketId: number): Promise<RootCauseAnalysisReport | null> {
-    return httpClient.get<RootCauseAnalysisReport | null>(`/api/tickets/${ticketId}/root-cause/report`);
+    return httpClient.get<RootCauseAnalysisReport | null>(
+      `/api/tickets/${ticketId}/root-cause/report`
+    );
   }
 
   // 确认根因
@@ -66,4 +71,3 @@ export class TicketRootCauseApi {
     return httpClient.post(`/api/tickets/${ticketId}/root-cause/${rootCauseId}/resolve`, {});
   }
 }
-

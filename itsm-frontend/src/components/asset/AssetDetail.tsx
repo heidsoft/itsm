@@ -124,11 +124,11 @@ const AssetDetail: React.FC = () => {
     return (
       <Card>
         <Result
-          status="404"
-          title="404"
-          subTitle="抱歉，您访问的资产不存在"
+          status='404'
+          title='404'
+          subTitle='抱歉，您访问的资产不存在'
           extra={
-            <Button type="primary" onClick={() => router.push('/assets')}>
+            <Button type='primary' onClick={() => router.push('/assets')}>
               返回列表
             </Button>
           }
@@ -138,7 +138,7 @@ const AssetDetail: React.FC = () => {
   }
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Space direction='vertical' style={{ width: '100%' }} size='large'>
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
@@ -148,12 +148,14 @@ const AssetDetail: React.FC = () => {
           >
             返回列表
           </Button>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+          >
             <div>
               <Title level={3} style={{ marginBottom: 8 }}>
                 {asset.name}
               </Title>
-              <Text type="secondary">资产编号: {asset.asset_number}</Text>
+              <Text type='secondary'>资产编号: {asset.asset_number}</Text>
             </div>
             <Space>
               <Tag color={statusColors[asset.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
@@ -165,58 +167,58 @@ const AssetDetail: React.FC = () => {
         </div>
 
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="资产编号">{asset.asset_number}</Descriptions.Item>
-          <Descriptions.Item label="资产名称">{asset.name}</Descriptions.Item>
-          <Descriptions.Item label="类型">
+          <Descriptions.Item label='资产编号'>{asset.asset_number}</Descriptions.Item>
+          <Descriptions.Item label='资产名称'>{asset.name}</Descriptions.Item>
+          <Descriptions.Item label='类型'>
             <Tag>{typeLabels[asset.type]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="状态">
+          <Descriptions.Item label='状态'>
             <Tag color={statusColors[asset.status]}>{statusLabels[asset.status]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="分类">{asset.category || '-'}</Descriptions.Item>
-          <Descriptions.Item label="子分类">{asset.subcategory || '-'}</Descriptions.Item>
-          <Descriptions.Item label="序列号">{asset.serial_number || '-'}</Descriptions.Item>
-          <Descriptions.Item label="型号">{asset.model || '-'}</Descriptions.Item>
-          <Descriptions.Item label="制造商">{asset.manufacturer || '-'}</Descriptions.Item>
-          <Descriptions.Item label="供应商">{asset.vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="分配给">
-            {asset.assigned_to_name || '-'}
-          </Descriptions.Item>
-          <Descriptions.Item label="所属部门">{asset.department || '-'}</Descriptions.Item>
-          <Descriptions.Item label="位置">{asset.location || '-'}</Descriptions.Item>
-          <Descriptions.Item label="采购日期">{asset.purchase_date || '-'}</Descriptions.Item>
-          <Descriptions.Item label="采购价格">
+          <Descriptions.Item label='分类'>{asset.category || '-'}</Descriptions.Item>
+          <Descriptions.Item label='子分类'>{asset.subcategory || '-'}</Descriptions.Item>
+          <Descriptions.Item label='序列号'>{asset.serial_number || '-'}</Descriptions.Item>
+          <Descriptions.Item label='型号'>{asset.model || '-'}</Descriptions.Item>
+          <Descriptions.Item label='制造商'>{asset.manufacturer || '-'}</Descriptions.Item>
+          <Descriptions.Item label='供应商'>{asset.vendor || '-'}</Descriptions.Item>
+          <Descriptions.Item label='分配给'>{asset.assigned_to_name || '-'}</Descriptions.Item>
+          <Descriptions.Item label='所属部门'>{asset.department || '-'}</Descriptions.Item>
+          <Descriptions.Item label='位置'>{asset.location || '-'}</Descriptions.Item>
+          <Descriptions.Item label='采购日期'>{asset.purchase_date || '-'}</Descriptions.Item>
+          <Descriptions.Item label='采购价格'>
             {asset.purchase_price ? `¥${asset.purchase_price}` : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="保修期到期">{asset.warranty_expiry || '-'}</Descriptions.Item>
-          <Descriptions.Item label="支持期到期">{asset.support_expiry || '-'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">
+          <Descriptions.Item label='保修期到期'>{asset.warranty_expiry || '-'}</Descriptions.Item>
+          <Descriptions.Item label='支持期到期'>{asset.support_expiry || '-'}</Descriptions.Item>
+          <Descriptions.Item label='创建时间'>
             {dayjs(asset.created_at).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
-          <Descriptions.Item label="更新时间">
+          <Descriptions.Item label='更新时间'>
             {dayjs(asset.updated_at).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
       {asset.description && (
-        <Card title="描述">
+        <Card title='描述'>
           <Text>{asset.description}</Text>
         </Card>
       )}
 
       {asset.specifications && Object.keys(asset.specifications).length > 0 && (
-        <Card title="规格参数">
+        <Card title='规格参数'>
           <Descriptions column={1}>
             {Object.entries(asset.specifications).map(([key, value]) => (
-              <Descriptions.Item key={key} label={key}>{value}</Descriptions.Item>
+              <Descriptions.Item key={key} label={key}>
+                {value}
+              </Descriptions.Item>
             ))}
           </Descriptions>
         </Card>
       )}
 
       {asset.tags && asset.tags.length > 0 && (
-        <Card title="标签">
+        <Card title='标签'>
           <Space wrap>
             {asset.tags.map((tag, index) => (
               <Tag key={index}>{tag}</Tag>
@@ -227,7 +229,7 @@ const AssetDetail: React.FC = () => {
 
       <Card>
         <Space>
-          <Button type="primary" onClick={() => router.push(`/assets/${asset.id}`)}>
+          <Button type='primary' onClick={() => router.push(`/assets/${asset.id}`)}>
             编辑
           </Button>
           {asset.status === 'available' && (
@@ -244,18 +246,18 @@ const AssetDetail: React.FC = () => {
       </Card>
 
       <Modal
-        title="分配资产"
+        title='分配资产'
         open={assignModalVisible}
         onOk={handleAssign}
         onCancel={() => setAssignModalVisible(false)}
       >
-        <Form form={form} layout="vertical">
+        <Form form={form} layout='vertical'>
           <Form.Item
-            name="assigned_to"
-            label="分配给用户"
+            name='assigned_to'
+            label='分配给用户'
             rules={[{ required: true, message: '请选择用户' }]}
           >
-            <Select placeholder="选择用户" showSearch>
+            <Select placeholder='选择用户' showSearch>
               {/* 这里需要添加用户列表 */}
               <Option value={1}>用户1</Option>
             </Select>

@@ -12,7 +12,7 @@ export const xssProtection = {
       "'": '&#39;',
       '/': '&#x2F;',
     };
-    return text.replace(/[&<>"'\/]/g, (s) => map[s]);
+    return text.replace(/[&<>"'\/]/g, s => map[s]);
   },
 
   // HTML反转义
@@ -25,7 +25,7 @@ export const xssProtection = {
       '&#39;': "'",
       '&#x2F;': '/',
     };
-    return text.replace(/&(amp|lt|gt|quot|#39|#x2F);/g, (s) => map[s]);
+    return text.replace(/&(amp|lt|gt|quot|#39|#x2F);/g, s => map[s]);
   },
 
   // 清理HTML标签
@@ -103,7 +103,9 @@ export const inputSanitization = {
 // 密码安全
 export const passwordSecurity = {
   // 密码强度检查
-  checkPasswordStrength: (password: string): {
+  checkPasswordStrength: (
+    password: string
+  ): {
     score: number;
     feedback: string[];
     isStrong: boolean;
@@ -164,12 +166,12 @@ export const passwordSecurity = {
   generateRandomPassword: (length = 12): string => {
     const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
     let password = '';
-    
+
     for (let i = 0; i < length; i++) {
       const randomIndex = Math.floor(Math.random() * charset.length);
       password += charset[randomIndex];
     }
-    
+
     return password;
   },
 };
@@ -197,7 +199,7 @@ export const sessionSecurity = {
       const item = {
         value,
         timestamp: Date.now(),
-        expiration: expirationMinutes ? Date.now() + (expirationMinutes * 60 * 1000) : null,
+        expiration: expirationMinutes ? Date.now() + expirationMinutes * 60 * 1000 : null,
       };
       localStorage.setItem(key, JSON.stringify(item));
     },
@@ -208,7 +210,7 @@ export const sessionSecurity = {
         if (!itemStr) return null;
 
         const item = JSON.parse(itemStr);
-        
+
         // 检查是否过期
         if (item.expiration && Date.now() > item.expiration) {
           localStorage.removeItem(key);
@@ -247,7 +249,7 @@ export const contentSecurity = {
       /eval\s*\(/gi,
       /document\.write/gi,
     ];
-    
+
     return maliciousPatterns.some(pattern => pattern.test(content));
   },
 
@@ -361,7 +363,7 @@ export const securityConfig: {
   set: (key: keyof SecurityDefaults, value: number | string[]) => {
     (securityConfig.defaults as unknown as Record<string, number | string[]>)[key] = value;
   },
-}
+};
 
 // 安全事件日志
 export const securityLogger = {

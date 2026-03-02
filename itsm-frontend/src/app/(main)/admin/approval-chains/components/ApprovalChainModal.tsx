@@ -251,11 +251,15 @@ export function ApprovalChainModal({
       width={800}
       destroyOnHidden
     >
-      <Steps current={currentStep} className='mb-6' items={stepItems.map((item, index) => ({
-        key: index,
-        title: item.title,
-        description: item.description,
-      }))} />
+      <Steps
+        current={currentStep}
+        className='mb-6'
+        items={stepItems.map((item, index) => ({
+          key: index,
+          title: item.title,
+          description: item.description,
+        }))}
+      />
 
       {currentStep === 0 && (
         <Form form={form} layout='vertical' preserve={false}>

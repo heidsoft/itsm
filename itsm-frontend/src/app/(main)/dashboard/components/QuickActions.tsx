@@ -139,7 +139,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
           {showTitle && !compact && (
             <div className='mb-4'>
               <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
-                <ThunderboltOutlined className="text-xl text-blue-500" />
+                <ThunderboltOutlined className='text-xl text-blue-500' />
                 快速操作
               </h2>
               <p className='text-sm text-gray-600'>常用任务和快捷方式</p>
@@ -183,7 +183,7 @@ export const QuickActions: React.FC<QuickActionsProps> = React.memo(
         {showTitle && !compact && (
           <div className='mb-4'>
             <h2 className='text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2'>
-              <ThunderboltOutlined className="text-xl text-blue-500" />
+              <ThunderboltOutlined className='text-xl text-blue-500' />
               快速操作
             </h2>
             <p className='text-sm text-gray-600'>常用任务和快捷方式</p>

@@ -8,18 +8,18 @@ import { TicketStatus, TicketUser } from './ticket';
  * 工单流转操作类型
  */
 export enum TicketWorkflowAction {
-  ACCEPT = 'accept',           // 接单
-  REJECT = 'reject',           // 驳回
-  WITHDRAW = 'withdraw',       // 撤回
-  FORWARD = 'forward',         // 转发
-  CC = 'cc',                   // 抄送
-  ESCALATE = 'escalate',       // 升级
-  APPROVE = 'approve',         // 审批通过
+  ACCEPT = 'accept', // 接单
+  REJECT = 'reject', // 驳回
+  WITHDRAW = 'withdraw', // 撤回
+  FORWARD = 'forward', // 转发
+  CC = 'cc', // 抄送
+  ESCALATE = 'escalate', // 升级
+  APPROVE = 'approve', // 审批通过
   APPROVE_REJECT = 'approve_reject', // 审批拒绝
-  DELEGATE = 'delegate',       // 委派
-  RESOLVE = 'resolve',         // 解决
-  CLOSE = 'close',             // 关闭
-  REOPEN = 'reopen',           // 重开
+  DELEGATE = 'delegate', // 委派
+  RESOLVE = 'resolve', // 解决
+  CLOSE = 'close', // 关闭
+  REOPEN = 'reopen', // 重开
 }
 
 /**
@@ -72,11 +72,11 @@ export interface TicketWorkflowState {
  * 审批状态
  */
 export enum ApprovalStatus {
-  PENDING = 'pending',           // 待审批
-  IN_PROGRESS = 'in_progress',   // 审批中
-  APPROVED = 'approved',         // 已通过
-  REJECTED = 'rejected',         // 已拒绝
-  CANCELLED = 'cancelled',       // 已取消
+  PENDING = 'pending', // 待审批
+  IN_PROGRESS = 'in_progress', // 审批中
+  APPROVED = 'approved', // 已通过
+  REJECTED = 'rejected', // 已拒绝
+  CANCELLED = 'cancelled', // 已取消
 }
 
 /**
@@ -233,4 +233,3 @@ export interface TicketActionPermissions {
   canComment: boolean;
   canViewInternal: boolean;
 }
-

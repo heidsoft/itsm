@@ -129,9 +129,7 @@ const SatisfactionDashboard: React.FC = () => {
         </Row>
 
         <div className='mt-4 text-center text-gray-600'>
-          <span>
-            基于 {metrics.totalResponses} 份反馈数据
-          </span>
+          <span>基于 {metrics.totalResponses} 份反馈数据</span>
         </div>
       </Card>
     </div>

@@ -3,7 +3,7 @@
  * 包含配置项管理和关系图谱可视化组件
  */
 
-export type { } from '@/types/cmdb';
+export type {} from '@/types/cmdb';
 
 // UI组件将在后续完善
 // export { CIList } from './CIList';
@@ -14,4 +14,3 @@ export type { } from '@/types/cmdb';
 // export { CIChangeHistory } from './CIChangeHistory';
 // export { DiscoveryRules } from './DiscoveryRules';
 // export { CMDBStats } from './CMDBStats';
-

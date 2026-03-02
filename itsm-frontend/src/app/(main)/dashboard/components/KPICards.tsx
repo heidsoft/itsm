@@ -70,7 +70,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
     <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6}>
       <Card
         className='h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200'
-        variant="borderless"
+        variant='borderless'
         styles={{
           body: {
             padding: '20px',
@@ -182,7 +182,10 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
         <Row gutter={[16, 16]}>
           {Array.from({ length: 6 }).map((_, index) => (
             <Col key={index} xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
-              <Card className='h-44 rounded-lg shadow-sm border border-gray-200' variant="borderless">
+              <Card
+                className='h-44 rounded-lg shadow-sm border border-gray-200'
+                variant='borderless'
+              >
                 <div className='flex items-center justify-center h-full'>
                   <div className='text-center'>
                     <Spin size='large' />
@@ -202,7 +205,7 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
       <div className='mb-6'>
         <Card
           className='text-center py-12 rounded-lg bg-gray-50 border border-dashed border-gray-300'
-          variant="borderless"
+          variant='borderless'
         >
           <div className='text-gray-500'>
             <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4'>

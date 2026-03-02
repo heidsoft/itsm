@@ -13,15 +13,13 @@ export const REPORTS_KEYS = {
   list: (query?: ReportQuery) => [...REPORTS_KEYS.lists(), query] as const,
   details: () => [...REPORTS_KEYS.all, 'detail'] as const,
   detail: (id: string) => [...REPORTS_KEYS.details(), id] as const,
-  executions: (reportId: string) =>
-    [...REPORTS_KEYS.all, 'executions', reportId] as const,
+  executions: (reportId: string) => [...REPORTS_KEYS.all, 'executions', reportId] as const,
   executionDetail: (executionId: string) =>
     [...REPORTS_KEYS.all, 'execution', executionId] as const,
   templates: () => [...REPORTS_KEYS.all, 'templates'] as const,
   datasets: () => [...REPORTS_KEYS.all, 'datasets'] as const,
   stats: () => [...REPORTS_KEYS.all, 'stats'] as const,
-  performance: (reportId: string) =>
-    [...REPORTS_KEYS.all, 'performance', reportId] as const,
+  performance: (reportId: string) => [...REPORTS_KEYS.all, 'performance', reportId] as const,
   recent: () => [...REPORTS_KEYS.all, 'recent'] as const,
   favorites: () => [...REPORTS_KEYS.all, 'favorites'] as const,
 };
@@ -200,8 +198,7 @@ export function useDeleteReportMutation() {
 export function useCloneReportMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) =>
-      ReportsApi.cloneReport(id, name),
+    mutationFn: ({ id, name }: { id: string; name: string }) => ReportsApi.cloneReport(id, name),
     onSuccess: () => {
       message.success('报表已复制');
       queryClient.invalidateQueries({ queryKey: REPORTS_KEYS.lists() });
@@ -425,4 +422,3 @@ export default {
   usePreviewDataMutation,
   useValidateQueryMutation,
 };
-

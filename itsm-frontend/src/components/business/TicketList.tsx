@@ -182,43 +182,46 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
   }, []);
 
   // 获取工单操作菜单
-  const getTicketMenu = useCallback((record: Ticket) => {
-    return [
-      {
-        key: 'view',
-        label: '查看详情',
-        icon: <EyeOutlined />,
-        onClick: () => onTicketSelect?.(record),
-      },
-      {
-        key: 'edit',
-        label: '编辑',
-        icon: <EditOutlined />,
-        onClick: () => onTicketSelect?.(record),
-      },
-      {
-        key: 'delete',
-        label: '删除',
-        icon: <DeleteOutlined />,
-        danger: true,
-        onClick: () => {
-          Modal.confirm({
-            title: '确认删除',
-            content: `确定要删除工单 ${record.ticketNumber} 吗？`,
-            onOk: async () => {
-              try {
-                await ticketService.deleteTicket(record.id);
-                message.success('删除成功');
-                fetchTickets();
-              } catch (error) {
-                message.error('删除失败');
-              }
-            },
-          });
+  const getTicketMenu = useCallback(
+    (record: Ticket) => {
+      return [
+        {
+          key: 'view',
+          label: '查看详情',
+          icon: <EyeOutlined />,
+          onClick: () => onTicketSelect?.(record),
         },
-      },
-    ];
-  }, [onTicketSelect, fetchTickets, message]);
+        {
+          key: 'edit',
+          label: '编辑',
+          icon: <EditOutlined />,
+          onClick: () => onTicketSelect?.(record),
+        },
+        {
+          key: 'delete',
+          label: '删除',
+          icon: <DeleteOutlined />,
+          danger: true,
+          onClick: () => {
+            Modal.confirm({
+              title: '确认删除',
+              content: `确定要删除工单 ${record.ticketNumber} 吗？`,
+              onOk: async () => {
+                try {
+                  await ticketService.deleteTicket(record.id);
+                  message.success('删除成功');
+                  fetchTickets();
+                } catch (error) {
+                  message.error('删除失败');
+                }
+              },
+            });
+          },
+        },
+      ];
+    },
+    [onTicketSelect, fetchTickets, message]
+  );
 
   // 批量操作
   const handleBatchAction = useCallback(
@@ -235,7 +238,9 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
               title: '确认删除',
               content: `确定要删除选中的 ${selectedRowKeys.length} 个工单吗？`,
               onOk: async () => {
-                await Promise.all(selectedRowKeys.map(id => ticketService.deleteTicket(Number(id))));
+                await Promise.all(
+                  selectedRowKeys.map(id => ticketService.deleteTicket(Number(id)))
+                );
                 message.success('删除成功');
                 setSelectedRowKeys([]);
                 fetchTickets();
@@ -344,17 +349,22 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         key: 'action',
         width: 120,
         render: (_: unknown, record: Ticket) => (
-          <Dropdown
-            menu={{ items: getTicketMenu(record) }}
-          >
-            <Button type="primary" size="small">
+          <Dropdown menu={{ items: getTicketMenu(record) }}>
+            <Button type='primary' size='small'>
               操作 <DownOutlined />
             </Button>
           </Dropdown>
         ),
       },
     ],
-    [getStatusColor, getPriorityColor, getStatusText, getPriorityText, getTicketMenu, onTicketSelect]
+    [
+      getStatusColor,
+      getPriorityColor,
+      getStatusText,
+      getPriorityText,
+      getTicketMenu,
+      onTicketSelect,
+    ]
   );
 
   // 行选择配置

@@ -5,7 +5,5 @@ import ServiceRequestDetail from '@/components/service-request/ServiceRequestDet
 
 // Client component wrapper for Detail page (using hooks)
 export default function ServiceRequestDetailPage() {
-    return (
-        <ServiceRequestDetail />
-    );
+  return <ServiceRequestDetail />;
 }

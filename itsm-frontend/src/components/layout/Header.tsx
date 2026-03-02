@@ -94,9 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
   ]);
 
   const markAsRead = (id: number) => {
-    setNotifications(prev => prev.map(n =>
-      n.id === id ? { ...n, read: true } : n
-    ));
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
   };
 
   const markAllAsRead = () => {
@@ -123,11 +121,12 @@ export const Header: React.FC<HeaderProps> = ({
   // 用户首字母
   const userInitial = displayName.charAt(0).toUpperCase() || 'U';
   // 用户角色显示
-  const roleText = user?.role === 'admin'
-    ? t('header.admin')
-    : user?.role === 'super_admin'
-      ? t('header.superAdmin')
-      : t('header.user');
+  const roleText =
+    user?.role === 'admin'
+      ? t('header.admin')
+      : user?.role === 'super_admin'
+        ? t('header.superAdmin')
+        : t('header.user');
 
   // 根据用户名生成一致的头像颜色
   const getAvatarColor = (name: string): string => {
@@ -444,7 +443,14 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 通知抽屉 */}
       <Drawer
         title={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Bell style={{ color: '#3b82f6', width: 20, height: 20 }} />
               <span>{t('header.notificationCenter')}</span>
@@ -452,8 +458,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             {unreadCount > 0 && (
               <Button
-                type="text"
-                size="small"
+                type='text'
+                size='small'
                 icon={<CheckCheck size={14} />}
                 onClick={markAllAsRead}
                 style={{ color: '#3b82f6' }}
@@ -464,19 +470,27 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         }
         placement='right'
-        size="large"
+        size='large'
         style={{ maxWidth: 'calc(100vw - 64px)' }}
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
         className={styles.notificationDrawer}
       >
         {notifications.length === 0 ? (
-          <div className={styles.emptyNotifications} style={{ textAlign: 'center', padding: '48px 0' }}>
+          <div
+            className={styles.emptyNotifications}
+            style={{ textAlign: 'center', padding: '48px 0' }}
+          >
             <Bell style={{ width: 48, height: 48, marginBottom: '16px', opacity: 0.3 }} />
-            <Text style={{ display: 'block', color: '#9ca3af' }}>{t('header.noNotifications')}</Text>
+            <Text style={{ display: 'block', color: '#9ca3af' }}>
+              {t('header.noNotifications')}
+            </Text>
           </div>
         ) : (
-          <div className="notifications-list" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+          <div
+            className='notifications-list'
+            style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}
+          >
             {notifications.map(item => (
               <div
                 key={item.id}
@@ -489,8 +503,10 @@ export const Header: React.FC<HeaderProps> = ({
                   transition: 'background-color 0.2s',
                 }}
                 onClick={() => handleNotificationClick(item)}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = item.read ? '#f9fafb' : '#eff6ff'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                onMouseEnter={e =>
+                  (e.currentTarget.style.backgroundColor = item.read ? '#f9fafb' : '#eff6ff')
+                }
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div
@@ -528,7 +544,10 @@ export const Header: React.FC<HeaderProps> = ({
                       </Text>
                       <Text style={{ fontSize: '12px', color: '#9ca3af' }}>{item.time}</Text>
                     </div>
-                    <Text className={styles.notificationContent} style={{ display: 'block', marginTop: 4, fontSize: '13px' }}>
+                    <Text
+                      className={styles.notificationContent}
+                      style={{ display: 'block', marginTop: 4, fontSize: '13px' }}
+                    >
                       {item.content}
                     </Text>
                   </div>
@@ -549,7 +568,7 @@ export const Header: React.FC<HeaderProps> = ({
         {searchResults ? (
           <div>
             <h3>{t('tickets.title')}</h3>
-            <div className="search-results">
+            <div className='search-results'>
               {searchResults.tickets.map(item => (
                 <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
                   <a href={`/tickets/${item.id}`}>{item.title}</a>
@@ -557,7 +576,7 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
             </div>
             <h3>{t('incidents.title')}</h3>
-            <div className="search-results">
+            <div className='search-results'>
               {searchResults.incidents.map(item => (
                 <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
                   <a href={`/incidents/${item.id}`}>{item.title}</a>
@@ -565,7 +584,7 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
             </div>
             <h3>{t('problems.title')}</h3>
-            <div className="search-results">
+            <div className='search-results'>
               {searchResults.problems.map(item => (
                 <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
                   <a href={`/problems/${item.id}`}>{item.title}</a>

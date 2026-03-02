@@ -17,16 +17,12 @@ export function validateRequiredProps<T extends object>(
   });
 
   if (missingProps.length > 0) {
-    console.error(
-      `[${componentName}] Missing required props: ${missingProps.join(', ')}`
-    );
-    
+    console.error(`[${componentName}] Missing required props: ${missingProps.join(', ')}`);
+
     if (process.env.NODE_ENV === 'development') {
-      throw new Error(
-        `${componentName}: Required props are missing - ${missingProps.join(', ')}`
-      );
+      throw new Error(`${componentName}: Required props are missing - ${missingProps.join(', ')}`);
     }
-    
+
     return false;
   }
 
@@ -36,20 +32,14 @@ export function validateRequiredProps<T extends object>(
 /**
  * 为props提供默认值
  */
-export function withDefaults<T extends object>(
-  props: Partial<T>,
-  defaults: T
-): T {
+export function withDefaults<T extends object>(props: Partial<T>, defaults: T): T {
   return { ...defaults, ...props } as T;
 }
 
 /**
  * 深度合并对象，处理嵌套的默认值
  */
-export function deepMergeDefaults<T extends object>(
-  props: Partial<T>,
-  defaults: T
-): T {
+export function deepMergeDefaults<T extends object>(props: Partial<T>, defaults: T): T {
   const result = { ...defaults };
 
   for (const key in props) {
@@ -66,10 +56,7 @@ export function deepMergeDefaults<T extends object>(
       typeof defaultValue === 'object' &&
       !Array.isArray(defaultValue)
     ) {
-      result[key] = deepMergeDefaults(
-        propsValue as Partial<any>,
-        defaultValue as any
-      );
+      result[key] = deepMergeDefaults(propsValue as Partial<any>, defaultValue as any);
     } else {
       result[key] = propsValue as T[Extract<keyof T, string>];
     }
@@ -118,11 +105,7 @@ export function safeGet<T, K extends keyof T>(
 /**
  * 安全获取深度嵌套属性
  */
-export function safeGetNested<T>(
-  obj: unknown,
-  path: string,
-  defaultValue?: T
-): T | undefined {
+export function safeGetNested<T>(obj: unknown, path: string, defaultValue?: T): T | undefined {
   try {
     const keys = path.split('.');
     let current: unknown = obj;
@@ -152,9 +135,7 @@ export function validateArrayProp<T>(
   maxLength?: number
 ): value is T[] {
   if (!Array.isArray(value)) {
-    console.warn(
-      `[${componentName}] '${propName}' should be an array, got ${typeof value}`
-    );
+    console.warn(`[${componentName}] '${propName}' should be an array, got ${typeof value}`);
     return false;
   }
 
@@ -184,9 +165,7 @@ export function validateFunctionProp(
   componentName: string
 ): value is Function {
   if (typeof value !== 'function') {
-    console.warn(
-      `[${componentName}] '${propName}' should be a function, got ${typeof value}`
-    );
+    console.warn(`[${componentName}] '${propName}' should be a function, got ${typeof value}`);
     return false;
   }
   return true;
@@ -265,7 +244,7 @@ export function createSafeHandler<T extends (...args: unknown[]) => unknown>(
   handler: T | undefined,
   fallback?: T
 ): T {
-  return (((...args: unknown[]) => {
+  return ((...args: unknown[]) => {
     try {
       if (handler && typeof handler === 'function') {
         return handler(...args);
@@ -275,7 +254,7 @@ export function createSafeHandler<T extends (...args: unknown[]) => unknown>(
     } catch (error) {
       console.error('Error in event handler:', error);
     }
-  }) as unknown) as T;
+  }) as unknown as T;
 }
 
 /**
@@ -311,4 +290,3 @@ export default {
   createSafeHandler,
   sanitizeObjectProp,
 };
-

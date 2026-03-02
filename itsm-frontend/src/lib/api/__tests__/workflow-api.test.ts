@@ -92,10 +92,7 @@ describe('WorkflowApi', () => {
 
       await WorkflowApi.getWorkflows({ page: 2, pageSize: 10 });
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('page=2'),
-        expect.any(Object)
-      );
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('page=2'), expect.any(Object));
       expect(fetch).toHaveBeenCalledWith(
         expect.stringContaining('page_size=10'),
         expect.any(Object)

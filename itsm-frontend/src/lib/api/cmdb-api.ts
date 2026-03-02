@@ -72,9 +72,7 @@ export class CMDBApi {
   /**
    * 创建配置项 (新端点)
    */
-  static async createConfigurationItem(
-    data: CreateCIRequest
-  ): Promise<ConfigurationItem> {
+  static async createConfigurationItem(data: CreateCIRequest): Promise<ConfigurationItem> {
     return httpClient.post('/api/v1/configuration-items', data);
   }
 
@@ -88,12 +86,9 @@ export class CMDBApi {
   /**
    * 获取CI拓扑关系 (新端点)
    */
-  static async getCITopology(
-    id: number,
-    depth = 3
-  ): Promise<CITopology> {
+  static async getCITopology(id: number, depth = 3): Promise<CITopology> {
     return httpClient.get(`/api/v1/configuration-items/${id}/topology`, {
-      depth
+      depth,
     });
   }
 
@@ -131,9 +126,7 @@ export class CMDBApi {
   /**
    * 获取CI列表 (DDD架构)
    */
-  static async getCIs(
-    query?: any
-  ): Promise<{
+  static async getCIs(query?: any): Promise<{
     cis: ConfigurationItem[];
     total: number;
   }> {
@@ -150,9 +143,7 @@ export class CMDBApi {
   /**
    * 创建CI (DDD架构)
    */
-  static async createCI(
-    request: CreateCIRequest
-  ): Promise<ConfigurationItem> {
+  static async createCI(request: CreateCIRequest): Promise<ConfigurationItem> {
     return httpClient.post('/api/v1/cmdb/cis', request);
   }
 
@@ -191,7 +182,7 @@ export class CMDBApi {
     const result = await this.getCIs(query);
     return {
       items: result.cis,
-      total: result.total
+      total: result.total,
     };
   }
 
@@ -241,7 +232,10 @@ export class CMDBApi {
    * 获取发现历史
    */
   static async getDiscoveryHistory(ruleId?: string): Promise<any[]> {
-    return httpClient.get('/api/v1/cmdb/discovery/history', ruleId ? { rule_id: ruleId } : undefined);
+    return httpClient.get(
+      '/api/v1/cmdb/discovery/history',
+      ruleId ? { rule_id: ruleId } : undefined
+    );
   }
 
   /**
@@ -293,16 +287,14 @@ export class CMDBApi {
       parent_id: request.source_ci_id,
       child_id: request.target_ci_id,
       type: request.type,
-      description: request.description
+      description: request.description,
     });
   }
 
   /**
    * 批量创建CI
    */
-  static async batchCreateCIs(
-    requests: CreateCIRequest[]
-  ): Promise<ConfigurationItem[]> {
+  static async batchCreateCIs(requests: CreateCIRequest[]): Promise<ConfigurationItem[]> {
     // 简单实现：逐个创建
     const results: ConfigurationItem[] = [];
     for (const request of requests) {

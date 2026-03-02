@@ -133,7 +133,7 @@ const FIELD_TYPES: FieldTypeConfig[] = [
     category: 'basic',
     defaultConfig: {},
   },
-  
+
   // 选择类型
   {
     type: 'select' as FieldType,
@@ -189,7 +189,7 @@ const FIELD_TYPES: FieldTypeConfig[] = [
       ],
     },
   },
-  
+
   // 高级类型
   {
     type: 'user_picker' as FieldType,
@@ -257,7 +257,7 @@ const FIELD_TYPES: FieldTypeConfig[] = [
       validation: { min: 0, max: 100 },
     },
   },
-  
+
   // 特殊类型
   {
     type: 'divider' as FieldType,
@@ -306,14 +306,9 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
   isFirst,
   isLast,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: field.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: field.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -321,87 +316,87 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const fieldTypeConfig = FIELD_TYPES.find((t) => t.type === field.type);
+  const fieldTypeConfig = FIELD_TYPES.find(t => t.type === field.type);
 
   return (
-    <div ref={setNodeRef} style={style} className="mb-2">
+    <div ref={setNodeRef} style={style} className='mb-2'>
       <Card
-        size="small"
-        className="hover:shadow-md transition-shadow"
+        size='small'
+        className='hover:shadow-md transition-shadow'
         styles={{ body: { padding: '12px 16px' } }}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3 flex-1">
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center gap-3 flex-1'>
             <div
               {...attributes}
               {...listeners}
-              className="cursor-move text-gray-400 hover:text-gray-600"
+              className='cursor-move text-gray-400 hover:text-gray-600'
             >
               <DragOutlined style={{ fontSize: 16 }} />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-xl">{fieldTypeConfig?.icon || '📝'}</span>
+            <div className='flex items-center gap-2'>
+              <span className='text-xl'>{fieldTypeConfig?.icon || '📝'}</span>
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{field.label}</span>
+                <div className='flex items-center gap-2'>
+                  <span className='font-medium'>{field.label}</span>
                   {field.required && (
-                    <Tag color="red" style={{ margin: 0 }}>
+                    <Tag color='red' style={{ margin: 0 }}>
                       必填
                     </Tag>
                   )}
                   {field.conditional && (
-                    <Tag color="blue" style={{ margin: 0 }}>
+                    <Tag color='blue' style={{ margin: 0 }}>
                       条件显示
                     </Tag>
                   )}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">
+                <div className='text-xs text-gray-500 mt-1'>
                   {fieldTypeConfig?.label} • {field.name}
                 </div>
               </div>
             </div>
           </div>
 
-          <Space size="small">
-            <Tooltip title="上移">
+          <Space size='small'>
+            <Tooltip title='上移'>
               <Button
-                type="text"
-                size="small"
+                type='text'
+                size='small'
                 icon={<ArrowUpOutlined />}
                 onClick={() => onMoveUp(index)}
                 disabled={isFirst}
               />
             </Tooltip>
-            <Tooltip title="下移">
+            <Tooltip title='下移'>
               <Button
-                type="text"
-                size="small"
+                type='text'
+                size='small'
                 icon={<ArrowDownOutlined />}
                 onClick={() => onMoveDown(index)}
                 disabled={isLast}
               />
             </Tooltip>
-            <Tooltip title="编辑">
+            <Tooltip title='编辑'>
               <Button
-                type="text"
-                size="small"
+                type='text'
+                size='small'
                 icon={<EditOutlined />}
                 onClick={() => onEdit(field)}
               />
             </Tooltip>
-            <Tooltip title="复制">
+            <Tooltip title='复制'>
               <Button
-                type="text"
-                size="small"
+                type='text'
+                size='small'
                 icon={<CopyOutlined />}
                 onClick={() => onDuplicate(field)}
               />
             </Tooltip>
-            <Tooltip title="删除">
+            <Tooltip title='删除'>
               <Button
-                type="text"
-                size="small"
+                type='text'
+                size='small'
                 danger
                 icon={<DeleteOutlined />}
                 onClick={() => onDelete(field.id)}
@@ -453,47 +448,42 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
 
   if (!field) {
     return (
-      <Card className="h-full">
-        <Empty
-          description="请选择或添加字段进行配置"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        />
+      <Card className='h-full'>
+        <Empty description='请选择或添加字段进行配置' image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </Card>
     );
   }
 
-  const fieldTypeConfig = FIELD_TYPES.find((t) => t.type === field.type);
-  const hasOptions = ['select', 'multi_select', 'radio', 'checkbox'].includes(
-    field.type
-  );
+  const fieldTypeConfig = FIELD_TYPES.find(t => t.type === field.type);
+  const hasOptions = ['select', 'multi_select', 'radio', 'checkbox'].includes(field.type);
 
   return (
     <Card
       title={
-        <div className="flex items-center gap-2">
-          <span className="text-xl">{fieldTypeConfig?.icon}</span>
+        <div className='flex items-center gap-2'>
+          <span className='text-xl'>{fieldTypeConfig?.icon}</span>
           <span>字段配置</span>
-          <Tag color="blue">{fieldTypeConfig?.label}</Tag>
+          <Tag color='blue'>{fieldTypeConfig?.label}</Tag>
         </div>
       }
       extra={
         <Space>
           <Button onClick={onCancel}>取消</Button>
-          <Button type="primary" onClick={handleSave}>
+          <Button type='primary' onClick={handleSave}>
             保存
           </Button>
         </Space>
       }
-      className="h-full"
+      className='h-full'
       styles={{ body: { height: 'calc(100% - 57px)', overflowY: 'auto' } }}
     >
-      <Form form={form} layout="vertical">
+      <Form form={form} layout='vertical'>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           {/* 基础设置 */}
-          <Tabs.TabPane tab="基础设置" key="basic">
+          <Tabs.TabPane tab='基础设置' key='basic'>
             <Form.Item
-              label="字段名称"
-              name="name"
+              label='字段名称'
+              name='name'
               rules={[
                 { required: true, message: '请输入字段名称' },
                 {
@@ -501,56 +491,53 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                   message: '只能包含字母、数字和下划线，且以字母或下划线开头',
                 },
               ]}
-              tooltip="用于数据存储的字段标识符，创建后不建议修改"
+              tooltip='用于数据存储的字段标识符，创建后不建议修改'
             >
-              <Input placeholder="如：customer_name" />
+              <Input placeholder='如：customer_name' />
             </Form.Item>
 
             <Form.Item
-              label="字段标签"
-              name="label"
+              label='字段标签'
+              name='label'
               rules={[{ required: true, message: '请输入字段标签' }]}
-              tooltip="显示给用户的字段名称"
+              tooltip='显示给用户的字段名称'
             >
-              <Input placeholder="如：客户姓名" />
+              <Input placeholder='如：客户姓名' />
             </Form.Item>
 
-            <Form.Item label="占位符" name="placeholder">
-              <Input placeholder="输入框的占位提示文字" />
+            <Form.Item label='占位符' name='placeholder'>
+              <Input placeholder='输入框的占位提示文字' />
             </Form.Item>
 
-            <Form.Item label="帮助文本" name="helpText">
-              <TextArea
-                rows={2}
-                placeholder="帮助用户理解如何填写此字段"
-              />
+            <Form.Item label='帮助文本' name='helpText'>
+              <TextArea rows={2} placeholder='帮助用户理解如何填写此字段' />
             </Form.Item>
 
-            <Form.Item label="工具提示" name="tooltip">
-              <Input placeholder="鼠标悬停时显示的提示" />
+            <Form.Item label='工具提示' name='tooltip'>
+              <Input placeholder='鼠标悬停时显示的提示' />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item label="必填" name="required" valuePropName="checked">
+                <Form.Item label='必填' name='required' valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="禁用" name="disabled" valuePropName="checked">
+                <Form.Item label='禁用' name='disabled' valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item label="隐藏" name="hidden" valuePropName="checked">
+                <Form.Item label='隐藏' name='hidden' valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </Col>
             </Row>
 
-            <Form.Item label="字段宽度" name="width">
+            <Form.Item label='字段宽度' name='width'>
               <Select
-                placeholder="选择字段宽度"
+                placeholder='选择字段宽度'
                 options={[
                   { value: 24, label: '100% (全宽)' },
                   { value: 12, label: '50% (半宽)' },
@@ -560,80 +547,57 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
               />
             </Form.Item>
 
-            <Form.Item label="默认值" name="defaultValue">
-              <Input placeholder="字段的默认值" />
+            <Form.Item label='默认值' name='defaultValue'>
+              <Input placeholder='字段的默认值' />
             </Form.Item>
           </Tabs.TabPane>
 
           {/* 验证规则 */}
-          <Tabs.TabPane tab="验证规则" key="validation">
+          <Tabs.TabPane tab='验证规则' key='validation'>
             <Alert
-              message="配置字段的验证规则，确保用户输入符合要求"
-              type="info"
+              message='配置字段的验证规则，确保用户输入符合要求'
+              type='info'
               showIcon
-              className="mb-4"
+              className='mb-4'
             />
 
-            <Form.Item label="最小长度" name={['validation', 'minLength']}>
-              <InputNumber
-                placeholder="字符最小长度"
-                min={0}
-                style={{ width: '100%' }}
-              />
+            <Form.Item label='最小长度' name={['validation', 'minLength']}>
+              <InputNumber placeholder='字符最小长度' min={0} style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="最大长度" name={['validation', 'maxLength']}>
-              <InputNumber
-                placeholder="字符最大长度"
-                min={0}
-                style={{ width: '100%' }}
-              />
+            <Form.Item label='最大长度' name={['validation', 'maxLength']}>
+              <InputNumber placeholder='字符最大长度' min={0} style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="最小值" name={['validation', 'minValue']}>
-              <InputNumber placeholder="数值最小值" style={{ width: '100%' }} />
+            <Form.Item label='最小值' name={['validation', 'minValue']}>
+              <InputNumber placeholder='数值最小值' style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="最大值" name={['validation', 'maxValue']}>
-              <InputNumber placeholder="数值最大值" style={{ width: '100%' }} />
+            <Form.Item label='最大值' name={['validation', 'maxValue']}>
+              <InputNumber placeholder='数值最大值' style={{ width: '100%' }} />
             </Form.Item>
 
-            <Form.Item label="正则表达式" name={['validation', 'pattern']}>
-              <Input placeholder="如：^[0-9]{11}$" />
+            <Form.Item label='正则表达式' name={['validation', 'pattern']}>
+              <Input placeholder='如：^[0-9]{11}$' />
             </Form.Item>
 
-            <Form.Item
-              label="自定义错误消息"
-              name={['validation', 'customMessage']}
-            >
-              <TextArea rows={2} placeholder="验证失败时显示的错误消息" />
+            <Form.Item label='自定义错误消息' name={['validation', 'customMessage']}>
+              <TextArea rows={2} placeholder='验证失败时显示的错误消息' />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item
-                  label="邮箱格式"
-                  name={['validation', 'email']}
-                  valuePropName="checked"
-                >
+                <Form.Item label='邮箱格式' name={['validation', 'email']} valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="URL格式"
-                  name={['validation', 'url']}
-                  valuePropName="checked"
-                >
+                <Form.Item label='URL格式' name={['validation', 'url']} valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="电话格式"
-                  name={['validation', 'phone']}
-                  valuePropName="checked"
-                >
+                <Form.Item label='电话格式' name={['validation', 'phone']} valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </Col>
@@ -642,27 +606,27 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
 
           {/* 选项配置 */}
           {hasOptions && (
-            <Tabs.TabPane tab="选项配置" key="options">
+            <Tabs.TabPane tab='选项配置' key='options'>
               <Alert
-                message="配置下拉选择、单选、多选等字段的选项"
-                type="info"
+                message='配置下拉选择、单选、多选等字段的选项'
+                type='info'
                 showIcon
-                className="mb-4"
+                className='mb-4'
               />
 
-              <Form.List name="options">
+              <Form.List name='options'>
                 {(fields, { add, remove }) => (
                   <>
                     {fields.map((fieldItem, index) => (
                       <Card
                         key={fieldItem.key}
-                        size="small"
-                        className="mb-2"
+                        size='small'
+                        className='mb-2'
                         extra={
                           <Button
-                            type="text"
+                            type='text'
                             danger
-                            size="small"
+                            size='small'
                             icon={<DeleteOutlined />}
                             onClick={() => remove(fieldItem.name)}
                           />
@@ -672,37 +636,33 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                           <Col span={10}>
                             <Form.Item
                               {...fieldItem}
-                              label="标签"
+                              label='标签'
                               name={[fieldItem.name, 'label']}
                               rules={[{ required: true, message: '请输入标签' }]}
                             >
-                              <Input placeholder="显示文本" />
+                              <Input placeholder='显示文本' />
                             </Form.Item>
                           </Col>
                           <Col span={10}>
                             <Form.Item
                               {...fieldItem}
-                              label="值"
+                              label='值'
                               name={[fieldItem.name, 'value']}
                               rules={[{ required: true, message: '请输入值' }]}
                             >
-                              <Input placeholder="实际值" />
+                              <Input placeholder='实际值' />
                             </Form.Item>
                           </Col>
                           <Col span={4}>
-                            <Form.Item
-                              {...fieldItem}
-                              label="颜色"
-                              name={[fieldItem.name, 'color']}
-                            >
-                              <Input type="color" />
+                            <Form.Item {...fieldItem} label='颜色' name={[fieldItem.name, 'color']}>
+                              <Input type='color' />
                             </Form.Item>
                           </Col>
                         </Row>
                       </Card>
                     ))}
                     <Button
-                      type="dashed"
+                      type='dashed'
                       onClick={() => add({ label: '', value: '' })}
                       block
                       icon={<PlusOutlined />}
@@ -716,32 +676,32 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
           )}
 
           {/* 条件显示 */}
-          <Tabs.TabPane tab="条件显示" key="conditional">
+          <Tabs.TabPane tab='条件显示' key='conditional'>
             <Alert
-              message="根据其他字段的值决定是否显示此字段"
-              type="info"
+              message='根据其他字段的值决定是否显示此字段'
+              type='info'
               showIcon
-              className="mb-4"
+              className='mb-4'
             />
 
-            <Form.Item label="依赖字段" name={['conditional', 'field']}>
+            <Form.Item label='依赖字段' name={['conditional', 'field']}>
               <Select
-                placeholder="选择依赖的字段"
+                placeholder='选择依赖的字段'
                 allowClear
                 showSearch
-                optionFilterProp="children"
+                optionFilterProp='children'
                 options={allFields
-                  .filter((f) => f.id !== field.id)
-                  .map((f) => ({
+                  .filter(f => f.id !== field.id)
+                  .map(f => ({
                     value: f.name,
                     label: `${f.label} (${f.name})`,
                   }))}
               />
             </Form.Item>
 
-            <Form.Item label="条件运算符" name={['conditional', 'operator']}>
+            <Form.Item label='条件运算符' name={['conditional', 'operator']}>
               <Select
-                placeholder="选择运算符"
+                placeholder='选择运算符'
                 options={[
                   { value: 'equals', label: '等于 (=)' },
                   { value: 'not_equals', label: '不等于 (≠)' },
@@ -755,28 +715,23 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
               />
             </Form.Item>
 
-            <Form.Item label="比较值" name={['conditional', 'value']}>
-              <Input placeholder="要比较的值" />
+            <Form.Item label='比较值' name={['conditional', 'value']}>
+              <Input placeholder='要比较的值' />
             </Form.Item>
           </Tabs.TabPane>
 
           {/* 高级配置 */}
-          <Tabs.TabPane tab="高级配置" key="advanced">
+          <Tabs.TabPane tab='高级配置' key='advanced'>
             {field.type === 'file_upload' && (
               <>
-                <Form.Item label="最大文件大小（MB）" name="maxFileSize">
-                  <InputNumber
-                    min={1}
-                    max={100}
-                    placeholder="10"
-                    style={{ width: '100%' }}
-                  />
+                <Form.Item label='最大文件大小（MB）' name='maxFileSize'>
+                  <InputNumber min={1} max={100} placeholder='10' style={{ width: '100%' }} />
                 </Form.Item>
 
-                <Form.Item label="允许的文件类型" name="acceptedFileTypes">
+                <Form.Item label='允许的文件类型' name='acceptedFileTypes'>
                   <Select
-                    mode="tags"
-                    placeholder="如：image/*, .pdf, .docx"
+                    mode='tags'
+                    placeholder='如：image/*, .pdf, .docx'
                     options={[
                       { value: 'image/*', label: '图片 (image/*)' },
                       { value: 'application/pdf', label: 'PDF' },
@@ -788,11 +743,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                   />
                 </Form.Item>
 
-                <Form.Item
-                  label="允许多个文件"
-                  name="multiple"
-                  valuePropName="checked"
-                >
+                <Form.Item label='允许多个文件' name='multiple' valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </>
@@ -802,55 +753,32 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
               field.type
             ) && (
               <>
-                <Form.Item
-                  label="显示搜索框"
-                  name="showSearch"
-                  valuePropName="checked"
-                >
+                <Form.Item label='显示搜索框' name='showSearch' valuePropName='checked'>
                   <Switch />
                 </Form.Item>
 
-                <Form.Item
-                  label="允许清空"
-                  name="allowClear"
-                  valuePropName="checked"
-                >
+                <Form.Item label='允许清空' name='allowClear' valuePropName='checked'>
                   <Switch />
                 </Form.Item>
               </>
             )}
 
             {field.type === 'multi_select' && (
-              <Form.Item
-                label="多选模式"
-                name="multiple"
-                valuePropName="checked"
-              >
+              <Form.Item label='多选模式' name='multiple' valuePropName='checked'>
                 <Switch />
               </Form.Item>
             )}
 
             {field.type === 'rich_text' && (
               <>
-                <Form.Item
-                  label="编辑器高度"
-                  name={['richTextConfig', 'height']}
-                >
-                  <InputNumber
-                    min={200}
-                    max={800}
-                    placeholder="300"
-                    style={{ width: '100%' }}
-                  />
+                <Form.Item label='编辑器高度' name={['richTextConfig', 'height']}>
+                  <InputNumber min={200} max={800} placeholder='300' style={{ width: '100%' }} />
                 </Form.Item>
 
-                <Form.Item
-                  label="工具栏"
-                  name={['richTextConfig', 'toolbar']}
-                >
+                <Form.Item label='工具栏' name={['richTextConfig', 'toolbar']}>
                   <Select
-                    mode="multiple"
-                    placeholder="选择工具栏按钮"
+                    mode='multiple'
+                    placeholder='选择工具栏按钮'
                     options={[
                       { value: 'bold', label: '粗体' },
                       { value: 'italic', label: '斜体' },
@@ -912,8 +840,8 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = fields.findIndex((f) => f.id === active.id);
-      const newIndex = fields.findIndex((f) => f.id === over.id);
+      const oldIndex = fields.findIndex(f => f.id === active.id);
+      const newIndex = fields.findIndex(f => f.id === over.id);
 
       const newFields = arrayMove(fields, oldIndex, newIndex).map((f, idx) => ({
         ...f,
@@ -945,9 +873,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
   };
 
   const handleSaveField = (updatedField: TemplateField) => {
-    const newFields = fields.map((f) =>
-      f.id === updatedField.id ? updatedField : f
-    );
+    const newFields = fields.map(f => (f.id === updatedField.id ? updatedField : f));
     handleFieldsChange(newFields);
     setSelectedField(null);
   };
@@ -957,7 +883,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
       title: '确认删除',
       content: '确定要删除这个字段吗？此操作不可撤销。',
       onOk: () => {
-        const newFields = fields.filter((f) => f.id !== id);
+        const newFields = fields.filter(f => f.id !== id);
         handleFieldsChange(newFields);
         if (selectedField?.id === id) {
           setSelectedField(null);
@@ -983,44 +909,34 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
   const handleMoveUp = (index: number) => {
     if (index > 0) {
       const newFields = [...fields];
-      [newFields[index - 1], newFields[index]] = [
-        newFields[index],
-        newFields[index - 1],
-      ];
-      handleFieldsChange(
-        newFields.map((f, idx) => ({ ...f, order: idx }))
-      );
+      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+      handleFieldsChange(newFields.map((f, idx) => ({ ...f, order: idx })));
     }
   };
 
   const handleMoveDown = (index: number) => {
     if (index < fields.length - 1) {
       const newFields = [...fields];
-      [newFields[index], newFields[index + 1]] = [
-        newFields[index + 1],
-        newFields[index],
-      ];
-      handleFieldsChange(
-        newFields.map((f, idx) => ({ ...f, order: idx }))
-      );
+      [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
+      handleFieldsChange(newFields.map((f, idx) => ({ ...f, order: idx })));
     }
   };
 
   const filteredFieldTypes = useMemo(() => {
     if (fieldTypeFilter === 'all') return FIELD_TYPES;
-    return FIELD_TYPES.filter((t) => t.category === fieldTypeFilter);
+    return FIELD_TYPES.filter(t => t.category === fieldTypeFilter);
   }, [fieldTypeFilter]);
 
   return (
-    <div className="field-designer">
+    <div className='field-designer'>
       <Row gutter={16} style={{ height: 'calc(100vh - 200px)' }}>
         {/* 左侧：字段类型面板 */}
         <Col span={5}>
           <Card
-            title="字段类型"
+            title='字段类型'
             extra={
               <Select
-                size="small"
+                size='small'
                 value={fieldTypeFilter}
                 onChange={setFieldTypeFilter}
                 style={{ width: 100 }}
@@ -1032,29 +948,25 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                 ]}
               />
             }
-            className="h-full"
+            className='h-full'
             styles={{ body: { height: 'calc(100% - 57px)', overflowY: 'auto' } }}
           >
-            <Space orientation="vertical" style={{ width: '100%' }} size="small">
-              {filteredFieldTypes.map((typeConfig) => (
+            <Space orientation='vertical' style={{ width: '100%' }} size='small'>
+              {filteredFieldTypes.map(typeConfig => (
                 <Card
                   key={typeConfig.type}
-                  size="small"
+                  size='small'
                   hoverable
                   onClick={() => handleAddField(typeConfig)}
-                  className="cursor-pointer"
+                  className='cursor-pointer'
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{typeConfig.icon}</span>
-                    <div className="flex-1">
-                      <div className="font-medium text-sm">
-                        {typeConfig.label}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {typeConfig.description}
-                      </div>
+                  <div className='flex items-center gap-2'>
+                    <span className='text-xl'>{typeConfig.icon}</span>
+                    <div className='flex-1'>
+                      <div className='font-medium text-sm'>{typeConfig.label}</div>
+                      <div className='text-xs text-gray-500'>{typeConfig.description}</div>
                     </div>
-                    <PlusOutlined className="text-blue-500" />
+                    <PlusOutlined className='text-blue-500' />
                   </div>
                 </Card>
               ))}
@@ -1066,17 +978,17 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
         <Col span={10}>
           <Card
             title={
-              <div className="flex items-center justify-between">
+              <div className='flex items-center justify-between'>
                 <span>字段列表</span>
-                <Badge count={fields.length} showZero color="blue" />
+                <Badge count={fields.length} showZero color='blue' />
               </div>
             }
-            className="h-full"
+            className='h-full'
             styles={{ body: { height: 'calc(100% - 57px)', overflowY: 'auto' } }}
           >
             {fields.length === 0 ? (
               <Empty
-                description="暂无字段，请从左侧添加字段"
+                description='暂无字段，请从左侧添加字段'
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
               />
             ) : (
@@ -1086,7 +998,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={fields.map((f) => f.id)}
+                  items={fields.map(f => f.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {fields.map((field, index) => (
@@ -1124,4 +1036,3 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
 };
 
 export default FieldDesigner;
-

@@ -20,8 +20,6 @@ import {
   Switch,
   InputNumber,
   Table,
-  Empty,
-  Spin,
 } from 'antd';
 import {
   Plus,
@@ -34,8 +32,12 @@ import {
   Settings,
   Copy,
 } from 'lucide-react';
-import { TicketCategoryApi, TicketCategory as TicketCategoryType } from '@/lib/api/ticket-category-api';
+import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import {
+  TicketCategoryApi,
+  TicketCategory as TicketCategoryType,
+} from '@/lib/api/ticket-category-api';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -89,6 +91,7 @@ const TicketCategoryManagementPage = () => {
       const list = data.items || data || [];
       setCategories(list);
     } catch (error) {
+      console.error('Failed to load categories:', error);
       message.error('加载分类失败');
       setCategories([]);
     } finally {
@@ -136,6 +139,7 @@ const TicketCategoryManagementPage = () => {
       setCategories(prev => prev.filter(c => c.id !== id));
       message.success('分类删除成功');
     } catch (error) {
+      console.error('Failed to delete category:', error);
       message.error('删除失败');
     }
   };
@@ -178,7 +182,7 @@ const TicketCategoryManagementPage = () => {
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      message.error('保存分类失败');
+      console.error('保存分类失败:', error);
     }
   };
 
@@ -366,14 +370,15 @@ const TicketCategoryManagementPage = () => {
 
   if (categories.length === 0) {
     return (
-      <Empty
-        description='暂无工单分类'
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      >
-        <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateCategory}>
-          创建分类
-        </Button>
-      </Empty>
+      <LoadingEmptyError
+        state='empty'
+        empty={{
+          title: '暂无工单分类',
+          description: '创建第一个工单分类来组织工单管理',
+          actionText: '创建分类',
+          onAction: handleCreateCategory,
+        }}
+      />
     );
   }
 

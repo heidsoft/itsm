@@ -139,9 +139,14 @@ export class AIService {
    * 智能推荐处理人
    * 基于工单内容、处理人技能、工作负载等推荐最合适的处理人
    */
-  static async recommendAssignee(request: AssigneeRecommendationRequest): Promise<AssigneeRecommendation[]> {
+  static async recommendAssignee(
+    request: AssigneeRecommendationRequest
+  ): Promise<AssigneeRecommendation[]> {
     try {
-      logger.debug('AIService.recommendAssignee', { ticketId: request.ticketId, category: request.category });
+      logger.debug('AIService.recommendAssignee', {
+        ticketId: request.ticketId,
+        category: request.category,
+      });
 
       const response = await httpClient.post<AssigneeRecommendation[]>(
         `${this.API_BASE}/recommend-assignee`,
@@ -226,18 +231,24 @@ export class AIService {
    * 智能搜索
    * 基于自然语言查询搜索相关工单、知识库等
    */
-  static async intelligentSearch(query: string, filters?: {
-    type?: 'tickets' | 'knowledge' | 'incidents' | 'all';
-    dateRange?: { start: string; end: string };
-    category?: string;
-  }): Promise<{
+  static async intelligentSearch(
+    query: string,
+    filters?: {
+      type?: 'tickets' | 'knowledge' | 'incidents' | 'all';
+      dateRange?: { start: string; end: string };
+      category?: string;
+    }
+  ): Promise<{
     tickets: SearchResult[];
     knowledge: SearchResult[];
     incidents: SearchResult[];
     suggestions: string[];
   }> {
     try {
-      logger.debug('AIService.intelligentSearch', { query: query.substring(0, 50), type: filters?.type });
+      logger.debug('AIService.intelligentSearch', {
+        query: query.substring(0, 50),
+        type: filters?.type,
+      });
 
       const response = await httpClient.post<{
         tickets: SearchResult[];
@@ -246,7 +257,7 @@ export class AIService {
         suggestions: string[];
       }>(`${this.API_BASE}/intelligent-search`, {
         query,
-        filters
+        filters,
       });
 
       logger.debug('AIService.intelligentSearch complete', {
@@ -261,13 +272,15 @@ export class AIService {
         tickets: [],
         knowledge: [],
         incidents: [],
-        suggestions: [`搜索"${query}"的相关内容`, '尝试使用更具体的关键词', '检查拼写是否正确']
+        suggestions: [`搜索"${query}"的相关内容`, '尝试使用更具体的关键词', '检查拼写是否正确'],
       };
     }
   }
 
   // 降级方案实现
-  private static getFallbackClassification(_request: TicketAnalysisRequest): TicketClassificationResult {
+  private static getFallbackClassification(
+    _request: TicketAnalysisRequest
+  ): TicketClassificationResult {
     // 基于关键词的简单分类逻辑
     const title = _request.title.toLowerCase();
     const description = _request.description.toLowerCase();
@@ -303,12 +316,14 @@ export class AIService {
       suggestions: [
         '建议提供更详细的问题描述',
         '如有截图或错误信息请一并提供',
-        '说明问题的影响范围和紧急程度'
-      ]
+        '说明问题的影响范围和紧急程度',
+      ],
     };
   }
 
-  private static getFallbackAssigneeRecommendations(_request: AssigneeRecommendationRequest): AssigneeRecommendation[] {
+  private static getFallbackAssigneeRecommendations(
+    _request: AssigneeRecommendationRequest
+  ): AssigneeRecommendation[] {
     // 模拟推荐数据
     const mockRecommendations: AssigneeRecommendation[] = [
       {
@@ -320,7 +335,7 @@ export class AIService {
         availability: 'available',
         confidence: 0.7,
         reasoning: '具有相关技能且当前工作负载适中',
-        suggestions: ['建议优先分配给该工程师']
+        suggestions: ['建议优先分配给该工程师'],
       },
       {
         userId: 2,
@@ -331,8 +346,8 @@ export class AIService {
         availability: 'available',
         confidence: 0.6,
         reasoning: '工作负载较轻，可以及时处理',
-        suggestions: ['适合处理一般性技术问题']
-      }
+        suggestions: ['适合处理一般性技术问题'],
+      },
     ];
 
     return mockRecommendations;
@@ -345,19 +360,14 @@ export class AIService {
         solutionId: 'sol_001',
         title: '常见网络连接问题解决方案',
         description: '针对网络连接问题的标准处理流程',
-        steps: [
-          '检查网络连接状态',
-          '重启网络适配器',
-          '检查IP配置',
-          '联系网络管理员'
-        ],
+        steps: ['检查网络连接状态', '重启网络适配器', '检查IP配置', '联系网络管理员'],
         estimatedTime: 30,
         successRate: 0.85,
         relatedKnowledge: ['网络故障排除指南', 'IP配置手册'],
         confidence: 0.8,
         reasoning: '基于历史相似问题的解决方案',
-        suggestions: ['建议按步骤逐一排查']
-      }
+        suggestions: ['建议按步骤逐一排查'],
+      },
     ];
 
     return mockSolutions;
@@ -367,24 +377,12 @@ export class AIService {
     return {
       severity: 'medium',
       impactScope: ['用户工作站', '网络连接'],
-      rootCauseHypothesis: [
-        '网络设备故障',
-        '配置错误',
-        '软件冲突'
-      ],
-      recommendedActions: [
-        '立即检查网络设备状态',
-        '收集更多用户反馈',
-        '准备回滚方案'
-      ],
+      rootCauseHypothesis: ['网络设备故障', '配置错误', '软件冲突'],
+      recommendedActions: ['立即检查网络设备状态', '收集更多用户反馈', '准备回滚方案'],
       escalationRequired: false,
       confidence: 0.6,
       reasoning: '基于事件描述的初步分析',
-      suggestions: [
-        '建议收集更多技术细节',
-        '监控系统状态变化',
-        '准备通知相关用户'
-      ]
+      suggestions: ['建议收集更多技术细节', '监控系统状态变化', '准备通知相关用户'],
     };
   }
 
@@ -396,25 +394,17 @@ export class AIService {
           category: '网络问题',
           trend: 'increasing',
           changePercentage: 15,
-          prediction: '预计下月将继续增长'
+          prediction: '预计下月将继续增长',
         },
         {
           category: '软件问题',
           trend: 'stable',
           changePercentage: 2,
-          prediction: '保持稳定水平'
-        }
+          prediction: '保持稳定水平',
+        },
       ],
-      insights: [
-        '网络相关问题呈上升趋势',
-        '软件问题处理效率有所提升',
-        '用户满意度整体稳定'
-      ],
-      recommendations: [
-        '加强网络基础设施监控',
-        '提供网络使用培训',
-        '优化问题处理流程'
-      ]
+      insights: ['网络相关问题呈上升趋势', '软件问题处理效率有所提升', '用户满意度整体稳定'],
+      recommendations: ['加强网络基础设施监控', '提供网络使用培训', '优化问题处理流程'],
     };
   }
 }

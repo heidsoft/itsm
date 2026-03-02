@@ -18,10 +18,10 @@ interface AuthActions {
 
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
-    (set) => ({
+    set => ({
       user: null,
       isAuthenticated: false,
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      setUser: user => set({ user, isAuthenticated: !!user }),
       logout: () => set({ user: null, isAuthenticated: false }),
     }),
     { name: 'auth-storage' }
@@ -29,14 +29,6 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 );
 
 // 通用 Store 创建函数
-export function createSimpleStore<T extends object>(
-  name: string,
-  initialState: T
-) {
-  return create<T>()(
-    persist(
-      () => initialState,
-      { name }
-    )
-  );
+export function createSimpleStore<T extends object>(name: string, initialState: T) {
+  return create<T>()(persist(() => initialState, { name }));
 }

@@ -115,7 +115,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         // API returns { ticket_id, current_status, available_actions, workflow_history }
         // We need to map this to WorkflowStep[] if possible, or leave empty if the UI expects different data
         // Currently casting to any to avoid type error, as the response structure doesn't match WorkflowStep[]
-        setWorkflowSteps([]); 
+        setWorkflowSteps([]);
       }
       if (slaRes.status === 'fulfilled') {
         setSlaInfo((slaRes.value as any) || null);
@@ -178,17 +178,13 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   };
 
   // 子任务处理函数
-  const handleCreateSubtask = async (data: Partial<Ticket>) => {
-  };
+  const handleCreateSubtask = async (data: Partial<Ticket>) => {};
 
-  const handleUpdateSubtask = async (id: number, data: Partial<Ticket>) => {
-  };
+  const handleUpdateSubtask = async (id: number, data: Partial<Ticket>) => {};
 
-  const handleDeleteSubtask = async (id: number) => {
-  };
+  const handleDeleteSubtask = async (id: number) => {};
 
-  const handleViewSubtask = (subtask: Subtask) => {
-  };
+  const handleViewSubtask = (subtask: Subtask) => {};
 
   return (
     <div className='max-w-7xl mx-auto bg-gray-50 min-h-screen'>
@@ -311,8 +307,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                   <TicketMultiLevelApproval
                     ticket={ticket}
                     canManage={canEdit}
-                    onWorkflowChange={workflowId => {
-                    }}
+                    onWorkflowChange={workflowId => {}}
                   />
                 </div>
               ),
@@ -325,8 +320,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
                   <TicketRootCauseAnalysis
                     ticketId={ticket.id}
                     autoAnalyze={false}
-                    onAnalysisComplete={report => {
-                    }}
+                    onAnalysisComplete={report => {}}
                   />
                 </div>
               ),

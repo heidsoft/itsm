@@ -115,4 +115,3 @@ export class TicketViewApi {
     return httpClient.post(`/api/v1/tickets/views/${viewId}/share`, data);
   }
 }
-

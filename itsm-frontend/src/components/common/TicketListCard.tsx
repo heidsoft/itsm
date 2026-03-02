@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { Card, List, Tag, Button, Badge, Dropdown, Menu, Avatar, Space, Tooltip } from 'antd';
@@ -16,7 +16,7 @@ interface TicketListCardProps {
 
 export const TicketListCard: React.FC<TicketListCardProps> = ({
   tickets,
-  title = "工单管理",
+  title = '工单管理',
   showActions = true,
   onViewAll,
   onViewTicket,
@@ -24,25 +24,25 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
 }) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "red";
-      case "medium":
-        return "orange";
-      case "low":
-        return "blue";
+      case 'high':
+        return 'red';
+      case 'medium':
+        return 'orange';
+      case 'low':
+        return 'blue';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getPriorityText = (priority: string) => {
     switch (priority) {
-      case "high":
-        return "高";
-      case "medium":
-        return "中";
-      case "low":
-        return "低";
+      case 'high':
+        return '高';
+      case 'medium':
+        return '中';
+      case 'low':
+        return '低';
       default:
         return priority;
     }
@@ -50,41 +50,41 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "processing":
-        return "processing";
-      case "pending":
-        return "warning";
-      case "resolved":
-        return "success";
+      case 'processing':
+        return 'processing';
+      case 'pending':
+        return 'warning';
+      case 'resolved':
+        return 'success';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case "processing":
-        return "处理中";
-      case "pending":
-        return "待处理";
-      case "resolved":
-        return "已解决";
+      case 'processing':
+        return '处理中';
+      case 'pending':
+        return '待处理';
+      case 'resolved':
+        return '已解决';
       default:
         return status;
     }
   };
 
-  const pendingCount = tickets.filter((t) => t.status === "pending").length;
+  const pendingCount = tickets.filter(t => t.status === 'pending').length;
 
   return (
     <Card
       title={
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <span className="font-semibold text-gray-800">{title}</span>
-          <div className="flex items-center space-x-2">
+        <div className='flex items-center justify-between flex-wrap gap-2'>
+          <span className='font-semibold text-gray-800'>{title}</span>
+          <div className='flex items-center space-x-2'>
             <Badge count={pendingCount} />
             {onViewAll && (
-              <Button type="link" size="small" onClick={onViewAll}>
+              <Button type='link' size='small' onClick={onViewAll}>
                 查看全部
               </Button>
             )}
@@ -103,27 +103,27 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
               ],
             }}
             trigger={['click']}
-            placement="bottomRight"
+            placement='bottomRight'
           >
-            <Button type="text" icon={<MoreHorizontal size={16} />} aria-label="更多选项" />
+            <Button type='text' icon={<MoreHorizontal size={16} />} aria-label='更多选项' />
           </Dropdown>
         ) : null
       }
     >
       <List
         dataSource={tickets}
-        renderItem={(item) => (
+        renderItem={item => (
           <List.Item
-            className="hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3 py-2 cursor-pointer"
+            className='hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3 py-2 cursor-pointer'
             onClick={() => onViewTicket?.(item.id)}
             actions={[
               <Button
-                key="view"
-                type="text"
+                key='view'
+                type='text'
                 icon={<Eye size={14} />}
-                size="small"
-                className="text-blue-500 hover:text-blue-600"
-                onClick={(e) => {
+                size='small'
+                className='text-blue-500 hover:text-blue-600'
+                onClick={e => {
                   e.stopPropagation();
                   onViewTicket?.(item.id);
                 }}
@@ -132,30 +132,28 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
           >
             <List.Item.Meta
               avatar={
-                <Avatar
-                  size="small"
-                  className="bg-gradient-to-r from-blue-500 to-purple-600"
-                >
+                <Avatar size='small' className='bg-gradient-to-r from-blue-500 to-purple-600'>
                   {item.id.split('-')[2]}
                 </Avatar>
               }
               title={
-                <div className="flex items-center space-x-2">
+                <div className='flex items-center space-x-2'>
                   <Tooltip title={item.title}>
-                    <span className="font-medium text-gray-800 text-sm truncate" style={{ maxWidth: '200px' }}>
+                    <span
+                      className='font-medium text-gray-800 text-sm truncate'
+                      style={{ maxWidth: '200px' }}
+                    >
                       {item.title}
                     </span>
                   </Tooltip>
-                  <Tag
-                    color={getPriorityColor(item.priority)}
-                  >
+                  <Tag color={getPriorityColor(item.priority)}>
                     {getPriorityText(item.priority)}
                   </Tag>
                 </div>
               }
               description={
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <div className='space-y-1'>
+                  <div className='flex items-center space-x-4 text-xs text-gray-500'>
                     <Space size={4}>
                       <User size={12} />
                       <span>{item.assignee}</span>
@@ -165,15 +163,9 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
                       <span>{item.time}</span>
                     </Space>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Tag
-                      color={getStatusColor(item.status)}
-                    >
-                      {getStatusText(item.status)}
-                    </Tag>
-                    <span className="text-xs text-gray-400">
-                      SLA: {item.sla}
-                    </span>
+                  <div className='flex items-center space-x-2'>
+                    <Tag color={getStatusColor(item.status)}>{getStatusText(item.status)}</Tag>
+                    <span className='text-xs text-gray-400'>SLA: {item.sla}</span>
                   </div>
                 </div>
               }

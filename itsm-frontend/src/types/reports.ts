@@ -9,11 +9,11 @@
  * 报表类型
  */
 export enum ReportType {
-  TABLE = 'table',               // 表格报表
-  CHART = 'chart',               // 图表报表
-  DASHBOARD = 'dashboard',       // 仪表盘
-  PIVOT = 'pivot',               // 透视表
-  MATRIX = 'matrix',             // 矩阵报表
+  TABLE = 'table', // 表格报表
+  CHART = 'chart', // 图表报表
+  DASHBOARD = 'dashboard', // 仪表盘
+  PIVOT = 'pivot', // 透视表
+  MATRIX = 'matrix', // 矩阵报表
 }
 
 /**
@@ -35,38 +35,38 @@ export interface ReportDefinition {
   type: ReportType;
   status: ReportStatus;
   description?: string;
-  
+
   // 分类
   category?: string;
   tags: string[];
-  
+
   // 数据源
   dataSource: ReportDataSource;
-  
+
   // 可视化配置
   visualization: ReportVisualization;
-  
+
   // 过滤器
   filters: ReportFilter[];
-  
+
   // 排序
   sorting?: ReportSorting[];
-  
+
   // 分组
   grouping?: ReportGrouping[];
-  
+
   // 权限
   visibility: 'public' | 'private' | 'shared';
-  sharedWith?: number[];         // 分享给的用户ID
-  
+  sharedWith?: number[]; // 分享给的用户ID
+
   // 调度
   schedule?: ReportSchedule;
-  
+
   // 统计
   executionCount: number;
   lastExecutedAt?: Date;
-  avgExecutionTime?: number;     // 平均执行时间（秒）
-  
+  avgExecutionTime?: number; // 平均执行时间（秒）
+
   // 元数据
   createdBy: number;
   createdByName: string;
@@ -82,10 +82,10 @@ export interface ReportDefinition {
  * 数据源类型
  */
 export enum DataSourceType {
-  QUERY = 'query',               // SQL查询
-  API = 'api',                   // API接口
-  PREDEFINED = 'predefined',     // 预定义数据集
-  AGGREGATE = 'aggregate',       // 聚合数据
+  QUERY = 'query', // SQL查询
+  API = 'api', // API接口
+  PREDEFINED = 'predefined', // 预定义数据集
+  AGGREGATE = 'aggregate', // 聚合数据
 }
 
 /**
@@ -93,21 +93,21 @@ export enum DataSourceType {
  */
 export interface ReportDataSource {
   type: DataSourceType;
-  
+
   // SQL查询
   query?: string;
-  
+
   // API接口
   apiEndpoint?: string;
   apiMethod?: 'GET' | 'POST';
   apiParams?: Record<string, any>;
-  
+
   // 预定义数据集
   datasetId?: string;
-  
+
   // 聚合配置
   aggregation?: {
-    collection: string;          // 数据集合
+    collection: string; // 数据集合
     metrics: AggregationMetric[];
     dimensions: string[];
     timeRange?: {
@@ -116,11 +116,11 @@ export interface ReportDataSource {
       granularity?: 'hour' | 'day' | 'week' | 'month';
     };
   };
-  
+
   // 数据刷新
-  refreshInterval?: number;      // 刷新间隔（分钟）
+  refreshInterval?: number; // 刷新间隔（分钟）
   cacheEnabled?: boolean;
-  cacheDuration?: number;        // 缓存时长（分钟）
+  cacheDuration?: number; // 缓存时长（分钟）
 }
 
 /**
@@ -166,7 +166,7 @@ export interface ReportVisualization {
     };
     exportEnabled?: boolean;
   };
-  
+
   // 图表配置
   chart?: {
     type: ChartType;
@@ -177,13 +177,13 @@ export interface ReportVisualization {
     tooltip?: ChartTooltip;
     theme?: string;
   };
-  
+
   // 仪表盘配置
   dashboard?: {
     layout: DashboardLayout;
     widgets: DashboardWidget[];
   };
-  
+
   // 透视表配置
   pivot?: {
     rows: string[];
@@ -204,8 +204,8 @@ export interface TableColumn {
   align?: 'left' | 'center' | 'right';
   sortable?: boolean;
   filterable?: boolean;
-  formatter?: string;            // 格式化函数
-  render?: string;               // 自定义渲染
+  formatter?: string; // 格式化函数
+  render?: string; // 自定义渲染
 }
 
 /**
@@ -228,7 +228,7 @@ export interface ChartSeries {
   field: string;
   type?: ChartType;
   color?: string;
-  stack?: string;                // 堆叠组
+  stack?: string; // 堆叠组
   smooth?: boolean;
 }
 
@@ -335,7 +335,7 @@ export interface ReportFilter {
     label: string;
     value: any;
   }>;
-  visible?: boolean;             // 是否在UI中显示
+  visible?: boolean; // 是否在UI中显示
 }
 
 /**
@@ -364,27 +364,27 @@ export interface ReportExecutionResult {
   id: string;
   reportId: string;
   reportName: string;
-  
+
   status: 'running' | 'completed' | 'failed';
-  
+
   // 结果数据
   data?: {
     columns: string[];
     rows: any[][];
     total: number;
   };
-  
+
   // 执行信息
   startTime: Date;
   endTime?: Date;
-  duration?: number;             // 执行时长（秒）
-  
+  duration?: number; // 执行时长（秒）
+
   // 错误信息
   error?: string;
-  
+
   // 执行参数
   filters?: Record<string, any>;
-  
+
   executedBy: number;
   executedByName: string;
 }
@@ -395,26 +395,26 @@ export interface ReportExecutionResult {
 export interface ReportSchedule {
   enabled: boolean;
   frequency: 'once' | 'daily' | 'weekly' | 'monthly' | 'cron';
-  
+
   // 定时配置
-  time?: string;                 // HH:mm
-  dayOfWeek?: number[];          // 0-6 (Sunday-Saturday)
-  dayOfMonth?: number;           // 1-31
+  time?: string; // HH:mm
+  dayOfWeek?: number[]; // 0-6 (Sunday-Saturday)
+  dayOfMonth?: number; // 1-31
   cronExpression?: string;
-  
+
   // 时区
   timezone?: string;
-  
+
   // 开始/结束时间
   startDate?: Date;
   endDate?: Date;
-  
+
   // 接收人
   recipients: ReportRecipient[];
-  
+
   // 输出格式
   outputFormat: 'pdf' | 'excel' | 'csv' | 'html';
-  
+
   // 最后执行
   lastRunTime?: Date;
   nextRunTime?: Date;
@@ -442,16 +442,16 @@ export interface ReportTemplate {
   category: string;
   description?: string;
   thumbnail?: string;
-  
+
   // 模板配置
   config: Omit<ReportDefinition, 'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'updatedAt'>;
-  
+
   // 标签
   tags: string[];
-  
+
   // 使用统计
   usageCount: number;
-  
+
   isPublic: boolean;
   createdAt: Date;
 }
@@ -465,18 +465,18 @@ export interface ReportStats {
   totalReports: number;
   activeReports: number;
   scheduledReports: number;
-  
+
   reportsByType: Record<ReportType, number>;
   reportsByCategory: Record<string, number>;
-  
+
   topReports: Array<{
     report: ReportDefinition;
     executionCount: number;
     avgExecutionTime: number;
   }>;
-  
+
   recentExecutions: ReportExecutionResult[];
-  
+
   executionTrend: {
     date: string;
     count: number;
@@ -490,22 +490,22 @@ export interface ReportStats {
 export interface ReportPerformance {
   reportId: string;
   reportName: string;
-  
+
   metrics: {
     totalExecutions: number;
     avgExecutionTime: number;
     minExecutionTime: number;
     maxExecutionTime: number;
-    failureRate: number;         // 失败率（%）
+    failureRate: number; // 失败率（%）
   };
-  
+
   executionHistory: {
     timestamp: Date;
     duration: number;
     status: 'success' | 'failed';
     rowCount?: number;
   }[];
-  
+
   recommendations: string[];
 }
 
@@ -583,4 +583,3 @@ export interface DatasetField {
 }
 
 export default ReportDefinition;
-

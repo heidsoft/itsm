@@ -72,29 +72,29 @@ export interface TicketTypeDefinition {
   icon?: string;
   color?: string;
   status: TicketTypeStatus;
-  
+
   // 表单配置
   customFields: CustomFieldDefinition[];
-  
+
   // 审批流程
   approvalEnabled: boolean;
   approvalWorkflowId?: string;
   approvalChain?: ApprovalChainDefinition[];
-  
+
   // SLA配置
   slaEnabled: boolean;
   defaultSlaId?: number;
-  
+
   // 分配规则
   autoAssignEnabled: boolean;
   assignmentRules?: AssignmentRule[];
-  
+
   // 通知配置
   notificationConfig?: NotificationConfig;
-  
+
   // 权限配置
   permissionConfig?: PermissionConfig;
-  
+
   // 元数据
   createdBy: number;
   createdByName: string;
@@ -104,7 +104,7 @@ export interface TicketTypeDefinition {
   updatedAt: string;
   tenantId: number;
   departmentId?: number; // 部门ID
-  
+
   // 统计
   usageCount?: number;
 }
@@ -244,4 +244,3 @@ export interface TicketTypeListResponse {
   page: number;
   pageSize: number;
 }
-

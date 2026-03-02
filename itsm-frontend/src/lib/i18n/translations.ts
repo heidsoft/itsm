@@ -297,7 +297,8 @@ export const translations = {
       relationType: '关系类型',
       relationDescription: '描述',
       topologyViewTitle: '配置项拓扑视图',
-      topologyViewDescription: '此视图展示了所有配置项之间的连接关系。通过可视化的方式，您可以快速了解整个IT基础设施的架构和依赖关系。',
+      topologyViewDescription:
+        '此视图展示了所有配置项之间的连接关系。通过可视化的方式，您可以快速了解整个IT基础设施的架构和依赖关系。',
       ciCount: '共 {cisCount} 个配置项，{relationsCount} 个关系连接',
       ciName: '配置项名称',
       ciNameRequired: '请输入配置项名称',
@@ -1101,7 +1102,8 @@ export const translations = {
       delete: 'Delete Ticket',
       batchDelete: 'Batch Delete',
       confirmDelete: 'Confirm Delete',
-      deleteConfirmation: 'Are you sure you want to delete the selected {count} tickets? This action cannot be undone.',
+      deleteConfirmation:
+        'Are you sure you want to delete the selected {count} tickets? This action cannot be undone.',
       deleteSuccess: 'Delete successfully',
       deleteFailed: 'Delete failed',
       refreshSuccess: 'Data refreshed successfully',
@@ -1208,7 +1210,8 @@ export const translations = {
     },
     cmdb: {
       title: 'Configuration Management Database (CMDB)',
-      description: 'Manage and maintain IT infrastructure configuration items and their relationships',
+      description:
+        'Manage and maintain IT infrastructure configuration items and their relationships',
       totalCIs: 'Total CIs',
       cloudServers: 'Cloud Servers',
       running: 'Running',
@@ -1256,7 +1259,8 @@ export const translations = {
       relationType: 'Relationship Type',
       relationDescription: 'Description',
       topologyViewTitle: 'Configuration Item Topology View',
-      topologyViewDescription: 'This view displays the connection relationships between all configuration items. Through visualization, you can quickly understand the architecture and dependencies of the entire IT infrastructure.',
+      topologyViewDescription:
+        'This view displays the connection relationships between all configuration items. Through visualization, you can quickly understand the architecture and dependencies of the entire IT infrastructure.',
       ciCount: 'Total {cisCount} CIs, {relationsCount} relationships',
       ciName: 'CI Name',
       ciNameRequired: 'Please enter CI name',
@@ -1388,7 +1392,8 @@ export const translations = {
     admin: {
       title: 'System Management Center',
       welcome: 'Welcome to ITSM Pro Enterprise System Management Center',
-      description: 'Here you can configure and manage various functions of the entire ITSM platform',
+      description:
+        'Here you can configure and manage various functions of the entire ITSM platform',
       activeUsers: 'Active Users',
       runningWorkflows: 'Running Workflows',
       serviceCatalogItems: 'Service Catalog Items',
@@ -1633,20 +1638,23 @@ export const translations = {
       nodeTypeUnknown: 'Unknown',
       workflowPreview: 'Workflow Preview',
       workflowOverview: 'Workflow Overview',
-      workflowOverviewDescription: 'This workflow contains {total} nodes, including {approval} approval nodes',
+      workflowOverviewDescription:
+        'This workflow contains {total} nodes, including {approval} approval nodes',
       processSteps: 'Process Steps',
       nodeDetails: 'Node Details',
       approversCount: '{count} approvers',
       timeoutHours: '{hours} hours',
       backToWorkflowList: 'Back to Workflow List',
       ticketApprovalDesigner: 'Ticket Approval Workflow Designer',
-      ticketApprovalDesignerDescription: 'Design and configure ticket approval workflows with multi-level approvals and conditional branches',
+      ticketApprovalDesignerDescription:
+        'Design and configure ticket approval workflows with multi-level approvals and conditional branches',
       preview: 'Preview',
       saveWorkflow: 'Save Workflow',
       saveTicketApprovalWorkflow: 'Save Ticket Approval Workflow',
       confirmSave: 'Confirm Save',
       saveConfirmation: 'Save Confirmation',
-      saveConfirmationDescription: 'Please confirm the workflow information. After saving, you can view and deploy it in workflow management',
+      saveConfirmationDescription:
+        'Please confirm the workflow information. After saving, you can view and deploy it in workflow management',
       processStatistics: 'Process Statistics',
       totalNodes: 'Total Nodes',
       approvalNodes: 'Approval Nodes',
@@ -1666,7 +1674,8 @@ export const translations = {
       initialStatus: 'Initial Status',
       ticketApprovalSaveSuccess: 'Ticket approval workflow saved successfully!',
       confirmLeave: 'Confirm Leave',
-      leaveConfirmation: 'Leaving this page will lose unsaved changes. Are you sure you want to leave?',
+      leaveConfirmation:
+        'Leaving this page will lose unsaved changes. Are you sure you want to leave?',
       continueEdit: 'Continue Editing',
       designWorkflowFirst: 'Please design the workflow first',
       ticketProcess: 'Ticket Process',
@@ -1803,7 +1812,8 @@ export const translations = {
       newPassword: 'New Password',
       confirmPassword: 'Confirm Password',
       passwordHint: 'Password Safety Hint',
-      passwordHintDesc: 'Use strong password with mixed case, numbers and special chars, min 8 chars.',
+      passwordHintDesc:
+        'Use strong password with mixed case, numbers and special chars, min 8 chars.',
       notificationSettings: 'Notifications',
       languageSettings: 'Language',
       themeSettings: 'Theme',
@@ -1932,4 +1942,4 @@ export const translations = {
 };
 
 export type Language = keyof typeof translations;
-export type TranslationKey = keyof typeof translations['zh-CN'];
+export type TranslationKey = keyof (typeof translations)['zh-CN'];

@@ -638,9 +638,10 @@ export class RoutePermissionChecker {
     // 检查资源权限
     if (route.permissions && route.permissions.length > 0) {
       return route.permissions.every(requiredPermission =>
-        userPermissions.some(userPermission =>
-          userPermission.resource === requiredPermission.resource &&
-          userPermission.action === requiredPermission.action
+        userPermissions.some(
+          userPermission =>
+            userPermission.resource === requiredPermission.resource &&
+            userPermission.action === requiredPermission.action
         )
       );
     }
@@ -676,10 +677,14 @@ export class RoutePermissionChecker {
   ): Array<{ name: string; title: string; path: string }> {
     const breadcrumbs: Array<{ name: string; title: string; path: string }> = [];
 
-    const findRoute = (routes: RouteConfig[], path: string, parents: RouteConfig[] = []): boolean => {
+    const findRoute = (
+      routes: RouteConfig[],
+      path: string,
+      parents: RouteConfig[] = []
+    ): boolean => {
       for (const route of routes) {
         const fullPath = route.path;
-        
+
         if (fullPath === path || (route.children && path.startsWith(fullPath))) {
           // 添加父级路由到面包屑
           parents.forEach(parent => {

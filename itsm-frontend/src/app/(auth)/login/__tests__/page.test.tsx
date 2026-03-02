@@ -57,7 +57,11 @@ jest.mock('antd', () => {
 
   // Mock Input.Password
   const MockPassword = (props: Record<string, unknown>) => {
-    return React.createElement('input', { type: 'password', 'data-testid': 'password-input', ...props });
+    return React.createElement('input', {
+      type: 'password',
+      'data-testid': 'password-input',
+      ...props,
+    });
   };
 
   // Mock Input with Password
@@ -92,12 +96,21 @@ jest.mock('antd', () => {
 
   // Mock Button
   const MockButton = (props: Record<string, unknown>) => {
-    return React.createElement('button', { type: props.htmlType || 'button', 'data-testid': 'login-button', ...props }, props.children);
+    return React.createElement(
+      'button',
+      { type: props.htmlType || 'button', 'data-testid': 'login-button', ...props },
+      props.children
+    );
   };
 
   // Mock Card
   const MockCard = (props: Record<string, unknown>) => {
-    return React.createElement('div', { 'data-testid': 'login-card', ...props }, props.title, props.children);
+    return React.createElement(
+      'div',
+      { 'data-testid': 'login-card', ...props },
+      props.title,
+      props.children
+    );
   };
 
   // Mock Typography
@@ -121,14 +134,20 @@ jest.mock('antd', () => {
       Title: MockTitle,
       Text: MockText,
     },
-    Space: (props: Record<string, unknown>) => React.createElement('div', { 'data-testid': 'space', ...props }, props.children),
-    ConfigProvider: (props: Record<string, unknown>) => React.createElement('div', {}, props.children),
-    Alert: (props: Record<string, unknown>) => React.createElement('div', { 'data-testid': 'alert', ...props }, props.message),
+    Space: (props: Record<string, unknown>) =>
+      React.createElement('div', { 'data-testid': 'space', ...props }, props.children),
+    ConfigProvider: (props: Record<string, unknown>) =>
+      React.createElement('div', {}, props.children),
+    Alert: (props: Record<string, unknown>) =>
+      React.createElement('div', { 'data-testid': 'alert', ...props }, props.message),
     Divider: () => React.createElement('div', { 'data-testid': 'divider' }),
     Checkbox: (props: Record<string, unknown>) => React.createElement('label', {}, props.children),
-    Row: (props: Record<string, unknown>) => React.createElement('div', { className: 'row', ...props }, props.children),
-    Col: (props: Record<string, unknown>) => React.createElement('div', { className: 'col', ...props }, props.children),
-    Flex: (props: Record<string, unknown>) => React.createElement('div', { className: 'flex', ...props }, props.children),
+    Row: (props: Record<string, unknown>) =>
+      React.createElement('div', { className: 'row', ...props }, props.children),
+    Col: (props: Record<string, unknown>) =>
+      React.createElement('div', { className: 'col', ...props }, props.children),
+    Flex: (props: Record<string, unknown>) =>
+      React.createElement('div', { className: 'flex', ...props }, props.children),
   };
 });
 

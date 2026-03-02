@@ -14,7 +14,7 @@ export interface TicketTemplate {
 export interface TemplateField {
   name: string;
   label: string;
-  type: "text" | "textarea" | "select" | "number" | "date" | "checkbox";
+  type: 'text' | 'textarea' | 'select' | 'number' | 'date' | 'checkbox';
   required: boolean;
   options?: string[];
   default_value?: string;
@@ -61,8 +61,11 @@ class TicketTemplateService {
       if (params.page_size) queryParams.page_size = params.page_size;
       if (params.category) queryParams.category = params.category;
       if (params.is_active !== undefined) queryParams.is_active = params.is_active;
-      
-      const response = await httpClient.get<TemplateListResponse>('/api/v1/ticket-templates', queryParams);
+
+      const response = await httpClient.get<TemplateListResponse>(
+        '/api/v1/ticket-templates',
+        queryParams
+      );
       return response;
     } catch (error) {
       console.error('TicketTemplateService.getTemplates error:', error);
@@ -116,9 +119,12 @@ class TicketTemplateService {
   // 激活/停用模板
   async toggleTemplateStatus(id: number, isActive: boolean): Promise<TicketTemplate> {
     try {
-      const response = await httpClient.patch<TicketTemplate>(`/api/v1/ticket-templates/${id}/status`, {
-        is_active: isActive
-      });
+      const response = await httpClient.patch<TicketTemplate>(
+        `/api/v1/ticket-templates/${id}/status`,
+        {
+          is_active: isActive,
+        }
+      );
       return response;
     } catch (error) {
       console.error('TicketTemplateService.toggleTemplateStatus error:', error);
@@ -129,9 +135,12 @@ class TicketTemplateService {
   // 复制模板
   async copyTemplate(id: number, newName: string): Promise<TicketTemplate> {
     try {
-      const response = await httpClient.post<TicketTemplate>(`/api/v1/ticket-templates/${id}/copy`, {
-        name: newName
-      });
+      const response = await httpClient.post<TicketTemplate>(
+        `/api/v1/ticket-templates/${id}/copy`,
+        {
+          name: newName,
+        }
+      );
       return response;
     } catch (error) {
       console.error('TicketTemplateService.copyTemplate error:', error);

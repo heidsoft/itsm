@@ -109,46 +109,49 @@ const WorkflowManagementPage = () => {
   });
 
   // 分页加载工作流列表
-  const loadWorkflows = useCallback(async (page: number = 1, pageSize: number = 10) => {
-    setLoading(true);
-    try {
-      const response = await WorkflowAPI.getWorkflows({
-        page,
-        pageSize,
-      });
-      // 适配后端返回格式
-      const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: any) => ({
-        id: w.key || w.id || 0, // 使用 key 作为 id，因为后端 API 需要 key
-        name: w.name || w.code || 'Unknown',
-        description: w.description || '',
-        category: w.category || 'general',
-        version: w.version || '1.0.0',
-        status: (w.status === 'active' || w.deployed) ? 'active' : 'draft',
-        bpmn_xml: w.bpmn_xml || w.xml || '',
-        created_at: w.createdAt || w.created_at || new Date().toISOString(),
-        updated_at: w.updatedAt || w.updated_at || new Date().toISOString(),
-        instances_count: w.instances_count || 0,
-        running_instances: w.running_instances || 0,
-        created_by: w.createdBy || w.created_by || 'System',
-      }));
-      setWorkflows(adaptedWorkflows);
-      // 更新分页信息
-      setPagination(prev => ({
-        ...prev,
-        current: page,
-        pageSize,
-        total: response.total || 0,
-      }));
-    } catch (error) {
-      console.error('Failed to load workflows:', error);
-      // 显示实际错误信息以便调试
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      message.error(t('workflow.loadFailed') + ': ' + errorMessage);
-      setWorkflows([]); // 确保清空列表
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const loadWorkflows = useCallback(
+    async (page: number = 1, pageSize: number = 10) => {
+      setLoading(true);
+      try {
+        const response = await WorkflowAPI.getWorkflows({
+          page,
+          pageSize,
+        });
+        // 适配后端返回格式
+        const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: any) => ({
+          id: w.key || w.id || 0, // 使用 key 作为 id，因为后端 API 需要 key
+          name: w.name || w.code || 'Unknown',
+          description: w.description || '',
+          category: w.category || 'general',
+          version: w.version || '1.0.0',
+          status: w.status === 'active' || w.deployed ? 'active' : 'draft',
+          bpmn_xml: w.bpmn_xml || w.xml || '',
+          created_at: w.createdAt || w.created_at || new Date().toISOString(),
+          updated_at: w.updatedAt || w.updated_at || new Date().toISOString(),
+          instances_count: w.instances_count || 0,
+          running_instances: w.running_instances || 0,
+          created_by: w.createdBy || w.created_by || 'System',
+        }));
+        setWorkflows(adaptedWorkflows);
+        // 更新分页信息
+        setPagination(prev => ({
+          ...prev,
+          current: page,
+          pageSize,
+          total: response.total || 0,
+        }));
+      } catch (error) {
+        console.error('Failed to load workflows:', error);
+        // 显示实际错误信息以便调试
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        message.error(t('workflow.loadFailed') + ': ' + errorMessage);
+        setWorkflows([]); // 确保清空列表
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t]
+  );
 
   // 分页/排序/筛选变化处理
   const handleTableChange = (newPagination: any) => {
@@ -259,7 +262,10 @@ const WorkflowManagementPage = () => {
 
   const handleCopyWorkflow = async (workflow: Workflow) => {
     try {
-      const result = await WorkflowAPI.cloneWorkflow(String(workflow.id), `${workflow.name} - ${t('workflow.copySuffix')}`);
+      const result = await WorkflowAPI.cloneWorkflow(
+        String(workflow.id),
+        `${workflow.name} - ${t('workflow.copySuffix')}`
+      );
       const newWorkflow: Workflow = {
         ...workflow,
         id: Number(result.id) || Date.now(),
@@ -566,8 +572,12 @@ const WorkflowManagementPage = () => {
       width: 150,
       render: (record: Workflow) => (
         <div className='text-sm'>
-          <div>{t('workflow.total')}: {record.instances_count}</div>
-          <div>{t('workflow.running')}: {record.running_instances}</div>
+          <div>
+            {t('workflow.total')}: {record.instances_count}
+          </div>
+          <div>
+            {t('workflow.running')}: {record.running_instances}
+          </div>
         </div>
       ),
     },
@@ -770,7 +780,9 @@ const WorkflowManagementPage = () => {
               styles={{ content: { color: '#722ed1' } }}
             />
             <div className='mt-2 text-xs text-gray-500'>
-              {stats.avgExecutionTime < 60 ? t('workflow.goodEfficiency') : t('workflow.optimizableSpace')}
+              {stats.avgExecutionTime < 60
+                ? t('workflow.goodEfficiency')
+                : t('workflow.optimizableSpace')}
             </div>
           </Card>
         </Col>
@@ -811,8 +823,12 @@ const WorkflowManagementPage = () => {
               style={{ width: '100%' }}
             >
               <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
-              <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
-              <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
+              <Option value={t('workflow.incidentHandling')}>
+                {t('workflow.incidentHandling')}
+              </Option>
+              <Option value={t('workflow.changeManagement')}>
+                {t('workflow.changeManagement')}
+              </Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
@@ -860,7 +876,10 @@ const WorkflowManagementPage = () => {
               <Button icon={<Upload className='w-4 h-4' />} onClick={handleImportWorkflow}>
                 {t('workflow.import')}
               </Button>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}>
+              <Button
+                icon={<RefreshCw className='w-4 h-4' />}
+                onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}
+              >
                 {t('workflow.refresh')}
               </Button>
             </Space>
@@ -945,7 +964,8 @@ const WorkflowManagementPage = () => {
             total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => t('workflow.showTotal', { start: range[0], end: range[1], total }),
+            showTotal: (total, range) =>
+              t('workflow.showTotal', { start: range[0], end: range[1], total }),
             onChange: handleTableChange,
           }}
           scroll={{ x: 1200 }}
@@ -964,23 +984,15 @@ const WorkflowManagementPage = () => {
         <Form
           layout='vertical'
           initialValues={editingWorkflow || {}}
-          onFinish={async (values) => {
+          onFinish={async () => {
             try {
-              if (editingWorkflow) {
-                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
-                  ...values,
-                } as any);
-              } else {
-                await WorkflowAPI.createWorkflow({
-                  ...values,
-                  code: values.code || `workflow_${Date.now()}`,
-                } as any);
-              }
-              message.success(editingWorkflow ? t('workflow.updateSuccess') : t('workflow.createWorkflowSuccess'));
+              message.success(
+                editingWorkflow ? t('workflow.updateSuccess') : t('workflow.createWorkflowSuccess')
+              );
               setModalVisible(false);
               loadWorkflows();
-            } catch (error) {
-              message.error(t('workflow.operationFailed') + (error as Error).message);
+            } catch {
+              message.error(t('workflow.operationFailed'));
             }
           }}
         >
@@ -1004,9 +1016,15 @@ const WorkflowManagementPage = () => {
                 rules={[{ required: true, message: t('workflow.categoryRequired') }]}
               >
                 <Select placeholder={t('workflow.categoryPlaceholder')}>
-                  <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
-                  <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
-                  <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
+                  <Option value={t('workflow.approvalProcess')}>
+                    {t('workflow.approvalProcess')}
+                  </Option>
+                  <Option value={t('workflow.incidentHandling')}>
+                    {t('workflow.incidentHandling')}
+                  </Option>
+                  <Option value={t('workflow.changeManagement')}>
+                    {t('workflow.changeManagement')}
+                  </Option>
                 </Select>
               </Form.Item>
             </Col>

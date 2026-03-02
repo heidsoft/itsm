@@ -32,7 +32,11 @@ import { useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
-import { KnowledgeStatus, KnowledgeStatusLabels, KnowledgeStatusColors } from '@/constants/knowledge';
+import {
+  KnowledgeStatus,
+  KnowledgeStatusLabels,
+  KnowledgeStatusColors,
+} from '@/constants/knowledge';
 import type { KnowledgeArticle, ArticleQuery } from '@/types/knowledge-base';
 
 const { Option } = Select;
@@ -163,7 +167,7 @@ const ArticleList: React.FC = () => {
         <Space size='small'>
           <Tooltip title='编辑'>
             <Button
-              size="small"
+              size='small'
               icon={<EditOutlined />}
               onClick={() => router.push(`/knowledge/articles/${record.id}/edit`)}
               style={{ backgroundColor: '#3b82f6', color: '#fff', border: 'none' }}
@@ -171,7 +175,7 @@ const ArticleList: React.FC = () => {
           </Tooltip>
           <Tooltip title='删除'>
             <Button
-              size="small"
+              size='small'
               icon={<DeleteOutlined />}
               onClick={() => handleDelete(record.id)}
               style={{ backgroundColor: '#ef4444', color: '#fff', border: 'none' }}
@@ -183,38 +187,38 @@ const ArticleList: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className='p-6'>
+      <div className='flex justify-between items-center mb-6'>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">知识库</h1>
-          <p className="text-gray-500 mt-1">创建、维护和分享解决方案与最佳实践</p>
+          <h1 className='text-2xl font-bold text-gray-900'>知识库</h1>
+          <p className='text-gray-500 mt-1'>创建、维护和分享解决方案与最佳实践</p>
         </div>
         <Button
           type='primary'
           icon={<PlusOutlined />}
           onClick={() => router.push('/knowledge/articles/new')}
-          size="large"
+          size='large'
         >
           新建文章
         </Button>
       </div>
 
-      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-        <Form form={form} layout='inline' className="mb-6 flex-wrap gap-y-4">
-          <Form.Item name='search' className="mb-0">
-            <Input 
-              placeholder='搜索标题/内容' 
-              allowClear 
-              prefix={<SearchOutlined className="text-gray-400" />} 
-              className="w-64"
+      <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
+        <Form form={form} layout='inline' className='mb-6 flex-wrap gap-y-4'>
+          <Form.Item name='search' className='mb-0'>
+            <Input
+              placeholder='搜索标题/内容'
+              allowClear
+              prefix={<SearchOutlined className='text-gray-400' />}
+              className='w-64'
             />
           </Form.Item>
-          <Form.Item name='category' className="mb-0">
+          <Form.Item name='category' className='mb-0'>
             <Select
               placeholder='分类'
-              className="w-36"
+              className='w-36'
               allowClear
-              variant="borderless"
+              variant='borderless'
               style={{ backgroundColor: '#fafafa', borderRadius: '6px' }}
             >
               {Array.isArray(categories) &&
@@ -225,35 +229,30 @@ const ArticleList: React.FC = () => {
                 ))}
             </Select>
           </Form.Item>
-          <Form.Item name='status' className="mb-0">
+          <Form.Item name='status' className='mb-0'>
             <Select
               placeholder='状态'
-              className="w-28"
+              className='w-28'
               allowClear
-              variant="borderless"
+              variant='borderless'
               style={{ backgroundColor: '#fafafa', borderRadius: '6px' }}
             >
               <Option value='published'>已发布</Option>
               <Option value='draft'>草稿</Option>
             </Select>
           </Form.Item>
-          <Form.Item className="mb-0">
+          <Form.Item className='mb-0'>
             <Space>
-              <Button type="primary" onClick={handleSearch}>
+              <Button type='primary' onClick={handleSearch}>
                 查询
               </Button>
-              <Button onClick={loadData}>
-                重置
-              </Button>
+              <Button onClick={loadData}>重置</Button>
             </Space>
           </Form.Item>
         </Form>
 
         {data.length === 0 && !loading ? (
-          <Empty
-            description='暂无知识库文章'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
+          <Empty description='暂无知识库文章' image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type='primary' onClick={() => router.push('/knowledge/articles/new')}>
               创建第一篇文章
             </Button>
@@ -269,11 +268,11 @@ const ArticleList: React.FC = () => {
               pageSize: query.pageSize,
               total: total,
               showSizeChanger: true,
-              showTotal: (total) => `共 ${total} 条记录`,
+              showTotal: total => `共 ${total} 条记录`,
               onChange: (page, pageSize) => setQuery(prev => ({ ...prev, page, pageSize })),
             }}
             scroll={{ x: 1000 }}
-            getPopupContainer={(node) => node.parentElement || document.body}
+            getPopupContainer={node => node.parentElement || document.body}
           />
         )}
       </Card>

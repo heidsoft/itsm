@@ -12,11 +12,14 @@ interface UserPreferences {
     mobile: boolean;
     types: string[];
   };
-  tableSettings: Record<string, {
-    columns: string[];
-    sortBy?: string;
-    sortOrder?: 'asc' | 'desc';
-  }>;
+  tableSettings: Record<
+    string,
+    {
+      columns: string[];
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    }
+  >;
 }
 
 const defaultPreferences: UserPreferences = {
@@ -31,9 +34,9 @@ const defaultPreferences: UserPreferences = {
     email: true,
     browser: true,
     mobile: false,
-    types: ['ticket', 'approval', 'alert']
+    types: ['ticket', 'approval', 'alert'],
   },
-  tableSettings: {}
+  tableSettings: {},
 };
 
 class UserPreferencesManager {
@@ -46,7 +49,7 @@ class UserPreferencesManager {
 
   private loadPreferences(): UserPreferences {
     if (typeof window === 'undefined') return defaultPreferences;
-    
+
     try {
       const saved = localStorage.getItem('user_preferences');
       return saved ? { ...defaultPreferences, ...JSON.parse(saved) } : defaultPreferences;

@@ -173,11 +173,9 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     try {
       await UserApi.updateUser(userId, { ...{} });
-      setUsers(prev => prev.map(user =>
-        user.id === userId
-          ? { ...user, active: !currentStatus }
-          : user
-      ));
+      setUsers(prev =>
+        prev.map(user => (user.id === userId ? { ...user, active: !currentStatus } : user))
+      );
       message.success('状态更新成功');
       loadUsers();
     } catch (error) {
@@ -416,10 +414,7 @@ const UserManagement: React.FC = () => {
       {/* 用户表格 */}
       <Card>
         {users.length === 0 && !loading ? (
-          <Empty
-            description='暂无用户数据'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
+          <Empty description='暂无用户数据' image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type='primary' onClick={() => setIsCreateModalVisible(true)}>
               创建第一个用户
             </Button>

@@ -399,15 +399,15 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                           item.associationType === 'auto'
                             ? 'blue'
                             : item.associationType === 'manual'
-                            ? 'green'
-                            : 'orange'
+                              ? 'green'
+                              : 'orange'
                         }
                       >
                         {item.associationType === 'auto'
                           ? '自动关联'
                           : item.associationType === 'manual'
-                          ? '手动关联'
-                          : '建议关联'}
+                            ? '手动关联'
+                            : '建议关联'}
                       </Tag>
                     </div>
                   }

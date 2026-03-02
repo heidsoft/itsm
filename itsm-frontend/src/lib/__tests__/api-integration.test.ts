@@ -182,10 +182,10 @@ describe('API Integration Tests', () => {
           json: async () => mockErrorResponse,
         });
 
-        const invalidData = { 
+        const invalidData = {
           description: '缺少标题',
           priority: 'medium' as const,
-          type: 'incident' as const
+          type: 'incident' as const,
         };
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -309,18 +309,15 @@ describe('API Integration Tests', () => {
 
     it('should handle timeout errors', async () => {
       (fetch as jest.Mock).mockImplementationOnce(
-        () => new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Request timeout')), 100)
-        )
+        () =>
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 100))
       );
 
       await expect(TicketApi.getTickets()).rejects.toThrow('Request timeout');
     });
 
     it('should handle CORS errors', async () => {
-      (fetch as jest.Mock).mockRejectedValueOnce(
-        new TypeError('Failed to fetch')
-      );
+      (fetch as jest.Mock).mockRejectedValueOnce(new TypeError('Failed to fetch'));
 
       await expect(TicketApi.getTickets()).rejects.toThrow('无法连接到服务器');
     });
@@ -357,7 +354,7 @@ describe('API Integration Tests', () => {
         expect.any(String),
         expect.objectContaining({
           headers: expect.objectContaining({
-            'Authorization': `Bearer ${mockToken}`,
+            Authorization: `Bearer ${mockToken}`,
           }),
         })
       );
@@ -406,11 +403,7 @@ describe('API Integration Tests', () => {
       });
 
       // Make multiple concurrent requests
-      const promises = [
-        TicketApi.getTickets(),
-        TicketApi.getTickets(),
-        TicketApi.getTickets(),
-      ];
+      const promises = [TicketApi.getTickets(), TicketApi.getTickets(), TicketApi.getTickets()];
 
       const results = await Promise.all(promises);
 
@@ -474,7 +467,7 @@ describe('API Integration Tests', () => {
       });
 
       const result = await TicketApi.getTickets();
-      
+
       expect(result.tickets).toHaveLength(1);
       expect(result.tickets[0].id).toBe(1);
     });
@@ -497,7 +490,7 @@ describe('API Integration Tests', () => {
 
       // The API should handle invalid response structures gracefully
       const result = await TicketApi.getTickets();
-      
+
       // Should provide fallback values or throw descriptive error
       expect(result).toBeDefined();
     });

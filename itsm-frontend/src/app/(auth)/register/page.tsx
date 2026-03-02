@@ -3,13 +3,31 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Mail, Lock, User, Building2, Phone, ArrowRight,
-  CheckCircle, AlertCircle, Shield
+  Mail,
+  Lock,
+  User,
+  Building2,
+  Phone,
+  ArrowRight,
+  CheckCircle,
+  AlertCircle,
+  Shield,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
-  Typography, Form, Input, Button, Card, Row, Col, Flex,
-  Divider, ConfigProvider, message, Select, Alert
+  Typography,
+  Form,
+  Input,
+  Button,
+  Card,
+  Row,
+  Col,
+  Flex,
+  Divider,
+  ConfigProvider,
+  message,
+  Select,
+  Alert,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
@@ -83,20 +101,24 @@ export default function RegisterPage() {
 
   return (
     <ConfigProvider theme={antdTheme}>
-      <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
-        <div className="w-full max-w-[480px]">
-          <Card className="rounded-xl shadow-xl border-none" styles={{ body: { padding: '40px' } }}>
-            <div className="text-center mb-6">
-              <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
+      <div className='min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50'>
+        <div className='w-full max-w-[480px]'>
+          <Card className='rounded-xl shadow-xl border-none' styles={{ body: { padding: '40px' } }}>
+            <div className='text-center mb-6'>
+              <Title level={2} className='!mb-2 !text-gray-900 !text-2xl'>
                 {t('auth.register.title')}
               </Title>
-              <Text className="!text-gray-500 !text-sm">
-                {t('auth.register.subtitle')}
-              </Text>
+              <Text className='!text-gray-500 !text-sm'>{t('auth.register.subtitle')}</Text>
             </div>
 
             {error && (
-              <Alert message={t('auth.register.registerFailed')} description={error} type="error" className="mb-4" showIcon />
+              <Alert
+                message={t('auth.register.registerFailed')}
+                description={error}
+                type='error'
+                className='mb-4'
+                showIcon
+              />
             )}
 
             {step === 1 && (
@@ -110,7 +132,11 @@ export default function RegisterPage() {
                       { min: 3, message: t('auth.register.usernameMinLength') },
                     ]}
                   >
-                    <Input prefix={<User size={14} className="text-gray-400" />} placeholder={t('auth.register.usernamePlaceholder')} disabled={loading} />
+                    <Input
+                      prefix={<User size={14} className='text-gray-400' />}
+                      placeholder={t('auth.register.usernamePlaceholder')}
+                      disabled={loading}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -121,7 +147,11 @@ export default function RegisterPage() {
                       { type: 'email', message: t('auth.register.emailInvalid') },
                     ]}
                   >
-                    <Input prefix={<Mail size={14} className="text-gray-400" />} placeholder={t('auth.register.emailPlaceholder')} disabled={loading} />
+                    <Input
+                      prefix={<Mail size={14} className='text-gray-400' />}
+                      placeholder={t('auth.register.emailPlaceholder')}
+                      disabled={loading}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -132,7 +162,11 @@ export default function RegisterPage() {
                       { min: 8, message: t('auth.register.passwordMinLength') },
                     ]}
                   >
-                    <Input.Password prefix={<Lock size={14} className="text-gray-400" />} placeholder={t('auth.register.passwordPlaceholder')} disabled={loading} />
+                    <Input.Password
+                      prefix={<Lock size={14} className='text-gray-400' />}
+                      placeholder={t('auth.register.passwordPlaceholder')}
+                      disabled={loading}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -151,24 +185,37 @@ export default function RegisterPage() {
                       }),
                     ]}
                   >
-                    <Input.Password prefix={<Lock size={14} className="text-gray-400" />} placeholder={t('auth.register.confirmPasswordPlaceholder')} disabled={loading} />
+                    <Input.Password
+                      prefix={<Lock size={14} className='text-gray-400' />}
+                      placeholder={t('auth.register.confirmPasswordPlaceholder')}
+                      disabled={loading}
+                    />
                   </Form.Item>
 
                   <Form.Item>
-                    <Button type='primary' onClick={handleNextStep} className="w-full" icon={<ArrowRight size={14} />}>
+                    <Button
+                      type='primary'
+                      onClick={handleNextStep}
+                      className='w-full'
+                      icon={<ArrowRight size={14} />}
+                    >
                       下一步
                     </Button>
                   </Form.Item>
                 </Form>
 
-                <Divider className="my-4">
-                  <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
+                <Divider className='my-4'>
+                  <Text className='text-gray-400 text-xs'>{t('auth.login.or')}</Text>
                 </Divider>
 
-                <div className="text-center">
-                  <Text className="text-gray-400 text-xs">
+                <div className='text-center'>
+                  <Text className='text-gray-400 text-xs'>
                     {t('auth.register.hasAccount')}{' '}
-                    <Button type='link' className="p-0 h-auto text-xs" onClick={() => router.push('/login')}>
+                    <Button
+                      type='link'
+                      className='p-0 h-auto text-xs'
+                      onClick={() => router.push('/login')}
+                    >
                       {t('auth.register.loginNow')}
                     </Button>
                   </Text>
@@ -184,7 +231,11 @@ export default function RegisterPage() {
                     label={t('auth.register.nameLabel')}
                     rules={[{ required: true, message: t('auth.register.nameRequired') }]}
                   >
-                    <Input prefix={<User size={14} className="text-gray-400" />} placeholder={t('auth.register.namePlaceholder')} disabled={loading} />
+                    <Input
+                      prefix={<User size={14} className='text-gray-400' />}
+                      placeholder={t('auth.register.namePlaceholder')}
+                      disabled={loading}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -192,11 +243,19 @@ export default function RegisterPage() {
                     label={t('auth.register.phoneLabel')}
                     rules={[{ required: true, message: t('auth.register.phoneRequired') }]}
                   >
-                    <Input prefix={<Phone size={14} className="text-gray-400" />} placeholder={t('auth.register.phonePlaceholder')} disabled={loading} />
+                    <Input
+                      prefix={<Phone size={14} className='text-gray-400' />}
+                      placeholder={t('auth.register.phonePlaceholder')}
+                      disabled={loading}
+                    />
                   </Form.Item>
 
                   <Form.Item name='company' label={t('auth.register.companyLabel')}>
-                    <Input prefix={<Building2 size={14} className="text-gray-400" />} placeholder={t('auth.register.companyPlaceholder')} disabled={loading} />
+                    <Input
+                      prefix={<Building2 size={14} className='text-gray-400' />}
+                      placeholder={t('auth.register.companyPlaceholder')}
+                      disabled={loading}
+                    />
                   </Form.Item>
 
                   <Form.Item
@@ -205,20 +264,28 @@ export default function RegisterPage() {
                     rules={[{ required: true, message: t('auth.register.roleRequired') }]}
                   >
                     <Select placeholder={t('auth.register.rolePlaceholder')} disabled={loading}>
-                      <Select.Option value="developer">开发人员</Select.Option>
-                      <Select.Option value="manager">项目经理</Select.Option>
-                      <Select.Option value="admin">系统管理员</Select.Option>
-                      <Select.Option value="user">普通用户</Select.Option>
+                      <Select.Option value='developer'>开发人员</Select.Option>
+                      <Select.Option value='manager'>项目经理</Select.Option>
+                      <Select.Option value='admin'>系统管理员</Select.Option>
+                      <Select.Option value='user'>普通用户</Select.Option>
                     </Select>
                   </Form.Item>
 
                   <Form.Item>
                     <Flex gap={8}>
-                      <Button onClick={() => setStep(1)} className="flex-1" disabled={loading}>
+                      <Button onClick={() => setStep(1)} className='flex-1' disabled={loading}>
                         上一步
                       </Button>
-                      <Button type='primary' htmlType='submit' loading={loading} className="flex-1" icon={<CheckCircle size={14} />}>
-                        {loading ? t('auth.register.registering') : t('auth.register.registerButton')}
+                      <Button
+                        type='primary'
+                        htmlType='submit'
+                        loading={loading}
+                        className='flex-1'
+                        icon={<CheckCircle size={14} />}
+                      >
+                        {loading
+                          ? t('auth.register.registering')
+                          : t('auth.register.registerButton')}
                       </Button>
                     </Flex>
                   </Form.Item>

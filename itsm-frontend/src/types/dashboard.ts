@@ -29,19 +29,19 @@ export interface WidgetConfig {
   showTitle?: boolean;
   showBorder?: boolean;
   backgroundColor?: string;
-  
+
   // 图表配置
   chartType?: ChartType;
   xAxis?: string;
   yAxis?: string;
   groupBy?: string;
   aggregation?: MetricType;
-  
+
   // 表格配置
   columns?: TableColumn[];
   pageSize?: number;
   showPagination?: boolean;
-  
+
   // 指标配置
   metric?: string;
   unit?: string;
@@ -50,7 +50,7 @@ export interface WidgetConfig {
     warning: number;
     critical: number;
   };
-  
+
   // 样式配置
   colors?: string[];
   theme?: 'light' | 'dark';
@@ -77,13 +77,13 @@ export interface Dashboard {
   widgets: DashboardWidget[];
   filters: DashboardFilter[];
   permissions: string[];
-  
+
   // 元数据
   createdBy: number;
   updatedBy: number;
   createdAt: string;
   updatedAt: string;
-  
+
   // 共享设置
   shareSettings: {
     isShared: boolean;
@@ -143,27 +143,27 @@ export interface TicketStats {
   inProgress: number;
   resolved: number;
   closed: number;
-  
+
   // 按优先级
   byPriority: Record<string, number>;
-  
+
   // 按状态
   byStatus: Record<string, number>;
-  
+
   // 按类型
   byType: Record<string, number>;
-  
+
   // 按分配人
   byAssignee: Record<string, number>;
-  
+
   // 按部门
   byDepartment: Record<string, number>;
-  
+
   // 时间统计
   avgResolutionTime: number;
   avgResponseTime: number;
   slaCompliance: number;
-  
+
   // 趋势数据
   trend: {
     period: string;
@@ -177,13 +177,13 @@ export interface UserStats {
   total: number;
   active: number;
   online: number;
-  
+
   // 按角色
   byRole: Record<string, number>;
-  
+
   // 按部门
   byDepartment: Record<string, number>;
-  
+
   // 活动统计
   loginToday: number;
   activeThisWeek: number;
@@ -195,16 +195,16 @@ export interface SystemStats {
   cpuUsage: number;
   memoryUsage: number;
   diskUsage: number;
-  
+
   // 性能指标
   avgResponseTime: number;
   requestsPerSecond: number;
   errorRate: number;
-  
+
   // 数据库统计
   dbConnections: number;
   dbSize: number;
-  
+
   // 缓存统计
   cacheHitRate: number;
   cacheSize: number;
@@ -242,7 +242,7 @@ export interface Report {
   schedule?: ReportSchedule;
   recipients: string[];
   isActive: boolean;
-  
+
   createdBy: number;
   createdAt: string;
   updatedAt: string;
@@ -339,7 +339,7 @@ export interface DashboardTemplate {
   isPublic: boolean;
   downloadCount: number;
   rating: number;
-  
+
   createdBy: number;
   createdAt: string;
   updatedAt: string;

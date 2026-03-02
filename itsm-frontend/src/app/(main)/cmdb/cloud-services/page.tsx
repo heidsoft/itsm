@@ -2,7 +2,19 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag, message } from 'antd';
+import {
+  Breadcrumb,
+  Button,
+  Card,
+  Form,
+  Input,
+  Modal,
+  Select,
+  Space,
+  Table,
+  Tag,
+  message,
+} from 'antd';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CloudService } from '@/types/biz/cmdb';
@@ -29,7 +41,7 @@ export default function CloudServicePage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const serviceMap = useMemo(() => {
-    return new Map(data.map((service) => [service.id, service]));
+    return new Map(data.map(service => [service.id, service]));
   }, [data]);
 
   const createProvider = Form.useWatch('provider', createForm);
@@ -118,7 +130,8 @@ export default function CloudServicePage() {
       title: '上级服务',
       dataIndex: 'parent_id',
       width: 160,
-      render: (value?: number) => (value ? serviceMap.get(value)?.service_name || `#${value}` : '-'),
+      render: (value?: number) =>
+        value ? serviceMap.get(value)?.service_name || `#${value}` : '-',
     },
     {
       title: '服务代码',
@@ -163,7 +176,7 @@ export default function CloudServicePage() {
   ];
 
   return (
-    <Card variant="borderless">
+    <Card variant='borderless'>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
@@ -174,9 +187,9 @@ export default function CloudServicePage() {
         ]}
       />
 
-      <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
-        <Form.Item name="provider">
-          <Select placeholder="云厂商" style={{ width: 160 }} allowClear>
+      <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
+        <Form.Item name='provider'>
+          <Select placeholder='云厂商' style={{ width: 160 }} allowClear>
             {providerOptions.map(item => (
               <Option key={item.value} value={item.value}>
                 {item.label}
@@ -187,13 +200,15 @@ export default function CloudServicePage() {
         <Form.Item>
           <Space>
             <Button onClick={loadData}>查询</Button>
-            <Button type="primary" onClick={() => setCreateOpen(true)}>新增云服务</Button>
+            <Button type='primary' onClick={() => setCreateOpen(true)}>
+              新增云服务
+            </Button>
           </Space>
         </Form.Item>
       </Form>
 
       <Table
-        rowKey="id"
+        rowKey='id'
         loading={loading}
         dataSource={data}
         columns={columns as any}
@@ -201,15 +216,19 @@ export default function CloudServicePage() {
       />
 
       <Modal
-        title="新增云服务"
+        title='新增云服务'
         open={createOpen}
         onCancel={() => setCreateOpen(false)}
         onOk={handleCreate}
         destroyOnClose
       >
-        <Form form={createForm} layout="vertical">
-          <Form.Item name="provider" label="云厂商" rules={[{ required: true, message: '请选择云厂商' }]}>
-            <Select placeholder="请选择云厂商">
+        <Form form={createForm} layout='vertical'>
+          <Form.Item
+            name='provider'
+            label='云厂商'
+            rules={[{ required: true, message: '请选择云厂商' }]}
+          >
+            <Select placeholder='请选择云厂商'>
               {providerOptions.map(item => (
                 <Option key={item.value} value={item.value}>
                   {item.label}
@@ -217,19 +236,23 @@ export default function CloudServicePage() {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name="service_code" label="服务代码" rules={[{ required: true, message: '请输入服务代码' }]}>
-            <Input placeholder="例如 ecs/rds/oss" />
+          <Form.Item
+            name='service_code'
+            label='服务代码'
+            rules={[{ required: true, message: '请输入服务代码' }]}
+          >
+            <Input placeholder='例如 ecs/rds/oss' />
           </Form.Item>
-          <Form.Item name="parent_id" label="上级服务">
+          <Form.Item name='parent_id' label='上级服务'>
             <Select
-              placeholder="选择父级服务（可选）"
+              placeholder='选择父级服务（可选）'
               allowClear
               showSearch
-              optionFilterProp="label"
+              optionFilterProp='label'
             >
               {data
-                .filter((service) => !createProvider || service.provider === createProvider)
-                .map((service) => (
+                .filter(service => !createProvider || service.provider === createProvider)
+                .map(service => (
                   <Option
                     key={service.id}
                     value={service.id}
@@ -240,22 +263,34 @@ export default function CloudServicePage() {
                 ))}
             </Select>
           </Form.Item>
-          <Form.Item name="category" label="服务分类">
-            <Input placeholder="例如 计算/存储/网络" />
+          <Form.Item name='category' label='服务分类'>
+            <Input placeholder='例如 计算/存储/网络' />
           </Form.Item>
-          <Form.Item name="service_name" label="服务名称" rules={[{ required: true, message: '请输入服务名称' }]}>
-            <Input placeholder="例如 弹性计算 ECS" />
+          <Form.Item
+            name='service_name'
+            label='服务名称'
+            rules={[{ required: true, message: '请输入服务名称' }]}
+          >
+            <Input placeholder='例如 弹性计算 ECS' />
           </Form.Item>
-          <Form.Item name="resource_type_code" label="资源类型代码" rules={[{ required: true, message: '请输入资源类型代码' }]}>
-            <Input placeholder="例如 instance/volume/vpc" />
+          <Form.Item
+            name='resource_type_code'
+            label='资源类型代码'
+            rules={[{ required: true, message: '请输入资源类型代码' }]}
+          >
+            <Input placeholder='例如 instance/volume/vpc' />
           </Form.Item>
-          <Form.Item name="resource_type_name" label="资源类型名称" rules={[{ required: true, message: '请输入资源类型名称' }]}>
-            <Input placeholder="例如 云服务器实例" />
+          <Form.Item
+            name='resource_type_name'
+            label='资源类型名称'
+            rules={[{ required: true, message: '请输入资源类型名称' }]}
+          >
+            <Input placeholder='例如 云服务器实例' />
           </Form.Item>
-          <Form.Item name="api_version" label="API版本">
-            <Input placeholder="例如 2014-05-26" />
+          <Form.Item name='api_version' label='API版本'>
+            <Input placeholder='例如 2014-05-26' />
           </Form.Item>
-          <Form.Item name="attribute_schema" label="属性模板(JSON)">
+          <Form.Item name='attribute_schema' label='属性模板(JSON)'>
             <TextArea
               rows={4}
               placeholder='仅支持枚举类型，例如 {"fields":[{"key":"instance_type","label":"实例规格","type":"select","options":["c6.large","c6.xlarge"]}]}'

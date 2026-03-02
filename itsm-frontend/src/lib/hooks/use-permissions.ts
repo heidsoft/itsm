@@ -7,7 +7,7 @@ import { RoutePermission } from '../router/route-config';
  */
 const getRolePermissions = (role: string): RoutePermission[] => {
   const rolePermissionMap: Record<string, RoutePermission[]> = {
-    'super_admin': [
+    super_admin: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'ticket', action: 'update' },
@@ -77,7 +77,7 @@ const getRolePermissions = (role: string): RoutePermission[] => {
       { resource: 'report', action: 'create' },
       { resource: 'report', action: 'schedule' },
     ],
-    'admin': [
+    admin: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'ticket', action: 'update' },
@@ -125,7 +125,7 @@ const getRolePermissions = (role: string): RoutePermission[] => {
       { resource: 'report', action: 'export' },
       { resource: 'report', action: 'create' },
     ],
-    'manager': [
+    manager: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'ticket', action: 'update' },
@@ -161,7 +161,7 @@ const getRolePermissions = (role: string): RoutePermission[] => {
       { resource: 'report', action: 'read' },
       { resource: 'report', action: 'export' },
     ],
-    'agent': [
+    agent: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'ticket', action: 'update' },
@@ -184,7 +184,7 @@ const getRolePermissions = (role: string): RoutePermission[] => {
       { resource: 'cmdb', action: 'read' },
       { resource: 'report', action: 'read' },
     ],
-    'user': [
+    user: [
       { resource: 'ticket', action: 'read' },
       { resource: 'ticket', action: 'create' },
       { resource: 'incident', action: 'read' },
@@ -206,7 +206,7 @@ export const usePermissions = () => {
   // 用户权限列表 - 基于角色获取权限
   const userPermissions = useMemo<RoutePermission[]>(() => {
     if (!user?.role) return [];
-    
+
     // 根据角色返回对应的权限
     const rolePermissions = getRolePermissions(user.role);
     return rolePermissions;
@@ -251,7 +251,10 @@ export const usePermissions = () => {
   /**
    * 检查是否有访问路由的权限
    */
-  const canAccessRoute = (routePermissions: RoutePermission[], requiredRoles?: string[]): boolean => {
+  const canAccessRoute = (
+    routePermissions: RoutePermission[],
+    requiredRoles?: string[]
+  ): boolean => {
     // 检查角色权限
     if (requiredRoles && requiredRoles.length > 0) {
       if (!hasAnyRole(requiredRoles)) {
@@ -323,7 +326,10 @@ export const useRoutePermissions = () => {
   /**
    * 检查路由权限
    */
-  const checkRoutePermission = (routePermissions?: RoutePermission[], requiredRoles?: string[]): boolean => {
+  const checkRoutePermission = (
+    routePermissions?: RoutePermission[],
+    requiredRoles?: string[]
+  ): boolean => {
     if (!routePermissions && !requiredRoles) {
       return true;
     }
@@ -481,44 +487,37 @@ export const usePermissionGuard = () => {
     fallback?: () => void
   ) => {
     const hasAccess = canAccessRoute(requiredPermissions || [], requiredRoles);
-    
+
     if (!hasAccess && fallback) {
       fallback();
     }
-    
+
     return hasAccess;
   };
 
   /**
    * 操作权限守卫
    */
-  const guardOperation = (
-    resource: string,
-    action: string,
-    onDenied?: () => void
-  ): boolean => {
+  const guardOperation = (resource: string, action: string, onDenied?: () => void): boolean => {
     const hasAccess = hasPermission(resource, action);
-    
+
     if (!hasAccess && onDenied) {
       onDenied();
     }
-    
+
     return hasAccess;
   };
 
   /**
    * 角色权限守卫
    */
-  const guardRole = (
-    requiredRoles: string[],
-    onDenied?: () => void
-  ): boolean => {
+  const guardRole = (requiredRoles: string[], onDenied?: () => void): boolean => {
     const hasAccess = requiredRoles.some(role => hasRole(role));
-    
+
     if (!hasAccess && onDenied) {
       onDenied();
     }
-    
+
     return hasAccess;
   };
 
@@ -545,7 +544,7 @@ export const PERMISSIONS = {
     BATCH_DELETE: { resource: 'ticket', action: 'batch_delete' },
     EXPORT: { resource: 'ticket', action: 'export' },
   },
-  
+
   // 事件权限
   INCIDENT: {
     READ: { resource: 'incident', action: 'read' },
@@ -558,7 +557,7 @@ export const PERMISSIONS = {
     CLOSE: { resource: 'incident', action: 'close' },
     DECLARE_MAJOR: { resource: 'incident', action: 'declare_major' },
   },
-  
+
   // 问题权限
   PROBLEM: {
     READ: { resource: 'problem', action: 'read' },
@@ -569,7 +568,7 @@ export const PERMISSIONS = {
     RESOLVE: { resource: 'problem', action: 'resolve' },
     CLOSE: { resource: 'problem', action: 'close' },
   },
-  
+
   // 变更权限
   CHANGE: {
     READ: { resource: 'change', action: 'read' },
@@ -581,7 +580,7 @@ export const PERMISSIONS = {
     IMPLEMENT: { resource: 'change', action: 'implement' },
     REVIEW: { resource: 'change', action: 'review' },
   },
-  
+
   // 系统权限
   SYSTEM: {
     READ: { resource: 'system', action: 'read' },

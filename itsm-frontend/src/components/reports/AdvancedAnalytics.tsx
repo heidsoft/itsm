@@ -36,7 +36,11 @@ import {
   Filter,
   Download,
 } from 'lucide-react';
-import { TicketAnalyticsApi, type AnalyticsConfig, type AnalyticsResponse } from '@/lib/api/ticket-analytics-api';
+import {
+  TicketAnalyticsApi,
+  type AnalyticsConfig,
+  type AnalyticsResponse,
+} from '@/lib/api/ticket-analytics-api';
 import ReportsCharts from './ReportsCharts';
 import { format, subDays } from 'date-fns';
 
@@ -83,7 +87,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
   });
   const [customTimeRange, setCustomTimeRange] = useState<[string, string]>([
     format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-    format(new Date(), 'yyyy-MM-dd')
+    format(new Date(), 'yyyy-MM-dd'),
   ]);
 
   // 预定义时间范围
@@ -93,14 +97,14 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
     '90days': '最近90天',
     '6months': '最近6个月',
     '1year': '最近1年',
-    'custom': '自定义',
+    custom: '自定义',
   };
 
   // 加载KPI数据
   const loadKPIData = async () => {
     try {
       setLoading(true);
-      
+
       // 模拟KPI数据
       const mockKPI: KPIData[] = [
         {
@@ -108,7 +112,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
           value: 2847,
           trend: 'up',
           trendValue: 12.5,
-          icon: <BarChart3 className="w-5 h-5" />,
+          icon: <BarChart3 className='w-5 h-5' />,
           color: '#1890ff',
           format: 'number',
         },
@@ -117,7 +121,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
           value: 87.3,
           trend: 'up',
           trendValue: 3.2,
-          icon: <Target className="w-5 h-5" />,
+          icon: <Target className='w-5 h-5' />,
           color: '#52c41a',
           format: 'percentage',
         },
@@ -126,7 +130,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
           value: 2.8,
           trend: 'down',
           trendValue: -15.6,
-          icon: <Clock className="w-5 h-5" />,
+          icon: <Clock className='w-5 h-5' />,
           color: '#faad14',
           format: 'duration',
         },
@@ -135,7 +139,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
           value: 94.2,
           trend: 'stable',
           trendValue: 0.0,
-          icon: <CheckCircle className="w-5 h-5" />,
+          icon: <CheckCircle className='w-5 h-5' />,
           color: '#722ed1',
           format: 'percentage',
         },
@@ -181,7 +185,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
   const renderKPI = (kpi: KPIData) => {
     const formatValue = (value: number | string, format?: string) => {
       if (typeof value === 'string') return value;
-      
+
       switch (format) {
         case 'percentage':
           return `${value.toFixed(1)}%`;
@@ -195,11 +199,11 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
     const getTrendIcon = () => {
       switch (kpi.trend) {
         case 'up':
-          return <TrendingUp className="w-4 h-4 text-green-500" />;
+          return <TrendingUp className='w-4 h-4 text-green-500' />;
         case 'down':
-          return <TrendingDown className="w-4 h-4 text-red-500" />;
+          return <TrendingDown className='w-4 h-4 text-red-500' />;
         default:
-          return <div className="w-4 h-4 bg-gray-400 rounded-full" />;
+          return <div className='w-4 h-4 bg-gray-400 rounded-full' />;
       }
     };
 
@@ -215,26 +219,25 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
     };
 
     return (
-      <Card className="kpi-card">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-2">
-            <div style={{ color: kpi.color }}>
-              {kpi.icon}
-            </div>
-            <Text type="secondary">{kpi.title}</Text>
+      <Card className='kpi-card'>
+        <div className='flex items-center justify-between mb-3'>
+          <div className='flex items-center space-x-2'>
+            <div style={{ color: kpi.color }}>{kpi.icon}</div>
+            <Text type='secondary'>{kpi.title}</Text>
           </div>
-          <div className="flex items-center space-x-1">
+          <div className='flex items-center space-x-1'>
             {getTrendIcon()}
             <Text className={`text-sm ${getTrendColor()}`}>
               {kpi.trendValue && kpi.trendValue !== 0 && (
                 <span>
-                  {kpi.trendValue > 0 ? '+' : ''}{kpi.trendValue}%
+                  {kpi.trendValue > 0 ? '+' : ''}
+                  {kpi.trendValue}%
                 </span>
               )}
             </Text>
           </div>
         </div>
-        <div className="text-2xl font-bold" style={{ color: kpi.color }}>
+        <div className='text-2xl font-bold' style={{ color: kpi.color }}>
           {formatValue(kpi.value, kpi.format)}
         </div>
       </Card>
@@ -249,11 +252,17 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       key: 'rank',
       width: 60,
       render: (_: any, __: any, index: number) => (
-        <div className={`text-center font-bold ${
-          index === 0 ? 'text-yellow-500' :
-          index === 1 ? 'text-gray-400' :
-          index === 2 ? 'text-orange-600' : 'text-gray-600'
-        }`}>
+        <div
+          className={`text-center font-bold ${
+            index === 0
+              ? 'text-yellow-500'
+              : index === 1
+                ? 'text-gray-400'
+                : index === 2
+                  ? 'text-orange-600'
+                  : 'text-gray-600'
+          }`}
+        >
           #{index + 1}
         </div>
       ),
@@ -264,7 +273,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       key: 'name',
       render: (name: string) => (
         <Space>
-          <Users className="w-4 h-4 text-blue-500" />
+          <Users className='w-4 h-4 text-blue-500' />
           {name}
         </Space>
       ),
@@ -273,23 +282,18 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       title: '处理工单',
       dataIndex: 'tickets',
       key: 'tickets',
-      render: (tickets: number) => (
-        <Text strong>{tickets}</Text>
-      ),
+      render: (tickets: number) => <Text strong>{tickets}</Text>,
     },
     {
       title: '效率评分',
       dataIndex: 'efficiency',
       key: 'efficiency',
       render: (efficiency: number) => (
-        <div className="flex items-center space-x-2">
+        <div className='flex items-center space-x-2'>
           <Progress
             percent={efficiency}
-            size="small"
-            strokeColor={
-              efficiency >= 90 ? '#52c41a' :
-              efficiency >= 80 ? '#faad14' : '#ff4d4f'
-            }
+            size='small'
+            strokeColor={efficiency >= 90 ? '#52c41a' : efficiency >= 80 ? '#faad14' : '#ff4d4f'}
             showInfo={false}
             style={{ width: 60 }}
           />
@@ -300,7 +304,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* KPI卡片区域 */}
       <Row gutter={[16, 16]}>
         {kpiData.map((kpi, index) => (
@@ -311,67 +315,85 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       </Row>
 
       {/* 控制面板 */}
-      <Card title="数据分析控制台" extra={
-        <Button icon={<Download />} onClick={() => message.info('导出功能开发中')}>
-          导出报告
-        </Button>
-      }>
-        <Form layout="inline">
-          <Form.Item label="时间范围">
+      <Card
+        title='数据分析控制台'
+        extra={
+          <Button icon={<Download />} onClick={() => message.info('导出功能开发中')}>
+            导出报告
+          </Button>
+        }
+      >
+        <Form layout='inline'>
+          <Form.Item label='时间范围'>
             <Select
               style={{ width: 150 }}
-              value="30days"
-              onChange={(value) => {
+              value='30days'
+              onChange={value => {
                 if (value !== 'custom') {
-                  const days = value === '7days' ? 7 : value === '30days' ? 30 : value === '90days' ? 90 : value === '6months' ? 180 : 365;
+                  const days =
+                    value === '7days'
+                      ? 7
+                      : value === '30days'
+                        ? 30
+                        : value === '90days'
+                          ? 90
+                          : value === '6months'
+                            ? 180
+                            : 365;
                   setCustomTimeRange([
                     format(subDays(new Date(), days), 'yyyy-MM-dd'),
-                    format(new Date(), 'yyyy-MM-dd')
+                    format(new Date(), 'yyyy-MM-dd'),
                   ]);
                 }
               }}
             >
               {Object.entries(timeRanges).map(([key, label]) => (
-                <Option key={key} value={key}>{label}</Option>
+                <Option key={key} value={key}>
+                  {label}
+                </Option>
               ))}
             </Select>
           </Form.Item>
 
-          <Form.Item label="分析维度">
+          <Form.Item label='分析维度'>
             <Select
               style={{ width: 200 }}
               value={analyticsConfig.dimensions?.[0]}
-              onChange={(value) => setAnalyticsConfig(prev => ({
-                ...prev,
-                dimensions: [value]
-              }))}
+              onChange={value =>
+                setAnalyticsConfig(prev => ({
+                  ...prev,
+                  dimensions: [value],
+                }))
+              }
             >
-              <Option value="created_date">创建日期</Option>
-              <Option value="status">工单状态</Option>
-              <Option value="priority">优先级</Option>
-              <Option value="category">工单分类</Option>
-              <Option value="assignee">处理人</Option>
+              <Option value='created_date'>创建日期</Option>
+              <Option value='status'>工单状态</Option>
+              <Option value='priority'>优先级</Option>
+              <Option value='category'>工单分类</Option>
+              <Option value='assignee'>处理人</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item label="分析指标">
+          <Form.Item label='分析指标'>
             <Select
               style={{ width: 200 }}
               value={analyticsConfig.metrics?.[0]}
-              onChange={(value) => setAnalyticsConfig(prev => ({
-                ...prev,
-                metrics: [value]
-              }))}
+              onChange={value =>
+                setAnalyticsConfig(prev => ({
+                  ...prev,
+                  metrics: [value],
+                }))
+              }
             >
-              <Option value="count">工单数量</Option>
-              <Option value="avg_response_time">平均响应时间</Option>
-              <Option value="avg_resolution_time">平均解决时间</Option>
-              <Option value="sla_compliance_rate">SLA合规率</Option>
+              <Option value='count'>工单数量</Option>
+              <Option value='avg_response_time'>平均响应时间</Option>
+              <Option value='avg_resolution_time'>平均解决时间</Option>
+              <Option value='sla_compliance_rate'>SLA合规率</Option>
             </Select>
           </Form.Item>
 
           <Form.Item>
-            <Button type="primary" icon={<Activity />} onClick={loadKPIData}>
+            <Button type='primary' icon={<Activity />} onClick={loadKPIData}>
               刷新数据
             </Button>
           </Form.Item>
@@ -382,39 +404,39 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       <Row gutter={[16, 16]}>
         {/* 趋势图表 */}
         <Col xs={24} lg={16}>
-          <Card 
+          <Card
             title={
               <Space>
-                <TrendingUp className="w-5 h-5 text-blue-600" />
+                <TrendingUp className='w-5 h-5 text-blue-600' />
                 <span>趋势分析</span>
               </Space>
             }
             extra={
-              <Select defaultValue="week" style={{ width: 120 }}>
-                <Option value="week">本周</Option>
-                <Option value="month">本月</Option>
-                <Option value="quarter">本季度</Option>
+              <Select defaultValue='week' style={{ width: 120 }}>
+                <Option value='week'>本周</Option>
+                <Option value='month'>本月</Option>
+                <Option value='quarter'>本季度</Option>
               </Select>
             }
           >
             <div style={{ height: 400 }}>
               {/* 这里应该集成真实的图表组件 */}
-              <div className="flex items-center justify-center h-full bg-gray-50 rounded">
-                <div className="text-center">
-                  <Activity className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <Text type="secondary">趋势图表加载中...</Text>
-                  <div className="mt-4 space-y-2">
+              <div className='flex items-center justify-center h-full bg-gray-50 rounded'>
+                <div className='text-center'>
+                  <Activity className='w-12 h-12 text-gray-400 mx-auto mb-2' />
+                  <Text type='secondary'>趋势图表加载中...</Text>
+                  <div className='mt-4 space-y-2'>
                     {trendData.map((trend, index) => (
-                      <div key={index} className="flex justify-between items-center">
-                        <Text className="w-12">{trend.period}</Text>
-                        <div className="flex items-center space-x-2">
-                          <Progress 
-                            percent={(trend.value / 100) * 100} 
-                            size="small" 
+                      <div key={index} className='flex justify-between items-center'>
+                        <Text className='w-12'>{trend.period}</Text>
+                        <div className='flex items-center space-x-2'>
+                          <Progress
+                            percent={(trend.value / 100) * 100}
+                            size='small'
                             style={{ width: 80 }}
                             showInfo={false}
                           />
-                          <Text className="w-12 text-right">{trend.value}</Text>
+                          <Text className='w-12 text-right'>{trend.value}</Text>
                         </div>
                       </div>
                     ))}
@@ -430,7 +452,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
           <Card
             title={
               <Space>
-                <Zap className="w-5 h-5 text-orange-600" />
+                <Zap className='w-5 h-5 text-orange-600' />
                 <span>表现排行</span>
               </Space>
             }
@@ -439,8 +461,8 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
               columns={performerColumns}
               dataSource={topPerformers}
               pagination={false}
-              size="small"
-              rowKey="name"
+              size='small'
+              rowKey='name'
             />
           </Card>
         </Col>
@@ -448,26 +470,26 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
 
       {/* 预警和洞察 */}
       <Alert
-        message="数据洞察"
+        message='数据洞察'
         description={
-          <div className="space-y-2">
+          <div className='space-y-2'>
             <div>
-              <AlertTriangle className="inline w-4 h-4 text-yellow-500 mr-1" />
+              <AlertTriangle className='inline w-4 h-4 text-yellow-500 mr-1' />
               <span>本周工单量较上周增长12.5%，建议关注资源分配。</span>
             </div>
             <div>
-              <CheckCircle className="inline w-4 h-4 text-green-500 mr-1" />
+              <CheckCircle className='inline w-4 h-4 text-green-500 mr-1' />
               <span>SLA合规率保持稳定，团队表现良好。</span>
             </div>
             <div>
-              <TrendingDown className="inline w-4 h-4 text-red-500 mr-1" />
+              <TrendingDown className='inline w-4 h-4 text-red-500 mr-1' />
               <span>平均响应时间下降15.6%，处理效率提升明显。</span>
             </div>
           </div>
         }
-        type="info"
+        type='info'
         showIcon
-        className="insights-alert"
+        className='insights-alert'
       />
     </div>
   );

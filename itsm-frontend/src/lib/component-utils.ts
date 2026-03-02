@@ -47,10 +47,7 @@ export const useDebouncedCallback = <T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T => {
-  const debouncedCallback = useMemo(
-    () => debounce(callback, delay),
-    [callback, delay]
-  );
+  const debouncedCallback = useMemo(() => debounce(callback, delay), [callback, delay]);
 
   useEffect(() => {
     return () => {
@@ -66,10 +63,7 @@ export const useThrottledCallback = <T extends (...args: unknown[]) => unknown>(
   callback: T,
   delay: number
 ): T => {
-  const throttledCallback = useMemo(
-    () => throttle(callback, delay),
-    [callback, delay]
-  );
+  const throttledCallback = useMemo(() => throttle(callback, delay), [callback, delay]);
 
   useEffect(() => {
     return () => {
@@ -99,18 +93,21 @@ export const useLocalStorage = <T>(
     }
   });
 
-  const setValue = useCallback((value: T | ((prev: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+  const setValue = useCallback(
+    (value: T | ((prev: T) => T)) => {
+      try {
+        const valueToStore = value instanceof Function ? value(storedValue) : value;
+        setStoredValue(valueToStore);
+
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(key, JSON.stringify(valueToStore));
+        }
+      } catch (error) {
+        logger.error(`Error setting localStorage key "${key}":`, error);
       }
-    } catch (error) {
-      logger.error(`Error setting localStorage key "${key}":`, error);
-    }
-  }, [key, storedValue]);
+    },
+    [key, storedValue]
+  );
 
   return [storedValue, setValue];
 };
@@ -134,27 +131,27 @@ export const useSessionStorage = <T>(
     }
   });
 
-  const setValue = useCallback((value: T | ((prev: T) => T)) => {
-    try {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
-      setStoredValue(valueToStore);
-      
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
+  const setValue = useCallback(
+    (value: T | ((prev: T) => T)) => {
+      try {
+        const valueToStore = value instanceof Function ? value(storedValue) : value;
+        setStoredValue(valueToStore);
+
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
+        }
+      } catch (error) {
+        logger.error(`Error setting sessionStorage key "${key}":`, error);
       }
-    } catch (error) {
-      logger.error(`Error setting sessionStorage key "${key}":`, error);
-    }
-  }, [key, storedValue]);
+    },
+    [key, storedValue]
+  );
 
   return [storedValue, setValue];
 };
 
 // 异步状态Hook
-export const useAsync = <T>(
-  asyncFunction: () => Promise<T>,
-  dependencies: unknown[] = []
-) => {
+export const useAsync = <T>(asyncFunction: () => Promise<T>, dependencies: unknown[] = []) => {
   const [state, setState] = useState<{
     data: T | null;
     loading: boolean;
@@ -167,7 +164,7 @@ export const useAsync = <T>(
 
   const execute = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true, error: null }));
-    
+
     try {
       const data = await asyncFunction();
       setState({ data, loading: false, error: null });
@@ -200,26 +197,26 @@ export const usePrevious = <T>(value: T): T | undefined => {
 // 是否首次渲染Hook
 export const useIsFirstRender = (): boolean => {
   const isFirst = useRef(true);
-  
+
   if (isFirst.current) {
     isFirst.current = false;
     return true;
   }
-  
+
   return false;
 };
 
 // 是否挂载Hook
 export const useIsMounted = (): boolean => {
   const isMounted = useRef(false);
-  
+
   useEffect(() => {
     isMounted.current = true;
     return () => {
       isMounted.current = false;
     };
   }, []);
-  
+
   return isMounted.current;
 };
 
@@ -324,7 +321,7 @@ export const useClipboard = () => {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       message.success('已复制到剪贴板');
-      
+
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       logger.error('复制失败:', error);
@@ -386,23 +383,29 @@ export const useFormValidation = <T extends Record<string, unknown>>(
   const [errors, setErrors] = useState<Record<keyof T, string>>({} as Record<keyof T, string>);
   const [touched, setTouched] = useState<Record<keyof T, boolean>>({} as Record<keyof T, boolean>);
 
-  const setValue = useCallback((field: keyof T, value: unknown) => {
-    setValues(prev => ({ ...prev, [field]: value }));
-    
-    // 验证字段
-    const error = validationRules[field]?.(value);
-    setErrors(prev => ({ ...prev, [field]: error || '' }));
-  }, [validationRules]);
+  const setValue = useCallback(
+    (field: keyof T, value: unknown) => {
+      setValues(prev => ({ ...prev, [field]: value }));
+
+      // 验证字段
+      const error = validationRules[field]?.(value);
+      setErrors(prev => ({ ...prev, [field]: error || '' }));
+    },
+    [validationRules]
+  );
 
   const setFieldTouched = useCallback((field: keyof T) => {
     setTouched(prev => ({ ...prev, [field]: true }));
   }, []);
 
-  const validateField = useCallback((field: keyof T) => {
-    const error = validationRules[field]?.(values[field]);
-    setErrors(prev => ({ ...prev, [field]: error || '' }));
-    return !error;
-  }, [values, validationRules]);
+  const validateField = useCallback(
+    (field: keyof T) => {
+      const error = validationRules[field]?.(values[field]);
+      setErrors(prev => ({ ...prev, [field]: error || '' }));
+      return !error;
+    },
+    [values, validationRules]
+  );
 
   const validateForm = useCallback(() => {
     const newErrors = {} as Record<keyof T, string>;
@@ -454,10 +457,7 @@ export const useVirtualScroll = <T>(
 
   const visibleRange = useMemo(() => {
     const start = Math.floor(scrollTop / itemHeight);
-    const end = Math.min(
-      start + Math.ceil(containerHeight / itemHeight) + overscan,
-      items.length
-    );
+    const end = Math.min(start + Math.ceil(containerHeight / itemHeight) + overscan, items.length);
 
     return {
       start: Math.max(0, start - overscan),

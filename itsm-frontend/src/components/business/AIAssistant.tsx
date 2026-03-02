@@ -182,10 +182,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
               classification.priority === 'critical'
                 ? 'red'
                 : classification.priority === 'high'
-                ? 'orange'
-                : classification.priority === 'medium'
-                ? 'yellow'
-                : 'green'
+                  ? 'orange'
+                  : classification.priority === 'medium'
+                    ? 'yellow'
+                    : 'green'
             }
           >
             优先级: {classification.priority}
@@ -254,15 +254,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                         item.availability === 'available'
                           ? 'green'
                           : item.availability === 'busy'
-                          ? 'orange'
-                          : 'red'
+                            ? 'orange'
+                            : 'red'
                       }
                     >
                       {item.availability === 'available'
                         ? '空闲'
                         : item.availability === 'busy'
-                        ? '忙碌'
-                        : '不可用'}
+                          ? '忙碌'
+                          : '不可用'}
                     </Tag>
                     <Progress
                       size='small'

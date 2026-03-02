@@ -3,5 +3,4 @@
  */
 
 // UI组件将在后续完善
-export type { } from '@/types/priority-matrix';
-
+export type {} from '@/types/priority-matrix';

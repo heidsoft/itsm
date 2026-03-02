@@ -38,7 +38,8 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
   };
 
   const totalTickets = data.reduce((sum, item) => sum + item.count, 0);
-  const avgTime = data.reduce((sum, item) => sum + (item.avgTime || 0) * item.count, 0) / totalTickets;
+  const avgTime =
+    data.reduce((sum, item) => sum + (item.avgTime || 0) * item.count, 0) / totalTickets;
 
   return (
     <DashboardChartCard

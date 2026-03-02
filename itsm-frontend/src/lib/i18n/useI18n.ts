@@ -18,7 +18,7 @@ export function useI18n() {
     setLanguage(currentLang);
 
     // 订阅语言变化
-    const unsubscribe = userPreferences.subscribe((prefs) => {
+    const unsubscribe = userPreferences.subscribe(prefs => {
       const newLang = prefs.language === 'en-US' ? 'en-US' : 'zh-CN';
       setLanguage(newLang);
     });
@@ -54,7 +54,7 @@ export function useI18n() {
       }
 
       let result = typeof value === 'string' ? value : key;
-      
+
       // 替换参数占位符
       if (params) {
         Object.keys(params).forEach(paramKey => {
@@ -81,4 +81,3 @@ export function useI18n() {
     changeLanguage,
   };
 }
-

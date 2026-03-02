@@ -125,7 +125,9 @@ class DashboardService {
 
   // 获取工单趋势
   async getTicketTrend(): Promise<DashboardOverviewResponse['ticket_trend']> {
-    return httpClient.get<DashboardOverviewResponse['ticket_trend']>(`${this.baseUrl}/ticket-trend`);
+    return httpClient.get<DashboardOverviewResponse['ticket_trend']>(
+      `${this.baseUrl}/ticket-trend`
+    );
   }
 
   // 获取事件分布
@@ -140,7 +142,9 @@ class DashboardService {
 
   // 获取满意度数据
   async getSatisfactionData(): Promise<DashboardOverviewResponse['satisfaction_data']> {
-    return httpClient.get<DashboardOverviewResponse['satisfaction_data']>(`${this.baseUrl}/satisfaction-data`);
+    return httpClient.get<DashboardOverviewResponse['satisfaction_data']>(
+      `${this.baseUrl}/satisfaction-data`
+    );
   }
 
   // 获取快捷操作
@@ -150,7 +154,9 @@ class DashboardService {
 
   // 获取最近活动
   async getRecentActivities(): Promise<DashboardOverviewResponse['recent_activities']> {
-    return httpClient.get<DashboardOverviewResponse['recent_activities']>(`${this.baseUrl}/recent-activities`);
+    return httpClient.get<DashboardOverviewResponse['recent_activities']>(
+      `${this.baseUrl}/recent-activities`
+    );
   }
 }
 
@@ -190,7 +196,7 @@ class TicketAnalyticsService {
       method: 'GET',
       url: `${this.baseUrl}/analytics/export`,
       params,
-      responseType: 'blob'
+      responseType: 'blob',
     });
     return response as Blob;
   }

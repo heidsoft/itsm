@@ -81,11 +81,14 @@ export default function DashboardPage() {
   const [activeChartTab, setActiveChartTab] = useState('all');
 
   // 处理快速操作点击
-  const handleQuickActionClick = useCallback((action: QuickAction) => {
-    if (action.path) {
-      router.push(action.path);
-    }
-  }, [router]);
+  const handleQuickActionClick = useCallback(
+    (action: QuickAction) => {
+      if (action.path) {
+        router.push(action.path);
+      }
+    },
+    [router]
+  );
 
   // 处理刷新间隔变化
   const handleRefreshIntervalChange = useCallback(

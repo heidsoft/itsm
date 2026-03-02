@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { Card, List, Avatar, Typography } from 'antd';
@@ -16,7 +16,7 @@ interface ActivityListCardProps {
 
 export const ActivityListCard: React.FC<ActivityListCardProps> = ({
   activities,
-  title = "最近活动",
+  title = '最近活动',
   maxItems = 10,
   className = '',
 }) => {
@@ -25,36 +25,33 @@ export const ActivityListCard: React.FC<ActivityListCardProps> = ({
   return (
     <Card
       title={
-        <div className="flex items-center space-x-2">
-          <Activity size={16} className="text-blue-500" />
-          <span className="font-semibold text-gray-800">{title}</span>
+        <div className='flex items-center space-x-2'>
+          <Activity size={16} className='text-blue-500' />
+          <span className='font-semibold text-gray-800'>{title}</span>
         </div>
       }
       className={`shadow-sm border-0 ${className}`}
     >
       <List
         dataSource={displayActivities}
-        renderItem={(item) => (
-          <List.Item className="hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3 py-2">
+        renderItem={item => (
+          <List.Item className='hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3 py-2'>
             <List.Item.Meta
               avatar={
-                <Avatar
-                  size="small"
-                  className="shadow-sm"
-                >
+                <Avatar size='small' className='shadow-sm'>
                   {item.user?.charAt(0) || 'U'}
                 </Avatar>
               }
               title={
-                <div className="flex items-center justify-between">
-                  <Text className="text-sm font-medium text-gray-800">
-                    <span className="text-blue-600">{item.user}</span>
-                    <span className="mx-1">{item.title}</span>
+                <div className='flex items-center justify-between'>
+                  <Text className='text-sm font-medium text-gray-800'>
+                    <span className='text-blue-600'>{item.user}</span>
+                    <span className='mx-1'>{item.title}</span>
                   </Text>
                 </div>
               }
               description={
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
+                <div className='flex items-center space-x-1 text-xs text-gray-500'>
                   <Clock size={12} />
                   <span>{item.timestamp}</span>
                 </div>

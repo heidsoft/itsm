@@ -173,8 +173,7 @@ export function useDeactivateWorkflowMutation() {
 export function useCloneWorkflowMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, name }: { id: string; name: string }) =>
-      WorkflowApi.cloneWorkflow(id, name),
+    mutationFn: ({ id, name }: { id: string; name: string }) => WorkflowApi.cloneWorkflow(id, name),
     onSuccess: () => {
       message.success('工作流已复制');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.lists() });
@@ -185,8 +184,7 @@ export function useCloneWorkflowMutation() {
 export function useStartWorkflowMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (request: StartWorkflowRequest) =>
-      WorkflowApi.startWorkflow(request),
+    mutationFn: (request: StartWorkflowRequest) => WorkflowApi.startWorkflow(request),
     onSuccess: () => {
       message.success('工作流已启动');
       queryClient.invalidateQueries({ queryKey: WORKFLOW_KEYS.instances() });
@@ -244,4 +242,3 @@ export default {
   useCancelInstanceMutation,
   useCompleteNodeMutation,
 };
-

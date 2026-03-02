@@ -17,12 +17,9 @@ export class GraphEngine {
   /**
    * 构建关系图谱
    */
-  static buildGraph(
-    cis: ConfigurationItem[],
-    relationships: CIRelationship[]
-  ): RelationshipGraph {
+  static buildGraph(cis: ConfigurationItem[], relationships: CIRelationship[]): RelationshipGraph {
     // 创建节点
-    const nodes: GraphNode[] = cis.map((ci) => ({
+    const nodes: GraphNode[] = cis.map(ci => ({
       id: ci.id,
       ciId: ci.id,
       name: ci.name,
@@ -34,10 +31,10 @@ export class GraphEngine {
     }));
 
     // 创建边并计算度数
-    const edges: GraphEdge[] = relationships.map((rel) => {
+    const edges: GraphEdge[] = relationships.map(rel => {
       // 更新节点度数
-      const sourceNode = nodes.find((n) => n.id === rel.sourceCI);
-      const targetNode = nodes.find((n) => n.id === rel.targetCI);
+      const sourceNode = nodes.find(n => n.id === rel.sourceCI);
+      const targetNode = nodes.find(n => n.id === rel.targetCI);
       if (sourceNode) sourceNode.outDegree = (sourceNode.outDegree || 0) + 1;
       if (targetNode) targetNode.inDegree = (targetNode.inDegree || 0) + 1;
 
@@ -114,9 +111,9 @@ export class GraphEngine {
       }
 
       // 计算引力
-      graph.edges.forEach((edge) => {
-        const source = graph.nodes.find((n) => n.id === edge.source);
-        const target = graph.nodes.find((n) => n.id === edge.target);
+      graph.edges.forEach(edge => {
+        const source = graph.nodes.find(n => n.id === edge.source);
+        const target = graph.nodes.find(n => n.id === edge.target);
 
         if (source && target) {
           const dx = target.x! - source.x!;
@@ -135,7 +132,7 @@ export class GraphEngine {
       });
 
       // 限制在边界内
-      graph.nodes.forEach((node) => {
+      graph.nodes.forEach(node => {
         node.x = Math.max(50, Math.min(width - 50, node.x!));
         node.y = Math.max(50, Math.min(height - 50, node.y!));
       });
@@ -156,12 +153,7 @@ export class GraphEngine {
       nodeSpacing?: number;
     }
   ): RelationshipGraph {
-    const {
-      width = 1200,
-      height = 800,
-      levelSpacing = 150,
-      nodeSpacing = 100,
-    } = options || {};
+    const { width = 1200, height = 800, levelSpacing = 150, nodeSpacing = 100 } = options || {};
 
     // 拓扑排序，确定层级
     const levels = this.topologicalSort(graph);
@@ -173,7 +165,7 @@ export class GraphEngine {
       const startX = (width - totalWidth) / 2;
 
       level.forEach((nodeId, index) => {
-        const node = graph.nodes.find((n) => n.id === nodeId);
+        const node = graph.nodes.find(n => n.id === nodeId);
         if (node) {
           node.x = startX + index * nodeSpacing;
           node.y = y;
@@ -193,10 +185,10 @@ export class GraphEngine {
     const inDegree = new Map<string, number>();
 
     // 计算入度
-    graph.nodes.forEach((node) => {
+    graph.nodes.forEach(node => {
       inDegree.set(node.id, 0);
     });
-    graph.edges.forEach((edge) => {
+    graph.edges.forEach(edge => {
       const current = inDegree.get(edge.target) || 0;
       inDegree.set(edge.target, current + 1);
     });
@@ -205,7 +197,7 @@ export class GraphEngine {
     while (visited.size < graph.nodes.length) {
       const currentLevel: string[] = [];
 
-      graph.nodes.forEach((node) => {
+      graph.nodes.forEach(node => {
         if (!visited.has(node.id) && (inDegree.get(node.id) || 0) === 0) {
           currentLevel.push(node.id);
           visited.add(node.id);
@@ -214,7 +206,7 @@ export class GraphEngine {
 
       if (currentLevel.length === 0) {
         // 如果有环，把剩余节点放在一层
-        graph.nodes.forEach((node) => {
+        graph.nodes.forEach(node => {
           if (!visited.has(node.id)) {
             currentLevel.push(node.id);
             visited.add(node.id);
@@ -225,10 +217,10 @@ export class GraphEngine {
       levels.push(currentLevel);
 
       // 减少相邻节点的入度
-      currentLevel.forEach((nodeId) => {
+      currentLevel.forEach(nodeId => {
         graph.edges
-          .filter((e) => e.source === nodeId)
-          .forEach((edge) => {
+          .filter(e => e.source === nodeId)
+          .forEach(edge => {
             const current = inDegree.get(edge.target) || 0;
             inDegree.set(edge.target, Math.max(0, current - 1));
           });
@@ -246,9 +238,7 @@ export class GraphEngine {
     sourceId: string,
     targetId: string
   ): string[] | null {
-    const queue: Array<{ node: string; path: string[] }> = [
-      { node: sourceId, path: [sourceId] },
-    ];
+    const queue: Array<{ node: string; path: string[] }> = [{ node: sourceId, path: [sourceId] }];
     const visited = new Set<string>([sourceId]);
 
     while (queue.length > 0) {
@@ -260,8 +250,8 @@ export class GraphEngine {
 
       // 找到所有相邻节点
       graph.edges
-        .filter((e) => e.source === current)
-        .forEach((edge) => {
+        .filter(e => e.source === current)
+        .forEach(edge => {
           if (!visited.has(edge.target)) {
             visited.add(edge.target);
             queue.push({
@@ -294,8 +284,8 @@ export class GraphEngine {
       }
 
       graph.edges
-        .filter((e) => e.source === current)
-        .forEach((edge) => {
+        .filter(e => e.source === current)
+        .forEach(edge => {
           if (!path.includes(edge.target)) {
             dfs(edge.target, [...path, edge.target], depth + 1);
           }
@@ -319,8 +309,8 @@ export class GraphEngine {
       recursionStack.add(nodeId);
 
       graph.edges
-        .filter((e) => e.source === nodeId)
-        .forEach((edge) => {
+        .filter(e => e.source === nodeId)
+        .forEach(edge => {
           if (!visited.has(edge.target)) {
             dfs(edge.target, [...path, edge.target]);
           } else if (recursionStack.has(edge.target)) {
@@ -335,7 +325,7 @@ export class GraphEngine {
       recursionStack.delete(nodeId);
     };
 
-    graph.nodes.forEach((node) => {
+    graph.nodes.forEach(node => {
       if (!visited.has(node.id)) {
         dfs(node.id, [node.id]);
       }
@@ -350,7 +340,7 @@ export class GraphEngine {
   static calculateCentrality(graph: RelationshipGraph): Map<string, number> {
     const centrality = new Map<string, number>();
 
-    graph.nodes.forEach((node) => {
+    graph.nodes.forEach(node => {
       const degree = (node.inDegree || 0) + (node.outDegree || 0);
       centrality.set(node.id, degree);
     });
@@ -361,14 +351,9 @@ export class GraphEngine {
   /**
    * 查找关键节点
    */
-  static findCriticalNodes(
-    graph: RelationshipGraph,
-    threshold = 5
-  ): GraphNode[] {
+  static findCriticalNodes(graph: RelationshipGraph, threshold = 5): GraphNode[] {
     const centrality = this.calculateCentrality(graph);
-    return graph.nodes.filter(
-      (node) => (centrality.get(node.id) || 0) >= threshold
-    );
+    return graph.nodes.filter(node => (centrality.get(node.id) || 0) >= threshold);
   }
 
   /**
@@ -383,11 +368,11 @@ export class GraphEngine {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const edgesByType: Record<RelationType, number> = {} as any;
 
-    nodes.forEach((node) => {
+    nodes.forEach(node => {
       nodesByType[node.type] = (nodesByType[node.type] || 0) + 1;
     });
 
-    edges.forEach((edge) => {
+    edges.forEach(edge => {
       edgesByType[edge.type] = (edgesByType[edge.type] || 0) + 1;
     });
 
@@ -438,43 +423,32 @@ export class GraphEngine {
 
     // 按节点类型过滤
     if (filters.nodeTypes && filters.nodeTypes.length > 0) {
-      filteredNodes = filteredNodes.filter((node) =>
-        filters.nodeTypes!.includes(node.type)
-      );
-      const nodeIds = new Set(filteredNodes.map((n) => n.id));
+      filteredNodes = filteredNodes.filter(node => filters.nodeTypes!.includes(node.type));
+      const nodeIds = new Set(filteredNodes.map(n => n.id));
       filteredEdges = filteredEdges.filter(
-        (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)
+        edge => nodeIds.has(edge.source) && nodeIds.has(edge.target)
       );
     }
 
     // 按关系类型过滤
     if (filters.relationshipTypes && filters.relationshipTypes.length > 0) {
-      filteredEdges = filteredEdges.filter((edge) =>
-        filters.relationshipTypes!.includes(edge.type)
-      );
+      filteredEdges = filteredEdges.filter(edge => filters.relationshipTypes!.includes(edge.type));
     }
 
     // 按连接数过滤
     if (filters.minConnections) {
       const connectionCount = new Map<string, number>();
-      filteredEdges.forEach((edge) => {
-        connectionCount.set(
-          edge.source,
-          (connectionCount.get(edge.source) || 0) + 1
-        );
-        connectionCount.set(
-          edge.target,
-          (connectionCount.get(edge.target) || 0) + 1
-        );
+      filteredEdges.forEach(edge => {
+        connectionCount.set(edge.source, (connectionCount.get(edge.source) || 0) + 1);
+        connectionCount.set(edge.target, (connectionCount.get(edge.target) || 0) + 1);
       });
 
       filteredNodes = filteredNodes.filter(
-        (node) =>
-          (connectionCount.get(node.id) || 0) >= filters.minConnections!
+        node => (connectionCount.get(node.id) || 0) >= filters.minConnections!
       );
-      const nodeIds = new Set(filteredNodes.map((n) => n.id));
+      const nodeIds = new Set(filteredNodes.map(n => n.id));
       filteredEdges = filteredEdges.filter(
-        (edge) => nodeIds.has(edge.source) && nodeIds.has(edge.target)
+        edge => nodeIds.has(edge.source) && nodeIds.has(edge.target)
       );
     }
 

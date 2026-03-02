@@ -27,9 +27,7 @@ export class ChangeClassificationApi {
   /**
    * 获取分类列表
    */
-  static async getClassifications(
-    query?: ClassificationQuery
-  ): Promise<{
+  static async getClassifications(query?: ClassificationQuery): Promise<{
     classifications: ChangeClassification[];
     total: number;
   }> {
@@ -39,9 +37,7 @@ export class ChangeClassificationApi {
   /**
    * 获取单个分类
    */
-  static async getClassification(
-    id: string
-  ): Promise<ChangeClassification> {
+  static async getClassification(id: string): Promise<ChangeClassification> {
     return httpClient.get(`/api/v1/change-classifications/${id}`);
   }
 
@@ -76,18 +72,14 @@ export class ChangeClassificationApi {
   /**
    * 评估风险
    */
-  static async assessRisk(
-    request: AssessRiskRequest
-  ): Promise<RiskAssessment> {
+  static async assessRisk(request: AssessRiskRequest): Promise<RiskAssessment> {
     return httpClient.post('/api/v1/changes/assess-risk', request);
   }
 
   /**
    * 获取风险评估历史
    */
-  static async getRiskAssessmentHistory(
-    changeId: number
-  ): Promise<RiskAssessment[]> {
+  static async getRiskAssessmentHistory(changeId: number): Promise<RiskAssessment[]> {
     return httpClient.get(`/api/v1/changes/${changeId}/risk-assessments`);
   }
 
@@ -96,18 +88,14 @@ export class ChangeClassificationApi {
   /**
    * 分析影响
    */
-  static async analyzeImpact(
-    request: AnalyzeImpactRequest
-  ): Promise<ImpactAnalysis> {
+  static async analyzeImpact(request: AnalyzeImpactRequest): Promise<ImpactAnalysis> {
     return httpClient.post('/api/v1/changes/analyze-impact', request);
   }
 
   /**
    * 获取影响分析历史
    */
-  static async getImpactAnalysisHistory(
-    changeId: number
-  ): Promise<ImpactAnalysis[]> {
+  static async getImpactAnalysisHistory(changeId: number): Promise<ImpactAnalysis[]> {
     return httpClient.get(`/api/v1/changes/${changeId}/impact-analyses`);
   }
 
@@ -116,12 +104,8 @@ export class ChangeClassificationApi {
   /**
    * 获取分类建议
    */
-  static async getClassificationSuggestion(
-    changeId: number
-  ): Promise<ClassificationSuggestion> {
-    return httpClient.get(
-      `/api/v1/changes/${changeId}/classification-suggestion`
-    );
+  static async getClassificationSuggestion(changeId: number): Promise<ClassificationSuggestion> {
+    return httpClient.get(`/api/v1/changes/${changeId}/classification-suggestion`);
   }
 
   /**
@@ -131,10 +115,9 @@ export class ChangeClassificationApi {
     changeId: number,
     classificationId: string
   ): Promise<void> {
-    return httpClient.post(
-      `/api/v1/changes/${changeId}/apply-classification`,
-      { classificationId }
-    );
+    return httpClient.post(`/api/v1/changes/${changeId}/apply-classification`, {
+      classificationId,
+    });
   }
 
   // ==================== 分类规则 ====================
@@ -204,12 +187,8 @@ export class ChangeClassificationApi {
   /**
    * 获取审批矩阵
    */
-  static async getApprovalMatrix(
-    classificationId: string
-  ): Promise<ApprovalMatrix> {
-    return httpClient.get(
-      `/api/v1/change-classifications/${classificationId}/approval-matrix`
-    );
+  static async getApprovalMatrix(classificationId: string): Promise<ApprovalMatrix> {
+    return httpClient.get(`/api/v1/change-classifications/${classificationId}/approval-matrix`);
   }
 
   /**
@@ -251,13 +230,10 @@ export class ChangeClassificationApi {
   /**
    * 获取分类历史
    */
-  static async getClassificationHistory(
-    changeId: number
-  ): Promise<ClassificationHistory[]> {
+  static async getClassificationHistory(changeId: number): Promise<ClassificationHistory[]> {
     return httpClient.get(`/api/v1/changes/${changeId}/classification-history`);
   }
 }
 
 export default ChangeClassificationApi;
 export const ChangeClassificationAPI = ChangeClassificationApi;
-

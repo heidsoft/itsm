@@ -14,7 +14,10 @@ export interface MockUser {
 
 export interface MockAuthService {
   // Mock login
-  login: (username: string, password: string) => Promise<{
+  login: (
+    username: string,
+    password: string
+  ) => Promise<{
     success: boolean;
     user?: MockUser;
     token?: string;

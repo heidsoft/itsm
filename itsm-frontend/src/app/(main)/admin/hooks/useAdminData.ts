@@ -27,7 +27,7 @@ export const useAdminData = () => {
         // 并行请求数据
         const [userStats, workflowStats] = await Promise.allSettled([
           DashboardAPI.getUserStats(),
-          WorkflowAPI.getWorkflows({ page: 1, pageSize: 1 }) // 只需获取总数，或者如果有专门的统计API更好
+          WorkflowAPI.getWorkflows({ page: 1, pageSize: 1 }), // 只需获取总数，或者如果有专门的统计API更好
         ]);
 
         const newStats: Partial<AdminStats> = {};
@@ -46,22 +46,21 @@ export const useAdminData = () => {
 
         // 尝试获取运行中的工作流实例数
         try {
-            const instances = await WorkflowAPI.getInstances({ status: 'running', pageSize: 1 });
-            newStats.runningWorkflows = instances.total;
+          const instances = await WorkflowAPI.getInstances({ status: 'running', pageSize: 1 });
+          newStats.runningWorkflows = instances.total;
         } catch (e) {
-            // 忽略错误，使用默认值
+          console.warn('Failed to fetch running workflow instances', e);
         }
 
         setStats(prev => ({
           ...prev,
           ...newStats,
           // 这里的其他数据暂时没有现成的API，保持默认值或模拟值
-          // serviceCatalogItems: 89, 
+          // serviceCatalogItems: 89,
           // systemAlerts: 2
         }));
-
       } catch (error) {
-        // 忽略错误，使用默认值
+        console.error('Failed to fetch admin data:', error);
       } finally {
         setLoading(false);
       }

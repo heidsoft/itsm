@@ -2,13 +2,7 @@
 
 import React from 'react';
 import { Card, Space, Typography, List, Tag, Avatar, theme, Button } from 'antd';
-import {
-  Activity,
-  AlertCircle,
-  CheckCircle,
-  RefreshCw,
-  XCircle,
-} from 'lucide-react';
+import { Activity, AlertCircle, CheckCircle, RefreshCw, XCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
@@ -77,20 +71,18 @@ export const SystemHealth: React.FC = () => {
   const HealthIcon = getHealthIcon(systemHealth.overall);
   const healthStatus = getHealthStatus(systemHealth.overall);
 
-  const serviceList = Object.entries(systemHealth.services).map(
-    ([service, status]) => ({
-      name:
-        service === 'database'
-          ? t('admin.database')
-          : service === 'api'
+  const serviceList = Object.entries(systemHealth.services).map(([service, status]) => ({
+    name:
+      service === 'database'
+        ? t('admin.database')
+        : service === 'api'
           ? t('admin.apiService')
           : service === 'cache'
-          ? t('admin.cache')
-          : t('admin.messageQueue'),
-      status,
-      icon: getHealthIcon(status),
-    })
-  );
+            ? t('admin.cache')
+            : t('admin.messageQueue'),
+    status,
+    icon: getHealthIcon(status),
+  }));
 
   return (
     <Card
@@ -100,13 +92,7 @@ export const SystemHealth: React.FC = () => {
           {t('admin.systemHealth')}
         </Space>
       }
-      extra={
-        <Button
-          type='text'
-          icon={<RefreshCw className='w-4 h-4' />}
-          size='small'
-        />
-      }
+      extra={<Button type='text' icon={<RefreshCw className='w-4 h-4' />} size='small' />}
     >
       <div style={{ marginBottom: token.marginLG }}>
         <Space align='center' size='large'>
@@ -119,7 +105,9 @@ export const SystemHealth: React.FC = () => {
             <Title level={3} style={{ margin: 0, color: healthStatus.color }}>
               {healthStatus.text}
             </Title>
-            <Text type='secondary'>{t('admin.uptime')}: {systemHealth.uptime}</Text>
+            <Text type='secondary'>
+              {t('admin.uptime')}: {systemHealth.uptime}
+            </Text>
           </div>
         </Space>
       </div>
@@ -133,10 +121,7 @@ export const SystemHealth: React.FC = () => {
           return (
             <List.Item>
               <Space align='center'>
-                <ServiceIcon
-                  className='w-4 h-4'
-                  style={{ color: serviceStatus.color }}
-                />
+                <ServiceIcon className='w-4 h-4' style={{ color: serviceStatus.color }} />
                 <Text>{item.name}</Text>
                 <Tag color={serviceStatus.type}>{serviceStatus.text}</Tag>
               </Space>

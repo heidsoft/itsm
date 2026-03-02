@@ -175,7 +175,11 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
               renderItem={(item, index) => (
                 <List.Item
                   actions={[
-                    <Button key="select" type='primary' onClick={() => handleSelectAssignee(item.user_id)}>
+                    <Button
+                      key='select'
+                      type='primary'
+                      onClick={() => handleSelectAssignee(item.user_id)}
+                    >
                       选择
                     </Button>,
                   ]}

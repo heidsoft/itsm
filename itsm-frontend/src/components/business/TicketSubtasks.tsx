@@ -30,10 +30,7 @@ import {
   BarChartOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons';
-import {
-  List,
-  GanttChart,
-} from 'lucide-react';
+import { List, GanttChart } from 'lucide-react';
 import type { ColumnsType } from 'antd/es/table';
 import { Ticket } from '@/lib/services/ticket-service';
 import { getStatusConfig, getPriorityConfig } from '@/lib/constants/ticket-constants';
@@ -92,9 +89,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
   // 计算父工单状态
   const parentStatus = useMemo(() => {
     if (!subtasks || subtasks.length === 0) return parentTicket.status;
-    const allResolved = subtasks.every(
-      s => s.status === 'resolved' || s.status === 'closed'
-    );
+    const allResolved = subtasks.every(s => s.status === 'resolved' || s.status === 'closed');
     const anyInProgress = subtasks.some(s => s.status === 'in_progress');
     const anyOpen = subtasks.some(s => s.status === 'open' || s.status === 'new');
 
@@ -175,9 +170,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       render: (text: string, record: Subtask) => (
         <div>
           <div className='font-medium'>{text}</div>
-          <div className='text-xs text-gray-500'>
-            #{record.ticketNumber || record.id}
-          </div>
+          <div className='text-xs text-gray-500'>#{record.ticketNumber || record.id}</div>
         </div>
       ),
     },
@@ -224,10 +217,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       render: (progress: number) => (
         <div className='flex items-center gap-2'>
           <div className='flex-1 bg-gray-200 rounded-full h-2'>
-            <div
-              className='bg-blue-500 h-2 rounded-full'
-              style={{ width: `${progress || 0}%` }}
-            />
+            <div className='bg-blue-500 h-2 rounded-full' style={{ width: `${progress || 0}%` }} />
           </div>
           <span className='text-xs'>{progress || 0}%</span>
         </div>
@@ -239,11 +229,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       width: 150,
       render: (_: any, record: Subtask) => (
         <Space size='small'>
-          <Button
-            type='link'
-            size='small'
-            onClick={() => onViewSubtask?.(record)}
-          >
+          <Button type='link' size='small' onClick={() => onViewSubtask?.(record)}>
             查看
           </Button>
           {canEdit && (
@@ -260,12 +246,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
                 title='确定要删除这个子任务吗？'
                 onConfirm={() => handleDelete(record.id)}
               >
-                <Button
-                  type='link'
-                  size='small'
-                  danger
-                  icon={<DeleteOutlined />}
-                >
+                <Button type='link' size='small' danger icon={<DeleteOutlined />}>
                   删除
                 </Button>
               </Popconfirm>
@@ -285,15 +266,11 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
     return (
       <div className='space-y-4'>
         {subtasks.map(subtask => {
-          const startDate = subtask.createdAt
-            ? new Date(subtask.createdAt)
-            : new Date();
+          const startDate = subtask.createdAt ? new Date(subtask.createdAt) : new Date();
           const endDate = subtask.due_date
             ? new Date(subtask.due_date)
             : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-          const days = Math.ceil(
-            (endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000)
-          );
+          const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
           const statusConfig = getStatusConfig(subtask.status || 'open');
 
           return (
@@ -352,22 +329,17 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
               <div className='flex items-center justify-between'>
                 <div>
                   <div className='font-medium'>{subtask.title}</div>
-                  <div className='text-sm text-gray-500 mt-1'>
-                    {subtask.description}
-                  </div>
+                  <div className='text-sm text-gray-500 mt-1'>{subtask.description}</div>
                   <div className='flex items-center gap-2 mt-2'>
                     <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
                     {subtask.assignee && (
-                      <span className='text-xs text-gray-500'>
-                        处理人: {subtask.assignee.name}
-                      </span>
+                      <span className='text-xs text-gray-500'>处理人: {subtask.assignee.name}</span>
                     )}
                   </div>
                 </div>
                 <div className='text-right'>
                   <div className='text-sm text-gray-500'>
-                    {subtask.createdAt &&
-                      format(new Date(subtask.createdAt), 'yyyy-MM-dd HH:mm')}
+                    {subtask.createdAt && format(new Date(subtask.createdAt), 'yyyy-MM-dd HH:mm')}
                   </div>
                   {subtask.due_date && (
                     <div className='text-xs text-gray-400'>
@@ -402,12 +374,10 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
                   parentStatus === 'resolved' || parentStatus === 'closed'
                     ? 'success'
                     : parentStatus === 'in_progress'
-                    ? 'processing'
-                    : 'default'
+                      ? 'processing'
+                      : 'default'
                 }
-                text={
-                  getStatusConfig(parentStatus).text
-                }
+                text={getStatusConfig(parentStatus).text}
               />
             </div>
           </div>
@@ -438,11 +408,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
               </Button>
             </Button.Group>
             {canEdit && (
-              <Button
-                type='primary'
-                icon={<PlusOutlined />}
-                onClick={() => handleOpenModal()}
-              >
+              <Button type='primary' icon={<PlusOutlined />} onClick={() => handleOpenModal()}>
                 创建子任务
               </Button>
             )}
@@ -519,4 +485,3 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
     </div>
   );
 };
-

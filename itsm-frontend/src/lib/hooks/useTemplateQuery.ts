@@ -31,8 +31,7 @@ import type { Ticket } from '@/types/ticket';
 export const templateKeys = {
   all: ['templates'] as const,
   lists: () => [...templateKeys.all, 'list'] as const,
-  list: (filters: TemplateListQuery) =>
-    [...templateKeys.lists(), { filters }] as const,
+  list: (filters: TemplateListQuery) => [...templateKeys.lists(), { filters }] as const,
   details: () => [...templateKeys.all, 'detail'] as const,
   detail: (id: string) => [...templateKeys.details(), id] as const,
   stats: (id: string) => [...templateKeys.all, 'stats', id] as const,
@@ -205,23 +204,18 @@ export function useTemplateVersionsQuery(
  * 创建模板
  */
 export function useCreateTemplateMutation(
-  options?: UseMutationOptions<
-    TicketTemplate,
-    Error,
-    CreateTemplateRequest
-  >
+  options?: UseMutationOptions<TicketTemplate, Error, CreateTemplateRequest>
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateTemplateRequest) =>
-      TemplateApi.createTemplate(data),
+    mutationFn: (data: CreateTemplateRequest) => TemplateApi.createTemplate(data),
     onSuccess: (data, variables, context) => {
       // 刷新模板列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       message.success('模板创建成功！');
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -236,11 +230,7 @@ export function useCreateTemplateMutation(
  * 更新模板
  */
 export function useUpdateTemplateMutation(
-  options?: UseMutationOptions<
-    TicketTemplate,
-    Error,
-    { id: string; data: UpdateTemplateRequest }
-  >
+  options?: UseMutationOptions<TicketTemplate, Error, { id: string; data: UpdateTemplateRequest }>
 ) {
   const queryClient = useQueryClient();
 
@@ -250,12 +240,12 @@ export function useUpdateTemplateMutation(
     onSuccess: (data, variables, context) => {
       // 更新缓存
       queryClient.setQueryData(templateKeys.detail(variables.id), data);
-      
+
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       message.success('模板更新成功！');
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -269,9 +259,7 @@ export function useUpdateTemplateMutation(
 /**
  * 删除模板
  */
-export function useDeleteTemplateMutation(
-  options?: UseMutationOptions<void, Error, string>
-) {
+export function useDeleteTemplateMutation(options?: UseMutationOptions<void, Error, string>) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -279,12 +267,12 @@ export function useDeleteTemplateMutation(
     onSuccess: (data, templateId, context) => {
       // 移除详情缓存
       queryClient.removeQueries({ queryKey: templateKeys.detail(templateId) });
-      
+
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       message.success('模板删除成功！');
-      
+
       options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -299,28 +287,23 @@ export function useDeleteTemplateMutation(
  * 发布模板
  */
 export function usePublishTemplateMutation(
-  options?: UseMutationOptions<
-    TicketTemplate,
-    Error,
-    { templateId: string; changelog?: string }
-  >
+  options?: UseMutationOptions<TicketTemplate, Error, { templateId: string; changelog?: string }>
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ templateId, changelog }) =>
-      TemplateApi.publishTemplate(templateId, changelog),
+    mutationFn: ({ templateId, changelog }) => TemplateApi.publishTemplate(templateId, changelog),
     onSuccess: (data, variables, context) => {
       // 更新缓存
       queryClient.setQueryData(templateKeys.detail(variables.templateId), data);
-      
+
       // 刷新版本历史
       queryClient.invalidateQueries({
         queryKey: templateKeys.versions(variables.templateId),
       });
-      
+
       message.success('模板发布成功！');
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -335,23 +318,18 @@ export function usePublishTemplateMutation(
  * 复制模板
  */
 export function useDuplicateTemplateMutation(
-  options?: UseMutationOptions<
-    TicketTemplate,
-    Error,
-    TemplateDuplicateRequest
-  >
+  options?: UseMutationOptions<TicketTemplate, Error, TemplateDuplicateRequest>
 ) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TemplateDuplicateRequest) =>
-      TemplateApi.duplicateTemplate(data),
+    mutationFn: (data: TemplateDuplicateRequest) => TemplateApi.duplicateTemplate(data),
     onSuccess: (data, variables, context) => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       message.success('模板复制成功！');
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -366,11 +344,7 @@ export function useDuplicateTemplateMutation(
  * 从模板创建工单
  */
 export function useCreateTicketFromTemplateMutation(
-  options?: UseMutationOptions<
-    Ticket,
-    Error,
-    CreateTicketFromTemplateRequest
-  >
+  options?: UseMutationOptions<Ticket, Error, CreateTicketFromTemplateRequest>
 ) {
   const queryClient = useQueryClient();
 
@@ -380,17 +354,17 @@ export function useCreateTicketFromTemplateMutation(
     onSuccess: (data, variables, context) => {
       // 记录模板使用
       TemplateApi.recordTemplateUsage(variables.templateId);
-      
+
       // 刷新模板统计
       queryClient.invalidateQueries({
         queryKey: templateKeys.stats(variables.templateId),
       });
-      
+
       // 刷新最近使用
       queryClient.invalidateQueries({ queryKey: templateKeys.recent() });
-      
+
       message.success('工单创建成功！');
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -405,11 +379,7 @@ export function useCreateTicketFromTemplateMutation(
  * 为模板评分
  */
 export function useRateTemplateMutation(
-  options?: UseMutationOptions<
-    any,
-    Error,
-    { templateId: string; rating: number; comment?: string }
-  >
+  options?: UseMutationOptions<any, Error, { templateId: string; rating: number; comment?: string }>
 ) {
   const queryClient = useQueryClient();
 
@@ -421,14 +391,14 @@ export function useRateTemplateMutation(
       queryClient.invalidateQueries({
         queryKey: templateKeys.detail(variables.templateId),
       });
-      
+
       // 刷新评分列表
       queryClient.invalidateQueries({
         queryKey: templateKeys.ratings(variables.templateId),
       });
-      
+
       message.success('评分成功！感谢您的反馈');
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -442,9 +412,7 @@ export function useRateTemplateMutation(
 /**
  * 收藏模板
  */
-export function useFavoriteTemplateMutation(
-  options?: UseMutationOptions<void, Error, string>
-) {
+export function useFavoriteTemplateMutation(options?: UseMutationOptions<void, Error, string>) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -452,9 +420,9 @@ export function useFavoriteTemplateMutation(
     onSuccess: (data, templateId, context) => {
       // 刷新收藏列表
       queryClient.invalidateQueries({ queryKey: templateKeys.favorites() });
-      
+
       message.success('已添加到收藏');
-      
+
       options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -468,20 +436,17 @@ export function useFavoriteTemplateMutation(
 /**
  * 取消收藏模板
  */
-export function useUnfavoriteTemplateMutation(
-  options?: UseMutationOptions<void, Error, string>
-) {
+export function useUnfavoriteTemplateMutation(options?: UseMutationOptions<void, Error, string>) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (templateId: string) =>
-      TemplateApi.unfavoriteTemplate(templateId),
+    mutationFn: (templateId: string) => TemplateApi.unfavoriteTemplate(templateId),
     onSuccess: (data, templateId, context) => {
       // 刷新收藏列表
       queryClient.invalidateQueries({ queryKey: templateKeys.favorites() });
-      
+
       message.success('已取消收藏');
-      
+
       options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -501,14 +466,13 @@ export function useImportTemplateMutation(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: TemplateImportRequest) =>
-      TemplateApi.importTemplate(data),
+    mutationFn: (data: TemplateImportRequest) => TemplateApi.importTemplate(data),
     onSuccess: (data, variables, context) => {
       // 刷新模板列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       message.success('模板导入成功！');
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -532,12 +496,12 @@ export function useArchiveTemplateMutation(
     onSuccess: (data, templateId, context) => {
       // 更新缓存
       queryClient.setQueryData(templateKeys.detail(templateId), data);
-      
+
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       message.success('模板已归档');
-      
+
       options?.onSuccess?.(data, templateId, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -557,18 +521,17 @@ export function useBatchDeleteTemplatesMutation(
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (templateIds: string[]) =>
-      TemplateApi.batchDeleteTemplates(templateIds),
+    mutationFn: (templateIds: string[]) => TemplateApi.batchDeleteTemplates(templateIds),
     onSuccess: (data, variables, context) => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       message.success(`成功删除 ${data.success} 个模板`);
-      
+
       if (data.failed > 0) {
         message.warning(`有 ${data.failed} 个模板删除失败`);
       }
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -583,11 +546,7 @@ export function useBatchDeleteTemplatesMutation(
  * 批量启用/禁用模板
  */
 export function useBatchToggleTemplatesMutation(
-  options?: UseMutationOptions<
-    any,
-    Error,
-    { templateIds: string[]; isActive: boolean }
-  >
+  options?: UseMutationOptions<any, Error, { templateIds: string[]; isActive: boolean }>
 ) {
   const queryClient = useQueryClient();
 
@@ -597,14 +556,14 @@ export function useBatchToggleTemplatesMutation(
     onSuccess: (data, variables, context) => {
       // 刷新列表
       queryClient.invalidateQueries({ queryKey: templateKeys.lists() });
-      
+
       const action = variables.isActive ? '启用' : '禁用';
       message.success(`成功${action} ${data.success} 个模板`);
-      
+
       if (data.failed > 0) {
         message.warning(`有 ${data.failed} 个模板${action}失败`);
       }
-      
+
       options?.onSuccess?.(data, variables, context, undefined as any);
     },
     onError: (error, variables, context) => {
@@ -614,4 +573,3 @@ export function useBatchToggleTemplatesMutation(
     ...options,
   });
 }
-

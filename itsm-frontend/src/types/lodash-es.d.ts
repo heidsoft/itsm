@@ -4,5 +4,3 @@ declare module 'lodash-es' {
   const lodash: any;
   export default lodash;
 }
-
-

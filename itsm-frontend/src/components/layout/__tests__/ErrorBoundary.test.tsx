@@ -1,6 +1,6 @@
 /**
  * Layout ErrorBoundary Component Tests
- * 
+ *
  * 测试覆盖:
  * - 正常渲染子组件
  * - 捕获子组件错误
@@ -208,7 +208,7 @@ describe('Layout ErrorBoundary', () => {
       );
 
       const reportButton = screen.getByRole('button', { name: /Report Issue/i });
-      
+
       // 点击不应该抛出错误
       expect(() => fireEvent.click(reportButton)).not.toThrow();
     });
@@ -342,7 +342,10 @@ describe('Layout ErrorBoundary', () => {
       expect(addEventListenerSpy).toHaveBeenCalledWith('error', expect.any(Function));
       expect(addEventListenerSpy).toHaveBeenCalledWith('unhandledrejection', expect.any(Function));
       expect(removeEventListenerSpy).toHaveBeenCalledWith('error', expect.any(Function));
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('unhandledrejection', expect.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'unhandledrejection',
+        expect.any(Function)
+      );
 
       addEventListenerSpy.mockRestore();
       removeEventListenerSpy.mockRestore();
@@ -432,7 +435,10 @@ describe('useErrorHandler Hook', () => {
     });
     window.dispatchEvent(rejectionEvent);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Hook caught unhandled Promise rejection:', rejectionEvent.reason);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Hook caught unhandled Promise rejection:',
+      rejectionEvent.reason
+    );
 
     consoleErrorSpy.mockRestore();
   });
@@ -578,9 +584,12 @@ describe('异步错误处理', () => {
     );
 
     // 等待 Promise rejection
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalled();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(consoleErrorSpy).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
 
     consoleErrorSpy.mockRestore();
   });
@@ -662,9 +671,7 @@ describe('性能和边界情况', () => {
   });
 
   it('处理大量子组件', () => {
-    const children = Array.from({ length: 100 }, (_, i) => (
-      <div key={i}>Child {i}</div>
-    ));
+    const children = Array.from({ length: 100 }, (_, i) => <div key={i}>Child {i}</div>);
 
     render(<ErrorBoundary>{children}</ErrorBoundary>);
 

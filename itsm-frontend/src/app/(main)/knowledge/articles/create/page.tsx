@@ -71,9 +71,7 @@ export default function CreateArticlePage() {
         </Button>
       </div>
 
-      <Card
-        title={<span className='text-lg font-medium'>新建知识库文章</span>}
-      >
+      <Card title={<span className='text-lg font-medium'>新建知识库文章</span>}>
         <Form
           form={form}
           layout='vertical'
@@ -103,21 +101,16 @@ export default function CreateArticlePage() {
               >
                 <Select placeholder='请选择分类'>
                   {categories.map((cat, idx) => (
-                    <Option key={idx} value={cat}>{cat}</Option>
+                    <Option key={idx} value={cat}>
+                      {cat}
+                    </Option>
                   ))}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name='tags'
-                label='标签'
-              >
-                <Select
-                  mode='tags'
-                  placeholder='输入标签后按回车添加'
-                  style={{ width: '100%' }}
-                />
+              <Form.Item name='tags' label='标签'>
+                <Select mode='tags' placeholder='输入标签后按回车添加' style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>

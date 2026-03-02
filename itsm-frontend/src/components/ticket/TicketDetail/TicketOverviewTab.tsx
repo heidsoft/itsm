@@ -148,23 +148,24 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
         {/* 右侧：操作和SLA */}
         <div className='space-y-6'>
           {/* 审批操作 */}
-          {canApprove && ticket.status === 'pending' as any && (  // 使用any避免类型错误
-            <Card title='审批操作' className='shadow-sm'>
-              <Space orientation='vertical' className='w-full'>
-                <Button
-                  type='primary'
-                  icon={<CheckCircle />}
-                  onClick={onApprove}
-                  className='w-full'
-                >
-                  批准
-                </Button>
-                <Button danger icon={<XCircle />} onClick={onReject} className='w-full'>
-                  拒绝
-                </Button>
-              </Space>
-            </Card>
-          )}
+          {canApprove &&
+            ticket.status === ('pending' as any) && ( // 使用any避免类型错误
+              <Card title='审批操作' className='shadow-sm'>
+                <Space orientation='vertical' className='w-full'>
+                  <Button
+                    type='primary'
+                    icon={<CheckCircle />}
+                    onClick={onApprove}
+                    className='w-full'
+                  >
+                    批准
+                  </Button>
+                  <Button danger icon={<XCircle />} onClick={onReject} className='w-full'>
+                    拒绝
+                  </Button>
+                </Space>
+              </Card>
+            )}
 
           {/* 分配操作 */}
           <Card title='分配工单' className='shadow-sm'>
@@ -196,8 +197,7 @@ export const TicketOverviewTab: React.FC<TicketOverviewTabProps> = ({
             ticketStatus={ticket.status}
             requesterId={ticket.requesterId}
             canRate={canEdit}
-            onRatingSubmitted={newRating => {
-            }}
+            onRatingSubmitted={newRating => {}}
           />
 
           {/* SLA信息 */}

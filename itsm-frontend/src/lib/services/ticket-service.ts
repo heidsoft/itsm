@@ -8,7 +8,7 @@ export enum TicketStatus {
   PENDING = 'pending',
   RESOLVED = 'resolved',
   CLOSED = 'closed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 // 工单优先级枚举
@@ -16,7 +16,7 @@ export enum TicketPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
 // 工单类型枚举
@@ -24,7 +24,7 @@ export enum TicketType {
   INCIDENT = 'incident',
   SERVICE_REQUEST = 'service_request',
   PROBLEM = 'problem',
-  CHANGE = 'change'
+  CHANGE = 'change',
 }
 
 // 移除旧的 Ticket 和 TicketListResponse 定义，使用 api-config 中的定义
@@ -44,8 +44,8 @@ export interface TicketFilterParams {
   search?: string;
   date_from?: string;
   date_to?: string;
-  created_after?: string;  // 添加 created_after 字段
-  created_before?: string;  // 添加 created_before 字段
+  created_after?: string; // 添加 created_after 字段
+  created_before?: string; // 添加 created_before 字段
   tags?: string[];
   sort_by?: string;
   sort_order?: 'asc' | 'desc';
@@ -192,7 +192,10 @@ class TicketService {
   }
 
   // 更新工单
-  async updateTicket(id: number, data: UpdateTicketRequest): Promise<{ message: string; ticket_id: number }> {
+  async updateTicket(
+    id: number,
+    data: UpdateTicketRequest
+  ): Promise<{ message: string; ticket_id: number }> {
     return httpClient.put<{ message: string; ticket_id: number }>(`${this.baseUrl}/${id}`, data);
   }
 
@@ -218,19 +221,31 @@ class TicketService {
         high_priority: 0,
         urgent: 0,
         overdue: 0,
-        sla_breach: 0
+        sla_breach: 0,
       };
     }
   }
 
   // 分配工单
-  async assignTicket(id: number, data: AssignTicketRequest): Promise<{ message: string; ticket_id: number }> {
-    return httpClient.post<{ message: string; ticket_id: number }>(`${this.baseUrl}/${id}/assign`, data);
+  async assignTicket(
+    id: number,
+    data: AssignTicketRequest
+  ): Promise<{ message: string; ticket_id: number }> {
+    return httpClient.post<{ message: string; ticket_id: number }>(
+      `${this.baseUrl}/${id}/assign`,
+      data
+    );
   }
 
   // 变更工单状态
-  async changeTicketStatus(id: number, data: ChangeTicketStatusRequest): Promise<{ message: string; ticket_id: number }> {
-    return httpClient.post<{ message: string; ticket_id: number }>(`${this.baseUrl}/${id}/status`, data);
+  async changeTicketStatus(
+    id: number,
+    data: ChangeTicketStatusRequest
+  ): Promise<{ message: string; ticket_id: number }> {
+    return httpClient.post<{ message: string; ticket_id: number }>(
+      `${this.baseUrl}/${id}/status`,
+      data
+    );
   }
 
   // 获取工单评论
@@ -239,11 +254,18 @@ class TicketService {
   }
 
   // 添加工单评论
-  async addTicketComment(id: number, content: string, isInternal: boolean = false): Promise<{ message: string; comment_id: number }> {
-    return httpClient.post<{ message: string; comment_id: number }>(`${this.baseUrl}/${id}/comments`, {
-      content,
-      is_internal: isInternal
-    });
+  async addTicketComment(
+    id: number,
+    content: string,
+    isInternal: boolean = false
+  ): Promise<{ message: string; comment_id: number }> {
+    return httpClient.post<{ message: string; comment_id: number }>(
+      `${this.baseUrl}/${id}/comments`,
+      {
+        content,
+        is_internal: isInternal,
+      }
+    );
   }
 
   // 获取工单附件
@@ -252,15 +274,26 @@ class TicketService {
   }
 
   // 上传工单附件
-  async uploadTicketAttachment(id: number, file: File): Promise<{ message: string; attachment_id: number }> {
+  async uploadTicketAttachment(
+    id: number,
+    file: File
+  ): Promise<{ message: string; attachment_id: number }> {
     const formData = new FormData();
     formData.append('file', file);
-    return httpClient.post<{ message: string; attachment_id: number }>(`${this.baseUrl}/${id}/attachments`, formData);
+    return httpClient.post<{ message: string; attachment_id: number }>(
+      `${this.baseUrl}/${id}/attachments`,
+      formData
+    );
   }
 
   // 删除工单附件
-  async deleteTicketAttachment(id: number, attachmentId: number): Promise<{ message: string; attachment_id: number }> {
-    return httpClient.delete<{ message: string; attachment_id: number }>(`${this.baseUrl}/${id}/attachments/${attachmentId}`);
+  async deleteTicketAttachment(
+    id: number,
+    attachmentId: number
+  ): Promise<{ message: string; attachment_id: number }> {
+    return httpClient.delete<{ message: string; attachment_id: number }>(
+      `${this.baseUrl}/${id}/attachments/${attachmentId}`
+    );
   }
 
   // 获取工单活动日志

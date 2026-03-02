@@ -40,15 +40,15 @@ export const AccessibilityEnhanced: React.FC<AccessibilityEnhancedProps> = ({
     // 检测减少动画偏好
     const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(motionQuery.matches);
-    
+
     const handleMotionChange = (e: MediaQueryListEvent) => {
       setPrefersReducedMotion(e.matches);
     };
-    
+
     // 检测高对比度偏好
     const contrastQuery = window.matchMedia('(prefers-contrast: high)');
     setPrefersHighContrast(contrastQuery.matches);
-    
+
     const handleContrastChange = (e: MediaQueryListEvent) => {
       setPrefersHighContrast(e.matches);
     };
@@ -96,7 +96,9 @@ export const AccessibilityEnhanced: React.FC<AccessibilityEnhancedProps> = ({
     colorBlindFriendly && 'colorblind-friendly',
     screenReaderOptimized && 'sr-optimized',
     keyboardNavigation && 'keyboard-nav',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   // 添加CSS变量
   const accessibilityStyles: React.CSSProperties = {
@@ -120,7 +122,7 @@ export const AccessibilityEnhanced: React.FC<AccessibilityEnhancedProps> = ({
   } as React.CSSProperties;
 
   return (
-    <div 
+    <div
       className={`accessibility-enhanced ${accessibilityClasses}`}
       style={accessibilityStyles}
       data-accessibility={{
@@ -144,12 +146,14 @@ export const ScreenReaderOnly: React.FC<{ children: React.ReactNode; className?:
   children,
   className = '',
 }) => (
-  <span className={`
+  <span
+    className={`
     sr-only
     absolute w-px h-px p-0 -m-px overflow-hidden
     whitespace-nowrap border-0
     ${className}
-  `}>
+  `}
+  >
     {children}
   </span>
 );
@@ -158,7 +162,7 @@ export const ScreenReaderOnly: React.FC<{ children: React.ReactNode; className?:
  * 焦点指示器组件
  */
 export const FocusIndicator: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+  <div className='focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2'>
     {children}
   </div>
 );
@@ -193,11 +197,7 @@ export const AriaLiveRegion: React.FC<{
   atomic?: boolean;
   children: React.ReactNode;
 }> = ({ politeness = 'polite', atomic = false, children }) => (
-  <div
-    aria-live={politeness}
-    aria-atomic={atomic}
-    className="sr-only"
-  >
+  <div aria-live={politeness} aria-atomic={atomic} className='sr-only'>
     {children}
   </div>
 );
@@ -212,17 +212,15 @@ export const KeyboardNavigationHint: React.FC<{
   if (!show) return null;
 
   return (
-    <div 
-      className="fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-50"
-      role="tooltip"
+    <div
+      className='fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-50'
+      role='tooltip'
     >
-      <h3 className="font-semibold mb-2">键盘快捷键</h3>
-      <ul className="space-y-1 text-sm">
+      <h3 className='font-semibold mb-2'>键盘快捷键</h3>
+      <ul className='space-y-1 text-sm'>
         {shortcuts.map((shortcut, index) => (
-          <li key={index} className="flex justify-between gap-4">
-            <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">
-              {shortcut.key}
-            </kbd>
+          <li key={index} className='flex justify-between gap-4'>
+            <kbd className='px-2 py-1 bg-gray-700 rounded text-xs'>{shortcut.key}</kbd>
             <span>{shortcut.description}</span>
           </li>
         ))}

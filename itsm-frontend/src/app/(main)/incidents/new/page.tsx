@@ -35,7 +35,7 @@ export default function NewIncidentPage() {
           setSearchResults([]);
         }
       };
-      
+
       const timeoutId = setTimeout(fetchCIs, 300);
       return () => clearTimeout(timeoutId);
     } else {
@@ -116,9 +116,7 @@ export default function NewIncidentPage() {
 
             {/* Configuration Items Selection */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-2'>
-                受影响的配置项
-              </label>
+              <label className='block text-sm font-medium text-gray-700 mb-2'>受影响的配置项</label>
 
               <div className='flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg'>
                 <div className='flex items-center space-x-2'>

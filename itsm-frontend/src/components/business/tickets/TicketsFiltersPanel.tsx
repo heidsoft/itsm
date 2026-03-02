@@ -77,7 +77,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
     if (filters.status) {
       tags.push(
-        <Tag key="status" closable onClose={() => onChange({ status: undefined })}>
+        <Tag key='status' closable onClose={() => onChange({ status: undefined })}>
           状态: {filters.status}
         </Tag>
       );
@@ -85,7 +85,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
     if (filters.priority) {
       tags.push(
-        <Tag key="priority" closable onClose={() => onChange({ priority: undefined })}>
+        <Tag key='priority' closable onClose={() => onChange({ priority: undefined })}>
           优先级: {filters.priority}
         </Tag>
       );
@@ -93,7 +93,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
     if (filters.type) {
       tags.push(
-        <Tag key="type" closable onClose={() => onChange({ type: undefined })}>
+        <Tag key='type' closable onClose={() => onChange({ type: undefined })}>
           类型: {filters.type}
         </Tag>
       );
@@ -101,18 +101,18 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
     if ((filters as any).assigneeId) {
       tags.push(
-        <Tag key="assignee" closable onClose={() => onChange({ assigneeId: undefined } as any)}>
+        <Tag key='assignee' closable onClose={() => onChange({ assigneeId: undefined } as any)}>
           指派人: {(filters as any).assigneeId}
         </Tag>
       );
     }
 
     return tags.length > 0 ? (
-      <div className="mb-4">
+      <div className='mb-4'>
         <Space wrap>
-          <span className="text-sm text-gray-600">已选筛选:</span>
+          <span className='text-sm text-gray-600'>已选筛选:</span>
           {tags}
-          <Button type="link" size="small" onClick={handleReset}>
+          <Button type='link' size='small' onClick={handleReset}>
             清除所有
           </Button>
         </Space>
@@ -121,48 +121,36 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
   };
 
   if (collapsed) {
-    return (
-      <div className="mb-4">
-        {renderActiveFilters()}
-      </div>
-    );
+    return <div className='mb-4'>{renderActiveFilters()}</div>;
   }
 
   return (
-    <Card 
+    <Card
       title={
         <Space>
           <FilterOutlined />
           <span>筛选条件</span>
         </Space>
       }
-      className="mb-4"
+      className='mb-4'
     >
       {renderActiveFilters()}
-      
+
       <Form
         form={form}
-        layout="vertical"
+        layout='vertical'
         initialValues={filters}
         onValuesChange={handleValuesChange}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
           {/* 搜索关键词 */}
-          <Form.Item label="搜索" name="search">
-            <Input
-              placeholder="搜索工单编号、标题"
-              prefix={<SearchOutlined />}
-              allowClear
-            />
+          <Form.Item label='搜索' name='search'>
+            <Input placeholder='搜索工单编号、标题' prefix={<SearchOutlined />} allowClear />
           </Form.Item>
 
           {/* 状态筛选 */}
-          <Form.Item label="状态" name="status" data-testid="status-filter">
-            <Select
-              placeholder="选择状态"
-              allowClear
-              mode="multiple"
-            >
+          <Form.Item label='状态' name='status' data-testid='status-filter'>
+            <Select placeholder='选择状态' allowClear mode='multiple'>
               {statusOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
@@ -172,12 +160,8 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
           </Form.Item>
 
           {/* 优先级筛选 */}
-          <Form.Item label="优先级" name="priority" data-testid="priority-filter">
-            <Select
-              placeholder="选择优先级"
-              allowClear
-              mode="multiple"
-            >
+          <Form.Item label='优先级' name='priority' data-testid='priority-filter'>
+            <Select placeholder='选择优先级' allowClear mode='multiple'>
               {priorityOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   <Tag color={option.color}>{option.label}</Tag>
@@ -187,11 +171,8 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
           </Form.Item>
 
           {/* 类型筛选 */}
-          <Form.Item label="类型" name="type">
-            <Select
-              placeholder="选择类型"
-              allowClear
-            >
+          <Form.Item label='类型' name='type'>
+            <Select placeholder='选择类型' allowClear>
               {typeOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
@@ -201,69 +182,56 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
           </Form.Item>
 
           {/* 指派人筛选 */}
-          <Form.Item label="指派人" name="assignee_id">
+          <Form.Item label='指派人' name='assignee_id'>
             <Select
-              placeholder="选择指派人"
+              placeholder='选择指派人'
               allowClear
               showSearch
               filterOption={(input, option) =>
-                String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+                String(option?.label ?? '')
+                  .toLowerCase()
+                  .includes(String(input).toLowerCase())
               }
             >
               {/* 这里应该从API获取用户列表 */}
-              <Option value={1} label="用户1">用户1</Option>
-              <Option value={2} label="用户2">用户2</Option>
+              <Option value={1} label='用户1'>
+                用户1
+              </Option>
+              <Option value={2} label='用户2'>
+                用户2
+              </Option>
             </Select>
           </Form.Item>
 
           {/* 创建人筛选 */}
-          <Form.Item label="创建人" name="requester_id">
-            <Select
-              placeholder="选择创建人"
-              allowClear
-              showSearch
-            >
+          <Form.Item label='创建人' name='requester_id'>
+            <Select placeholder='选择创建人' allowClear showSearch>
               <Option value={1}>用户1</Option>
               <Option value={2}>用户2</Option>
             </Select>
           </Form.Item>
 
           {/* 日期范围 */}
-          <Form.Item label="创建时间" name="date_range">
-            <RangePicker
-              style={{ width: '100%' }}
-              placeholder={['开始日期', '结束日期']}
-            />
+          <Form.Item label='创建时间' name='date_range'>
+            <RangePicker style={{ width: '100%' }} placeholder={['开始日期', '结束日期']} />
           </Form.Item>
 
           {/* 标签筛选 */}
-          <Form.Item label="标签" name="tags">
-            <Select
-              mode="tags"
-              placeholder="输入或选择标签"
-              allowClear
-            >
-              <Option value="urgent">紧急</Option>
-              <Option value="vip">VIP</Option>
-              <Option value="bug">Bug</Option>
+          <Form.Item label='标签' name='tags'>
+            <Select mode='tags' placeholder='输入或选择标签' allowClear>
+              <Option value='urgent'>紧急</Option>
+              <Option value='vip'>VIP</Option>
+              <Option value='bug'>Bug</Option>
             </Select>
           </Form.Item>
         </div>
 
         {/* 操作按钮 */}
-        <div className="flex justify-end space-x-2 mt-4">
-          <Button
-            icon={<ClearOutlined />}
-            onClick={handleReset}
-          >
+        <div className='flex justify-end space-x-2 mt-4'>
+          <Button icon={<ClearOutlined />} onClick={handleReset}>
             重置
           </Button>
-          <Button
-            type="primary"
-            icon={<SearchOutlined />}
-            onClick={onSearch}
-            loading={loading}
-          >
+          <Button type='primary' icon={<SearchOutlined />} onClick={onSearch} loading={loading}>
             搜索
           </Button>
         </div>
@@ -273,4 +241,3 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 };
 
 export default TicketsFiltersPanel;
-

@@ -65,7 +65,10 @@ const A2UIComponentRenderer: React.FC<{
       };
 
       return (
-        <div style={{ color: typeof textProps?.color === 'string' ? textProps.color : undefined }} className={hint ? classes[hint] : ''}>
+        <div
+          style={{ color: typeof textProps?.color === 'string' ? textProps.color : undefined }}
+          className={hint ? classes[hint] : ''}
+        >
           {String(textValue ?? '')}
         </div>
       );
@@ -84,7 +87,11 @@ const A2UIComponentRenderer: React.FC<{
 
     case 'Card': {
       const child = props as { child: string };
-      return <Card size="small" className="my-2">{renderChild(child.child)}</Card>;
+      return (
+        <Card size='small' className='my-2'>
+          {renderChild(child.child)}
+        </Card>
+      );
     }
 
     case 'TextField': {
@@ -103,8 +110,12 @@ const A2UIComponentRenderer: React.FC<{
       };
 
       const path = getPath(fieldProps?.text)?.replace('/ticket/', '') || '';
-      const isEnabled = fieldProps?.enabled ? resolveValue(fieldProps.enabled, model) !== false : true;
-      const errorMsg = fieldProps?.error ? resolveValue(fieldProps.error, model) as string : undefined;
+      const isEnabled = fieldProps?.enabled
+        ? resolveValue(fieldProps.enabled, model) !== false
+        : true;
+      const errorMsg = fieldProps?.error
+        ? (resolveValue(fieldProps.error, model) as string)
+        : undefined;
 
       return (
         <Form.Item
@@ -116,7 +127,7 @@ const A2UIComponentRenderer: React.FC<{
           <Input
             placeholder={fieldProps?.placeholder?.literalString}
             disabled={!isEnabled}
-            onChange={(e) => {
+            onChange={e => {
               const dataPath = getPath(fieldProps?.text);
               if (dataPath) onModelChange(dataPath, e.target.value);
             }}
@@ -140,14 +151,16 @@ const A2UIComponentRenderer: React.FC<{
       };
 
       const path = getPath(fieldProps?.text)?.replace('/ticket/', '') || '';
-      const isEnabled = fieldProps?.enabled ? resolveValue(fieldProps.enabled, model) !== false : true;
+      const isEnabled = fieldProps?.enabled
+        ? resolveValue(fieldProps.enabled, model) !== false
+        : true;
 
       return (
         <Form.Item name={path} label={fieldProps?.label?.literalString}>
           <Input.TextArea
             rows={fieldProps?.rows || 3}
             disabled={!isEnabled}
-            onChange={(e) => {
+            onChange={e => {
               const dataPath = getPath(fieldProps?.text);
               if (dataPath) onModelChange(dataPath, e.target.value);
             }}
@@ -172,19 +185,23 @@ const A2UIComponentRenderer: React.FC<{
 
       const path = getPath(selectProps?.selection)?.replace('/ticket/', '') || '';
       const options = selectProps?.options?.explicitList || [];
-      const isEnabled = selectProps?.enabled ? resolveValue(selectProps.enabled, model) !== false : true;
+      const isEnabled = selectProps?.enabled
+        ? resolveValue(selectProps.enabled, model) !== false
+        : true;
 
       return (
         <Form.Item name={path} label={selectProps?.label?.literalString}>
           <Select
             disabled={!isEnabled}
-            onChange={(value) => {
+            onChange={value => {
               const dataPath = getPath(selectProps?.selection);
               if (dataPath) onModelChange(dataPath, value);
             }}
           >
             {options.map(opt => (
-              <Select.Option key={opt.id} value={opt.id}>{opt.text}</Select.Option>
+              <Select.Option key={opt.id} value={opt.id}>
+                {opt.text}
+              </Select.Option>
             ))}
           </Select>
         </Form.Item>
@@ -208,7 +225,7 @@ const A2UIComponentRenderer: React.FC<{
           const childDef = childComp.component;
           const childType = Object.keys(childDef)[0];
           if (childType === 'Text') {
-            buttonText = resolveValue((childDef as any).Text?.text, model) as string || '提交';
+            buttonText = (resolveValue((childDef as any).Text?.text, model) as string) || '提交';
           }
         }
       }
@@ -216,7 +233,7 @@ const A2UIComponentRenderer: React.FC<{
       return (
         <Form.Item>
           <Button
-            type="primary"
+            type='primary'
             disabled={!isEnabled}
             onClick={() => {
               if (btnProps?.action) {
@@ -238,7 +255,7 @@ const A2UIComponentRenderer: React.FC<{
     }
 
     default:
-      return <div className="text-gray-400 text-xs">Unknown: {compType}</div>;
+      return <div className='text-gray-400 text-xs'>Unknown: {compType}</div>;
   }
 };
 
@@ -263,7 +280,9 @@ export function A2UIFormRenderer() {
 
     const compDef = root.component;
     const compType = Object.keys(compDef)[0];
-    const children = (compDef as Record<string, unknown>)[compType] as { children?: { explicitList?: string[] } };
+    const children = (compDef as Record<string, unknown>)[compType] as {
+      children?: { explicitList?: string[] };
+    };
 
     return children?.children?.explicitList || [];
   };
@@ -350,10 +369,17 @@ export function A2UIFormRenderer() {
             const updates = parsed.dataModelUpdate.contents;
             setModel(prev => {
               const newModel = JSON.parse(JSON.stringify(prev));
-              updates.forEach((u: { key: string; valueString?: string; valueNumber?: number; valueBoolean?: boolean }) => {
-                const value = u.valueString ?? u.valueNumber ?? u.valueBoolean;
-                setValueByPath(newModel, `${parsed.dataModelUpdate.path}/${u.key}`, value);
-              });
+              updates.forEach(
+                (u: {
+                  key: string;
+                  valueString?: string;
+                  valueNumber?: number;
+                  valueBoolean?: boolean;
+                }) => {
+                  const value = u.valueString ?? u.valueNumber ?? u.valueBoolean;
+                  setValueByPath(newModel, `${parsed.dataModelUpdate.path}/${u.key}`, value);
+                }
+              );
               return newModel;
             });
 
@@ -449,19 +475,22 @@ export function A2UIFormRenderer() {
   // 成功提交后的显示
   if (submitted) {
     return (
-      <Card className="max-w-2xl mx-auto">
-        <div className="text-center py-8">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">工单创建成功</h2>
-          <p className="text-gray-500 mb-4">您的工单已成功提交</p>
-          <Button type="primary" onClick={() => {
-            setSubmitted(false);
-            setComponents([]);
-            setModel({
-              ticket: { title: '', type: 'hardware', priority: 'medium', description: '' },
-              ui: { canSubmit: false, status: '', statusColor: 'gray', errors: {} },
-            });
-          }}>
+      <Card className='max-w-2xl mx-auto'>
+        <div className='text-center py-8'>
+          <CheckCircle className='w-16 h-16 text-green-500 mx-auto mb-4' />
+          <h2 className='text-xl font-semibold mb-2'>工单创建成功</h2>
+          <p className='text-gray-500 mb-4'>您的工单已成功提交</p>
+          <Button
+            type='primary'
+            onClick={() => {
+              setSubmitted(false);
+              setComponents([]);
+              setModel({
+                ticket: { title: '', type: 'hardware', priority: 'medium', description: '' },
+                ui: { canSubmit: false, status: '', statusColor: 'gray', errors: {} },
+              });
+            }}
+          >
             创建新工单
           </Button>
         </div>
@@ -470,28 +499,30 @@ export function A2UIFormRenderer() {
   }
 
   return (
-    <Card className="max-w-2xl mx-auto">
+    <Card className='max-w-2xl mx-auto'>
       {/* AI 输入区 */}
-      <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <Bot className="w-4 h-4 text-purple-500" />
-          <span className="text-sm font-medium">描述需求，AI 自动生成表单</span>
+      <div className='mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg'>
+        <div className='flex items-center gap-2 mb-2'>
+          <Bot className='w-4 h-4 text-purple-500' />
+          <span className='text-sm font-medium'>描述需求，AI 自动生成表单</span>
         </div>
         <Space.Compact style={{ width: '100%' }}>
           <Input
-            placeholder="例如：帮我申请一台 ThinkPad 笔记本，用于 Java 开发..."
+            placeholder='例如：帮我申请一台 ThinkPad 笔记本，用于 Java 开发...'
             value={userIntent}
             onChange={e => setUserIntent(e.target.value)}
             onPressEnter={sendToAI}
           />
-          <Button icon={<Send />} onClick={sendToAI} loading={loading}>发送</Button>
+          <Button icon={<Send />} onClick={sendToAI} loading={loading}>
+            发送
+          </Button>
         </Space.Compact>
       </div>
 
       {/* A2UI 表单渲染 */}
       {components.length > 0 ? (
         <Spin spinning={loading}>
-          <Form form={form} layout="vertical">
+          <Form form={form} layout='vertical'>
             {renderableIds.map(id => {
               const comp = components.find(c => c.id === id);
               if (!comp) return null;
@@ -509,18 +540,18 @@ export function A2UIFormRenderer() {
           </Form>
         </Spin>
       ) : (
-        <div className="text-center text-gray-400 py-8">
-          <Bot className="w-12 h-12 mx-auto mb-2 opacity-50" />
+        <div className='text-center text-gray-400 py-8'>
+          <Bot className='w-12 h-12 mx-auto mb-2 opacity-50' />
           <p>描述您的需求，AI 将生成工单表单</p>
-          <p className="text-xs mt-2">例如：帮我申请一台 ThinkPad 笔记本</p>
+          <p className='text-xs mt-2'>例如：帮我申请一台 ThinkPad 笔记本</p>
         </div>
       )}
 
       {/* 调试信息 */}
       {process.env.NODE_ENV === 'development' && components.length > 0 && (
-        <details className="mt-4 text-xs text-gray-400">
+        <details className='mt-4 text-xs text-gray-400'>
           <summary>A2UI 调试信息</summary>
-          <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40">
+          <pre className='mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40'>
             {JSON.stringify(components, null, 2)}
           </pre>
         </details>

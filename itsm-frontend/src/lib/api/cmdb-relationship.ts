@@ -174,12 +174,15 @@ export const CIRelationshipAPI = {
   },
 
   // 获取CI的所有关系
-  async getCIRelationships(ciId: number, options?: {
-    includeOutgoing?: boolean;
-    includeIncoming?: boolean;
-    relationshipType?: CIRelationshipType;
-    activeOnly?: boolean;
-  }): Promise<{
+  async getCIRelationships(
+    ciId: number,
+    options?: {
+      includeOutgoing?: boolean;
+      includeIncoming?: boolean;
+      relationshipType?: CIRelationshipType;
+      activeOnly?: boolean;
+    }
+  ): Promise<{
     outgoing_relations: CIRelationship[];
     incoming_relations: CIRelationship[];
     total_outgoing: number;

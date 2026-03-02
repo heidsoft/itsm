@@ -22,15 +22,19 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
   onRefresh,
 }) => {
   const { t } = useI18n();
-  
+
   return (
     <Card className='mb-4 shadow-sm border-0' styles={{ body: { padding: '16px' } }}>
       <div className='mb-3'>
-        <h3 className='text-sm font-semibold text-gray-800 mb-3'>{t('incidents.filterAndSearch')}</h3>
+        <h3 className='text-sm font-semibold text-gray-800 mb-3'>
+          {t('incidents.filterAndSearch')}
+        </h3>
         <Row gutter={[12, 12]} align='middle'>
           <Col xs={24} sm={12} md={8}>
             <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>{t('incidents.searchIncidents')}</label>
+              <label className='text-sm font-medium text-gray-700'>
+                {t('incidents.searchIncidents')}
+              </label>
               <Search
                 placeholder={t('incidents.searchPlaceholder')}
                 allowClear
@@ -43,7 +47,9 @@ export const IncidentFilters: React.FC<IncidentFiltersProps> = ({
           </Col>
           <Col xs={24} sm={12} md={4}>
             <div className='space-y-2'>
-              <label className='text-sm font-medium text-gray-700'>{t('incidents.statusFilter')}</label>
+              <label className='text-sm font-medium text-gray-700'>
+                {t('incidents.statusFilter')}
+              </label>
               <Select
                 placeholder={t('incidents.selectStatus')}
                 size='large'

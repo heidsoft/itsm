@@ -9,10 +9,10 @@
  * 变更类型
  */
 export enum ChangeType {
-  STANDARD = 'standard',       // 标准变更
-  NORMAL = 'normal',           // 普通变更
-  EMERGENCY = 'emergency',     // 紧急变更
-  MAJOR = 'major',             // 重大变更
+  STANDARD = 'standard', // 标准变更
+  NORMAL = 'normal', // 普通变更
+  EMERGENCY = 'emergency', // 紧急变更
+  MAJOR = 'major', // 重大变更
 }
 
 /**
@@ -26,12 +26,12 @@ export interface ChangeClassification {
   description?: string;
   riskLevel: 'low' | 'medium' | 'high' | 'critical';
   approvalRequired: boolean;
-  cabRequired: boolean;          // Change Advisory Board
+  cabRequired: boolean; // Change Advisory Board
   testingRequired: boolean;
   backoutPlanRequired: boolean;
   businessJustificationRequired: boolean;
-  standardDuration?: number;     // 标准工期（小时）
-  cooldownPeriod?: number;       // 冷却期（小时）
+  standardDuration?: number; // 标准工期（小时）
+  cooldownPeriod?: number; // 冷却期（小时）
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -45,8 +45,8 @@ export interface ChangeClassification {
 export interface RiskFactor {
   category: 'technical' | 'business' | 'compliance' | 'operational';
   factor: string;
-  weight: number;                // 权重（0-100）
-  value: number;                 // 评分（0-100）
+  weight: number; // 权重（0-100）
+  value: number; // 评分（0-100）
   description: string;
 }
 
@@ -55,7 +55,7 @@ export interface RiskFactor {
  */
 export interface RiskAssessment {
   overallRisk: 'low' | 'medium' | 'high' | 'critical';
-  riskScore: number;             // 总风险分数（0-100）
+  riskScore: number; // 总风险分数（0-100）
   factors: RiskFactor[];
   recommendations: string[];
   assessedBy?: number;
@@ -69,12 +69,12 @@ export interface RiskAssessment {
  * 影响范围
  */
 export interface ImpactScope {
-  services: string[];            // 受影响服务
-  cis: string[];                 // 受影响配置项
-  users: number;                 // 受影响用户数
-  departments: string[];         // 受影响部门
-  locations: string[];           // 受影响位置
-  estimatedDowntime?: number;    // 预计停机时间（分钟）
+  services: string[]; // 受影响服务
+  cis: string[]; // 受影响配置项
+  users: number; // 受影响用户数
+  departments: string[]; // 受影响部门
+  locations: string[]; // 受影响位置
+  estimatedDowntime?: number; // 预计停机时间（分钟）
 }
 
 /**
@@ -109,9 +109,9 @@ export interface ClassificationRuleCondition {
 export interface ClassificationRule {
   id: string;
   name: string;
-  priority: number;              // 规则优先级
+  priority: number; // 规则优先级
   conditions: ClassificationRuleCondition[];
-  resultClassification: string;  // 分类ID
+  resultClassification: string; // 分类ID
   enabled: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -126,7 +126,7 @@ export interface ClassificationSuggestion {
   changeId: number;
   currentClassification?: ChangeClassification;
   suggestedClassification: ChangeClassification;
-  confidence: number;            // 置信度（0-100）
+  confidence: number; // 置信度（0-100）
   reasoning: string;
   basedOn: 'rules' | 'similarity' | 'risk' | 'impact' | 'historical';
   riskAssessment?: RiskAssessment;
@@ -163,7 +163,7 @@ export interface ChangeTemplateStep {
   order: number;
   title: string;
   description?: string;
-  expectedDuration?: number;     // 预计时长（分钟）
+  expectedDuration?: number; // 预计时长（分钟）
   assignedRole?: string;
   verificationRequired: boolean;
 }
@@ -176,10 +176,10 @@ export interface ChangeTemplateStep {
 export interface ApprovalLevel {
   level: number;
   name: string;
-  approvers: number[];           // 审批人ID
-  requiredApprovals: number;     // 需要的审批数量
-  timeoutHours?: number;         // 超时时间
-  escalationTo?: number;         // 升级到（审批人ID）
+  approvers: number[]; // 审批人ID
+  requiredApprovals: number; // 需要的审批数量
+  timeoutHours?: number; // 超时时间
+  escalationTo?: number; // 升级到（审批人ID）
 }
 
 /**
@@ -188,7 +188,7 @@ export interface ApprovalLevel {
 export interface ApprovalMatrix {
   classificationId: string;
   levels: ApprovalLevel[];
-  parallelApproval: boolean;     // 是否并行审批
+  parallelApproval: boolean; // 是否并行审批
   autoApproveConditions?: ClassificationRuleCondition[];
 }
 
@@ -200,8 +200,8 @@ export interface ApprovalMatrix {
 export interface ClassificationStats {
   classification: ChangeClassification;
   count: number;
-  successRate: number;           // 成功率（%）
-  avgDuration: number;           // 平均时长（小时）
+  successRate: number; // 成功率（%）
+  avgDuration: number; // 平均时长（小时）
   avgRiskScore: number;
   failureReasons?: Array<{
     reason: string;
@@ -299,4 +299,3 @@ export interface ClassificationHistory {
 }
 
 export default ChangeClassification;
-

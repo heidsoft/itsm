@@ -108,10 +108,7 @@ describe('TicketApi', () => {
 
       await TicketApi.getTickets({ page: 2, pageSize: 10, status: 'open' });
 
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('page=2'),
-        expect.any(Object)
-      );
+      expect(fetch).toHaveBeenCalledWith(expect.stringContaining('page=2'), expect.any(Object));
     });
 
     it('should handle API error response', async () => {

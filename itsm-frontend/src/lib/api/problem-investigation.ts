@@ -13,19 +13,10 @@ export type InvestigationStatus =
   | 'cancelled';
 
 // 调查步骤状态
-export type StepStatus =
-  | 'pending'
-  | 'in_progress'
-  | 'completed'
-  | 'blocked'
-  | 'cancelled';
+export type StepStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'cancelled';
 
 // 解决方案类型
-export type SolutionType =
-  | 'workaround'
-  | 'fix'
-  | 'prevention'
-  | 'process';
+export type SolutionType = 'workaround' | 'fix' | 'prevention' | 'process';
 
 // 解决方案状态
 export type SolutionStatus =
@@ -284,7 +275,10 @@ export const ProblemInvestigationAPI = {
   },
 
   // 更新问题调查
-  async updateInvestigation(id: number, data: UpdateInvestigationRequest): Promise<ProblemInvestigation> {
+  async updateInvestigation(
+    id: number,
+    data: UpdateInvestigationRequest
+  ): Promise<ProblemInvestigation> {
     return httpClient.put(`/api/v1/problem-investigation/investigations/${id}`, data);
   },
 
@@ -345,7 +339,9 @@ export const ProblemInvestigationAPI = {
   },
 
   // 创建知识库文章
-  async createKnowledgeArticle(data: CreateKnowledgeArticleRequest): Promise<ProblemKnowledgeArticle> {
+  async createKnowledgeArticle(
+    data: CreateKnowledgeArticleRequest
+  ): Promise<ProblemKnowledgeArticle> {
     return httpClient.post('/api/v1/problem-knowledge-articles', data);
   },
 

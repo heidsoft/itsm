@@ -1,24 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  Send,
-  Edit,
-  Trash2,
-  MessageSquare,
-  AtSign,
-  User,
-} from 'lucide-react';
-import {
-  Card,
-  Typography,
-  Button,
-  Input,
-  Avatar,
-  Tag as AntTag,
-  Modal,
-  message,
-} from 'antd';
+import { Send, Edit, Trash2, MessageSquare, AtSign, User } from 'lucide-react';
+import { Card, Typography, Button, Input, Avatar, Tag as AntTag, Modal } from 'antd';
 import { UserSelect } from '@/components/common/UserSelect';
 import { TicketApi } from '@/lib/api/ticket-api';
 import { Comment } from '@/types/comment';
@@ -59,7 +43,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       setIsInternal(false);
       onRefresh();
     } catch (error) {
-      message.error('添加评论失败');
+      console.error('添加评论失败:', error);
     }
   };
 
@@ -74,7 +58,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       setEditingCommentContent('');
       onRefresh();
     } catch (error) {
-      message.error('更新评论失败');
+      console.error('更新评论失败:', error);
     }
   };
 
@@ -83,7 +67,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       await TicketApi.deleteTicketComment(ticketId, commentId);
       onRefresh();
     } catch (error) {
-      message.error('删除评论失败');
+      console.error('删除评论失败:', error);
     }
   };
 
@@ -109,7 +93,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                   type='checkbox'
                   id='internal'
                   checked={isInternal}
-                  onChange={(e) => setIsInternal(e.target.checked)}
+                  onChange={e => setIsInternal(e.target.checked)}
                 />
                 <label htmlFor='internal' className='text-sm text-gray-600'>
                   仅内部可见
@@ -133,7 +117,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
             </div>
             <TextArea
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
+              onChange={e => setNewComment(e.target.value)}
               placeholder='输入您的评论...'
               rows={4}
             />
@@ -153,13 +137,13 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
 
       {/* 评论列表 */}
       <div className='space-y-4'>
-        {comments.map((comment) => (
+        {comments.map(comment => (
           <Card key={comment.id} className='shadow-sm'>
             {editingCommentId === comment.id ? (
               <div className='space-y-3'>
                 <TextArea
                   value={editingCommentContent}
-                  onChange={(e) => setEditingCommentContent(e.target.value)}
+                  onChange={e => setEditingCommentContent(e.target.value)}
                   rows={3}
                 />
                 <div className='flex justify-end space-x-2'>
@@ -180,12 +164,8 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                 </Avatar>
                 <div className='flex-1'>
                   <div className='flex items-center space-x-2 mb-2'>
-                    <Text strong>
-                      {comment.user?.name || comment.user?.username || '未知用户'}
-                    </Text>
-                    {comment.is_internal && (
-                      <AntTag color='orange'>仅内部可见</AntTag>
-                    )}
+                    <Text strong>{comment.user?.name || comment.user?.username || '未知用户'}</Text>
+                    {comment.is_internal && <AntTag color='orange'>仅内部可见</AntTag>}
                     {comment.mentions && comment.mentions.length > 0 && (
                       <AntTag color='blue' icon={<AtSign className='w-3 h-3' />}>
                         @{comment.mentions.length}人
@@ -200,9 +180,7 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                       </Text>
                     )}
                   </div>
-                  <Paragraph className='mb-2 whitespace-pre-wrap'>
-                    {comment.content}
-                  </Paragraph>
+                  <Paragraph className='mb-2 whitespace-pre-wrap'>{comment.content}</Paragraph>
                   <div className='flex items-center space-x-2'>
                     <Button
                       type='link'

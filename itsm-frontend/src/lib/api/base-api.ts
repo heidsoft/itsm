@@ -251,10 +251,7 @@ export abstract class BaseApi {
   /**
    * 批量删除
    */
-  protected static async batchDelete<T>(
-    endpoint: string,
-    ids: (string | number)[]
-  ): Promise<T> {
+  protected static async batchDelete<T>(endpoint: string, ids: (string | number)[]): Promise<T> {
     return this.request<T>('POST', `${endpoint}/batch`, { ids });
   }
 
@@ -371,7 +368,12 @@ export abstract class BaseApi {
 /**
  * 简化的CRUD API特征接口
  */
-export interface CrudApiInterface<T, CreateDto, UpdateDto, QueryParams extends ListQueryParams = ListQueryParams> {
+export interface CrudApiInterface<
+  T,
+  CreateDto,
+  UpdateDto,
+  QueryParams extends ListQueryParams = ListQueryParams,
+> {
   list(params?: QueryParams): Promise<PaginationResponse<T>>;
   get(id: string | number): Promise<T>;
   create(data: CreateDto): Promise<T>;

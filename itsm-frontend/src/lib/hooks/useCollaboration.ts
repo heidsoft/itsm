@@ -21,21 +21,16 @@ export const COLLABORATION_KEYS = {
   comments: () => [...COLLABORATION_KEYS.all, 'comments'] as const,
   commentsList: (query: CommentListQuery) =>
     [...COLLABORATION_KEYS.comments(), 'list', query] as const,
-  comment: (commentId: string) =>
-    [...COLLABORATION_KEYS.comments(), commentId] as const,
+  comment: (commentId: string) => [...COLLABORATION_KEYS.comments(), commentId] as const,
   commentStats: (ticketId: number) =>
     [...COLLABORATION_KEYS.comments(), 'stats', ticketId] as const,
   notifications: () => [...COLLABORATION_KEYS.all, 'notifications'] as const,
   notificationsList: (query?: NotificationListQuery) =>
     [...COLLABORATION_KEYS.notifications(), 'list', query] as const,
-  unreadCount: () =>
-    [...COLLABORATION_KEYS.notifications(), 'unread-count'] as const,
-  activities: (ticketId: number) =>
-    [...COLLABORATION_KEYS.all, 'activities', ticketId] as const,
-  watchers: (ticketId: number) =>
-    [...COLLABORATION_KEYS.all, 'watchers', ticketId] as const,
-  collaborationStats: (ticketId: number) =>
-    [...COLLABORATION_KEYS.all, 'stats', ticketId] as const,
+  unreadCount: () => [...COLLABORATION_KEYS.notifications(), 'unread-count'] as const,
+  activities: (ticketId: number) => [...COLLABORATION_KEYS.all, 'activities', ticketId] as const,
+  watchers: (ticketId: number) => [...COLLABORATION_KEYS.all, 'watchers', ticketId] as const,
+  collaborationStats: (ticketId: number) => [...COLLABORATION_KEYS.all, 'stats', ticketId] as const,
 };
 
 // ==================== Query Hooks ====================
@@ -127,10 +122,7 @@ export function useWatchersQuery(ticketId: number, enabled: boolean = true) {
 /**
  * 获取协作统计
  */
-export function useCollaborationStatsQuery(
-  ticketId: number,
-  enabled: boolean = true
-) {
+export function useCollaborationStatsQuery(ticketId: number, enabled: boolean = true) {
   return useQuery({
     queryKey: COLLABORATION_KEYS.collaborationStats(ticketId),
     queryFn: () => CollaborationApi.getCollaborationStats(ticketId),
@@ -167,8 +159,7 @@ export function useCreateCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: CreateCommentRequest) =>
-      CollaborationApi.createComment(request),
+    mutationFn: (request: CreateCommentRequest) => CollaborationApi.createComment(request),
     onSuccess: (_, variables) => {
       message.success('评论已发布');
       queryClient.invalidateQueries({
@@ -197,13 +188,8 @@ export function useUpdateCommentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      commentId,
-      request,
-    }: {
-      commentId: string;
-      request: UpdateCommentRequest;
-    }) => CollaborationApi.updateComment(commentId, request),
+    mutationFn: ({ commentId, request }: { commentId: string; request: UpdateCommentRequest }) =>
+      CollaborationApi.updateComment(commentId, request),
     onSuccess: (_, variables) => {
       message.success('评论已更新');
       queryClient.invalidateQueries({
@@ -278,8 +264,7 @@ export function useMarkNotificationAsReadMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (notificationId: string) =>
-      CollaborationApi.markNotificationAsRead(notificationId),
+    mutationFn: (notificationId: string) => CollaborationApi.markNotificationAsRead(notificationId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: COLLABORATION_KEYS.notifications(),
@@ -318,8 +303,7 @@ export function useAddWatcherMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { ticketId: number; userId: number }) =>
-      CollaborationApi.addWatcher(data),
+    mutationFn: (data: { ticketId: number; userId: number }) => CollaborationApi.addWatcher(data),
     onSuccess: (_, variables) => {
       message.success('观察者已添加');
       queryClient.invalidateQueries({
@@ -421,4 +405,3 @@ const CollaborationHooks = {
 };
 
 export default CollaborationHooks;
-

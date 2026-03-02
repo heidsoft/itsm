@@ -66,10 +66,7 @@ export const SystemInfo: React.FC = () => {
             ]}
             renderItem={item => (
               <List.Item>
-                <Link
-                  href={item.href}
-                  style={{ textDecoration: 'none', width: '100%' }}
-                >
+                <Link href={item.href} style={{ textDecoration: 'none', width: '100%' }}>
                   <div
                     style={{
                       display: 'flex',
@@ -80,10 +77,7 @@ export const SystemInfo: React.FC = () => {
                     }}
                   >
                     <Text>{item.title}</Text>
-                    <ArrowUpRight
-                      className='w-4 h-4'
-                      style={{ color: token.colorTextSecondary }}
-                    />
+                    <ArrowUpRight className='w-4 h-4' style={{ color: token.colorTextSecondary }} />
                   </div>
                 </Link>
               </List.Item>

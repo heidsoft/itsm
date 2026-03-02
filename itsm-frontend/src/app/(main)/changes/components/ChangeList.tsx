@@ -123,18 +123,14 @@ export const ChangeList: React.FC<ChangeListProps> = ({
           <div className='flex items-center space-x-2'>
             <Badge
               color={
-                record.type === 'emergency'
-                  ? 'red'
-                  : record.type === 'standard'
-                  ? 'green'
-                  : 'blue'
+                record.type === 'emergency' ? 'red' : record.type === 'standard' ? 'green' : 'blue'
               }
               text={
                 record.type === 'emergency'
                   ? '紧急变更'
                   : record.type === 'standard'
-                  ? '标准变更'
-                  : '普通变更'
+                    ? '标准变更'
+                    : '普通变更'
               }
             />
           </div>

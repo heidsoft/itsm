@@ -90,10 +90,11 @@ class TicketCategoryService {
   // 获取分类列表
   async listCategories(params: ListCategoriesParams = {}): Promise<ListCategoriesResponse> {
     const queryParams = new URLSearchParams();
-    
+
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.page_size) queryParams.append('page_size', params.page_size.toString());
-    if (params.parent_id !== undefined) queryParams.append('parent_id', params.parent_id.toString());
+    if (params.parent_id !== undefined)
+      queryParams.append('parent_id', params.parent_id.toString());
     if (params.level) queryParams.append('level', params.level.toString());
     if (params.is_active !== undefined) queryParams.append('active', params.is_active.toString());
 
@@ -101,7 +102,7 @@ class TicketCategoryService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
     });
 
@@ -119,7 +120,7 @@ class TicketCategoryService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
     });
 
@@ -137,7 +138,7 @@ class TicketCategoryService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
     });
 
@@ -155,7 +156,7 @@ class TicketCategoryService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });
@@ -175,7 +176,7 @@ class TicketCategoryService {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });
@@ -195,7 +196,7 @@ class TicketCategoryService {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
     });
 
@@ -211,7 +212,7 @@ class TicketCategoryService {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });
@@ -228,7 +229,7 @@ class TicketCategoryService {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getAuthToken()}`,
+        Authorization: `Bearer ${this.getAuthToken()}`,
       },
       body: JSON.stringify(data),
     });

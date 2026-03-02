@@ -9,4 +9,3 @@ export { BatchProgressModal } from './BatchProgressModal';
 export type { BatchOperationBarProps } from './BatchOperationBar';
 export type { BatchOperationModalProps } from './BatchOperationModal';
 export type { BatchProgressModalProps } from './BatchProgressModal';
-

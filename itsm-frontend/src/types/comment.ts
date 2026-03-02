@@ -9,9 +9,9 @@
  * 评论类型枚举
  */
 export enum CommentType {
-  INTERNAL = 'internal',     // 内部评论
-  PUBLIC = 'public',         // 公开评论
-  SYSTEM = 'system',         // 系统评论
+  INTERNAL = 'internal', // 内部评论
+  PUBLIC = 'public', // 公开评论
+  SYSTEM = 'system', // 系统评论
 }
 
 /**

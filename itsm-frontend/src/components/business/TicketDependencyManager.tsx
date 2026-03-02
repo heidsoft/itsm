@@ -108,7 +108,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
         dependency_type: rel.metadata?.dependency_type === 'hard' ? 'hard' : 'soft',
         is_blocking: rel.metadata?.is_blocking === true,
         description: rel.description,
-        created_at: typeof rel.createdAt === 'string' ? rel.createdAt : new Date(rel.createdAt).toISOString(),
+        created_at:
+          typeof rel.createdAt === 'string' ? rel.createdAt : new Date(rel.createdAt).toISOString(),
         created_by: rel.createdBy,
         created_by_name: rel.createdByName || '系统',
       }));
@@ -135,7 +136,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       try {
         // 注意：影响分析API尚未实现
         // 未来可通过 TicketRelationsApi.analyzeImpact(ticket.id) 获取实际数据
-        
+
         // 暂时返回空数据，禁止使用mock数据
         setImpactAnalysis([]);
       } catch (error) {
@@ -418,10 +419,10 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               {field === 'status'
                 ? '状态'
                 : field === 'progress'
-                ? '进度'
-                : field === 'priority'
-                ? '优先级'
-                : field}
+                  ? '进度'
+                  : field === 'priority'
+                    ? '优先级'
+                    : field}
             </Tag>
           ))}
         </Space>
@@ -484,7 +485,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       <Card>
         <Tabs
           activeKey={activeTab}
-          onChange={(key) => setActiveTab(key as 'dependencies' | 'impact' | 'graph' | 'stats')}
+          onChange={key => setActiveTab(key as 'dependencies' | 'impact' | 'graph' | 'stats')}
           type='card'
           size='large'
           items={[

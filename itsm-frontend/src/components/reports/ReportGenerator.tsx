@@ -16,7 +16,7 @@ import {
   InputNumber,
   DatePicker,
   Input,
-  App
+  App,
 } from 'antd';
 import {
   BarChart3,
@@ -27,7 +27,11 @@ import {
   PlayCircle,
   Settings,
 } from 'lucide-react';
-import { TicketAnalyticsApi, type AnalyticsConfig, type AnalyticsResponse } from '@/lib/api/ticket-analytics-api';
+import {
+  TicketAnalyticsApi,
+  type AnalyticsConfig,
+  type AnalyticsResponse,
+} from '@/lib/api/ticket-analytics-api';
 import ReportsCharts from './ReportsCharts';
 
 const { Title, Text } = Typography;
@@ -133,10 +137,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       <Form
         form={form}
-        layout="vertical"
+        layout='vertical'
         initialValues={{
           dimensions: ['created_date'],
           metrics: ['count'],
@@ -149,15 +153,11 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
           {/* 维度选择 */}
           <Col xs={24} md={8}>
             <Form.Item
-              label="分析维度"
-              name="dimensions"
+              label='分析维度'
+              name='dimensions'
               rules={[{ required: true, message: '请选择至少一个维度' }]}
             >
-              <Select
-                mode="multiple"
-                placeholder="选择分析维度"
-                style={{ width: '100%' }}
-              >
+              <Select mode='multiple' placeholder='选择分析维度' style={{ width: '100%' }}>
                 {dimensionOptions.map(option => (
                   <Option key={option.value} value={option.value}>
                     <Space>
@@ -173,20 +173,16 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
           {/* 指标选择 */}
           <Col xs={24} md={8}>
             <Form.Item
-              label="分析指标"
-              name="metrics"
+              label='分析指标'
+              name='metrics'
               rules={[{ required: true, message: '请选择至少一个指标' }]}
             >
-              <Select
-                mode="multiple"
-                placeholder="选择分析指标"
-                style={{ width: '100%' }}
-              >
+              <Select mode='multiple' placeholder='选择分析指标' style={{ width: '100%' }}>
                 {metricOptions.map(option => (
                   <Option key={option.value} value={option.value}>
                     <div>
                       <div>{option.label}</div>
-                      <Text type="secondary" className="text-xs">
+                      <Text type='secondary' className='text-xs'>
                         {option.description}
                       </Text>
                     </div>
@@ -199,11 +195,11 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
           {/* 图表类型 */}
           <Col xs={24} md={8}>
             <Form.Item
-              label="图表类型"
-              name="chart_type"
+              label='图表类型'
+              name='chart_type'
               rules={[{ required: true, message: '请选择图表类型' }]}
             >
-              <Select placeholder="选择图表类型" style={{ width: '100%' }}>
+              <Select placeholder='选择图表类型' style={{ width: '100%' }}>
                 {chartTypeOptions.map(option => (
                   <Option key={option.value} value={option.value}>
                     <Space>
@@ -218,11 +214,8 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
           {/* 分组字段 */}
           <Col xs={24} md={8}>
-            <Form.Item
-              label="分组字段（可选）"
-              name="group_by"
-            >
-              <Select placeholder="选择分组字段" allowClear style={{ width: '100%' }}>
+            <Form.Item label='分组字段（可选）' name='group_by'>
+              <Select placeholder='选择分组字段' allowClear style={{ width: '100%' }}>
                 {dimensionOptions.map(option => (
                   <Option key={option.value} value={option.value}>
                     {option.label}
@@ -234,21 +227,13 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
           {/* 分页设置 */}
           <Col xs={24} md={8}>
-            <Form.Item label="分页设置">
+            <Form.Item label='分页设置'>
               <Space.Compact style={{ width: '100%' }}>
-                <Form.Item name="page" noStyle>
-                  <InputNumber
-                    placeholder="页码"
-                    min={1}
-                    style={{ width: '50%' }}
-                  />
+                <Form.Item name='page' noStyle>
+                  <InputNumber placeholder='页码' min={1} style={{ width: '50%' }} />
                 </Form.Item>
-                <Form.Item name="page_size" noStyle>
-                  <InputNumber
-                    placeholder="每页数量"
-                    min={1}
-                    style={{ width: '50%' }}
-                  />
+                <Form.Item name='page_size' noStyle>
+                  <InputNumber placeholder='每页数量' min={1} style={{ width: '50%' }} />
                 </Form.Item>
               </Space.Compact>
             </Form.Item>
@@ -256,25 +241,20 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
           {/* 操作按钮 */}
           <Col xs={24} md={8}>
-            <Form.Item label="操作">
+            <Form.Item label='操作'>
               <Space>
                 <Button
-                  type="primary"
+                  type='primary'
                   icon={<PlayCircle size={16} />}
                   onClick={handleGeneratePreview}
                   loading={loading}
                 >
                   预览
                 </Button>
-                <Button
-                  icon={<Settings size={16} />}
-                  onClick={handleApplyConfig}
-                >
+                <Button icon={<Settings size={16} />} onClick={handleApplyConfig}>
                   应用配置
                 </Button>
-                <Button onClick={handleReset}>
-                  重置
-                </Button>
+                <Button onClick={handleReset}>重置</Button>
               </Space>
             </Form.Item>
           </Col>
@@ -285,13 +265,13 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
       {/* 预览区域 */}
       {showPreview && previewData && (
-        <Card title="数据预览" className="mb-4">
+        <Card title='数据预览' className='mb-4'>
           <Alert
-            message="预览模式"
+            message='预览模式'
             description="这是基于当前配置生成的数据预览，点击 '应用配置' 将更新主图表。"
-            type="info"
+            type='info'
             showIcon
-            className="mb-4"
+            className='mb-4'
           />
 
           <ReportsCharts
@@ -301,44 +281,44 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
           />
 
           {/* 统计摘要 */}
-          <Row gutter={[16, 16]} className="mt-6">
+          <Row gutter={[16, 16]} className='mt-6'>
             <Col span={6}>
-              <Card size="small">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+              <Card size='small'>
+                <div className='text-center'>
+                  <div className='text-2xl font-bold text-blue-600'>
                     {previewData.summary.total.toLocaleString()}
                   </div>
-                  <div className="text-gray-500">总数据量</div>
+                  <div className='text-gray-500'>总数据量</div>
                 </div>
               </Card>
             </Col>
             <Col span={6}>
-              <Card size="small">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">
+              <Card size='small'>
+                <div className='text-center'>
+                  <div className='text-2xl font-bold text-green-600'>
                     {previewData.summary.resolved.toLocaleString()}
                   </div>
-                  <div className="text-gray-500">已解决</div>
+                  <div className='text-gray-500'>已解决</div>
                 </div>
               </Card>
             </Col>
             <Col span={6}>
-              <Card size="small">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-orange-600">
+              <Card size='small'>
+                <div className='text-center'>
+                  <div className='text-2xl font-bold text-orange-600'>
                     {previewData.summary.avg_response_time.toFixed(1)}h
                   </div>
-                  <div className="text-gray-500">平均响应时间</div>
+                  <div className='text-gray-500'>平均响应时间</div>
                 </div>
               </Card>
             </Col>
             <Col span={6}>
-              <Card size="small">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
+              <Card size='small'>
+                <div className='text-center'>
+                  <div className='text-2xl font-bold text-purple-600'>
                     {previewData.summary.sla_compliance.toFixed(1)}%
                   </div>
-                  <div className="text-gray-500">SLA合规率</div>
+                  <div className='text-gray-500'>SLA合规率</div>
                 </div>
               </Card>
             </Col>
@@ -348,9 +328,9 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
       {!showPreview && (
         <Alert
-          message="配置报告参数"
+          message='配置报告参数'
           description="选择分析维度、指标和图表类型，然后点击 '预览' 查看效果。"
-          type="info"
+          type='info'
           showIcon
         />
       )}

@@ -2,7 +2,7 @@
  * 服务目录组件导出
  */
 
-export type { } from '@/types/service-catalog';
+export type {} from '@/types/service-catalog';
 
 // UI组件将在后续完善
 // export { ServiceList } from './ServiceList';
@@ -12,4 +12,3 @@ export type { } from '@/types/service-catalog';
 // export { ServiceRequestList } from './ServiceRequestList';
 // export { PortalHomepage } from './PortalHomepage';
 // export { ServiceRatings } from './ServiceRatings';
-

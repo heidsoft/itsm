@@ -5,16 +5,10 @@
 
 import React from 'react';
 import { Table, Tag, Space, Button, Tooltip, Popconfirm } from 'antd';
-import {
-  EyeOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { EyeOutlined, EditOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { Ticket } from '@/types/ticket';
 import { AvatarImage } from '@/components/ui/OptimizedImage';
-import { useI18n } from '@/lib/i18n';
 
 export interface TicketsTableViewProps {
   tickets: Ticket[];
@@ -46,7 +40,6 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
   canEdit = true,
   canDelete = true,
 }) => {
-  const { t } = useI18n();
   // 状态颜色映射
   const statusColorMap: Record<string, string> = {
     new: 'blue',
@@ -76,7 +69,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       width: 120,
       fixed: 'left',
       render: (text: string) => (
-        <span className="font-mono text-blue-600 font-semibold">{text}</span>
+        <span className='font-mono text-blue-600 font-semibold'>{text}</span>
       ),
     },
     {
@@ -86,7 +79,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       ellipsis: true,
       render: (text: string, record: Ticket) => (
         <Tooltip title={record.description}>
-          <span className="cursor-pointer hover:text-blue-600">{text}</span>
+          <span className='cursor-pointer hover:text-blue-600'>{text}</span>
         </Tooltip>
       ),
     },
@@ -106,9 +99,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
           cancelled: '已取消',
         };
         return (
-        <Tag color={statusColorMap[status] || 'default'}>
-            {statusTextMap[status] || status}
-        </Tag>
+          <Tag color={statusColorMap[status] || 'default'}>{statusTextMap[status] || status}</Tag>
         );
       },
     },
@@ -126,9 +117,9 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
           critical: '紧急',
         };
         return (
-        <Tag color={priorityColorMap[priority] || 'default'}>
+          <Tag color={priorityColorMap[priority] || 'default'}>
             {priorityTextMap[priority] || priority}
-        </Tag>
+          </Tag>
         );
       },
     },
@@ -137,9 +128,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       dataIndex: 'type',
       key: 'type',
       width: 100,
-      render: (type: string) => (
-        <Tag>{type || '未分类'}</Tag>
-      ),
+      render: (type: string) => <Tag>{type || '未分类'}</Tag>,
     },
     {
       title: '创建人',
@@ -148,11 +137,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       width: 120,
       render: (requester: { id: number; name: string; avatar?: string }) => (
         <Space>
-          <AvatarImage
-            src={requester?.avatar}
-            name={requester?.name || '未知'}
-            size={24}
-          />
+          <AvatarImage src={requester?.avatar} name={requester?.name || '未知'} size={24} />
           <span>{requester?.name || '未知'}</span>
         </Space>
       ),
@@ -162,20 +147,15 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       dataIndex: 'assignee',
       key: 'assignee',
       width: 120,
-      render: (assignee: { id: number; name: string; avatar?: string }) => (
+      render: (assignee: { id: number; name: string; avatar?: string }) =>
         assignee ? (
           <Space>
-            <AvatarImage
-              src={assignee.avatar}
-              name={assignee.name}
-              size={24}
-            />
+            <AvatarImage src={assignee.avatar} name={assignee.name} size={24} />
             <span>{assignee.name}</span>
           </Space>
         ) : (
-          <span className="text-gray-400">未分配</span>
-        )
-      ),
+          <span className='text-gray-400'>未分配</span>
+        ),
     },
     {
       title: '创建时间',
@@ -184,9 +164,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       width: 160,
       sorter: true,
       render: (date: string) => (
-        <span className="text-gray-600">
-          {new Date(date).toLocaleString('zh-CN')}
-        </span>
+        <span className='text-gray-600'>{new Date(date).toLocaleString('zh-CN')}</span>
       ),
     },
     {
@@ -196,9 +174,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       width: 160,
       sorter: true,
       render: (date: string) => (
-        <span className="text-gray-600">
-          {new Date(date).toLocaleString('zh-CN')}
-        </span>
+        <span className='text-gray-600'>{new Date(date).toLocaleString('zh-CN')}</span>
       ),
     },
     {
@@ -207,41 +183,36 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       fixed: 'right',
       width: 150,
       render: (_, record: Ticket) => (
-        <Space size="small">
-          <Tooltip title="查看详情">
+        <Space size='small'>
+          <Tooltip title='查看详情'>
             <Button
-              type="link"
-              size="small"
+              type='link'
+              size='small'
               icon={<EyeOutlined />}
               onClick={() => onView(record)}
             />
           </Tooltip>
-          
+
           {canEdit && (
-            <Tooltip title="编辑">
+            <Tooltip title='编辑'>
               <Button
-                type="link"
-                size="small"
+                type='link'
+                size='small'
                 icon={<EditOutlined />}
                 onClick={() => onEdit(record)}
               />
             </Tooltip>
           )}
-          
+
           {canDelete && (
             <Popconfirm
-              title={t('common.confirmDeleteContent')}
+              title='确定要删除这个工单吗？'
               onConfirm={() => onDelete(record)}
-              okText={t('common.confirm')}
-              cancelText={t('common.cancel')}
+              okText='确定'
+              cancelText='取消'
             >
-              <Tooltip title={t('common.delete')}>
-                <Button
-                  type="link"
-                  size="small"
-                  danger
-                  icon={<DeleteOutlined />}
-                />
+              <Tooltip title='删除'>
+                <Button type='link' size='small' danger icon={<DeleteOutlined />} />
               </Tooltip>
             </Popconfirm>
           )}
@@ -254,28 +225,23 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
   const rowSelection = {
     selectedRowKeys,
     onChange: onRowSelectionChange,
-    selections: [
-      Table.SELECTION_ALL,
-      Table.SELECTION_INVERT,
-      Table.SELECTION_NONE,
-    ],
+    selections: [Table.SELECTION_ALL, Table.SELECTION_INVERT, Table.SELECTION_NONE],
   };
 
   return (
     <Table<Ticket>
       columns={columns}
       dataSource={tickets}
-      rowKey="id"
+      rowKey='id'
       loading={loading}
       pagination={pagination}
       rowSelection={rowSelection}
-      onChange={(pagination) => onPaginationChange(pagination)}
+      onChange={pagination => onPaginationChange(pagination)}
       scroll={{ x: 1500 }}
-      className="bg-white rounded-lg shadow-sm"
-      size="middle"
+      className='bg-white rounded-lg shadow-sm'
+      size='middle'
     />
   );
 };
 
 export default TicketsTableView;
-

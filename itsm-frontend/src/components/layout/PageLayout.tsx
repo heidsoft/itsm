@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { ReactNode } from "react";
-import { theme } from "antd";
-import { cn } from "@/lib/utils";
-import { layout, semanticSpacing } from "@/lib/design-system/spacing";
+import React, { ReactNode } from 'react';
+import { theme } from 'antd';
+import { cn } from '@/lib/utils';
+import { layout, semanticSpacing } from '@/lib/design-system/spacing';
 
 const { token } = theme.useToken();
 
@@ -51,15 +51,15 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   footer,
   showBreadcrumb = false,
   breadcrumb = [],
-  maxWidth = "lg",
-  padding = "md",
+  maxWidth = 'lg',
+  padding = 'md',
   backgroundColor,
   className,
   style,
 }) => {
   return (
     <div
-      className={cn("min-h-screen flex flex-col", className)}
+      className={cn('min-h-screen flex flex-col', className)}
       style={{
         backgroundColor: backgroundColor || token.colorBgLayout,
         ...style,
@@ -68,7 +68,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       {/* 页面头部 */}
       {header && (
         <header
-          className="sticky top-0 z-50"
+          className='sticky top-0 z-50'
           style={{
             backgroundColor: token.colorBgContainer,
             borderBottom: `1px solid ${token.colorBorder}`,
@@ -80,11 +80,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       )}
 
       {/* 主要内容区域 */}
-      <div className="flex flex-1">
+      <div className='flex flex-1'>
         {/* 侧边栏 */}
         {sidebar && (
           <aside
-            className="hidden lg:block"
+            className='hidden lg:block'
             style={{
               width: layout.sidebar.width.lg,
               backgroundColor: token.colorBgContainer,
@@ -96,18 +96,18 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         )}
 
         {/* 页面内容 */}
-        <main className="flex-1 flex flex-col">
+        <main className='flex-1 flex flex-col'>
           {/* 页面标题区域 */}
           {(title || description || showBreadcrumb) && (
             <div
-              className="px-4 py-6 lg:px-8"
+              className='px-4 py-6 lg:px-8'
               style={{
                 backgroundColor: token.colorBgContainer,
                 borderBottom: `1px solid ${token.colorBorder}`,
               }}
             >
               <div
-                className="mx-auto"
+                className='mx-auto'
                 style={{
                   maxWidth: layout.page.maxWidth,
                   padding: `0 ${semanticSpacing.padding[padding]}`,
@@ -115,30 +115,25 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               >
                 {/* 面包屑 */}
                 {showBreadcrumb && breadcrumb.length > 0 && (
-                  <nav className="mb-4">
-                    <ol className="flex items-center space-x-2 text-sm">
+                  <nav className='mb-4'>
+                    <ol className='flex items-center space-x-2 text-sm'>
                       {breadcrumb.map((item, index) => (
-                        <li key={index} className="flex items-center">
+                        <li key={index} className='flex items-center'>
                           {index > 0 && (
-                            <span
-                              className="mx-2"
-                              style={{ color: token.colorTextTertiary }}
-                            >
+                            <span className='mx-2' style={{ color: token.colorTextTertiary }}>
                               /
                             </span>
                           )}
                           {item.href ? (
                             <a
                               href={item.href}
-                              className="hover:underline"
+                              className='hover:underline'
                               style={{ color: token.colorPrimary }}
                             >
                               {item.label}
                             </a>
                           ) : (
-                            <span style={{ color: token.colorTextSecondary }}>
-                              {item.label}
-                            </span>
+                            <span style={{ color: token.colorTextSecondary }}>{item.label}</span>
                           )}
                         </li>
                       ))}
@@ -148,20 +143,14 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
                 {/* 页面标题 */}
                 {title && (
-                  <h1
-                    className="text-3xl font-bold mb-2"
-                    style={{ color: token.colorText }}
-                  >
+                  <h1 className='text-3xl font-bold mb-2' style={{ color: token.colorText }}>
                     {title}
                   </h1>
                 )}
 
                 {/* 页面描述 */}
                 {description && (
-                  <p
-                    className="text-lg"
-                    style={{ color: token.colorTextSecondary }}
-                  >
+                  <p className='text-lg' style={{ color: token.colorTextSecondary }}>
                     {description}
                   </p>
                 )}
@@ -171,13 +160,13 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
           {/* 页面内容 */}
           <div
-            className="flex-1 px-4 py-6 lg:px-8"
+            className='flex-1 px-4 py-6 lg:px-8'
             style={{
               padding: `${semanticSpacing.padding[padding]} ${semanticSpacing.padding[padding]}`,
             }}
           >
             <div
-              className="mx-auto"
+              className='mx-auto'
               style={{
                 maxWidth: layout.page.maxWidth,
               }}
@@ -198,7 +187,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           }}
         >
           <div
-            className="mx-auto"
+            className='mx-auto'
             style={{
               maxWidth: layout.page.maxWidth,
             }}
@@ -241,14 +230,14 @@ export const ContentLayout: React.FC<ContentLayoutProps> = ({
   title,
   description,
   actions,
-  maxWidth = "md",
-  padding = "md",
+  maxWidth = 'md',
+  padding = 'md',
   bordered = false,
   className,
 }) => {
   return (
     <div
-      className={cn("w-full", bordered && "border rounded-lg", className)}
+      className={cn('w-full', bordered && 'border rounded-lg', className)}
       style={{
         maxWidth: layout.content.maxWidth,
         padding: semanticSpacing.padding[padding],
@@ -260,21 +249,16 @@ export const ContentLayout: React.FC<ContentLayoutProps> = ({
     >
       {/* 内容头部 */}
       {(title || description || actions) && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
+        <div className='mb-6'>
+          <div className='flex items-center justify-between mb-2'>
             {title && (
-              <h2
-                className="text-2xl font-semibold"
-                style={{ color: token.colorText }}
-              >
+              <h2 className='text-2xl font-semibold' style={{ color: token.colorText }}>
                 {title}
               </h2>
             )}
-            {actions && <div className="ml-4">{actions}</div>}
+            {actions && <div className='ml-4'>{actions}</div>}
           </div>
-          {description && (
-            <p style={{ color: token.colorTextSecondary }}>{description}</p>
-          )}
+          {description && <p style={{ color: token.colorTextSecondary }}>{description}</p>}
         </div>
       )}
 
@@ -312,12 +296,12 @@ export interface GridLayoutProps {
 export const GridLayout: React.FC<GridLayoutProps> = ({
   children,
   columns = 3,
-  gap = "md",
+  gap = 'md',
   responsive,
   className,
 }) => {
   const getGridClasses = () => {
-    const baseClasses = "grid";
+    const baseClasses = 'grid';
 
     // 基础列数
     const columnClasses = `grid-cols-${columns}`;
@@ -326,8 +310,8 @@ export const GridLayout: React.FC<GridLayoutProps> = ({
     const responsiveClasses = responsive
       ? Object.entries(responsive)
           .map(([breakpoint, cols]) => `${breakpoint}:grid-cols-${cols}`)
-          .join(" ")
-      : "";
+          .join(' ')
+      : '';
 
     return cn(baseClasses, columnClasses, responsiveClasses);
   };
@@ -348,11 +332,11 @@ export const GridLayout: React.FC<GridLayoutProps> = ({
 export interface FlexLayoutProps {
   children: ReactNode;
   /** 布局方向 */
-  direction?: "row" | "column" | "row-reverse" | "column-reverse";
+  direction?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
   /** 对齐方式 */
-  align?: "start" | "end" | "center" | "baseline" | "stretch";
+  align?: 'start' | 'end' | 'center' | 'baseline' | 'stretch';
   /** 分布方式 */
-  justify?: "start" | "end" | "center" | "between" | "around" | "evenly";
+  justify?: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly';
   /** 是否换行 */
   wrap?: boolean;
   /** 间距 */
@@ -367,27 +351,21 @@ export interface FlexLayoutProps {
  */
 export const FlexLayout: React.FC<FlexLayoutProps> = ({
   children,
-  direction = "row",
-  align = "start",
-  justify = "start",
+  direction = 'row',
+  align = 'start',
+  justify = 'start',
   wrap = false,
-  gap = "md",
+  gap = 'md',
   className,
 }) => {
   const getFlexClasses = () => {
-    const baseClasses = "flex";
+    const baseClasses = 'flex';
     const directionClasses = `flex-${direction}`;
     const alignClasses = `items-${align}`;
     const justifyClasses = `justify-${justify}`;
-    const wrapClasses = wrap ? "flex-wrap" : "flex-nowrap";
+    const wrapClasses = wrap ? 'flex-wrap' : 'flex-nowrap';
 
-    return cn(
-      baseClasses,
-      directionClasses,
-      alignClasses,
-      justifyClasses,
-      wrapClasses
-    );
+    return cn(baseClasses, directionClasses, alignClasses, justifyClasses, wrapClasses);
   };
 
   return (

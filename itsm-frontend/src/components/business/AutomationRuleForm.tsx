@@ -32,7 +32,6 @@ import {
 } from '@ant-design/icons';
 import type { AutomationRule } from '@/lib/api/ticket-automation-rule-api';
 import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
-import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -49,7 +48,6 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
   onSave,
   onCancel,
 }) => {
-  const { t } = useI18n();
   const [form] = Form.useForm();
   const [testModalVisible, setTestModalVisible] = useState(false);
   const [testTicketId, setTestTicketId] = useState<number | null>(null);
@@ -80,7 +78,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
       const values = await form.validateFields();
       onSave(values);
     } catch (error) {
-      message.error('表单验证失败');
+      console.error('Form validation failed:', error);
     }
   };
 
@@ -127,6 +125,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
         ),
       });
     } catch (error) {
+      console.error('Failed to test rule:', error);
       message.error('测试规则失败');
     }
   };
@@ -157,7 +156,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
     <>
       <Form
         form={form}
-        layout="vertical"
+        layout='vertical'
         onFinish={handleSubmit}
         initialValues={{
           priority: 0,
@@ -169,46 +168,39 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              name="name"
-              label="规则名称"
+              name='name'
+              label='规则名称'
               rules={[{ required: true, message: '请输入规则名称' }]}
             >
-              <Input placeholder="例如：高优先级工单自动升级" />
+              <Input placeholder='例如：高优先级工单自动升级' />
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              name="priority"
-              label="优先级"
+              name='priority'
+              label='优先级'
               rules={[{ required: true, message: '请输入优先级' }]}
-              tooltip="数字越大优先级越高，系统按优先级从高到低执行规则"
+              tooltip='数字越大优先级越高，系统按优先级从高到低执行规则'
             >
               <InputNumber min={0} max={100} style={{ width: '100%' }} />
             </Form.Item>
           </Col>
         </Row>
 
-        <Form.Item name="description" label="规则描述">
-          <TextArea rows={2} placeholder="规则描述（可选）" />
+        <Form.Item name='description' label='规则描述'>
+          <TextArea rows={2} placeholder='规则描述（可选）' />
         </Form.Item>
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item
-              name="is_active"
-              label="启用状态"
-              valuePropName="checked"
-            >
-              <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+            <Form.Item name='is_active' label='启用状态' valuePropName='checked'>
+              <Switch checkedChildren='启用' unCheckedChildren='禁用' />
             </Form.Item>
           </Col>
           {editingRule && (
             <Col span={12}>
               <Space>
-                <Button
-                  icon={<PlayCircleOutlined />}
-                  onClick={() => setTestModalVisible(true)}
-                >
+                <Button icon={<PlayCircleOutlined />} onClick={() => setTestModalVisible(true)}>
                   测试规则
                 </Button>
               </Space>
@@ -219,35 +211,35 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
         <Divider>条件设置</Divider>
 
         <Form.Item
-          name="conditions"
-          label="触发条件"
+          name='conditions'
+          label='触发条件'
           rules={[{ required: true, message: '请至少添加一个条件' }]}
         >
-          <Form.List name="conditions">
+          <Form.List name='conditions'>
             {(fields, { add, remove }) => (
               <div>
                 {fields.map((field, index) => (
                   <Card
                     key={field.key}
-                    size="small"
+                    size='small'
                     style={{ marginBottom: 8 }}
                     extra={
                       <Button
-                        type="link"
+                        type='link'
                         danger
                         icon={<DeleteOutlined />}
                         onClick={() => remove(field.name)}
                       />
                     }
                   >
-                    <Row gutter={8} align="middle">
+                    <Row gutter={8} align='middle'>
                       <Col span={8}>
                         <Form.Item
                           {...field}
                           name={[field.name, 'field']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder="选择字段">
+                          <Select placeholder='选择字段'>
                             {conditionFields.map(f => (
                               <Option key={f.value} value={f.value}>
                                 {f.label}
@@ -262,14 +254,14 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                           name={[field.name, 'operator']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder="操作符">
-                            <Option value="equals">等于</Option>
-                            <Option value="not_equals">不等于</Option>
-                            <Option value="contains">包含</Option>
-                            <Option value="in">属于</Option>
-                            <Option value="not_in">不属于</Option>
-                            <Option value="greater_than">大于</Option>
-                            <Option value="less_than">小于</Option>
+                          <Select placeholder='操作符'>
+                            <Option value='equals'>等于</Option>
+                            <Option value='not_equals'>不等于</Option>
+                            <Option value='contains'>包含</Option>
+                            <Option value='in'>属于</Option>
+                            <Option value='not_in'>不属于</Option>
+                            <Option value='greater_than'>大于</Option>
+                            <Option value='less_than'>小于</Option>
                           </Select>
                         </Form.Item>
                       </Col>
@@ -279,18 +271,13 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                           name={[field.name, 'value']}
                           rules={[{ required: true }]}
                         >
-                          <Input placeholder="值" />
+                          <Input placeholder='值' />
                         </Form.Item>
                       </Col>
                     </Row>
                   </Card>
                 ))}
-                <Button
-                  type="dashed"
-                  onClick={() => add()}
-                  block
-                  icon={<PlusOutlined />}
-                >
+                <Button type='dashed' onClick={() => add()} block icon={<PlusOutlined />}>
                   添加条件
                 </Button>
               </div>
@@ -301,11 +288,11 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
         <Divider>动作设置</Divider>
 
         <Form.Item
-          name="actions"
-          label="执行动作"
+          name='actions'
+          label='执行动作'
           rules={[{ required: true, message: '请至少添加一个动作' }]}
         >
-          <Form.List name="actions">
+          <Form.List name='actions'>
             {(fields, { add, remove }) => (
               <div>
                 {fields.map((field, index) => {
@@ -313,25 +300,25 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                   return (
                     <Card
                       key={field.key}
-                      size="small"
+                      size='small'
                       style={{ marginBottom: 8 }}
                       extra={
                         <Button
-                          type="link"
+                          type='link'
                           danger
                           icon={<DeleteOutlined />}
                           onClick={() => remove(field.name)}
                         />
                       }
                     >
-                      <Row gutter={8} align="middle">
+                      <Row gutter={8} align='middle'>
                         <Col span={8}>
                           <Form.Item
                             {...field}
                             name={[field.name, 'type']}
                             rules={[{ required: true }]}
                           >
-                            <Select placeholder="选择动作类型">
+                            <Select placeholder='选择动作类型'>
                               {actionTypes.map(type => (
                                 <Option key={type.value} value={type.value}>
                                   {type.label}
@@ -347,7 +334,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                               name={[field.name, 'category_id']}
                               rules={[{ required: true }]}
                             >
-                              <Input placeholder="分类ID" />
+                              <Input placeholder='分类ID' />
                             </Form.Item>
                           )}
                           {actionType === 'set_priority' && (
@@ -356,11 +343,11 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                               name={[field.name, 'priority']}
                               rules={[{ required: true }]}
                             >
-                              <Select placeholder="选择优先级">
-                                <Option value="low">低</Option>
-                                <Option value="medium">中</Option>
-                                <Option value="high">高</Option>
-                                <Option value="urgent">紧急</Option>
+                              <Select placeholder='选择优先级'>
+                                <Option value='low'>低</Option>
+                                <Option value='medium'>中</Option>
+                                <Option value='high'>高</Option>
+                                <Option value='urgent'>紧急</Option>
                               </Select>
                             </Form.Item>
                           )}
@@ -370,7 +357,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                               name={[field.name, 'user_id']}
                               rules={[{ required: true }]}
                             >
-                              <Input placeholder="用户ID" />
+                              <Input placeholder='用户ID' />
                             </Form.Item>
                           )}
                           {actionType === 'send_notification' && (
@@ -379,7 +366,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                               name={[field.name, 'content']}
                               rules={[{ required: true }]}
                             >
-                              <Input placeholder="通知内容" />
+                              <Input placeholder='通知内容' />
                             </Form.Item>
                           )}
                           {actionType === 'set_status' && (
@@ -388,16 +375,16 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                               name={[field.name, 'status']}
                               rules={[{ required: true }]}
                             >
-                              <Select placeholder="选择状态">
-                                <Option value="open">待处理</Option>
-                                <Option value="in_progress">处理中</Option>
-                                <Option value="resolved">已解决</Option>
-                                <Option value="closed">已关闭</Option>
+                              <Select placeholder='选择状态'>
+                                <Option value='open'>待处理</Option>
+                                <Option value='in_progress'>处理中</Option>
+                                <Option value='resolved'>已解决</Option>
+                                <Option value='closed'>已关闭</Option>
                               </Select>
                             </Form.Item>
                           )}
                           {(actionType === 'auto_assign' || actionType === 'escalate') && (
-                            <Text type="secondary" style={{ fontSize: 12 }}>
+                            <Text type='secondary' style={{ fontSize: 12 }}>
                               此动作无需额外配置
                             </Text>
                           )}
@@ -407,7 +394,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                   );
                 })}
                 <Button
-                  type="dashed"
+                  type='dashed'
                   onClick={() => add({ type: 'set_category' })}
                   block
                   icon={<PlusOutlined />}
@@ -421,7 +408,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
 
         <Form.Item>
           <Space>
-            <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
+            <Button type='primary' htmlType='submit' icon={<SaveOutlined />}>
               {editingRule ? '更新规则' : '创建规则'}
             </Button>
             <Button onClick={onCancel} icon={<CloseOutlined />}>
@@ -433,26 +420,25 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
 
       {/* 测试规则模态框 */}
       <Modal
-        title="测试规则"
+        title='测试规则'
         open={testModalVisible}
         onOk={handleTest}
         onCancel={() => {
           setTestModalVisible(false);
           setTestTicketId(null);
         }}
-        okText={t('common.test') || '测试'}
-        cancelText={t('common.cancel')}
+        okText='测试'
+        cancelText='取消'
       >
-        <Form.Item label="工单ID" required>
+        <Form.Item label='工单ID' required>
           <Input
-            type="number"
-            placeholder="请输入要测试的工单ID"
+            type='number'
+            placeholder='请输入要测试的工单ID'
             value={testTicketId || ''}
-            onChange={(e) => setTestTicketId(parseInt(e.target.value) || null)}
+            onChange={e => setTestTicketId(parseInt(e.target.value) || null)}
           />
         </Form.Item>
       </Modal>
     </>
   );
 };
-

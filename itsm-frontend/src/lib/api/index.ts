@@ -5,7 +5,13 @@
 
 // 基础类
 export { BaseApi, ApiError, ApiResult, ApiResponseHandler } from './base-api';
-export type { CrudApiInterface, PaginatedApiInterface, BatchApiInterface, BaseApiV2, ApiErrorCode } from './base-api';
+export type {
+  CrudApiInterface,
+  PaginatedApiInterface,
+  BatchApiInterface,
+  BaseApiV2,
+  ApiErrorCode,
+} from './base-api';
 export { httpClient } from './http-client';
 
 // 类型定义
@@ -96,7 +102,12 @@ export { AIApi } from './ai-api';
 export { BatchOperationsApi } from './batch-operations-api';
 export { CollaborationApi } from './collaboration-api';
 export { globalSearchApi } from './global-search-api';
-export { listAuditLogs, type AuditLog, type ListAuditLogsParams, type ListAuditLogsResponse } from './auditlog-api';
+export {
+  listAuditLogs,
+  type AuditLog,
+  type ListAuditLogsParams,
+  type ListAuditLogsResponse,
+} from './auditlog-api';
 export { PriorityMatrixApi } from './priority-matrix-api';
 export { TemplateApi } from './template-api';
 
@@ -107,8 +118,7 @@ import type { PaginationResponse } from './types';
 /**
  * 延迟函数
  */
-export const delay = (ms: number): Promise<void> =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+export const delay = (ms: number): Promise<void> => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * 重试函数

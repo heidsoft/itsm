@@ -88,10 +88,10 @@ export type DateToString<T> = {
   [K in keyof T]: T[K] extends Date
     ? string
     : T[K] extends Date | undefined
-    ? string | undefined
-    : T[K] extends object
-    ? DateToString<T[K]>
-    : T[K];
+      ? string | undefined
+      : T[K] extends object
+        ? DateToString<T[K]>
+        : T[K];
 };
 
 /**
@@ -102,10 +102,10 @@ export type StringToDate<T> = {
   [K in keyof T]: T[K] extends string
     ? Date
     : T[K] extends string | undefined
-    ? Date | undefined
-    : T[K] extends object
-    ? StringToDate<T[K]>
-    : T[K];
+      ? Date | undefined
+      : T[K] extends object
+        ? StringToDate<T[K]>
+        : T[K];
 };
 
 /**

@@ -58,7 +58,7 @@ export default function IncidentsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      const stats = await IncidentAPI.getIncidentMetrics() as unknown as Record<string, unknown>;
+      const stats = (await IncidentAPI.getIncidentMetrics()) as unknown as Record<string, unknown>;
       // Transform snake_case to camelCase for IncidentStats component
       setMetrics({
         totalIncidents: Number(stats.total_incidents) || 0,
@@ -81,11 +81,9 @@ export default function IncidentsPage() {
     };
   }, [page, pageSize]);
 
-  const handleEdit = (incident: Incident) => {
-  };
+  const handleEdit = (incident: Incident) => {};
 
-  const handleView = (incident: Incident) => {
-  };
+  const handleView = (incident: Incident) => {};
 
   return (
     <div className='p-6 min-h-screen bg-gray-50'>
@@ -94,14 +92,19 @@ export default function IncidentsPage() {
           <h1 className='text-2xl font-bold text-gray-900'>事件管理</h1>
           <p className='text-gray-500 mt-1'>管理和追踪系统中的所有事件记录</p>
         </div>
-        <Button type='primary' icon={<Plus className='w-4 h-4' />} size='large' onClick={() => router.push('/incidents/new')}>
+        <Button
+          type='primary'
+          icon={<Plus className='w-4 h-4' />}
+          size='large'
+          onClick={() => router.push('/incidents/new')}
+        >
           新建事件
         </Button>
       </div>
 
       <IncidentStats metrics={metrics || undefined} />
 
-      <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+      <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
         <div className='mb-4 flex justify-between items-center'>
           <Space size='middle'>
             <Input
@@ -128,10 +131,7 @@ export default function IncidentsPage() {
         )}
 
         {incidents.length === 0 && !loading ? (
-          <Empty
-            description='暂无事件记录'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
+          <Empty description='暂无事件记录' image={Empty.PRESENTED_IMAGE_SIMPLE}>
             <Button type='primary' onClick={() => router.push('/incidents/new')}>
               创建第一个事件
             </Button>
@@ -158,7 +158,7 @@ export default function IncidentsPage() {
                 setPageSize(ps);
               }}
               showSizeChanger
-              showTotal={(total) => `共 ${total} 条记录`}
+              showTotal={total => `共 ${total} 条记录`}
             />
           </div>
         )}

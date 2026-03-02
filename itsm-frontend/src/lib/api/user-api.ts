@@ -143,11 +143,11 @@ export class UserApi {
   }> {
     const formData = new FormData();
     formData.append('file', file);
-    
+
     return httpClient.post(`${this.baseURL}/import`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     });
   }
 }

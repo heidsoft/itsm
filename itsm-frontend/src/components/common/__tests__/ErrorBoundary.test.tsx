@@ -1,6 +1,6 @@
 /**
  * ErrorBoundary Component Tests
- * 
+ *
  * 测试覆盖:
  * - 正常渲染子组件
  * - 捕获子组件错误
@@ -131,7 +131,7 @@ describe('ErrorBoundary', () => {
 
       // 应该显示错误信息
       expect(screen.getByText('页面出现错误')).toBeInTheDocument();
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -144,9 +144,7 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      expect(
-        screen.getByText(/抱歉，页面遇到了一个意外错误/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/抱歉，页面遇到了一个意外错误/)).toBeInTheDocument();
 
       consoleSpy.mockRestore();
     });
@@ -413,9 +411,9 @@ describe('ErrorBoundary', () => {
     it('HOC 设置自定义 displayName', () => {
       const TestComponent = () => <div>Test</div>;
       TestComponent.displayName = 'TestComponent';
-      
+
       const WrappedComponent = withErrorBoundary(TestComponent);
-      
+
       expect(WrappedComponent.displayName).toContain('withErrorBoundary(TestComponent)');
     });
   });
@@ -424,7 +422,7 @@ describe('ErrorBoundary', () => {
     it('提供 captureError 和 resetError 函数', () => {
       const TestComponent = () => {
         const { captureError, resetError } = useErrorBoundary();
-        
+
         return (
           <div>
             <button onClick={() => captureError(new Error('Test'))}>Capture</button>
@@ -448,11 +446,11 @@ describe('ErrorBoundary', () => {
 
       const TestComponent = () => {
         const { captureError } = useErrorBoundary();
-        
+
         React.useEffect(() => {
           captureError(new Error('Captured error'));
         }, [captureError]);
-        
+
         return <div>Test</div>;
       };
 
@@ -509,7 +507,7 @@ describe('ErrorBoundary', () => {
 
       const copiedContent = (mockClipboard.writeText as jest.Mock).mock.calls[0][0];
       const parsed = JSON.parse(copiedContent);
-      
+
       // 错误 ID 应该存在
       expect(parsed.errorId).toBeDefined();
       expect(typeof parsed.errorId).toBe('string');
@@ -658,7 +656,9 @@ describe('GlobalErrorBoundary', () => {
   describe('自定义配置', () => {
     it('使用自定义 fallback', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
-      const CustomFallback = () => <div data-testid='global-custom-fallback'>Global Custom Error</div>;
+      const CustomFallback = () => (
+        <div data-testid='global-custom-fallback'>Global Custom Error</div>
+      );
 
       render(
         <GlobalErrorBoundary fallback={<CustomFallback />}>

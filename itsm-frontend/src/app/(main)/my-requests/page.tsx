@@ -88,7 +88,7 @@ const RequestCard = ({ request, t }: { request: ServiceRequest; t: (key: string)
   return (
     <Card
       className='mb-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow'
-      variant="borderless"
+      variant='borderless'
     >
       <div className='flex items-start justify-between mb-4'>
         <div className='flex-1'>
@@ -204,7 +204,7 @@ const MyRequestsPage = () => {
         </div>
 
         {/* 搜索和筛选 */}
-        <Card className='mb-6 rounded-lg shadow-sm border border-gray-200' variant="borderless">
+        <Card className='mb-6 rounded-lg shadow-sm border border-gray-200' variant='borderless'>
           <div className='flex flex-col lg:flex-row gap-4'>
             {/* 搜索框 */}
             <div className='flex-1'>
@@ -256,7 +256,7 @@ const MyRequestsPage = () => {
         ) : (
           <Card
             className='text-center py-12 rounded-lg shadow-sm border border-gray-200'
-            variant="borderless"
+            variant='borderless'
           >
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
@@ -280,7 +280,7 @@ const MyRequestsPage = () => {
         {totalPages > 1 && (
           <Card
             className='mt-8 rounded-lg shadow-sm border border-gray-200'
-            variant="borderless"
+            variant='borderless'
             bodyStyle={{ padding: '16px 24px' }}
           >
             <div className='flex items-center justify-between'>

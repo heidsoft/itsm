@@ -122,7 +122,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
         prediction_period: predictionPeriod,
         model_type: modelType,
       });
-      
+
       if (data) {
         setPredictionReport(data);
         onPredictionChange?.(data);
@@ -135,7 +135,15 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [ticketType, category, timeRange, predictionPeriod, modelType, antMessage, onPredictionChange]);
+  }, [
+    ticketType,
+    category,
+    timeRange,
+    predictionPeriod,
+    modelType,
+    antMessage,
+    onPredictionChange,
+  ]);
 
   useEffect(() => {
     loadPrediction();
@@ -206,24 +214,29 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           {chartData.some(d => d.upper && d.lower) && (
             <>
               <Area
-              type='monotone'
-              dataKey='upper'
-              stroke='#ff4d4f'
-              strokeDasharray='5 5'
-              fill='none'
-              name='上限'
-            />
-            <Area
-              type='monotone'
-              dataKey='lower'
-              stroke='#ff4d4f'
-              strokeDasharray='5 5'
-              fill='none'
-              name='下限'
-            />
+                type='monotone'
+                dataKey='upper'
+                stroke='#ff4d4f'
+                strokeDasharray='5 5'
+                fill='none'
+                name='上限'
+              />
+              <Area
+                type='monotone'
+                dataKey='lower'
+                stroke='#ff4d4f'
+                strokeDasharray='5 5'
+                fill='none'
+                name='下限'
+              />
             </>
           )}
-          <ReferenceLine x={chartData[chartData.length - 20]?.date} stroke='#faad14' strokeDasharray='3 3' label='预测起点' />
+          <ReferenceLine
+            x={chartData[chartData.length - 20]?.date}
+            stroke='#faad14'
+            strokeDasharray='3 3'
+            label='预测起点'
+          />
         </AreaChart>
       </ResponsiveContainer>
     );
@@ -262,20 +275,12 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               }
             }}
           />
-          <Select
-            value={predictionPeriod}
-            onChange={setPredictionPeriod}
-            style={{ width: 120 }}
-          >
+          <Select value={predictionPeriod} onChange={setPredictionPeriod} style={{ width: 120 }}>
             <Option value='week'>预测一周</Option>
             <Option value='month'>预测一月</Option>
             <Option value='quarter'>预测一季</Option>
           </Select>
-          <Select
-            value={modelType}
-            onChange={setModelType}
-            style={{ width: 150 }}
-          >
+          <Select value={modelType} onChange={setModelType} style={{ width: 150 }}>
             <Option value='arima'>ARIMA模型</Option>
             <Option value='exponential'>指数平滑</Option>
             <Option value='linear'>线性回归</Option>
@@ -330,11 +335,17 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               <Card>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <Text type='secondary' className='text-sm'>趋势</Text>
+                    <Text type='secondary' className='text-sm'>
+                      趋势
+                    </Text>
                     <div className='flex items-center gap-2 mt-1'>
                       {getTrendIcon(predictionReport.metrics.trend)}
                       <Text strong>
-                        {predictionReport.metrics.trend === 'up' ? '上升' : predictionReport.metrics.trend === 'down' ? '下降' : '稳定'}
+                        {predictionReport.metrics.trend === 'up'
+                          ? '上升'
+                          : predictionReport.metrics.trend === 'down'
+                            ? '下降'
+                            : '稳定'}
                       </Text>
                     </div>
                   </div>
@@ -396,32 +407,56 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               <Card title='预测指标'>
                 <div className='space-y-4'>
                   <div>
-                    <Text type='secondary' className='text-sm'>准确率</Text>
+                    <Text type='secondary' className='text-sm'>
+                      准确率
+                    </Text>
                     <Progress
                       percent={predictionReport.metrics.accuracy}
-                      status={predictionReport.metrics.accuracy >= 85 ? 'success' : predictionReport.metrics.accuracy >= 70 ? 'active' : 'exception'}
+                      status={
+                        predictionReport.metrics.accuracy >= 85
+                          ? 'success'
+                          : predictionReport.metrics.accuracy >= 70
+                            ? 'active'
+                            : 'exception'
+                      }
                       className='mt-2'
                     />
                   </div>
                   <div>
-                    <Text type='secondary' className='text-sm'>平均绝对百分比误差 (MAPE)</Text>
-                    <Text strong className='text-lg'>{predictionReport.metrics.mape.toFixed(2)}%</Text>
+                    <Text type='secondary' className='text-sm'>
+                      平均绝对百分比误差 (MAPE)
+                    </Text>
+                    <Text strong className='text-lg'>
+                      {predictionReport.metrics.mape.toFixed(2)}%
+                    </Text>
                   </div>
                   <div>
-                    <Text type='secondary' className='text-sm'>均方根误差 (RMSE)</Text>
-                    <Text strong className='text-lg'>{predictionReport.metrics.rmse.toFixed(2)}</Text>
+                    <Text type='secondary' className='text-sm'>
+                      均方根误差 (RMSE)
+                    </Text>
+                    <Text strong className='text-lg'>
+                      {predictionReport.metrics.rmse.toFixed(2)}
+                    </Text>
                   </div>
                   <Divider />
                   <div>
-                    <Text type='secondary' className='text-sm'>风险级别</Text>
+                    <Text type='secondary' className='text-sm'>
+                      风险级别
+                    </Text>
                     <div className='mt-2'>
                       <Tag color={getRiskLevelColor(predictionReport.metrics.risk_level)}>
-                        {predictionReport.metrics.risk_level === 'low' ? '低风险' : predictionReport.metrics.risk_level === 'medium' ? '中风险' : '高风险'}
+                        {predictionReport.metrics.risk_level === 'low'
+                          ? '低风险'
+                          : predictionReport.metrics.risk_level === 'medium'
+                            ? '中风险'
+                            : '高风险'}
                       </Tag>
                     </div>
                   </div>
                   <div>
-                    <Text type='secondary' className='text-sm'>风险因素</Text>
+                    <Text type='secondary' className='text-sm'>
+                      风险因素
+                    </Text>
                     <div className='mt-2 space-y-1'>
                       {predictionReport.metrics.risk_factors.map((factor, index) => (
                         <Tag key={index} color='orange'>
@@ -468,4 +503,3 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
     </div>
   );
 };
-

@@ -19,11 +19,7 @@ import {
   message,
   Typography,
 } from 'antd';
-import {
-  ArrowLeftOutlined,
-  KeyOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { ArrowLeftOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -108,11 +104,11 @@ const LicenseDetail: React.FC = () => {
     return (
       <Card>
         <Result
-          status="404"
-          title="404"
-          subTitle="抱歉，您访问的许可证不存在"
+          status='404'
+          title='404'
+          subTitle='抱歉，您访问的许可证不存在'
           extra={
-            <Button type="primary" onClick={() => router.push('/licenses')}>
+            <Button type='primary' onClick={() => router.push('/licenses')}>
               返回列表
             </Button>
           }
@@ -121,12 +117,11 @@ const LicenseDetail: React.FC = () => {
     );
   }
 
-  const usagePercent = license.total_quantity > 0
-    ? (license.used_quantity / license.total_quantity) * 100
-    : 0;
+  const usagePercent =
+    license.total_quantity > 0 ? (license.used_quantity / license.total_quantity) * 100 : 0;
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size="large">
+    <Space direction='vertical' style={{ width: '100%' }} size='large'>
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
@@ -136,17 +131,22 @@ const LicenseDetail: React.FC = () => {
           >
             返回列表
           </Button>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+          >
             <div>
               <Title level={3} style={{ marginBottom: 8 }}>
                 {license.name}
               </Title>
               {license.license_key && (
-                <Text type="secondary">许可证密钥: {license.license_key}</Text>
+                <Text type='secondary'>许可证密钥: {license.license_key}</Text>
               )}
             </div>
             <Space>
-              <Tag color={statusColors[license.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
+              <Tag
+                color={statusColors[license.status]}
+                style={{ padding: '4px 12px', fontSize: 14 }}
+              >
                 {statusLabels[license.status]}
               </Tag>
               <Tag>{typeLabels[license.license_type]}</Tag>
@@ -154,71 +154,82 @@ const LicenseDetail: React.FC = () => {
           </div>
         </div>
 
-        <Card type="inner" style={{ marginBottom: 16 }}>
+        <Card type='inner' style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <div style={{ flex: 1 }}>
               <Text>使用情况</Text>
               <Progress
                 percent={Math.round(usagePercent)}
-                status={usagePercent >= 100 ? 'exception' : usagePercent >= 80 ? 'normal' : 'success'}
+                status={
+                  usagePercent >= 100 ? 'exception' : usagePercent >= 80 ? 'normal' : 'success'
+                }
                 format={() => `${license.used_quantity} / ${license.total_quantity}`}
               />
             </div>
             <div style={{ textAlign: 'center', minWidth: 100 }}>
-              <div style={{ fontSize: 24, fontWeight: 'bold' }}>
-                {license.available_quantity}
-              </div>
+              <div style={{ fontSize: 24, fontWeight: 'bold' }}>{license.available_quantity}</div>
               <div>可用数量</div>
             </div>
           </div>
         </Card>
 
         <Descriptions bordered column={2}>
-          <Descriptions.Item label="许可证名称">{license.name}</Descriptions.Item>
-          <Descriptions.Item label="许可证类型">
+          <Descriptions.Item label='许可证名称'>{license.name}</Descriptions.Item>
+          <Descriptions.Item label='许可证类型'>
             <Tag>{typeLabels[license.license_type]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="状态">
+          <Descriptions.Item label='状态'>
             <Tag color={statusColors[license.status]}>{statusLabels[license.status]}</Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="供应商">{license.vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="总数量">{license.total_quantity}</Descriptions.Item>
-          <Descriptions.Item label="已使用">{license.used_quantity}</Descriptions.Item>
-          <Descriptions.Item label="采购日期">{license.purchase_date || '-'}</Descriptions.Item>
-          <Descriptions.Item label="采购价格">
+          <Descriptions.Item label='供应商'>{license.vendor || '-'}</Descriptions.Item>
+          <Descriptions.Item label='总数量'>{license.total_quantity}</Descriptions.Item>
+          <Descriptions.Item label='已使用'>{license.used_quantity}</Descriptions.Item>
+          <Descriptions.Item label='采购日期'>{license.purchase_date || '-'}</Descriptions.Item>
+          <Descriptions.Item label='采购价格'>
             {license.purchase_price ? `¥${license.purchase_price}` : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label="到期日期">
-            <Text style={{ color: license.status === 'expired' ? '#ff4d4f' : license.status === 'expiring-soon' ? '#faad14' : undefined }}>
+          <Descriptions.Item label='到期日期'>
+            <Text
+              style={{
+                color:
+                  license.status === 'expired'
+                    ? '#ff4d4f'
+                    : license.status === 'expiring-soon'
+                      ? '#faad14'
+                      : undefined,
+              }}
+            >
               {license.expiry_date || '永久'}
             </Text>
           </Descriptions.Item>
-          <Descriptions.Item label="续费成本">{license.renewal_cost || '-'}</Descriptions.Item>
-          <Descriptions.Item label="支持供应商">{license.support_vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="支持联系方式">{license.support_contact || '-'}</Descriptions.Item>
-          <Descriptions.Item label="创建时间">
+          <Descriptions.Item label='续费成本'>{license.renewal_cost || '-'}</Descriptions.Item>
+          <Descriptions.Item label='支持供应商'>{license.support_vendor || '-'}</Descriptions.Item>
+          <Descriptions.Item label='支持联系方式'>
+            {license.support_contact || '-'}
+          </Descriptions.Item>
+          <Descriptions.Item label='创建时间'>
             {dayjs(license.created_at).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
-          <Descriptions.Item label="更新时间">
+          <Descriptions.Item label='更新时间'>
             {dayjs(license.updated_at).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
         </Descriptions>
       </Card>
 
       {license.description && (
-        <Card title="描述">
+        <Card title='描述'>
           <Text>{license.description}</Text>
         </Card>
       )}
 
       {license.notes && (
-        <Card title="备注">
+        <Card title='备注'>
           <Text>{license.notes}</Text>
         </Card>
       )}
 
       {license.users && license.users.length > 0 && (
-        <Card title="授权用户">
+        <Card title='授权用户'>
           <Space wrap>
             {license.users.map((userId, index) => (
               <Tag key={index} icon={<UserOutlined />}>
@@ -230,7 +241,7 @@ const LicenseDetail: React.FC = () => {
       )}
 
       {license.tags && license.tags.length > 0 && (
-        <Card title="标签">
+        <Card title='标签'>
           <Space wrap>
             {license.tags.map((tag, index) => (
               <Tag key={index}>{tag}</Tag>
@@ -241,7 +252,7 @@ const LicenseDetail: React.FC = () => {
 
       <Card>
         <Space>
-          <Button type="primary" onClick={() => router.push(`/licenses/${license.id}`)}>
+          <Button type='primary' onClick={() => router.push(`/licenses/${license.id}`)}>
             编辑
           </Button>
           {license.status === 'active' && license.available_quantity > 0 && (
@@ -253,7 +264,7 @@ const LicenseDetail: React.FC = () => {
       </Card>
 
       <Modal
-        title="分配许可证给用户"
+        title='分配许可证给用户'
         open={assignModalVisible}
         onOk={handleAssign}
         onCancel={() => setAssignModalVisible(false)}
@@ -262,9 +273,9 @@ const LicenseDetail: React.FC = () => {
           <Text>可用数量: {license.available_quantity}</Text>
         </div>
         <Select
-          mode="multiple"
+          mode='multiple'
           style={{ width: '100%' }}
-          placeholder="选择用户"
+          placeholder='选择用户'
           value={selectedUsers}
           onChange={setSelectedUsers}
           maxCount={license.available_quantity}

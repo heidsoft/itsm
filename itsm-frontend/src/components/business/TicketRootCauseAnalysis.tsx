@@ -113,7 +113,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
       setAnalyzing(true);
       // 调用实际API
       const report = await TicketRootCauseApi.analyzeTicket(ticketId);
-      
+
       if (report) {
         setAnalysisReport(report);
         onAnalysisComplete?.(report);
@@ -221,7 +221,8 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
       render: (_: any, record: RootCause) => (
         <div>
           <Text type='secondary' className='text-sm'>
-            工单: {record.impact_scope.affected_tickets} | 用户: {record.impact_scope.affected_users}
+            工单: {record.impact_scope.affected_tickets} | 用户:{' '}
+            {record.impact_scope.affected_users}
           </Text>
         </div>
       ),
@@ -230,19 +231,13 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
-      ),
+      render: (status: string) => <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>,
     },
     {
       title: '操作',
       key: 'actions',
       render: (_: any, record: RootCause) => (
-        <Button
-          type='link'
-          size='small'
-          onClick={() => setSelectedRootCause(record)}
-        >
+        <Button type='link' size='small' onClick={() => setSelectedRootCause(record)}>
           查看详情
         </Button>
       ),
@@ -296,7 +291,9 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                   </Text>
                 </div>
                 <div className='text-right'>
-                  <Text type='secondary' className='text-sm'>分析置信度</Text>
+                  <Text type='secondary' className='text-sm'>
+                    分析置信度
+                  </Text>
                   <div>
                     <Progress
                       type='circle'
@@ -311,7 +308,14 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
               <Paragraph>{analysisReport.analysis_summary}</Paragraph>
               <div className='flex items-center gap-4 text-sm text-gray-500'>
                 <span>分析日期: {analysisReport.analysis_date}</span>
-                <span>分析方法: {analysisReport.analysis_method === 'automatic' ? '自动分析' : analysisReport.analysis_method === 'manual' ? '人工分析' : '混合分析'}</span>
+                <span>
+                  分析方法:{' '}
+                  {analysisReport.analysis_method === 'automatic'
+                    ? '自动分析'
+                    : analysisReport.analysis_method === 'manual'
+                      ? '人工分析'
+                      : '混合分析'}
+                </span>
                 <span>生成时间: {analysisReport.generated_at}</span>
               </div>
             </div>
@@ -331,9 +335,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
           {selectedRootCause && (
             <Card
               title={`根因详情: ${selectedRootCause.title}`}
-              extra={
-                <Button onClick={() => setSelectedRootCause(null)}>关闭</Button>
-              }
+              extra={<Button onClick={() => setSelectedRootCause(null)}>关闭</Button>}
             >
               <div className='space-y-6'>
                 <div>
@@ -353,8 +355,8 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                           evidence.relevance >= 0.8
                             ? 'red'
                             : evidence.relevance >= 0.6
-                            ? 'orange'
-                            : 'blue'
+                              ? 'orange'
+                              : 'blue'
                         }
                       >
                         <div className='space-y-1'>
@@ -439,13 +441,17 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                     <Col span={8}>
                       <Card>
                         <div>
-                          <Text type='secondary' className='text-sm'>受影响系统</Text>
+                          <Text type='secondary' className='text-sm'>
+                            受影响系统
+                          </Text>
                           <div className='mt-2 space-y-1'>
-                            {selectedRootCause.impact_scope.affected_systems.map((system, index) => (
-                              <Tag key={index} color='orange'>
-                                {system}
-                              </Tag>
-                            ))}
+                            {selectedRootCause.impact_scope.affected_systems.map(
+                              (system, index) => (
+                                <Tag key={index} color='orange'>
+                                  {system}
+                                </Tag>
+                              )
+                            )}
                           </div>
                         </div>
                       </Card>
@@ -475,4 +481,3 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
     </div>
   );
 };
-

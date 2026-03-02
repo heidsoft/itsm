@@ -27,7 +27,7 @@ class CacheManager {
     this.cache.set(key, {
       data,
       timestamp: Date.now(),
-      ttl
+      ttl,
     });
   }
 
@@ -66,58 +66,60 @@ class CacheManager {
 
 const cacheManager = new CacheManager();
 
-export function useCache<T>(
-  key: string,
-  fetcher: () => Promise<T>,
-  options: CacheOptions = {}
-) {
+export function useCache<T>(key: string, fetcher: () => Promise<T>, options: CacheOptions = {}) {
   const { ttl = 5 * 60 * 1000, staleWhileRevalidate = true } = options;
-  
+
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = useCallback(async (forceRefresh = false) => {
-    try {
-      setError(null);
-      
-      // 检查缓存
-      if (!forceRefresh) {
-        const cachedData = cacheManager.get<T>(key);
-        if (cachedData) {
-          setData(cachedData);
-          return cachedData;
-        }
+  const fetchData = useCallback(
+    async (forceRefresh = false) => {
+      try {
+        setError(null);
 
-        // 如果启用了 staleWhileRevalidate，先返回过期数据
-        if (staleWhileRevalidate) {
-          const staleData = cacheManager.getStale<T>(key);
-          if (staleData) {
-            setData(staleData);
+        // 检查缓存
+        if (!forceRefresh) {
+          const cachedData = cacheManager.get<T>(key);
+          if (cachedData) {
+            setData(cachedData);
+            return cachedData;
+          }
+
+          // 如果启用了 staleWhileRevalidate，先返回过期数据
+          if (staleWhileRevalidate) {
+            const staleData = cacheManager.getStale<T>(key);
+            if (staleData) {
+              setData(staleData);
+            }
           }
         }
+
+        setLoading(true);
+        const result = await fetcher();
+
+        // 缓存新数据
+        cacheManager.set(key, result, ttl);
+        setData(result);
+
+        return result;
+      } catch (err) {
+        setError(err as Error);
+        throw err;
+      } finally {
+        setLoading(false);
       }
+    },
+    [key, fetcher, ttl, staleWhileRevalidate]
+  );
 
-      setLoading(true);
-      const result = await fetcher();
-      
-      // 缓存新数据
-      cacheManager.set(key, result, ttl);
-      setData(result);
-      
-      return result;
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [key, fetcher, ttl, staleWhileRevalidate]);
-
-  const mutate = useCallback((newData: T) => {
-    cacheManager.set(key, newData, ttl);
-    setData(newData);
-  }, [key, ttl]);
+  const mutate = useCallback(
+    (newData: T) => {
+      cacheManager.set(key, newData, ttl);
+      setData(newData);
+    },
+    [key, ttl]
+  );
 
   const invalidate = useCallback(() => {
     cacheManager.delete(key);
@@ -133,7 +135,7 @@ export function useCache<T>(
     error,
     refetch: () => fetchData(true),
     mutate,
-    invalidate
+    invalidate,
   };
 }
 

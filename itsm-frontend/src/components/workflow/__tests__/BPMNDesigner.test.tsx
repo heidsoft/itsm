@@ -49,7 +49,7 @@ describe('BPMNDesigner', () => {
   });
 
   it('should render toolbar container', () => {
-    const { container } = render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+    const { container } = render(<BPMNDesigner xml='' onSave={mockOnSave} />);
 
     // Toolbar should be present
     const toolbar = container.querySelector('div[style*="flex-direction: column"]');
@@ -57,7 +57,7 @@ describe('BPMNDesigner', () => {
   });
 
   it('should render zoom controls section', () => {
-    render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+    render(<BPMNDesigner xml='' onSave={mockOnSave} />);
 
     // Zoom controls should be present
     const zoomControls = screen.getByText('100%');
@@ -65,7 +65,7 @@ describe('BPMNDesigner', () => {
   });
 
   it('should call onSave when save is triggered', () => {
-    render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+    render(<BPMNDesigner xml='' onSave={mockOnSave} />);
 
     // The onSave should be called - we test this by clicking the save button
     // In the real component, clicking the button with Tooltip triggers onSave
@@ -74,23 +74,21 @@ describe('BPMNDesigner', () => {
   });
 
   it('should call onDeploy when deploy is triggered', () => {
-    render(<BPMNDesigner xml="" onSave={mockOnSave} onDeploy={mockOnDeploy} />);
+    render(<BPMNDesigner xml='' onSave={mockOnSave} onDeploy={mockOnDeploy} />);
 
     mockOnDeploy();
     expect(mockOnDeploy).toHaveBeenCalled();
   });
 
   it('should accept custom height prop', () => {
-    const { container } = render(
-      <BPMNDesigner xml="" onSave={mockOnSave} height={800} />
-    );
+    const { container } = render(<BPMNDesigner xml='' onSave={mockOnSave} height={800} />);
 
     const designerElement = container.firstChild as HTMLElement;
     expect(designerElement).toHaveStyle({ height: '800px' });
   });
 
   it('should have a main container', () => {
-    const { container } = render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+    const { container } = render(<BPMNDesigner xml='' onSave={mockOnSave} />);
 
     const designerElement = container.firstChild as HTMLElement;
     expect(designerElement).toBeInTheDocument();
@@ -98,7 +96,7 @@ describe('BPMNDesigner', () => {
   });
 
   it('should render with flex layout', () => {
-    const { container } = render(<BPMNDesigner xml="" onSave={mockOnSave} />);
+    const { container } = render(<BPMNDesigner xml='' onSave={mockOnSave} />);
 
     const designerElement = container.firstChild as HTMLElement;
     expect(designerElement).toHaveStyle({ display: 'flex' });

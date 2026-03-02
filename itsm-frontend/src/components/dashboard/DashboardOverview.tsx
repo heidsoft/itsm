@@ -38,7 +38,7 @@ dayjs.extend(relativeTime);
 
 import type { TicketStats, UserStats, SystemStats } from '@/types/dashboard';
 import type { Ticket } from '@/types/ticket';
-import type { User } from '@/lib/api/types';  // 改用lib/api/types中的User
+import type { User } from '@/lib/api/types'; // 改用lib/api/types中的User
 
 interface DashboardOverviewProps {
   timeRange?: '24h' | '7d' | '30d';

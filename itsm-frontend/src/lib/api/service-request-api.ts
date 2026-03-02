@@ -91,7 +91,7 @@ class ServiceRequestAPI {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = getAccessToken();
     const tenantCode = getTenantCode();
-    
+
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
         ...options,
@@ -109,12 +109,12 @@ class ServiceRequestAPI {
       }
 
       const data = await response.json();
-      
+
       // Check backend response code field
       if (data.code !== 0) {
         throw new Error(data.message || 'Request failed');
       }
-      
+
       return data.data; // Backend response format: { code, message, data }
     } catch (error) {
       // console.error('API request failed:', error);
@@ -123,13 +123,15 @@ class ServiceRequestAPI {
   }
 
   // Get current user's service request list
-  async getUserServiceRequests(params: {
-    page?: number;
-    size?: number;
-    status?: string;
-  } = {}): Promise<ServiceRequestListResponse> {
+  async getUserServiceRequests(
+    params: {
+      page?: number;
+      size?: number;
+      status?: string;
+    } = {}
+  ): Promise<ServiceRequestListResponse> {
     const searchParams = new URLSearchParams();
-    
+
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.size) searchParams.append('size', params.size.toString());
     if (params.status && params.status !== 'all') searchParams.append('status', params.status);
@@ -140,7 +142,9 @@ class ServiceRequestAPI {
   }
 
   // Get pending approvals (approver inbox)
-  async getPendingApprovals(params: { page?: number; size?: number } = {}): Promise<ServiceRequestListResponse> {
+  async getPendingApprovals(
+    params: { page?: number; size?: number } = {}
+  ): Promise<ServiceRequestListResponse> {
     const searchParams = new URLSearchParams();
     if (params.page) searchParams.append('page', params.page.toString());
     if (params.size) searchParams.append('size', params.size.toString());
@@ -164,7 +168,11 @@ class ServiceRequestAPI {
   }
 
   // Update service request status (admin operation)
-  async updateServiceRequestStatus(id: number, status: string, comment?: string): Promise<ServiceRequest> {
+  async updateServiceRequestStatus(
+    id: number,
+    status: string,
+    comment?: string
+  ): Promise<ServiceRequest> {
     return this.request<ServiceRequest>(`/api/v1/service-requests/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify({ status, comment }),
@@ -172,7 +180,10 @@ class ServiceRequestAPI {
   }
 
   // Apply approval action on current step
-  async applyApprovalAction(id: number, payload: ServiceRequestApprovalActionRequest): Promise<ServiceRequest> {
+  async applyApprovalAction(
+    id: number,
+    payload: ServiceRequestApprovalActionRequest
+  ): Promise<ServiceRequest> {
     return this.request<ServiceRequest>(`/api/v1/service-requests/${id}/approvals`, {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -186,7 +197,7 @@ class ServiceRequestAPI {
   }
 
   // ==================== Provisioning Tasks ====================
-  
+
   // Start provisioning for a service request
   async startProvisioning(serviceRequestId: number): Promise<{ task: ProvisioningTask }> {
     return this.request<{ task: ProvisioningTask }>(
@@ -206,12 +217,9 @@ class ServiceRequestAPI {
 
   // Execute a provisioning task
   async executeProvisioningTask(taskId: number): Promise<ProvisioningTask> {
-    return this.request<ProvisioningTask>(
-      `/api/v1/provisioning-tasks/${taskId}/execute`,
-      {
-        method: 'POST',
-      }
-    );
+    return this.request<ProvisioningTask>(`/api/v1/provisioning-tasks/${taskId}/execute`, {
+      method: 'POST',
+    });
   }
 
   // ==================== 兼容别名 ====================

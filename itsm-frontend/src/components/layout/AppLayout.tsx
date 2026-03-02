@@ -47,17 +47,20 @@ export function AppLayout({
   // 移动端Drawer侧边栏
   const MobileSidebar = () => (
     <Drawer
-      placement="left"
+      placement='left'
       onClose={() => setMobileDrawerVisible(false)}
       open={mobileDrawerVisible}
       width={280}
       bodyStyle={{ padding: 0 }}
       headerStyle={{ display: 'none' }}
     >
-      <Sidebar collapsed={false} onCollapse={(c) => {
-        setCollapsed(c);
-        if (c) setMobileDrawerVisible(false);
-      }} />
+      <Sidebar
+        collapsed={false}
+        onCollapse={c => {
+          setCollapsed(c);
+          if (c) setMobileDrawerVisible(false);
+        }}
+      />
     </Drawer>
   );
 
@@ -66,7 +69,7 @@ export function AppLayout({
       {/* 移动端顶部菜单按钮 */}
       {isMobile && (
         <Button
-          type="text"
+          type='text'
           icon={<Menu />}
           onClick={() => setMobileDrawerVisible(true)}
           style={{
@@ -91,7 +94,11 @@ export function AppLayout({
 
       <Layout
         style={{
-          marginLeft: isMobile ? 0 : (collapsed ? LAYOUT_CONFIG.sider.collapsedWidth : LAYOUT_CONFIG.sider.width),
+          marginLeft: isMobile
+            ? 0
+            : collapsed
+              ? LAYOUT_CONFIG.sider.collapsedWidth
+              : LAYOUT_CONFIG.sider.width,
           transition: LAYOUT_CONFIG.transitions.base,
         }}
       >

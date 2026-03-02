@@ -120,7 +120,9 @@ const LicenseList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '180px' }}>{text || '-'}</span>
+          <span className='truncate block' style={{ maxWidth: '180px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -131,7 +133,17 @@ const LicenseList: React.FC = () => {
       width: 120,
       render: (type: string) => (
         <Tag color={typeColors[type] || 'default'}>
-          {type === 'perpetual' ? '永久' : type === 'subscription' ? '订阅' : type === 'per-user' ? '按用户' : type === 'per-seat' ? '按席位' : type === 'site' ? '站点' : type}
+          {type === 'perpetual'
+            ? '永久'
+            : type === 'subscription'
+              ? '订阅'
+              : type === 'per-user'
+                ? '按用户'
+                : type === 'per-seat'
+                  ? '按席位'
+                  : type === 'site'
+                    ? '站点'
+                    : type}
         </Tag>
       ),
     },
@@ -142,7 +154,15 @@ const LicenseList: React.FC = () => {
       width: 100,
       render: (status: string) => (
         <Tag color={statusColors[status] || 'default'}>
-          {status === 'active' ? '有效' : status === 'expired' ? '已过期' : status === 'expiring-soon' ? '即将过期' : status === 'depleted' ? '已耗尽' : status}
+          {status === 'active'
+            ? '有效'
+            : status === 'expired'
+              ? '已过期'
+              : status === 'expiring-soon'
+                ? '即将过期'
+                : status === 'depleted'
+                  ? '已耗尽'
+                  : status}
         </Tag>
       ),
     },
@@ -151,13 +171,12 @@ const LicenseList: React.FC = () => {
       key: 'usage',
       width: 150,
       render: (_: any, record: any) => {
-        const percent = record.total_quantity > 0
-          ? (record.used_quantity / record.total_quantity) * 100
-          : 0;
+        const percent =
+          record.total_quantity > 0 ? (record.used_quantity / record.total_quantity) * 100 : 0;
         return (
           <Progress
             percent={Math.round(percent)}
-            size="small"
+            size='small'
             status={percent >= 100 ? 'exception' : percent >= 80 ? 'normal' : 'success'}
             format={() => `${record.used_quantity}/${record.total_quantity}`}
           />
@@ -171,7 +190,9 @@ const LicenseList: React.FC = () => {
       width: 150,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '130px' }}>{text || '-'}</span>
+          <span className='truncate block' style={{ maxWidth: '130px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -202,18 +223,18 @@ const LicenseList: React.FC = () => {
       key: 'action',
       width: 120,
       render: (_: any, record: any) => (
-        <Space aria-label="操作按钮">
-          <Tooltip title="查看许可证详情">
+        <Space aria-label='操作按钮'>
+          <Tooltip title='查看许可证详情'>
             <Button
-              type="text"
+              type='text'
               icon={<EyeOutlined />}
               onClick={() => router.push(`/licenses/${record.id}`)}
               aria-label={`查看许可证 ${record.name || '详情'}`}
             />
           </Tooltip>
-          <Tooltip title="编辑许可证信息">
+          <Tooltip title='编辑许可证信息'>
             <Button
-              type="text"
+              type='text'
               icon={<EditOutlined />}
               onClick={() => router.push(`/licenses/${record.id}`)}
               aria-label={`编辑许可证 ${record.name || '详情'}`}
@@ -229,26 +250,18 @@ const LicenseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="总许可证"
-              value={stats.total || 0}
-              prefix={<KeyOutlined />}
-            />
+            <Statistic title='总许可证' value={stats.total || 0} prefix={<KeyOutlined />} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
+          <Card>
+            <Statistic title='有效' value={stats.active || 0} valueStyle={{ color: '#52c41a' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="有效"
-              value={stats.active || 0}
-              valueStyle={{ color: '#52c41a' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8} lg={6} xl={4}>
-          <Card>
-            <Statistic
-              title="即将过期"
+              title='即将过期'
               value={stats.expiring_soon || 0}
               valueStyle={{ color: '#faad14' }}
             />
@@ -257,7 +270,7 @@ const LicenseList: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="已过期"
+              title='已过期'
               value={stats.expired || 0}
               valueStyle={{ color: '#ff4d4f' }}
             />
@@ -266,9 +279,9 @@ const LicenseList: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title="合规率"
+              title='合规率'
               value={stats.compliance_rate || 0}
-              suffix="%"
+              suffix='%'
               valueStyle={{ color: (stats.compliance_rate || 0) >= 80 ? '#52c41a' : '#ff4d4f' }}
             />
           </Card>
@@ -276,50 +289,42 @@ const LicenseList: React.FC = () => {
       </Row>
 
       <Card>
-        <Form
-          form={form}
-          layout="inline"
-          style={{ marginBottom: 16 }}
-        >
-          <Form.Item name="status" label="状态">
+        <Form form={form} layout='inline' style={{ marginBottom: 16 }}>
+          <Form.Item name='status' label='状态'>
             <Select
-              placeholder="选择状态"
+              placeholder='选择状态'
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
             >
-              <Option value="active">有效</Option>
-              <Option value="expired">已过期</Option>
-              <Option value="expiring-soon">即将过期</Option>
-              <Option value="depleted">已耗尽</Option>
+              <Option value='active'>有效</Option>
+              <Option value='expired'>已过期</Option>
+              <Option value='expiring-soon'>即将过期</Option>
+              <Option value='depleted'>已耗尽</Option>
             </Select>
           </Form.Item>
-          <Form.Item name="license_type" label="类型">
+          <Form.Item name='license_type' label='类型'>
             <Select
-              placeholder="选择类型"
+              placeholder='选择类型'
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
             >
-              <Option value="perpetual">永久</Option>
-              <Option value="subscription">订阅</Option>
-              <Option value="per-user">按用户</Option>
-              <Option value="per-seat">按席位</Option>
-              <Option value="site">站点</Option>
+              <Option value='perpetual'>永久</Option>
+              <Option value='subscription'>订阅</Option>
+              <Option value='per-user'>按用户</Option>
+              <Option value='per-seat'>按席位</Option>
+              <Option value='site'>站点</Option>
             </Select>
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-              >
+              <Button type='primary' icon={<SearchOutlined />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
               <Button
-                type="primary"
+                type='primary'
                 icon={<PlusOutlined />}
                 onClick={() => router.push('/licenses/new')}
               >
@@ -332,16 +337,13 @@ const LicenseList: React.FC = () => {
         <Table
           columns={columns}
           dataSource={data}
-          rowKey="id"
+          rowKey='id'
           loading={loading}
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无许可证数据"
-              >
-                <Button type="primary" onClick={() => router.push('/licenses/new')}>
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无许可证数据'>
+                <Button type='primary' onClick={() => router.push('/licenses/new')}>
                   创建第一个许可证
                 </Button>
               </Empty>
@@ -354,7 +356,7 @@ const LicenseList: React.FC = () => {
             onChange: handlePageChange,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: total => `共 ${total} 条`,
           }}
         />
       </Card>

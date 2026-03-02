@@ -249,7 +249,10 @@ const TicketTemplatePage: React.FC = () => {
           fields,
           is_active: values.is_active,
         };
-        const updatedTemplate = await ticketTemplateService.updateTemplate(editingTemplate.id, updatePayload);
+        const updatedTemplate = await ticketTemplateService.updateTemplate(
+          editingTemplate.id,
+          updatePayload
+        );
 
         setTemplates(templates.map(t => (t.id === editingTemplate.id ? updatedTemplate : t)));
         message.success(t('tickets.templateUpdated'));

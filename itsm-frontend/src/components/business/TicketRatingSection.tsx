@@ -15,16 +15,14 @@ import {
   Tag,
   Empty,
 } from 'antd';
+import { Star, MessageSquare, CheckCircle, Clock } from 'lucide-react';
 import {
-  Star,
-  MessageSquare,
-  CheckCircle,
-  Clock,
-} from 'lucide-react';
-import { TicketRatingApi, TicketRating, SubmitTicketRatingRequest } from '@/lib/api/ticket-rating-api';
+  TicketRatingApi,
+  TicketRating,
+  SubmitTicketRatingRequest,
+} from '@/lib/api/ticket-rating-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
-import { useI18n } from '@/lib/i18n';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -47,7 +45,6 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
   canRate = true,
   onRatingSubmitted,
 }) => {
-  const { t } = useI18n();
   const { message: antMessage } = App.useApp();
   const { user } = useAuthStore();
   const [rating, setRating] = useState<TicketRating | null>(null);
@@ -72,6 +69,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
       const ratingData = await TicketRatingApi.getRating(ticketId);
       setRating(ratingData);
     } catch (error) {
+      console.error('Failed to load rating:', error);
       // 如果获取失败，可能是还没有评分，不显示错误
     } finally {
       setLoading(false);
@@ -101,6 +99,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
         onRatingSubmitted(newRating);
       }
     } catch (error: any) {
+      console.error('Failed to submit rating:', error);
       antMessage.error(error.message || '提交评分失败');
     } finally {
       setSubmitting(false);
@@ -135,7 +134,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
   if (loading) {
     return (
       <Card loading={loading}>
-        <Empty description="加载中..." />
+        <Empty description='加载中...' />
       </Card>
     );
   }
@@ -150,16 +149,18 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             <span>评分信息</span>
           </Space>
         }
-        className="shadow-sm"
+        className='shadow-sm'
       >
-        <div className="space-y-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
+        <div className='space-y-4'>
+          <div className='flex items-center space-x-4'>
+            <div className='flex items-center space-x-2'>
               <Rate disabled value={rating.rating} />
               <Text strong style={{ fontSize: 18, color: getRatingColor(rating.rating) }}>
                 {rating.rating} 星
               </Text>
-              <Tag color={rating.rating >= 4 ? 'success' : rating.rating >= 3 ? 'warning' : 'error'}>
+              <Tag
+                color={rating.rating >= 4 ? 'success' : rating.rating >= 3 ? 'warning' : 'error'}
+              >
                 {getRatingDescription(rating.rating)}
               </Tag>
             </div>
@@ -167,11 +168,13 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
 
           {rating.comment && (
             <div>
-              <div className="flex items-center space-x-2 mb-2">
+              <div className='flex items-center space-x-2 mb-2'>
                 <MessageSquare style={{ fontSize: 16, color: '#8c8c8c' }} />
-                <Text type="secondary" strong>评分评论</Text>
+                <Text type='secondary' strong>
+                  评分评论
+                </Text>
               </div>
-              <div className="p-3 bg-gray-50 rounded-md">
+              <div className='p-3 bg-gray-50 rounded-md'>
                 <Text>{rating.comment}</Text>
               </div>
             </div>
@@ -179,15 +182,15 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
 
           <Divider style={{ margin: '12px 0' }} />
 
-          <div className="flex items-center space-x-4 text-sm text-gray-500">
+          <div className='flex items-center space-x-4 text-sm text-gray-500'>
             {rating.rated_at && (
-              <div className="flex items-center space-x-1">
+              <div className='flex items-center space-x-1'>
                 <Clock style={{ fontSize: 14 }} />
                 <Text>评分时间: {formatDateTime(rating.rated_at)}</Text>
               </div>
             )}
             {rating.rated_by_name && (
-              <div className="flex items-center space-x-1">
+              <div className='flex items-center space-x-1'>
                 <CheckCircle style={{ fontSize: 14 }} />
                 <Text>评分人: {rating.rated_by_name}</Text>
               </div>
@@ -208,19 +211,19 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             <span>服务评分</span>
           </Space>
         }
-        className="shadow-sm"
+        className='shadow-sm'
       >
-        <div className="space-y-4">
-          <div className="text-center py-4">
-            <Text type="secondary" className="block mb-4">
+        <div className='space-y-4'>
+          <div className='text-center py-4'>
+            <Text type='secondary' className='block mb-4'>
               工单已解决，请为本次服务评分
             </Text>
             <Button
-              type="primary"
-              size="large"
+              type='primary'
+              size='large'
               icon={<Star />}
               onClick={() => setShowRatingModal(true)}
-              className="bg-gradient-to-r from-yellow-400 to-orange-500 border-0 hover:from-yellow-500 hover:to-orange-600"
+              className='bg-gradient-to-r from-yellow-400 to-orange-500 border-0 hover:from-yellow-500 hover:to-orange-600'
             >
               立即评分
             </Button>
@@ -241,48 +244,38 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             setShowRatingModal(false);
             form.resetFields();
           }}
-          okText={t('common.submit')}
-          cancelText={t('common.cancel')}
+          okText='提交评分'
+          cancelText='取消'
           confirmLoading={submitting}
           width={500}
         >
           <Form
             form={form}
-            layout="vertical"
+            layout='vertical'
             onFinish={handleSubmitRating}
             initialValues={{
               rating: 5,
             }}
           >
             <Form.Item
-              label="评分"
-              name="rating"
+              label='评分'
+              name='rating'
               rules={[{ required: true, message: '请选择评分' }]}
             >
-              <Rate
-                allowClear={false}
-                style={{ fontSize: 32 }}
-                character={<Star />}
-              />
+              <Rate allowClear={false} style={{ fontSize: 32 }} character={<Star />} />
             </Form.Item>
 
-            <Form.Item
-              label="评分评论（可选）"
-              name="comment"
-            >
+            <Form.Item label='评分评论（可选）' name='comment'>
               <TextArea
                 rows={4}
-                placeholder="请分享您对本次服务的评价..."
+                placeholder='请分享您对本次服务的评价...'
                 showCount
                 maxLength={500}
               />
             </Form.Item>
 
-            <div className="text-sm text-gray-500 mt-4">
-              <Text type="secondary">
-                您的评分将帮助我
-们改进服务质量，感谢您的反馈！
-              </Text>
+            <div className='text-sm text-gray-500 mt-4'>
+              <Text type='secondary'>您的评分将帮助我 们改进服务质量，感谢您的反馈！</Text>
             </div>
           </Form>
         </Modal>
@@ -293,4 +286,3 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
   // 如果不满足评分条件，不显示任何内容
   return null;
 };
-

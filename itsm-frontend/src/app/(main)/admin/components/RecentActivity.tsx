@@ -2,15 +2,7 @@
 
 import React from 'react';
 import { Card, List, Space, Typography, Avatar, Button, theme } from 'antd';
-import {
-  Activity,
-  Users,
-  Workflow,
-  Shield,
-  BookOpen,
-  Bell,
-  Clock,
-} from 'lucide-react';
+import { Activity, Users, Workflow, Shield, BookOpen, Bell, Clock } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 
 const { Text } = Typography;

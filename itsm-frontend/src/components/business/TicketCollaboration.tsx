@@ -14,12 +14,7 @@ import {
   App,
   Tooltip,
 } from 'antd';
-import {
-  SendOutlined,
-  UserOutlined,
-  EyeOutlined,
-  MessageOutlined,
-} from '@ant-design/icons';
+import { SendOutlined, UserOutlined, EyeOutlined, MessageOutlined } from '@ant-design/icons';
 import { Ticket } from '@/lib/services/ticket-service';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -85,7 +80,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
   const handleInputChange = useCallback(
     (value: string) => {
       setNewMessage(value);
-      
+
       if (!isTyping && value.length > 0) {
         setIsTyping(true);
         onTyping?.(true);
@@ -163,9 +158,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
           <div className='flex items-center gap-2'>
             <MessageOutlined />
             <span>实时协作</span>
-            {messages.length > 0 && (
-              <Badge count={messages.length} showZero className='ml-2' />
-            )}
+            {messages.length > 0 && <Badge count={messages.length} showZero className='ml-2' />}
           </div>
         }
         className='flex-1'
@@ -250,4 +243,3 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
     </div>
   );
 };
-

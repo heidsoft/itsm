@@ -22,7 +22,7 @@ export function formatDate(
   format: 'short' | 'long' | 'time' | 'datetime' = 'short'
 ): string {
   const dateObj = typeof date === 'string' ? new Date(date) : date;
-  
+
   if (isNaN(dateObj.getTime())) {
     return '无效日期';
   }
@@ -42,12 +42,12 @@ export function formatDate(
     short: { month: 'short', day: 'numeric' },
     long: { year: 'numeric', month: 'long', day: 'numeric' },
     time: { hour: '2-digit', minute: '2-digit' },
-    datetime: { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric', 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    datetime: {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     },
   };
 
@@ -61,11 +61,11 @@ export function formatDate(
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
-  
+
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
@@ -94,7 +94,7 @@ export function debounce<T extends (...args: unknown[]) => unknown>(
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -112,7 +112,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  
+
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
       func(...args);
@@ -171,17 +171,12 @@ export function formatNumber(
     suffix?: string;
   } = {}
 ): string {
-  const {
-    decimals = 0,
-    separator = ',',
-    prefix = '',
-    suffix = '',
-  } = options;
+  const { decimals = 0, separator = ',', prefix = '', suffix = '' } = options;
 
   const fixed = num.toFixed(decimals);
   const parts = fixed.split('.');
   parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, separator);
-  
+
   return prefix + parts.join('.') + suffix;
 }
 
@@ -192,11 +187,7 @@ export function formatNumber(
  * @param suffix 后缀
  * @returns 截断后的文本
  */
-export function truncateText(
-  text: string,
-  length: number,
-  suffix: string = '...'
-): string {
+export function truncateText(text: string, length: number, suffix: string = '...'): string {
   if (text.length <= length) return text;
   return text.substring(0, length - suffix.length) + suffix;
 }
@@ -207,7 +198,7 @@ export function truncateText(
  * @returns 文件扩展名
  */
 export function getFileExtension(filename: string): string {
-  return filename.slice((filename.lastIndexOf('.') - 1 >>> 0) + 2);
+  return filename.slice(((filename.lastIndexOf('.') - 1) >>> 0) + 2);
 }
 
 /**
@@ -238,11 +229,11 @@ export function isValidPhone(phone: string): boolean {
 export function getUrlParams(url: string): Record<string, string> {
   const params: Record<string, string> = {};
   const urlObj = new URL(url);
-  
+
   urlObj.searchParams.forEach((value, key) => {
     params[key] = value;
   });
-  
+
   return params;
 }
 
@@ -253,12 +244,12 @@ export function getUrlParams(url: string): Record<string, string> {
  */
 export function buildQueryString(params: Record<string, unknown>): string {
   const searchParams = new URLSearchParams();
-  
+
   Object.entries(params).forEach(([key, value]) => {
     if (value !== null && value !== undefined && value !== '') {
       searchParams.append(key, String(value));
     }
   });
-  
+
   return searchParams.toString();
 }

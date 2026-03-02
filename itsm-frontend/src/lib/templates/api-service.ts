@@ -58,20 +58,15 @@ export function createCrudApi<T extends { id: number }>(
   }
 ) {
   return {
-    list: (params?: object) =>
-      httpClient.get<{ list: T[]; total: number }>(endpoint, params),
+    list: (params?: object) => httpClient.get<{ list: T[]; total: number }>(endpoint, params),
 
-    get: (id: number) =>
-      httpClient.get<T>(`${endpoint}/${id}`),
+    get: (id: number) => httpClient.get<T>(`${endpoint}/${id}`),
 
-    create: (data: Partial<T>) =>
-      httpClient.post<T>(endpoint, data),
+    create: (data: Partial<T>) => httpClient.post<T>(endpoint, data),
 
-    update: (id: number, data: Partial<T>) =>
-      httpClient.put<T>(`${endpoint}/${id}`, data),
+    update: (id: number, data: Partial<T>) => httpClient.put<T>(`${endpoint}/${id}`, data),
 
-    delete: (id: number) =>
-      httpClient.delete(`${endpoint}/${id}`),
+    delete: (id: number) => httpClient.delete(`${endpoint}/${id}`),
 
     batchDelete: (ids: number[]) =>
       httpClient.post(`${options?.batchEndpoint || endpoint + '/batch'}/delete`, { ids }),
@@ -85,20 +80,15 @@ export function createCrudApi<T extends { id: number }>(
 
 export function createTenantApi<T extends { id: number }>(endpoint: string) {
   return {
-    list: (params?: object) =>
-      httpClient.get<{ list: T[]; total: number }>(endpoint, params),
+    list: (params?: object) => httpClient.get<{ list: T[]; total: number }>(endpoint, params),
 
-    get: (id: number) =>
-      httpClient.get<T>(`${endpoint}/${id}`),
+    get: (id: number) => httpClient.get<T>(`${endpoint}/${id}`),
 
-    create: (data: Partial<T>) =>
-      httpClient.post<T>(endpoint, data),
+    create: (data: Partial<T>) => httpClient.post<T>(endpoint, data),
 
-    update: (id: number, data: Partial<T>) =>
-      httpClient.put<T>(`${endpoint}/${id}`, data),
+    update: (id: number, data: Partial<T>) => httpClient.put<T>(`${endpoint}/${id}`, data),
 
-    delete: (id: number) =>
-      httpClient.delete(`${endpoint}/${id}`),
+    delete: (id: number) => httpClient.delete(`${endpoint}/${id}`),
   };
 }
 

@@ -12,19 +12,13 @@ export function useDashboardData() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // 使用React Query获取Dashboard数据
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-    isError,
-  } = useQuery({
+  const { data, isLoading, error, refetch, isError } = useQuery({
     queryKey: ['dashboard', 'overview'],
     queryFn: async () => {
       // 并行请求 Dashboard 概览和真实的工单统计
       const [overviewResult, statsResult] = await Promise.allSettled([
         DashboardAPI.getOverview(),
-        ticketService.getTicketStats()
+        ticketService.getTicketStats(),
       ]);
 
       let dashboardData = getInitialData(); // 默认使用空数据初始化
@@ -53,7 +47,7 @@ export function useDashboardData() {
             case 'completed-tickets':
               return { ...metric, value: stats.resolved + stats.closed, description: '实时已完成' };
             case 'overdue-tickets':
-               return { ...metric, value: stats.overdue || 0, description: '实时超时工单' };
+              return { ...metric, value: stats.overdue || 0, description: '实时超时工单' };
             default:
               return metric;
           }
@@ -101,7 +95,7 @@ function getInitialData(): DashboardData {
       {
         id: 'total-tickets',
         title: '总工单数',
-        value: 0, 
+        value: 0,
         unit: '个',
         color: '#3b82f6',
         trend: 'up' as const,
@@ -230,22 +224,22 @@ function getInitialData(): DashboardData {
       },
     ],
     recentActivities: [],
-    
+
     // 新增：工单类型分布
     typeDistribution: [],
-    
+
     // 新增：响应时间分布
     responseTimeDistribution: [],
-    
+
     // 新增：团队工作负载
     teamWorkload: [],
-    
+
     // 新增：优先级分布
     priorityDistribution: [],
-    
+
     // 新增：高峰时段分析
     peakHours: [],
-    
+
     // 元数据
     metadata: {
       lastUpdated: new Date().toISOString(),

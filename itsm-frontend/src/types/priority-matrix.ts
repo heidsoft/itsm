@@ -11,9 +11,9 @@ import type { TicketPriority } from './ticket';
  * 影响度级别
  */
 export enum ImpactLevel {
-  LOW = 'low',           // 低 - 影响个人或小团队
-  MEDIUM = 'medium',     // 中 - 影响部门
-  HIGH = 'high',         // 高 - 影响多个部门
+  LOW = 'low', // 低 - 影响个人或小团队
+  MEDIUM = 'medium', // 中 - 影响部门
+  HIGH = 'high', // 高 - 影响多个部门
   CRITICAL = 'critical', // 严重 - 影响整个组织
 }
 
@@ -21,13 +21,13 @@ export enum ImpactLevel {
  * 影响度因素
  */
 export interface ImpactFactors {
-  affectedUsers: number;              // 受影响用户数
-  affectedDepartments: string[];      // 受影响部门
+  affectedUsers: number; // 受影响用户数
+  affectedDepartments: string[]; // 受影响部门
   businessImpact: 'none' | 'low' | 'medium' | 'high' | 'critical'; // 业务影响
-  financialImpact?: number;           // 财务影响（金额）
+  financialImpact?: number; // 财务影响（金额）
   reputationImpact?: 'none' | 'low' | 'medium' | 'high'; // 声誉影响
-  dataLoss?: boolean;                 // 是否涉及数据丢失
-  securityImpact?: boolean;           // 是否涉及安全
+  dataLoss?: boolean; // 是否涉及数据丢失
+  securityImpact?: boolean; // 是否涉及安全
 }
 
 /**
@@ -35,7 +35,7 @@ export interface ImpactFactors {
  */
 export interface ImpactAssessment {
   level: ImpactLevel;
-  score: number;                      // 影响度评分（0-100）
+  score: number; // 影响度评分（0-100）
   factors: ImpactFactors;
   description: string;
   calculatedAt: Date;
@@ -47,9 +47,9 @@ export interface ImpactAssessment {
  * 紧急度级别
  */
 export enum UrgencyLevel {
-  LOW = 'low',           // 低 - 可以延后处理
-  MEDIUM = 'medium',     // 中 - 需要及时处理
-  HIGH = 'high',         // 高 - 需要尽快处理
+  LOW = 'low', // 低 - 可以延后处理
+  MEDIUM = 'medium', // 中 - 需要及时处理
+  HIGH = 'high', // 高 - 需要尽快处理
   CRITICAL = 'critical', // 严重 - 需要立即处理
 }
 
@@ -57,13 +57,13 @@ export enum UrgencyLevel {
  * 紧急度因素
  */
 export interface UrgencyFactors {
-  isBlocking: boolean;                // 是否阻塞业务
-  deadline?: Date;                    // 截止时间
-  timeToDeadline?: number;            // 距离截止时间（小时）
-  escalationLevel: number;            // 升级级别（0-5）
-  vipUser?: boolean;                  // 是否VIP用户
-  peakHours?: boolean;                // 是否高峰时段
-  slaBreachRisk?: number;             // SLA违反风险（0-100）
+  isBlocking: boolean; // 是否阻塞业务
+  deadline?: Date; // 截止时间
+  timeToDeadline?: number; // 距离截止时间（小时）
+  escalationLevel: number; // 升级级别（0-5）
+  vipUser?: boolean; // 是否VIP用户
+  peakHours?: boolean; // 是否高峰时段
+  slaBreachRisk?: number; // SLA违反风险（0-100）
 }
 
 /**
@@ -71,7 +71,7 @@ export interface UrgencyFactors {
  */
 export interface UrgencyAssessment {
   level: UrgencyLevel;
-  score: number;                      // 紧急度评分（0-100）
+  score: number; // 紧急度评分（0-100）
   factors: UrgencyFactors;
   description: string;
   calculatedAt: Date;
@@ -86,7 +86,7 @@ export interface PriorityMatrixConfig {
   id: string;
   name: string;
   description?: string;
-  matrixType: '2x2' | '3x3' | '4x4';  // 矩阵类型
+  matrixType: '2x2' | '3x3' | '4x4'; // 矩阵类型
   mappingRules: PriorityMappingRule[];
   isActive: boolean;
   createdAt: Date;
@@ -100,9 +100,9 @@ export interface PriorityMappingRule {
   impactLevel: ImpactLevel;
   urgencyLevel: UrgencyLevel;
   resultPriority: TicketPriority;
-  slaTarget?: number;                 // SLA目标（小时）
-  autoAssign?: boolean;               // 是否自动分配
-  notificationRules?: string[];       // 通知规则
+  slaTarget?: number; // SLA目标（小时）
+  autoAssign?: boolean; // 是否自动分配
+  notificationRules?: string[]; // 通知规则
 }
 
 /**
@@ -114,7 +114,7 @@ export interface MatrixCell {
   priority: TicketPriority;
   color: string;
   label: string;
-  count?: number;                     // 当前此优先级的工单数
+  count?: number; // 当前此优先级的工单数
 }
 
 /**
@@ -150,7 +150,7 @@ export interface PriorityCalculationResult {
   suggestedPriority: TicketPriority;
   impactAssessment: ImpactAssessment;
   urgencyAssessment: UrgencyAssessment;
-  confidence: number;                 // 置信度（0-100）
+  confidence: number; // 置信度（0-100）
   reasoning: string;
   alternatives?: Array<{
     priority: TicketPriority;
@@ -185,8 +185,8 @@ export interface PrioritySuggestion {
 export interface BatchPrioritySuggestions {
   suggestions: PrioritySuggestion[];
   total: number;
-  highConfidence: number;             // 高置信度建议数量
-  needsReview: number;                // 需要审查的数量
+  highConfidence: number; // 高置信度建议数量
+  needsReview: number; // 需要审查的数量
 }
 
 // ==================== 优先级规则 ====================
@@ -195,12 +195,12 @@ export interface BatchPrioritySuggestions {
  * 优先级规则类型
  */
 export enum PriorityRuleType {
-  KEYWORD_MATCH = 'keyword_match',      // 关键词匹配
-  USER_BASED = 'user_based',            // 基于用户
-  TIME_BASED = 'time_based',            // 基于时间
-  CATEGORY_BASED = 'category_based',    // 基于分类
-  SLA_BASED = 'sla_based',              // 基于SLA
-  CUSTOM = 'custom',                    // 自定义
+  KEYWORD_MATCH = 'keyword_match', // 关键词匹配
+  USER_BASED = 'user_based', // 基于用户
+  TIME_BASED = 'time_based', // 基于时间
+  CATEGORY_BASED = 'category_based', // 基于分类
+  SLA_BASED = 'sla_based', // 基于SLA
+  CUSTOM = 'custom', // 自定义
 }
 
 /**
@@ -211,7 +211,7 @@ export interface PriorityRule {
   name: string;
   type: PriorityRuleType;
   enabled: boolean;
-  priority: number;                   // 规则优先级（数字越小越优先）
+  priority: number; // 规则优先级（数字越小越优先）
   conditions: PriorityRuleCondition[];
   actions: PriorityRuleAction[];
   createdAt: Date;
@@ -301,12 +301,12 @@ export interface PriorityDistributionAnalysis {
 export interface PriorityAccuracyAnalysis {
   totalTickets: number;
   accurateAssignments: number;
-  accuracyRate: number;               // 准确率（%）
+  accuracyRate: number; // 准确率（%）
   commonMisclassifications: Array<{
     assignedPriority: TicketPriority;
     shouldBePriority: TicketPriority;
     count: number;
-    examples: number[];               // 工单ID示例
+    examples: number[]; // 工单ID示例
   }>;
   improvementSuggestions: string[];
 }
@@ -357,4 +357,3 @@ export interface PriorityAnalysisQuery {
 // ==================== 导出所有类型 ====================
 
 export default PriorityMatrixConfig;
-

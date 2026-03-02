@@ -480,12 +480,12 @@ const AdvancedReporting: React.FC = () => {
               {record.category === 'ticket'
                 ? '工单'
                 : record.category === 'sla'
-                ? 'SLA'
-                : record.category === 'user'
-                ? '用户'
-                : record.category === 'system'
-                ? '系统'
-                : '自定义'}
+                  ? 'SLA'
+                  : record.category === 'user'
+                    ? '用户'
+                    : record.category === 'system'
+                      ? '系统'
+                      : '自定义'}
             </span>
             <span>•</span>
             <span>创建者：{record.created_by}</span>
@@ -503,20 +503,20 @@ const AdvancedReporting: React.FC = () => {
             {record.visualization === 'table'
               ? '表格'
               : record.visualization === 'chart'
-              ? '图表'
-              : '仪表盘'}
+                ? '图表'
+                : '仪表盘'}
           </Tag>
           {record.chart_type && (
             <div className='text-xs text-gray-500'>
               {record.chart_type === 'bar'
                 ? '柱状图'
                 : record.chart_type === 'line'
-                ? '折线图'
-                : record.chart_type === 'pie'
-                ? '饼图'
-                : record.chart_type === 'area'
-                ? '面积图'
-                : '散点图'}
+                  ? '折线图'
+                  : record.chart_type === 'pie'
+                    ? '饼图'
+                    : record.chart_type === 'area'
+                      ? '面积图'
+                      : '散点图'}
             </div>
           )}
         </div>
@@ -582,8 +582,8 @@ const AdvancedReporting: React.FC = () => {
           {record.status === 'completed'
             ? '已完成'
             : record.status === 'running'
-            ? '执行中'
-            : '执行失败'}
+              ? '执行中'
+              : '执行失败'}
         </Tag>
       ),
     },

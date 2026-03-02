@@ -419,7 +419,7 @@ const TicketList: React.FC<TicketListProps> = ({
   return (
     <div className='ticket-list space-y-4'>
       {showHeader && (
-        <Card className="rounded-lg shadow-sm">
+        <Card className='rounded-lg shadow-sm'>
           <Row gutter={[16, 16]} align='middle'>
             <Col flex='auto'>
               <Space size='middle'>
@@ -536,7 +536,7 @@ const TicketList: React.FC<TicketListProps> = ({
         />
       )}
 
-      <Card className="rounded-lg shadow-sm">
+      <Card className='rounded-lg shadow-sm'>
         <Table<Ticket>
           columns={columns}
           dataSource={tickets}
@@ -555,7 +555,7 @@ const TicketList: React.FC<TicketListProps> = ({
           onChange={handleTableChange}
           scroll={{ x: 1200 }}
           size='middle'
-          getPopupContainer={(node) => node.parentElement || document.body}
+          getPopupContainer={node => node.parentElement || document.body}
         />
       </Card>
 

@@ -235,7 +235,7 @@ const WorkflowAutomationPage = () => {
         <p className='text-gray-600 mt-1'>配置和管理工作流自动化规则，提高流程效率</p>
       </div>
       {/* 全局设置 */}
-      <Card className='rounded-lg shadow-sm border border-gray-200 mb-6' variant="borderless">
+      <Card className='rounded-lg shadow-sm border border-gray-200 mb-6' variant='borderless'>
         <Row gutter={[16, 16]} align='middle'>
           <Col xs={24} sm={12}>
             <div className='flex items-center space-x-4'>
@@ -264,7 +264,7 @@ const WorkflowAutomationPage = () => {
       {/* 统计信息 */}
       <Row gutter={[16, 16]} className='mb-6'>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
             <Statistic
               title='自动分配规则'
               value={rules.filter(r => r.type === 'assignment').length}
@@ -274,7 +274,7 @@ const WorkflowAutomationPage = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
             <Statistic
               title='智能路由规则'
               value={rules.filter(r => r.type === 'routing').length}
@@ -284,7 +284,7 @@ const WorkflowAutomationPage = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
             <Statistic
               title='自动升级规则'
               value={rules.filter(r => r.type === 'escalation').length}
@@ -294,7 +294,7 @@ const WorkflowAutomationPage = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+          <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
             <Statistic
               title='活跃规则'
               value={rules.filter(r => r.is_active).length}
@@ -306,7 +306,7 @@ const WorkflowAutomationPage = () => {
       </Row>
 
       {/* 规则管理 */}
-      <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+      <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
         <div className='flex items-center justify-between mb-4'>
           <Title level={5}>自动化规则</Title>
           <Button type='primary' icon={<Plus className='w-4 h-4' />} onClick={handleCreateRule}>

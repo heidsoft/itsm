@@ -32,7 +32,7 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
   optionsLoading,
   onCreateService,
 }) => {
-    const { t } = useI18n();
+  const { t } = useI18n();
   return (
     <Card style={{ marginBottom: 24 }}>
       <Row gutter={20} align='middle'>
@@ -110,7 +110,12 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
           </Select>
         </Col>
         <Col xs={24} sm={12} md={2}>
-          <Button icon={<Search size={20} />} onClick={() => {}} size='large' style={{ width: '100%' }}>
+          <Button
+            icon={<Search size={20} />}
+            onClick={() => {}}
+            size='large'
+            style={{ width: '100%' }}
+          >
             {t('serviceCatalog.refresh')}
           </Button>
         </Col>

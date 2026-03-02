@@ -135,15 +135,8 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
 
     if (!relations || relations.length === 0) {
       return (
-        <Empty
-          description='暂无关联工单'
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        >
-          <Button
-            type='primary'
-            icon={<PlusOutlined />}
-            onClick={() => setModalVisible(true)}
-          >
+        <Empty description='暂无关联工单' image={Empty.PRESENTED_IMAGE_SIMPLE}>
+          <Button type='primary' icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
             添加关联
           </Button>
         </Empty>
@@ -153,11 +146,9 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
     return (
       <List
         dataSource={relations}
-        renderItem={(relation) => {
+        renderItem={relation => {
           const isSource = relation.sourceTicketId === ticketId;
-          const relatedTicket = isSource
-            ? relation.targetTicket
-            : relation.sourceTicket;
+          const relatedTicket = isSource ? relation.targetTicket : relation.sourceTicket;
 
           return (
             <List.Item
@@ -168,9 +159,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
                     size='small'
                     onClick={() =>
                       onRelationClick?.(
-                        isSource
-                          ? relation.targetTicketId
-                          : relation.sourceTicketId
+                        isSource ? relation.targetTicketId : relation.sourceTicketId
                       )
                     }
                   >
@@ -184,12 +173,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
                   okText='确认'
                   cancelText='取消'
                 >
-                  <Button
-                    type='link'
-                    danger
-                    size='small'
-                    icon={<DeleteOutlined />}
-                  >
+                  <Button type='link' danger size='small' icon={<DeleteOutlined />}>
                     删除
                   </Button>
                 </Popconfirm>,
@@ -207,9 +191,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
                       #{isSource ? relation.targetTicketNumber : relation.sourceTicketNumber}
                     </span>
                     <span>{relatedTicket?.title}</span>
-                    {relatedTicket?.status && (
-                      <Tag>{relatedTicket.status}</Tag>
-                    )}
+                    {relatedTicket?.status && <Tag>{relatedTicket.status}</Tag>}
                   </Space>
                 }
                 description={relation.description}
@@ -257,9 +239,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
         <Space>
           <LinkOutlined />
           <span>工单关联</span>
-          {stats && stats.totalRelations > 0 && (
-            <Badge count={stats.totalRelations} showZero />
-          )}
+          {stats && stats.totalRelations > 0 && <Badge count={stats.totalRelations} showZero />}
         </Space>
       }
       extra={
@@ -306,11 +286,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
             name='targetTicketId'
             rules={[{ required: true, message: '请输入目标工单ID' }]}
           >
-            <Input
-              type='number'
-              placeholder='输入工单ID'
-              addonBefore='#'
-            />
+            <Input type='number' placeholder='输入工单ID' addonBefore='#' />
           </Form.Item>
 
           <Form.Item label='描述' name='description'>
@@ -323,4 +299,3 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
 };
 
 export default RelationPanel;
-

@@ -87,7 +87,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
         unit: '%',
         status: 'normal',
         trend: 'up',
-        icon: <Server className="w-5 h-5 text-blue-500" />,
+        icon: <Server className='w-5 h-5 text-blue-500' />,
       },
       {
         name: '内存使用率',
@@ -95,7 +95,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
         unit: '%',
         status: 'warning',
         trend: 'stable',
-        icon: <Database className="w-5 h-5 text-green-500" />,
+        icon: <Database className='w-5 h-5 text-green-500' />,
       },
       {
         name: '响应时间',
@@ -103,7 +103,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
         unit: 'ms',
         status: 'normal',
         trend: 'down',
-        icon: <Clock className="w-5 h-5 text-orange-500" />,
+        icon: <Clock className='w-5 h-5 text-orange-500' />,
       },
       {
         name: '在线用户',
@@ -111,7 +111,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
         unit: '人',
         status: 'normal',
         trend: 'up',
-        icon: <Users className="w-5 h-5 text-purple-500" />,
+        icon: <Users className='w-5 h-5 text-purple-500' />,
       },
       {
         name: 'API调用',
@@ -119,7 +119,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
         unit: '次/分',
         status: 'normal',
         trend: 'up',
-        icon: <Activity className="w-5 h-5 text-cyan-500" />,
+        icon: <Activity className='w-5 h-5 text-cyan-500' />,
       },
       {
         name: '网络流量',
@@ -127,7 +127,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
         unit: 'Mbps',
         status: 'warning',
         trend: 'stable',
-        icon: <Globe className="w-5 h-5 text-teal-500" />,
+        icon: <Globe className='w-5 h-5 text-teal-500' />,
       },
     ];
 
@@ -236,9 +236,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   // 确认告警
   const acknowledgeAlert = (alertId: string) => {
     setActiveAlerts(prev =>
-      prev.map(alert =>
-        alert.id === alertId ? { ...alert, acknowledged: true } : alert
-      )
+      prev.map(alert => (alert.id === alertId ? { ...alert, acknowledged: true } : alert))
     );
   };
 
@@ -260,11 +258,11 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   const getTrendIcon = (trend?: string) => {
     switch (trend) {
       case 'up':
-        return <TrendingUp className="w-4 h-4 text-green-500" />;
+        return <TrendingUp className='w-4 h-4 text-green-500' />;
       case 'down':
-        return <TrendingUp className="w-4 h-4 text-red-500 rotate-180" />;
+        return <TrendingUp className='w-4 h-4 text-red-500 rotate-180' />;
       default:
-        return <div className="w-4 h-4 bg-gray-400 rounded-full" />;
+        return <div className='w-4 h-4 bg-gray-400 rounded-full' />;
     }
   };
 
@@ -288,13 +286,13 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'ticket_created':
-        return <Bell className="w-4 h-4 text-blue-500" />;
+        return <Bell className='w-4 h-4 text-blue-500' />;
       case 'ticket_resolved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className='w-4 h-4 text-green-500' />;
       case 'user_login':
-        return <Users className="w-4 h-4 text-purple-500" />;
+        return <Users className='w-4 h-4 text-purple-500' />;
       default:
-        return <Activity className="w-4 h-4 text-gray-500" />;
+        return <Activity className='w-4 h-4 text-gray-500' />;
     }
   };
 
@@ -317,8 +315,10 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
       key: 'title',
       render: (title: string, record: ActiveAlert) => (
         <div>
-          <div className="font-medium">{title}</div>
-          <Text type="secondary" className="text-xs">{record.description}</Text>
+          <div className='font-medium'>{title}</div>
+          <Text type='secondary' className='text-xs'>
+            {record.description}
+          </Text>
         </div>
       ),
     },
@@ -329,9 +329,13 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
       width: 80,
       render: (severity: string) => (
         <Tag color={getSeverityColor(severity)}>
-          {severity === 'critical' ? '严重' :
-           severity === 'high' ? '高' :
-           severity === 'medium' ? '中' : '低'}
+          {severity === 'critical'
+            ? '严重'
+            : severity === 'high'
+              ? '高'
+              : severity === 'medium'
+                ? '中'
+                : '低'}
         </Tag>
       ),
     },
@@ -350,33 +354,31 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* 控制面板 */}
-      <Card title="实时监控控制台" extra={
-        <Space>
-          <Text type="secondary">
-            最后更新: {lastRefresh.toLocaleTimeString()}
-          </Text>
-          <Tooltip title={refreshEnabled ? '关闭自动刷新' : '开启自动刷新'}>
-            <Switch
-              checked={refreshEnabled}
-              onChange={setRefreshEnabled}
-              checkedChildren="自动"
-              unCheckedChildren="手动"
-            />
-          </Tooltip>
-          <Button
-            icon={<RefreshCw className="w-4 h-4" />}
-            onClick={handleManualRefresh}
-          >
-            刷新
-          </Button>
-        </Space>
-      }>
-        <div className="flex items-center space-x-4 text-sm text-gray-600">
-          <Activity className="w-4 h-4" />
+      <Card
+        title='实时监控控制台'
+        extra={
+          <Space>
+            <Text type='secondary'>最后更新: {lastRefresh.toLocaleTimeString()}</Text>
+            <Tooltip title={refreshEnabled ? '关闭自动刷新' : '开启自动刷新'}>
+              <Switch
+                checked={refreshEnabled}
+                onChange={setRefreshEnabled}
+                checkedChildren='自动'
+                unCheckedChildren='手动'
+              />
+            </Tooltip>
+            <Button icon={<RefreshCw className='w-4 h-4' />} onClick={handleManualRefresh}>
+              刷新
+            </Button>
+          </Space>
+        }
+      >
+        <div className='flex items-center space-x-4 text-sm text-gray-600'>
+          <Activity className='w-4 h-4' />
           <span>实时监控已启用</span>
-          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse' />
           <span>刷新间隔: {refreshInterval}秒</span>
         </div>
       </Card>
@@ -385,32 +387,34 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
       <Row gutter={[16, 16]}>
         {systemMetrics.map((metric, index) => (
           <Col xs={24} sm={12} md={8} lg={6} key={index}>
-            <Card size="small" className="system-metric-card">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
+            <Card size='small' className='system-metric-card'>
+              <div className='flex items-center justify-between mb-2'>
+                <div className='flex items-center space-x-2'>
                   {metric.icon}
-                  <Text type="secondary">{metric.name}</Text>
+                  <Text type='secondary'>{metric.name}</Text>
                 </div>
-                <div className="flex items-center space-x-1">
-                  {getTrendIcon(metric.trend)}
-                </div>
+                <div className='flex items-center space-x-1'>{getTrendIcon(metric.trend)}</div>
               </div>
-              <div className="flex items-baseline space-x-2">
+              <div className='flex items-baseline space-x-2'>
                 <Statistic
                   value={metric.value}
                   suffix={metric.unit}
-                  styles={{ content: {
-                    color: getStatusColor(metric.status),
-                    fontSize: '20px',
-                  }}}
+                  styles={{
+                    content: {
+                      color: getStatusColor(metric.status),
+                      fontSize: '20px',
+                    },
+                  }}
                 />
               </div>
               <Progress
-                percent={metric.unit === '%' ? metric.value : Math.min((metric.value / 100) * 100, 100)}
+                percent={
+                  metric.unit === '%' ? metric.value : Math.min((metric.value / 100) * 100, 100)
+                }
                 strokeColor={getStatusColor(metric.status)}
                 showInfo={false}
-                size="small"
-                className="mt-2"
+                size='small'
+                className='mt-2'
               />
             </Card>
           </Col>
@@ -424,24 +428,20 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
           <Card
             title={
               <Space>
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
+                <AlertTriangle className='w-5 h-5 text-orange-600' />
                 <span>活跃告警</span>
                 <Badge count={activeAlerts.filter(a => !a.acknowledged).length} />
               </Space>
             }
-            extra={
-              <Text type="secondary">
-                总计: {activeAlerts.length}个
-              </Text>
-            }
+            extra={<Text type='secondary'>总计: {activeAlerts.length}个</Text>}
           >
             <Table
               columns={alertColumns}
               dataSource={activeAlerts}
-              rowKey="id"
+              rowKey='id'
               pagination={false}
-              size="small"
-              onRow={(record) => ({
+              size='small'
+              onRow={record => ({
                 onClick: () => !record.acknowledged && acknowledgeAlert(record.id),
                 style: { cursor: !record.acknowledged ? 'pointer' : 'default' },
               })}
@@ -454,31 +454,32 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
           <Card
             title={
               <Space>
-                <Zap className="w-5 h-5 text-blue-600" />
+                <Zap className='w-5 h-5 text-blue-600' />
                 <span>最近活动</span>
               </Space>
             }
-            >
-            <div className="space-y-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-0">
-                  <div className="mt-1">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <Text className="font-medium">{activity.description}</Text>
-                      <Text type="secondary" className="text-xs">
+          >
+            <div className='space-y-3' style={{ maxHeight: '400px', overflowY: 'auto' }}>
+              {recentActivities.map(activity => (
+                <div
+                  key={activity.id}
+                  className='flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-0'
+                >
+                  <div className='mt-1'>{getActivityIcon(activity.type)}</div>
+                  <div className='flex-1'>
+                    <div className='flex items-center justify-between'>
+                      <Text className='font-medium'>{activity.description}</Text>
+                      <Text type='secondary' className='text-xs'>
                         {activity.timestamp.toLocaleTimeString()}
                       </Text>
                     </div>
                     {activity.user && (
-                      <Text type="secondary" className="text-xs">
+                      <Text type='secondary' className='text-xs'>
                         操作者: {activity.user}
                       </Text>
                     )}
                     {activity.details && (
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className='text-xs text-gray-500 mt-1'>
                         {Object.entries(activity.details).map(([key, value]) => (
                           <div key={key}>
                             {key}: {JSON.stringify(value)}
@@ -496,17 +497,17 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
 
       {/* 系统状态总览 */}
       <Alert
-        message="系统状态总览"
+        message='系统状态总览'
         description={
-          <div className="space-y-1">
+          <div className='space-y-1'>
             <div>• 3个警告需要关注，1个严重告警待处理</div>
             <div>• 系统整体运行正常，各项指标在可接受范围内</div>
             <div>• 建议关注内存使用率趋势，必要时进行扩容</div>
           </div>
         }
-        type="info"
+        type='info'
         showIcon
-        className="status-overview"
+        className='status-overview'
       />
     </div>
   );

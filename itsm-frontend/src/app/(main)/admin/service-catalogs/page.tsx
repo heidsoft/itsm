@@ -140,9 +140,7 @@ const ServiceCatalogManagement = () => {
         category: values.category,
         shortDescription: values.description,
         fullDescription: values.description,
-        availability: values.delivery_time
-          ? { responseTime: values.delivery_time }
-          : undefined,
+        availability: values.delivery_time ? { responseTime: values.delivery_time } : undefined,
         ciTypeId: values.ciTypeId,
         cloudServiceId: values.cloudServiceId,
         ...(values.status ? { status: values.status } : {}),
@@ -242,9 +240,12 @@ const ServiceCatalogManagement = () => {
         : catalog.status !== 'published');
     const matchesCategory = !categoryFilter || catalog.category === categoryFilter;
     const matchesCIType = !ciTypeFilter || catalog.ciTypeId === ciTypeFilter;
-    const matchesCloudService = !cloudServiceFilter || catalog.cloudServiceId === cloudServiceFilter;
+    const matchesCloudService =
+      !cloudServiceFilter || catalog.cloudServiceId === cloudServiceFilter;
 
-    return matchesSearch && matchesStatus && matchesCategory && matchesCIType && matchesCloudService;
+    return (
+      matchesSearch && matchesStatus && matchesCategory && matchesCIType && matchesCloudService
+    );
   });
 
   // 表格列定义
@@ -653,11 +654,7 @@ const ServiceCatalogManagement = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item
-                name='serviceType'
-                label='服务类型'
-                tooltip='用于动态加载对应的申请表单'
-              >
+              <Form.Item name='serviceType' label='服务类型' tooltip='用于动态加载对应的申请表单'>
                 <Select placeholder='选择服务类型' allowClear>
                   <Option value='vm'>云服务器 (VM)</Option>
                   <Option value='rds'>数据库 (RDS)</Option>
@@ -670,10 +667,7 @@ const ServiceCatalogManagement = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name='delivery_time'
-                label='交付时间'
-              >
+              <Form.Item name='delivery_time' label='交付时间'>
                 <Input placeholder='例如：1-3个工作日' />
               </Form.Item>
             </Col>
@@ -681,7 +675,9 @@ const ServiceCatalogManagement = () => {
 
           {/* 审批配置 */}
           <div className='bg-gray-50 p-4 rounded-lg mb-4'>
-            <Text strong className='block mb-3'>审批配置</Text>
+            <Text strong className='block mb-3'>
+              审批配置
+            </Text>
             <Row gutter={16}>
               <Col span={8}>
                 <Form.Item name='requiresApproval' label='需要审批' valuePropName='checked'>
@@ -706,7 +702,9 @@ const ServiceCatalogManagement = () => {
 
           {/* SLA配置 */}
           <div className='bg-blue-50 p-4 rounded-lg mb-4'>
-            <Text strong className='block mb-3'>SLA配置</Text>
+            <Text strong className='block mb-3'>
+              SLA配置
+            </Text>
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item name='slaResponseTime' label='响应时间(分钟)' tooltip='SLA响应时间要求'>
@@ -714,7 +712,11 @@ const ServiceCatalogManagement = () => {
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item name='slaResolutionTime' label='解决时间(分钟)' tooltip='SLA解决时间要求'>
+                <Form.Item
+                  name='slaResolutionTime'
+                  label='解决时间(分钟)'
+                  tooltip='SLA解决时间要求'
+                >
                   <InputNumber min={0} placeholder='例如：240' style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
@@ -735,7 +737,13 @@ const ServiceCatalogManagement = () => {
             </Col>
             <Col span={12}>
               <Form.Item name='cloudServiceId' label='关联云服务'>
-                <Select placeholder='选择云服务' allowClear loading={optionsLoading} showSearch optionFilterProp='label'>
+                <Select
+                  placeholder='选择云服务'
+                  allowClear
+                  loading={optionsLoading}
+                  showSearch
+                  optionFilterProp='label'
+                >
                   {cloudServices.map(service => (
                     <Option
                       key={service.id}

@@ -5,7 +5,14 @@ export interface TicketNotification {
   id: number;
   ticket_id: number;
   user_id: number;
-  type: 'created' | 'assigned' | 'status_changed' | 'commented' | 'sla_warning' | 'resolved' | 'closed';
+  type:
+    | 'created'
+    | 'assigned'
+    | 'status_changed'
+    | 'commented'
+    | 'sla_warning'
+    | 'resolved'
+    | 'closed';
   channel: 'email' | 'in_app' | 'sms';
   content: string;
   sent_at?: string;
@@ -65,7 +72,9 @@ export interface BulkUpdatePreferencesRequest {
 export class TicketNotificationApi {
   // 获取工单通知列表
   static async getTicketNotifications(ticketId: number): Promise<ListTicketNotificationsResponse> {
-    return httpClient.get<ListTicketNotificationsResponse>(`/api/v1/tickets/${ticketId}/notifications`);
+    return httpClient.get<ListTicketNotificationsResponse>(
+      `/api/v1/tickets/${ticketId}/notifications`
+    );
   }
 
   // 发送工单通知
@@ -104,7 +113,10 @@ export class TicketNotificationApi {
   static async updateNotificationPreferences(
     data: BulkUpdatePreferencesRequest
   ): Promise<NotificationPreferencesResponse> {
-    return httpClient.put<NotificationPreferencesResponse>('/api/v1/notification-preferences', data);
+    return httpClient.put<NotificationPreferencesResponse>(
+      '/api/v1/notification-preferences',
+      data
+    );
   }
 
   // 重置为默认偏好
@@ -117,4 +129,3 @@ export class TicketNotificationApi {
     return httpClient.post<{ initialized: boolean }>('/api/v1/notification-preferences/init', {});
   }
 }
-

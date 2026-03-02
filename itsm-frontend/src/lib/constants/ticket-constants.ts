@@ -126,16 +126,23 @@ export const TICKET_TYPE_CONFIG = {
 
 // 获取状态配置
 export const getStatusConfig = (status: string) => {
-  return TICKET_STATUS_CONFIG[status as keyof typeof TICKET_STATUS_CONFIG] || TICKET_STATUS_CONFIG.open;
+  return (
+    TICKET_STATUS_CONFIG[status as keyof typeof TICKET_STATUS_CONFIG] || TICKET_STATUS_CONFIG.open
+  );
 };
 
 // 获取优先级配置
 export const getPriorityConfig = (priority: string) => {
-  return TICKET_PRIORITY_CONFIG[priority as keyof typeof TICKET_PRIORITY_CONFIG] || TICKET_PRIORITY_CONFIG.medium;
+  return (
+    TICKET_PRIORITY_CONFIG[priority as keyof typeof TICKET_PRIORITY_CONFIG] ||
+    TICKET_PRIORITY_CONFIG.medium
+  );
 };
 
 // 获取类型配置
 export const getTypeConfig = (type: string) => {
-  return TICKET_TYPE_CONFIG[type as keyof typeof TICKET_TYPE_CONFIG] || TICKET_TYPE_CONFIG.service_request;
+  return (
+    TICKET_TYPE_CONFIG[type as keyof typeof TICKET_TYPE_CONFIG] ||
+    TICKET_TYPE_CONFIG.service_request
+  );
 };
-

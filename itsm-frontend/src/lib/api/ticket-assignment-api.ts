@@ -31,7 +31,15 @@ export interface AutoAssignResponse {
 // 条件配置类型
 export interface ConditionConfig {
   field: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'not_contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'in'
+    | 'not_in';
   value: string | number | boolean | string[] | number[];
 }
 
@@ -113,7 +121,9 @@ export class TicketAssignmentApi {
    * 获取分配推荐
    */
   static async getRecommendations(ticketId: number): Promise<GetAssignRecommendationsResponse> {
-    return httpClient.get<GetAssignRecommendationsResponse>(`/api/v1/tickets/assign-recommendations/${ticketId}`);
+    return httpClient.get<GetAssignRecommendationsResponse>(
+      `/api/v1/tickets/assign-recommendations/${ticketId}`
+    );
   }
 
   /**
@@ -140,7 +150,10 @@ export class TicketAssignmentApi {
   /**
    * 更新分配规则
    */
-  static async updateRule(ruleId: number, data: UpdateAssignmentRuleRequest): Promise<AssignmentRule> {
+  static async updateRule(
+    ruleId: number,
+    data: UpdateAssignmentRuleRequest
+  ): Promise<AssignmentRule> {
     return httpClient.put<AssignmentRule>(`/api/v1/tickets/assignment-rules/${ruleId}`, data);
   }
 
@@ -155,7 +168,9 @@ export class TicketAssignmentApi {
    * 测试分配规则
    */
   static async testRule(data: TestAssignmentRuleRequest): Promise<TestAssignmentRuleResponse> {
-    return httpClient.post<TestAssignmentRuleResponse>('/api/v1/tickets/assignment-rules/test', data);
+    return httpClient.post<TestAssignmentRuleResponse>(
+      '/api/v1/tickets/assignment-rules/test',
+      data
+    );
   }
 }
-

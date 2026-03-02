@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Row,
-  Col,
-  Select,
-  DatePicker,
-  Space,
-  Typography,
-  Spin,
-  App,
-  Statistic,
-} from 'antd';
+import { Card, Row, Col, Select, DatePicker, Space, Typography, Spin, App, Statistic } from 'antd';
 import {
   LineChart,
   Line,
@@ -141,7 +130,9 @@ const IncidentTrendsPage = () => {
   const generateMockTrend = () => {
     const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90;
     return Array.from({ length: days }, (_, i) => ({
-      date: dayjs().subtract(days - 1 - i, 'day').format('MM-DD'),
+      date: dayjs()
+        .subtract(days - 1 - i, 'day')
+        .format('MM-DD'),
       created: Math.floor(Math.random() * 20) + 5,
       resolved: Math.floor(Math.random() * 15) + 3,
       open: Math.floor(Math.random() * 10) + 2,
@@ -156,10 +147,10 @@ const IncidentTrendsPage = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-800 mb-1">{`日期: ${label}`}</p>
+        <div className='bg-white p-3 rounded-lg shadow-lg border border-gray-200'>
+          <p className='font-semibold text-gray-800 mb-1'>{`日期: ${label}`}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
+            <p key={index} className='text-sm' style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value}`}
             </p>
           ))}
@@ -170,27 +161,21 @@ const IncidentTrendsPage = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-full">
-      <header className="mb-6">
+    <div className='p-6 bg-gray-50 min-h-full'>
+      <header className='mb-6'>
         <Title level={2}>事件趋势报表</Title>
-        <p className="text-gray-500 mt-1">
-          展示事件数量随时间变化的趋势以及按优先级的分布情况
-        </p>
+        <p className='text-gray-500 mt-1'>展示事件数量随时间变化的趋势以及按优先级的分布情况</p>
       </header>
 
       {/* 控制面板 */}
-      <Card className="mb-6">
-        <Row justify="space-between" align="middle">
+      <Card className='mb-6'>
+        <Row justify='space-between' align='middle'>
           <Col>
             <Space>
-              <Select
-                value={selectedPeriod}
-                onChange={setSelectedPeriod}
-                style={{ width: 140 }}
-              >
-                <Option value="7d">最近7天</Option>
-                <Option value="30d">最近30天</Option>
-                <Option value="90d">最近90天</Option>
+              <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 140 }}>
+                <Option value='7d'>最近7天</Option>
+                <Option value='30d'>最近30天</Option>
+                <Option value='90d'>最近90天</Option>
               </Select>
               <RangePicker
                 value={dateRange}
@@ -213,11 +198,11 @@ const IncidentTrendsPage = () => {
       </Card>
 
       {/* 统计卡片 */}
-      <Row gutter={16} className="mb-6">
+      <Row gutter={16} className='mb-6'>
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="事件总数"
+              title='事件总数'
               value={stats.total}
               prefix={<BarChart3 size={20} style={{ color: colors.primary }} />}
             />
@@ -226,7 +211,7 @@ const IncidentTrendsPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="新增事件"
+              title='新增事件'
               value={stats.created}
               styles={{ content: { color: colors.primary } }}
               prefix={<TrendingUp size={20} />}
@@ -236,7 +221,7 @@ const IncidentTrendsPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="已解决事件"
+              title='已解决事件'
               value={stats.resolved}
               styles={{ content: { color: colors.success } }}
               prefix={<CheckCircle size={20} />}
@@ -246,9 +231,9 @@ const IncidentTrendsPage = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="平均解决时间"
+              title='平均解决时间'
               value={stats.avgResolutionTime.toFixed(1)}
-              suffix="小时"
+              suffix='小时'
               prefix={<Clock size={20} style={{ color: colors.warning }} />}
             />
           </Card>
@@ -256,48 +241,48 @@ const IncidentTrendsPage = () => {
       </Row>
 
       {loading && trendData.length === 0 ? (
-        <div className="flex items-center justify-center h-96">
-          <Spin size="large" tip="加载报表数据..." />
+        <div className='flex items-center justify-center h-96'>
+          <Spin size='large' tip='加载报表数据...' />
         </div>
       ) : (
         <>
           {/* 趋势图表 */}
-          <Row gutter={[16, 16]} className="mb-6">
+          <Row gutter={[16, 16]} className='mb-6'>
             <Col span={24}>
-              <Card title="每日事件数量趋势">
-                <ResponsiveContainer width="100%" height={350}>
+              <Card title='每日事件数量趋势'>
+                <ResponsiveContainer width='100%' height={350}>
                   <AreaChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='date' />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Area
-                      type="monotone"
-                      dataKey="created"
-                      stackId="1"
+                      type='monotone'
+                      dataKey='created'
+                      stackId='1'
                       stroke={colors.primary}
                       fill={colors.primary}
                       fillOpacity={0.3}
-                      name="新建事件"
+                      name='新建事件'
                     />
                     <Area
-                      type="monotone"
-                      dataKey="resolved"
-                      stackId="2"
+                      type='monotone'
+                      dataKey='resolved'
+                      stackId='2'
                       stroke={colors.success}
                       fill={colors.success}
                       fillOpacity={0.3}
-                      name="已解决事件"
+                      name='已解决事件'
                     />
                     <Area
-                      type="monotone"
-                      dataKey="open"
-                      stackId="3"
+                      type='monotone'
+                      dataKey='open'
+                      stackId='3'
                       stroke={colors.warning}
                       fill={colors.warning}
                       fillOpacity={0.3}
-                      name="待处理事件"
+                      name='待处理事件'
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -308,15 +293,15 @@ const IncidentTrendsPage = () => {
           {/* 优先级分布和解决趋势 */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title="按优先级分布">
-                <ResponsiveContainer width="100%" height={300}>
+              <Card title='按优先级分布'>
+                <ResponsiveContainer width='100%' height={300}>
                   <BarChart data={priorityData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='name' />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Bar dataKey="value" name="事件数量" fill={colors.primary}>
+                    <Bar dataKey='value' name='事件数量' fill={colors.primary}>
                       {priorityData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color || colors.primary} />
                       ))}
@@ -326,29 +311,29 @@ const IncidentTrendsPage = () => {
               </Card>
             </Col>
             <Col xs={24} lg={12}>
-              <Card title="事件解决率趋势">
-                <ResponsiveContainer width="100%" height={300}>
+              <Card title='事件解决率趋势'>
+                <ResponsiveContainer width='100%' height={300}>
                   <LineChart data={trendData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='date' />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line
-                      type="monotone"
-                      dataKey="resolved"
+                      type='monotone'
+                      dataKey='resolved'
                       stroke={colors.success}
                       strokeWidth={2}
                       dot={{ fill: colors.success }}
-                      name="已解决"
+                      name='已解决'
                     />
                     <Line
-                      type="monotone"
-                      dataKey="created"
+                      type='monotone'
+                      dataKey='created'
                       stroke={colors.primary}
                       strokeWidth={2}
                       dot={{ fill: colors.primary }}
-                      name="新建"
+                      name='新建'
                     />
                   </LineChart>
                 </ResponsiveContainer>

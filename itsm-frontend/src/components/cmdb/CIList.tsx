@@ -238,7 +238,7 @@ const CIList: React.FC = () => {
         </Button>
       </div>
 
-      <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
+      <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
         <Form form={form} layout='inline' className='mb-6 flex-wrap gap-y-4'>
           <Form.Item name='search' className='mb-0'>
             <Input
@@ -268,7 +268,7 @@ const CIList: React.FC = () => {
           </Form.Item>
           <Form.Item className='mb-0'>
             <Space>
-              <Button type="primary" onClick={handleSearch}>
+              <Button type='primary' onClick={handleSearch}>
                 查询
               </Button>
               <Button icon={<ReloadOutlined />} onClick={loadData} aria-label='刷新' />
@@ -294,11 +294,8 @@ const CIList: React.FC = () => {
           loading={loading}
           locale={{
             emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无配置项数据"
-              >
-                <Button type="primary" onClick={() => router.push('/cmdb/cis/create')}>
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无配置项数据'>
+                <Button type='primary' onClick={() => router.push('/cmdb/cis/create')}>
                   创建第一个配置项
                 </Button>
               </Empty>
@@ -313,7 +310,7 @@ const CIList: React.FC = () => {
             onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
           }}
           scroll={{ x: 1200 }}
-          getPopupContainer={(node) => node.parentElement || document.body}
+          getPopupContainer={node => node.parentElement || document.body}
         />
       </Card>
     </div>

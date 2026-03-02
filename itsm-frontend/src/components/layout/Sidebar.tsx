@@ -223,7 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           icon: item.icon,
           label: (
             <div className={styles.menuItemLabel} title={item.description || item.label}>
-              <span className="truncate">{item.label}</span>
+              <span className='truncate'>{item.label}</span>
             </div>
           ),
           children: item.children.map((child: any) => ({
@@ -240,8 +240,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
         icon: item.icon,
         label: (
           <div className={styles.menuItemLabel} title={item.description || item.label}>
-            <span className="truncate">{item.label}</span>
-            {item.badge && <Badge count={item.badge} size='small' className={styles.menuItemBadge} />}
+            <span className='truncate'>{item.label}</span>
+            {item.badge && (
+              <Badge count={item.badge} size='small' className={styles.menuItemBadge} />
+            )}
           </div>
         ),
         onClick: () => handleMenuClick({ key: item.key }),
@@ -307,9 +309,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       {!collapsed && (
         <div className={styles.userInfoContainer}>
           <div className={styles.userInfo}>
-            <div className={styles.userAvatar}>
-              {user?.name?.[0] || user?.username?.[0] || 'U'}
-            </div>
+            <div className={styles.userAvatar}>{user?.name?.[0] || user?.username?.[0] || 'U'}</div>
             <div className={styles.userDetails}>
               <div className={styles.userName}>{user?.name || user?.username}</div>
               <div className={styles.userRole}>{user?.role || 'user'}</div>

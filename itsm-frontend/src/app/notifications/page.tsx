@@ -58,16 +58,56 @@ const { RangePicker } = DatePicker;
 
 // 通知事件类型配置
 const EVENT_TYPES = [
-  { type: 'ticket_created', nameKey: 'notifications.ticketCreated', descKey: 'notifications.ticketCreatedDesc' },
-  { type: 'ticket_assigned', nameKey: 'notifications.ticketAssigned', descKey: 'notifications.ticketAssignedDesc' },
-  { type: 'ticket_updated', nameKey: 'notifications.ticketUpdated', descKey: 'notifications.ticketUpdatedDesc' },
-  { type: 'ticket_commented', nameKey: 'notifications.ticketCommented', descKey: 'notifications.ticketCommentedDesc' },
-  { type: 'sla_warning', nameKey: 'notifications.slaWarning', descKey: 'notifications.slaWarningDesc' },
-  { type: 'sla_violated', nameKey: 'notifications.slaViolated', descKey: 'notifications.slaViolatedDesc' },
-  { type: 'ticket_resolved', nameKey: 'notifications.ticketResolved', descKey: 'notifications.ticketResolvedDesc' },
-  { type: 'ticket_closed', nameKey: 'notifications.ticketClosed', descKey: 'notifications.ticketClosedDesc' },
-  { type: 'approval_required', nameKey: 'notifications.approvalRequired', descKey: 'notifications.approvalRequiredDesc' },
-  { type: 'approval_completed', nameKey: 'notifications.approvalCompleted', descKey: 'notifications.approvalCompletedDesc' },
+  {
+    type: 'ticket_created',
+    nameKey: 'notifications.ticketCreated',
+    descKey: 'notifications.ticketCreatedDesc',
+  },
+  {
+    type: 'ticket_assigned',
+    nameKey: 'notifications.ticketAssigned',
+    descKey: 'notifications.ticketAssignedDesc',
+  },
+  {
+    type: 'ticket_updated',
+    nameKey: 'notifications.ticketUpdated',
+    descKey: 'notifications.ticketUpdatedDesc',
+  },
+  {
+    type: 'ticket_commented',
+    nameKey: 'notifications.ticketCommented',
+    descKey: 'notifications.ticketCommentedDesc',
+  },
+  {
+    type: 'sla_warning',
+    nameKey: 'notifications.slaWarning',
+    descKey: 'notifications.slaWarningDesc',
+  },
+  {
+    type: 'sla_violated',
+    nameKey: 'notifications.slaViolated',
+    descKey: 'notifications.slaViolatedDesc',
+  },
+  {
+    type: 'ticket_resolved',
+    nameKey: 'notifications.ticketResolved',
+    descKey: 'notifications.ticketResolvedDesc',
+  },
+  {
+    type: 'ticket_closed',
+    nameKey: 'notifications.ticketClosed',
+    descKey: 'notifications.ticketClosedDesc',
+  },
+  {
+    type: 'approval_required',
+    nameKey: 'notifications.approvalRequired',
+    descKey: 'notifications.approvalRequiredDesc',
+  },
+  {
+    type: 'approval_completed',
+    nameKey: 'notifications.approvalCompleted',
+    descKey: 'notifications.approvalCompletedDesc',
+  },
 ];
 
 // 通知渠道配置
@@ -148,24 +188,25 @@ export default function NotificationsPage() {
   useEffect(() => {
     if (user?.id && token) {
       // 连接 WebSocket
-      notificationWS.connect(user.id, token)
+      notificationWS
+        .connect(user.id, token)
         .then(() => {
           setWsConnected(true);
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('WebSocket connection failed:', error);
           setWsConnected(false);
         });
 
       // 监听新通知
-      const unsubscribe = notificationWS.onNotification((notification) => {
+      const unsubscribe = notificationWS.onNotification(notification => {
         setNotifications(prev => [notification, ...prev]);
         setUnreadNotifications(prev => [notification, ...prev]);
         message.info(notification.content);
       });
 
       // 监听连接状态变化
-      const unsubConnection = notificationWS.onConnectionChange((connected) => {
+      const unsubConnection = notificationWS.onConnectionChange(connected => {
         setWsConnected(connected);
       });
 
@@ -184,16 +225,19 @@ export default function NotificationsPage() {
   }, [loadNotifications, loadPreferences]);
 
   // 标记已读
-  const handleMarkRead = useCallback(async (notificationId: number) => {
-    try {
-      await TicketNotificationApi.markNotificationRead(notificationId);
-      message.success(t('notifications.markSuccess'));
-      loadNotifications();
-    } catch (error) {
-      message.error(t('notifications.loadFailed'));
-      console.error('Failed to mark notification as read:', error);
-    }
-  }, [t, loadNotifications]);
+  const handleMarkRead = useCallback(
+    async (notificationId: number) => {
+      try {
+        await TicketNotificationApi.markNotificationRead(notificationId);
+        message.success(t('notifications.markSuccess'));
+        loadNotifications();
+      } catch (error) {
+        message.error(t('notifications.loadFailed'));
+        console.error('Failed to mark notification as read:', error);
+      }
+    },
+    [t, loadNotifications]
+  );
 
   // 标记全部已读
   const handleMarkAllRead = useCallback(async () => {
@@ -244,15 +288,18 @@ export default function NotificationsPage() {
   }, [t, loadPreferences]);
 
   // 删除单个通知
-  const handleDeleteNotification = useCallback(async (notificationId: number) => {
-    try {
-      // 这里需要添加删除 API
-      message.success(t('notifications.delete'));
-      loadNotifications();
-    } catch (error) {
-      message.error(t('notifications.loadFailed'));
-    }
-  }, [t, loadNotifications]);
+  const handleDeleteNotification = useCallback(
+    async (notificationId: number) => {
+      try {
+        // 这里需要添加删除 API
+        message.success(t('notifications.delete'));
+        loadNotifications();
+      } catch (error) {
+        message.error(t('notifications.loadFailed'));
+      }
+    },
+    [t, loadNotifications]
+  );
 
   // 清空所有通知
   const handleClearAll = useCallback(async () => {
@@ -266,35 +313,47 @@ export default function NotificationsPage() {
   }, [t, loadNotifications]);
 
   // 筛选通知列表
-  const filterNotifications = useCallback((list: TicketNotification[]) => {
-    return list.filter(item => {
-      // 搜索筛选
-      if (searchText && !item.content.toLowerCase().includes(searchText.toLowerCase())) {
-        return false;
-      }
-      // 渠道筛选
-      if (channelFilter && item.channel !== channelFilter) {
-        return false;
-      }
-      // 类型筛选
-      if (typeFilter && item.type !== typeFilter) {
-        return false;
-      }
-      // 日期范围筛选
-      if (dateRange && item.created_at) {
-        const date = dayjs(item.created_at);
-        if (!date.isAfter(dateRange[0]) || !date.isBefore(dateRange[1])) {
+  const filterNotifications = useCallback(
+    (list: TicketNotification[]) => {
+      return list.filter(item => {
+        // 搜索筛选
+        if (searchText && !item.content.toLowerCase().includes(searchText.toLowerCase())) {
           return false;
         }
-      }
-      return true;
-    });
-  }, [searchText, channelFilter, typeFilter, dateRange]);
+        // 渠道筛选
+        if (channelFilter && item.channel !== channelFilter) {
+          return false;
+        }
+        // 类型筛选
+        if (typeFilter && item.type !== typeFilter) {
+          return false;
+        }
+        // 日期范围筛选
+        if (dateRange && item.created_at) {
+          const date = dayjs(item.created_at);
+          if (!date.isAfter(dateRange[0]) || !date.isBefore(dateRange[1])) {
+            return false;
+          }
+        }
+        return true;
+      });
+    },
+    [searchText, channelFilter, typeFilter, dateRange]
+  );
 
   // 获取筛选后的通知
-  const filteredNotifications = useMemo(() => filterNotifications(notifications), [notifications, filterNotifications]);
-  const filteredUnreadNotifications = useMemo(() => filterNotifications(unreadNotifications), [unreadNotifications, filterNotifications]);
-  const filteredReadNotifications = useMemo(() => filterNotifications(readNotifications), [readNotifications, filterNotifications]);
+  const filteredNotifications = useMemo(
+    () => filterNotifications(notifications),
+    [notifications, filterNotifications]
+  );
+  const filteredUnreadNotifications = useMemo(
+    () => filterNotifications(unreadNotifications),
+    [unreadNotifications, filterNotifications]
+  );
+  const filteredReadNotifications = useMemo(
+    () => filterNotifications(readNotifications),
+    [readNotifications, filterNotifications]
+  );
 
   // 获取偏好值
   const getPreferenceValue = (eventType: string, field: 'email' | 'in_app' | 'sms'): boolean => {
@@ -321,7 +380,7 @@ export default function NotificationsPage() {
   const getChannelIcon = (channel: string) => {
     const config = CHANNELS.find(c => c.key === channel);
     const IconComponent = config?.icon || MessageSquare;
-    return <IconComponent className="w-4 h-4" />;
+    return <IconComponent className='w-4 h-4' />;
   };
 
   // 获取渠道颜色
@@ -357,22 +416,22 @@ export default function NotificationsPage() {
             actions={[
               notification.status !== 'read' && (
                 <Button
-                  key="read"
-                  type="link"
-                  size="small"
-                  icon={<Eye className="w-4 h-4" />}
+                  key='read'
+                  type='link'
+                  size='small'
+                  icon={<Eye className='w-4 h-4' />}
                   onClick={() => handleMarkRead(notification.id)}
                 >
                   {t('notifications.markRead')}
                 </Button>
               ),
               <Popconfirm
-                key="delete"
+                key='delete'
                 title={t('notifications.delete')}
                 description={t('notifications.deleteRead')}
                 onConfirm={() => handleDeleteNotification(notification.id)}
               >
-                <Button type="link" size="small" danger icon={<Delete className="w-4 h-4" />}>
+                <Button type='link' size='small' danger icon={<Delete className='w-4 h-4' />}>
                   {t('notifications.delete')}
                 </Button>
               </Popconfirm>,
@@ -380,39 +439,43 @@ export default function NotificationsPage() {
           >
             <List.Item.Meta
               avatar={
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100">
-                  <Bell className="w-5 h-5 text-blue-600" />
+                <div className='flex items-center justify-center w-10 h-10 rounded-full bg-blue-100'>
+                  <Bell className='w-5 h-5 text-blue-600' />
                 </div>
               }
               title={
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center space-x-2'>
                     <Text strong={notification.status !== 'read'}>
                       {getNotificationTypeLabel(notification.type)}
                     </Text>
-                    {notification.status !== 'read' && (
-                      <Badge status="processing" />
-                    )}
-                    <Tag color={getChannelColor(notification.channel)} icon={getChannelIcon(notification.channel)}>
-                      {notification.channel === 'email' ? t('notifications.email') :
-                       notification.channel === 'sms' ? t('notifications.sms') : t('notifications.inApp')}
+                    {notification.status !== 'read' && <Badge status='processing' />}
+                    <Tag
+                      color={getChannelColor(notification.channel)}
+                      icon={getChannelIcon(notification.channel)}
+                    >
+                      {notification.channel === 'email'
+                        ? t('notifications.email')
+                        : notification.channel === 'sms'
+                          ? t('notifications.sms')
+                          : t('notifications.inApp')}
                     </Tag>
                   </div>
-                  <Text type="secondary" className="text-xs">
+                  <Text type='secondary' className='text-xs'>
                     {formatDateTime(notification.created_at)}
                   </Text>
                 </div>
               }
               description={
-                <div className="space-y-1">
+                <div className='space-y-1'>
                   <Text>{notification.content}</Text>
                   {notification.sent_at && (
-                    <div className="text-xs text-gray-500">
+                    <div className='text-xs text-gray-500'>
                       {t('notifications.sentAt')}: {formatDateTime(notification.sent_at)}
                     </div>
                   )}
                   {notification.read_at && (
-                    <div className="text-xs text-gray-500">
+                    <div className='text-xs text-gray-500'>
                       {t('notifications.readAt')}: {formatDateTime(notification.read_at)}
                     </div>
                   )}
@@ -427,11 +490,11 @@ export default function NotificationsPage() {
 
   // 渲染筛选栏
   const renderFilterBar = () => (
-    <Row gutter={[16, 16]} className="mb-4">
+    <Row gutter={[16, 16]} className='mb-4'>
       <Col xs={24} md={6}>
         <Input
           placeholder={t('notifications.searchPlaceholder')}
-          prefix={<Search className="w-4 h-4" />}
+          prefix={<Search className='w-4 h-4' />}
           value={searchText}
           onChange={e => setSearchText(e.target.value)}
           allowClear
@@ -482,7 +545,7 @@ export default function NotificationsPage() {
         />
       </Col>
       <Col xs={24} md={2}>
-        <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadNotifications}>
+        <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadNotifications}>
           {t('workflow.refresh')}
         </Button>
       </Col>
@@ -490,18 +553,20 @@ export default function NotificationsPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className='p-6'>
+      <div className='mb-6 flex items-center justify-between'>
         <Title level={2}>{t('notifications.title')}</Title>
         <Space>
-          <Tooltip title={wsConnected ? t('notifications.wsConnected') : t('notifications.wsDisconnected')}>
+          <Tooltip
+            title={wsConnected ? t('notifications.wsConnected') : t('notifications.wsDisconnected')}
+          >
             {wsConnected ? (
-              <Wifi className="w-5 h-5 text-green-500" />
+              <Wifi className='w-5 h-5 text-green-500' />
             ) : (
-              <WifiOff className="w-5 h-5 text-red-500" />
+              <WifiOff className='w-5 h-5 text-red-500' />
             )}
           </Tooltip>
-          <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadNotifications}>
+          <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadNotifications}>
             {t('workflow.refresh')}
           </Button>
         </Space>
@@ -511,27 +576,25 @@ export default function NotificationsPage() {
         <TabPane
           tab={
             <span>
-              <Bell className="w-4 h-4 inline mr-1" />
+              <Bell className='w-4 h-4 inline mr-1' />
               {t('notifications.allNotifications')}
               {filteredUnreadNotifications.length > 0 && (
-                <Badge count={filteredUnreadNotifications.length} className="ml-2" />
+                <Badge count={filteredUnreadNotifications.length} className='ml-2' />
               )}
             </span>
           }
-          key="all"
+          key='all'
         >
           <Card>
             {renderFilterBar()}
-            <div className="mb-4 flex justify-between items-center">
+            <div className='mb-4 flex justify-between items-center'>
               <Text>
                 {t('notifications.totalNotifications', { total: filteredNotifications.length })},
                 {t('notifications.unreadCount', { count: filteredUnreadNotifications.length })}
               </Text>
               <Space>
                 {filteredUnreadNotifications.length > 0 && (
-                  <Button onClick={handleMarkAllRead}>
-                    {t('notifications.markAllRead')}
-                  </Button>
+                  <Button onClick={handleMarkAllRead}>{t('notifications.markAllRead')}</Button>
                 )}
                 {filteredNotifications.length > 0 && (
                   <Popconfirm
@@ -539,126 +602,122 @@ export default function NotificationsPage() {
                     description={t('notifications.deleteRead')}
                     onConfirm={handleClearAll}
                   >
-                    <Button danger icon={<Delete className="w-4 h-4" />}>
+                    <Button danger icon={<Delete className='w-4 h-4' />}>
                       {t('notifications.clearAll')}
                     </Button>
                   </Popconfirm>
                 )}
               </Space>
             </div>
-            <Spin spinning={loading}>
-              {renderNotificationList(filteredNotifications)}
-            </Spin>
+            <Spin spinning={loading}>{renderNotificationList(filteredNotifications)}</Spin>
           </Card>
         </TabPane>
 
         <TabPane
           tab={
             <span>
-              <Clock className="w-4 h-4 inline mr-1" />
+              <Clock className='w-4 h-4 inline mr-1' />
               {t('notifications.unread')}
               {filteredUnreadNotifications.length > 0 && (
-                <Badge count={filteredUnreadNotifications.length} className="ml-2" />
+                <Badge count={filteredUnreadNotifications.length} className='ml-2' />
               )}
             </span>
           }
-          key="unread"
+          key='unread'
         >
           <Card>
             {renderFilterBar()}
-            <Spin spinning={loading}>
-              {renderNotificationList(filteredUnreadNotifications)}
-            </Spin>
+            <Spin spinning={loading}>{renderNotificationList(filteredUnreadNotifications)}</Spin>
           </Card>
         </TabPane>
 
         <TabPane
           tab={
             <span>
-              <CheckCircle className="w-4 h-4 inline mr-1" />
+              <CheckCircle className='w-4 h-4 inline mr-1' />
               {t('notifications.read')}
             </span>
           }
-          key="read"
+          key='read'
         >
           <Card>
             {renderFilterBar()}
-            <Spin spinning={loading}>
-              {renderNotificationList(filteredReadNotifications)}
-            </Spin>
+            <Spin spinning={loading}>{renderNotificationList(filteredReadNotifications)}</Spin>
           </Card>
         </TabPane>
 
         <TabPane
           tab={
             <span>
-              <Settings className="w-4 h-4 inline mr-1" />
+              <Settings className='w-4 h-4 inline mr-1' />
               {t('notifications.preferences')}
             </span>
           }
-          key="preferences"
+          key='preferences'
         >
           <Card>
-            <div className="flex justify-between items-center mb-4">
+            <div className='flex justify-between items-center mb-4'>
               <Title level={4}>{t('notifications.preferences')}</Title>
-              <Button
-                icon={<RotateCcw className="w-4 h-4" />}
-                onClick={handleResetPreferences}
-              >
+              <Button icon={<RotateCcw className='w-4 h-4' />} onClick={handleResetPreferences}>
                 {t('notifications.resetDefault')}
               </Button>
             </div>
             <Spin spinning={preferencesLoading}>
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleSavePreferences}
-              >
+              <Form form={form} layout='vertical' onFinish={handleSavePreferences}>
                 <Row gutter={[16, 16]}>
                   <Col xs={24} md={8}>
                     <Text strong>{t('notifications.eventTypes')}</Text>
                   </Col>
                   <Col xs={24} md={5}>
-                    <Text strong className="flex items-center">
-                      <Mail className="w-4 h-4 mr-1" /> {t('notifications.emailEnabled')}
+                    <Text strong className='flex items-center'>
+                      <Mail className='w-4 h-4 mr-1' /> {t('notifications.emailEnabled')}
                     </Text>
                   </Col>
                   <Col xs={24} md={5}>
-                    <Text strong className="flex items-center">
-                      <MessageSquare className="w-4 h-4 mr-1" /> {t('notifications.inAppEnabled')}
+                    <Text strong className='flex items-center'>
+                      <MessageSquare className='w-4 h-4 mr-1' /> {t('notifications.inAppEnabled')}
                     </Text>
                   </Col>
                   <Col xs={24} md={6}>
-                    <Text strong className="flex items-center">
-                      <Smartphone className="w-4 h-4 mr-1" /> {t('notifications.smsEnabled')}
+                    <Text strong className='flex items-center'>
+                      <Smartphone className='w-4 h-4 mr-1' /> {t('notifications.smsEnabled')}
                     </Text>
                   </Col>
                 </Row>
                 <Divider />
                 {EVENT_TYPES.map(event => (
-                  <Row key={event.type} gutter={[16, 16]} align="middle" className="mb-2">
+                  <Row key={event.type} gutter={[16, 16]} align='middle' className='mb-2'>
                     <Col xs={24} md={8}>
                       <div>
                         <Text>{t(event.nameKey as any)}</Text>
                         <br />
-                        <Text type="secondary" className="text-xs">
+                        <Text type='secondary' className='text-xs'>
                           {t(event.descKey as any)}
                         </Text>
                       </div>
                     </Col>
                     <Col xs={24} md={5}>
-                      <Form.Item name={`${event.type}_email`} valuePropName="checked" noStyle>
-                        <Switch checkedChildren={t('workflow.statusEnabled')} unCheckedChildren={t('workflow.statusDisabled')} />
+                      <Form.Item name={`${event.type}_email`} valuePropName='checked' noStyle>
+                        <Switch
+                          checkedChildren={t('workflow.statusEnabled')}
+                          unCheckedChildren={t('workflow.statusDisabled')}
+                        />
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={5}>
-                      <Form.Item name={`${event.type}_in_app`} valuePropName="checked" noStyle>
-                        <Switch checkedChildren={t('workflow.statusEnabled')} unCheckedChildren={t('workflow.statusDisabled')} />
+                      <Form.Item name={`${event.type}_in_app`} valuePropName='checked' noStyle>
+                        <Switch
+                          checkedChildren={t('workflow.statusEnabled')}
+                          unCheckedChildren={t('workflow.statusDisabled')}
+                        />
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={6}>
-                      <Form.Item name={`${event.type}_sms`} valuePropName="checked" noStyle>
-                        <Switch checkedChildren={t('workflow.statusEnabled')} unCheckedChildren={t('workflow.statusDisabled')} />
+                      <Form.Item name={`${event.type}_sms`} valuePropName='checked' noStyle>
+                        <Switch
+                          checkedChildren={t('workflow.statusEnabled')}
+                          unCheckedChildren={t('workflow.statusDisabled')}
+                        />
                       </Form.Item>
                     </Col>
                   </Row>
@@ -667,7 +726,7 @@ export default function NotificationsPage() {
                 <Divider />
 
                 <Form.Item>
-                  <Button type="primary" htmlType="submit">
+                  <Button type='primary' htmlType='submit'>
                     {t('notifications.saveSettings')}
                   </Button>
                 </Form.Item>

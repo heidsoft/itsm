@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Statistic,
@@ -20,8 +20,7 @@ import {
   Rate,
   Avatar,
   Divider,
-  message,
-} from "antd";
+} from 'antd';
 import {
   Smile,
   Meh,
@@ -41,7 +40,7 @@ import {
   ThumbsDown,
   AlertTriangle,
   CheckCircle,
-} from "lucide-react";
+} from 'lucide-react';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -51,12 +50,12 @@ interface SatisfactionData {
   overallScore: number;
   totalResponses: number;
   responseRate: number;
-  trend: "up" | "down" | "stable";
+  trend: 'up' | 'down' | 'stable';
   categoryScores: {
     category: string;
     score: number;
     count: number;
-    trend: "up" | "down" | "stable";
+    trend: 'up' | 'down' | 'stable';
   }[];
   monthlyTrend: {
     month: string;
@@ -85,10 +84,9 @@ interface SatisfactionData {
 }
 
 export const SatisfactionDashboard: React.FC = () => {
-  const [satisfactionData, setSatisfactionData] =
-    useState<SatisfactionData | null>(null);
-  const [timeRange, setTimeRange] = useState<[string, string]>(["30d", "7d"]);
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [satisfactionData, setSatisfactionData] = useState<SatisfactionData | null>(null);
+  const [timeRange, setTimeRange] = useState<[string, string]>(['30d', '7d']);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -98,7 +96,7 @@ export const SatisfactionDashboard: React.FC = () => {
   const loadSatisfactionData = async () => {
     try {
       const { TicketRatingApi } = await import('@/lib/api/ticket-rating-api');
-      
+
       // 计算日期范围
       const endDate = new Date();
       const startDate = new Date();
@@ -106,22 +104,22 @@ export const SatisfactionDashboard: React.FC = () => {
       if (!isNaN(days)) {
         startDate.setDate(endDate.getDate() - days);
       }
-      
+
       const stats = await TicketRatingApi.getRatingStats({
         start_date: startDate.toISOString(),
-        end_date: endDate.toISOString()
+        end_date: endDate.toISOString(),
       });
 
       const data: SatisfactionData = {
         overallScore: stats.average_rating || 0,
         totalResponses: stats.total_ratings || 0,
         responseRate: 0, // API暂不支持
-        trend: "stable", // API暂不支持
+        trend: 'stable', // API暂不支持
         categoryScores: Object.values(stats.by_category || {}).map((c: any) => ({
           category: c.category_name,
           score: c.average_rating,
           count: c.total_ratings,
-          trend: "stable"
+          trend: 'stable',
         })),
         monthlyTrend: [], // API暂不支持
         agentPerformance: Object.values(stats.by_assignee || {}).map((a: any) => ({
@@ -130,14 +128,14 @@ export const SatisfactionDashboard: React.FC = () => {
           score: a.average_rating,
           tickets: a.total_ratings,
           responseTime: 0,
-          satisfaction: (a.average_rating / 5) * 100
+          satisfaction: (a.average_rating / 5) * 100,
         })),
-        recentFeedback: [] // API暂不支持列表查询
+        recentFeedback: [], // API暂不支持列表查询
       };
 
       setSatisfactionData(data);
     } catch (error) {
-      message.error("加载满意度数据失败");
+      console.error('加载满意度数据失败:', error);
       // 失败时不显示mock数据
     } finally {
       setLoading(false);
@@ -145,49 +143,49 @@ export const SatisfactionDashboard: React.FC = () => {
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 4.5) return "#52c41a";
-    if (score >= 4.0) return "#1890ff";
-    if (score >= 3.5) return "#faad14";
-    return "#f5222d";
+    if (score >= 4.5) return '#52c41a';
+    if (score >= 4.0) return '#1890ff';
+    if (score >= 3.5) return '#faad14';
+    return '#f5222d';
   };
 
   const getScoreLevel = (score: number): string => {
-    if (score >= 4.5) return "非常满意";
-    if (score >= 4.0) return "满意";
-    if (score >= 3.5) return "一般";
-    if (score >= 3.0) return "不满意";
-    return "非常不满意";
+    if (score >= 4.5) return '非常满意';
+    if (score >= 4.0) return '满意';
+    if (score >= 3.5) return '一般';
+    if (score >= 3.0) return '不满意';
+    return '非常不满意';
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case "up":
-        return <TrendingUp className="text-green-500" />;
-      case "down":
-        return <TrendingDown className="text-red-500" />;
+      case 'up':
+        return <TrendingUp className='text-green-500' />;
+      case 'down':
+        return <TrendingDown className='text-red-500' />;
       default:
-        return <TrendingUp className="text-blue-500" />;
+        return <TrendingUp className='text-blue-500' />;
     }
   };
 
   const getTrendColor = (trend: string): string => {
     switch (trend) {
-      case "up":
-        return "green";
-      case "down":
-        return "red";
+      case 'up':
+        return 'green';
+      case 'down':
+        return 'red';
       default:
-        return "blue";
+        return 'blue';
     }
   };
 
   const agentColumns = [
     {
-      title: "处理人",
-      key: "agent",
+      title: '处理人',
+      key: 'agent',
       render: (record: any) => (
         <Space>
-          <Avatar size="small" style={{ backgroundColor: "#1890ff" }}>
+          <Avatar size='small' style={{ backgroundColor: '#1890ff' }}>
             {record.avatar}
           </Avatar>
           <Text strong>{record.agent}</Text>
@@ -195,9 +193,9 @@ export const SatisfactionDashboard: React.FC = () => {
       ),
     },
     {
-      title: "满意度评分",
-      dataIndex: "score",
-      key: "score",
+      title: '满意度评分',
+      dataIndex: 'score',
+      key: 'score',
       render: (score: number) => (
         <Space>
           <Rate disabled defaultValue={score} style={{ fontSize: 14 }} />
@@ -208,32 +206,26 @@ export const SatisfactionDashboard: React.FC = () => {
       ),
     },
     {
-      title: "处理工单数",
-      dataIndex: "tickets",
-      key: "tickets",
+      title: '处理工单数',
+      dataIndex: 'tickets',
+      key: 'tickets',
       render: (tickets: number) => <Text>{tickets}</Text>,
     },
     {
-      title: "平均响应时间",
-      dataIndex: "responseTime",
-      key: "responseTime",
+      title: '平均响应时间',
+      dataIndex: 'responseTime',
+      key: 'responseTime',
       render: (time: number) => <Text>{time} 小时</Text>,
     },
     {
-      title: "满意度率",
-      dataIndex: "satisfaction",
-      key: "satisfaction",
+      title: '满意度率',
+      dataIndex: 'satisfaction',
+      key: 'satisfaction',
       render: (satisfaction: number) => (
         <Progress
           percent={satisfaction}
-          size="small"
-          status={
-            satisfaction >= 90
-              ? "success"
-              : satisfaction >= 80
-              ? "normal"
-              : "exception"
-          }
+          size='small'
+          status={satisfaction >= 90 ? 'success' : satisfaction >= 80 ? 'normal' : 'exception'}
         />
       ),
     },
@@ -241,53 +233,51 @@ export const SatisfactionDashboard: React.FC = () => {
 
   const feedbackColumns = [
     {
-      title: "工单号",
-      dataIndex: "ticketNumber",
-      key: "ticketNumber",
+      title: '工单号',
+      dataIndex: 'ticketNumber',
+      key: 'ticketNumber',
       render: (text: string) => <Text strong>{text}</Text>,
     },
     {
-      title: "标题",
-      dataIndex: "title",
-      key: "title",
+      title: '标题',
+      dataIndex: 'title',
+      key: 'title',
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: "评分",
-      dataIndex: "score",
-      key: "score",
+      title: '评分',
+      dataIndex: 'score',
+      key: 'score',
       render: (score: number) => (
         <Space>
           <Rate disabled defaultValue={score} style={{ fontSize: 12 }} />
-          <Tag color={score >= 4.0 ? "green" : "orange"}>
-            {getScoreLevel(score)}
-          </Tag>
+          <Tag color={score >= 4.0 ? 'green' : 'orange'}>{getScoreLevel(score)}</Tag>
         </Space>
       ),
     },
     {
-      title: "处理人",
-      dataIndex: "agent",
-      key: "agent",
+      title: '处理人',
+      dataIndex: 'agent',
+      key: 'agent',
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: "分类",
-      dataIndex: "category",
-      key: "category",
+      title: '分类',
+      dataIndex: 'category',
+      key: 'category',
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: "评价时间",
-      dataIndex: "date",
-      key: "date",
+      title: '评价时间',
+      dataIndex: 'date',
+      key: 'date',
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (record: any) => (
-        <Button size="small" icon={<Eye />}>
+        <Button size='small' icon={<Eye />}>
           查看详情
         </Button>
       ),
@@ -297,12 +287,12 @@ export const SatisfactionDashboard: React.FC = () => {
   if (loading) {
     return (
       <Card>
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-          <div className="space-y-3">
-            <div className="h-3 bg-gray-200 rounded"></div>
-            <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-            <div className="h-3 bg-gray-200 rounded w-4/6"></div>
+        <div className='animate-pulse space-y-4'>
+          <div className='h-4 bg-gray-200 rounded w-1/3'></div>
+          <div className='space-y-3'>
+            <div className='h-3 bg-gray-200 rounded'></div>
+            <div className='h-3 bg-gray-200 rounded w-5/6'></div>
+            <div className='h-3 bg-gray-200 rounded w-4/6'></div>
           </div>
         </div>
       </Card>
@@ -310,12 +300,12 @@ export const SatisfactionDashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* 满意度概览 */}
       <Card
         title={
           <Space>
-            <Heart className="text-red-600" />
+            <Heart className='text-red-600' />
             <span>满意度概览</span>
             <Badge count={satisfactionData?.totalResponses} />
           </Space>
@@ -324,14 +314,14 @@ export const SatisfactionDashboard: React.FC = () => {
           <Space>
             <Select
               value={timeRange[0]}
-              onChange={(value) => setTimeRange([value, timeRange[1]])}
+              onChange={value => setTimeRange([value, timeRange[1]])}
               style={{ width: 100 }}
             >
-              <Option value="7d">7天</Option>
-              <Option value="30d">30天</Option>
-              <Option value="90d">90天</Option>
+              <Option value='7d'>7天</Option>
+              <Option value='30d'>30天</Option>
+              <Option value='90d'>90天</Option>
             </Select>
-            <Button icon={<Download />} size="small">
+            <Button icon={<Download />} size='small'>
               导出报告
             </Button>
           </Space>
@@ -340,7 +330,7 @@ export const SatisfactionDashboard: React.FC = () => {
         <Row gutter={16}>
           <Col span={6}>
             <Statistic
-              title="整体满意度"
+              title='整体满意度'
               value={satisfactionData?.overallScore}
               precision={1}
               prefix={
@@ -351,13 +341,13 @@ export const SatisfactionDashboard: React.FC = () => {
                 />
               }
               suffix={
-                <div className="text-xs">
-                  <div className="text-gray-500">
+                <div className='text-xs'>
+                  <div className='text-gray-500'>
                     {getScoreLevel(satisfactionData?.overallScore || 0)}
                   </div>
-                  <div className="flex items-center">
-                    {getTrendIcon(satisfactionData?.trend || "stable")}
-                    <span className="ml-1 text-xs">较上月</span>
+                  <div className='flex items-center'>
+                    {getTrendIcon(satisfactionData?.trend || 'stable')}
+                    <span className='ml-1 text-xs'>较上月</span>
                   </div>
                 </div>
               }
@@ -365,11 +355,11 @@ export const SatisfactionDashboard: React.FC = () => {
           </Col>
           <Col span={6}>
             <Statistic
-              title="评价总数"
+              title='评价总数'
               value={satisfactionData?.totalResponses}
               prefix={<MessageSquare />}
               suffix={
-                <div className="text-xs text-gray-500">
+                <div className='text-xs text-gray-500'>
                   响应率: {satisfactionData?.responseRate}%
                 </div>
               }
@@ -377,44 +367,42 @@ export const SatisfactionDashboard: React.FC = () => {
           </Col>
           <Col span={6}>
             <Statistic
-              title="非常满意"
+              title='非常满意'
               value={Math.round(
-                ((satisfactionData?.recentFeedback.filter((f) => f.score >= 4.5)
-                  .length || 0) /
+                ((satisfactionData?.recentFeedback.filter(f => f.score >= 4.5).length || 0) /
                   (satisfactionData?.recentFeedback.length || 1)) *
                   100
               )}
-              prefix={<Smile className="text-green-500" />}
-              suffix="%"
+              prefix={<Smile className='text-green-500' />}
+              suffix='%'
             />
           </Col>
           <Col span={6}>
             <Statistic
-              title="不满意"
+              title='不满意'
               value={Math.round(
-                ((satisfactionData?.recentFeedback.filter((f) => f.score < 3.5)
-                  .length || 0) /
+                ((satisfactionData?.recentFeedback.filter(f => f.score < 3.5).length || 0) /
                   (satisfactionData?.recentFeedback.length || 1)) *
                   100
               )}
-              prefix={<Frown className="text-red-500" />}
-              suffix="%"
+              prefix={<Frown className='text-red-500' />}
+              suffix='%'
             />
           </Col>
         </Row>
 
-        <div className="mt-6">
-          <div className="flex items-center justify-between mb-2">
+        <div className='mt-6'>
+          <div className='flex items-center justify-between mb-2'>
             <Text>满意度分布</Text>
             <Text strong>{satisfactionData?.overallScore.toFixed(1)}/5.0</Text>
           </div>
           <Progress
             percent={((satisfactionData?.overallScore || 0) / 5) * 100}
-            status="success"
+            status='success'
             strokeColor={{
-              "0%": "#f5222d",
-              "50%": "#faad14",
-              "100%": "#52c41a",
+              '0%': '#f5222d',
+              '50%': '#faad14',
+              '100%': '#52c41a',
             }}
           />
         </div>
@@ -424,41 +412,37 @@ export const SatisfactionDashboard: React.FC = () => {
       <Card
         title={
           <Space>
-            <BarChart3 className="text-blue-600" />
+            <BarChart3 className='text-blue-600' />
             <span>分类满意度分析</span>
           </Space>
         }
       >
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {satisfactionData?.categoryScores.map((category, index) => (
             <div
               key={index}
-              className="flex items-center justify-between p-3 border rounded hover:bg-gray-50"
+              className='flex items-center justify-between p-3 border rounded hover:bg-gray-50'
             >
-              <div className="flex-1">
-                <div className="flex items-center mb-2">
-                  <Text strong className="mr-3">
+              <div className='flex-1'>
+                <div className='flex items-center mb-2'>
+                  <Text strong className='mr-3'>
                     {category.category}
                   </Text>
                   <Tag color={getTrendColor(category.trend)}>
                     {getTrendIcon(category.trend)}
-                    {category.trend === "up"
-                      ? "上升"
-                      : category.trend === "down"
-                      ? "下降"
-                      : "稳定"}
+                    {category.trend === 'up' ? '上升' : category.trend === 'down' ? '下降' : '稳定'}
                   </Tag>
                 </div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <span className="mr-4">评价数: {category.count}</span>
+                <div className='flex items-center text-sm text-gray-500'>
+                  <span className='mr-4'>评价数: {category.count}</span>
                   <span>评分: {category.score.toFixed(1)}/5.0</span>
                 </div>
               </div>
-              <div className="text-right">
+              <div className='text-right'>
                 <Progress
                   percent={(category.score / 5) * 100}
-                  size="small"
-                  status={category.score >= 4.0 ? "success" : "normal"}
+                  size='small'
+                  status={category.score >= 4.0 ? 'success' : 'normal'}
                   strokeColor={getScoreColor(category.score)}
                 />
               </div>
@@ -471,7 +455,7 @@ export const SatisfactionDashboard: React.FC = () => {
       <Card
         title={
           <Space>
-            <Users className="text-green-600" />
+            <Users className='text-green-600' />
             <span>处理人绩效分析</span>
           </Space>
         }
@@ -479,9 +463,9 @@ export const SatisfactionDashboard: React.FC = () => {
         <Table
           columns={agentColumns}
           dataSource={satisfactionData?.agentPerformance}
-          rowKey="agent"
+          rowKey='agent'
           pagination={false}
-          size="small"
+          size='small'
         />
       </Card>
 
@@ -489,7 +473,7 @@ export const SatisfactionDashboard: React.FC = () => {
       <Card
         title={
           <Space>
-            <MessageSquare className="text-purple-600" />
+            <MessageSquare className='text-purple-600' />
             <span>最近评价反馈</span>
             <Badge count={satisfactionData?.recentFeedback.length} />
           </Space>
@@ -498,20 +482,18 @@ export const SatisfactionDashboard: React.FC = () => {
         <Table
           columns={feedbackColumns}
           dataSource={satisfactionData?.recentFeedback}
-          rowKey="id"
+          rowKey='id'
           pagination={{ pageSize: 5 }}
           expandable={{
-            expandedRowRender: (record) => (
-              <div className="p-4 bg-gray-50 rounded">
-                <div className="mb-3">
+            expandedRowRender: record => (
+              <div className='p-4 bg-gray-50 rounded'>
+                <div className='mb-3'>
                   <Text strong>评价内容:</Text>
-                  <div className="mt-1 p-2 bg-white rounded border">
-                    {record.comment}
-                  </div>
+                  <div className='mt-1 p-2 bg-white rounded border'>{record.comment}</div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className='flex flex-wrap gap-2'>
                   {record.tags.map((tag, index) => (
-                    <Tag key={index} color="blue">
+                    <Tag key={index} color='blue'>
                       {tag}
                     </Tag>
                   ))}
@@ -526,39 +508,39 @@ export const SatisfactionDashboard: React.FC = () => {
       <Card
         title={
           <Space>
-            <ThumbsUp className="text-orange-600" />
+            <ThumbsUp className='text-orange-600' />
             <span>改进建议</span>
           </Space>
         }
       >
         <Alert
-          message="基于满意度分析的建议"
-          description="根据用户反馈和满意度数据，建议重点关注数据库问题处理效率和沟通清晰度改进"
-          type="info"
+          message='基于满意度分析的建议'
+          description='根据用户反馈和满意度数据，建议重点关注数据库问题处理效率和沟通清晰度改进'
+          type='info'
           showIcon
           icon={<ThumbsUp />}
-          className="mb-4"
+          className='mb-4'
         />
 
-        <div className="space-y-3">
-          <div className="p-3 border border-orange-200 rounded bg-orange-50">
-            <div className="flex items-center mb-2">
-              <AlertTriangle className="text-orange-500 mr-2" />
+        <div className='space-y-3'>
+          <div className='p-3 border border-orange-200 rounded bg-orange-50'>
+            <div className='flex items-center mb-2'>
+              <AlertTriangle className='text-orange-500 mr-2' />
               <Text strong>需要改进的方面</Text>
             </div>
-            <ul className="space-y-1 text-sm">
+            <ul className='space-y-1 text-sm'>
               <li>• 数据库问题处理时间较长，建议优化流程</li>
               <li>• 技术沟通不够清晰，建议加强培训</li>
               <li>• 响应时间在高峰期有所延迟</li>
             </ul>
           </div>
 
-          <div className="p-3 border border-green-200 rounded bg-green-50">
-            <div className="flex items-center mb-2">
-              <CheckCircle className="text-green-500 mr-2" />
+          <div className='p-3 border border-green-200 rounded bg-green-50'>
+            <div className='flex items-center mb-2'>
+              <CheckCircle className='text-green-500 mr-2' />
               <Text strong>表现优秀的方面</Text>
             </div>
-            <ul className="space-y-1 text-sm">
+            <ul className='space-y-1 text-sm'>
               <li>• 硬件问题处理满意度最高</li>
               <li>• 系统问题解决效率持续提升</li>
               <li>• 整体服务态度获得好评</li>

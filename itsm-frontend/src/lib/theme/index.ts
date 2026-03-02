@@ -87,31 +87,39 @@ export const colors = {
 
   // Ticket status colors
   status: {
-    new: '#3b82f6',      // Blue
-    open: '#06b6d4',     // Cyan
+    new: '#3b82f6', // Blue
+    open: '#06b6d4', // Cyan
     in_progress: '#f59e0b', // Amber
-    pending: '#eab308',  // Yellow
+    pending: '#eab308', // Yellow
     resolved: '#22c55e', // Green
-    closed: '#6b7280',   // Gray
+    closed: '#6b7280', // Gray
     cancelled: '#ef4444', // Red
   },
 
   // Priority colors
   priority: {
-    low: '#22c55e',      // Green
-    normal: '#3b82f6',   // Blue
-    high: '#f59e0b',     // Amber
-    urgent: '#ef4444',   // Red
+    low: '#22c55e', // Green
+    normal: '#3b82f6', // Blue
+    high: '#f59e0b', // Amber
+    urgent: '#ef4444', // Red
     critical: '#a855f7', // Purple
   },
 } as const;
 
 export const typography = {
   fontFamily: {
-    sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+    sans: [
+      'Inter',
+      'system-ui',
+      '-apple-system',
+      'BlinkMacSystemFont',
+      'Segoe UI',
+      'Roboto',
+      'sans-serif',
+    ],
     mono: ['JetBrains Mono', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
   },
-  
+
   fontSize: {
     xs: ['0.75rem', { lineHeight: '1rem' }],
     sm: ['0.875rem', { lineHeight: '1.25rem' }],
@@ -245,7 +253,7 @@ export const components = {
         borderRadius: '0.5rem',
       },
     },
-    
+
     // Button variants
     variant: {
       primary: {
@@ -329,7 +337,7 @@ export const components = {
         borderRadius: '0.375rem',
       },
     },
-    
+
     variant: {
       default: {
         backgroundColor: '#ffffff',
@@ -482,7 +490,8 @@ export const animation = {
   // Common transitions
   transition: {
     all: 'all 200ms ease-in-out',
-    colors: 'color 200ms ease-in-out, background-color 200ms ease-in-out, border-color 200ms ease-in-out',
+    colors:
+      'color 200ms ease-in-out, background-color 200ms ease-in-out, border-color 200ms ease-in-out',
     opacity: 'opacity 200ms ease-in-out',
     transform: 'transform 200ms ease-in-out',
   },

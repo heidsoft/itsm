@@ -86,9 +86,7 @@ export default function ProblemEditPage() {
 
       <Card
         title={
-          <span className='text-lg font-medium'>
-            编辑问题 - {problemData?.problem_number}
-          </span>
+          <span className='text-lg font-medium'>编辑问题 - {problemData?.problem_number}</span>
         }
         loading={fetching}
       >

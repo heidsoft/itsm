@@ -1,64 +1,58 @@
-"use client";
+'use client';
 
-import React, { useEffect, useRef } from "react";
-import { Tooltip } from "antd";
-import {
-  Zap,
-  AlertCircle,
-  Info,
-  ChevronsDown,
-  Clock,
-} from "lucide-react";
+import React, { useEffect, useRef } from 'react';
+import { Tooltip } from 'antd';
+import { Zap, AlertCircle, Info, ChevronsDown, Clock } from 'lucide-react';
 
 const priorityConfig = {
   P1: {
-    color: "red",
+    color: 'red',
     icon: Zap,
-    label: "P1 紧急",
-    borderColor: "border-red-500",
-    bgColor: "bg-red-100",
-    textColor: "text-red-800",
-    iconColor: "text-red-600",
+    label: 'P1 紧急',
+    borderColor: 'border-red-500',
+    bgColor: 'bg-red-100',
+    textColor: 'text-red-800',
+    iconColor: 'text-red-600',
   },
   P2: {
-    color: "orange",
+    color: 'orange',
     icon: AlertCircle,
-    label: "P2 高",
-    borderColor: "border-orange-500",
-    bgColor: "bg-orange-100",
-    textColor: "text-orange-800",
-    iconColor: "text-orange-600",
+    label: 'P2 高',
+    borderColor: 'border-orange-500',
+    bgColor: 'bg-orange-100',
+    textColor: 'text-orange-800',
+    iconColor: 'text-orange-600',
   },
   P3: {
-    color: "yellow",
+    color: 'yellow',
     icon: Info,
-    label: "P3 中",
-    borderColor: "border-yellow-500",
-    bgColor: "bg-yellow-100",
-    textColor: "text-yellow-800",
-    iconColor: "text-yellow-600",
+    label: 'P3 中',
+    borderColor: 'border-yellow-500',
+    bgColor: 'bg-yellow-100',
+    textColor: 'text-yellow-800',
+    iconColor: 'text-yellow-600',
   },
   P4: {
-    color: "blue",
+    color: 'blue',
     icon: ChevronsDown,
-    label: "P4 低",
-    borderColor: "border-blue-500",
-    bgColor: "bg-blue-100",
-    textColor: "text-blue-800",
-    iconColor: "text-blue-600",
+    label: 'P4 低',
+    borderColor: 'border-blue-500',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-800',
+    iconColor: 'text-blue-600',
   },
 };
 
 const playAlertSound = () => {
-  const audio = new Audio("/alert.mp3"); // 确保public目录下有alert.mp3文件
-  audio.play().catch((e) => console.error("Error playing sound:", e));
+  const audio = new Audio('/alert.mp3'); // 确保public目录下有alert.mp3文件
+  audio.play().catch(e => console.error('Error playing sound:', e));
 };
 
 interface TicketCardProps {
   id: string | number;
   title: string;
   status: string;
-  priority: "P1" | "P2" | "P3" | "P4";
+  priority: 'P1' | 'P2' | 'P3' | 'P4';
   lastUpdate: string;
   type?: string;
   playSound?: boolean;
@@ -70,7 +64,7 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   status,
   priority,
   lastUpdate,
-  type = "事件",
+  type = '事件',
   playSound = false,
 }) => {
   const config = priorityConfig[priority] || priorityConfig.P4; // 默认P4
@@ -79,13 +73,13 @@ export const TicketCard: React.FC<TicketCardProps> = ({
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (priority === "P1") {
+    if (priority === 'P1') {
       if (playSound) {
         playAlertSound();
       }
-      cardRef.current?.classList.add("animate-pulse-strong"); // 自定义动画类
+      cardRef.current?.classList.add('animate-pulse-strong'); // 自定义动画类
     } else {
-      cardRef.current?.classList.remove("animate-pulse-strong");
+      cardRef.current?.classList.remove('animate-pulse-strong');
     }
   }, [priority, playSound]);
 
@@ -103,20 +97,20 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         </div>
       </Tooltip>
 
-      <h3 className="mb-2 text-lg font-semibold text-gray-800 truncate" title={title}>
+      <h3 className='mb-2 text-lg font-semibold text-gray-800 truncate' title={title}>
         {title}
       </h3>
-      <p className="mb-4 text-sm text-gray-600">
+      <p className='mb-4 text-sm text-gray-600'>
         {type}ID: {id}
       </p>
 
-      <div className="flex items-center justify-between text-sm text-gray-500">
-        <div className="flex items-center">
+      <div className='flex items-center justify-between text-sm text-gray-500'>
+        <div className='flex items-center'>
           <Icon className={`mr-2 h-4 w-4 ${config.iconColor}`} />
           <span>状态: {status}</span>
         </div>
-        <div className="flex items-center">
-          <Clock className="mr-1 h-4 w-4" />
+        <div className='flex items-center'>
+          <Clock className='mr-1 h-4 w-4' />
           <span>{lastUpdate}</span>
         </div>
       </div>

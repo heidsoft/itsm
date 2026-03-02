@@ -15,31 +15,35 @@ export const rgbToLuminance = (r: number, g: number, b: number): number => {
 // HEX转RGB
 export const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : null;
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null;
 };
 
 // 计算对比度
 export const getContrastRatio = (color1: string, color2: string): number => {
   const rgb1 = hexToRgb(color1);
   const rgb2 = hexToRgb(color2);
-  
+
   if (!rgb1 || !rgb2) return 1;
-  
+
   const lum1 = rgbToLuminance(rgb1.r, rgb1.g, rgb1.b);
   const lum2 = rgbToLuminance(rgb2.r, rgb2.g, rgb2.b);
-  
+
   const brightest = Math.max(lum1, lum2);
   const darkest = Math.min(lum1, lum2);
-  
+
   return (brightest + 0.05) / (darkest + 0.05);
 };
 
 // WCAG等级检查
-export const getWCAGLevel = (contrastRatio: number): {
+export const getWCAGLevel = (
+  contrastRatio: number
+): {
   AA: { normal: boolean; large: boolean };
   AAA: { normal: boolean; large: boolean };
   level: 'Fail' | 'AA' | 'AAA';
@@ -48,12 +52,12 @@ export const getWCAGLevel = (contrastRatio: number): {
     normal: contrastRatio >= 4.5,
     large: contrastRatio >= 3.0,
   };
-  
+
   const AAA = {
     normal: contrastRatio >= 7.0,
     large: contrastRatio >= 4.5,
   };
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _unused = AAA;
 
@@ -65,7 +69,7 @@ export const getWCAGLevel = (contrastRatio: number): {
       level = 'AA';
     }
   }
-  
+
   return { AA, AAA, level };
 };
 
@@ -86,38 +90,38 @@ export const getAccessibilityRecommendation = (
   const ratio = getContrastRatio(foreground, background);
   const { AA, AAA, level } = getWCAGLevel(ratio);
   const passes = AA.normal;
-  
+
   let recommendation: string | undefined;
   let alternative: { foreground?: string; background?: string } | undefined;
-  
+
   if (!passes) {
     recommendation = `对比度 ${ratio.toFixed(2)} 不符合WCAG 2.1 AA标准(需要≥4.5:1)`;
-    
+
     // 提供颜色建议
     const brightnessRatio = getContrastRatio(foreground, '#ffffff');
     if (brightnessRatio < 4.5) {
       // 前景色太浅
       alternative = {
         foreground: '#000000', // 使用纯黑
-        background: background
+        background: background,
       };
     } else {
       // 背景色太浅
       alternative = {
         foreground: foreground,
-        background: '#000000' // 使用纯黑
+        background: '#000000', // 使用纯黑
       };
     }
   } else if (level === 'AA') {
     recommendation = '符合AA标准，建议考虑AAA标准以获得更好的可访问性';
   }
-  
+
   return {
     passes,
     ratio,
     level,
     recommendation,
-    alternative
+    alternative,
   };
 };
 
@@ -130,19 +134,19 @@ export const isColorBlindFriendly = (
   // 简化的色盲模拟 - 检查色相差异
   const rgb1 = hexToRgb(foreground);
   const rgb2 = hexToRgb(background);
-  
+
   if (!rgb1 || !rgb2) return false;
-  
+
   // 计算色相差异
   const hue1 = Math.atan2(Math.sqrt(3) * (rgb1.g - rgb1.b), 2 * rgb1.r - rgb1.g - rgb1.b);
   const hue2 = Math.atan2(Math.sqrt(3) * (rgb2.g - rgb2.b), 2 * rgb2.r - rgb2.g - rgb2.b);
-  
+
   const hueDifference = Math.abs(hue1 - hue2);
   const normalizedHueDifference = Math.min(hueDifference, 2 * Math.PI - hueDifference);
-  
+
   // 色盲用户需要更大的色相差异
   const minHueDifference = type === 'tritanopia' ? Math.PI / 6 : Math.PI / 4;
-  
+
   return normalizedHueDifference >= minHueDifference;
 };
 
@@ -153,24 +157,25 @@ export const getAccessibleTextColor = (
 ): string => {
   const lightColors = ['#ffffff', '#f8f9fa', '#e9ecef', '#dee2e6', '#ced4da'];
   const darkColors = ['#000000', '#212529', '#343a40', '#495057', '#6c757d'];
-  
+
   // 检查首选颜色是否合适
   if (getContrastRatio(preferredColor, backgroundColor) >= 4.5) {
     return preferredColor;
   }
-  
+
   // 尝试找到一个合适的颜色
   const colors = preferredColor === '#000000' ? lightColors : darkColors;
-  
+
   for (const color of colors) {
     if (getContrastRatio(color, backgroundColor) >= 4.5) {
       return color;
     }
   }
-  
+
   // 如果都不合适，返回最高对比度的颜色
-  return getContrastRatio('#000000', backgroundColor) > 
-         getContrastRatio('#ffffff', backgroundColor) ? '#000000' : '#ffffff';
+  return getContrastRatio('#000000', backgroundColor) > getContrastRatio('#ffffff', backgroundColor)
+    ? '#000000'
+    : '#ffffff';
 };
 
 // 可访问调色板
@@ -189,7 +194,7 @@ export const accessibleColors = {
     900: '#1e3a8a',
     950: '#172554',
   },
-  
+
   // 辅助色
   success: {
     50: '#f0fdf4',
@@ -204,7 +209,7 @@ export const accessibleColors = {
     900: '#14532d',
     950: '#052e16',
   },
-  
+
   warning: {
     50: '#fffbeb',
     100: '#fef3c7',
@@ -218,7 +223,7 @@ export const accessibleColors = {
     900: '#78350f',
     950: '#451a03',
   },
-  
+
   error: {
     50: '#fef2f2',
     100: '#fee2e2',
@@ -232,7 +237,7 @@ export const accessibleColors = {
     900: '#7f1d1d',
     950: '#450a0a',
   },
-  
+
   // 中性色 - 优化对比度
   gray: {
     0: '#ffffff',
@@ -247,7 +252,7 @@ export const accessibleColors = {
     800: '#262626',
     900: '#171717',
     950: '#0a0a0a',
-  }
+  },
 };
 
 export default {
@@ -256,5 +261,5 @@ export default {
   getAccessibilityRecommendation,
   isColorBlindFriendly,
   getAccessibleTextColor,
-  accessibleColors
+  accessibleColors,
 };

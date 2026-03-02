@@ -47,4 +47,3 @@ class TicketTagService {
 }
 
 export const ticketTagService = new TicketTagService();
-

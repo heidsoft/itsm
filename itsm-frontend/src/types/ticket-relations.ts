@@ -12,38 +12,38 @@ import type { Ticket } from './ticket';
  */
 export enum TicketRelationType {
   // 层级关系
-  PARENT_CHILD = 'parent_child',         // 父子关系
-  
+  PARENT_CHILD = 'parent_child', // 父子关系
+
   // 依赖关系
-  BLOCKS = 'blocks',                     // 阻塞（A阻塞B，B依赖A）
-  BLOCKED_BY = 'blocked_by',             // 被阻塞
-  DEPENDS_ON = 'depends_on',             // 依赖于
-  
+  BLOCKS = 'blocks', // 阻塞（A阻塞B，B依赖A）
+  BLOCKED_BY = 'blocked_by', // 被阻塞
+  DEPENDS_ON = 'depends_on', // 依赖于
+
   // 关联关系
-  RELATES_TO = 'relates_to',             // 相关
-  DUPLICATES = 'duplicates',             // 重复（A重复B）
-  DUPLICATED_BY = 'duplicated_by',       // 被重复
-  
+  RELATES_TO = 'relates_to', // 相关
+  DUPLICATES = 'duplicates', // 重复（A重复B）
+  DUPLICATED_BY = 'duplicated_by', // 被重复
+
   // 因果关系
-  CAUSES = 'causes',                     // 导致
-  CAUSED_BY = 'caused_by',               // 由...导致
-  
+  CAUSES = 'causes', // 导致
+  CAUSED_BY = 'caused_by', // 由...导致
+
   // 替代关系
-  REPLACES = 'replaces',                 // 替代
-  REPLACED_BY = 'replaced_by',           // 被替代
-  
+  REPLACES = 'replaces', // 替代
+  REPLACED_BY = 'replaced_by', // 被替代
+
   // 分解关系
-  SPLITS_FROM = 'splits_from',           // 分离自
-  MERGED_INTO = 'merged_into',           // 合并到
+  SPLITS_FROM = 'splits_from', // 分离自
+  MERGED_INTO = 'merged_into', // 合并到
 }
 
 /**
  * 关联方向
  */
 export enum RelationDirection {
-  INBOUND = 'inbound',                   // 入向（被其他工单关联）
-  OUTBOUND = 'outbound',                 // 出向（关联其他工单）
-  BIDIRECTIONAL = 'bidirectional',       // 双向
+  INBOUND = 'inbound', // 入向（被其他工单关联）
+  OUTBOUND = 'outbound', // 出向（关联其他工单）
+  BIDIRECTIONAL = 'bidirectional', // 双向
 }
 
 // ==================== 工单关联接口 ====================
@@ -53,25 +53,25 @@ export enum RelationDirection {
  */
 export interface TicketRelation {
   id: string;
-  sourceTicketId: number;                // 源工单ID
-  sourceTicketNumber: string;            // 源工单编号
-  targetTicketId: number;                // 目标工单ID
-  targetTicketNumber: string;            // 目标工单编号
-  relationType: TicketRelationType;      // 关联类型
-  direction: RelationDirection;          // 关联方向
-  description?: string;                  // 关联描述
-  createdBy: number;                     // 创建人ID
-  createdByName: string;                 // 创建人姓名
-  createdAt: Date;                       // 创建时间
-  metadata?: Record<string, any>;        // 元数据
+  sourceTicketId: number; // 源工单ID
+  sourceTicketNumber: string; // 源工单编号
+  targetTicketId: number; // 目标工单ID
+  targetTicketNumber: string; // 目标工单编号
+  relationType: TicketRelationType; // 关联类型
+  direction: RelationDirection; // 关联方向
+  description?: string; // 关联描述
+  createdBy: number; // 创建人ID
+  createdByName: string; // 创建人姓名
+  createdAt: Date; // 创建时间
+  metadata?: Record<string, any>; // 元数据
 }
 
 /**
  * 工单关联详情（包含关联工单的基本信息）
  */
 export interface TicketRelationWithDetails extends TicketRelation {
-  sourceTicket?: Partial<Ticket>;        // 源工单基本信息
-  targetTicket?: Partial<Ticket>;        // 目标工单基本信息
+  sourceTicket?: Partial<Ticket>; // 源工单基本信息
+  targetTicket?: Partial<Ticket>; // 目标工单基本信息
 }
 
 // ==================== 父子关系 ====================
@@ -90,9 +90,9 @@ export interface ParentTicket {
     name: string;
     avatar?: string;
   };
-  progress?: number;                     // 进度（基于子工单）
-  childrenCount: number;                 // 子工单数量
-  completedChildrenCount: number;        // 已完成子工单数量
+  progress?: number; // 进度（基于子工单）
+  childrenCount: number; // 子工单数量
+  completedChildrenCount: number; // 已完成子工单数量
 }
 
 /**
@@ -109,8 +109,8 @@ export interface ChildTicket {
     name: string;
     avatar?: string;
   };
-  order: number;                         // 排序顺序
-  isBlocking: boolean;                   // 是否阻塞其他子工单
+  order: number; // 排序顺序
+  isBlocking: boolean; // 是否阻塞其他子工单
 }
 
 /**
@@ -120,9 +120,9 @@ export interface TicketHierarchy {
   ticket: Ticket;
   parent?: ParentTicket;
   children: ChildTicket[];
-  ancestors: ParentTicket[];             // 祖先工单链
-  depth: number;                         // 层级深度
-  path: string[];                        // 路径（工单编号）
+  ancestors: ParentTicket[]; // 祖先工单链
+  depth: number; // 层级深度
+  path: string[]; // 路径（工单编号）
 }
 
 // ==================== 依赖关系 ====================
@@ -139,10 +139,10 @@ export interface TicketDependency {
   target_ticket_number: string;
   target_ticket_title: string;
   relation_type: TicketRelationType;
-  dependency_type: 'hard' | 'soft';       // 硬依赖/软依赖
-  is_blocking: boolean;                   // 是否当前阻塞
+  dependency_type: 'hard' | 'soft'; // 硬依赖/软依赖
+  is_blocking: boolean; // 是否当前阻塞
   description?: string;
-  created_at: string;                     // 改为string以匹配API响应
+  created_at: string; // 改为string以匹配API响应
   created_by: number;
   created_by_name: string;
 }
@@ -153,8 +153,8 @@ export interface TicketDependency {
 export interface DependencyGraph {
   nodes: DependencyNode[];
   edges: DependencyEdge[];
-  criticalPath: number[];                // 关键路径
-  estimatedCompletionDate?: Date;        // 预计完成日期
+  criticalPath: number[]; // 关键路径
+  estimatedCompletionDate?: Date; // 预计完成日期
 }
 
 export interface DependencyNode {
@@ -163,9 +163,9 @@ export interface DependencyNode {
   title: string;
   status: string;
   priority: string;
-  estimatedDuration?: number;            // 预计工期（小时）
-  isCritical: boolean;                   // 是否在关键路径上
-  level: number;                         // 层级
+  estimatedDuration?: number; // 预计工期（小时）
+  isCritical: boolean; // 是否在关键路径上
+  level: number; // 层级
 }
 
 export interface DependencyEdge {
@@ -262,8 +262,8 @@ export interface RelationQuery {
   relationType?: TicketRelationType;
   direction?: RelationDirection;
   includeDetails?: boolean;
-  recursive?: boolean;                   // 是否递归查询
-  maxDepth?: number;                     // 最大递归深度
+  recursive?: boolean; // 是否递归查询
+  maxDepth?: number; // 最大递归深度
 }
 
 /**
@@ -369,9 +369,9 @@ export interface RelationSuggestion {
   targetTicketNumber: string;
   targetTicketTitle: string;
   suggestedRelationType: TicketRelationType;
-  confidence: number;                    // 置信度（0-1）
+  confidence: number; // 置信度（0-1）
   reason: string;
-  similarity?: number;                   // 相似度
+  similarity?: number; // 相似度
 }
 
 /**
@@ -448,4 +448,3 @@ export interface RelationPermissions {
 // ==================== 导出所有类型 ====================
 
 export default TicketRelation;
-

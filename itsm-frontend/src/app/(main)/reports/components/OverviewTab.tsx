@@ -108,9 +108,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ metrics }) => {
               <div className='flex items-center justify-between'>
                 <Text>平均解决时间</Text>
                 <div className='flex items-center'>
-                  <Tag
-                    color={metrics && metrics.avgResolutionTime <= 12 ? 'green' : 'orange'}
-                  >
+                  <Tag color={metrics && metrics.avgResolutionTime <= 12 ? 'green' : 'orange'}>
                     {metrics && metrics.avgResolutionTime <= 12 ? '优秀' : '需改进'}
                   </Tag>
                   <Text strong className='ml-2'>

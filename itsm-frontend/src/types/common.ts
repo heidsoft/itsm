@@ -94,7 +94,16 @@ export interface Option<T = string> {
 export interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'select' | 'multiselect' | 'date' | 'datetime' | 'number' | 'boolean' | 'file';
+  type:
+    | 'text'
+    | 'textarea'
+    | 'select'
+    | 'multiselect'
+    | 'date'
+    | 'datetime'
+    | 'number'
+    | 'boolean'
+    | 'file';
   required?: boolean;
   placeholder?: string;
   options?: Option[];

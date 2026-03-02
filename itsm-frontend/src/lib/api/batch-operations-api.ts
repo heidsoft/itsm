@@ -25,10 +25,7 @@ export class BatchOperationsApi {
   static async executeBatchOperation(
     request: BatchOperationRequest
   ): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/execute',
-      request
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/execute', request);
   }
 
   /**
@@ -37,10 +34,7 @@ export class BatchOperationsApi {
   static async validateBatchOperation(
     request: BatchOperationRequest
   ): Promise<BatchOperationValidation> {
-    return httpClient.post<BatchOperationValidation>(
-      '/api/v1/tickets/batch/validate',
-      request
-    );
+    return httpClient.post<BatchOperationValidation>('/api/v1/tickets/batch/validate', request);
   }
 
   /**
@@ -49,10 +43,7 @@ export class BatchOperationsApi {
   static async previewBatchOperation(
     request: BatchOperationRequest
   ): Promise<BatchOperationPreview> {
-    return httpClient.post<BatchOperationPreview>(
-      '/api/v1/tickets/batch/preview',
-      request
-    );
+    return httpClient.post<BatchOperationPreview>('/api/v1/tickets/batch/preview', request);
   }
 
   // ==================== 批量分配 ====================
@@ -67,10 +58,7 @@ export class BatchOperationsApi {
     assignmentRule?: 'round_robin' | 'load_balance' | 'manual';
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/assign',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/assign', data);
   }
 
   /**
@@ -112,10 +100,7 @@ export class BatchOperationsApi {
     resolution?: string;
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/status',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/status', data);
   }
 
   /**
@@ -127,10 +112,7 @@ export class BatchOperationsApi {
     resolution?: string;
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/close',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/close', data);
   }
 
   /**
@@ -141,10 +123,7 @@ export class BatchOperationsApi {
     reason?: string;
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/reopen',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/reopen', data);
   }
 
   // ==================== 批量字段更新 ====================
@@ -157,10 +136,7 @@ export class BatchOperationsApi {
     priority: string;
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/priority',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/priority', data);
   }
 
   /**
@@ -171,10 +147,7 @@ export class BatchOperationsApi {
     type: string;
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/type',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/type', data);
   }
 
   /**
@@ -185,10 +158,7 @@ export class BatchOperationsApi {
     categoryId: number;
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/category',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/category', data);
   }
 
   /**
@@ -199,10 +169,7 @@ export class BatchOperationsApi {
     customFields: Record<string, any>;
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/fields',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/fields', data);
   }
 
   // ==================== 批量标签操作 ====================
@@ -215,10 +182,7 @@ export class BatchOperationsApi {
     tags: string[];
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/tags/add',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/tags/add', data);
   }
 
   /**
@@ -229,10 +193,7 @@ export class BatchOperationsApi {
     tags: string[];
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/tags/remove',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/tags/remove', data);
   }
 
   /**
@@ -243,10 +204,7 @@ export class BatchOperationsApi {
     tags: string[];
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/tags/replace',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/tags/replace', data);
   }
 
   // ==================== 批量删除和归档 ====================
@@ -273,10 +231,7 @@ export class BatchOperationsApi {
     ticketIds: number[];
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/archive',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/archive', data);
   }
 
   /**
@@ -286,10 +241,7 @@ export class BatchOperationsApi {
     ticketIds: number[];
     comment?: string;
   }): Promise<BatchOperationResponse> {
-    return httpClient.post<BatchOperationResponse>(
-      '/api/v1/tickets/batch/unarchive',
-      data
-    );
+    return httpClient.post<BatchOperationResponse>('/api/v1/tickets/batch/unarchive', data);
   }
 
   // ==================== 批量导出 ====================
@@ -337,9 +289,7 @@ export class BatchOperationsApi {
   /**
    * 获取批量操作进度
    */
-  static async getBatchOperationProgress(
-    operationId: string
-  ): Promise<BatchOperationProgress> {
+  static async getBatchOperationProgress(operationId: string): Promise<BatchOperationProgress> {
     return httpClient.get<BatchOperationProgress>(
       `/api/v1/tickets/batch/operations/${operationId}/progress`
     );
@@ -349,27 +299,21 @@ export class BatchOperationsApi {
    * 暂停批量操作
    */
   static async pauseBatchOperation(operationId: string): Promise<void> {
-    return httpClient.post(
-      `/api/v1/tickets/batch/operations/${operationId}/pause`
-    );
+    return httpClient.post(`/api/v1/tickets/batch/operations/${operationId}/pause`);
   }
 
   /**
    * 恢复批量操作
    */
   static async resumeBatchOperation(operationId: string): Promise<void> {
-    return httpClient.post(
-      `/api/v1/tickets/batch/operations/${operationId}/resume`
-    );
+    return httpClient.post(`/api/v1/tickets/batch/operations/${operationId}/resume`);
   }
 
   /**
    * 取消批量操作
    */
   static async cancelBatchOperation(operationId: string): Promise<void> {
-    return httpClient.post(
-      `/api/v1/tickets/batch/operations/${operationId}/cancel`
-    );
+    return httpClient.post(`/api/v1/tickets/batch/operations/${operationId}/cancel`);
   }
 
   // ==================== 批量操作日志 ====================
@@ -397,21 +341,15 @@ export class BatchOperationsApi {
   /**
    * 获取批量操作日志详情
    */
-  static async getBatchOperationLog(
-    logId: string
-  ): Promise<BatchOperationLog> {
-    return httpClient.get<BatchOperationLog>(
-      `/api/v1/tickets/batch/operations/logs/${logId}`
-    );
+  static async getBatchOperationLog(logId: string): Promise<BatchOperationLog> {
+    return httpClient.get<BatchOperationLog>(`/api/v1/tickets/batch/operations/logs/${logId}`);
   }
 
   /**
    * 删除批量操作日志
    */
   static async deleteBatchOperationLog(logId: string): Promise<void> {
-    return httpClient.delete(
-      `/api/v1/tickets/batch/operations/logs/${logId}`
-    );
+    return httpClient.delete(`/api/v1/tickets/batch/operations/logs/${logId}`);
   }
 
   // ==================== 批量操作统计 ====================
@@ -424,10 +362,7 @@ export class BatchOperationsApi {
     endDate?: string;
     groupBy?: 'day' | 'week' | 'month';
   }): Promise<BatchOperationStats> {
-    return httpClient.get<BatchOperationStats>(
-      '/api/v1/tickets/batch/operations/stats',
-      params
-    );
+    return httpClient.get<BatchOperationStats>('/api/v1/tickets/batch/operations/stats', params);
   }
 
   /**
@@ -459,10 +394,7 @@ export class BatchOperationsApi {
     operationType: string;
     ticketIds: number[];
   }): Promise<{ canExecute: boolean; reason?: string }> {
-    return httpClient.post(
-      '/api/v1/tickets/batch/operations/can-execute',
-      data
-    );
+    return httpClient.post('/api/v1/tickets/batch/operations/can-execute', data);
   }
 
   // ==================== 批量操作模板 ====================
@@ -476,10 +408,7 @@ export class BatchOperationsApi {
     operationType: string;
     defaultData: any;
   }): Promise<{ id: string }> {
-    return httpClient.post(
-      '/api/v1/tickets/batch/operations/templates',
-      data
-    );
+    return httpClient.post('/api/v1/tickets/batch/operations/templates', data);
   }
 
   /**
@@ -516,9 +445,7 @@ export class BatchOperationsApi {
   /**
    * 撤销批量操作
    */
-  static async undoBatchOperation(
-    operationId: string
-  ): Promise<BatchOperationResponse> {
+  static async undoBatchOperation(operationId: string): Promise<BatchOperationResponse> {
     return httpClient.post<BatchOperationResponse>(
       `/api/v1/tickets/batch/operations/${operationId}/undo`
     );
@@ -532,9 +459,7 @@ export class BatchOperationsApi {
     reason?: string;
     affectedTickets?: number;
   }> {
-    return httpClient.get(
-      `/api/v1/tickets/batch/operations/${operationId}/can-undo`
-    );
+    return httpClient.get(`/api/v1/tickets/batch/operations/${operationId}/can-undo`);
   }
 
   // ==================== 批量操作调度 ====================
@@ -558,9 +483,7 @@ export class BatchOperationsApi {
    * 取消调度的批量操作
    */
   static async cancelScheduledOperation(scheduleId: string): Promise<void> {
-    return httpClient.delete(
-      `/api/v1/tickets/batch/operations/schedule/${scheduleId}`
-    );
+    return httpClient.delete(`/api/v1/tickets/batch/operations/schedule/${scheduleId}`);
   }
 
   /**
@@ -584,4 +507,3 @@ export default BatchOperationsApi;
 
 // 导出别名以支持不同的导入方式
 export const BatchOperationsAPI = BatchOperationsApi;
-

@@ -8,81 +8,81 @@ export const spacing = {
   // 基础间距
   px: '1px',
   0: '0px',
-  0.5: '2px',   // 0.25rem
-  1: '4px',     // 0.25rem
-  1.5: '6px',   // 0.375rem
-  2: '8px',     // 0.5rem
-  2.5: '10px',  // 0.625rem
-  3: '12px',    // 0.75rem
-  3.5: '14px',  // 0.875rem
-  4: '16px',    // 1rem
-  5: '20px',    // 1.25rem
-  6: '24px',    // 1.5rem
-  7: '28px',    // 1.75rem
-  8: '32px',    // 2rem
-  9: '36px',    // 2.25rem
-  10: '40px',   // 2.5rem
-  11: '44px',   // 2.75rem
-  12: '48px',   // 3rem
-  14: '56px',   // 3.5rem
-  16: '64px',   // 4rem
-  20: '80px',   // 5rem
-  24: '96px',   // 6rem
-  28: '112px',  // 7rem
-  32: '128px',  // 8rem
-  36: '144px',  // 9rem
-  40: '160px',  // 10rem
-  44: '176px',  // 11rem
-  48: '192px',  // 12rem
-  52: '208px',  // 13rem
-  56: '224px',  // 14rem
-  60: '240px',  // 15rem
-  64: '256px',  // 16rem
-  72: '288px',  // 18rem
-  80: '320px',  // 20rem
-  96: '384px',  // 24rem
+  0.5: '2px', // 0.25rem
+  1: '4px', // 0.25rem
+  1.5: '6px', // 0.375rem
+  2: '8px', // 0.5rem
+  2.5: '10px', // 0.625rem
+  3: '12px', // 0.75rem
+  3.5: '14px', // 0.875rem
+  4: '16px', // 1rem
+  5: '20px', // 1.25rem
+  6: '24px', // 1.5rem
+  7: '28px', // 1.75rem
+  8: '32px', // 2rem
+  9: '36px', // 2.25rem
+  10: '40px', // 2.5rem
+  11: '44px', // 2.75rem
+  12: '48px', // 3rem
+  14: '56px', // 3.5rem
+  16: '64px', // 4rem
+  20: '80px', // 5rem
+  24: '96px', // 6rem
+  28: '112px', // 7rem
+  32: '128px', // 8rem
+  36: '144px', // 9rem
+  40: '160px', // 10rem
+  44: '176px', // 11rem
+  48: '192px', // 12rem
+  52: '208px', // 13rem
+  56: '224px', // 14rem
+  60: '240px', // 15rem
+  64: '256px', // 16rem
+  72: '288px', // 18rem
+  80: '320px', // 20rem
+  96: '384px', // 24rem
 } as const;
 
 // 语义化间距
 export const semanticSpacing = {
   // 内边距
   padding: {
-    xs: spacing[1],    // 4px
-    sm: spacing[2],   // 8px
-    md: spacing[4],   // 16px
-    lg: spacing[6],   // 24px
-    xl: spacing[8],   // 32px
+    xs: spacing[1], // 4px
+    sm: spacing[2], // 8px
+    md: spacing[4], // 16px
+    lg: spacing[6], // 24px
+    xl: spacing[8], // 32px
     '2xl': spacing[12], // 48px
     '3xl': spacing[16], // 64px
   },
-  
+
   // 外边距
   margin: {
-    xs: spacing[1],    // 4px
-    sm: spacing[2],   // 8px
-    md: spacing[4],   // 16px
-    lg: spacing[6],   // 24px
-    xl: spacing[8],   // 32px
+    xs: spacing[1], // 4px
+    sm: spacing[2], // 8px
+    md: spacing[4], // 16px
+    lg: spacing[6], // 24px
+    xl: spacing[8], // 32px
     '2xl': spacing[12], // 48px
     '3xl': spacing[16], // 64px
   },
-  
+
   // 组件间距
   component: {
-    xs: spacing[1],    // 4px
-    sm: spacing[2],   // 8px
-    md: spacing[3],   // 12px
-    lg: spacing[4],   // 16px
-    xl: spacing[6],   // 24px
+    xs: spacing[1], // 4px
+    sm: spacing[2], // 8px
+    md: spacing[3], // 12px
+    lg: spacing[4], // 16px
+    xl: spacing[6], // 24px
   },
-  
+
   // 布局间距
   layout: {
-    xs: spacing[4],   // 16px
-    sm: spacing[6],   // 24px
-    md: spacing[8],   // 32px
-    lg: spacing[12],  // 48px
-    xl: spacing[16],  // 64px
+    xs: spacing[4], // 16px
+    sm: spacing[6], // 24px
+    md: spacing[8], // 32px
+    lg: spacing[12], // 48px
+    xl: spacing[16], // 64px
     '2xl': spacing[24], // 96px
   },
 } as const;
@@ -98,7 +98,7 @@ export const grid = {
     xl: '1280px',
     '2xl': '1536px',
   },
-  
+
   // 容器最大宽度
   container: {
     sm: '640px',
@@ -107,7 +107,7 @@ export const grid = {
     xl: '1280px',
     '2xl': '1536px',
   },
-  
+
   // 网格列数
   columns: {
     xs: 4,
@@ -117,14 +117,14 @@ export const grid = {
     xl: 12,
     '2xl': 12,
   },
-  
+
   // 网格间距
   gap: {
-    xs: spacing[2],   // 8px
-    sm: spacing[3],   // 12px
-    md: spacing[4],   // 16px
-    lg: spacing[6],   // 24px
-    xl: spacing[8],   // 32px
+    xs: spacing[2], // 8px
+    sm: spacing[3], // 12px
+    md: spacing[4], // 16px
+    lg: spacing[6], // 24px
+    xl: spacing[8], // 32px
   },
 } as const;
 
@@ -134,23 +134,23 @@ export const layout = {
   page: {
     maxWidth: '1280px',
     padding: {
-      xs: spacing[4],   // 16px
-      sm: spacing[6],   // 24px
-      md: spacing[8],   // 32px
-      lg: spacing[12],  // 48px
+      xs: spacing[4], // 16px
+      sm: spacing[6], // 24px
+      md: spacing[8], // 32px
+      lg: spacing[12], // 48px
     },
   },
-  
+
   // 内容区域
   content: {
     maxWidth: '1024px',
     padding: {
-      xs: spacing[4],   // 16px
-      sm: spacing[6],   // 24px
-      md: spacing[8],   // 32px
+      xs: spacing[4], // 16px
+      sm: spacing[6], // 24px
+      md: spacing[8], // 32px
     },
   },
-  
+
   // 侧边栏
   sidebar: {
     width: {
@@ -160,7 +160,7 @@ export const layout = {
     },
     collapsedWidth: '64px',
   },
-  
+
   // 头部
   header: {
     height: {
@@ -169,7 +169,7 @@ export const layout = {
       lg: '72px',
     },
   },
-  
+
   // 底部
   footer: {
     height: {
@@ -251,7 +251,7 @@ export const animation = {
     normal: '300ms',
     slow: '500ms',
   },
-  
+
   // 缓动函数
   easing: {
     linear: 'linear',
@@ -262,7 +262,7 @@ export const animation = {
     bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
     elastic: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
   },
-  
+
   // 预设动画
   presets: {
     fadeIn: {
@@ -303,25 +303,25 @@ export const responsive = {
     xl: `@media (min-width: ${grid.breakpoints.xl})`,
     '2xl': `@media (min-width: ${grid.breakpoints['2xl']})`,
   },
-  
+
   // 断点检查
   isBreakpoint: (breakpoint: keyof typeof grid.breakpoints, width: number): boolean => {
     const breakpointValue = parseInt(grid.breakpoints[breakpoint]);
     return width >= breakpointValue;
   },
-  
+
   // 获取当前断点
   getCurrentBreakpoint: (width: number): keyof typeof grid.breakpoints => {
     const breakpoints = Object.entries(grid.breakpoints)
       .sort(([, a], [, b]) => parseInt(a) - parseInt(b))
       .reverse();
-    
+
     for (const [breakpoint, value] of breakpoints) {
       if (width >= parseInt(value)) {
         return breakpoint as keyof typeof grid.breakpoints;
       }
     }
-    
+
     return 'xs';
   },
 };

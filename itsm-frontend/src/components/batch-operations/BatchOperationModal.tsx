@@ -20,15 +20,8 @@ import {
   Radio,
   Checkbox,
 } from 'antd';
-import {
-  ExclamationCircleOutlined,
-  RocketOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
-import {
-  BatchOperationType,
-  type BatchOperationData,
-} from '@/types/batch-operations';
+import { ExclamationCircleOutlined, RocketOutlined, EyeOutlined } from '@ant-design/icons';
+import { BatchOperationType, type BatchOperationData } from '@/types/batch-operations';
 import {
   useBatchAssignMutation,
   useBatchUpdateStatusMutation,
@@ -139,14 +132,14 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
         return (
           <>
             <Form.Item
-              label="分配方式"
-              name="assignmentRule"
+              label='分配方式'
+              name='assignmentRule'
               rules={[{ required: true, message: '请选择分配方式' }]}
             >
               <Radio.Group>
-                <Radio value="manual">手动指定</Radio>
-                <Radio value="round_robin">轮流分配</Radio>
-                <Radio value="load_balance">负载均衡</Radio>
+                <Radio value='manual'>手动指定</Radio>
+                <Radio value='round_robin'>轮流分配</Radio>
+                <Radio value='load_balance'>负载均衡</Radio>
               </Radio.Group>
             </Form.Item>
 
@@ -161,11 +154,11 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
                 if (rule === 'manual') {
                   return (
                     <Form.Item
-                      label="处理人"
-                      name="assigneeId"
+                      label='处理人'
+                      name='assigneeId'
                       rules={[{ required: true, message: '请选择处理人' }]}
                     >
-                      <Select placeholder="选择处理人" showSearch>
+                      <Select placeholder='选择处理人' showSearch>
                         <Option value={1}>张三</Option>
                         <Option value={2}>李四</Option>
                         <Option value={3}>王五</Option>
@@ -175,11 +168,11 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
                 }
                 return (
                   <Form.Item
-                    label="目标团队"
-                    name="teamId"
+                    label='目标团队'
+                    name='teamId'
                     rules={[{ required: true, message: '请选择团队' }]}
                   >
-                    <Select placeholder="选择团队">
+                    <Select placeholder='选择团队'>
                       <Option value={1}>技术支持团队</Option>
                       <Option value={2}>运维团队</Option>
                     </Select>
@@ -194,19 +187,19 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
         return (
           <>
             <Form.Item
-              label="目标状态"
-              name="status"
+              label='目标状态'
+              name='status'
               rules={[{ required: true, message: '请选择状态' }]}
             >
-              <Select placeholder="选择状态">
-                <Option value="open">打开</Option>
-                <Option value="in_progress">处理中</Option>
-                <Option value="resolved">已解决</Option>
-                <Option value="closed">已关闭</Option>
+              <Select placeholder='选择状态'>
+                <Option value='open'>打开</Option>
+                <Option value='in_progress'>处理中</Option>
+                <Option value='resolved'>已解决</Option>
+                <Option value='closed'>已关闭</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="解决方案" name="resolution">
-              <TextArea rows={3} placeholder="输入解决方案..." />
+            <Form.Item label='解决方案' name='resolution'>
+              <TextArea rows={3} placeholder='输入解决方案...' />
             </Form.Item>
           </>
         );
@@ -214,15 +207,15 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
       case BatchOperationType.UPDATE_PRIORITY:
         return (
           <Form.Item
-            label="优先级"
-            name="priority"
+            label='优先级'
+            name='priority'
             rules={[{ required: true, message: '请选择优先级' }]}
           >
-            <Select placeholder="选择优先级">
-              <Option value="low">低</Option>
-              <Option value="medium">中</Option>
-              <Option value="high">高</Option>
-              <Option value="urgent">紧急</Option>
+            <Select placeholder='选择优先级'>
+              <Option value='low'>低</Option>
+              <Option value='medium'>中</Option>
+              <Option value='high'>高</Option>
+              <Option value='urgent'>紧急</Option>
             </Select>
           </Form.Item>
         );
@@ -230,28 +223,24 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
       case BatchOperationType.ADD_TAGS:
       case BatchOperationType.REMOVE_TAGS:
         return (
-          <Form.Item
-            label="标签"
-            name="tags"
-            rules={[{ required: true, message: '请输入标签' }]}
-          >
-            <Select mode="tags" placeholder="输入标签（回车添加）" />
+          <Form.Item label='标签' name='tags' rules={[{ required: true, message: '请输入标签' }]}>
+            <Select mode='tags' placeholder='输入标签（回车添加）' />
           </Form.Item>
         );
 
       case BatchOperationType.CLOSE:
         return (
           <>
-            <Form.Item label="关闭原因" name="closureReason">
-              <Select placeholder="选择关闭原因">
-                <Option value="resolved">问题已解决</Option>
-                <Option value="duplicate">重复工单</Option>
-                <Option value="invalid">无效工单</Option>
-                <Option value="wont_fix">不予修复</Option>
+            <Form.Item label='关闭原因' name='closureReason'>
+              <Select placeholder='选择关闭原因'>
+                <Option value='resolved'>问题已解决</Option>
+                <Option value='duplicate'>重复工单</Option>
+                <Option value='invalid'>无效工单</Option>
+                <Option value='wont_fix'>不予修复</Option>
               </Select>
             </Form.Item>
-            <Form.Item label="解决方案" name="resolution">
-              <TextArea rows={3} placeholder="输入解决方案..." />
+            <Form.Item label='解决方案' name='resolution'>
+              <TextArea rows={3} placeholder='输入解决方案...' />
             </Form.Item>
           </>
         );
@@ -260,17 +249,17 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
         return (
           <>
             <Alert
-              message="警告"
-              description="删除操作不可撤销，请谨慎操作！"
-              type="warning"
+              message='警告'
+              description='删除操作不可撤销，请谨慎操作！'
+              type='warning'
               showIcon
               icon={<ExclamationCircleOutlined />}
-              className="mb-4"
+              className='mb-4'
             />
-            <Form.Item label="删除原因" name="reason">
-              <TextArea rows={2} placeholder="请说明删除原因..." />
+            <Form.Item label='删除原因' name='reason'>
+              <TextArea rows={2} placeholder='请说明删除原因...' />
             </Form.Item>
-            <Form.Item name="hardDelete" valuePropName="checked">
+            <Form.Item name='hardDelete' valuePropName='checked'>
               <Checkbox>永久删除（不可恢复）</Checkbox>
             </Form.Item>
           </>
@@ -280,22 +269,22 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
         return (
           <>
             <Form.Item
-              label="导出格式"
+              label='导出格式'
               name={['config', 'format']}
-              initialValue="excel"
+              initialValue='excel'
               rules={[{ required: true }]}
             >
               <Radio.Group>
-                <Radio value="excel">Excel</Radio>
-                <Radio value="csv">CSV</Radio>
-                <Radio value="pdf">PDF</Radio>
+                <Radio value='excel'>Excel</Radio>
+                <Radio value='csv'>CSV</Radio>
+                <Radio value='pdf'>PDF</Radio>
               </Radio.Group>
             </Form.Item>
-            <Form.Item label="导出选项" name={['config', 'options']}>
+            <Form.Item label='导出选项' name={['config', 'options']}>
               <Checkbox.Group>
-                <Checkbox value="comments">包含评论</Checkbox>
-                <Checkbox value="attachments">包含附件</Checkbox>
-                <Checkbox value="history">包含历史记录</Checkbox>
+                <Checkbox value='comments'>包含评论</Checkbox>
+                <Checkbox value='attachments'>包含附件</Checkbox>
+                <Checkbox value='history'>包含历史记录</Checkbox>
               </Checkbox.Group>
             </Form.Item>
           </>
@@ -314,12 +303,12 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
         onCancel={onCancel}
         width={600}
         footer={[
-          <Button key="cancel" onClick={onCancel}>
+          <Button key='cancel' onClick={onCancel}>
             取消
           </Button>,
           <Button
-            key="submit"
-            type="primary"
+            key='submit'
+            type='primary'
             icon={<RocketOutlined />}
             loading={mutation.isPending}
             onClick={handleSubmit}
@@ -330,18 +319,18 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
       >
         <Alert
           message={`即将对 ${ticketIds.length} 个工单执行批量操作`}
-          type="info"
+          type='info'
           showIcon
-          className="mb-4"
+          className='mb-4'
         />
 
-        <Form form={form} layout="vertical">
+        <Form form={form} layout='vertical'>
           {renderFormFields()}
 
           <Divider />
 
-          <Form.Item label="备注说明" name="comment">
-            <TextArea rows={2} placeholder="添加备注说明（可选）" />
+          <Form.Item label='备注说明' name='comment'>
+            <TextArea rows={2} placeholder='添加备注说明（可选）' />
           </Form.Item>
         </Form>
       </Modal>
@@ -358,4 +347,3 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
 };
 
 export default BatchOperationModal;
-

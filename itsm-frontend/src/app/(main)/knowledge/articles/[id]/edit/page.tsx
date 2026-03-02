@@ -106,15 +106,8 @@ export default function EditArticlePage() {
         </Button>
       </div>
 
-      <Card
-        title={<span className='text-lg font-medium'>编辑知识库文章</span>}
-        loading={fetching}
-      >
-        <Form
-          form={form}
-          layout='vertical'
-          onFinish={handleSubmit}
-        >
+      <Card title={<span className='text-lg font-medium'>编辑知识库文章</span>} loading={fetching}>
+        <Form form={form} layout='vertical' onFinish={handleSubmit}>
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item
@@ -136,21 +129,16 @@ export default function EditArticlePage() {
               >
                 <Select placeholder='请选择分类'>
                   {categories.map((cat, idx) => (
-                    <Option key={idx} value={cat}>{cat}</Option>
+                    <Option key={idx} value={cat}>
+                      {cat}
+                    </Option>
                   ))}
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name='tags'
-                label='标签'
-              >
-                <Select
-                  mode='tags'
-                  placeholder='输入标签后按回车添加'
-                  style={{ width: '100%' }}
-                />
+              <Form.Item name='tags' label='标签'>
+                <Select mode='tags' placeholder='输入标签后按回车添加' style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>

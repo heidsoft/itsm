@@ -13,7 +13,7 @@ export default function IncidentDetailPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 16 }}>
         <Button
-          type="link"
+          type='link'
           icon={<ArrowLeftOutlined />}
           onClick={() => router.back()}
           style={{ paddingLeft: 0, color: '#666' }}

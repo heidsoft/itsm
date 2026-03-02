@@ -79,7 +79,7 @@ export function useDataFetch<T = any>(
 
     try {
       const result = await fetchFn();
-      
+
       if (!mountedRef.current) return;
 
       setData(result);
@@ -99,7 +99,7 @@ export function useDataFetch<T = any>(
       if (!mountedRef.current) return;
 
       const error = err instanceof Error ? err : new Error(String(err));
-      
+
       // 重试逻辑
       if (retryCountRef.current < retryCount) {
         retryCountRef.current++;
@@ -125,16 +125,19 @@ export function useDataFetch<T = any>(
   }, [executeFetch]);
 
   // 手动更新数据
-  const mutate = useCallback((newData: T) => {
-    setData(newData);
-    // 更新缓存
-    if (cacheTime > 0) {
-      cache.set(cacheKey.current, {
-        data: newData,
-        timestamp: Date.now(),
-      });
-    }
-  }, [cacheTime]);
+  const mutate = useCallback(
+    (newData: T) => {
+      setData(newData);
+      // 更新缓存
+      if (cacheTime > 0) {
+        cache.set(cacheKey.current, {
+          data: newData,
+          timestamp: Date.now(),
+        });
+      }
+    },
+    [cacheTime]
+  );
 
   useEffect(() => {
     mountedRef.current = true;
@@ -192,13 +195,10 @@ export function usePagination<T = any>(
   const [page, setPage] = useState(initialPage);
   const [pageSize, setPageSize] = useState(initialPageSize);
 
-  const { data, error, loading, refetch } = useDataFetch(
-    () => fetchFn(page, pageSize),
-    {
-      ...fetchOptions,
-      dependencies: [page, pageSize],
-    }
-  );
+  const { data, error, loading, refetch } = useDataFetch(() => fetchFn(page, pageSize), {
+    ...fetchOptions,
+    dependencies: [page, pageSize],
+  });
 
   const nextPage = useCallback(() => {
     if (data && page < data.totalPages) {
@@ -212,11 +212,14 @@ export function usePagination<T = any>(
     }
   }, [page]);
 
-  const goToPage = useCallback((newPage: number) => {
-    if (data && newPage >= 1 && newPage <= data.totalPages) {
-      setPage(newPage);
-    }
-  }, [data]);
+  const goToPage = useCallback(
+    (newPage: number) => {
+      if (data && newPage >= 1 && newPage <= data.totalPages) {
+        setPage(newPage);
+      }
+    },
+    [data]
+  );
 
   const handleSetPageSize = useCallback((size: number) => {
     setPageSize(size);
@@ -251,4 +254,3 @@ export const clearCache = () => {
 export const clearCacheByKey = (key: string) => {
   cache.delete(key);
 };
-

@@ -3,16 +3,16 @@
  */
 
 export const KnowledgeStatus = {
-    PUBLISHED: 'published',
-    DRAFT: 'draft',
+  PUBLISHED: 'published',
+  DRAFT: 'draft',
 };
 
 export const KnowledgeStatusLabels = {
-    [KnowledgeStatus.PUBLISHED]: '已发布',
-    [KnowledgeStatus.DRAFT]: '草稿',
+  [KnowledgeStatus.PUBLISHED]: '已发布',
+  [KnowledgeStatus.DRAFT]: '草稿',
 };
 
 export const KnowledgeStatusColors = {
-    [KnowledgeStatus.PUBLISHED]: 'green',
-    [KnowledgeStatus.DRAFT]: 'orange',
+  [KnowledgeStatus.PUBLISHED]: 'green',
+  [KnowledgeStatus.DRAFT]: 'orange',
 };
