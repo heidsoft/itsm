@@ -384,7 +384,7 @@ const WorkflowAutomationPage = () => {
           onFinish={async values => {
             try {
               if (editingRule) {
-                await TicketAutomationRuleApi.updateRule(String(editingRule.id), {
+                await TicketAutomationRuleApi.updateRule(editingRule.id, {
                   ...values,
                 } as any);
               } else {
