@@ -6,6 +6,7 @@ function Deployments() {
   const [deployments, setDeployments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [metrics, setMetrics] = useState({});
 
   useEffect(() => {
     loadDeployments();
@@ -13,10 +14,24 @@ function Deployments() {
 
   const loadDeployments = async () => {
     try {
+      setLoading(true);
       const data = await deployService.getDeployments();
-      setDeployments(data);
+      setDeployments(data.data || []);
+      
+      // 加载监控数据
+      const metricsData = {};
+      for (const deployment of data.data || []) {
+        try {
+          const metrics = await deployService.getMetrics(deployment.id);
+          metricsData[deployment.id] = metrics.data;
+        } catch (error) {
+          console.error('Failed to load metrics:', error);
+        }
+      }
+      setMetrics(metricsData);
     } catch (error) {
       console.error('Failed to load deployments:', error);
+      alert('加载部署列表失败：' + error.message);
     } finally {
       setLoading(false);
     }
@@ -26,6 +41,7 @@ function Deployments() {
     try {
       await deployService.startDeployment(id);
       loadDeployments();
+      alert('启动成功');
     } catch (error) {
       alert('启动失败：' + error.message);
     }
@@ -35,34 +51,48 @@ function Deployments() {
     try {
       await deployService.stopDeployment(id);
       loadDeployments();
+      alert('停止成功');
     } catch (error) {
       alert('停止失败：' + error.message);
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!confirm('确定要删除这个部署吗？此操作不可恢复！')) {
+      return;
+    }
+    try {
+      await deployService.deleteDeployment(id);
+      loadDeployments();
+      alert('删除成功');
+    } catch (error) {
+      alert('删除失败：' + error.message);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusMap = {
-      running: { class: 'status-running', text: '运行中' },
-      deploying: { class: 'status-deploying', text: '部署中' },
-      stopped: { class: 'status-stopped', text: '已停止' },
-      error: { class: 'status-error', text: '错误' }
+      running: { class: 'status-running', text: '运行中', icon: 'fa-circle' },
+      deploying: { class: 'status-deploying', text: '部署中', icon: 'fa-spinner fa-spin' },
+      stopped: { class: 'status-stopped', text: '已停止', icon: 'fa-circle' },
+      error: { class: 'status-error', text: '错误', icon: 'fa-exclamation-circle' }
     };
     const statusInfo = statusMap[status] || statusMap.stopped;
     return (
       <span className={`status-badge ${statusInfo.class}`}>
-        {statusInfo.text}
+        <i className={`fas ${statusInfo.icon}`}></i> {statusInfo.text}
       </span>
     );
   };
 
   if (loading) {
-    return <div className="loading">加载中...</div>;
+    return <div className="loading-container"><div className="loading">加载中...</div></div>;
   }
 
   return (
     <div className="deployments-page">
       <div className="page-header">
-        <h1>部署实例</h1>
+        <h1><i className="fas fa-server"></i> 部署实例</h1>
         <button 
           className="btn btn-primary"
           onClick={() => setShowCreateModal(true)}
@@ -81,57 +111,109 @@ function Deployments() {
                   {deployment.instance_name}
                 </h3>
                 <small>ID: {deployment.id}</small>
+                {deployment.domain && (
+                  <small className="domain">
+                    <i className="fas fa-globe"></i> {deployment.domain}
+                  </small>
+                )}
               </div>
               {getStatusBadge(deployment.status)}
             </div>
 
             <div className="deployment-metrics">
-              <div className="metric">
-                <strong>CPU: {deployment.metrics?.cpu_usage || 0}%</strong>
-                <small>内存：{deployment.metrics?.memory_usage || 0}GB</small>
-              </div>
-              <div className="metric">
-                <strong>QPS: {deployment.metrics?.qps || 0}</strong>
-                <small>响应：{deployment.metrics?.response_time || 0}ms</small>
-              </div>
+              {metrics[deployment.id] && (
+                <>
+                  <div className="metric">
+                    <div className="metric-value">{metrics[deployment.id].cpu_usage}%</div>
+                    <div className="metric-label">CPU</div>
+                  </div>
+                  <div className="metric">
+                    <div className="metric-value">{metrics[deployment.id].memory_usage}GB</div>
+                    <div className="metric-label">内存</div>
+                  </div>
+                  <div className="metric">
+                    <div className="metric-value">{metrics[deployment.id].qps}</div>
+                    <div className="metric-label">QPS</div>
+                  </div>
+                  <div className="metric">
+                    <div className="metric-value">{metrics[deployment.id].response_time}ms</div>
+                    <div className="metric-label">响应</div>
+                  </div>
+                </>
+              )}
             </div>
 
             <div className="deployment-actions">
-              <button className="btn btn-sm btn-outline-primary">
-                <i className="fas fa-eye"></i> 监控
+              <button className="btn btn-sm btn-outline-primary" title="监控">
+                <i className="fas fa-chart-line"></i>
               </button>
-              <button className="btn btn-sm btn-outline-secondary">
-                <i className="fas fa-cog"></i> 配置
+              <button className="btn btn-sm btn-outline-secondary" title="配置">
+                <i className="fas fa-cog"></i>
+              </button>
+              <button className="btn btn-sm btn-outline-info" title="日志">
+                <i className="fas fa-file-alt"></i>
               </button>
               {deployment.status === 'running' ? (
                 <button 
                   className="btn btn-sm btn-outline-danger"
                   onClick={() => handleStop(deployment.id)}
+                  title="停止"
                 >
-                  <i className="fas fa-stop"></i> 停止
+                  <i className="fas fa-stop"></i>
                 </button>
               ) : (
                 <button 
                   className="btn btn-sm btn-outline-success"
                   onClick={() => handleStart(deployment.id)}
+                  title="启动"
                 >
-                  <i className="fas fa-play"></i> 启动
+                  <i className="fas fa-play"></i>
                 </button>
               )}
+              <button 
+                className="btn btn-sm btn-outline-danger"
+                onClick={() => handleDelete(deployment.id)}
+                title="删除"
+              >
+                <i className="fas fa-trash"></i>
+              </button>
             </div>
           </div>
         ))}
       </div>
 
       {showCreateModal && (
-        <div className="modal-overlay">
-          <div className="modal">
+        <div className="modal-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
             <h2>新建部署</h2>
-            {/* 表单内容 */}
-            <div className="modal-actions">
-              <button className="btn" onClick={() => setShowCreateModal(false)}>取消</button>
-              <button className="btn btn-primary">创建</button>
-            </div>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              // TODO: 实现创建逻辑
+              setShowCreateModal(false);
+              loadDeployments();
+            }}>
+              <div className="form-group">
+                <label>套餐选择</label>
+                <select required>
+                  <option value="">请选择套餐</option>
+                  <option value="community">社区版（免费）</option>
+                  <option value="pro">专业版（¥9,800/年）</option>
+                  <option value="enterprise">企业版（定制）</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label>实例名称</label>
+                <input type="text" placeholder="请输入实例名称" required />
+              </div>
+              <div className="form-group">
+                <label>域名</label>
+                <input type="text" placeholder="xxx.openclaw.cn" />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn" onClick={() => setShowCreateModal(false)}>取消</button>
+                <button type="submit" className="btn btn-primary">创建</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
