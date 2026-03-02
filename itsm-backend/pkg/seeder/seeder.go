@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/permission"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/servicecatalog"
@@ -268,6 +269,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
+	s.seedPermissions(ctx)       // 新增：初始化权限
 	s.backfillAdminRole(ctx)
 	s.seedAdmin(ctx)
 	s.seedUser1(ctx)
@@ -778,6 +780,109 @@ func (s *Seeder) seedTicketViews(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("ticket views seeded", "count", len(s.config.TicketViews))
+}
+
+// seedPermissions 初始化系统权限
+func (s *Seeder) seedPermissions(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip permissions seed", "error", err)
+		return
+	}
+
+	// 检查是否已有权限
+	existing, err := s.client.Permission.Query().Where(permission.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing permissions failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("permissions already seeded")
+		return
+	}
+
+	// 定义所有权限
+	permissions := []struct {
+		Code        string
+		Name        string
+		Resource    string
+		Action      string
+		Description string
+	}{
+		// 工单权限
+		{"ticket:read", "查看工单", "ticket", "read", "查看工单列表和详情"},
+		{"ticket:write", "管理工单", "ticket", "write", "创建、编辑工单"},
+		{"ticket:delete", "删除工单", "ticket", "delete", "删除工单"},
+		// 事件权限
+		{"incident:read", "查看事件", "incident", "read", "查看事件列表和详情"},
+		{"incident:write", "管理事件", "incident", "write", "创建、编辑事件"},
+		{"incident:delete", "删除事件", "incident", "delete", "删除事件"},
+		// 问题权限
+		{"problem:read", "查看问题", "problem", "read", "查看问题列表和详情"},
+		{"problem:write", "管理问题", "problem", "write", "创建、编辑问题"},
+		{"problem:delete", "删除问题", "problem", "delete", "删除问题"},
+		// 变更权限
+		{"change:read", "查看变更", "change", "read", "查看变更列表和详情"},
+		{"change:write", "管理变更", "change", "write", "创建、编辑变更"},
+		{"change:delete", "删除变更", "change", "delete", "删除变更"},
+		// 发布权限
+		{"release:read", "查看发布", "release", "read", "查看发布列表和详情"},
+		{"release:write", "管理发布", "release", "write", "创建、编辑发布"},
+		{"release:delete", "删除发布", "release", "delete", "删除发布"},
+		// 资产权限
+		{"asset:read", "查看资产", "asset", "read", "查看资产列表和详情"},
+		{"asset:write", "管理资产", "asset", "write", "创建、编辑资产"},
+		{"asset:delete", "删除资产", "asset", "delete", "删除资产"},
+		// 许可证权限
+		{"license:read", "查看许可证", "license", "read", "查看许可证列表和详情"},
+		{"license:write", "管理许可证", "license", "write", "创建、编辑许可证"},
+		{"license:delete", "删除许可证", "license", "delete", "删除许可证"},
+		// 服务目录权限
+		{"service:read", "查看服务", "service", "read", "查看服务目录"},
+		{"service:write", "管理服务", "service", "write", "管理服务目录"},
+		// SLA权限
+		{"sla:read", "查看SLA", "sla", "read", "查看SLA定义"},
+		{"sla:write", "管理SLA", "sla", "write", "管理SLA定义"},
+		// 用户权限
+		{"user:read", "查看用户", "user", "read", "查看用户列表"},
+		{"user:write", "管理用户", "user", "write", "创建、编辑用户"},
+		{"user:delete", "删除用户", "user", "delete", "删除用户"},
+		// 角色权限
+		{"role:read", "查看角色", "role", "read", "查看角色列表"},
+		{"role:write", "管理角色", "role", "write", "创建、编辑角色"},
+		// 部门权限
+		{"department:read", "查看部门", "department", "read", "查看部门列表"},
+		{"department:write", "管理部门", "department", "write", "创建、编辑部门"},
+		// 团队权限
+		{"team:read", "查看团队", "team", "read", "查看团队列表"},
+		{"team:write", "管理团队", "team", "write", "创建、编辑团队"},
+		// 审批权限
+		{"approval:read", "查看审批", "approval", "read", "查看审批记录"},
+		{"approval:write", "管理审批", "approval", "write", "审批操作"},
+		// 工作流权限
+		{"workflow:read", "查看工作流", "workflow", "read", "查看工作流"},
+		{"workflow:write", "管理工作流", "workflow", "write", "创建、编辑工作流"},
+		// 知识库权限
+		{"knowledge:read", "查看知识库", "knowledge", "read", "查看知识库文章"},
+		{"knowledge:write", "管理知识库", "knowledge", "write", "创建、编辑知识库"},
+		// 系统权限
+		{"system:read", "查看系统", "system", "read", "查看系统配置"},
+		{"system:write", "系统管理", "system", "write", "管理系统配置"},
+	}
+
+	for _, p := range permissions {
+		if _, err := s.client.Permission.Create().
+			SetCode(p.Code).
+			SetName(p.Name).
+			SetResource(p.Resource).
+			SetAction(p.Action).
+			SetDescription(p.Description).
+			SetTenantID(t.ID).
+			Save(ctx); err != nil {
+			s.sugar.Warnw("seed permission failed", "error", err, "code", p.Code)
+		}
+	}
+	s.sugar.Infow("permissions seeded", "count", len(permissions))
 }
 
 func (s *Seeder) seedServiceCatalog(ctx context.Context) {
