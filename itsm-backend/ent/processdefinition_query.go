@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processversionchangelog"
 	"math"
 
 	"entgo.io/ent"
@@ -22,13 +23,14 @@ import (
 // ProcessDefinitionQuery is the builder for querying ProcessDefinition entities.
 type ProcessDefinitionQuery struct {
 	config
-	ctx                  *QueryContext
-	order                []processdefinition.OrderOption
-	inters               []Interceptor
-	predicates           []predicate.ProcessDefinition
-	withProcessInstances *ProcessInstanceQuery
-	withBindings         *ProcessBindingQuery
-	withDeployment       *ProcessDeploymentQuery
+	ctx                   *QueryContext
+	order                 []processdefinition.OrderOption
+	inters                []Interceptor
+	predicates            []predicate.ProcessDefinition
+	withProcessInstances  *ProcessInstanceQuery
+	withBindings          *ProcessBindingQuery
+	withVersionChangelogs *ProcessVersionChangelogQuery
+	withDeployment        *ProcessDeploymentQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -102,6 +104,28 @@ func (pdq *ProcessDefinitionQuery) QueryBindings() *ProcessBindingQuery {
 			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, selector),
 			sqlgraph.To(processbinding.Table, processbinding.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, processdefinition.BindingsTable, processdefinition.BindingsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryVersionChangelogs chains the current query on the "version_changelogs" edge.
+func (pdq *ProcessDefinitionQuery) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
+	query := (&ProcessVersionChangelogClient{config: pdq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := pdq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := pdq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, selector),
+			sqlgraph.To(processversionchangelog.Table, processversionchangelog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.VersionChangelogsTable, processdefinition.VersionChangelogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pdq.driver.Dialect(), step)
 		return fromU, nil
@@ -318,14 +342,15 @@ func (pdq *ProcessDefinitionQuery) Clone() *ProcessDefinitionQuery {
 		return nil
 	}
 	return &ProcessDefinitionQuery{
-		config:               pdq.config,
-		ctx:                  pdq.ctx.Clone(),
-		order:                append([]processdefinition.OrderOption{}, pdq.order...),
-		inters:               append([]Interceptor{}, pdq.inters...),
-		predicates:           append([]predicate.ProcessDefinition{}, pdq.predicates...),
-		withProcessInstances: pdq.withProcessInstances.Clone(),
-		withBindings:         pdq.withBindings.Clone(),
-		withDeployment:       pdq.withDeployment.Clone(),
+		config:                pdq.config,
+		ctx:                   pdq.ctx.Clone(),
+		order:                 append([]processdefinition.OrderOption{}, pdq.order...),
+		inters:                append([]Interceptor{}, pdq.inters...),
+		predicates:            append([]predicate.ProcessDefinition{}, pdq.predicates...),
+		withProcessInstances:  pdq.withProcessInstances.Clone(),
+		withBindings:          pdq.withBindings.Clone(),
+		withVersionChangelogs: pdq.withVersionChangelogs.Clone(),
+		withDeployment:        pdq.withDeployment.Clone(),
 		// clone intermediate query.
 		sql:  pdq.sql.Clone(),
 		path: pdq.path,
@@ -351,6 +376,17 @@ func (pdq *ProcessDefinitionQuery) WithBindings(opts ...func(*ProcessBindingQuer
 		opt(query)
 	}
 	pdq.withBindings = query
+	return pdq
+}
+
+// WithVersionChangelogs tells the query-builder to eager-load the nodes that are connected to
+// the "version_changelogs" edge. The optional arguments are used to configure the query builder of the edge.
+func (pdq *ProcessDefinitionQuery) WithVersionChangelogs(opts ...func(*ProcessVersionChangelogQuery)) *ProcessDefinitionQuery {
+	query := (&ProcessVersionChangelogClient{config: pdq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	pdq.withVersionChangelogs = query
 	return pdq
 }
 
@@ -443,9 +479,10 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	var (
 		nodes       = []*ProcessDefinition{}
 		_spec       = pdq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			pdq.withProcessInstances != nil,
 			pdq.withBindings != nil,
+			pdq.withVersionChangelogs != nil,
 			pdq.withDeployment != nil,
 		}
 	)
@@ -480,6 +517,15 @@ func (pdq *ProcessDefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 		if err := pdq.loadBindings(ctx, query, nodes,
 			func(n *ProcessDefinition) { n.Edges.Bindings = []*ProcessBinding{} },
 			func(n *ProcessDefinition, e *ProcessBinding) { n.Edges.Bindings = append(n.Edges.Bindings, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := pdq.withVersionChangelogs; query != nil {
+		if err := pdq.loadVersionChangelogs(ctx, query, nodes,
+			func(n *ProcessDefinition) { n.Edges.VersionChangelogs = []*ProcessVersionChangelog{} },
+			func(n *ProcessDefinition, e *ProcessVersionChangelog) {
+				n.Edges.VersionChangelogs = append(n.Edges.VersionChangelogs, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -580,6 +626,36 @@ func (pdq *ProcessDefinitionQuery) loadBindings(ctx context.Context, query *Proc
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (pdq *ProcessDefinitionQuery) loadVersionChangelogs(ctx context.Context, query *ProcessVersionChangelogQuery, nodes []*ProcessDefinition, init func(*ProcessDefinition), assign func(*ProcessDefinition, *ProcessVersionChangelog)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*ProcessDefinition)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(processversionchangelog.FieldProcessDefinitionID)
+	}
+	query.Where(predicate.ProcessVersionChangelog(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(processdefinition.VersionChangelogsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ProcessDefinitionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "process_definition_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

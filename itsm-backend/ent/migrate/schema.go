@@ -1733,6 +1733,61 @@ var (
 			},
 		},
 	}
+	// ProcessVersionChangelogsColumns holds the columns for the "process_version_changelogs" table.
+	ProcessVersionChangelogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "version", Type: field.TypeString},
+		{Name: "change_log", Type: field.TypeString, Size: 2147483647},
+		{Name: "change_details", Type: field.TypeJSON, Nullable: true},
+		{Name: "change_type", Type: field.TypeString, Default: "update"},
+		{Name: "created_by_name", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "process_definition_id", Type: field.TypeInt},
+		{Name: "created_by", Type: field.TypeInt, Nullable: true},
+	}
+	// ProcessVersionChangelogsTable holds the schema information for the "process_version_changelogs" table.
+	ProcessVersionChangelogsTable = &schema.Table{
+		Name:       "process_version_changelogs",
+		Columns:    ProcessVersionChangelogsColumns,
+		PrimaryKey: []*schema.Column{ProcessVersionChangelogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_version_changelogs_process_definitions_version_changelogs",
+				Columns:    []*schema.Column{ProcessVersionChangelogsColumns[8]},
+				RefColumns: []*schema.Column{ProcessDefinitionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "process_version_changelogs_users_version_changelogs",
+				Columns:    []*schema.Column{ProcessVersionChangelogsColumns[9]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processversionchangelog_process_definition_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVersionChangelogsColumns[8]},
+			},
+			{
+				Name:    "processversionchangelog_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVersionChangelogsColumns[6]},
+			},
+			{
+				Name:    "processversionchangelog_process_definition_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVersionChangelogsColumns[8], ProcessVersionChangelogsColumns[7]},
+			},
+			{
+				Name:    "processversionchangelog_tenant_id_process_definition_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessVersionChangelogsColumns[6], ProcessVersionChangelogsColumns[8]},
+			},
+		},
+	}
 	// ProjectsColumns holds the columns for the "projects" table.
 	ProjectsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3265,6 +3320,7 @@ var (
 		ProcessInstancesTable,
 		ProcessTasksTable,
 		ProcessVariablesTable,
+		ProcessVersionChangelogsTable,
 		ProjectsTable,
 		PromptTemplatesTable,
 		ProvisioningTasksTable,
@@ -3341,6 +3397,8 @@ func init() {
 	ProcessInstancesTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
 	ProcessTasksTable.ForeignKeys[0].RefTable = ProcessInstancesTable
 	ProcessVariablesTable.ForeignKeys[0].RefTable = ProcessInstancesTable
+	ProcessVersionChangelogsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
+	ProcessVersionChangelogsTable.ForeignKeys[1].RefTable = UsersTable
 	ProjectsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	RolesTable.ForeignKeys[0].RefTable = PermissionsTable
 	RootCauseAnalysesTable.ForeignKeys[0].RefTable = TicketsTable

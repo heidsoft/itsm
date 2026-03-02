@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/notificationpreference"
+	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
@@ -246,6 +247,21 @@ func (uc *UserCreate) AddRoles(r ...*Role) *UserCreate {
 		ids[i] = r[i].ID
 	}
 	return uc.AddRoleIDs(ids...)
+}
+
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (uc *UserCreate) AddVersionChangelogIDs(ids ...int) *UserCreate {
+	uc.mutation.AddVersionChangelogIDs(ids...)
+	return uc
+}
+
+// AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (uc *UserCreate) AddVersionChangelogs(p ...*ProcessVersionChangelog) *UserCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uc.AddVersionChangelogIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -520,6 +536,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VersionChangelogsTable,
+			Columns: []string{user.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

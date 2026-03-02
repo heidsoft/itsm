@@ -786,6 +786,29 @@ func HasBindingsWith(preds ...predicate.ProcessBinding) predicate.ProcessDefinit
 	})
 }
 
+// HasVersionChangelogs applies the HasEdge predicate on the "version_changelogs" edge.
+func HasVersionChangelogs() predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, VersionChangelogsTable, VersionChangelogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasVersionChangelogsWith applies the HasEdge predicate on the "version_changelogs" edge with a given conditions (other predicates).
+func HasVersionChangelogsWith(preds ...predicate.ProcessVersionChangelog) predicate.ProcessDefinition {
+	return predicate.ProcessDefinition(func(s *sql.Selector) {
+		step := newVersionChangelogsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasDeployment applies the HasEdge predicate on the "deployment" edge.
 func HasDeployment() predicate.ProcessDefinition {
 	return predicate.ProcessDefinition(func(s *sql.Selector) {

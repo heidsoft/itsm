@@ -61,11 +61,13 @@ type ProcessDefinitionEdges struct {
 	ProcessInstances []*ProcessInstance `json:"process_instances,omitempty"`
 	// 流程绑定
 	Bindings []*ProcessBinding `json:"bindings,omitempty"`
+	// 版本变更日志
+	VersionChangelogs []*ProcessVersionChangelog `json:"version_changelogs,omitempty"`
 	// Deployment holds the value of the deployment edge.
 	Deployment *ProcessDeployment `json:"deployment,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ProcessInstancesOrErr returns the ProcessInstances value or an error if the edge
@@ -86,12 +88,21 @@ func (e ProcessDefinitionEdges) BindingsOrErr() ([]*ProcessBinding, error) {
 	return nil, &NotLoadedError{edge: "bindings"}
 }
 
+// VersionChangelogsOrErr returns the VersionChangelogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e ProcessDefinitionEdges) VersionChangelogsOrErr() ([]*ProcessVersionChangelog, error) {
+	if e.loadedTypes[2] {
+		return e.VersionChangelogs, nil
+	}
+	return nil, &NotLoadedError{edge: "version_changelogs"}
+}
+
 // DeploymentOrErr returns the Deployment value or an error if the edge
 // was not loaded in eager-loading, or loaded but was not found.
 func (e ProcessDefinitionEdges) DeploymentOrErr() (*ProcessDeployment, error) {
 	if e.Deployment != nil {
 		return e.Deployment, nil
-	} else if e.loadedTypes[2] {
+	} else if e.loadedTypes[3] {
 		return nil, &NotFoundError{label: processdeployment.Label}
 	}
 	return nil, &NotLoadedError{edge: "deployment"}
@@ -248,6 +259,11 @@ func (pd *ProcessDefinition) QueryProcessInstances() *ProcessInstanceQuery {
 // QueryBindings queries the "bindings" edge of the ProcessDefinition entity.
 func (pd *ProcessDefinition) QueryBindings() *ProcessBindingQuery {
 	return NewProcessDefinitionClient(pd.config).QueryBindings(pd)
+}
+
+// QueryVersionChangelogs queries the "version_changelogs" edge of the ProcessDefinition entity.
+func (pd *ProcessDefinition) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
+	return NewProcessDefinitionClient(pd.config).QueryVersionChangelogs(pd)
 }
 
 // QueryDeployment queries the "deployment" edge of the ProcessDefinition entity.

@@ -63,9 +63,11 @@ type UserEdges struct {
 	NotificationPreferences []*NotificationPreference `json:"notification_preferences,omitempty"`
 	// 用户角色
 	Roles []*Role `json:"roles,omitempty"`
+	// 版本变更日志
+	VersionChangelogs []*ProcessVersionChangelog `json:"version_changelogs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [6]bool
+	loadedTypes [7]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -122,6 +124,15 @@ func (e UserEdges) RolesOrErr() ([]*Role, error) {
 		return e.Roles, nil
 	}
 	return nil, &NotLoadedError{edge: "roles"}
+}
+
+// VersionChangelogsOrErr returns the VersionChangelogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) VersionChangelogsOrErr() ([]*ProcessVersionChangelog, error) {
+	if e.loadedTypes[6] {
+		return e.VersionChangelogs, nil
+	}
+	return nil, &NotLoadedError{edge: "version_changelogs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -280,6 +291,11 @@ func (u *User) QueryNotificationPreferences() *NotificationPreferenceQuery {
 // QueryRoles queries the "roles" edge of the User entity.
 func (u *User) QueryRoles() *RoleQuery {
 	return NewUserClient(u.config).QueryRoles(u)
+}
+
+// QueryVersionChangelogs queries the "version_changelogs" edge of the User entity.
+func (u *User) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
+	return NewUserClient(u.config).QueryVersionChangelogs(u)
 }
 
 // Update returns a builder for updating this User.

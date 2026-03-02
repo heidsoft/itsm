@@ -73,6 +73,8 @@ func (ProcessDefinition) Edges() []ent.Edge {
 			Comment("流程实例"),
 		edge.To("bindings", ProcessBinding.Type).
 			Comment("流程绑定"),
+		edge.To("version_changelogs", ProcessVersionChangelog.Type).
+			Comment("版本变更日志"),
 		edge.From("deployment", ProcessDeployment.Type).
 			Ref("definitions").
 			Field("deployment_id").
