@@ -19,27 +19,27 @@ export const SystemInfo: React.FC = () => {
         <Card
           title={
             <Space>
-              <Settings className='w-5 h-5' />
+              <Settings className="w-5 h-5" />
               {t('admin.systemInfo')}
             </Space>
           }
           style={{ height: '100%' }}
         >
-          <Space orientation='vertical' size='middle' style={{ width: '100%' }}>
+          <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type='secondary'>{t('admin.systemVersion')}</Text>
+              <Text type="secondary">{t('admin.systemVersion')}</Text>
               <Text strong>ITSM Pro v2.0.1</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type='secondary'>{t('admin.databaseVersion')}</Text>
+              <Text type="secondary">{t('admin.databaseVersion')}</Text>
               <Text strong>PostgreSQL 14.2</Text>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type='secondary'>{t('admin.licenseStatus')}</Text>
-              <Tag color='success'>{t('admin.licenseActivated')}</Tag>
+              <Text type="secondary">{t('admin.licenseStatus')}</Text>
+              <Tag color="success">{t('admin.licenseActivated')}</Tag>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type='secondary'>{t('admin.licenseExpiry')}</Text>
+              <Text type="secondary">{t('admin.licenseExpiry')}</Text>
               <Text strong>2024-12-31</Text>
             </div>
           </Space>
@@ -51,7 +51,7 @@ export const SystemInfo: React.FC = () => {
         <Card
           title={
             <Space>
-              <FileText className='w-5 h-5' />
+              <FileText className="w-5 h-5" />
               {t('admin.helpSupport')}
             </Space>
           }
@@ -77,7 +77,7 @@ export const SystemInfo: React.FC = () => {
                     }}
                   >
                     <Text>{item.title}</Text>
-                    <ArrowUpRight className='w-4 h-4' style={{ color: token.colorTextSecondary }} />
+                    <ArrowUpRight className="w-4 h-4" style={{ color: token.colorTextSecondary }} />
                   </div>
                 </Link>
               </List.Item>

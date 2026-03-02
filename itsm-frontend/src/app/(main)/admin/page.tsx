@@ -13,10 +13,10 @@ import { useI18n } from '@/lib/i18n';
 
 const AdminDashboardSkeleton: React.FC = () => {
   return (
-    <div className='p-6'>
-      <Skeleton.Input className='w-full h-32 mb-6' active />
+    <div className="p-6">
+      <Skeleton.Input className="w-full h-32 mb-6" active />
       <Skeleton active paragraph={{ rows: 4 }} />
-      <Row gutter={[24, 24]} className='mt-6'>
+      <Row gutter={[24, 24]} className="mt-6">
         <Col xs={24} lg={8}>
           <Skeleton active paragraph={{ rows: 6 }} />
         </Col>
@@ -37,12 +37,12 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       <AdminHeader />
-      <div className='mb-6'>
+      <div className="mb-6">
         <SystemOverview stats={stats} loading={loading} />
       </div>
-      <Row gutter={[24, 24]} className='mb-6'>
+      <Row gutter={[24, 24]} className="mb-6">
         <Col xs={24} lg={8}>
           <SystemHealth />
         </Col>
@@ -50,7 +50,7 @@ const AdminDashboard = () => {
           <RecentActivity />
         </Col>
       </Row>
-      <div className='mb-6'>
+      <div className="mb-6">
         <QuickActions />
       </div>
       <SystemInfo />

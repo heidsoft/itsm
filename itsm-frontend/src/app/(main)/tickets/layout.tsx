@@ -9,21 +9,21 @@ const TicketLayout: React.FC<PropsWithChildren> = ({ children }) => {
   const breadcrumbItems = [
     {
       title: (
-        <Link href='/'>
+        <Link href="/">
           <HomeOutlined />
         </Link>
       ),
     },
     {
-      title: <Link href='/tickets'>工单管理</Link>,
+      title: <Link href="/tickets">工单管理</Link>,
     },
   ];
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className="min-h-screen bg-gray-50">
       {/* 面包屑导航 */}
-      <div className='bg-white border-b border-gray-200'>
-        <div className='max-w-7xl mx-auto px-6 py-3'>
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-6 py-3">
           <Breadcrumb items={breadcrumbItems} />
         </div>
       </div>

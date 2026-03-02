@@ -139,14 +139,14 @@ const AutomationRulesPage: React.FC = () => {
       title: '规则名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => <span className='font-medium'>{text}</span>,
+      render: (text: string) => <span className="font-medium">{text}</span>,
     },
     {
       title: '描述',
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
-      render: (text: string) => <Text type='secondary'>{text || '-'}</Text>,
+      render: (text: string) => <Text type="secondary">{text || '-'}</Text>,
     },
     {
       title: '优先级',
@@ -172,8 +172,8 @@ const AutomationRulesPage: React.FC = () => {
       render: (active: boolean, record: AutomationRule) => (
         <Switch
           checked={active}
-          checkedChildren='启用'
-          unCheckedChildren='禁用'
+          checkedChildren="启用"
+          unCheckedChildren="禁用"
           onChange={() => handleToggleActive(record)}
         />
       ),
@@ -184,17 +184,17 @@ const AutomationRulesPage: React.FC = () => {
       width: 150,
       render: (_: unknown, record: AutomationRule) => (
         <Space>
-          <Tooltip title='编辑'>
-            <Button size='small' icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
+          <Tooltip title="编辑">
+            <Button size="small" icon={<Edit size={14} />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个规则吗？'
+            title="确定要删除这个规则吗？"
             onConfirm={() => handleDelete(record.id)}
-            okText='确定'
-            cancelText='取消'
+            okText="确定"
+            cancelText="取消"
           >
-            <Tooltip title='删除'>
-              <Button size='small' danger icon={<Delete size={14} />} />
+            <Tooltip title="删除">
+              <Button size="small" danger icon={<Delete size={14} />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -203,32 +203,32 @@ const AutomationRulesPage: React.FC = () => {
   ];
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       <Card>
-        <div className='flex justify-between items-center mb-4'>
+        <div className="flex justify-between items-center mb-4">
           <div>
             <Title level={3} style={{ marginBottom: 4 }}>
               工单自动化规则
             </Title>
-            <Text type='secondary'>配置自动化规则来简化工单处理流程</Text>
+            <Text type="secondary">配置自动化规则来简化工单处理流程</Text>
           </div>
-          <Button type='primary' icon={<Plus size={16} />} onClick={handleCreate}>
+          <Button type="primary" icon={<Plus size={16} />} onClick={handleCreate}>
             创建规则
           </Button>
         </div>
 
         {rules.length === 0 && !loading ? (
           <Alert
-            type='info'
+            type="info"
             showIcon
-            message='暂无自动化规则'
-            description='点击上方按钮创建第一个自动化规则'
+            message="暂无自动化规则"
+            description="点击上方按钮创建第一个自动化规则"
           />
         ) : (
           <Table
             columns={columns}
             dataSource={rules}
-            rowKey='id'
+            rowKey="id"
             loading={loading}
             pagination={{
               pageSize: 10,
@@ -245,39 +245,39 @@ const AutomationRulesPage: React.FC = () => {
         open={modalVisible}
         onOk={handleSave}
         onCancel={() => setModalVisible(false)}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
         width={600}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='规则名称'
+            name="name"
+            label="规则名称"
             rules={[{ required: true, message: '请输入规则名称' }]}
           >
-            <Input placeholder='请输入规则名称' />
+            <Input placeholder="请输入规则名称" />
           </Form.Item>
 
-          <Form.Item name='description' label='规则描述'>
-            <TextArea rows={3} placeholder='请输入规则描述' />
+          <Form.Item name="description" label="规则描述">
+            <TextArea rows={3} placeholder="请输入规则描述" />
           </Form.Item>
 
-          <Form.Item name='priority' label='优先级' initialValue={1} tooltip='数字越大优先级越高'>
+          <Form.Item name="priority" label="优先级" initialValue={1} tooltip="数字越大优先级越高">
             <InputNumber min={1} max={10} />
           </Form.Item>
 
-          <Form.Item name='is_active' label='启用状态' valuePropName='checked' initialValue={true}>
-            <Switch checkedChildren='启用' unCheckedChildren='禁用' />
+          <Form.Item name="is_active" label="启用状态" valuePropName="checked" initialValue={true}>
+            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
 
-          <Form.Item name='conditions' label='触发条件' tooltip='JSON格式的条件数组'>
+          <Form.Item name="conditions" label="触发条件" tooltip="JSON格式的条件数组">
             <TextArea
               rows={4}
               placeholder='[{"field": "status", "operator": "equals", "value": "new"}]'
             />
           </Form.Item>
 
-          <Form.Item name='actions' label='执行动作' tooltip='JSON格式的动作数组'>
+          <Form.Item name="actions" label="执行动作" tooltip="JSON格式的动作数组">
             <TextArea rows={4} placeholder='[{"type": "assign", "assignee_id": 1}]' />
           </Form.Item>
         </Form>

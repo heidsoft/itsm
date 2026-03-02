@@ -269,14 +269,14 @@ export const TemplateList: React.FC<TemplateListProps> = ({
 
   // Render
   return (
-    <div className='template-list'>
+    <div className="template-list">
       {/* 顶部操作栏 */}
-      <Card className='mb-4'>
+      <Card className="mb-4">
         <Row gutter={[16, 16]}>
-          <Col flex='auto'>
-            <Space size='middle' className='w-full'>
+          <Col flex="auto">
+            <Space size="middle" className="w-full">
               <Search
-                placeholder='搜索模板...'
+                placeholder="搜索模板..."
                 allowClear
                 onSearch={handleSearch}
                 style={{ width: 300 }}
@@ -284,40 +284,40 @@ export const TemplateList: React.FC<TemplateListProps> = ({
               />
 
               <Select
-                placeholder='选择分类'
+                placeholder="选择分类"
                 allowClear
                 style={{ width: 150 }}
                 onChange={handleCategoryChange}
               >
-                <Option value='incident'>事件</Option>
-                <Option value='request'>服务请求</Option>
-                <Option value='problem'>问题</Option>
-                <Option value='change'>变更</Option>
+                <Option value="incident">事件</Option>
+                <Option value="request">服务请求</Option>
+                <Option value="problem">问题</Option>
+                <Option value="change">变更</Option>
               </Select>
 
               <Select
-                placeholder='可见性'
+                placeholder="可见性"
                 allowClear
                 style={{ width: 120 }}
                 onChange={handleVisibilityChange as any}
               >
-                <Option value='public'>公开</Option>
-                <Option value='private'>私有</Option>
-                <Option value='department'>部门</Option>
-                <Option value='role'>角色</Option>
+                <Option value="public">公开</Option>
+                <Option value="private">私有</Option>
+                <Option value="department">部门</Option>
+                <Option value="role">角色</Option>
               </Select>
 
               <Select
-                placeholder='排序方式'
-                defaultValue='usageCount-desc'
+                placeholder="排序方式"
+                defaultValue="usageCount-desc"
                 style={{ width: 150 }}
                 onChange={handleSortChange}
               >
-                <Option value='usageCount-desc'>使用次数 ↓</Option>
-                <Option value='rating-desc'>评分 ↓</Option>
-                <Option value='createdAt-desc'>创建时间 ↓</Option>
-                <Option value='updatedAt-desc'>更新时间 ↓</Option>
-                <Option value='name-asc'>名称 A-Z</Option>
+                <Option value="usageCount-desc">使用次数 ↓</Option>
+                <Option value="rating-desc">评分 ↓</Option>
+                <Option value="createdAt-desc">创建时间 ↓</Option>
+                <Option value="updatedAt-desc">更新时间 ↓</Option>
+                <Option value="name-asc">名称 A-Z</Option>
               </Select>
             </Space>
           </Col>
@@ -339,10 +339,10 @@ export const TemplateList: React.FC<TemplateListProps> = ({
               )}
 
               <Radio.Group value={viewMode} onChange={e => setViewMode(e.target.value)}>
-                <Radio.Button value='grid'>
+                <Radio.Button value="grid">
                   <AppstoreOutlined />
                 </Radio.Button>
-                <Radio.Button value='list'>
+                <Radio.Button value="list">
                   <UnorderedListOutlined />
                 </Radio.Button>
               </Radio.Group>
@@ -352,7 +352,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
               </Button>
 
               {showActions && (
-                <Button type='primary' icon={<PlusOutlined />} onClick={onCreateClick}>
+                <Button type="primary" icon={<PlusOutlined />} onClick={onCreateClick}>
                   创建模板
                 </Button>
               )}
@@ -365,9 +365,9 @@ export const TemplateList: React.FC<TemplateListProps> = ({
       <Spin spinning={isLoading}>
         {templates.length === 0 ? (
           <Card>
-            <Empty description='暂无模板' image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Empty description="暂无模板" image={Empty.PRESENTED_IMAGE_SIMPLE}>
               {showActions && (
-                <Button type='primary' icon={<PlusOutlined />} onClick={onCreateClick}>
+                <Button type="primary" icon={<PlusOutlined />} onClick={onCreateClick}>
                   创建第一个模板
                 </Button>
               )}
@@ -378,7 +378,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
             {templates.map(template => (
               <Col key={template.id} xs={24} sm={12} lg={8} xl={6}>
                 {selectedIds.length > 0 && (
-                  <div className='absolute top-2 left-2 z-10' onClick={e => e.stopPropagation()}>
+                  <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedIds.includes(template.id)}
                       onChange={e => handleSelectTemplate(template.id, e.target.checked)}
@@ -387,7 +387,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                 )}
                 <TemplateCard
                   template={template}
-                  viewMode='grid'
+                  viewMode="grid"
                   onView={onTemplateClick}
                   onEdit={onEditClick}
                   onDuplicate={handleDuplicate}
@@ -402,9 +402,9 @@ export const TemplateList: React.FC<TemplateListProps> = ({
         ) : (
           <div>
             {templates.map(template => (
-              <div key={template.id} className='relative'>
+              <div key={template.id} className="relative">
                 {selectedIds.length > 0 && (
-                  <div className='absolute top-4 left-4 z-10' onClick={e => e.stopPropagation()}>
+                  <div className="absolute top-4 left-4 z-10" onClick={e => e.stopPropagation()}>
                     <Checkbox
                       checked={selectedIds.includes(template.id)}
                       onChange={e => handleSelectTemplate(template.id, e.target.checked)}
@@ -414,7 +414,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                 )}
                 <TemplateCard
                   template={template}
-                  viewMode='list'
+                  viewMode="list"
                   onView={onTemplateClick}
                   onEdit={onEditClick}
                   onDuplicate={handleDuplicate}
@@ -431,9 +431,9 @@ export const TemplateList: React.FC<TemplateListProps> = ({
 
       {/* 分页 */}
       {total > 0 && (
-        <Card className='mt-4'>
-          <div className='flex justify-between items-center'>
-            <span className='text-gray-600'>
+        <Card className="mt-4">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">
               共 {total} 个模板
               {selectedIds.length > 0 && ` (已选择 ${selectedIds.length} 个)`}
             </span>

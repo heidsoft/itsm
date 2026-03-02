@@ -80,11 +80,11 @@ const ArticleDetail: React.FC = () => {
     return (
       <Card>
         <Result
-          status='404'
-          title='404'
-          subTitle='抱歉，您访问的文章不存在'
+          status="404"
+          title="404"
+          subTitle="抱歉，您访问的文章不存在"
           extra={
-            <Button type='primary' onClick={() => router.push('/knowledge')}>
+            <Button type="primary" onClick={() => router.push('/knowledge')}>
               返回列表
             </Button>
           }
@@ -121,7 +121,7 @@ const ArticleDetail: React.FC = () => {
               返回列表
             </Button>
             <Button
-              type='primary'
+              type="primary"
               icon={<EditOutlined />}
               onClick={() => router.push(`/knowledge/articles/${article.id}/edit`)}
             >
@@ -131,18 +131,18 @@ const ArticleDetail: React.FC = () => {
 
           <Title level={2}>{article.title}</Title>
 
-          <Space split={<Divider type='vertical' />} wrap>
+          <Space split={<Divider type="vertical" />} wrap>
             <Space>
               <UserOutlined />
-              <Text type='secondary'>作者: {article.author}</Text>
+              <Text type="secondary">作者: {article.author}</Text>
             </Space>
             <Space>
               <CalendarOutlined />
-              <Text type='secondary'>{dayjs(article.created_at).format('YYYY-MM-DD HH:mm')}</Text>
+              <Text type="secondary">{dayjs(article.created_at).format('YYYY-MM-DD HH:mm')}</Text>
             </Space>
             <Space>
               <FolderOutlined />
-              <Text type='secondary'>{article.category || '未分类'}</Text>
+              <Text type="secondary">{article.category || '未分类'}</Text>
             </Space>
             <Tag color={KnowledgeStatusColors[status]}>{KnowledgeStatusLabels[status]}</Tag>
           </Space>
@@ -157,13 +157,13 @@ const ArticleDetail: React.FC = () => {
         <Divider />
 
         <Tabs
-          defaultActiveKey='content'
+          defaultActiveKey="content"
           items={[
             {
               key: 'content',
               label: '文章内容',
               children: (
-                <div className='article-content' style={{ minHeight: 400 }}>
+                <div className="article-content" style={{ minHeight: 400 }}>
                   <Paragraph>
                     {article.content.split('\n').map((line, i) => (
                       <React.Fragment key={i}>

@@ -262,7 +262,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       dataIndex: 'ticketNumber',
       key: 'ticketNumber',
       render: (text: string) => (
-        <Text strong className='text-lg' style={{ color: '#1890ff' }}>
+        <Text strong className="text-lg" style={{ color: '#1890ff' }}>
           {text}
         </Text>
       ),
@@ -271,14 +271,14 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       title: '工单标题',
       dataIndex: 'ticketTitle',
       key: 'ticketTitle',
-      render: (text: string) => <Text className='text-base'>{text}</Text>,
+      render: (text: string) => <Text className="text-base">{text}</Text>,
     },
     {
       title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
       render: (priority: string) => (
-        <Tag color={getPriorityColor(priority)} className='text-sm px-3 py-1'>
+        <Tag color={getPriorityColor(priority)} className="text-sm px-3 py-1">
           {priority === 'low'
             ? '低'
             : priority === 'medium'
@@ -297,7 +297,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         <Badge
           status={level === 'critical' ? 'error' : 'warning'}
           text={
-            <Tag color={getAlertLevelColor(level)} className='text-sm px-3 py-1'>
+            <Tag color={getAlertLevelColor(level)} className="text-sm px-3 py-1">
               {level === 'critical' ? '严重' : '警告'}
             </Tag>
           }
@@ -316,7 +316,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         return (
           <Text
             strong
-            className='text-lg'
+            className="text-lg"
             style={{ color: isNegative ? '#ff4d4f' : hours < 2 ? '#faad14' : '#52c41a' }}
           >
             {isNegative ? '-' : ''}
@@ -329,14 +329,14 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       title: 'SLA定义',
       dataIndex: 'slaDefinition',
       key: 'slaDefinition',
-      render: (text: string) => <Text className='text-base'>{text}</Text>,
+      render: (text: string) => <Text className="text-base">{text}</Text>,
     },
   ];
 
   if (loading && !metrics) {
     return (
-      <div className='flex items-center justify-center h-screen'>
-        <Spin size='large' tip='加载SLA监控数据...' />
+      <div className="flex items-center justify-center h-screen">
+        <Spin size="large" tip="加载SLA监控数据..." />
       </div>
     );
   }
@@ -352,14 +352,14 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
     >
       {/* 顶部工具栏 */}
       <div
-        className='flex items-center justify-between mb-6'
+        className="flex items-center justify-between mb-6"
         style={{
           backgroundColor: isFullscreen ? 'rgba(255,255,255,0.1)' : 'transparent',
           padding: '12px 16px',
           borderRadius: '8px',
         }}
       >
-        <div className='flex items-center gap-4'>
+        <div className="flex items-center gap-4">
           <Title
             level={2}
             style={{
@@ -368,11 +368,11 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               fontSize: isFullscreen ? '32px' : '24px',
             }}
           >
-            <Activity className='inline-block mr-2' size={isFullscreen ? 32 : 24} />
+            <Activity className="inline-block mr-2" size={isFullscreen ? 32 : 24} />
             SLA实时监控大屏
           </Title>
           <Text
-            type='secondary'
+            type="secondary"
             style={{
               color: isFullscreen ? 'rgba(255,255,255,0.7)' : undefined,
               fontSize: isFullscreen ? '16px' : '14px',
@@ -410,10 +410,10 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       </div>
 
       {/* 关键指标卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
           <Card
-            className='sla-stat-card'
+            className="sla-stat-card"
             style={{
               backgroundColor: isFullscreen ? 'rgba(255,255,255,0.05)' : '#fff',
               border: isFullscreen ? '1px solid rgba(255,255,255,0.1)' : undefined,
@@ -432,7 +432,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               }
               value={metrics?.complianceRate || 0}
               precision={1}
-              suffix='%'
+              suffix="%"
               styles={{
                 content: {
                   color: isFullscreen ? '#fff' : getComplianceColor(metrics?.complianceRate || 0),
@@ -446,14 +446,14 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               percent={metrics?.complianceRate || 0}
               strokeColor={getComplianceColor(metrics?.complianceRate || 0)}
               showInfo={false}
-              size='small'
-              className='mt-4'
+              size="small"
+              className="mt-4"
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
-            className='sla-stat-card'
+            className="sla-stat-card"
             style={{
               backgroundColor: isFullscreen ? 'rgba(255,255,255,0.05)' : '#fff',
               border: isFullscreen ? '1px solid rgba(255,255,255,0.1)' : undefined,
@@ -472,7 +472,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               }
               value={metrics?.violationRate || 0}
               precision={1}
-              suffix='%'
+              suffix="%"
               styles={{
                 content: {
                   color: isFullscreen ? '#ff4d4f' : '#ff4d4f',
@@ -482,7 +482,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               }}
               prefix={<CloseCircleOutlined />}
             />
-            <div className='mt-4'>
+            <div className="mt-4">
               <Text
                 style={{
                   color: isFullscreen ? 'rgba(255,255,255,0.7)' : undefined,
@@ -496,7 +496,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
-            className='sla-stat-card'
+            className="sla-stat-card"
             style={{
               backgroundColor: isFullscreen ? 'rgba(255,255,255,0.05)' : '#fff',
               border: isFullscreen ? '1px solid rgba(255,255,255,0.1)' : undefined,
@@ -523,7 +523,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               }}
               prefix={<WarningOutlined />}
             />
-            <div className='mt-4'>
+            <div className="mt-4">
               <Text
                 style={{
                   color: isFullscreen ? 'rgba(255,255,255,0.7)' : undefined,
@@ -537,7 +537,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card
-            className='sla-stat-card'
+            className="sla-stat-card"
             style={{
               backgroundColor: isFullscreen ? 'rgba(255,255,255,0.05)' : '#fff',
               border: isFullscreen ? '1px solid rgba(255,255,255,0.1)' : undefined,
@@ -556,7 +556,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               }
               value={metrics?.averageResponseTime || 0}
               precision={1}
-              suffix='小时'
+              suffix="小时"
               styles={{
                 content: {
                   color: isFullscreen ? '#1890ff' : '#1890ff',
@@ -566,7 +566,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
               }}
               prefix={<ClockCircleOutlined />}
             />
-            <div className='mt-4'>
+            <div className="mt-4">
               <Text
                 style={{
                   color: isFullscreen ? 'rgba(255,255,255,0.7)' : undefined,
@@ -583,13 +583,13 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       {/* 告警列表 */}
       <Card
         title={
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <BellOutlined style={{ fontSize: '20px' }} />
             <span style={{ fontSize: isFullscreen ? '24px' : '18px' }}>SLA告警列表</span>
-            <Badge count={alerts.length} showZero className='ml-2' />
+            <Badge count={alerts.length} showZero className="ml-2" />
           </div>
         }
-        className='mb-6'
+        className="mb-6"
         style={{
           backgroundColor: isFullscreen ? 'rgba(255,255,255,0.05)' : '#fff',
           border: isFullscreen ? '1px solid rgba(255,255,255,0.1)' : undefined,
@@ -603,7 +603,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           <Table
             dataSource={alerts}
             columns={alertColumns}
-            rowKey='id'
+            rowKey="id"
             pagination={false}
             size={isFullscreen ? 'large' : 'middle'}
             rowClassName={record =>
@@ -614,7 +614,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             }}
           />
         ) : (
-          <div className='text-center py-12'>
+          <div className="text-center py-12">
             <CheckCircleOutlined
               style={{
                 fontSize: '48px',
@@ -639,7 +639,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         <Col xs={24} lg={12}>
           <Card
             title={
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <Target style={{ fontSize: '20px' }} />
                 <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>响应时间合规率</span>
               </div>
@@ -650,13 +650,13 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             }}
           >
             <Progress
-              type='dashboard'
+              type="dashboard"
               percent={metrics?.responseTimeCompliance || 0}
               strokeColor={getComplianceColor(metrics?.responseTimeCompliance || 0)}
               format={percent => `${percent}%`}
               style={{ fontSize: isFullscreen ? '24px' : '18px' }}
             />
-            <div className='text-center mt-4'>
+            <div className="text-center mt-4">
               <Text
                 style={{
                   color: isFullscreen ? 'rgba(255,255,255,0.8)' : undefined,
@@ -671,7 +671,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
         <Col xs={24} lg={12}>
           <Card
             title={
-              <div className='flex items-center gap-2'>
+              <div className="flex items-center gap-2">
                 <Zap style={{ fontSize: '20px' }} />
                 <span style={{ fontSize: isFullscreen ? '20px' : '16px' }}>解决时间合规率</span>
               </div>
@@ -682,13 +682,13 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             }}
           >
             <Progress
-              type='dashboard'
+              type="dashboard"
               percent={metrics?.resolutionTimeCompliance || 0}
               strokeColor={getComplianceColor(metrics?.resolutionTimeCompliance || 0)}
               format={percent => `${percent}%`}
               style={{ fontSize: isFullscreen ? '24px' : '18px' }}
             />
-            <div className='text-center mt-4'>
+            <div className="text-center mt-4">
               <Text
                 style={{
                   color: isFullscreen ? 'rgba(255,255,255,0.8)' : undefined,

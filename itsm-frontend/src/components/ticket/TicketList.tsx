@@ -275,7 +275,7 @@ const TicketList: React.FC<TicketListProps> = ({
         fixed: 'left',
         render: (ticketNumber: string, record: Ticket) => (
           <Button
-            type='link'
+            type="link"
             onClick={() => {
               if (onTicketSelect) {
                 onTicketSelect(record);
@@ -296,7 +296,7 @@ const TicketList: React.FC<TicketListProps> = ({
           showTitle: false,
         },
         render: (title: string) => (
-          <Tooltip placement='topLeft' title={title}>
+          <Tooltip placement="topLeft" title={title}>
             {title}
           </Tooltip>
         ),
@@ -336,7 +336,7 @@ const TicketList: React.FC<TicketListProps> = ({
         dataIndex: 'source',
         key: 'source',
         width: 100,
-        render: (source: string) => <Tag color='blue'>{source}</Tag>,
+        render: (source: string) => <Tag color="blue">{source}</Tag>,
       },
       {
         title: '创建时间',
@@ -388,7 +388,7 @@ const TicketList: React.FC<TicketListProps> = ({
 
           return (
             <Dropdown menu={{ items }} trigger={['click']}>
-              <Button type='text' icon={<MoreOutlined />} />
+              <Button type="text" icon={<MoreOutlined />} />
             </Dropdown>
           );
         },
@@ -417,14 +417,14 @@ const TicketList: React.FC<TicketListProps> = ({
   );
 
   return (
-    <div className='ticket-list space-y-4'>
+    <div className="ticket-list space-y-4">
       {showHeader && (
-        <Card className='rounded-lg shadow-sm'>
-          <Row gutter={[16, 16]} align='middle'>
-            <Col flex='auto'>
-              <Space size='middle'>
+        <Card className="rounded-lg shadow-sm">
+          <Row gutter={[16, 16]} align="middle">
+            <Col flex="auto">
+              <Space size="middle">
                 <Search
-                  placeholder='搜索工单标题、描述或工单号'
+                  placeholder="搜索工单标题、描述或工单号"
                   value={searchValue}
                   onChange={e => setSearchValue(e.target.value)}
                   onSearch={handleSearch}
@@ -450,7 +450,7 @@ const TicketList: React.FC<TicketListProps> = ({
                   导出
                 </Button>
                 <Button
-                  type='primary'
+                  type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => router.push('/tickets/create')}
                 >
@@ -466,7 +466,7 @@ const TicketList: React.FC<TicketListProps> = ({
               <Row gutter={[16, 16]}>
                 <Col xs={24} sm={12} md={6}>
                   <Select
-                    placeholder='状态'
+                    placeholder="状态"
                     value={filters.status}
                     onChange={value => handleFilterChange('status', value)}
                     allowClear
@@ -481,7 +481,7 @@ const TicketList: React.FC<TicketListProps> = ({
                 </Col>
                 <Col xs={24} sm={12} md={6}>
                   <Select
-                    placeholder='优先级'
+                    placeholder="优先级"
                     value={filters.priority}
                     onChange={value => handleFilterChange('priority', value)}
                     allowClear
@@ -496,7 +496,7 @@ const TicketList: React.FC<TicketListProps> = ({
                 </Col>
                 <Col xs={24} sm={12} md={6}>
                   <Select
-                    placeholder='类型'
+                    placeholder="类型"
                     value={filters.type}
                     onChange={value => handleFilterChange('type', value)}
                     allowClear
@@ -536,11 +536,11 @@ const TicketList: React.FC<TicketListProps> = ({
         />
       )}
 
-      <Card className='rounded-lg shadow-sm'>
+      <Card className="rounded-lg shadow-sm">
         <Table<Ticket>
           columns={columns}
           dataSource={tickets}
-          rowKey='id'
+          rowKey="id"
           rowSelection={embedded ? undefined : rowSelection}
           loading={loading}
           pagination={{
@@ -554,22 +554,22 @@ const TicketList: React.FC<TicketListProps> = ({
           }}
           onChange={handleTableChange}
           scroll={{ x: 1200 }}
-          size='middle'
+          size="middle"
           getPopupContainer={node => node.parentElement || document.body}
         />
       </Card>
 
       {/* 删除确认对话框 */}
       <Modal
-        title='确认删除'
+        title="确认删除"
         open={deleteModalVisible}
         onOk={() => ticketToDelete && handleDelete(ticketToDelete)}
         onCancel={() => {
           setDeleteModalVisible(false);
           setTicketToDelete(null);
         }}
-        okText='确认'
-        cancelText='取消'
+        okText="确认"
+        cancelText="取消"
         okButtonProps={{ danger: true }}
       >
         <p>

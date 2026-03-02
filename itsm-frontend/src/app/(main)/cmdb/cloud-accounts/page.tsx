@@ -107,7 +107,7 @@ export default function CloudAccountPage() {
   ];
 
   return (
-    <Card variant='borderless'>
+    <Card variant="borderless">
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
@@ -118,9 +118,9 @@ export default function CloudAccountPage() {
         ]}
       />
 
-      <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
-        <Form.Item name='provider'>
-          <Select placeholder='云厂商' style={{ width: 160 }} allowClear>
+      <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
+        <Form.Item name="provider">
+          <Select placeholder="云厂商" style={{ width: 160 }} allowClear>
             {providerOptions.map(item => (
               <Option key={item.value} value={item.value}>
                 {item.label}
@@ -131,7 +131,7 @@ export default function CloudAccountPage() {
         <Form.Item>
           <Space>
             <Button onClick={loadData}>查询</Button>
-            <Button type='primary' onClick={() => setCreateOpen(true)}>
+            <Button type="primary" onClick={() => setCreateOpen(true)}>
               新增云账号
             </Button>
           </Space>
@@ -139,7 +139,7 @@ export default function CloudAccountPage() {
       </Form>
 
       <Table
-        rowKey='id'
+        rowKey="id"
         loading={loading}
         dataSource={data}
         columns={columns as any}
@@ -147,19 +147,19 @@ export default function CloudAccountPage() {
       />
 
       <Modal
-        title='新增云账号'
+        title="新增云账号"
         open={createOpen}
         onCancel={() => setCreateOpen(false)}
         onOk={handleCreate}
         destroyOnClose
       >
-        <Form form={createForm} layout='vertical'>
+        <Form form={createForm} layout="vertical">
           <Form.Item
-            name='provider'
-            label='云厂商'
+            name="provider"
+            label="云厂商"
             rules={[{ required: true, message: '请选择云厂商' }]}
           >
-            <Select placeholder='请选择云厂商'>
+            <Select placeholder="请选择云厂商">
               {providerOptions.map(item => (
                 <Option key={item.value} value={item.value}>
                   {item.label}
@@ -168,21 +168,21 @@ export default function CloudAccountPage() {
             </Select>
           </Form.Item>
           <Form.Item
-            name='account_id'
-            label='账号ID'
+            name="account_id"
+            label="账号ID"
             rules={[{ required: true, message: '请输入账号ID' }]}
           >
-            <Input placeholder='例如 1234567890123456' />
+            <Input placeholder="例如 1234567890123456" />
           </Form.Item>
           <Form.Item
-            name='account_name'
-            label='账号名称'
+            name="account_name"
+            label="账号名称"
             rules={[{ required: true, message: '请输入账号名称' }]}
           >
-            <Input placeholder='例如 生产账号' />
+            <Input placeholder="例如 生产账号" />
           </Form.Item>
-          <Form.Item name='credential_ref' label='凭据引用'>
-            <Input placeholder='例如 aliyun-prod-credential' />
+          <Form.Item name="credential_ref" label="凭据引用">
+            <Input placeholder="例如 aliyun-prod-credential" />
           </Form.Item>
         </Form>
       </Modal>

@@ -9,10 +9,10 @@ export const metadata: Metadata = {
 
 export default function ServiceRequestsPage() {
   return (
-    <div className='p-6'>
-      <div className='mb-6'>
-        <h1 className='text-2xl font-bold text-gray-900'>服务请求</h1>
-        <p className='text-gray-500'>查看我的请求状态及处理待办审批</p>
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">服务请求</h1>
+        <p className="text-gray-500">查看我的请求状态及处理待办审批</p>
       </div>
       <ServiceRequestList />
     </div>

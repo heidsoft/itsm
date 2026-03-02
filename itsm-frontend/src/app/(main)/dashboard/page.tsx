@@ -114,11 +114,11 @@ export default function DashboardPage() {
       key: 'auto-refresh',
       label: (
         <div
-          className='flex items-center justify-between min-w-[200px]'
+          className="flex items-center justify-between min-w-[200px]"
           onClick={e => e.stopPropagation()}
         >
-          <span className='text-sm font-medium'>自动刷新</span>
-          <Switch checked={autoRefresh} onChange={handleAutoRefreshToggle} size='small' />
+          <span className="text-sm font-medium">自动刷新</span>
+          <Switch checked={autoRefresh} onChange={handleAutoRefreshToggle} size="small" />
         </div>
       ),
     },
@@ -126,15 +126,15 @@ export default function DashboardPage() {
       key: 'interval',
       label: (
         <div
-          className='flex items-center justify-between min-w-[200px]'
+          className="flex items-center justify-between min-w-[200px]"
           onClick={e => e.stopPropagation()}
         >
-          <span className='text-sm font-medium'>刷新间隔</span>
+          <span className="text-sm font-medium">刷新间隔</span>
           <Select
             value={refreshInterval}
             onChange={value => handleRefreshIntervalChange(Number(value))}
-            className='w-[100px]'
-            size='small'
+            className="w-[100px]"
+            size="small"
             disabled={!autoRefresh}
             onClick={e => e.stopPropagation()}
             options={[
@@ -151,8 +151,8 @@ export default function DashboardPage() {
     {
       key: 'connection',
       label: (
-        <div className='flex items-center justify-between min-w-[200px]'>
-          <span className='text-sm font-medium'>连接状态</span>
+        <div className="flex items-center justify-between min-w-[200px]">
+          <span className="text-sm font-medium">连接状态</span>
           <Badge
             status={isConnected ? 'success' : 'error'}
             text={isConnected ? '已连接' : '未连接'}
@@ -163,9 +163,9 @@ export default function DashboardPage() {
     {
       key: 'last-updated',
       label: (
-        <div className='flex items-center justify-between min-w-[200px]'>
-          <span className='text-sm font-medium'>最后更新</span>
-          <span className='text-xs text-gray-500 font-medium'>
+        <div className="flex items-center justify-between min-w-[200px]">
+          <span className="text-sm font-medium">最后更新</span>
+          <span className="text-xs text-gray-500 font-medium">
             {lastUpdated ? new Date(lastUpdated).toLocaleTimeString() : '从未'}
           </span>
         </div>
@@ -176,18 +176,18 @@ export default function DashboardPage() {
   // 错误状态
   if (error) {
     return (
-      <Card className='text-center py-16 rounded-xl border-0 shadow-sm' variant='borderless'>
-        <div className='text-red-500 mb-4 flex justify-center'>
+      <Card className="text-center py-16 rounded-xl border-0 shadow-sm" variant="borderless">
+        <div className="text-red-500 mb-4 flex justify-center">
           <LayoutDashboard size={64} />
         </div>
-        <h3 className='text-xl font-bold text-gray-900 mb-2'>仪表盘加载失败</h3>
-        <p className='text-gray-600 mb-6'>{error}</p>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">仪表盘加载失败</h3>
+        <p className="text-gray-600 mb-6">{error}</p>
         <Button
-          type='primary'
-          size='large'
+          type="primary"
+          size="large"
           onClick={() => refresh()}
           icon={<RefreshCw />}
-          className='h-11 rounded-lg'
+          className="h-11 rounded-lg"
         >
           重新加载
         </Button>
@@ -212,26 +212,26 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className='p-6 min-h-screen bg-gray-50'>
+    <div className="p-6 min-h-screen bg-gray-50">
       {/* 简化顶部工具栏 */}
-      <div className='flex items-center justify-between mb-6 pb-4 border-b border-gray-200'>
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
         <div>
-          <h1 className='text-2xl font-bold text-gray-900 flex items-center gap-2'>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             ITSM 运营仪表盘
-            {isConnected && <Badge status='success' text='在线' />}
+            {isConnected && <Badge status="success" text="在线" />}
           </h1>
-          <p className='text-sm text-gray-600 mt-1'>实时监控系统运行状态和关键业务指标</p>
+          <p className="text-sm text-gray-600 mt-1">实时监控系统运行状态和关键业务指标</p>
         </div>
 
-        <Space size='middle'>
+        <Space size="middle">
           {lastUpdated && (
-            <span className='text-sm text-gray-500'>
+            <span className="text-sm text-gray-500">
               更新于 {new Date(lastUpdated).toLocaleTimeString()}
             </span>
           )}
 
           <Button
-            type='default'
+            type="default"
             icon={<RefreshCw className={loading ? 'animate-spin' : ''} />}
             onClick={() => refresh()}
             loading={loading}
@@ -239,7 +239,7 @@ export default function DashboardPage() {
             刷新
           </Button>
 
-          <Dropdown menu={{ items: controlMenuItems }} trigger={['click']} placement='bottomRight'>
+          <Dropdown menu={{ items: controlMenuItems }} trigger={['click']} placement="bottomRight">
             <Button icon={<Settings />}>设置</Button>
           </Dropdown>
         </Space>
@@ -250,20 +250,20 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* KPI指标卡片区域 */}
-          <div className='mb-6'>
+          <div className="mb-6">
             <KPICards metrics={data?.kpiMetrics || []} loading={loading} />
           </div>
 
-          <Divider className='my-8' />
+          <Divider className="my-8" />
 
           {/* 快速操作区域 */}
-          <div className='mb-6'>
-            <div className='mb-4'>
-              <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
-                <Zap className='text-orange-500 w-5 h-5' />
+          <div className="mb-6">
+            <div className="mb-4">
+              <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                <Zap className="text-orange-500 w-5 h-5" />
                 快速操作
               </h2>
-              <p className='text-sm text-gray-600'>常用功能快捷入口，提升工作效率</p>
+              <p className="text-sm text-gray-600">常用功能快捷入口，提升工作效率</p>
             </div>
             <QuickActions
               actions={data?.quickActions || []}
@@ -274,38 +274,38 @@ export default function DashboardPage() {
             />
           </div>
 
-          <Divider className='my-8' />
+          <Divider className="my-8" />
 
           {/* 图表分析区域 */}
-          <div className='mb-6'>
+          <div className="mb-6">
             <Card
-              className='rounded-xl border-0 shadow-sm'
-              variant='borderless'
+              className="rounded-xl border-0 shadow-sm"
+              variant="borderless"
               styles={{ body: { padding: '24px' } }}
             >
-              <div className='mb-5'>
-                <h2 className='text-lg font-bold text-gray-900 mb-1 flex items-center gap-2'>
-                  <LineChart className='text-blue-500 w-5 h-5' />
+              <div className="mb-5">
+                <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                  <LineChart className="text-blue-500 w-5 h-5" />
                   数据分析与趋势
                 </h2>
-                <p className='text-sm text-gray-600'>系统性能和业务趋势的可视化分析</p>
+                <p className="text-sm text-gray-600">系统性能和业务趋势的可视化分析</p>
               </div>
 
               <Tabs
                 activeKey={activeChartTab}
                 onChange={setActiveChartTab}
-                size='large'
+                size="large"
                 items={[
                   {
                     key: 'all',
                     label: (
-                      <span className='flex items-center gap-2'>
+                      <span className="flex items-center gap-2">
                         <LayoutDashboard />
                         全部图表
                       </span>
                     ),
                     children: (
-                      <div className='pt-4'>
+                      <div className="pt-4">
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
                             <TicketTrendChart data={data?.ticketTrend || []} />
@@ -335,13 +335,13 @@ export default function DashboardPage() {
                   {
                     key: 'tickets',
                     label: (
-                      <span className='flex items-center gap-2'>
+                      <span className="flex items-center gap-2">
                         <LineChart />
                         工单与事件
                       </span>
                     ),
                     children: (
-                      <div className='pt-4'>
+                      <div className="pt-4">
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
                             <TicketTrendChart data={data?.ticketTrend || []} />
@@ -362,13 +362,13 @@ export default function DashboardPage() {
                   {
                     key: 'performance',
                     label: (
-                      <span className='flex items-center gap-2'>
+                      <span className="flex items-center gap-2">
                         <TrendingUp />
                         性能与满意度
                       </span>
                     ),
                     children: (
-                      <div className='pt-4'>
+                      <div className="pt-4">
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
                             <SLAComplianceChart data={data?.slaData || []} />

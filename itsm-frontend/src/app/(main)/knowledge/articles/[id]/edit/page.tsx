@@ -94,10 +94,10 @@ export default function EditArticlePage() {
   };
 
   return (
-    <div className='p-6 min-h-screen bg-gray-50'>
-      <div className='mb-6'>
+    <div className="p-6 min-h-screen bg-gray-50">
+      <div className="mb-6">
         <Button
-          type='link'
+          type="link"
           icon={<ArrowLeftOutlined />}
           onClick={() => router.back()}
           style={{ paddingLeft: 0, color: '#666' }}
@@ -106,16 +106,16 @@ export default function EditArticlePage() {
         </Button>
       </div>
 
-      <Card title={<span className='text-lg font-medium'>编辑知识库文章</span>} loading={fetching}>
-        <Form form={form} layout='vertical' onFinish={handleSubmit}>
+      <Card title={<span className="text-lg font-medium">编辑知识库文章</span>} loading={fetching}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item
-                name='title'
-                label='文章标题'
+                name="title"
+                label="文章标题"
                 rules={[{ required: true, message: '请输入文章标题' }]}
               >
-                <Input placeholder='请输入文章标题' />
+                <Input placeholder="请输入文章标题" />
               </Form.Item>
             </Col>
           </Row>
@@ -123,11 +123,11 @@ export default function EditArticlePage() {
           <Row gutter={24}>
             <Col span={12}>
               <Form.Item
-                name='category'
-                label='分类'
+                name="category"
+                label="分类"
                 rules={[{ required: true, message: '请选择分类' }]}
               >
-                <Select placeholder='请选择分类'>
+                <Select placeholder="请选择分类">
                   {categories.map((cat, idx) => (
                     <Option key={idx} value={cat}>
                       {cat}
@@ -137,8 +137,8 @@ export default function EditArticlePage() {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='tags' label='标签'>
-                <Select mode='tags' placeholder='输入标签后按回车添加' style={{ width: '100%' }} />
+              <Form.Item name="tags" label="标签">
+                <Select mode="tags" placeholder="输入标签后按回车添加" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>
@@ -146,13 +146,13 @@ export default function EditArticlePage() {
           <Row gutter={24}>
             <Col span={24}>
               <Form.Item
-                name='content'
-                label='文章内容'
+                name="content"
+                label="文章内容"
                 rules={[{ required: true, message: '请输入文章内容' }]}
               >
                 <TextArea
                   rows={16}
-                  placeholder='请使用 Markdown 格式编写文章内容...
+                  placeholder="请使用 Markdown 格式编写文章内容...
 # 标题1
 ## 标题2
 
@@ -164,7 +164,7 @@ export default function EditArticlePage() {
 
 ### 注意事项
 - 注意一
-- 注意二'
+- 注意二"
                 />
               </Form.Item>
             </Col>
@@ -174,7 +174,7 @@ export default function EditArticlePage() {
 
           <Form.Item>
             <Space>
-              <Button type='primary' htmlType='submit' icon={<SaveOutlined />} loading={loading}>
+              <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
                 保存
               </Button>
               <Button onClick={handleCancel}>取消</Button>

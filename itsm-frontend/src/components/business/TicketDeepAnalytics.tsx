@@ -230,7 +230,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
   // 渲染图表
   const renderChart = () => {
     if (chartData.length === 0) {
-      return <Empty description='暂无数据' />;
+      return <Empty description="暂无数据" />;
     }
 
     const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2'];
@@ -238,43 +238,43 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
     switch (config.chart_type) {
       case 'line':
         return (
-          <ResponsiveContainer width='100%' height={400}>
+          <ResponsiveContainer width="100%" height={400}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='name' />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type='monotone' dataKey='value' stroke='#1890ff' strokeWidth={2} />
+              <Line type="monotone" dataKey="value" stroke="#1890ff" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         );
       case 'bar':
         return (
-          <ResponsiveContainer width='100%' height={400}>
+          <ResponsiveContainer width="100%" height={400}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='name' />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey='value' fill='#1890ff' />
+              <Bar dataKey="value" fill="#1890ff" />
             </BarChart>
           </ResponsiveContainer>
         );
       case 'pie':
         return (
-          <ResponsiveContainer width='100%' height={400}>
+          <ResponsiveContainer width="100%" height={400}>
             <PieChart>
               <Pie
                 data={chartData}
-                cx='50%'
-                cy='50%'
+                cx="50%"
+                cy="50%"
                 labelLine={false}
                 label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                 outerRadius={120}
-                fill='#8884d8'
-                dataKey='value'
+                fill="#8884d8"
+                dataKey="value"
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -286,18 +286,18 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         );
       case 'area':
         return (
-          <ResponsiveContainer width='100%' height={400}>
+          <ResponsiveContainer width="100%" height={400}>
             <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='name' />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
               <Legend />
               <Area
-                type='monotone'
-                dataKey='value'
-                stroke='#1890ff'
-                fill='#1890ff'
+                type="monotone"
+                dataKey="value"
+                stroke="#1890ff"
+                fill="#1890ff"
                 fillOpacity={0.6}
               />
             </AreaChart>
@@ -314,7 +314,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
                 ? [{ title: '平均响应时间', dataIndex: 'avg_time', key: 'avg_time' }]
                 : []),
             ]}
-            rowKey='name'
+            rowKey="name"
             pagination={false}
           />
         );
@@ -324,10 +324,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
   };
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* 工具栏 */}
       <Card>
-        <div className='flex items-center justify-between mb-4'>
+        <div className="flex items-center justify-between mb-4">
           <Title level={5} style={{ margin: 0 }}>
             深度数据分析
           </Title>
@@ -353,7 +353,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         </div>
 
         {/* 时间范围和快速筛选 */}
-        <Space className='mb-4' wrap>
+        <Space className="mb-4" wrap>
           <RangePicker
             value={[
               config.time_range[0] ? dayjs(config.time_range[0]) : null,
@@ -373,19 +373,19 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             onChange={value => setConfig({ ...config, chart_type: value })}
             style={{ width: 120 }}
           >
-            <Option value='line'>
+            <Option value="line">
               <LineChartOutlined /> 折线图
             </Option>
-            <Option value='bar'>
+            <Option value="bar">
               <BarChartOutlined /> 柱状图
             </Option>
-            <Option value='pie'>
+            <Option value="pie">
               <PieChartOutlined /> 饼图
             </Option>
-            <Option value='area'>
+            <Option value="area">
               <AreaChart /> 面积图
             </Option>
-            <Option value='table'>
+            <Option value="table">
               <TableOutlined /> 表格
             </Option>
           </Select>
@@ -397,7 +397,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='总工单数'
+              title="总工单数"
               value={summaryData.total || 0}
               prefix={<BarChartOutlined />}
             />
@@ -406,7 +406,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='已解决'
+              title="已解决"
               value={summaryData.resolved || 0}
               styles={{ content: { color: '#3f8600' } }}
               prefix={<CheckCircleOutlined />}
@@ -416,10 +416,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='平均响应时间'
+              title="平均响应时间"
               value={summaryData.avg_response_time || 0}
               precision={1}
-              suffix='小时'
+              suffix="小时"
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
@@ -427,10 +427,10 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title='SLA合规率'
+              title="SLA合规率"
               value={summaryData.sla_compliance || 0}
               precision={1}
-              suffix='%'
+              suffix="%"
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
@@ -438,22 +438,22 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       </Row>
 
       {/* 图表 */}
-      <Card title='数据分析图表' loading={loading}>
+      <Card title="数据分析图表" loading={loading}>
         {renderChart()}
       </Card>
 
       {/* 配置模态框 */}
       <Modal
-        title='分析配置'
+        title="分析配置"
         open={configModalVisible}
         onOk={handleSaveConfig}
         onCancel={() => setConfigModalVisible(false)}
         width={800}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='dimensions'
-            label='分析维度'
+            name="dimensions"
+            label="分析维度"
             rules={[{ required: true, message: '请至少选择一个维度' }]}
           >
             <CheckboxGroup>
@@ -465,8 +465,8 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
             </CheckboxGroup>
           </Form.Item>
           <Form.Item
-            name='metrics'
-            label='分析指标'
+            name="metrics"
+            label="分析指标"
             rules={[{ required: true, message: '请至少选择一个指标' }]}
           >
             <CheckboxGroup>
@@ -477,17 +477,17 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
               ))}
             </CheckboxGroup>
           </Form.Item>
-          <Form.Item name='chart_type' label='图表类型'>
+          <Form.Item name="chart_type" label="图表类型">
             <Radio.Group>
-              <Radio value='line'>折线图</Radio>
-              <Radio value='bar'>柱状图</Radio>
-              <Radio value='pie'>饼图</Radio>
-              <Radio value='area'>面积图</Radio>
-              <Radio value='table'>表格</Radio>
+              <Radio value="line">折线图</Radio>
+              <Radio value="bar">柱状图</Radio>
+              <Radio value="pie">饼图</Radio>
+              <Radio value="area">面积图</Radio>
+              <Radio value="table">表格</Radio>
             </Radio.Group>
           </Form.Item>
-          <Form.Item name='group_by' label='分组方式'>
-            <Select placeholder='请选择分组方式' allowClear>
+          <Form.Item name="group_by" label="分组方式">
+            <Select placeholder="请选择分组方式" allowClear>
               {availableDimensions
                 .filter(d => d.type === 'category')
                 .map(dim => (

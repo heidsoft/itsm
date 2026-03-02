@@ -223,7 +223,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           icon: item.icon,
           label: (
             <div className={styles.menuItemLabel} title={item.description || item.label}>
-              <span className='truncate'>{item.label}</span>
+              <span className="truncate">{item.label}</span>
             </div>
           ),
           children: item.children.map((child: any) => ({
@@ -240,9 +240,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
         icon: item.icon,
         label: (
           <div className={styles.menuItemLabel} title={item.description || item.label}>
-            <span className='truncate'>{item.label}</span>
+            <span className="truncate">{item.label}</span>
             {item.badge && (
-              <Badge count={item.badge} size='small' className={styles.menuItemBadge} />
+              <Badge count={item.badge} size="small" className={styles.menuItemBadge} />
             )}
           </div>
         ),
@@ -281,11 +281,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       {/* 主菜单 */}
       <div className={styles.mainMenu} style={{ flex: 1, overflowY: 'auto' }}>
         <Menu
-          mode='inline'
+          mode="inline"
           selectedKeys={[pathname]}
           className={styles.customMenu}
           items={renderMenuItems(MENU_CONFIG.main)}
-          theme='light'
+          theme="light"
         />
       </div>
 
@@ -295,11 +295,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           {!collapsed && <div className={styles.adminMenuHeader}>管理功能</div>}
           <div className={styles.adminMenu}>
             <Menu
-              mode='inline'
+              mode="inline"
               selectedKeys={[pathname]}
               className={styles.customMenu}
               items={renderMenuItems(MENU_CONFIG.admin)}
-              theme='light'
+              theme="light"
             />
           </div>
         </div>

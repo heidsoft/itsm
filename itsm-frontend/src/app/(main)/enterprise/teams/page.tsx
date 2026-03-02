@@ -71,7 +71,7 @@ export default function TeamsPage() {
       title: '团队名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => <span className='font-medium'>{text}</span>,
+      render: (text: string) => <span className="font-medium">{text}</span>,
     },
     {
       title: '团队代码',
@@ -112,10 +112,10 @@ export default function TeamsPage() {
       title: '操作',
       key: 'action',
       render: (_: any, record: Team) => (
-        <Space size='middle'>
-          <Button type='text' icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+        <Space size="middle">
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -172,12 +172,12 @@ export default function TeamsPage() {
         breadcrumb: { items: [{ title: '首页' }, { title: '企业管理' }, { title: '团队管理' }] },
       }}
       extra={[
-        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchTeams} loading={fetching}>
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchTeams} loading={fetching}>
           刷新
         </Button>,
         <Button
-          key='create'
-          type='primary'
+          key="create"
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
             form.resetFields();
@@ -188,33 +188,33 @@ export default function TeamsPage() {
         </Button>,
       ]}
     >
-      <Table columns={columns} dataSource={teams} rowKey='id' loading={fetching} />
+      <Table columns={columns} dataSource={teams} rowKey="id" loading={fetching} />
 
       <Modal
-        title='新建/编辑团队'
+        title="新建/编辑团队"
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='团队名称'
+            name="name"
+            label="团队名称"
             rules={[{ required: true, message: '请输入团队名称' }]}
           >
-            <Input placeholder='请输入团队名称' />
+            <Input placeholder="请输入团队名称" />
           </Form.Item>
           <Form.Item
-            name='code'
-            label='团队代码'
+            name="code"
+            label="团队代码"
             rules={[{ required: true, message: '请输入团队代码' }]}
           >
-            <Input placeholder='请输入团队代码' />
+            <Input placeholder="请输入团队代码" />
           </Form.Item>
-          <Form.Item name='manager_id' label='负责人'>
+          <Form.Item name="manager_id" label="负责人">
             <Select
-              placeholder='请选择负责人'
+              placeholder="请选择负责人"
               options={users}
               showSearch
               filterOption={(input, option) =>
@@ -222,10 +222,10 @@ export default function TeamsPage() {
               }
             />
           </Form.Item>
-          <Form.Item name='members' label='成员'>
+          <Form.Item name="members" label="成员">
             <Select
-              mode='multiple'
-              placeholder='请选择成员'
+              mode="multiple"
+              placeholder="请选择成员"
               options={users}
               showSearch
               filterOption={(input, option) =>
@@ -233,7 +233,7 @@ export default function TeamsPage() {
               }
             />
           </Form.Item>
-          <Form.Item name='description' label='描述'>
+          <Form.Item name="description" label="描述">
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

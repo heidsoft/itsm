@@ -67,10 +67,10 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
 
   return (
     <DashboardChartCard
-      title='SLA 达成率监控'
-      subtitle='服务水平协议整体达成情况'
+      title="SLA 达成率监控"
+      subtitle="服务水平协议整体达成情况"
       icon={<GaugeIcon style={{ width: 20, height: 20 }} />}
-      iconColor='#8b5cf6'
+      iconColor="#8b5cf6"
       extra={<Tag color={status.color as any}>{status.text}</Tag>}
     >
       <div
@@ -85,10 +85,10 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
         {validData.length > 0 && typeof percentValue === 'number' && !isNaN(percentValue) ? (
           <>
             <Statistic
-              title='SLA 达成率'
+              title="SLA 达成率"
               value={averageSLA}
               precision={1}
-              suffix='%'
+              suffix="%"
               styles={{
                 content: {
                   fontSize: '48px',
@@ -99,7 +99,7 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
               }}
             />
             <Progress
-              type='dashboard'
+              type="dashboard"
               percent={percentValue}
               strokeColor={getProgressColor(averageSLA)}
               size={200}
@@ -124,24 +124,24 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
 
       {/* SLA服务详情 */}
       {validData.length > 0 && (
-        <div className='mt-4 space-y-3'>
+        <div className="mt-4 space-y-3">
           {validData.map((item, index) => {
             const actual = typeof item.actual === 'number' && !isNaN(item.actual) ? item.actual : 0;
             const target = typeof item.target === 'number' && !isNaN(item.target) ? item.target : 0;
             return (
-              <div key={index} className='flex items-center justify-between'>
-                <span className='text-sm text-gray-600 font-medium'>
+              <div key={index} className="flex items-center justify-between">
+                <span className="text-sm text-gray-600 font-medium">
                   {item.service || '未知服务'}
                 </span>
-                <div className='flex items-center gap-3'>
+                <div className="flex items-center gap-3">
                   <Progress
                     percent={actual}
-                    size='small'
+                    size="small"
                     strokeColor={actual >= target ? '#22c55e' : '#f59e0b'}
                     style={{ width: 120 }}
                     format={percent => `${percent?.toFixed(1) || 0}%`}
                   />
-                  <span className='text-xs text-gray-500 w-12 text-right'>目标{target}%</span>
+                  <span className="text-xs text-gray-500 w-12 text-right">目标{target}%</span>
                 </div>
               </div>
             );

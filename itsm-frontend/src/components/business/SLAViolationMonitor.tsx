@@ -297,7 +297,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       dataIndex: 'ticket_id',
       key: 'ticket_id',
       render: (id: number) => (
-        <Text code className='text-sm'>
+        <Text code className="text-sm">
           #{String(id).padStart(6, '0')}
         </Text>
       ),
@@ -358,7 +358,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       ellipsis: true,
       render: (desc: string) => (
         <Tooltip title={desc}>
-          <Text className='text-sm'>{desc}</Text>
+          <Text className="text-sm">{desc}</Text>
         </Tooltip>
       ),
     },
@@ -367,7 +367,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       dataIndex: 'created_at',
       key: 'created_at',
       render: (date: string) => (
-        <Text className='text-sm'>{dayjs(date).format('MM-DD HH:mm')}</Text>
+        <Text className="text-sm">{dayjs(date).format('MM-DD HH:mm')}</Text>
       ),
     },
     {
@@ -376,7 +376,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       render: (_: any, record: SLAViolation) => (
         <Space>
           <Button
-            size='small'
+            size="small"
             icon={<Eye size={14} />}
             onClick={() => {
               // 显示详情
@@ -384,7 +384,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
                 title: `违规详情 #${record.id}`,
                 width: 600,
                 content: (
-                  <div className='space-y-4'>
+                  <div className="space-y-4">
                     <div>
                       <Text strong>工单ID:</Text> #{record.ticket_id}
                     </div>
@@ -412,7 +412,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
           </Button>
           {record.status === 'open' && (
             <Popconfirm
-              title='确认标记为已解决？'
+              title="确认标记为已解决？"
               onConfirm={() => {
                 SLAApi.updateSLAViolationStatus(record.id, true) // 改为 true
                   .then(() => {
@@ -423,7 +423,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
                   .catch(() => message.error('状态更新失败'));
               }}
             >
-              <Button size='small' type='primary'>
+              <Button size="small" type="primary">
                 解决
               </Button>
             </Popconfirm>
@@ -434,13 +434,13 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
   ];
 
   return (
-    <div className='sla-violation-monitor'>
+    <div className="sla-violation-monitor">
       {/* 统计卡片 */}
-      <Row gutter={16} className='mb-6'>
+      <Row gutter={16} className="mb-6">
         <Col xs={24} sm={6}>
           <Card>
             <Statistic
-              title='总违规数'
+              title="总违规数"
               value={stats.total}
               prefix={<AlertTriangle size={20} />}
               styles={{ content: { color: '#1890ff' } }}
@@ -450,7 +450,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
         <Col xs={24} sm={6}>
           <Card>
             <Statistic
-              title='待处理'
+              title="待处理"
               value={stats.open}
               prefix={<XCircle size={20} />}
               styles={{ content: { color: '#ff4d4f' } }}
@@ -458,16 +458,16 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             <Progress
               percent={stats.total > 0 ? (stats.open / stats.total) * 100 : 0}
               showInfo={false}
-              strokeColor='#ff4d4f'
-              size='small'
-              className='mt-2'
+              strokeColor="#ff4d4f"
+              size="small"
+              className="mt-2"
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
           <Card>
             <Statistic
-              title='已解决'
+              title="已解决"
               value={stats.resolved}
               prefix={<CheckCircle size={20} />}
               styles={{ content: { color: '#52c41a' } }}
@@ -475,16 +475,16 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             <Progress
               percent={stats.total > 0 ? (stats.resolved / stats.total) * 100 : 0}
               showInfo={false}
-              strokeColor='#52c41a'
-              size='small'
-              className='mt-2'
+              strokeColor="#52c41a"
+              size="small"
+              className="mt-2"
             />
           </Card>
         </Col>
         <Col xs={24} sm={6}>
           <Card>
             <Statistic
-              title='严重违规'
+              title="严重违规"
               value={stats.critical}
               prefix={<Bell size={20} />}
               styles={{ content: { color: '#faad14' } }}
@@ -494,48 +494,48 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       </Row>
 
       {/* 过滤器和操作 */}
-      <Card className='mb-6'>
-        <Row justify='space-between' align='middle'>
+      <Card className="mb-6">
+        <Row justify="space-between" align="middle">
           <Col xs={24} lg={16}>
             <Space wrap>
               <Search
-                placeholder='搜索工单ID、类型或描述'
+                placeholder="搜索工单ID、类型或描述"
                 value={filters.search}
                 onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 style={{ width: 200 }}
               />
               <Select
-                placeholder='状态'
+                placeholder="状态"
                 value={filters.status}
                 onChange={value => setFilters(prev => ({ ...prev, status: value }))}
                 style={{ width: 120 }}
                 allowClear
               >
-                <Option value='open'>待处理</Option>
-                <Option value='investigating'>处理中</Option>
-                <Option value='resolved'>已解决</Option>
+                <Option value="open">待处理</Option>
+                <Option value="investigating">处理中</Option>
+                <Option value="resolved">已解决</Option>
               </Select>
               <Select
-                placeholder='严重程度'
+                placeholder="严重程度"
                 value={filters.severity}
                 onChange={value => setFilters(prev => ({ ...prev, severity: value }))}
                 style={{ width: 120 }}
                 allowClear
               >
-                <Option value='critical'>严重</Option>
-                <Option value='high'>高</Option>
-                <Option value='medium'>中</Option>
-                <Option value='low'>低</Option>
+                <Option value="critical">严重</Option>
+                <Option value="high">高</Option>
+                <Option value="medium">中</Option>
+                <Option value="low">低</Option>
               </Select>
               <Select
-                placeholder='违规类型'
+                placeholder="违规类型"
                 value={filters.type}
                 onChange={value => setFilters(prev => ({ ...prev, type: value }))}
                 style={{ width: 120 }}
                 allowClear
               >
-                <Option value='response_time'>响应超时</Option>
-                <Option value='resolution_time'>解决超时</Option>
+                <Option value="response_time">响应超时</Option>
+                <Option value="resolution_time">解决超时</Option>
               </Select>
               <RangePicker
                 value={filters.dateRange}
@@ -558,7 +558,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               </Button>
               {selectedRowKeys.length > 0 && (
                 <>
-                  <Button onClick={() => handleBatchUpdate('resolved')} type='primary'>
+                  <Button onClick={() => handleBatchUpdate('resolved')} type="primary">
                     批量解决 ({selectedRowKeys.length})
                   </Button>
                 </>
@@ -573,7 +573,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
         <Table
           dataSource={filteredViolations}
           columns={columns}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           rowSelection={{
             selectedRowKeys,
@@ -600,23 +600,23 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             SLA告警规则配置
           </Space>
         }
-        size='large'
+        size="large"
         style={{ width: 600 }}
         open={showRuleDrawer}
         onClose={() => setShowRuleDrawer(false)}
         extra={
-          <Button type='primary' icon={<Bell size={16} />} onClick={() => setShowRuleModal(true)}>
+          <Button type="primary" icon={<Bell size={16} />} onClick={() => setShowRuleModal(true)}>
             新建规则
           </Button>
         }
       >
-        <div className='space-y-4'>
+        <div className="space-y-4">
           {alertRules.map(rule => (
-            <Card key={rule.id} size='small'>
-              <Row justify='space-between' align='middle'>
+            <Card key={rule.id} size="small">
+              <Row justify="space-between" align="middle">
                 <Col>
-                  <div className='space-y-2'>
-                    <div className='flex items-center gap-2'>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
                       <Text strong>{rule.name}</Text>
                       <Tag color={rule.alert_level === 'critical' ? 'red' : 'orange'}>
                         {rule.alert_level === 'critical' ? '严重' : '警告'}
@@ -626,7 +626,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
                         text={rule.is_active ? '启用' : '禁用'}
                       />
                     </div>
-                    <Text type='secondary' className='text-sm'>
+                    <Text type="secondary" className="text-sm">
                       触发阈值: {rule.trigger_conditions.time_threshold_percent}% | 通知方式:{' '}
                       {rule.notification_channels.join(', ')}
                     </Text>
@@ -635,7 +635,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
                 <Col>
                   <Space>
                     <Button
-                      size='small'
+                      size="small"
                       icon={<Settings size={14} />}
                       onClick={() => {
                         setEditingRule(rule);
@@ -647,10 +647,10 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
                       编辑
                     </Button>
                     <Popconfirm
-                      title='确认删除此规则？'
+                      title="确认删除此规则？"
                       onConfirm={() => handleDeleteRule(rule.id)}
                     >
-                      <Button size='small' danger>
+                      <Button size="small" danger>
                         删除
                       </Button>
                     </Popconfirm>
@@ -661,9 +661,9 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
           ))}
 
           {alertRules.length === 0 && (
-            <div className='text-center py-8'>
-              <BellOff size={48} className='mx-auto mb-4 text-gray-400' />
-              <Text type='secondary'>暂无告警规则</Text>
+            <div className="text-center py-8">
+              <BellOff size={48} className="mx-auto mb-4 text-gray-400" />
+              <Text type="secondary">暂无告警规则</Text>
             </div>
           )}
         </div>
@@ -681,71 +681,71 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
         footer={null}
         width={600}
       >
-        <Form form={form} layout='vertical' onFinish={handleSaveRule}>
+        <Form form={form} layout="vertical" onFinish={handleSaveRule}>
           <Form.Item
-            name='name'
-            label='规则名称'
+            name="name"
+            label="规则名称"
             rules={[{ required: true, message: '请输入规则名称' }]}
           >
-            <Input placeholder='例如：高优先级工单告警' />
+            <Input placeholder="例如：高优先级工单告警" />
           </Form.Item>
 
           <Form.Item
-            name='alert_level'
-            label='告警级别'
+            name="alert_level"
+            label="告警级别"
             rules={[{ required: true, message: '请选择告警级别' }]}
           >
-            <Select placeholder='选择告警级别'>
-              <Option value='warning'>警告</Option>
-              <Option value='critical'>严重</Option>
+            <Select placeholder="选择告警级别">
+              <Option value="warning">警告</Option>
+              <Option value="critical">严重</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
             name={['trigger_conditions', 'time_threshold_percent']}
-            label='时间阈值 (%)'
+            label="时间阈值 (%)"
             rules={[{ required: true, message: '请输入时间阈值' }]}
           >
             <Input
-              type='number'
+              type="number"
               min={1}
               max={100}
-              placeholder='当SLA时间使用超过此百分比时触发告警'
-              suffix='%'
+              placeholder="当SLA时间使用超过此百分比时触发告警"
+              suffix="%"
             />
           </Form.Item>
 
           <Form.Item
             name={['trigger_conditions', 'violation_types']}
-            label='违规类型'
+            label="违规类型"
             rules={[{ required: true, message: '请选择违规类型' }]}
           >
-            <Select mode='multiple' placeholder='选择违规类型'>
-              <Option value='response_time'>响应超时</Option>
-              <Option value='resolution_time'>解决超时</Option>
+            <Select mode="multiple" placeholder="选择违规类型">
+              <Option value="response_time">响应超时</Option>
+              <Option value="resolution_time">解决超时</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            name='notification_channels'
-            label='通知方式'
+            name="notification_channels"
+            label="通知方式"
             rules={[{ required: true, message: '请选择通知方式' }]}
           >
-            <Select mode='multiple' placeholder='选择通知方式'>
-              <Option value='email'>邮件</Option>
-              <Option value='sms'>短信</Option>
-              <Option value='webhook'>Webhook</Option>
-              <Option value='push'>推送通知</Option>
+            <Select mode="multiple" placeholder="选择通知方式">
+              <Option value="email">邮件</Option>
+              <Option value="sms">短信</Option>
+              <Option value="webhook">Webhook</Option>
+              <Option value="push">推送通知</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item name='is_active' label='启用状态' valuePropName='checked' initialValue={true}>
-            <Switch checkedChildren='启用' unCheckedChildren='禁用' />
+          <Form.Item name="is_active" label="启用状态" valuePropName="checked" initialValue={true}>
+            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
 
           <Form.Item>
             <Space>
-              <Button type='primary' htmlType='submit'>
+              <Button type="primary" htmlType="submit">
                 {editingRule ? '更新' : '创建'}
               </Button>
               <Button

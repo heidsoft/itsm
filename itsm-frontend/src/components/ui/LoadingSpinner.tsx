@@ -69,9 +69,9 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
  */
 export const PageLoading: React.FC<{ message?: string }> = ({ message = '加载中...' }) => {
   return (
-    <div className='flex flex-col items-center justify-center min-h-screen bg-gray-50'>
-      <LoadingSpinner size='xl' />
-      <p className='mt-4 text-gray-600'>{message}</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+      <LoadingSpinner size="xl" />
+      <p className="mt-4 text-gray-600">{message}</p>
     </div>
   );
 };
@@ -81,7 +81,7 @@ export const PageLoading: React.FC<{ message?: string }> = ({ message = '加载�
  * 用于按钮内的加载状态
  */
 export const ButtonLoading: React.FC<{ className?: string }> = ({ className }) => {
-  return <LoadingSpinner size='sm' color='white' className={cn('mr-2', className)} />;
+  return <LoadingSpinner size="sm" color="white" className={cn('mr-2', className)} />;
 };
 
 /**
@@ -90,9 +90,9 @@ export const ButtonLoading: React.FC<{ className?: string }> = ({ className }) =
  */
 export const CardLoading: React.FC<{ message?: string }> = ({ message = '加载中...' }) => {
   return (
-    <div className='flex flex-col items-center justify-center py-12'>
-      <LoadingSpinner size='lg' />
-      <p className='mt-4 text-gray-600'>{message}</p>
+    <div className="flex flex-col items-center justify-center py-12">
+      <LoadingSpinner size="lg" />
+      <p className="mt-4 text-gray-600">{message}</p>
     </div>
   );
 };

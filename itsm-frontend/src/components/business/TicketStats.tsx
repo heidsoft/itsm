@@ -33,9 +33,9 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ title, value, icon, colo
       className={`border-0 shadow-sm hover:shadow-md transition-all duration-300 bg-gradient-to-br ${bgColor}`}
       styles={{ body: { padding: '16px' } }}
     >
-      <div className='flex items-center justify-between'>
+      <div className="flex items-center justify-between">
         <div>
-          <div className='text-xs text-gray-600 mb-1 font-medium'>{title}</div>
+          <div className="text-xs text-gray-600 mb-1 font-medium">{title}</div>
           <div className={`text-xl font-bold ${color}`}>{value.toLocaleString()}</div>
         </div>
         <div
@@ -45,7 +45,7 @@ const StatCard: React.FC<StatCardProps> = React.memo(({ title, value, icon, colo
           )} rounded-lg flex items-center justify-center shadow-sm`}
           style={{ opacity: 0.9 }}
         >
-          <span className='text-white text-xl'>{icon}</span>
+          <span className="text-white text-xl">{icon}</span>
         </div>
       </div>
     </Card>
@@ -58,13 +58,13 @@ const TicketStatsSkeleton: React.FC = () => (
   <Row gutter={[12, 12]}>
     {Array.from({ length: 4 }).map((_, index) => (
       <Col key={index} xs={24} sm={12} md={6} lg={6} xl={6}>
-        <Card className='border-0 shadow-sm' styles={{ body: { padding: '16px' } }}>
-          <div className='flex items-center justify-between'>
+        <Card className="border-0 shadow-sm" styles={{ body: { padding: '16px' } }}>
+          <div className="flex items-center justify-between">
             <div>
               <Skeleton.Input active style={{ width: '80px', height: '16px' }} />
               <Skeleton.Input active style={{ width: '50px', height: '24px', marginTop: '8px' }} />
             </div>
-            <Skeleton.Avatar active size='large' shape='square' />
+            <Skeleton.Avatar active size="large" shape="square" />
           </div>
         </Card>
       </Col>
@@ -117,7 +117,7 @@ export const TicketStats: React.FC<TicketStatsProps> = React.memo(({ stats, load
   ];
 
   return (
-    <div className='mb-4'>
+    <div className="mb-4">
       <Row gutter={[12, 12]}>
         {statCards.map((card, index) => (
           <StatCard

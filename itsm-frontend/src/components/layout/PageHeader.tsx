@@ -35,7 +35,7 @@ export function PageHeader({ title, description, extra, showBackButton = false }
       {/* 返回按钮 */}
       {showBackButton && (
         <div style={{ marginBottom: 16 }}>
-          <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()} size='small'>
+          <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()} size="small">
             返回
           </Button>
         </div>

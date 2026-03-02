@@ -397,15 +397,15 @@ const NotificationCenter: React.FC<{
   const getChannelIcon = (type: string) => {
     switch (type) {
       case 'email':
-        return <Mail className='w-4 h-4' />;
+        return <Mail className="w-4 h-4" />;
       case 'sms':
-        return <Smartphone className='w-4 h-4' />;
+        return <Smartphone className="w-4 h-4" />;
       case 'webhook':
-        return <MessageSquare className='w-4 h-4' />;
+        return <MessageSquare className="w-4 h-4" />;
       case 'in_app':
-        return <Bell className='w-4 h-4' />;
+        return <Bell className="w-4 h-4" />;
       default:
-        return <Bell className='w-4 h-4' />;
+        return <Bell className="w-4 h-4" />;
     }
   };
 
@@ -427,15 +427,15 @@ const NotificationCenter: React.FC<{
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'sent':
-        return <CheckCircle className='w-4 h-4' />;
+        return <CheckCircle className="w-4 h-4" />;
       case 'pending':
-        return <Clock className='w-4 h-4' />;
+        return <Clock className="w-4 h-4" />;
       case 'failed':
-        return <AlertCircle className='w-4 h-4' />;
+        return <AlertCircle className="w-4 h-4" />;
       case 'read':
-        return <CheckCircle className='w-4 h-4' />;
+        return <CheckCircle className="w-4 h-4" />;
       default:
-        return <Clock className='w-4 h-4' />;
+        return <Clock className="w-4 h-4" />;
     }
   };
 
@@ -444,10 +444,10 @@ const NotificationCenter: React.FC<{
       title: '通知内容',
       key: 'content',
       render: (_, record) => (
-        <div className='space-y-1'>
-          <div className='font-medium'>{record.title}</div>
-          <div className='text-sm text-gray-600'>{record.message}</div>
-          <div className='flex items-center gap-2 text-xs text-gray-500'>
+        <div className="space-y-1">
+          <div className="font-medium">{record.title}</div>
+          <div className="text-sm text-gray-600">{record.message}</div>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
             {getChannelIcon(record.channel)}
             <span>{record.recipient}</span>
             <span>•</span>
@@ -504,20 +504,20 @@ const NotificationCenter: React.FC<{
       key: 'actions',
       width: 120,
       render: (_, record) => (
-        <Space size='small'>
+        <Space size="small">
           {record.status === 'pending' && (
-            <Button size='small' onClick={() => handleMarkRead(record.id)}>
+            <Button size="small" onClick={() => handleMarkRead(record.id)}>
               标记已读
             </Button>
           )}
           <Popconfirm
-            title='确认删除'
-            description='确定要删除这条通知吗？'
+            title="确认删除"
+            description="确定要删除这条通知吗？"
             onConfirm={() => handleDeleteNotification(record.id)}
-            okText='确认'
-            cancelText='取消'
+            okText="确认"
+            cancelText="取消"
           >
-            <Button size='small' danger icon={<Trash2 className='w-3 h-3' />} />
+            <Button size="small" danger icon={<Trash2 className="w-3 h-3" />} />
           </Popconfirm>
         </Space>
       ),
@@ -529,9 +529,9 @@ const NotificationCenter: React.FC<{
       title: '模板名称',
       key: 'name',
       render: (_, record) => (
-        <div className='space-y-1'>
-          <div className='font-medium'>{record.name}</div>
-          <div className='text-sm text-gray-600'>{record.description}</div>
+        <div className="space-y-1">
+          <div className="font-medium">{record.name}</div>
+          <div className="text-sm text-gray-600">{record.description}</div>
         </div>
       ),
     },
@@ -566,7 +566,7 @@ const NotificationCenter: React.FC<{
       key: 'channels',
       width: 150,
       render: (_, record) => (
-        <div className='flex gap-1'>
+        <div className="flex gap-1">
           {record.channels.map(channel => (
             <Tag key={channel}>
               {getChannelIcon(channel)}
@@ -597,10 +597,10 @@ const NotificationCenter: React.FC<{
       key: 'actions',
       width: 120,
       render: (_, record) => (
-        <Space size='small'>
+        <Space size="small">
           <Button
-            size='small'
-            icon={<Edit className='w-3 h-3' />}
+            size="small"
+            icon={<Edit className="w-3 h-3" />}
             onClick={() => {
               setSelectedTemplate(record);
               form.setFieldsValue(record);
@@ -610,8 +610,8 @@ const NotificationCenter: React.FC<{
             编辑
           </Button>
           <Button
-            size='small'
-            icon={<Copy className='w-3 h-3' />}
+            size="small"
+            icon={<Copy className="w-3 h-3" />}
             onClick={() => {
               const newTemplate = { ...record, id: Date.now(), name: `${record.name}_副本` };
               setTemplates(prev => [...prev, newTemplate]);
@@ -630,9 +630,9 @@ const NotificationCenter: React.FC<{
       title: '通道名称',
       key: 'name',
       render: (_, record) => (
-        <div className='space-y-1'>
-          <div className='font-medium'>{record.name}</div>
-          <div className='text-sm text-gray-600'>
+        <div className="space-y-1">
+          <div className="font-medium">{record.name}</div>
+          <div className="text-sm text-gray-600">
             {record.type === 'email'
               ? 'SMTP邮件服务'
               : record.type === 'sms'
@@ -649,7 +649,7 @@ const NotificationCenter: React.FC<{
       key: 'status',
       width: 120,
       render: (_, record) => (
-        <div className='space-y-1'>
+        <div className="space-y-1">
           <Tag color={record.is_active ? 'success' : 'default'}>
             {record.is_active ? '启用' : '禁用'}
           </Tag>
@@ -676,7 +676,7 @@ const NotificationCenter: React.FC<{
       key: 'last_used',
       width: 150,
       render: (_, record) => (
-        <div className='text-sm text-gray-500'>
+        <div className="text-sm text-gray-500">
           {record.last_used ? new Date(record.last_used).toLocaleString() : '从未使用'}
         </div>
       ),
@@ -686,13 +686,13 @@ const NotificationCenter: React.FC<{
       key: 'actions',
       width: 150,
       render: (_, record) => (
-        <Space size='small'>
-          <Button size='small' onClick={() => handleTestChannel(record.id)}>
+        <Space size="small">
+          <Button size="small" onClick={() => handleTestChannel(record.id)}>
             测试
           </Button>
           <Button
-            size='small'
-            icon={<Edit className='w-3 h-3' />}
+            size="small"
+            icon={<Edit className="w-3 h-3" />}
             onClick={() => {
               setSelectedChannel(record);
               channelForm.setFieldsValue(record);
@@ -709,14 +709,14 @@ const NotificationCenter: React.FC<{
   return (
     <Drawer
       title={
-        <div className='flex items-center gap-2'>
-          <Bell className='w-5 h-5 text-blue-500' />
+        <div className="flex items-center gap-2">
+          <Bell className="w-5 h-5 text-blue-500" />
           <span>通知中心</span>
-          {stats.unread > 0 && <Badge count={stats.unread} size='small' />}
+          {stats.unread > 0 && <Badge count={stats.unread} size="small" />}
         </div>
       }
-      placement='right'
-      size='large'
+      placement="right"
+      size="large"
       style={{ width: 800 }}
       open={open}
       onClose={onClose}
@@ -728,59 +728,59 @@ const NotificationCenter: React.FC<{
       }}
     >
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab='通知列表' key='notifications'>
-          <div className='space-y-4'>
+        <TabPane tab="通知列表" key="notifications">
+          <div className="space-y-4">
             {/* 统计卡片 */}
             <Row gutter={[16, 16]}>
               <Col span={6}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='总通知'
+                    title="总通知"
                     value={stats.total}
-                    prefix={<Bell className='w-4 h-4' />}
+                    prefix={<Bell className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
               <Col span={6}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='未读'
+                    title="未读"
                     value={stats.unread}
                     styles={{ content: { color: '#1890ff' } }}
-                    prefix={<AlertCircle className='w-4 h-4' />}
+                    prefix={<AlertCircle className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
               <Col span={6}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='今日发送'
+                    title="今日发送"
                     value={stats.sent_today}
                     styles={{ content: { color: '#52c41a' } }}
-                    prefix={<CheckCircle className='w-4 h-4' />}
+                    prefix={<CheckCircle className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
               <Col span={6}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='发送成功率'
+                    title="发送成功率"
                     value={stats.delivery_rate}
-                    suffix='%'
+                    suffix="%"
                     styles={{ content: { color: '#52c41a' } }}
-                    prefix={<Progress type='circle' size={24} percent={stats.delivery_rate} />}
+                    prefix={<Progress type="circle" size={24} percent={stats.delivery_rate} />}
                   />
                 </Card>
               </Col>
             </Row>
 
             {/* 操作按钮 */}
-            <div className='flex justify-between items-center'>
+            <div className="flex justify-between items-center">
               <Space>
-                <Button icon={<Filter className='w-4 h-4' />} onClick={() => {}}>
+                <Button icon={<Filter className="w-4 h-4" />} onClick={() => {}}>
                   筛选
                 </Button>
-                <Button icon={<Download className='w-4 h-4' />} onClick={() => {}}>
+                <Button icon={<Download className="w-4 h-4" />} onClick={() => {}}>
                   导出
                 </Button>
               </Space>
@@ -795,7 +795,7 @@ const NotificationCenter: React.FC<{
             <Table
               columns={notificationColumns}
               dataSource={notifications}
-              rowKey='id'
+              rowKey="id"
               loading={loading}
               pagination={{
                 pageSize: 10,
@@ -803,18 +803,18 @@ const NotificationCenter: React.FC<{
                 showQuickJumper: true,
                 showTotal: total => `共 ${total} 条记录`,
               }}
-              size='small'
+              size="small"
             />
           </div>
         </TabPane>
 
-        <TabPane tab='通知模板' key='templates'>
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
+        <TabPane tab="通知模板" key="templates">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
               <Title level={5}>通知模板管理</Title>
               <Button
-                type='primary'
-                icon={<Plus className='w-4 h-4' />}
+                type="primary"
+                icon={<Plus className="w-4 h-4" />}
                 onClick={() => {
                   setSelectedTemplate(null);
                   form.resetFields();
@@ -825,17 +825,17 @@ const NotificationCenter: React.FC<{
               </Button>
             </div>
 
-            <Table columns={templateColumns} dataSource={templates} rowKey='id' size='small' />
+            <Table columns={templateColumns} dataSource={templates} rowKey="id" size="small" />
           </div>
         </TabPane>
 
-        <TabPane tab='通知通道' key='channels'>
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
+        <TabPane tab="通知通道" key="channels">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
               <Title level={5}>通知通道配置</Title>
               <Button
-                type='primary'
-                icon={<Plus className='w-4 h-4' />}
+                type="primary"
+                icon={<Plus className="w-4 h-4" />}
                 onClick={() => {
                   setSelectedChannel(null);
                   channelForm.resetFields();
@@ -846,7 +846,7 @@ const NotificationCenter: React.FC<{
               </Button>
             </div>
 
-            <Table columns={channelColumns} dataSource={channels} rowKey='id' size='small' />
+            <Table columns={channelColumns} dataSource={channels} rowKey="id" size="small" />
           </div>
         </TabPane>
       </Tabs>
@@ -862,75 +862,75 @@ const NotificationCenter: React.FC<{
           form.resetFields();
         }}
         width={600}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            label='模板名称'
-            name='name'
+            label="模板名称"
+            name="name"
             rules={[{ required: true, message: '请输入模板名称' }]}
           >
-            <Input placeholder='请输入模板名称' />
+            <Input placeholder="请输入模板名称" />
           </Form.Item>
 
-          <Form.Item label='描述' name='description'>
-            <Input placeholder='请输入模板描述' />
+          <Form.Item label="描述" name="description">
+            <Input placeholder="请输入模板描述" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label='通知类型'
-                name='type'
+                label="通知类型"
+                name="type"
                 rules={[{ required: true, message: '请选择通知类型' }]}
               >
-                <Select placeholder='请选择通知类型'>
-                  <Option value='info'>信息</Option>
-                  <Option value='success'>成功</Option>
-                  <Option value='warning'>警告</Option>
-                  <Option value='error'>错误</Option>
+                <Select placeholder="请选择通知类型">
+                  <Option value="info">信息</Option>
+                  <Option value="success">成功</Option>
+                  <Option value="warning">警告</Option>
+                  <Option value="error">错误</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label='通知通道'
-                name='channels'
+                label="通知通道"
+                name="channels"
                 rules={[{ required: true, message: '请选择通知通道' }]}
               >
-                <Select mode='multiple' placeholder='请选择通知通道'>
-                  <Option value='in_app'>站内信</Option>
-                  <Option value='email'>邮件</Option>
-                  <Option value='sms'>短信</Option>
-                  <Option value='webhook'>Webhook</Option>
+                <Select mode="multiple" placeholder="请选择通知通道">
+                  <Option value="in_app">站内信</Option>
+                  <Option value="email">邮件</Option>
+                  <Option value="sms">短信</Option>
+                  <Option value="webhook">Webhook</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item label='邮件主题' name='subject'>
-            <Input placeholder='请输入邮件主题' />
+          <Form.Item label="邮件主题" name="subject">
+            <Input placeholder="请输入邮件主题" />
           </Form.Item>
 
           <Form.Item
-            label='模板内容'
-            name='content'
+            label="模板内容"
+            name="content"
             rules={[{ required: true, message: '请输入模板内容' }]}
           >
-            <TextArea rows={4} placeholder='请输入模板内容，支持变量：{{variable_name}}' />
+            <TextArea rows={4} placeholder="请输入模板内容，支持变量：{{variable_name}}" />
           </Form.Item>
 
-          <Form.Item label='可用变量' name='variables'>
-            <Select mode='tags' placeholder='输入变量名后按回车'>
-              <Option value='user_name'>用户名</Option>
-              <Option value='ticket_id'>工单ID</Option>
-              <Option value='ticket_title'>工单标题</Option>
-              <Option value='priority'>优先级</Option>
+          <Form.Item label="可用变量" name="variables">
+            <Select mode="tags" placeholder="输入变量名后按回车">
+              <Option value="user_name">用户名</Option>
+              <Option value="ticket_id">工单ID</Option>
+              <Option value="ticket_title">工单标题</Option>
+              <Option value="priority">优先级</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item label='启用状态' name='is_active' valuePropName='checked'>
+          <Form.Item label="启用状态" name="is_active" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
@@ -947,66 +947,66 @@ const NotificationCenter: React.FC<{
           channelForm.resetFields();
         }}
         width={600}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
-        <Form form={channelForm} layout='vertical'>
+        <Form form={channelForm} layout="vertical">
           <Form.Item
-            label='通道名称'
-            name='name'
+            label="通道名称"
+            name="name"
             rules={[{ required: true, message: '请输入通道名称' }]}
           >
-            <Input placeholder='请输入通道名称' />
+            <Input placeholder="请输入通道名称" />
           </Form.Item>
 
           <Form.Item
-            label='通道类型'
-            name='type'
+            label="通道类型"
+            name="type"
             rules={[{ required: true, message: '请选择通道类型' }]}
           >
-            <Select placeholder='请选择通道类型'>
-              <Option value='email'>邮件</Option>
-              <Option value='sms'>短信</Option>
-              <Option value='webhook'>Webhook</Option>
+            <Select placeholder="请选择通道类型">
+              <Option value="email">邮件</Option>
+              <Option value="sms">短信</Option>
+              <Option value="webhook">Webhook</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item label='启用状态' name='is_active' valuePropName='checked'>
+          <Form.Item label="启用状态" name="is_active" valuePropName="checked">
             <Switch />
           </Form.Item>
 
           <Divider>配置信息</Divider>
 
           <Form.Item
-            label='SMTP服务器'
+            label="SMTP服务器"
             name={['config', 'smtp_server']}
             rules={[{ required: true, message: '请输入SMTP服务器' }]}
           >
-            <Input placeholder='请输入SMTP服务器地址' />
+            <Input placeholder="请输入SMTP服务器地址" />
           </Form.Item>
 
           <Form.Item
-            label='SMTP端口'
+            label="SMTP端口"
             name={['config', 'smtp_port']}
             rules={[{ required: true, message: '请输入SMTP端口' }]}
           >
-            <Input type='number' placeholder='请输入SMTP端口' />
+            <Input type="number" placeholder="请输入SMTP端口" />
           </Form.Item>
 
           <Form.Item
-            label='用户名'
+            label="用户名"
             name={['config', 'username']}
             rules={[{ required: true, message: '请输入用户名' }]}
           >
-            <Input placeholder='请输入用户名' />
+            <Input placeholder="请输入用户名" />
           </Form.Item>
 
           <Form.Item
-            label='密码'
+            label="密码"
             name={['config', 'password']}
             rules={[{ required: true, message: '请输入密码' }]}
           >
-            <Input.Password placeholder='请输入密码' />
+            <Input.Password placeholder="请输入密码" />
           </Form.Item>
         </Form>
       </Modal>

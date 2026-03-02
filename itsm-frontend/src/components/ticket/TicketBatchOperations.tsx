@@ -279,19 +279,19 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         return (
           <>
             <Form.Item
-              label='分配给'
-              name='assignee_id'
+              label="分配给"
+              name="assignee_id"
               rules={[{ required: true, message: '请选择处理人' }]}
             >
-              <Select placeholder='选择处理人' showSearch filterOption>
+              <Select placeholder="选择处理人" showSearch filterOption>
                 {/* 这里应该从API获取用户列表 */}
                 <Option value={1}>张三</Option>
                 <Option value={2}>李四</Option>
                 <Option value={3}>王五</Option>
               </Select>
             </Form.Item>
-            <Form.Item label='分配备注' name='comment'>
-              <TextArea rows={3} placeholder='可选的分配备注' />
+            <Form.Item label="分配备注" name="comment">
+              <TextArea rows={3} placeholder="可选的分配备注" />
             </Form.Item>
           </>
         );
@@ -299,28 +299,28 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       case 'update_status':
         return (
           <Form.Item
-            label='新状态'
-            name='status'
+            label="新状态"
+            name="status"
             rules={[{ required: true, message: '请选择状态' }]}
           >
-            <Select placeholder='选择状态'>
-              <Option value='new'>新建</Option>
-              <Option value='open'>待处理</Option>
-              <Option value='in_progress'>处理中</Option>
-              <Option value='pending'>等待中</Option>
-              <Option value='resolved'>已解决</Option>
-              <Option value='closed'>已关闭</Option>
+            <Select placeholder="选择状态">
+              <Option value="new">新建</Option>
+              <Option value="open">待处理</Option>
+              <Option value="in_progress">处理中</Option>
+              <Option value="pending">等待中</Option>
+              <Option value="resolved">已解决</Option>
+              <Option value="closed">已关闭</Option>
             </Select>
           </Form.Item>
         );
 
       case 'add_tags':
         return (
-          <Form.Item label='标签' name='tags' rules={[{ required: true, message: '请输入标签' }]}>
-            <Select mode='tags' placeholder='输入标签，按回车添加' style={{ width: '100%' }}>
-              <Option value='urgent'>紧急</Option>
-              <Option value='sla'>SLA监控</Option>
-              <Option value='escalation'>已升级</Option>
+          <Form.Item label="标签" name="tags" rules={[{ required: true, message: '请输入标签' }]}>
+            <Select mode="tags" placeholder="输入标签，按回车添加" style={{ width: '100%' }}>
+              <Option value="urgent">紧急</Option>
+              <Option value="sla">SLA监控</Option>
+              <Option value="escalation">已升级</Option>
             </Select>
           </Form.Item>
         );
@@ -328,16 +328,16 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       case 'set_priority':
         return (
           <Form.Item
-            label='优先级'
-            name='priority'
+            label="优先级"
+            name="priority"
             rules={[{ required: true, message: '请选择优先级' }]}
           >
-            <Select placeholder='选择优先级'>
-              <Option value='low'>低</Option>
-              <Option value='medium'>中</Option>
-              <Option value='high'>高</Option>
-              <Option value='urgent'>紧急</Option>
-              <Option value='critical'>严重</Option>
+            <Select placeholder="选择优先级">
+              <Option value="low">低</Option>
+              <Option value="medium">中</Option>
+              <Option value="high">高</Option>
+              <Option value="urgent">紧急</Option>
+              <Option value="critical">严重</Option>
             </Select>
           </Form.Item>
         );
@@ -345,13 +345,13 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       case 'notify':
         return (
           <>
-            <Form.Item label='通知内容' name='notification' rules={[{ required: true }]}>
-              <TextArea rows={4} placeholder='输入通知内容' />
+            <Form.Item label="通知内容" name="notification" rules={[{ required: true }]}>
+              <TextArea rows={4} placeholder="输入通知内容" />
             </Form.Item>
-            <Form.Item name='notify_assignee' valuePropName='checked' initialValue={true}>
+            <Form.Item name="notify_assignee" valuePropName="checked" initialValue={true}>
               <Checkbox>通知处理人</Checkbox>
             </Form.Item>
-            <Form.Item name='notify_reporter' valuePropName='checked'>
+            <Form.Item name="notify_reporter" valuePropName="checked">
               <Checkbox>通知报告人</Checkbox>
             </Form.Item>
           </>
@@ -360,9 +360,9 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       case 'delete':
         return (
           <Alert
-            message='删除确认'
+            message="删除确认"
             description={`即将删除 ${selectedTickets.length} 个工单，此操作不可恢复。请确认是否继续？`}
-            type='error'
+            type="error"
             showIcon
           />
         );
@@ -387,20 +387,20 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   }
 
   return (
-    <div className='ticket-batch-operations'>
+    <div className="ticket-batch-operations">
       {/* 批量操作工具栏 */}
-      <div className='bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center space-x-4'>
-            <CheckCircleOutlined className='text-blue-600 text-lg' />
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <CheckCircleOutlined className="text-blue-600 text-lg" />
             <Text strong>已选择 {selectedTickets.length} 个工单</Text>
-            <Button size='small' onClick={onSelectionClear}>
+            <Button size="small" onClick={onSelectionClear}>
               清空选择
             </Button>
           </div>
 
-          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} placement='bottomRight'>
-            <Button type='primary' icon={<MoreOutlined />} loading={loading}>
+          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} placement="bottomRight">
+            <Button type="primary" icon={<MoreOutlined />} loading={loading}>
               批量操作
             </Button>
           </Dropdown>
@@ -417,14 +417,14 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         }}
         footer={[
           <Button
-            key='cancel'
+            key="cancel"
             onClick={() => setOperationModal({ visible: false, type: '', title: '' })}
           >
             取消
           </Button>,
           <Button
-            key='confirm'
-            type='primary'
+            key="confirm"
+            type="primary"
             danger={operationModal.type === 'delete'}
             loading={loading}
             onClick={() => form.submit()}
@@ -436,7 +436,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       >
         <Form
           form={form}
-          layout='vertical'
+          layout="vertical"
           onFinish={values => executeBatchOperation(operationModal.type, values)}
         >
           {renderOperationForm()}
@@ -445,22 +445,22 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
 
       {/* 操作进度模态框 */}
       <Modal
-        title='批量操作进度'
+        title="批量操作进度"
         open={operationProgress.visible}
         closable={false}
         footer={null}
         width={500}
       >
-        <div className='text-center py-6'>
+        <div className="text-center py-6">
           <Progress
             percent={Math.round((operationProgress.current / operationProgress.total) * 100)}
             status={operationProgress.current === operationProgress.total ? 'success' : 'active'}
           />
-          <div className='mt-4'>
+          <div className="mt-4">
             <Text>{operationProgress.status}</Text>
           </div>
-          <div className='mt-2'>
-            <Text type='secondary'>
+          <div className="mt-2">
+            <Text type="secondary">
               {operationProgress.current} / {operationProgress.total}
             </Text>
           </div>

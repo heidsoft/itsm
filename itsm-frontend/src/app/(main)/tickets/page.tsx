@@ -142,16 +142,16 @@ export default function TicketsPage() {
   };
 
   return (
-    <div className='min-h-screen bg-gray-50'>
+    <div className="min-h-screen bg-gray-50">
       {/* 页面头部 */}
-      <div className='bg-white border-b border-gray-200'>
-        <div className='w-full px-6 py-4'>
-          <div className='flex items-center justify-between'>
+      <div className="bg-white border-b border-gray-200">
+        <div className="w-full px-6 py-4">
+          <div className="flex items-center justify-between">
             <div>
               <Title level={2} style={{ marginBottom: 0 }}>
                 工单管理
               </Title>
-              <Text type='secondary'>
+              <Text type="secondary">
                 统一的工单处理平台，支持多维度视图切换、全生命周期管理、SLA 监控与智能分派
               </Text>
             </div>
@@ -162,11 +162,11 @@ export default function TicketsPage() {
               >
                 高级搜索
               </Button>
-              <Badge count={ticketStats.overdue} size='small'>
+              <Badge count={ticketStats.overdue} size="small">
                 <Button icon={<BellOutlined />}>SLA 预警</Button>
               </Badge>
-              <Link href='/tickets/create'>
-                <Button type='primary' icon={<PlusOutlined />}>
+              <Link href="/tickets/create">
+                <Button type="primary" icon={<PlusOutlined />}>
                   新建工单
                 </Button>
               </Link>
@@ -174,41 +174,41 @@ export default function TicketsPage() {
           </div>
 
           {/* 统计数据栏 */}
-          <div className='grid grid-cols-1 md:grid-cols-4 gap-4 mt-4'>
-            <Card size='small' className='rounded-lg shadow-sm'>
-              <div className='flex items-center justify-between'>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+            <Card size="small" className="rounded-lg shadow-sm">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Text type='secondary'>总工单</Text>
-                  <div className='text-2xl font-bold'>{ticketStats.total}</div>
+                  <Text type="secondary">总工单</Text>
+                  <div className="text-2xl font-bold">{ticketStats.total}</div>
                 </div>
-                <TableOutlined className='text-2xl text-blue-500' />
+                <TableOutlined className="text-2xl text-blue-500" />
               </div>
             </Card>
-            <Card size='small' className='rounded-lg shadow-sm'>
-              <div className='flex items-center justify-between'>
+            <Card size="small" className="rounded-lg shadow-sm">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Text type='secondary'>待处理</Text>
-                  <div className='text-2xl font-bold text-orange-500'>{ticketStats.open}</div>
+                  <Text type="secondary">待处理</Text>
+                  <div className="text-2xl font-bold text-orange-500">{ticketStats.open}</div>
                 </div>
-                <BellOutlined className='text-2xl text-orange-500' />
+                <BellOutlined className="text-2xl text-orange-500" />
               </div>
             </Card>
-            <Card size='small' className='rounded-lg shadow-sm'>
-              <div className='flex items-center justify-between'>
+            <Card size="small" className="rounded-lg shadow-sm">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Text type='secondary'>超时工单</Text>
-                  <div className='text-2xl font-bold text-red-500'>{ticketStats.overdue}</div>
+                  <Text type="secondary">超时工单</Text>
+                  <div className="text-2xl font-bold text-red-500">{ticketStats.overdue}</div>
                 </div>
-                <BellOutlined className='text-2xl text-red-500' />
+                <BellOutlined className="text-2xl text-red-500" />
               </div>
             </Card>
-            <Card size='small' className='rounded-lg shadow-sm'>
-              <div className='flex items-center justify-between'>
+            <Card size="small" className="rounded-lg shadow-sm">
+              <div className="flex items-center justify-between">
                 <div>
-                  <Text type='secondary'>今日新增</Text>
-                  <div className='text-2xl font-bold text-green-500'>{ticketStats.today}</div>
+                  <Text type="secondary">今日新增</Text>
+                  <div className="text-2xl font-bold text-green-500">{ticketStats.today}</div>
                 </div>
-                <PlusOutlined className='text-2xl text-green-500' />
+                <PlusOutlined className="text-2xl text-green-500" />
               </div>
             </Card>
           </div>
@@ -217,26 +217,26 @@ export default function TicketsPage() {
 
       {/* 高级搜索面板 */}
       {showAdvancedSearch && (
-        <div className='bg-gray-50 border-b border-gray-200'>
-          <div className='w-full px-6 py-4'>
+        <div className="bg-gray-50 border-b border-gray-200">
+          <div className="w-full px-6 py-4">
             <TicketAdvancedSearch onSearch={handleAdvancedSearch} onReset={handleSearchReset} />
           </div>
         </div>
       )}
 
       {/* 主内容区域 */}
-      <div className='w-full px-6 py-6'>
+      <div className="w-full px-6 py-6">
         {/* 标签页导航 */}
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
-          size='large'
-          className='mb-6'
+          size="large"
+          className="mb-6"
           items={[
             {
               key: 'list',
               label: (
-                <span className='flex items-center gap-2'>
+                <span className="flex items-center gap-2">
                   <TableOutlined />
                   列表视图
                 </span>
@@ -245,7 +245,7 @@ export default function TicketsPage() {
             {
               key: 'kanban',
               label: (
-                <span className='flex items-center gap-2'>
+                <span className="flex items-center gap-2">
                   <AppstoreOutlined />
                   看板视图
                 </span>
@@ -265,15 +265,15 @@ export default function TicketsPage() {
       </div>
 
       {/* 快捷操作浮动按钮 */}
-      <div className='fixed bottom-6 right-6 z-50'>
-        <Space orientation='vertical' size='middle'>
+      <div className="fixed bottom-6 right-6 z-50">
+        <Space orientation="vertical" size="middle">
           <Button
-            type='primary'
-            shape='circle'
-            size='large'
+            type="primary"
+            shape="circle"
+            size="large"
             icon={<PlusOutlined />}
             onClick={() => router.push('/tickets/create')}
-            className='shadow-lg hover:scale-110 transition-transform'
+            className="shadow-lg hover:scale-110 transition-transform"
           />
         </Space>
       </div>

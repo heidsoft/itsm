@@ -200,28 +200,28 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       key: 'actions',
       width: 150,
       render: (_: unknown, record: Incident) => (
-        <Space size='small'>
+        <Space size="small">
           <Button
-            type='text'
-            size='small'
+            type="text"
+            size="small"
             icon={<Eye size={16} />}
             onClick={() => onView(record)}
-            className='text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2'
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2"
             title={t('incidents.viewDetails')}
           />
           <Button
-            type='text'
-            size='small'
+            type="text"
+            size="small"
             icon={<Edit size={16} />}
             onClick={() => onEdit(record)}
-            className='text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2'
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
             title={t('incidents.editIncident')}
           />
           <Button
-            type='text'
-            size='small'
+            type="text"
+            size="small"
             icon={<MoreHorizontal size={16} />}
-            className='text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2'
+            className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2"
             title={t('incidents.moreActions')}
           />
         </Space>
@@ -230,7 +230,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   ];
 
   return (
-    <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <Table
         rowSelection={{
           selectedRowKeys,
@@ -238,7 +238,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
         }}
         columns={columns}
         dataSource={incidents}
-        rowKey='id'
+        rowKey="id"
         loading={loading}
         pagination={false}
         scroll={{ x: 1200 }}

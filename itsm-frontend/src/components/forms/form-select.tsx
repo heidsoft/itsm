@@ -96,34 +96,34 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
     const hiddenCount = selectedOptions.length - maxTagCount;
 
     return (
-      <div className='flex flex-wrap gap-1'>
+      <div className="flex flex-wrap gap-1">
         {visibleTags.map(option => (
           <span
             key={option.value}
-            className='inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800'
+            className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800"
           >
             {option.label}
             <button
-              type='button'
+              type="button"
               onClick={e => {
                 e.stopPropagation();
                 handleOptionClick(option);
               }}
-              className='ml-1 hover:text-blue-600'
+              className="ml-1 hover:text-blue-600"
             >
-              <svg className='h-3 w-3' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   strokeWidth={2}
-                  d='M6 18L18 6M6 6l12 12'
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
           </span>
         ))}
         {hiddenCount > 0 && (
-          <span className='inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-600'>
+          <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">
             +{hiddenCount}
           </span>
         )}
@@ -149,13 +149,13 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
     .join(' ');
 
   return (
-    <div ref={selectRef} className='relative'>
+    <div ref={selectRef} className="relative">
       <div className={selectClasses} onClick={() => !disabled && setIsOpen(!isOpen)}>
-        <div className='flex items-center min-h-[20px]'>
+        <div className="flex items-center min-h-[20px]">
           {multiple ? (
-            <div className='flex-1'>
+            <div className="flex-1">
               {renderSelectedTags()}
-              {selectedOptions.length === 0 && <span className='text-gray-500'>{placeholder}</span>}
+              {selectedOptions.length === 0 && <span className="text-gray-500">{placeholder}</span>}
             </div>
           ) : (
             <span className={selectedOptions.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
@@ -164,51 +164,51 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
           )}
         </div>
 
-        <div className='absolute inset-y-0 right-0 flex items-center pr-2'>
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2">
           {clearable && selectedOptions.length > 0 && (
-            <button type='button' onClick={handleClear} className='mr-1 hover:text-gray-600'>
-              <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+            <button type="button" onClick={handleClear} className="mr-1 hover:text-gray-600">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   strokeWidth={2}
-                  d='M6 18L18 6M6 6l12 12'
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
           )}
           <svg
             className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
-            <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </div>
       </div>
 
       {isOpen && (
-        <div className='absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200'>
+        <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-200">
           {searchable && (
-            <div className='p-2 border-b border-gray-200'>
+            <div className="p-2 border-b border-gray-200">
               <input
                 ref={searchInputRef}
-                type='text'
+                type="text"
                 value={searchQuery}
                 onChange={handleSearch}
-                placeholder='搜索选项...'
-                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500'
+                placeholder="搜索选项..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 autoFocus
               />
             </div>
           )}
 
-          <div className='max-h-60 overflow-auto py-1'>
+          <div className="max-h-60 overflow-auto py-1">
             {loading ? (
-              <div className='px-3 py-2 text-gray-500 text-center'>{loadingText}</div>
+              <div className="px-3 py-2 text-gray-500 text-center">{loadingText}</div>
             ) : filteredOptions.length === 0 ? (
-              <div className='px-3 py-2 text-gray-500 text-center'>{noOptionsText}</div>
+              <div className="px-3 py-2 text-gray-500 text-center">{noOptionsText}</div>
             ) : (
               filteredOptions.map(option => {
                 const isSelected = selectedValues.includes(option.value);
@@ -227,14 +227,14 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
                       .filter(Boolean)
                       .join(' ')}
                   >
-                    <span className='block truncate'>{option.label}</span>
+                    <span className="block truncate">{option.label}</span>
                     {isSelected && (
-                      <span className='absolute inset-y-0 right-0 flex items-center pr-4'>
-                        <svg className='h-5 w-5' viewBox='0 0 20 20' fill='currentColor'>
+                      <span className="absolute inset-y-0 right-0 flex items-center pr-4">
+                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                           <path
-                            fillRule='evenodd'
-                            d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-                            clipRule='evenodd'
+                            fillRule="evenodd"
+                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                            clipRule="evenodd"
                           />
                         </svg>
                       </span>

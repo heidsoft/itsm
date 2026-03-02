@@ -12,7 +12,7 @@ export default function CreateIncidentPage() {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 16 }}>
         <Button
-          type='link'
+          type="link"
           icon={<ArrowLeftOutlined />}
           onClick={() => router.back()}
           style={{ paddingLeft: 0, color: '#666' }}
@@ -20,8 +20,8 @@ export default function CreateIncidentPage() {
           返回列表
         </Button>
       </div>
-      <Card variant='borderless'>
-        <Result status='info' title='创建事件功能开发中' subTitle='请稍后重试，或联系管理员。' />
+      <Card variant="borderless">
+        <Result status="info" title="创建事件功能开发中" subTitle="请稍后重试，或联系管理员。" />
       </Card>
     </div>
   );

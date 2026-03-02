@@ -49,10 +49,10 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
       onOk={onConfirm}
       width={600}
     >
-      <Form form={form} layout='vertical' style={{ marginTop: 20 }}>
+      <Form form={form} layout="vertical" style={{ marginTop: 20 }}>
         <Form.Item
           label={t('serviceCatalog.name')}
-          name='name'
+          name="name"
           rules={[{ required: true, message: t('serviceCatalog.serviceNameRequired') }]}
         >
           <Input placeholder={t('serviceCatalog.name')} />
@@ -60,19 +60,19 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
 
         <Form.Item
           label={t('serviceCatalog.category')}
-          name='category'
+          name="category"
           rules={[{ required: true, message: t('serviceCatalog.serviceCategoryRequired') }]}
         >
           <Select placeholder={t('serviceCatalog.category')}>
-            <Option value='云资源服务'>{t('serviceCatalog.cloudResources')}</Option>
-            <Option value='账号与权限'>{t('serviceCatalog.accountPermissions')}</Option>
-            <Option value='安全服务'>{t('serviceCatalog.securityServices')}</Option>
+            <Option value="云资源服务">{t('serviceCatalog.cloudResources')}</Option>
+            <Option value="账号与权限">{t('serviceCatalog.accountPermissions')}</Option>
+            <Option value="安全服务">{t('serviceCatalog.securityServices')}</Option>
           </Select>
         </Form.Item>
 
         <Form.Item
           label={t('serviceCatalog.deliveryTime')}
-          name='deliveryTime'
+          name="deliveryTime"
           rules={[{ required: true, message: t('serviceCatalog.serviceDeliveryTimeRequired') }]}
         >
           <Input placeholder={t('serviceCatalog.deliveryTimePlaceholder')} />
@@ -80,16 +80,16 @@ export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({
 
         <Form.Item
           label={t('serviceCatalog.status')}
-          name='status'
+          name="status"
           rules={[{ required: true, message: t('serviceCatalog.serviceStatusRequired') }]}
         >
           <Select placeholder={t('serviceCatalog.status')}>
-            <Option value='enabled'>{t('serviceCatalog.enabled')}</Option>
-            <Option value='disabled'>{t('serviceCatalog.disabled')}</Option>
+            <Option value="enabled">{t('serviceCatalog.enabled')}</Option>
+            <Option value="disabled">{t('serviceCatalog.disabled')}</Option>
           </Select>
         </Form.Item>
 
-        <Form.Item label={t('serviceCatalog.serviceDescription')} name='description'>
+        <Form.Item label={t('serviceCatalog.serviceDescription')} name="description">
           <Input.TextArea
             placeholder={t('serviceCatalog.serviceDescriptionPlaceholder')}
             rows={4}

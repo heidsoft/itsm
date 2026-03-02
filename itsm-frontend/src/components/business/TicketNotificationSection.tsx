@@ -197,9 +197,9 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
   const unreadCount = notifications.filter(n => n.status !== 'read').length;
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* 操作栏 */}
-      <div className='flex justify-between items-center'>
+      <div className="flex justify-between items-center">
         <Space>
           <Title level={5} style={{ margin: 0 }}>
             通知历史
@@ -211,7 +211,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
           )}
         </Space>
         {canSend && (
-          <Button type='primary' icon={<Send />} onClick={() => setSendModalVisible(true)}>
+          <Button type="primary" icon={<Send />} onClick={() => setSendModalVisible(true)}>
             发送通知
           </Button>
         )}
@@ -220,7 +220,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
       {/* 通知列表 */}
       <Card loading={loading}>
         {notifications.length === 0 ? (
-          <Empty description='暂无通知' />
+          <Empty description="暂无通知" />
         ) : (
           <List
             dataSource={notifications}
@@ -229,10 +229,10 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
                 className={notification.status === 'read' ? 'opacity-70' : ''}
                 actions={[
                   notification.status !== 'read' && (
-                    <Tooltip title='标记为已读' key='read'>
+                    <Tooltip title="标记为已读" key="read">
                       <Button
-                        type='text'
-                        size='small'
+                        type="text"
+                        size="small"
                         icon={<Eye />}
                         onClick={() => handleMarkRead(notification.id)}
                       >
@@ -244,7 +244,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
               >
                 <List.Item.Meta
                   avatar={
-                    <div className='flex items-center justify-center w-10 h-10 rounded-full bg-blue-50'>
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-50">
                       {notification.status === 'read' ? (
                         <CheckCircle style={{ fontSize: 20, color: '#52c41a' }} />
                       ) : (
@@ -267,13 +267,13 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
                             ? '短信'
                             : '站内消息'}
                       </Tag>
-                      {notification.status !== 'read' && <Badge status='processing' text='未读' />}
+                      {notification.status !== 'read' && <Badge status="processing" text="未读" />}
                     </Space>
                   }
                   description={
-                    <div className='space-y-1'>
+                    <div className="space-y-1">
                       <Text>{notification.content}</Text>
-                      <div className='flex items-center space-x-4 text-xs text-gray-500'>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
                         <span>
                           <Clock style={{ fontSize: 12, marginRight: 4 }} />
                           创建时间: {formatDateTime(notification.created_at)}
@@ -307,20 +307,20 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
 
       {/* 发送通知模态框 */}
       <Modal
-        title='发送通知'
+        title="发送通知"
         open={sendModalVisible}
         onOk={() => form.submit()}
         onCancel={() => {
           setSendModalVisible(false);
           form.resetFields();
         }}
-        okText='发送'
-        cancelText='取消'
+        okText="发送"
+        cancelText="取消"
         width={600}
       >
         <Form
           form={form}
-          layout='vertical'
+          layout="vertical"
           onFinish={handleSendNotification}
           initialValues={{
             channel: 'in_app',
@@ -328,48 +328,48 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
           }}
         >
           <Form.Item
-            label='接收人'
-            name='user_ids'
+            label="接收人"
+            name="user_ids"
             rules={[{ required: true, message: '请选择接收人' }]}
           >
-            <UserSelect mode='multiple' placeholder='请选择接收人' />
+            <UserSelect mode="multiple" placeholder="请选择接收人" />
           </Form.Item>
 
           <Form.Item
-            label='通知类型'
-            name='type'
+            label="通知类型"
+            name="type"
             rules={[{ required: true, message: '请选择通知类型' }]}
           >
-            <Select placeholder='请选择通知类型'>
-              <Option value='created'>工单创建</Option>
-              <Option value='assigned'>工单分配</Option>
-              <Option value='status_changed'>状态变更</Option>
-              <Option value='commented'>新增评论</Option>
-              <Option value='sla_warning'>SLA警告</Option>
-              <Option value='resolved'>工单已解决</Option>
-              <Option value='closed'>工单已关闭</Option>
+            <Select placeholder="请选择通知类型">
+              <Option value="created">工单创建</Option>
+              <Option value="assigned">工单分配</Option>
+              <Option value="status_changed">状态变更</Option>
+              <Option value="commented">新增评论</Option>
+              <Option value="sla_warning">SLA警告</Option>
+              <Option value="resolved">工单已解决</Option>
+              <Option value="closed">工单已关闭</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            label='通知渠道'
-            name='channel'
+            label="通知渠道"
+            name="channel"
             rules={[{ required: true, message: '请选择通知渠道' }]}
           >
-            <Select placeholder='请选择通知渠道'>
-              <Option value='in_app'>
+            <Select placeholder="请选择通知渠道">
+              <Option value="in_app">
                 <Space>
                   <MessageSquare />
                   站内消息
                 </Space>
               </Option>
-              <Option value='email'>
+              <Option value="email">
                 <Space>
                   <Mail />
                   邮件
                 </Space>
               </Option>
-              <Option value='sms'>
+              <Option value="sms">
                 <Space>
                   <Smartphone />
                   短信
@@ -379,11 +379,11 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
           </Form.Item>
 
           <Form.Item
-            label='通知内容'
-            name='content'
+            label="通知内容"
+            name="content"
             rules={[{ required: true, message: '请输入通知内容' }]}
           >
-            <TextArea rows={4} placeholder='请输入通知内容...' showCount maxLength={500} />
+            <TextArea rows={4} placeholder="请输入通知内容..." showCount maxLength={500} />
           </Form.Item>
         </Form>
       </Modal>

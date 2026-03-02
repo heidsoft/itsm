@@ -235,7 +235,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
       <Space>
         <Select
           style={{ width: 200 }}
-          placeholder='选择视图'
+          placeholder="选择视图"
           value={currentViewId}
           onChange={handleViewSelect}
           loading={loading}
@@ -244,7 +244,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
               {menu}
               <Divider style={{ margin: '8px 0' }} />
               <Button
-                type='text'
+                type="text"
                 icon={<PlusOutlined />}
                 block
                 onClick={() => {
@@ -262,12 +262,12 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
               <Space>
                 <span>{view.name}</span>
                 {view.is_shared && (
-                  <Tag color='blue' style={{ marginRight: 0 }}>
+                  <Tag color="blue" style={{ marginRight: 0 }}>
                     共享
                   </Tag>
                 )}
                 {view.id === currentViewId && (
-                  <Tag color='green' style={{ marginRight: 0 }}>
+                  <Tag color="green" style={{ marginRight: 0 }}>
                     当前
                   </Tag>
                 )}
@@ -285,34 +285,34 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
 
       {/* 保存视图模态框 */}
       <Modal
-        title='保存视图'
+        title="保存视图"
         open={saveModalVisible}
         onOk={() => form.submit()}
         onCancel={() => {
           setSaveModalVisible(false);
           form.resetFields();
         }}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
         <Form
           form={form}
-          layout='vertical'
+          layout="vertical"
           onFinish={handleSaveView}
           initialValues={{ is_shared: false }}
         >
           <Form.Item
-            name='name'
-            label='视图名称'
+            name="name"
+            label="视图名称"
             rules={[{ required: true, message: '请输入视图名称' }]}
           >
-            <Input placeholder='例如：我的待处理工单' />
+            <Input placeholder="例如：我的待处理工单" />
           </Form.Item>
-          <Form.Item name='description' label='描述'>
-            <TextArea rows={3} placeholder='视图描述（可选）' />
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} placeholder="视图描述（可选）" />
           </Form.Item>
-          <Form.Item name='is_shared' valuePropName='checked'>
-            <Switch checkedChildren='共享' unCheckedChildren='私有' />
+          <Form.Item name="is_shared" valuePropName="checked">
+            <Switch checkedChildren="共享" unCheckedChildren="私有" />
             <div style={{ marginTop: 8, color: '#999', fontSize: 12 }}>
               共享后，团队成员可以看到并使用此视图
             </div>
@@ -322,7 +322,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
 
       {/* 编辑视图模态框 */}
       <Modal
-        title='编辑视图'
+        title="编辑视图"
         open={editModalVisible}
         onOk={() => form.submit()}
         onCancel={() => {
@@ -330,22 +330,22 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
           setEditingView(null);
           form.resetFields();
         }}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
-        <Form form={form} layout='vertical' onFinish={handleUpdateView}>
+        <Form form={form} layout="vertical" onFinish={handleUpdateView}>
           <Form.Item
-            name='name'
-            label='视图名称'
+            name="name"
+            label="视图名称"
             rules={[{ required: true, message: '请输入视图名称' }]}
           >
             <Input />
           </Form.Item>
-          <Form.Item name='description' label='描述'>
+          <Form.Item name="description" label="描述">
             <TextArea rows={3} />
           </Form.Item>
-          <Form.Item name='is_shared' valuePropName='checked'>
-            <Switch checkedChildren='共享' unCheckedChildren='私有' />
+          <Form.Item name="is_shared" valuePropName="checked">
+            <Switch checkedChildren="共享" unCheckedChildren="私有" />
             <div style={{ marginTop: 8, color: '#999', fontSize: 12 }}>
               共享后，团队成员可以看到并使用此视图
             </div>

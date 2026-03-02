@@ -155,27 +155,27 @@ const WORKFLOW_TYPE_CONFIG = {
   [WORKFLOW_TYPES.INCIDENT]: {
     label: '事件管理',
     color: 'red',
-    icon: <AlertCircle className='w-3 h-3' />,
+    icon: <AlertCircle className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.SERVICE_REQUEST]: {
     label: '服务请求',
     color: 'blue',
-    icon: <Users className='w-3 h-3' />,
+    icon: <Users className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.CHANGE]: {
     label: '变更管理',
     color: 'orange',
-    icon: <GitBranch className='w-3 h-3' />,
+    icon: <GitBranch className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.PROBLEM]: {
     label: '问题管理',
     color: 'purple',
-    icon: <Settings className='w-3 h-3' />,
+    icon: <Settings className="w-3 h-3" />,
   },
   [WORKFLOW_TYPES.APPROVAL]: {
     label: '审批流程',
     color: 'green',
-    icon: <CheckCircle className='w-3 h-3' />,
+    icon: <CheckCircle className="w-3 h-3" />,
   },
 };
 
@@ -184,17 +184,17 @@ const STATUS_CONFIG = {
   [WORKFLOW_STATUS.ACTIVE]: {
     label: '已启用',
     color: 'success',
-    icon: <Play className='w-3 h-3' />,
+    icon: <Play className="w-3 h-3" />,
   },
   [WORKFLOW_STATUS.INACTIVE]: {
     label: '已停用',
     color: 'default',
-    icon: <Pause className='w-3 h-3' />,
+    icon: <Pause className="w-3 h-3" />,
   },
   [WORKFLOW_STATUS.DRAFT]: {
     label: '草稿',
     color: 'processing',
-    icon: <Edit className='w-3 h-3' />,
+    icon: <Edit className="w-3 h-3" />,
   },
 };
 
@@ -391,16 +391,16 @@ const WorkflowManagement = () => {
       key: 'name',
       render: (_: unknown, record: Workflow) => (
         <div>
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <Text strong>{record.name}</Text>
-            <Badge count={record.version} color='blue' />
+            <Badge count={record.version} color="blue" />
           </div>
-          <Text type='secondary' className='text-sm'>
+          <Text type="secondary" className="text-sm">
             {record.description}
           </Text>
-          <div className='flex items-center gap-4 mt-1'>
-            <span className='text-xs text-gray-500'>创建者: {record.createdBy}</span>
-            <span className='text-xs text-gray-500'>步骤: {record.stepsCount}</span>
+          <div className="flex items-center gap-4 mt-1">
+            <span className="text-xs text-gray-500">创建者: {record.createdBy}</span>
+            <span className="text-xs text-gray-500">步骤: {record.stepsCount}</span>
           </div>
         </div>
       ),
@@ -438,10 +438,10 @@ const WorkflowManagement = () => {
       key: 'instances',
       align: 'center' as const,
       render: (_: unknown, record: Workflow) => (
-        <div className='text-center'>
-          <div className='text-lg font-bold text-blue-600'>{record.activeInstances}</div>
-          <div className='text-xs text-gray-500'>活跃实例</div>
-          <div className='text-xs text-gray-500'>已完成: {record.completedInstances}</div>
+        <div className="text-center">
+          <div className="text-lg font-bold text-blue-600">{record.activeInstances}</div>
+          <div className="text-xs text-gray-500">活跃实例</div>
+          <div className="text-xs text-gray-500">已完成: {record.completedInstances}</div>
         </div>
       ),
     },
@@ -458,14 +458,14 @@ const WorkflowManagement = () => {
               )
             : 0;
         return (
-          <div className='text-center'>
+          <div className="text-center">
             <Progress
-              type='circle'
+              type="circle"
               size={50}
               percent={completionRate}
               format={percent => `${percent}%`}
             />
-            <div className='text-xs text-gray-500 mt-1'>完成率</div>
+            <div className="text-xs text-gray-500 mt-1">完成率</div>
           </div>
         );
       },
@@ -476,9 +476,9 @@ const WorkflowManagement = () => {
       key: 'lastModified',
       align: 'center' as const,
       render: (date: string) => (
-        <div className='text-center'>
-          <div className='text-sm'>{date.split(' ')[0]}</div>
-          <div className='text-xs text-gray-500'>{date.split(' ')[1]}</div>
+        <div className="text-center">
+          <div className="text-sm">{date.split(' ')[0]}</div>
+          <div className="text-xs text-gray-500">{date.split(' ')[1]}</div>
         </div>
       ),
     },
@@ -488,17 +488,17 @@ const WorkflowManagement = () => {
       align: 'center' as const,
       render: (_: unknown, record: Workflow) => (
         <Space>
-          <Tooltip title='查看详情'>
+          <Tooltip title="查看详情">
             <Button
-              type='text'
-              icon={<Eye className='w-4 h-4' />}
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              type='text'
-              icon={<Edit className='w-4 h-4' />}
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
               onClick={() => {
                 setSelectedWorkflow(record);
                 form.setFieldsValue(record);
@@ -506,35 +506,35 @@ const WorkflowManagement = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title='复制'>
+          <Tooltip title="复制">
             <Button
-              type='text'
-              icon={<Copy className='w-4 h-4' />}
+              type="text"
+              icon={<Copy className="w-4 h-4" />}
               onClick={() => handleDuplicate(record)}
             />
           </Tooltip>
           <Tooltip title={record.status === WORKFLOW_STATUS.ACTIVE ? '停用' : '启用'}>
             <Button
-              type='text'
+              type="text"
               icon={
                 record.status === WORKFLOW_STATUS.ACTIVE ? (
-                  <Pause className='w-4 h-4' />
+                  <Pause className="w-4 h-4" />
                 ) : (
-                  <Play className='w-4 h-4' />
+                  <Play className="w-4 h-4" />
                 )
               }
               onClick={() => handleStatusToggle(record.id)}
             />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个工作流吗？'
-            description='删除后无法恢复，相关的实例将被停止。'
+            title="确定要删除这个工作流吗？"
+            description="删除后无法恢复，相关的实例将被停止。"
             onConfirm={() => handleDelete(record.id)}
-            okText='确定删除'
-            cancelText='取消'
-            okType='danger'
+            okText="确定删除"
+            cancelText="取消"
+            okType="danger"
           >
-            <Button type='text' danger icon={<Trash2 className='w-4 h-4' />} />
+            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
           </Popconfirm>
         </Space>
       ),
@@ -542,54 +542,54 @@ const WorkflowManagement = () => {
   ];
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div className='mb-6'>
-        <Title level={2} className='!mb-2'>
-          <GitBranch className='inline-block w-6 h-6 mr-2' />
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <GitBranch className="inline-block w-6 h-6 mr-2" />
           工作流管理
         </Title>
-        <Text type='secondary'>设计和管理业务流程，配置审批节点和自动化规则</Text>
+        <Text type="secondary">设计和管理业务流程，配置审批节点和自动化规则</Text>
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='工作流总数'
+              title="工作流总数"
               value={stats.total}
-              prefix={<GitBranch className='w-5 h-5' />}
+              prefix={<GitBranch className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='已启用'
+              title="已启用"
               value={stats.active}
-              prefix={<Play className='w-5 h-5' />}
+              prefix={<Play className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='活跃实例'
+              title="活跃实例"
               value={stats.totalInstances}
-              prefix={<Activity className='w-5 h-5' />}
+              prefix={<Activity className="w-5 h-5" />}
               styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='平均步骤数'
+              title="平均步骤数"
               value={stats.avgSteps}
-              prefix={<BarChart3 className='w-5 h-5' />}
+              prefix={<BarChart3 className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
@@ -597,12 +597,12 @@ const WorkflowManagement = () => {
       </Row>
 
       {/* 搜索和过滤 */}
-      <Card className='mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Input
-              placeholder='搜索工作流名称或描述...'
-              prefix={<Search className='w-4 h-4 text-gray-400' />}
+              placeholder="搜索工作流名称或描述..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               allowClear
@@ -610,12 +610,12 @@ const WorkflowManagement = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder='工作流类型'
+              placeholder="工作流类型"
               value={typeFilter}
               onChange={setTypeFilter}
               style={{ width: '100%' }}
             >
-              <Option value='all'>全部类型</Option>
+              <Option value="all">全部类型</Option>
               {Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => (
                 <Option key={key} value={key}>
                   {config.label}
@@ -625,12 +625,12 @@ const WorkflowManagement = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder='状态'
+              placeholder="状态"
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
             >
-              <Option value='all'>全部状态</Option>
+              <Option value="all">全部状态</Option>
               {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                 <Option key={key} value={key}>
                   {config.label}
@@ -638,24 +638,24 @@ const WorkflowManagement = () => {
               ))}
             </Select>
           </Col>
-          <Col xs={24} md={8} className='text-right'>
+          <Col xs={24} md={8} className="text-right">
             <Space>
               {selectedRowKeys.length > 0 && (
                 <Popconfirm
-                  title='确定要批量删除选中的工作流吗？'
+                  title="确定要批量删除选中的工作流吗？"
                   onConfirm={handleBatchDelete}
-                  okText='确定删除'
-                  cancelText='取消'
-                  okType='danger'
+                  okText="确定删除"
+                  cancelText="取消"
+                  okType="danger"
                 >
-                  <Button danger icon={<Trash2 className='w-4 h-4' />}>
+                  <Button danger icon={<Trash2 className="w-4 h-4" />}>
                     批量删除 ({selectedRowKeys.length})
                   </Button>
                 </Popconfirm>
               )}
               <Button
-                type='primary'
-                icon={<Plus className='w-4 h-4' />}
+                type="primary"
+                icon={<Plus className="w-4 h-4" />}
                 onClick={() => {
                   setSelectedWorkflow(null);
                   form.resetFields();
@@ -670,19 +670,19 @@ const WorkflowManagement = () => {
       </Card>
 
       {/* 工作流列表 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         {filteredWorkflows.length === 0 && !loading ? (
           <Alert
-            message='暂无工作流'
-            description='点击右上角按钮创建第一个工作流'
-            type='info'
+            message="暂无工作流"
+            description="点击右上角按钮创建第一个工作流"
+            type="info"
             showIcon
           />
         ) : (
           <Table
             columns={columns}
             dataSource={filteredWorkflows}
-            rowKey='id'
+            rowKey="id"
             rowSelection={rowSelection}
             loading={loading}
             pagination={{
@@ -692,7 +692,7 @@ const WorkflowManagement = () => {
               showQuickJumper: true,
               showTotal: total => `共 ${total} 条记录`,
             }}
-            className='enterprise-table'
+            className="enterprise-table"
           />
         )}
       </Card>
@@ -701,7 +701,7 @@ const WorkflowManagement = () => {
       <Modal
         title={
           <span>
-            <GitBranch className='w-4 h-4 mr-2' />
+            <GitBranch className="w-4 h-4 mr-2" />
             {selectedWorkflow ? '编辑工作流' : '创建工作流'}
           </span>
         }
@@ -714,34 +714,34 @@ const WorkflowManagement = () => {
         }}
         width={600}
         confirmLoading={loading}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
         <Alert
-          message='工作流设计器正在开发中'
-          description='当前仅支持基本信息编辑，完整的可视化工作流设计器即将发布！'
-          type='info'
+          message="工作流设计器正在开发中"
+          description="当前仅支持基本信息编辑，完整的可视化工作流设计器即将发布！"
+          type="info"
           showIcon
-          className='mb-4'
+          className="mb-4"
         />
-        <Form form={form} layout='vertical' className='mt-4'>
+        <Form form={form} layout="vertical" className="mt-4">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label='工作流名称'
-                name='name'
+                label="工作流名称"
+                name="name"
                 rules={[{ required: true, message: '请输入工作流名称' }]}
               >
-                <Input placeholder='请输入工作流名称' />
+                <Input placeholder="请输入工作流名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label='工作流类型'
-                name='type'
+                label="工作流类型"
+                name="type"
                 rules={[{ required: true, message: '请选择工作流类型' }]}
               >
-                <Select placeholder='选择工作流类型'>
+                <Select placeholder="选择工作流类型">
                   {Object.entries(WORKFLOW_TYPE_CONFIG).map(([key, config]) => (
                     <Option key={key} value={key}>
                       {config.label}
@@ -752,20 +752,20 @@ const WorkflowManagement = () => {
             </Col>
           </Row>
           <Form.Item
-            label='描述'
-            name='description'
+            label="描述"
+            name="description"
             rules={[{ required: true, message: '请输入工作流描述' }]}
           >
-            <Input.TextArea rows={3} placeholder='请输入工作流描述' />
+            <Input.TextArea rows={3} placeholder="请输入工作流描述" />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label='版本' name='version' initialValue='v1.0'>
-                <Input placeholder='如: v1.0' />
+              <Form.Item label="版本" name="version" initialValue="v1.0">
+                <Input placeholder="如: v1.0" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item label='状态' name='status' initialValue={WORKFLOW_STATUS.DRAFT}>
+              <Form.Item label="状态" name="status" initialValue={WORKFLOW_STATUS.DRAFT}>
                 <Select>
                   {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                     <Option key={key} value={key}>
@@ -782,8 +782,8 @@ const WorkflowManagement = () => {
       {/* 详情模态框 */}
       <Modal
         title={
-          <div className='flex items-center gap-2'>
-            <Eye className='w-5 h-5' />
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5" />
             <span>工作流详情</span>
           </div>
         }
@@ -791,43 +791,43 @@ const WorkflowManagement = () => {
         onCancel={() => setShowDetailModal(false)}
         width={800}
         footer={[
-          <Button key='close' onClick={() => setShowDetailModal(false)}>
+          <Button key="close" onClick={() => setShowDetailModal(false)}>
             关闭
           </Button>,
         ]}
       >
         {selectedWorkflow && (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             <div>
               <Title level={4}>{selectedWorkflow.name}</Title>
-              <Text type='secondary'>{selectedWorkflow.description}</Text>
+              <Text type="secondary">{selectedWorkflow.description}</Text>
             </div>
 
             <Row gutter={16}>
               <Col span={8}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='活跃实例'
+                    title="活跃实例"
                     value={selectedWorkflow.activeInstances}
-                    prefix={<Activity className='w-4 h-4' />}
+                    prefix={<Activity className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
               <Col span={8}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='已完成实例'
+                    title="已完成实例"
                     value={selectedWorkflow.completedInstances}
-                    prefix={<CheckCircle className='w-4 h-4' />}
+                    prefix={<CheckCircle className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
               <Col span={8}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='步骤数'
+                    title="步骤数"
                     value={selectedWorkflow.stepsCount}
-                    prefix={<BarChart3 className='w-4 h-4' />}
+                    prefix={<BarChart3 className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
@@ -890,9 +890,9 @@ const WorkflowManagement = () => {
             </div>
 
             <Alert
-              message='工作流设计器预览'
-              description='可视化工作流设计器和实例管理功能正在开发中，将在下个版本中提供完整的流程设计和监控能力。'
-              type='warning'
+              message="工作流设计器预览"
+              description="可视化工作流设计器和实例管理功能正在开发中，将在下个版本中提供完整的流程设计和监控能力。"
+              type="warning"
               showIcon
             />
           </div>

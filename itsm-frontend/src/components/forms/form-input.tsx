@@ -45,10 +45,10 @@ const Input = forwardRef<HTMLInputElement, Omit<FormInputProps, 'label' | 'error
       .join(' ');
 
     return (
-      <div className='relative'>
+      <div className="relative">
         {prefix && (
-          <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
-            <span className='text-gray-500 sm:text-sm'>{prefix}</span>
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm">{prefix}</span>
           </div>
         )}
 
@@ -72,8 +72,8 @@ const Input = forwardRef<HTMLInputElement, Omit<FormInputProps, 'label' | 'error
         />
 
         {suffix && (
-          <div className='absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none'>
-            <span className='text-gray-500 sm:text-sm'>{suffix}</span>
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <span className="text-gray-500 sm:text-sm">{suffix}</span>
           </div>
         )}
       </div>

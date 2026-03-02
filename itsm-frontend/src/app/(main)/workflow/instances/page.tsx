@@ -418,14 +418,14 @@ const WorkflowInstancesPage = () => {
       dataIndex: 'instance_id',
       key: 'instance_id',
       width: 150,
-      render: (instanceId: string) => <span className='font-mono text-sm'>{instanceId}</span>,
+      render: (instanceId: string) => <span className="font-mono text-sm">{instanceId}</span>,
     },
     {
       title: '业务键',
       dataIndex: 'business_key',
       key: 'business_key',
       width: 150,
-      render: (businessKey: string) => <span className='text-sm'>{businessKey || '-'}</span>,
+      render: (businessKey: string) => <span className="text-sm">{businessKey || '-'}</span>,
     },
     {
       title: '状态',
@@ -447,8 +447,8 @@ const WorkflowInstancesPage = () => {
       key: 'started_by',
       width: 120,
       render: (startedBy: string) => (
-        <div className='flex items-center'>
-          <User className='w-4 h-4 mr-1' />
+        <div className="flex items-center">
+          <User className="w-4 h-4 mr-1" />
           <span>{startedBy}</span>
         </div>
       ),
@@ -459,7 +459,7 @@ const WorkflowInstancesPage = () => {
       key: 'started_at',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{new Date(date).toLocaleString('zh-CN')}</div>
+        <div className="text-sm">{new Date(date).toLocaleString('zh-CN')}</div>
       ),
     },
     {
@@ -468,7 +468,7 @@ const WorkflowInstancesPage = () => {
       key: 'due_date',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{date ? new Date(date).toLocaleString('zh-CN') : '-'}</div>
+        <div className="text-sm">{date ? new Date(date).toLocaleString('zh-CN') : '-'}</div>
       ),
     },
     {
@@ -477,37 +477,37 @@ const WorkflowInstancesPage = () => {
       width: 200,
       render: (record: WorkflowInstanceRecord) => (
         <Space>
-          <Tooltip title='查看详情'>
+          <Tooltip title="查看详情">
             <Button
-              type='text'
-              icon={<Eye className='w-4 h-4' />}
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
           {record.status === 'running' && (
             <>
-              <Tooltip title='暂停'>
+              <Tooltip title="暂停">
                 <Button
-                  type='text'
-                  icon={<PauseCircle className='w-4 h-4' />}
+                  type="text"
+                  icon={<PauseCircle className="w-4 h-4" />}
                   onClick={() => handleSuspendInstance(record.instance_id)}
                 />
               </Tooltip>
-              <Tooltip title='终止'>
+              <Tooltip title="终止">
                 <Button
-                  type='text'
+                  type="text"
                   danger
-                  icon={<StopCircle className='w-4 h-4' />}
+                  icon={<StopCircle className="w-4 h-4" />}
                   onClick={() => handleTerminateInstance(record.instance_id)}
                 />
               </Tooltip>
             </>
           )}
           {record.status === 'suspended' && (
-            <Tooltip title='恢复'>
+            <Tooltip title="恢复">
               <Button
-                type='text'
-                icon={<PlayCircle className='w-4 h-4' />}
+                type="text"
+                icon={<PlayCircle className="w-4 h-4" />}
                 onClick={() => handleResumeInstance(record.instance_id)}
               />
             </Tooltip>
@@ -524,8 +524,8 @@ const WorkflowInstancesPage = () => {
       key: 'name',
       render: (name: string, record: WorkflowTaskRecord) => (
         <div>
-          <div className='font-medium'>{name}</div>
-          <div className='text-sm text-gray-500'>{record.activity_id}</div>
+          <div className="font-medium">{name}</div>
+          <div className="text-sm text-gray-500">{record.activity_id}</div>
         </div>
       ),
     },
@@ -534,7 +534,7 @@ const WorkflowInstancesPage = () => {
       dataIndex: 'type',
       key: 'type',
       width: 120,
-      render: (type: string) => <Tag color='blue'>{type}</Tag>,
+      render: (type: string) => <Tag color="blue">{type}</Tag>,
     },
     {
       title: '状态',
@@ -556,7 +556,7 @@ const WorkflowInstancesPage = () => {
       key: 'created_at',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{new Date(date).toLocaleString('zh-CN')}</div>
+        <div className="text-sm">{new Date(date).toLocaleString('zh-CN')}</div>
       ),
     },
     {
@@ -565,7 +565,7 @@ const WorkflowInstancesPage = () => {
       key: 'due_date',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{date ? new Date(date).toLocaleString('zh-CN') : '-'}</div>
+        <div className="text-sm">{date ? new Date(date).toLocaleString('zh-CN') : '-'}</div>
       ),
     },
     {
@@ -578,10 +578,10 @@ const WorkflowInstancesPage = () => {
         // 如果是会签任务，显示投票按钮
         if (record.activity_id && record.status === 'pending') {
           return (
-            <Space direction='vertical' size='small'>
+            <Space direction="vertical" size="small">
               {/* 会签状态显示 */}
               {csStatus && (
-                <div className='text-xs'>
+                <div className="text-xs">
                   <Tag
                     color={
                       csStatus.status === 'approved'
@@ -597,7 +597,7 @@ const WorkflowInstancesPage = () => {
                         ? '已拒绝'
                         : '会签中'}
                   </Tag>
-                  <span className='ml-1'>
+                  <span className="ml-1">
                     {csStatus.completed}/{csStatus.total}
                   </span>
                 </div>
@@ -605,9 +605,9 @@ const WorkflowInstancesPage = () => {
               {/* 投票按钮 */}
               <Space>
                 <Button
-                  type='primary'
-                  size='small'
-                  icon={<ThumbsUp className='w-3 h-3' />}
+                  type="primary"
+                  size="small"
+                  icon={<ThumbsUp className="w-3 h-3" />}
                   onClick={() => handleVote(record.id, true)}
                   loading={votingTaskId === record.id}
                   disabled={csStatus?.status !== 'pending'}
@@ -615,9 +615,9 @@ const WorkflowInstancesPage = () => {
                   通过
                 </Button>
                 <Button
-                  size='small'
+                  size="small"
                   danger
-                  icon={<ThumbsDown className='w-3 h-3' />}
+                  icon={<ThumbsDown className="w-3 h-3" />}
                   onClick={() => handleVote(record.id, false)}
                   loading={votingTaskId === record.id}
                   disabled={csStatus?.status !== 'pending'}
@@ -633,11 +633,7 @@ const WorkflowInstancesPage = () => {
         return (
           <Space>
             {record.status === 'pending' && (
-              <Button
-                type='primary'
-                size='small'
-                onClick={() => handleOpenCompleteTask(record)}
-              >
+              <Button type="primary" size="small" onClick={() => handleOpenCompleteTask(record)}>
                 处理
               </Button>
             )}
@@ -650,48 +646,48 @@ const WorkflowInstancesPage = () => {
   return (
     <>
       {/* 页面头部 */}
-      <div className='mb-6'>
-        <h1 className='text-2xl font-bold text-gray-900'>工作流实例</h1>
-        <p className='text-gray-600 mt-1'>管理工作流实例的执行状态和生命周期</p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">工作流实例</h1>
+        <p className="text-gray-600 mt-1">管理工作流实例的执行状态和生命周期</p>
       </div>
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='总实例'
+              title="总实例"
               value={stats.total}
-              prefix={<Activity className='w-5 h-5' />}
+              prefix={<Activity className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='运行中'
+              title="运行中"
               value={stats.running}
-              prefix={<PlayCircle className='w-5 h-5' />}
+              prefix={<PlayCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='已完成'
+              title="已完成"
               value={stats.completed}
-              prefix={<CheckCircle className='w-5 h-5' />}
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='已暂停'
+              title="已暂停"
               value={stats.suspended}
-              prefix={<PauseCircle className='w-5 h-5' />}
+              prefix={<PauseCircle className="w-5 h-5" />}
               styles={{ content: { color: '#faad14' } }}
             />
           </Card>
@@ -699,12 +695,12 @@ const WorkflowInstancesPage = () => {
       </Row>
 
       {/* 工具栏 */}
-      <Card className='enterprise-card mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="enterprise-card mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={6}>
             <Input
-              placeholder='搜索实例ID或业务键...'
-              prefix={<Search className='w-4 h-4' />}
+              placeholder="搜索实例ID或业务键..."
+              prefix={<Search className="w-4 h-4" />}
               value={filters.business_key}
               onChange={e =>
                 setFilters(prev => ({
@@ -717,51 +713,51 @@ const WorkflowInstancesPage = () => {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
-              placeholder='状态筛选'
+              placeholder="状态筛选"
               value={filters.status}
               onChange={value => setFilters(prev => ({ ...prev, status: value }))}
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value='running'>运行中</Option>
-              <Option value='completed'>已完成</Option>
-              <Option value='suspended'>已暂停</Option>
-              <Option value='terminated'>已终止</Option>
+              <Option value="running">运行中</Option>
+              <Option value="completed">已完成</Option>
+              <Option value="suspended">已暂停</Option>
+              <Option value="terminated">已终止</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
-              placeholder='启动人筛选'
+              placeholder="启动人筛选"
               value={filters.started_by}
               onChange={value => setFilters(prev => ({ ...prev, started_by: value }))}
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value='admin'>管理员</Option>
-              <Option value='user1'>用户1</Option>
-              <Option value='user2'>用户2</Option>
+              <Option value="admin">管理员</Option>
+              <Option value="user1">用户1</Option>
+              <Option value="user2">用户2</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={10}>
             <Space>
               <Button
-                icon={<RefreshCw className='w-4 h-4' />}
+                icon={<RefreshCw className="w-4 h-4" />}
                 onClick={() => loadInstances(pagination.current, pagination.pageSize)}
               >
                 刷新
               </Button>
-              <Button icon={<BarChart3 className='w-4 h-4' />}>统计报告</Button>
+              <Button icon={<BarChart3 className="w-4 h-4" />}>统计报告</Button>
             </Space>
           </Col>
         </Row>
       </Card>
 
       {/* 实例表格 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         <Table
           columns={columns}
           dataSource={instances}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           pagination={{
             current: pagination.current,
@@ -786,39 +782,39 @@ const WorkflowInstancesPage = () => {
         destroyOnHidden
       >
         {selectedInstance && (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             {/* 基本信息 */}
-            <Card title='基本信息' size='small'>
+            <Card title="基本信息" size="small">
               <Descriptions column={2}>
-                <Descriptions.Item label='实例ID'>{selectedInstance.instance_id}</Descriptions.Item>
-                <Descriptions.Item label='业务键'>
+                <Descriptions.Item label="实例ID">{selectedInstance.instance_id}</Descriptions.Item>
+                <Descriptions.Item label="业务键">
                   {selectedInstance.business_key || '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label='状态'>
+                <Descriptions.Item label="状态">
                   <Tag color={getStatusColor(selectedInstance.status)}>
                     {getStatusText(selectedInstance.status)}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label='优先级'>
+                <Descriptions.Item label="优先级">
                   <Tag color={getPriorityColor(selectedInstance.priority ?? 'medium')}>
                     {selectedInstance.priority || '-'}
                   </Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label='启动人'>
+                <Descriptions.Item label="启动人">
                   {selectedInstance.started_by || '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label='启动时间'>
+                <Descriptions.Item label="启动时间">
                   {selectedInstance.started_at
                     ? new Date(selectedInstance.started_at).toLocaleString('zh-CN')
                     : '-'}
                 </Descriptions.Item>
                 {selectedInstance.completed_at && (
-                  <Descriptions.Item label='完成时间'>
+                  <Descriptions.Item label="完成时间">
                     {new Date(selectedInstance.completed_at).toLocaleString('zh-CN')}
                   </Descriptions.Item>
                 )}
                 {selectedInstance.due_date && (
-                  <Descriptions.Item label='到期时间'>
+                  <Descriptions.Item label="到期时间">
                     {new Date(selectedInstance.due_date).toLocaleString('zh-CN')}
                   </Descriptions.Item>
                 )}
@@ -826,20 +822,20 @@ const WorkflowInstancesPage = () => {
             </Card>
 
             {/* 任务列表 */}
-            <Card title='任务列表' size='small'>
+            <Card title="任务列表" size="small">
               <Table
                 columns={taskColumns}
                 dataSource={tasks}
-                rowKey='id'
+                rowKey="id"
                 pagination={false}
-                size='small'
+                size="small"
               />
             </Card>
 
             {/* 流程变量 */}
             {selectedInstance.variables && Object.keys(selectedInstance.variables).length > 0 && (
-              <Card title='流程变量' size='small'>
-                <pre className='bg-gray-100 p-4 rounded text-sm overflow-auto'>
+              <Card title="流程变量" size="small">
+                <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto">
                   {JSON.stringify(selectedInstance.variables, null, 2)}
                 </pre>
               </Card>
@@ -862,37 +858,38 @@ const WorkflowInstancesPage = () => {
         confirmLoading={completingTaskId !== null}
         width={600}
       >
-        <div className='space-y-4'>
+        <div className="space-y-4">
           <Alert
-            message='任务信息'
+            message="任务信息"
             description={
-              <div className='space-y-1 text-sm'>
+              <div className="space-y-1 text-sm">
                 <div>任务 ID: {selectedTask?.id}</div>
                 <div>活动 ID: {selectedTask?.activity_id}</div>
                 <div>类型：{selectedTask?.type}</div>
                 <div>
-                  创建时间：{selectedTask?.created_at ? new Date(selectedTask.created_at).toLocaleString('zh-CN') : '-'}
+                  创建时间：
+                  {selectedTask?.created_at
+                    ? new Date(selectedTask.created_at).toLocaleString('zh-CN')
+                    : '-'}
                 </div>
               </div>
             }
-            type='info'
+            type="info"
             showIcon
           />
 
           <div>
-            <label className='block text-sm font-medium mb-2'>处理意见</label>
+            <label className="block text-sm font-medium mb-2">处理意见</label>
             <Input.TextArea
               rows={4}
-              placeholder='请输入处理意见或备注...'
+              placeholder="请输入处理意见或备注..."
               value={taskComment}
               onChange={e => setTaskComment(e.target.value)}
             />
           </div>
 
           <div>
-            <label className='block text-sm font-medium mb-2'>
-              输出变量 (可选，JSON 格式)
-            </label>
+            <label className="block text-sm font-medium mb-2">输出变量 (可选，JSON 格式)</label>
             <Input.TextArea
               rows={4}
               placeholder='{"key": "value"}'
@@ -906,9 +903,7 @@ const WorkflowInstancesPage = () => {
                 }
               }}
             />
-            <div className='text-xs text-gray-500 mt-1'>
-              用于传递数据到下一个节点
-            </div>
+            <div className="text-xs text-gray-500 mt-1">用于传递数据到下一个节点</div>
           </div>
         </div>
       </Modal>

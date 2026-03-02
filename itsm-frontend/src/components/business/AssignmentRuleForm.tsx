@@ -97,7 +97,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
   return (
     <Form
       form={form}
-      layout='vertical'
+      layout="vertical"
       onFinish={handleSubmit}
       initialValues={{
         priority: 0,
@@ -107,31 +107,31 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
       }}
     >
       <Form.Item
-        name='name'
-        label='规则名称'
+        name="name"
+        label="规则名称"
         rules={[{ required: true, message: '请输入规则名称' }]}
       >
-        <Input placeholder='例如：高优先级工单分配给技术团队' />
+        <Input placeholder="例如：高优先级工单分配给技术团队" />
       </Form.Item>
 
-      <Form.Item name='description' label='规则描述'>
-        <TextArea rows={2} placeholder='规则描述（可选）' />
+      <Form.Item name="description" label="规则描述">
+        <TextArea rows={2} placeholder="规则描述（可选）" />
       </Form.Item>
 
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
-            name='priority'
-            label='优先级'
+            name="priority"
+            label="优先级"
             rules={[{ required: true, message: '请输入优先级' }]}
-            tooltip='数字越大优先级越高，系统按优先级从高到低执行规则'
+            tooltip="数字越大优先级越高，系统按优先级从高到低执行规则"
           >
             <InputNumber min={0} max={100} style={{ width: '100%' }} />
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name='is_active' label='启用状态' valuePropName='checked'>
-            <Switch checkedChildren='启用' unCheckedChildren='禁用' />
+          <Form.Item name="is_active" label="启用状态" valuePropName="checked">
+            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
         </Col>
       </Row>
@@ -139,11 +139,11 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
       <Divider>条件设置</Divider>
 
       <Form.Item
-        name='conditions'
-        label='匹配条件'
+        name="conditions"
+        label="匹配条件"
         rules={[{ required: true, message: '请至少添加一个条件' }]}
       >
-        <Form.List name='conditions'>
+        <Form.List name="conditions">
           {(fields, { add, remove }) => (
             <div>
               {fields.map((field, index) => {
@@ -151,11 +151,11 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                 return (
                   <Card
                     key={field.key}
-                    size='small'
+                    size="small"
                     style={{ marginBottom: 8 }}
                     extra={
                       <Button
-                        type='link'
+                        type="link"
                         danger
                         icon={<DeleteOutlined />}
                         onClick={() => {
@@ -164,14 +164,14 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                       />
                     }
                   >
-                    <Row gutter={8} align='middle'>
+                    <Row gutter={8} align="middle">
                       <Col span={8}>
                         <Form.Item
                           {...field}
                           name={[field.name, 'field']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder='选择字段'>
+                          <Select placeholder="选择字段">
                             {conditionFields.map(f => (
                               <Option key={f.value} value={f.value}>
                                 {f.label}
@@ -186,12 +186,12 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                           name={[field.name, 'operator']}
                           rules={[{ required: true }]}
                         >
-                          <Select placeholder='操作符'>
-                            <Option value='equals'>等于</Option>
-                            <Option value='not_equals'>不等于</Option>
-                            <Option value='contains'>包含</Option>
-                            <Option value='in'>属于</Option>
-                            <Option value='not_in'>不属于</Option>
+                          <Select placeholder="操作符">
+                            <Option value="equals">等于</Option>
+                            <Option value="not_equals">不等于</Option>
+                            <Option value="contains">包含</Option>
+                            <Option value="in">属于</Option>
+                            <Option value="not_in">不属于</Option>
                           </Select>
                         </Form.Item>
                       </Col>
@@ -201,14 +201,14 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                           name={[field.name, 'value']}
                           rules={[{ required: true }]}
                         >
-                          <Input placeholder='值' />
+                          <Input placeholder="值" />
                         </Form.Item>
                       </Col>
                     </Row>
                   </Card>
                 );
               })}
-              <Button type='dashed' onClick={() => add()} block icon={<PlusOutlined />}>
+              <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
                 添加条件
               </Button>
             </div>
@@ -220,10 +220,10 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
 
       <Form.Item
         name={['actions', 'type']}
-        label='分配方式'
+        label="分配方式"
         rules={[{ required: true, message: '请选择分配方式' }]}
       >
-        <Select placeholder='选择分配方式' onChange={value => setActionType(value)}>
+        <Select placeholder="选择分配方式" onChange={value => setActionType(value)}>
           {actionTypes.map(type => (
             <Option key={type.value} value={type.value}>
               {type.label}
@@ -235,32 +235,32 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
       {actionType === 'assign' && (
         <Form.Item
           name={['actions', 'user_id']}
-          label='分配给用户'
+          label="分配给用户"
           rules={[{ required: true, message: '请选择用户' }]}
         >
-          <Input placeholder='用户ID（需要集成用户选择器）' />
+          <Input placeholder="用户ID（需要集成用户选择器）" />
         </Form.Item>
       )}
 
       {actionType === 'assign_to_team' && (
         <Form.Item
           name={['actions', 'team_id']}
-          label='分配给团队'
+          label="分配给团队"
           rules={[{ required: true, message: '请选择团队' }]}
         >
-          <Input placeholder='团队ID（需要集成团队选择器）' />
+          <Input placeholder="团队ID（需要集成团队选择器）" />
         </Form.Item>
       )}
 
       {actionType === 'assign_by_skill' && (
-        <Form.Item name={['actions', 'skill_required']} label='所需技能'>
-          <Input placeholder='技能名称或ID' />
+        <Form.Item name={['actions', 'skill_required']} label="所需技能">
+          <Input placeholder="技能名称或ID" />
         </Form.Item>
       )}
 
       <Form.Item>
         <Space>
-          <Button type='primary' htmlType='submit' icon={<SaveOutlined />}>
+          <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
             {editingRule ? '更新规则' : '创建规则'}
           </Button>
           <Button onClick={onCancel} icon={<CloseOutlined />}>

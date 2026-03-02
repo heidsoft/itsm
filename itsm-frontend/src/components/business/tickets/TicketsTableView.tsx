@@ -69,7 +69,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       width: 120,
       fixed: 'left',
       render: (text: string) => (
-        <span className='font-mono text-blue-600 font-semibold'>{text}</span>
+        <span className="font-mono text-blue-600 font-semibold">{text}</span>
       ),
     },
     {
@@ -79,7 +79,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       ellipsis: true,
       render: (text: string, record: Ticket) => (
         <Tooltip title={record.description}>
-          <span className='cursor-pointer hover:text-blue-600'>{text}</span>
+          <span className="cursor-pointer hover:text-blue-600">{text}</span>
         </Tooltip>
       ),
     },
@@ -154,7 +154,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
             <span>{assignee.name}</span>
           </Space>
         ) : (
-          <span className='text-gray-400'>未分配</span>
+          <span className="text-gray-400">未分配</span>
         ),
     },
     {
@@ -164,7 +164,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       width: 160,
       sorter: true,
       render: (date: string) => (
-        <span className='text-gray-600'>{new Date(date).toLocaleString('zh-CN')}</span>
+        <span className="text-gray-600">{new Date(date).toLocaleString('zh-CN')}</span>
       ),
     },
     {
@@ -174,7 +174,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       width: 160,
       sorter: true,
       render: (date: string) => (
-        <span className='text-gray-600'>{new Date(date).toLocaleString('zh-CN')}</span>
+        <span className="text-gray-600">{new Date(date).toLocaleString('zh-CN')}</span>
       ),
     },
     {
@@ -183,21 +183,21 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
       fixed: 'right',
       width: 150,
       render: (_, record: Ticket) => (
-        <Space size='small'>
-          <Tooltip title='查看详情'>
+        <Space size="small">
+          <Tooltip title="查看详情">
             <Button
-              type='link'
-              size='small'
+              type="link"
+              size="small"
               icon={<EyeOutlined />}
               onClick={() => onView(record)}
             />
           </Tooltip>
 
           {canEdit && (
-            <Tooltip title='编辑'>
+            <Tooltip title="编辑">
               <Button
-                type='link'
-                size='small'
+                type="link"
+                size="small"
                 icon={<EditOutlined />}
                 onClick={() => onEdit(record)}
               />
@@ -206,13 +206,13 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
 
           {canDelete && (
             <Popconfirm
-              title='确定要删除这个工单吗？'
+              title="确定要删除这个工单吗？"
               onConfirm={() => onDelete(record)}
-              okText='确定'
-              cancelText='取消'
+              okText="确定"
+              cancelText="取消"
             >
-              <Tooltip title='删除'>
-                <Button type='link' size='small' danger icon={<DeleteOutlined />} />
+              <Tooltip title="删除">
+                <Button type="link" size="small" danger icon={<DeleteOutlined />} />
               </Tooltip>
             </Popconfirm>
           )}
@@ -232,14 +232,14 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
     <Table<Ticket>
       columns={columns}
       dataSource={tickets}
-      rowKey='id'
+      rowKey="id"
       loading={loading}
       pagination={pagination}
       rowSelection={rowSelection}
       onChange={pagination => onPaginationChange(pagination)}
       scroll={{ x: 1500 }}
-      className='bg-white rounded-lg shadow-sm'
-      size='middle'
+      className="bg-white rounded-lg shadow-sm"
+      size="middle"
     />
   );
 };

@@ -130,11 +130,11 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
 
   // 步骤类型图标
   const stepTypeIcons = {
-    system: <Server className='w-4 h-4 text-blue-500' />,
-    data: <Database className='w-4 h-4 text-green-500' />,
-    config: <FileText className='w-4 h-4 text-orange-500' />,
-    network: <Network className='w-4 h-4 text-purple-500' />,
-    service: <CheckCircle className='w-4 h-4 text-cyan-500' />,
+    system: <Server className="w-4 h-4 text-blue-500" />,
+    data: <Database className="w-4 h-4 text-green-500" />,
+    config: <FileText className="w-4 h-4 text-orange-500" />,
+    network: <Network className="w-4 h-4 text-purple-500" />,
+    service: <CheckCircle className="w-4 h-4 text-cyan-500" />,
   };
 
   useEffect(() => {
@@ -207,7 +207,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Input
           value={text}
           onChange={e => updateRollbackStep(index, 'title', e.target.value)}
-          placeholder='输入步骤标题'
+          placeholder="输入步骤标题"
           disabled={readOnly}
         />
       ),
@@ -242,7 +242,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       width: 130,
       render: (time: number, record: RollbackStep, index: number) => (
         <Input
-          type='number'
+          type="number"
           value={time}
           onChange={e => updateRollbackStep(index, 'estimated_time', parseInt(e.target.value) || 0)}
           disabled={readOnly}
@@ -259,7 +259,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Input
           value={person}
           onChange={e => updateRollbackStep(index, 'responsible_person', e.target.value)}
-          placeholder='负责人'
+          placeholder="负责人"
           disabled={readOnly}
         />
       ),
@@ -270,7 +270,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       width: 80,
       render: (_: any, record: RollbackStep, index: number) =>
         !readOnly ? (
-          <Button type='text' danger size='small' onClick={() => deleteRollbackStep(index)}>
+          <Button type="text" danger size="small" onClick={() => deleteRollbackStep(index)}>
             删除
           </Button>
         ) : null,
@@ -281,37 +281,37 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
     <Card
       title={
         <Space>
-          <RotateCcw className='w-5 h-5 text-blue-600' />
+          <RotateCcw className="w-5 h-5 text-blue-600" />
           <span>变更回滚计划</span>
         </Space>
       }
       extra={
         !readOnly && (
-          <Button type='primary' onClick={handleSubmit}>
+          <Button type="primary" onClick={handleSubmit}>
             保存回滚计划
           </Button>
         )
       }
-      className='change-rollback-plan'
+      className="change-rollback-plan"
     >
-      <Form form={form} layout='vertical' disabled={readOnly}>
+      <Form form={form} layout="vertical" disabled={readOnly}>
         {/* 回滚策略选择 */}
         <Row gutter={[24, 16]}>
           <Col xs={24}>
             <Form.Item
-              label='回滚策略'
-              name='rollback_strategy'
+              label="回滚策略"
+              name="rollback_strategy"
               rules={[{ required: true, message: '请选择回滚策略' }]}
             >
-              <Select placeholder='选择回滚策略'>
+              <Select placeholder="选择回滚策略">
                 {Object.entries(rollbackStrategies).map(([key, strategy]) => (
                   <Option key={key} value={key}>
-                    <div className='p-2'>
-                      <div className='font-medium'>{strategy.label}</div>
-                      <Text type='secondary' className='text-xs'>
+                    <div className="p-2">
+                      <div className="font-medium">{strategy.label}</div>
+                      <Text type="secondary" className="text-xs">
                         {strategy.description}
                       </Text>
-                      <div className='mt-1'>
+                      <div className="mt-1">
                         <Tag
                           color={
                             strategy.risk === 'high'
@@ -345,15 +345,15 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           {/* 回滚触发条件 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label='回滚触发条件'
-              name='rollback_triggers'
+              label="回滚触发条件"
+              name="rollback_triggers"
               rules={[{ required: true, message: '请选择触发条件' }]}
             >
-              <Select mode='multiple' placeholder='选择触发回滚的条件' style={{ width: '100%' }}>
+              <Select mode="multiple" placeholder="选择触发回滚的条件" style={{ width: '100%' }}>
                 {rollbackTriggers.map(trigger => (
                   <Option key={trigger} value={trigger}>
                     <Space>
-                      <AlertTriangle className='w-4 h-4 text-orange-500' />
+                      <AlertTriangle className="w-4 h-4 text-orange-500" />
                       {trigger}
                     </Space>
                   </Option>
@@ -365,31 +365,31 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           {/* 回滚团队 */}
           <Col xs={24} lg={12}>
             <Form.Item
-              label='回滚团队'
-              name='rollback_team'
+              label="回滚团队"
+              name="rollback_team"
               rules={[{ required: true, message: '请指定回滚团队成员' }]}
             >
-              <Select mode='tags' placeholder='指定回滚团队成员' style={{ width: '100%' }}>
-                <Option value='系统管理员'>系统管理员</Option>
-                <Option value='数据库管理员'>数据库管理员</Option>
-                <Option value='网络工程师'>网络工程师</Option>
-                <Option value='应用开发'>应用开发</Option>
-                <Option value='安全专员'>安全专员</Option>
+              <Select mode="tags" placeholder="指定回滚团队成员" style={{ width: '100%' }}>
+                <Option value="系统管理员">系统管理员</Option>
+                <Option value="数据库管理员">数据库管理员</Option>
+                <Option value="网络工程师">网络工程师</Option>
+                <Option value="应用开发">应用开发</Option>
+                <Option value="安全专员">安全专员</Option>
               </Select>
             </Form.Item>
           </Col>
         </Row>
 
         {/* 回滚步骤 */}
-        <Card size='small' className='mb-4'>
-          <div className='flex justify-between items-center mb-4'>
-            <Title level={5} className='mb-0'>
+        <Card size="small" className="mb-4">
+          <div className="flex justify-between items-center mb-4">
+            <Title level={5} className="mb-0">
               回滚步骤明细
             </Title>
             <Space>
-              <Text type='secondary'>总预计时间: {getTotalRollbackTime()} 分钟</Text>
+              <Text type="secondary">总预计时间: {getTotalRollbackTime()} 分钟</Text>
               {!readOnly && (
-                <Button type='dashed' icon={<FileText />} onClick={addRollbackStep}>
+                <Button type="dashed" icon={<FileText />} onClick={addRollbackStep}>
                   添加步骤
                 </Button>
               )}
@@ -397,18 +397,18 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           </div>
 
           {rollbackSteps.length === 0 ? (
-            <div className='text-center py-8'>
-              <RotateCcw className='w-12 h-12 text-gray-400 mx-auto mb-4' />
-              <Text type='secondary'>暂无回滚步骤，请添加详细的回滚步骤</Text>
+            <div className="text-center py-8">
+              <RotateCcw className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <Text type="secondary">暂无回滚步骤，请添加详细的回滚步骤</Text>
             </div>
           ) : (
             <Table
               columns={stepColumns}
               dataSource={rollbackSteps}
-              rowKey='id'
+              rowKey="id"
               pagination={false}
-              size='small'
-              className='rollback-steps-table'
+              size="small"
+              className="rollback-steps-table"
             />
           )}
         </Card>
@@ -417,23 +417,23 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Row gutter={[24, 16]}>
           <Col xs={24} lg={12}>
             <Form.Item
-              label='回滚测试计划'
-              name='rollback_test_plan'
+              label="回滚测试计划"
+              name="rollback_test_plan"
               rules={[{ required: true, message: '请制定测试计划' }]}
             >
-              <TextArea rows={4} placeholder='描述回滚前的测试方案...' maxLength={1000} showCount />
+              <TextArea rows={4} placeholder="描述回滚前的测试方案..." maxLength={1000} showCount />
             </Form.Item>
           </Col>
 
           <Col xs={24} lg={12}>
             <Form.Item
-              label='回滚验证方案'
-              name='rollback_verification'
+              label="回滚验证方案"
+              name="rollback_verification"
               rules={[{ required: true, message: '请制定验证方案' }]}
             >
               <TextArea
                 rows={4}
-                placeholder='描述回滚成功后的验证方法...'
+                placeholder="描述回滚成功后的验证方法..."
                 maxLength={1000}
                 showCount
               />
@@ -443,13 +443,13 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
           {/* 风险评估 */}
           <Col xs={24}>
             <Form.Item
-              label='回滚风险评估'
-              name='rollback_risk_assessment'
+              label="回滚风险评估"
+              name="rollback_risk_assessment"
               rules={[{ required: true, message: '请进行风险评估' }]}
             >
               <TextArea
                 rows={4}
-                placeholder='评估回滚过程可能遇到的风险和应对措施...'
+                placeholder="评估回滚过程可能遇到的风险和应对措施..."
                 maxLength={1000}
                 showCount
               />
@@ -459,7 +459,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
 
         {/* 时间窗口建议 */}
         <Alert
-          message='回滚时间窗口建议'
+          message="回滚时间窗口建议"
           description={
             <div>
               <p>建议设置以下时间窗口进行回滚操作：</p>
@@ -471,9 +471,9 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               </ul>
             </div>
           }
-          type='info'
+          type="info"
           showIcon
-          className='mt-4'
+          className="mt-4"
         />
       </Form>
     </Card>

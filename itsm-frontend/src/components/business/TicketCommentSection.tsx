@@ -183,19 +183,19 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
   };
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* 评论输入框 */}
       {canComment && (
         <Card
           title={
             <Space>
-              <MessageSquare className='w-4 h-4' />
+              <MessageSquare className="w-4 h-4" />
               <span>{t('comments.title') || '评论'}</span>
             </Space>
           }
-          className='shadow-sm'
+          className="shadow-sm"
         >
-          <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
+          <Space orientation="vertical" style={{ width: '100%' }} size="middle">
             <TextArea
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
@@ -204,21 +204,21 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
               maxLength={5000}
               showCount
             />
-            <div className='flex items-center justify-between'>
+            <div className="flex items-center justify-between">
               <Space>
                 <Switch
                   checked={isInternal}
                   onChange={setIsInternal}
-                  checkedChildren={<Lock className='w-3 h-3' />}
-                  unCheckedChildren={<MessageSquare className='w-3 h-3' />}
+                  checkedChildren={<Lock className="w-3 h-3" />}
+                  unCheckedChildren={<MessageSquare className="w-3 h-3" />}
                 />
-                <Text type='secondary' className='text-sm'>
+                <Text type="secondary" className="text-sm">
                   {isInternal ? '内部备注' : '公开评论'}
                 </Text>
               </Space>
               <Button
-                type='primary'
-                icon={<Send className='w-4 h-4' />}
+                type="primary"
+                icon={<Send className="w-4 h-4" />}
                 onClick={handleAddComment}
                 loading={submitting}
                 disabled={!newComment.trim()}
@@ -234,19 +234,19 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       <Card
         title={
           <Space>
-            <MessageSquare className='w-4 h-4' />
+            <MessageSquare className="w-4 h-4" />
             <span>
               {t('comments.list') || '评论列表'} ({comments.length})
             </span>
           </Space>
         }
-        className='shadow-sm'
+        className="shadow-sm"
         loading={loading}
       >
         {comments.length === 0 ? (
-          <div className='text-center py-8 text-gray-400'>
-            <MessageSquare className='w-12 h-12 mx-auto mb-2 opacity-50' />
-            <Text type='secondary'>{t('comments.empty') || '暂无评论'}</Text>
+          <div className="text-center py-8 text-gray-400">
+            <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
+            <Text type="secondary">{t('comments.empty') || '暂无评论'}</Text>
           </div>
         ) : (
           <List
@@ -254,44 +254,44 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
             renderItem={comment => (
               <List.Item
                 key={comment.id}
-                className='!px-0 !py-4 border-b border-gray-100 last:border-b-0'
+                className="!px-0 !py-4 border-b border-gray-100 last:border-b-0"
               >
-                <div className='flex items-start space-x-3 w-full'>
+                <div className="flex items-start space-x-3 w-full">
                   <Avatar
-                    size='default'
+                    size="default"
                     icon={<User />}
                     src={comment.user?.name?.[0] || comment.user?.username?.[0]}
                   >
                     {comment.user?.name?.[0] || comment.user?.username?.[0] || 'U'}
                   </Avatar>
-                  <div className='flex-1 min-w-0'>
-                    <div className='flex items-center space-x-2 mb-2'>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-2">
                       <Text strong>
                         {comment.user?.name || comment.user?.username || '未知用户'}
                       </Text>
                       {comment.is_internal && (
-                        <Tag color='orange' icon={<Lock className='w-3 h-3' />}>
+                        <Tag color="orange" icon={<Lock className="w-3 h-3" />}>
                           {t('comments.internal') || '内部'}
                         </Tag>
                       )}
                       {comment.mentions && comment.mentions.length > 0 && (
                         <Tooltip title={`@${comment.mentions.length}位用户`}>
-                          <Tag color='blue' icon={<AtSign className='w-3 h-3' />}>
+                          <Tag color="blue" icon={<AtSign className="w-3 h-3" />}>
                             @{comment.mentions.length}
                           </Tag>
                         </Tooltip>
                       )}
-                      <Text type='secondary' className='text-xs'>
+                      <Text type="secondary" className="text-xs">
                         {formatTime(comment.created_at)}
                       </Text>
                       {comment.updated_at !== comment.created_at && (
-                        <Text type='secondary' className='text-xs'>
+                        <Text type="secondary" className="text-xs">
                           （已编辑）
                         </Text>
                       )}
                     </div>
                     {editingId === comment.id ? (
-                      <div className='space-y-2'>
+                      <div className="space-y-2">
                         <TextArea
                           value={editingContent}
                           onChange={e => setEditingContent(e.target.value)}
@@ -301,29 +301,29 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
                         />
                         <Space>
                           <Button
-                            type='primary'
-                            size='small'
+                            type="primary"
+                            size="small"
                             onClick={() => handleUpdateComment(comment.id)}
                           >
                             {t('common.save') || '保存'}
                           </Button>
-                          <Button size='small' onClick={cancelEdit}>
+                          <Button size="small" onClick={cancelEdit}>
                             {t('common.cancel') || '取消'}
                           </Button>
                         </Space>
                       </div>
                     ) : (
                       <>
-                        <Paragraph className='mb-2 whitespace-pre-wrap break-words'>
+                        <Paragraph className="mb-2 whitespace-pre-wrap break-words">
                           {comment.content}
                         </Paragraph>
                         {(canEdit(comment) || canDelete(comment)) && (
-                          <Space size='small'>
+                          <Space size="small">
                             {canEdit(comment) && (
                               <Button
-                                type='text'
-                                size='small'
-                                icon={<Edit className='w-3 h-3' />}
+                                type="text"
+                                size="small"
+                                icon={<Edit className="w-3 h-3" />}
                                 onClick={() => startEdit(comment)}
                               >
                                 {t('common.edit') || '编辑'}
@@ -337,10 +337,10 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
                                 cancelText={t('common.cancel') || '取消'}
                               >
                                 <Button
-                                  type='text'
-                                  size='small'
+                                  type="text"
+                                  size="small"
                                   danger
-                                  icon={<Trash2 className='w-3 h-3' />}
+                                  icon={<Trash2 className="w-3 h-3" />}
                                 >
                                   {t('common.delete') || '删除'}
                                 </Button>

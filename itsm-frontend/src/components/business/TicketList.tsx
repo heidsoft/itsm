@@ -277,7 +277,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         dataIndex: 'ticketNumber',
         key: 'ticketNumber',
         width: 120,
-        render: (text: string) => <span className='font-mono text-sm'>{text}</span>,
+        render: (text: string) => <span className="font-mono text-sm">{text}</span>,
       },
       {
         title: '标题',
@@ -286,12 +286,12 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         render: (text: string, record: Ticket) => (
           <Tooltip title={text}>
             <Button
-              type='link'
-              className='p-0 h-auto text-left truncate'
+              type="link"
+              className="p-0 h-auto text-left truncate"
               style={{ maxWidth: '100%' }}
               onClick={() => onTicketSelect?.(record)}
             >
-              <span className='truncate'>{text}</span>
+              <span className="truncate">{text}</span>
             </Button>
           </Tooltip>
         ),
@@ -327,7 +327,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         width: 100,
         render: (assignee: any) => (
           <span>
-            <UserOutlined className='mr-1' />
+            <UserOutlined className="mr-1" />
             {assignee?.name || '未分配'}
           </span>
         ),
@@ -339,7 +339,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         width: 150,
         render: (text: string) => (
           <span>
-            <ClockCircleOutlined className='mr-1' />
+            <ClockCircleOutlined className="mr-1" />
             {new Date(text).toLocaleString()}
           </span>
         ),
@@ -350,7 +350,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         width: 120,
         render: (_: unknown, record: Ticket) => (
           <Dropdown menu={{ items: getTicketMenu(record) }}>
-            <Button type='primary' size='small'>
+            <Button type="primary" size="small">
               操作 <DownOutlined />
             </Button>
           </Dropdown>
@@ -375,11 +375,11 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
 
   return (
     <Card
-      title='工单列表'
+      title="工单列表"
       extra={
         <Space>
           <Button
-            type='primary'
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => onTicketSelect?.({} as Ticket)}
           >
@@ -399,38 +399,38 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
       }
     >
       {/* 搜索和筛选区域 */}
-      <div className='mb-4 space-y-4'>
-        <div className='flex items-center space-x-4'>
+      <div className="mb-4 space-y-4">
+        <div className="flex items-center space-x-4">
           <Input.Search
-            placeholder='搜索工单标题或描述'
+            placeholder="搜索工单标题或描述"
             allowClear
             style={{ width: 300 }}
             onSearch={handleSearch}
             prefix={<SearchOutlined />}
           />
           <Select
-            placeholder='状态'
+            placeholder="状态"
             allowClear
             style={{ width: 120 }}
             onChange={value => handleFilterChange({ status: value })}
           >
-            <Option value='open'>待处理</Option>
-            <Option value='in_progress'>处理中</Option>
-            <Option value='pending'>待确认</Option>
-            <Option value='resolved'>已解决</Option>
-            <Option value='closed'>已关闭</Option>
-            <Option value='cancelled'>已取消</Option>
+            <Option value="open">待处理</Option>
+            <Option value="in_progress">处理中</Option>
+            <Option value="pending">待确认</Option>
+            <Option value="resolved">已解决</Option>
+            <Option value="closed">已关闭</Option>
+            <Option value="cancelled">已取消</Option>
           </Select>
           <Select
-            placeholder='优先级'
+            placeholder="优先级"
             allowClear
             style={{ width: 120 }}
             onChange={value => handleFilterChange({ priority: value })}
           >
-            <Option value='critical'>紧急</Option>
-            <Option value='high'>高</Option>
-            <Option value='medium'>中</Option>
-            <Option value='low'>低</Option>
+            <Option value="critical">紧急</Option>
+            <Option value="high">高</Option>
+            <Option value="medium">中</Option>
+            <Option value="low">低</Option>
           </Select>
           <RangePicker
             placeholder={['开始日期', '结束日期']}
@@ -455,7 +455,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
       <Table
         columns={columns}
         dataSource={tickets}
-        rowKey='id'
+        rowKey="id"
         loading={loading}
         pagination={{
           current: currentPage,

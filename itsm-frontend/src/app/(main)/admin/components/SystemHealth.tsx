@@ -88,24 +88,24 @@ export const SystemHealth: React.FC = () => {
     <Card
       title={
         <Space>
-          <Activity className='w-5 h-5' />
+          <Activity className="w-5 h-5" />
           {t('admin.systemHealth')}
         </Space>
       }
-      extra={<Button type='text' icon={<RefreshCw className='w-4 h-4' />} size='small' />}
+      extra={<Button type="text" icon={<RefreshCw className="w-4 h-4" />} size="small" />}
     >
       <div style={{ marginBottom: token.marginLG }}>
-        <Space align='center' size='large'>
+        <Space align="center" size="large">
           <Avatar
             size={48}
             style={{ backgroundColor: healthStatus.color, border: 'none' }}
-            icon={<HealthIcon className='w-6 h-6' />}
+            icon={<HealthIcon className="w-6 h-6" />}
           />
           <div>
             <Title level={3} style={{ margin: 0, color: healthStatus.color }}>
               {healthStatus.text}
             </Title>
-            <Text type='secondary'>
+            <Text type="secondary">
               {t('admin.uptime')}: {systemHealth.uptime}
             </Text>
           </div>
@@ -120,8 +120,8 @@ export const SystemHealth: React.FC = () => {
           const serviceStatus = getHealthStatus(item.status);
           return (
             <List.Item>
-              <Space align='center'>
-                <ServiceIcon className='w-4 h-4' style={{ color: serviceStatus.color }} />
+              <Space align="center">
+                <ServiceIcon className="w-4 h-4" style={{ color: serviceStatus.color }} />
                 <Text>{item.name}</Text>
                 <Tag color={serviceStatus.type}>{serviceStatus.text}</Tag>
               </Space>
@@ -137,7 +137,7 @@ export const SystemHealth: React.FC = () => {
           borderTop: `1px solid ${token.colorBorder}`,
         }}
       >
-        <Text type='secondary' style={{ fontSize: token.fontSizeSM }}>
+        <Text type="secondary" style={{ fontSize: token.fontSizeSM }}>
           {t('admin.lastUpdate')}: {systemHealth.lastUpdate}
         </Text>
       </div>

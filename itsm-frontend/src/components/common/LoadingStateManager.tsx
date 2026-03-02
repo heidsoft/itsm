@@ -99,8 +99,8 @@ const LoadingStateManagerComponent: React.FC<LoadingStateManagerProps> = ({
       className={`flex flex-col items-center justify-center ${className}`}
       style={containerStyle}
     >
-      <Spin size='large' />
-      <Text className='mt-4 text-gray-500'>{loadingText}</Text>
+      <Spin size="large" />
+      <Text className="mt-4 text-gray-500">{loadingText}</Text>
     </div>
   );
 
@@ -113,30 +113,30 @@ const LoadingStateManagerComponent: React.FC<LoadingStateManagerProps> = ({
         className={`flex flex-col items-center justify-center p-6 ${className}`}
         style={containerStyle}
       >
-        <div className='text-center max-w-md'>
+        <div className="text-center max-w-md">
           {isNetworkError ? (
-            <WifiOff className='text-red-500 mx-auto mb-4' size={48} />
+            <WifiOff className="text-red-500 mx-auto mb-4" size={48} />
           ) : (
-            <AlertCircle className='text-red-500 mx-auto mb-4' size={48} />
+            <AlertCircle className="text-red-500 mx-auto mb-4" size={48} />
           )}
 
-          <Title level={4} className='text-gray-800 mb-2'>
+          <Title level={4} className="text-gray-800 mb-2">
             {errorTitle}
           </Title>
 
-          <Text className='text-gray-600 block mb-4'>
+          <Text className="text-gray-600 block mb-4">
             {isNetworkError ? '网络连接异常，请检查网络设置' : error}
           </Text>
 
           {showErrorDetails && retryCount > 0 && (
-            <Text className='text-orange-600 text-sm block mb-4'>
+            <Text className="text-orange-600 text-sm block mb-4">
               已重试 {retryCount} 次{isMaxRetriesReached && ' (已达到最大重试次数)'}
             </Text>
           )}
 
           {showRetry && onRetry && !isMaxRetriesReached && (
             <Space>
-              <Button type='primary' icon={<RefreshCw size={16} />} onClick={handleRetry}>
+              <Button type="primary" icon={<RefreshCw size={16} />} onClick={handleRetry}>
                 重试
               </Button>
               {isNetworkError && (
@@ -149,11 +149,11 @@ const LoadingStateManagerComponent: React.FC<LoadingStateManagerProps> = ({
 
           {isMaxRetriesReached && (
             <Alert
-              message='多次重试失败'
-              description='请稍后再试或联系技术支持'
-              type='warning'
+              message="多次重试失败"
+              description="请稍后再试或联系技术支持"
+              type="warning"
               showIcon
-              className='mt-4 text-left'
+              className="mt-4 text-left"
             />
           )}
         </div>
@@ -168,11 +168,11 @@ const LoadingStateManagerComponent: React.FC<LoadingStateManagerProps> = ({
       style={containerStyle}
     >
       <Empty
-        image={<Inbox className='text-gray-400' size={64} />}
+        image={<Inbox className="text-gray-400" size={64} />}
         description={
-          <Space orientation='vertical' size='small'>
-            <Text className='text-gray-600'>{emptyText}</Text>
-            <Text className='text-gray-400 text-sm'>{emptyDescription}</Text>
+          <Space orientation="vertical" size="small">
+            <Text className="text-gray-600">{emptyText}</Text>
+            <Text className="text-gray-400 text-sm">{emptyDescription}</Text>
           </Space>
         }
       />
@@ -261,9 +261,9 @@ const SimpleLoadingComponent: React.FC<{
   text?: string;
   size?: 'small' | 'default' | 'large';
 }> = ({ text = '加载中...', size = 'default' }) => (
-  <div className='flex flex-col items-center justify-center p-8'>
+  <div className="flex flex-col items-center justify-center p-8">
     <Spin size={size} />
-    <Text className='mt-2 text-gray-500'>{text}</Text>
+    <Text className="mt-2 text-gray-500">{text}</Text>
   </div>
 );
 
@@ -274,11 +274,11 @@ const SimpleErrorComponent: React.FC<{
   message?: string;
   onRetry?: () => void;
 }> = ({ message = '加载失败', onRetry }) => (
-  <div className='flex flex-col items-center justify-center p-8'>
-    <AlertCircle className='text-red-500 mb-2' size={32} />
-    <Text className='text-gray-600 mb-4'>{message}</Text>
+  <div className="flex flex-col items-center justify-center p-8">
+    <AlertCircle className="text-red-500 mb-2" size={32} />
+    <Text className="text-gray-600 mb-4">{message}</Text>
     {onRetry && (
-      <Button type='primary' size='small' icon={<RefreshCw size={14} />} onClick={onRetry}>
+      <Button type="primary" size="small" icon={<RefreshCw size={14} />} onClick={onRetry}>
         重试
       </Button>
     )}

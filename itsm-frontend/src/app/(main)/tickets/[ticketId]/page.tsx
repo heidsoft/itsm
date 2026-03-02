@@ -23,7 +23,6 @@ import {
   Input,
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -47,7 +46,6 @@ const TicketDetailPage: React.FC = () => {
   const params = useParams();
   const { message: antMessage } = App.useApp();
   const { user: currentUser } = useAuthStore();
-  const { t } = useI18n();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -193,11 +191,11 @@ const TicketDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className='p-6'>
+      <div className="p-6">
         <Card>
-          <div className='text-center py-8'>
-            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto'></div>
-            <Text className='mt-4 block'>加载中...</Text>
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <Text className="mt-4 block">加载中...</Text>
           </div>
         </Card>
       </div>
@@ -206,16 +204,16 @@ const TicketDetailPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className='p-6'>
+      <div className="p-6">
         <Card>
-          <div className='text-center py-8'>
-            <AlertCircle className='w-12 h-12 text-red-500 mx-auto mb-4' />
-            <Title level={4} className='text-red-600 mb-2'>
+          <div className="text-center py-8">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <Title level={4} className="text-red-600 mb-2">
               加载失败
             </Title>
-            <Text type='secondary'>{error}</Text>
-            <div className='mt-4'>
-              <Button type='primary' onClick={fetchTicket}>
+            <Text type="secondary">{error}</Text>
+            <div className="mt-4">
+              <Button type="primary" onClick={fetchTicket}>
                 重试
               </Button>
             </div>
@@ -227,17 +225,17 @@ const TicketDetailPage: React.FC = () => {
 
   if (!ticket) {
     return (
-      <div className='p-6'>
+      <div className="p-6">
         <Card>
-          <div className='text-center py-8'>
-            <XCircle className='w-12 h-12 text-gray-400 mx-auto mb-4' />
-            <Title level={4} className='text-gray-600 mb-2'>
+          <div className="text-center py-8">
+            <XCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <Title level={4} className="text-gray-600 mb-2">
               未找到工单
             </Title>
-            <Text type='secondary'>未找到指定的工单</Text>
-            <div className='mt-4'>
-              <Link href='/tickets'>
-                <Button type='primary'>返回工单列表</Button>
+            <Text type="secondary">未找到指定的工单</Text>
+            <div className="mt-4">
+              <Link href="/tickets">
+                <Button type="primary">返回工单列表</Button>
               </Link>
             </div>
           </div>
@@ -247,24 +245,24 @@ const TicketDetailPage: React.FC = () => {
   }
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {/* Page header */}
-      <div className='mb-6'>
-        <div className='flex items-center justify-between mb-4'>
-          <div className='flex items-center space-x-4'>
-            <Link href='/tickets'>
-              <Button icon={<ArrowLeft />} type='text'>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            <Link href="/tickets">
+              <Button icon={<ArrowLeft />} type="text">
                 返回列表
               </Button>
             </Link>
             <div>
-              <Title level={2} className='!mb-1 !text-gray-900'>
+              <Title level={2} className="!mb-1 !text-gray-900">
                 工单详情 #{ticket.id}
               </Title>
-              <Text type='secondary'>{ticket.title}</Text>
+              <Text type="secondary">{ticket.title}</Text>
             </div>
           </div>
-          <div className='flex items-center space-x-2'>
+          <div className="flex items-center space-x-2">
             <Badge
               status={statusMap[ticket.status]?.status || 'default'}
               text={statusMap[ticket.status]?.text || ticket.status}
@@ -288,31 +286,31 @@ const TicketDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
-        <Space orientation='vertical' size={16} style={{ width: '100%' }}>
-          <Descriptions column={2} bordered size='middle'>
-            <Descriptions.Item label='标题'>{ticket.title}</Descriptions.Item>
-            <Descriptions.Item label='编号'>{ticket.ticketNumber || '-'}</Descriptions.Item>
-            <Descriptions.Item label='状态'>{ticket.status}</Descriptions.Item>
-            <Descriptions.Item label='优先级'>{ticket.priority}</Descriptions.Item>
-            <Descriptions.Item label='创建时间'>{ticket.createdAt}</Descriptions.Item>
-            <Descriptions.Item label='更新时间'>{ticket.updatedAt}</Descriptions.Item>
-            <Descriptions.Item label='描述' span={2}>
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Space orientation="vertical" size={16} style={{ width: '100%' }}>
+          <Descriptions column={2} bordered size="middle">
+            <Descriptions.Item label="标题">{ticket.title}</Descriptions.Item>
+            <Descriptions.Item label="编号">{ticket.ticketNumber || '-'}</Descriptions.Item>
+            <Descriptions.Item label="状态">{ticket.status}</Descriptions.Item>
+            <Descriptions.Item label="优先级">{ticket.priority}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">{ticket.createdAt}</Descriptions.Item>
+            <Descriptions.Item label="更新时间">{ticket.updatedAt}</Descriptions.Item>
+            <Descriptions.Item label="描述" span={2}>
               {ticket.description}
             </Descriptions.Item>
           </Descriptions>
 
           {/* SLA Information */}
           {slaInfo && (
-            <Card size='small' title='SLA信息' className='mt-4'>
-              <Space orientation='vertical' style={{ width: '100%' }}>
-                <div className='flex justify-between'>
-                  <Text type='secondary'>SLA定义:</Text>
+            <Card size="small" title="SLA信息" className="mt-4">
+              <Space orientation="vertical" style={{ width: '100%' }}>
+                <div className="flex justify-between">
+                  <Text type="secondary">SLA定义:</Text>
                   <Tag color={slaInfo.is_breached ? 'red' : 'blue'}>{slaInfo.sla_name}</Tag>
                 </div>
                 {slaInfo.response_deadline && (
-                  <div className='flex justify-between'>
-                    <Text type='secondary'>响应截止:</Text>
+                  <div className="flex justify-between">
+                    <Text type="secondary">响应截止:</Text>
                     <Text
                       type={
                         slaInfo.response_time_remaining !== null &&
@@ -329,8 +327,8 @@ const TicketDetailPage: React.FC = () => {
                   </div>
                 )}
                 {slaInfo.resolution_deadline && (
-                  <div className='flex justify-between'>
-                    <Text type='secondary'>解决截止:</Text>
+                  <div className="flex justify-between">
+                    <Text type="secondary">解决截止:</Text>
                     <Text
                       type={
                         slaInfo.resolution_time_remaining !== null &&
@@ -346,14 +344,14 @@ const TicketDetailPage: React.FC = () => {
                     </Text>
                   </div>
                 )}
-                {slaInfo.is_breached && <Tag color='red'>SLA已违规</Tag>}
+                {slaInfo.is_breached && <Tag color="red">SLA已违规</Tag>}
               </Space>
             </Card>
           )}
 
           <Space>
             <Button
-              type='primary'
+              type="primary"
               onClick={handleApprove}
               disabled={isRequester}
               title={isRequester ? '不能审批自己提交的工单' : ''}
@@ -377,13 +375,13 @@ const TicketDetailPage: React.FC = () => {
           </Space>
 
           {isRequester && (
-            <Text type='secondary' className='block mt-2'>
+            <Text type="secondary" className="block mt-2">
               您是此工单的申请人，无法进行审批操作
             </Text>
           )}
 
           {!isRequester && (
-            <Text type='secondary'>支持状态变更、审批流程、分配处理人等完整工单操作</Text>
+            <Text type="secondary">支持状态变更、审批流程、分配处理人等完整工单操作</Text>
           )}
         </Space>
 
@@ -391,7 +389,7 @@ const TicketDetailPage: React.FC = () => {
         <Modal
           title={
             <Space>
-              <UserCheck className='w-5 h-5 text-blue-600' />
+              <UserCheck className="w-5 h-5 text-blue-600" />
               分配工单
             </Space>
           }
@@ -403,14 +401,14 @@ const TicketDetailPage: React.FC = () => {
           footer={null}
           width={500}
         >
-          <Form form={assignForm} layout='vertical' onFinish={handleAssignSubmit}>
+          <Form form={assignForm} layout="vertical" onFinish={handleAssignSubmit}>
             <Form.Item
-              label='分配给'
-              name='assignee_id'
+              label="分配给"
+              name="assignee_id"
               rules={[{ required: true, message: '请选择处理人' }]}
             >
               <Select
-                placeholder='请选择处理人'
+                placeholder="请选择处理人"
                 loading={loadingUsers}
                 showSearch
                 filterOption={(input, option) =>
@@ -421,20 +419,20 @@ const TicketDetailPage: React.FC = () => {
                   label: (
                     <Space>
                       <span>{user.name}</span>
-                      <Text type='secondary' className='text-xs'>
+                      <Text type="secondary" className="text-xs">
                         ({user.username})
                       </Text>
-                      {user.department && <Tag color='blue'>{user.department}</Tag>}
+                      {user.department && <Tag color="blue">{user.department}</Tag>}
                     </Space>
                   ),
                 }))}
               />
             </Form.Item>
-            <Form.Item label='备注' name='comment'>
-              <TextArea rows={3} placeholder='请输入分配备注（可选）' maxLength={500} showCount />
+            <Form.Item label="备注" name="comment">
+              <TextArea rows={3} placeholder="请输入分配备注（可选）" maxLength={500} showCount />
             </Form.Item>
-            <Form.Item className='mb-0'>
-              <Space className='w-full justify-end'>
+            <Form.Item className="mb-0">
+              <Space className="w-full justify-end">
                 <Button
                   icon={<X />}
                   onClick={() => {
@@ -444,7 +442,7 @@ const TicketDetailPage: React.FC = () => {
                 >
                   取消
                 </Button>
-                <Button type='primary' htmlType='submit' icon={<Save />}>
+                <Button type="primary" htmlType="submit" icon={<Save />}>
                   确认分配
                 </Button>
               </Space>
@@ -456,8 +454,8 @@ const TicketDetailPage: React.FC = () => {
         <Modal
           title={
             <Space>
-              <Edit className='w-5 h-5 text-green-600' />
-              {t('tickets.edit')}
+              <Edit className="w-5 h-5 text-green-600" />
+              编辑工单
             </Space>
           }
           open={editModalVisible}
@@ -468,41 +466,41 @@ const TicketDetailPage: React.FC = () => {
           footer={null}
           width={600}
         >
-          <Form form={editForm} layout='vertical' onFinish={handleEditSubmit}>
+          <Form form={editForm} layout="vertical" onFinish={handleEditSubmit}>
             <Form.Item
-              label='工单标题'
-              name='title'
+              label="工单标题"
+              name="title"
               rules={[
                 { required: true, message: '请输入工单标题' },
                 { max: 100, message: '标题不能超过100个字符' },
               ]}
             >
-              <Input placeholder='请输入工单标题' />
+              <Input placeholder="请输入工单标题" />
             </Form.Item>
             <Form.Item
-              label='工单描述'
-              name='description'
+              label="工单描述"
+              name="description"
               rules={[
                 { required: true, message: '请输入工单描述' },
                 { max: 2000, message: '描述不能超过2000个字符' },
               ]}
             >
-              <TextArea rows={6} placeholder='请输入工单描述' showCount maxLength={2000} />
+              <TextArea rows={6} placeholder="请输入工单描述" showCount maxLength={2000} />
             </Form.Item>
-            <div className='grid grid-cols-2 gap-4'>
+            <div className="grid grid-cols-2 gap-4">
               <Form.Item
-                label='优先级'
-                name='priority'
+                label="优先级"
+                name="priority"
                 rules={[{ required: true, message: '请选择优先级' }]}
               >
                 <Select
-                  placeholder='请选择优先级'
+                  placeholder="请选择优先级"
                   options={[
                     {
                       value: 'low',
                       label: (
                         <>
-                          <Tag color='green'>低优先级</Tag>
+                          <Tag color="green">低优先级</Tag>
                         </>
                       ),
                     },
@@ -510,7 +508,7 @@ const TicketDetailPage: React.FC = () => {
                       value: 'medium',
                       label: (
                         <>
-                          <Tag color='orange'>中优先级</Tag>
+                          <Tag color="orange">中优先级</Tag>
                         </>
                       ),
                     },
@@ -518,7 +516,7 @@ const TicketDetailPage: React.FC = () => {
                       value: 'high',
                       label: (
                         <>
-                          <Tag color='red'>高优先级</Tag>
+                          <Tag color="red">高优先级</Tag>
                         </>
                       ),
                     },
@@ -526,12 +524,12 @@ const TicketDetailPage: React.FC = () => {
                 />
               </Form.Item>
               <Form.Item
-                label='状态'
-                name='status'
+                label="状态"
+                name="status"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
                 <Select
-                  placeholder='请选择状态'
+                  placeholder="请选择状态"
                   options={[
                     { value: 'new', label: '待处理' },
                     { value: 'open', label: '处理中' },
@@ -542,8 +540,8 @@ const TicketDetailPage: React.FC = () => {
                 />
               </Form.Item>
             </div>
-            <Form.Item className='mb-0'>
-              <Space className='w-full justify-end'>
+            <Form.Item className="mb-0">
+              <Space className="w-full justify-end">
                 <Button
                   icon={<X />}
                   onClick={() => {
@@ -553,8 +551,8 @@ const TicketDetailPage: React.FC = () => {
                 >
                   取消
                 </Button>
-                <Button type='primary' htmlType='submit' icon={<Save />}>
-                  {t('common.save')}
+                <Button type="primary" htmlType="submit" icon={<Save />}>
+                  保存修改
                 </Button>
               </Space>
             </Form.Item>

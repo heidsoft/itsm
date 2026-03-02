@@ -258,14 +258,14 @@ export const TicketAssociation: React.FC = () => {
       render: (_: any, record: Ticket) => (
         <Space>
           <Button
-            size='small'
+            size="small"
             icon={<Eye />}
             onClick={() => window.open(`/tickets/${record.id}`, '_blank')}
           >
             查看
           </Button>
           <Button
-            size='small'
+            size="small"
             icon={<Link />}
             onClick={() => {
               setSelectedTickets([record.id]);
@@ -285,8 +285,8 @@ export const TicketAssociation: React.FC = () => {
       key: 'source',
       render: (record: TicketRelation) => (
         <div>
-          <div className='font-medium'>{record.sourceTicket.ticketNumber}</div>
-          <div className='text-sm text-gray-500'>{record.sourceTicket.title}</div>
+          <div className="font-medium">{record.sourceTicket.ticketNumber}</div>
+          <div className="text-sm text-gray-500">{record.sourceTicket.title}</div>
         </div>
       ),
     },
@@ -303,8 +303,8 @@ export const TicketAssociation: React.FC = () => {
       key: 'target',
       render: (record: TicketRelation) => (
         <div>
-          <div className='font-medium'>{record.targetTicket.ticketNumber}</div>
-          <div className='text-sm text-gray-500'>{record.targetTicket.title}</div>
+          <div className="font-medium">{record.targetTicket.ticketNumber}</div>
+          <div className="text-sm text-gray-500">{record.targetTicket.title}</div>
         </div>
       ),
     },
@@ -324,7 +324,7 @@ export const TicketAssociation: React.FC = () => {
       title: '操作',
       key: 'action',
       render: (_: any, record: TicketRelation) => (
-        <Button size='small' danger icon={<Unlink />} onClick={() => removeRelation(record.id)}>
+        <Button size="small" danger icon={<Unlink />} onClick={() => removeRelation(record.id)}>
           移除
         </Button>
       ),
@@ -332,12 +332,12 @@ export const TicketAssociation: React.FC = () => {
   ];
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 工单关联管理 */}
       <Card
         title={
           <Space>
-            <Link className='text-blue-600' />
+            <Link className="text-blue-600" />
             <span>工单关联管理</span>
             <Badge count={relations.length} />
           </Space>
@@ -361,9 +361,9 @@ export const TicketAssociation: React.FC = () => {
           </Space>
         }
       >
-        <div className='mb-4'>
+        <div className="mb-4">
           <Input.Search
-            placeholder='搜索工单...'
+            placeholder="搜索工单..."
             value={searchKeyword}
             onChange={e => setSearchKeyword(e.target.value)}
             style={{ width: 300 }}
@@ -376,7 +376,7 @@ export const TicketAssociation: React.FC = () => {
         <Table
           columns={columns}
           dataSource={tickets}
-          rowKey='id'
+          rowKey="id"
           rowSelection={{
             type: 'checkbox',
             selectedRowKeys: selectedTickets,
@@ -390,22 +390,22 @@ export const TicketAssociation: React.FC = () => {
       <Card
         title={
           <Space>
-            <Link className='text-green-600' />
+            <Link className="text-green-600" />
             <span>关联关系</span>
             <Badge count={relations.length} />
           </Space>
         }
       >
         {relations.length === 0 ? (
-          <div className='text-center py-8 text-gray-500'>
-            <Link className='w-12 h-12 mx-auto mb-3 text-gray-300' />
+          <div className="text-center py-8 text-gray-500">
+            <Link className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p>暂无关联关系</p>
           </div>
         ) : (
           <Table
             columns={relationColumns}
             dataSource={relations}
-            rowKey='id'
+            rowKey="id"
             pagination={{ pageSize: 5 }}
           />
         )}
@@ -415,39 +415,39 @@ export const TicketAssociation: React.FC = () => {
       <Card
         title={
           <Space>
-            <Merge className='text-orange-600' />
+            <Merge className="text-orange-600" />
             <span>合并候选工单</span>
             <Badge count={mergeCandidates.length} />
           </Space>
         }
       >
         {mergeCandidates.length === 0 ? (
-          <div className='text-center py-8 text-gray-500'>
-            <Merge className='w-12 h-12 mx-auto mb-3 text-gray-300' />
+          <div className="text-center py-8 text-gray-500">
+            <Merge className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             <p>暂无合并候选工单</p>
           </div>
         ) : (
-          <div className='space-y-3'>
+          <div className="space-y-3">
             {mergeCandidates.map((candidate, index) => (
-              <div key={index} className='p-3 border rounded hover:bg-gray-50'>
-                <div className='flex items-center justify-between'>
-                  <div className='flex-1'>
-                    <div className='flex items-center mb-2'>
-                      <Text strong className='mr-3'>
+              <div key={index} className="p-3 border rounded hover:bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center mb-2">
+                      <Text strong className="mr-3">
                         {candidate.ticket.ticketNumber}
                       </Text>
-                      <Tag color='orange'>相似度: {candidate.similarity}%</Tag>
+                      <Tag color="orange">相似度: {candidate.similarity}%</Tag>
                     </div>
-                    <Text className='block mb-1'>{candidate.ticket.title}</Text>
-                    <Text type='secondary' className='text-sm'>
+                    <Text className="block mb-1">{candidate.ticket.title}</Text>
+                    <Text type="secondary" className="text-sm">
                       {candidate.reason}
                     </Text>
                   </div>
                   <Space>
-                    <Button size='small' icon={<Eye />}>
+                    <Button size="small" icon={<Eye />}>
                       查看
                     </Button>
-                    <Button size='small' type='primary' icon={<Merge />}>
+                    <Button size="small" type="primary" icon={<Merge />}>
                       合并
                     </Button>
                   </Space>
@@ -460,21 +460,21 @@ export const TicketAssociation: React.FC = () => {
 
       {/* 创建关联关系模态框 */}
       <Modal
-        title='创建工单关联'
+        title="创建工单关联"
         open={showRelationModal}
         onCancel={() => setShowRelationModal(false)}
         footer={null}
         width={600}
       >
-        <Form form={relationForm} layout='vertical' onFinish={handleCreateRelation}>
+        <Form form={relationForm} layout="vertical" onFinish={handleCreateRelation}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='sourceTicketId'
-                label='源工单'
+                name="sourceTicketId"
+                label="源工单"
                 rules={[{ required: true, message: '请选择源工单' }]}
               >
-                <Select placeholder='选择源工单'>
+                <Select placeholder="选择源工单">
                   {tickets.map(ticket => (
                     <Option key={ticket.id} value={ticket.id}>
                       {ticket.ticketNumber} - {ticket.title}
@@ -485,11 +485,11 @@ export const TicketAssociation: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item
-                name='targetTicketId'
-                label='目标工单'
+                name="targetTicketId"
+                label="目标工单"
                 rules={[{ required: true, message: '请选择目标工单' }]}
               >
-                <Select placeholder='选择目标工单'>
+                <Select placeholder="选择目标工单">
                   {tickets.map(ticket => (
                     <Option key={ticket.id} value={ticket.id}>
                       {ticket.ticketNumber} - {ticket.title}
@@ -501,31 +501,31 @@ export const TicketAssociation: React.FC = () => {
           </Row>
 
           <Form.Item
-            name='relationType'
-            label='关联类型'
+            name="relationType"
+            label="关联类型"
             rules={[{ required: true, message: '请选择关联类型' }]}
           >
-            <Select placeholder='选择关联类型'>
-              <Option value='parent'>父工单</Option>
-              <Option value='child'>子工单</Option>
-              <Option value='duplicate'>重复工单</Option>
-              <Option value='related'>相关工单</Option>
-              <Option value='blocked_by'>被阻塞</Option>
-              <Option value='blocks'>阻塞其他</Option>
+            <Select placeholder="选择关联类型">
+              <Option value="parent">父工单</Option>
+              <Option value="child">子工单</Option>
+              <Option value="duplicate">重复工单</Option>
+              <Option value="related">相关工单</Option>
+              <Option value="blocked_by">被阻塞</Option>
+              <Option value="blocks">阻塞其他</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            name='description'
-            label='关联说明'
+            name="description"
+            label="关联说明"
             rules={[{ required: true, message: '请填写关联说明' }]}
           >
-            <TextArea rows={3} placeholder='请描述工单间的关联关系...' />
+            <TextArea rows={3} placeholder="请描述工单间的关联关系..." />
           </Form.Item>
 
-          <div className='flex justify-end space-x-2'>
+          <div className="flex justify-end space-x-2">
             <Button onClick={() => setShowRelationModal(false)}>取消</Button>
-            <Button type='primary' htmlType='submit'>
+            <Button type="primary" htmlType="submit">
               创建关联
             </Button>
           </div>
@@ -534,24 +534,24 @@ export const TicketAssociation: React.FC = () => {
 
       {/* 合并工单模态框 */}
       <Modal
-        title='合并工单'
+        title="合并工单"
         open={showMergeModal}
         onCancel={() => setShowMergeModal(false)}
         footer={null}
         width={800}
       >
         <Alert
-          message='工单合并说明'
-          description='合并工单将保留主工单，将其他工单的信息合并到主工单中。合并后其他工单将被关闭。'
-          type='info'
+          message="工单合并说明"
+          description="合并工单将保留主工单，将其他工单的信息合并到主工单中。合并后其他工单将被关闭。"
+          type="info"
           showIcon
-          className='mb-4'
+          className="mb-4"
         />
 
-        <div className='space-y-4'>
+        <div className="space-y-4">
           <div>
             <Text strong>选择主工单（保留）:</Text>
-            <Select placeholder='选择要保留的主工单' style={{ width: '100%', marginTop: 8 }}>
+            <Select placeholder="选择要保留的主工单" style={{ width: '100%', marginTop: 8 }}>
               {tickets
                 .filter(t => selectedTickets.includes(t.id))
                 .map(ticket => (
@@ -564,11 +564,11 @@ export const TicketAssociation: React.FC = () => {
 
           <div>
             <Text strong>选择要合并的工单:</Text>
-            <div className='mt-2 space-y-2'>
+            <div className="mt-2 space-y-2">
               {tickets
                 .filter(t => selectedTickets.includes(t.id))
                 .map(ticket => (
-                  <div key={ticket.id} className='flex items-center space-x-2'>
+                  <div key={ticket.id} className="flex items-center space-x-2">
                     <Checkbox defaultChecked />
                     <Text>
                       {ticket.ticketNumber} - {ticket.title}
@@ -580,13 +580,13 @@ export const TicketAssociation: React.FC = () => {
 
           <div>
             <Text strong>合并说明:</Text>
-            <TextArea rows={3} placeholder='请描述合并的原因和注意事项...' className='mt-2' />
+            <TextArea rows={3} placeholder="请描述合并的原因和注意事项..." className="mt-2" />
           </div>
         </div>
 
-        <div className='flex justify-end space-x-2 mt-6'>
+        <div className="flex justify-end space-x-2 mt-6">
           <Button onClick={() => setShowMergeModal(false)}>取消</Button>
-          <Button type='primary' danger>
+          <Button type="primary" danger>
             确认合并
           </Button>
         </div>

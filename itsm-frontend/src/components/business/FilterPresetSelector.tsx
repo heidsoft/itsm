@@ -203,7 +203,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
       <Space>
         <Select
           style={{ width: 180 }}
-          placeholder='筛选预设'
+          placeholder="筛选预设"
           onSelect={handlePresetSelect}
           popupRender={menu => (
             <div>
@@ -230,8 +230,8 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
                       </Space>
                       <Dropdown menu={{ items: getPresetMenuItems(preset) }} trigger={['click']}>
                         <Button
-                          type='text'
-                          size='small'
+                          type="text"
+                          size="small"
                           onClick={e => e.stopPropagation()}
                           style={{ padding: '0 4px' }}
                         >
@@ -267,8 +267,8 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
                       <span>{preset.name}</span>
                       <Dropdown menu={{ items: getPresetMenuItems(preset) }} trigger={['click']}>
                         <Button
-                          type='text'
-                          size='small'
+                          type="text"
+                          size="small"
                           onClick={e => e.stopPropagation()}
                           style={{ padding: '0 4px' }}
                         >
@@ -281,7 +281,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
               )}
               <div style={{ borderTop: '1px solid #f0f0f0', margin: '4px 0' }} />
               <Button
-                type='text'
+                type="text"
                 icon={<PlusOutlined />}
                 block
                 onClick={() => {
@@ -296,7 +296,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
           )}
         >
           {presets.length === 0 && (
-            <Option value='' disabled>
+            <Option value="" disabled>
               暂无预设
             </Option>
           )}
@@ -305,7 +305,7 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
 
       {/* 保存预设模态框 */}
       <Modal
-        title='保存筛选预设'
+        title="保存筛选预设"
         open={saveModalVisible}
         onOk={handleSavePreset}
         onCancel={() => {
@@ -313,23 +313,23 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
           form.resetFields();
         }}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='预设名称'
+            name="name"
+            label="预设名称"
             rules={[{ required: true, message: '请输入预设名称' }]}
           >
-            <Input placeholder='例如：我的待处理工单' />
+            <Input placeholder="例如：我的待处理工单" />
           </Form.Item>
-          <Form.Item name='is_favorite' valuePropName='checked'>
-            <Input type='checkbox' /> 收藏此预设
+          <Form.Item name="is_favorite" valuePropName="checked">
+            <Input type="checkbox" /> 收藏此预设
           </Form.Item>
         </Form>
       </Modal>
 
       {/* 编辑预设模态框 */}
       <Modal
-        title='编辑筛选预设'
+        title="编辑筛选预设"
         open={editModalVisible}
         onOk={handleEditPreset}
         onCancel={() => {
@@ -338,16 +338,16 @@ export const FilterPresetSelector: React.FC<FilterPresetSelectorProps> = ({
           form.resetFields();
         }}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='预设名称'
+            name="name"
+            label="预设名称"
             rules={[{ required: true, message: '请输入预设名称' }]}
           >
-            <Input placeholder='例如：我的待处理工单' />
+            <Input placeholder="例如：我的待处理工单" />
           </Form.Item>
-          <Form.Item name='is_favorite' valuePropName='checked'>
-            <Input type='checkbox' /> 收藏此预设
+          <Form.Item name="is_favorite" valuePropName="checked">
+            <Input type="checkbox" /> 收藏此预设
           </Form.Item>
         </Form>
       </Modal>

@@ -96,7 +96,7 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
               backgroundColor: getColorByName(stat.color),
               border: 'none',
             }}
-            icon={<Icon className='w-6 h-6' />}
+            icon={<Icon className="w-6 h-6" />}
           />
           <div
             style={{
@@ -116,7 +116,7 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
           loading={loading}
           styles={{ content: { color: token.colorText, fontSize: 28, fontWeight: 700 } }}
         />
-        <Paragraph type='secondary' style={{ marginTop: token.marginSM, marginBottom: 0 }}>
+        <Paragraph type="secondary" style={{ marginTop: token.marginSM, marginBottom: 0 }}>
           {stat.description}
         </Paragraph>
       </Card>
@@ -126,7 +126,7 @@ export const SystemOverview: React.FC<SystemOverviewProps> = ({ stats, loading }
   return (
     <div style={{ marginBottom: 24 }}>
       <Title level={3} style={{ marginBottom: 24 }}>
-        <BarChart3 className='w-5 h-5' style={{ marginRight: 8, color: '#1890ff' }} />
+        <BarChart3 className="w-5 h-5" style={{ marginRight: 8, color: '#1890ff' }} />
         {t('admin.systemOverview')}
       </Title>
       <Row gutter={[16, 16]}>

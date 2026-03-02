@@ -66,7 +66,7 @@ const Textarea = forwardRef<
     const showCounter = maxLength && maxLength > 0;
 
     return (
-      <div className='relative'>
+      <div className="relative">
         <textarea
           ref={combinedRef}
           value={value}
@@ -85,7 +85,7 @@ const Textarea = forwardRef<
         />
 
         {showCounter && (
-          <div className='absolute bottom-2 right-2 text-xs text-gray-400 bg-white px-1'>
+          <div className="absolute bottom-2 right-2 text-xs text-gray-400 bg-white px-1">
             {currentLength}/{maxLength}
           </div>
         )}

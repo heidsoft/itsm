@@ -58,7 +58,7 @@ export default function ProjectsPage() {
       render: (text: string) => (
         <Space>
           <ProjectOutlined />
-          <span className='font-medium'>{text}</span>
+          <span className="font-medium">{text}</span>
         </Space>
       ),
     },
@@ -83,7 +83,7 @@ export default function ProjectsPage() {
       title: '进度',
       dataIndex: 'progress', // Not in API yet
       key: 'progress',
-      render: (percent: number) => <Progress percent={percent || 0} size='small' />,
+      render: (percent: number) => <Progress percent={percent || 0} size="small" />,
       width: 200,
     },
     {
@@ -99,10 +99,10 @@ export default function ProjectsPage() {
       title: '操作',
       key: 'action',
       render: (_: any, record: Project) => (
-        <Space size='middle'>
-          <Button type='text' icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+        <Space size="middle">
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -159,12 +159,12 @@ export default function ProjectsPage() {
         breadcrumb: { items: [{ title: '首页' }, { title: '项目管理' }] },
       }}
       extra={[
-        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchProjects} loading={fetching}>
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchProjects} loading={fetching}>
           刷新
         </Button>,
         <Button
-          key='create'
-          type='primary'
+          key="create"
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => setIsModalVisible(true)}
         >
@@ -172,40 +172,40 @@ export default function ProjectsPage() {
         </Button>,
       ]}
     >
-      <Table columns={columns} dataSource={projects} rowKey='id' loading={fetching} />
+      <Table columns={columns} dataSource={projects} rowKey="id" loading={fetching} />
 
       <Modal
-        title='新建/编辑项目'
+        title="新建/编辑项目"
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
         width={600}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='项目名称'
+            name="name"
+            label="项目名称"
             rules={[{ required: true, message: '请输入项目名称' }]}
           >
-            <Input placeholder='请输入项目名称' />
+            <Input placeholder="请输入项目名称" />
           </Form.Item>
           <Form.Item
-            name='code'
-            label='项目代码'
+            name="code"
+            label="项目代码"
             rules={[{ required: true, message: '请输入项目代码' }]}
           >
-            <Input placeholder='请输入项目代码' />
+            <Input placeholder="请输入项目代码" />
           </Form.Item>
-          <div className='grid grid-cols-2 gap-4'>
-            <Form.Item name='department_id' label='所属部门'>
-              <Select placeholder='请选择部门' options={[{ value: 1, label: '研发中心' }]} />
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="department_id" label="所属部门">
+              <Select placeholder="请选择部门" options={[{ value: 1, label: '研发中心' }]} />
             </Form.Item>
-            <Form.Item name='manager_id' label='负责人'>
-              <Select placeholder='请选择负责人' options={[{ value: 1, label: '管理员' }]} />
+            <Form.Item name="manager_id" label="负责人">
+              <Select placeholder="请选择负责人" options={[{ value: 1, label: '管理员' }]} />
             </Form.Item>
           </div>
-          <Form.Item name='description' label='描述'>
+          <Form.Item name="description" label="描述">
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

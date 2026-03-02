@@ -214,43 +214,43 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
 
   return (
     <Modal
-      title='批量导入工单分类'
+      title="批量导入工单分类"
       open={visible}
       onCancel={handleCancel}
       footer={null}
       width={800}
       destroyOnHidden
     >
-      <div className='space-y-6'>
+      <div className="space-y-6">
         {/* 模板下载 */}
-        <Card size='small' title='下载导入模板'>
+        <Card size="small" title="下载导入模板">
           <Space>
-            <Button icon={<Download className='w-4 h-4' />} onClick={downloadTemplate}>
+            <Button icon={<Download className="w-4 h-4" />} onClick={downloadTemplate}>
               下载CSV模板
             </Button>
-            <Button icon={<FileExcel className='w-4 h-4' />} onClick={downloadExcelTemplate}>
+            <Button icon={<FileExcel className="w-4 h-4" />} onClick={downloadExcelTemplate}>
               下载Excel模板
             </Button>
           </Space>
-          <div className='mt-2 text-sm text-gray-500'>
+          <div className="mt-2 text-sm text-gray-500">
             请按照模板格式填写数据，支持CSV和Excel文件
           </div>
         </Card>
 
         {/* 文件上传 */}
-        <Card size='small' title='选择文件'>
+        <Card size="small" title="选择文件">
           <Dragger {...uploadProps}>
-            <p className='ant-upload-drag-icon'>
-              <UploadOutlined className='text-4xl text-blue-500' />
+            <p className="ant-upload-drag-icon">
+              <UploadOutlined className="text-4xl text-blue-500" />
             </p>
-            <p className='ant-upload-text'>点击或拖拽文件到此区域上传</p>
-            <p className='ant-upload-hint'>支持 .xlsx, .xls, .csv 格式，文件大小不超过 10MB</p>
+            <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
+            <p className="ant-upload-hint">支持 .xlsx, .xls, .csv 格式，文件大小不超过 10MB</p>
           </Dragger>
         </Card>
 
         {/* 文件预览 */}
         {previewData.length > 0 && (
-          <Card size='small' title='数据预览'>
+          <Card size="small" title="数据预览">
             <Table
               dataSource={previewData}
               columns={[
@@ -272,7 +272,7 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
                   ),
                 },
               ]}
-              size='small'
+              size="small"
               pagination={false}
               scroll={{ x: 600 }}
             />
@@ -281,44 +281,44 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
 
         {/* 导入进度 */}
         {uploading && (
-          <Card size='small' title='导入进度'>
-            <Progress percent={importProgress} status='active' />
-            <div className='text-center text-sm text-gray-500 mt-2'>正在导入数据，请稍候...</div>
+          <Card size="small" title="导入进度">
+            <Progress percent={importProgress} status="active" />
+            <div className="text-center text-sm text-gray-500 mt-2">正在导入数据，请稍候...</div>
           </Card>
         )}
 
         {/* 导入结果 */}
         {importResult && (
-          <Card size='small' title='导入结果'>
-            <div className='space-y-4'>
+          <Card size="small" title="导入结果">
+            <div className="space-y-4">
               {/* 统计信息 */}
-              <div className='flex items-center justify-center space-x-8'>
-                <div className='text-center'>
-                  <div className='text-2xl font-bold text-green-600'>{importResult.success}</div>
-                  <div className='text-sm text-gray-500'>成功</div>
+              <div className="flex items-center justify-center space-x-8">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">{importResult.success}</div>
+                  <div className="text-sm text-gray-500">成功</div>
                 </div>
-                <div className='text-center'>
-                  <div className='text-2xl font-bold text-red-600'>{importResult.failed}</div>
-                  <div className='text-sm text-gray-500'>失败</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-red-600">{importResult.failed}</div>
+                  <div className="text-sm text-gray-500">失败</div>
                 </div>
-                <div className='text-center'>
-                  <div className='text-2xl font-bold text-blue-600'>{importResult.total}</div>
-                  <div className='text-sm text-gray-500'>总计</div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">{importResult.total}</div>
+                  <div className="text-sm text-gray-500">总计</div>
                 </div>
               </div>
 
               {/* 错误信息 */}
               {importResult.errors.length > 0 && (
                 <Alert
-                  message='导入错误'
+                  message="导入错误"
                   description={
-                    <ul className='list-disc list-inside'>
+                    <ul className="list-disc list-inside">
                       {importResult.errors.map((error, index) => (
                         <li key={index}>{error}</li>
                       ))}
                     </ul>
                   }
-                  type='error'
+                  type="error"
                   showIcon
                 />
               )}
@@ -345,24 +345,24 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
                   },
                   { title: '消息', dataIndex: 'message', key: 'message' },
                 ]}
-                size='small'
+                size="small"
                 pagination={false}
-                rowKey='row'
+                rowKey="row"
               />
             </div>
           </Card>
         )}
 
         {/* 操作按钮 */}
-        <div className='flex justify-end space-x-2'>
+        <div className="flex justify-end space-x-2">
           <Button onClick={handleCancel}>取消</Button>
           {fileList.length > 0 && !uploading && !importResult && (
-            <Button type='primary' onClick={handleImport}>
+            <Button type="primary" onClick={handleImport}>
               开始导入
             </Button>
           )}
           {importResult && (
-            <Button type='primary' onClick={handleFinish}>
+            <Button type="primary" onClick={handleFinish}>
               完成
             </Button>
           )}

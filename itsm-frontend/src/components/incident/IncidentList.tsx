@@ -159,17 +159,17 @@ const IncidentList: React.FC = () => {
       key: 'action',
       width: 120,
       render: (_: any, record: Incident) => (
-        <Space size='small'>
-          <Tooltip title='查看详情'>
+        <Space size="small">
+          <Tooltip title="查看详情">
             <Button
-              type='text'
+              type="text"
               icon={<EyeOutlined />}
               onClick={() => router.push(`/incidents/${record.id}`)}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
               onClick={() => router.push(`/incidents/${record.id}/edit`)}
             />
@@ -180,13 +180,13 @@ const IncidentList: React.FC = () => {
   ];
 
   return (
-    <Card variant='borderless'>
-      <Form form={form} layout='inline' style={{ marginBottom: 24 }}>
-        <Form.Item name='keyword'>
-          <Input placeholder='搜索编号或标题' allowClear prefix={<SearchOutlined />} />
+    <Card variant="borderless">
+      <Form form={form} layout="inline" style={{ marginBottom: 24 }}>
+        <Form.Item name="keyword">
+          <Input placeholder="搜索编号或标题" allowClear prefix={<SearchOutlined />} />
         </Form.Item>
-        <Form.Item name='status'>
-          <Select placeholder='状态' style={{ width: 120 }} allowClear>
+        <Form.Item name="status">
+          <Select placeholder="状态" style={{ width: 120 }} allowClear>
             {Object.entries(IncidentStatusLabels).map(([key, label]) => (
               <Option key={key} value={key}>
                 {label}
@@ -194,8 +194,8 @@ const IncidentList: React.FC = () => {
             ))}
           </Select>
         </Form.Item>
-        <Form.Item name='priority'>
-          <Select placeholder='优先级' style={{ width: 120 }} allowClear>
+        <Form.Item name="priority">
+          <Select placeholder="优先级" style={{ width: 120 }} allowClear>
             {Object.entries(IncidentPriorityLabels).map(([key, label]) => (
               <Option key={key} value={key}>
                 {label}
@@ -205,7 +205,7 @@ const IncidentList: React.FC = () => {
         </Form.Item>
         <Form.Item>
           <Space>
-            <Button type='primary' onClick={handleSearch}>
+            <Button type="primary" onClick={handleSearch}>
               查询
             </Button>
             <Button onClick={handleReset}>重置</Button>
@@ -213,7 +213,7 @@ const IncidentList: React.FC = () => {
         </Form.Item>
         <div style={{ flex: 1, textAlign: 'right' }}>
           <Button
-            type='primary'
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => router.push('/incidents/new')}
           >
@@ -223,15 +223,15 @@ const IncidentList: React.FC = () => {
       </Form>
 
       <Table
-        rowKey='id'
+        rowKey="id"
         columns={columns as any}
         dataSource={data}
         loading={loading}
         scroll={{ x: 'max-content' }}
         locale={{
           emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无事件数据'>
-              <Button type='primary' onClick={() => router.push('/incidents/new')}>
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无事件数据">
+              <Button type="primary" onClick={() => router.push('/incidents/new')}>
                 创建第一个事件
               </Button>
             </Empty>

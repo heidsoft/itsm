@@ -213,7 +213,7 @@ export const QuickActions: React.FC = () => {
             <Title level={4} style={{ margin: 0 }}>
               {group.title}
             </Title>
-            <Text type='secondary'>{group.description}</Text>
+            <Text type="secondary">{group.description}</Text>
           </div>
         }
       >
@@ -224,19 +224,19 @@ export const QuickActions: React.FC = () => {
               <Col xs={24} md={12} key={index}>
                 <Link href={action.href} style={{ textDecoration: 'none' }}>
                   <Card
-                    size='small'
+                    size="small"
                     hoverable
                     style={{ height: '100%' }}
                     styles={{ body: { padding: token.paddingMD } }}
                   >
-                    <Space align='start' style={{ width: '100%' }}>
+                    <Space align="start" style={{ width: '100%' }}>
                       <Avatar
                         size={40}
                         style={{
                           backgroundColor: getColorByClass(action.color),
                           border: 'none',
                         }}
-                        icon={<Icon className='w-5 h-5' />}
+                        icon={<Icon className="w-5 h-5" />}
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div
@@ -251,13 +251,13 @@ export const QuickActions: React.FC = () => {
                             {action.title}
                           </Text>
                           <ArrowUpRight
-                            className='w-4 h-4'
+                            className="w-4 h-4"
                             style={{ color: token.colorTextSecondary }}
                           />
                         </div>
                         <Tooltip title={action.description}>
                           <p
-                            className='truncate'
+                            className="truncate"
                             style={{
                               fontSize: token.fontSizeSM,
                               margin: '4px 0',
@@ -268,7 +268,7 @@ export const QuickActions: React.FC = () => {
                           </p>
                         </Tooltip>
                         <Text
-                          type='secondary'
+                          type="secondary"
                           style={{ fontSize: token.fontSizeSM, fontWeight: 500 }}
                         >
                           {action.stats}
@@ -289,12 +289,12 @@ export const QuickActions: React.FC = () => {
     <div style={{ marginBottom: token.marginLG }}>
       <Title level={3} style={{ marginBottom: token.marginLG }}>
         <Zap
-          className='w-5 h-5'
+          className="w-5 h-5"
           style={{ marginRight: token.marginXS, color: token.colorPrimary }}
         />
         {t('admin.quickActions')}
       </Title>
-      <Space orientation='vertical' size='large' style={{ width: '100%' }}>
+      <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         {Object.entries(quickActionGroups).map(([key, group]) => (
           <QuickActionGroup key={key} group={group} actions={group.actions} />
         ))}

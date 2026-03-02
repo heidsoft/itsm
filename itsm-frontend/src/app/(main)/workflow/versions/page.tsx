@@ -248,9 +248,9 @@ const WorkflowVersionsPage = () => {
       key: 'version',
       width: 120,
       render: (version: string, record: WorkflowVersion) => (
-        <div className='flex items-center space-x-2'>
-          <span className='font-mono text-sm'>{version}</span>
-          {record.is_current && <Badge count='当前' style={{ backgroundColor: '#52c41a' }} />}
+        <div className="flex items-center space-x-2">
+          <span className="font-mono text-sm">{version}</span>
+          {record.is_current && <Badge count="当前" style={{ backgroundColor: '#52c41a' }} />}
         </div>
       ),
     },
@@ -266,7 +266,7 @@ const WorkflowVersionsPage = () => {
       dataIndex: 'change_log',
       key: 'change_log',
       render: (changeLog: string) => (
-        <div className='max-w-xs truncate'>
+        <div className="max-w-xs truncate">
           <Tooltip title={changeLog}>
             <span>{changeLog}</span>
           </Tooltip>
@@ -279,8 +279,8 @@ const WorkflowVersionsPage = () => {
       key: 'created_by',
       width: 120,
       render: (createdBy: string) => (
-        <div className='flex items-center'>
-          <User className='w-4 h-4 mr-1' />
+        <div className="flex items-center">
+          <User className="w-4 h-4 mr-1" />
           <span>{createdBy}</span>
         </div>
       ),
@@ -291,7 +291,7 @@ const WorkflowVersionsPage = () => {
       key: 'created_at',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{new Date(date).toLocaleString('zh-CN')}</div>
+        <div className="text-sm">{new Date(date).toLocaleString('zh-CN')}</div>
       ),
     },
     {
@@ -299,7 +299,7 @@ const WorkflowVersionsPage = () => {
       key: 'stats',
       width: 120,
       render: (record: WorkflowVersion) => (
-        <div className='text-sm'>
+        <div className="text-sm">
           <div>元素: {Number(record.metadata?.elements_count ?? 0)}</div>
           <div>连接: {Number(record.metadata?.connections_count ?? 0)}</div>
         </div>
@@ -311,44 +311,44 @@ const WorkflowVersionsPage = () => {
       width: 200,
       render: (record: WorkflowVersion) => (
         <Space>
-          <Tooltip title='查看详情'>
+          <Tooltip title="查看详情">
             <Button
-              type='text'
-              icon={<Eye className='w-4 h-4' />}
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
               onClick={() => setSelectedVersion(record)}
             />
           </Tooltip>
           {record.status === 'draft' && (
-            <Tooltip title='部署'>
+            <Tooltip title="部署">
               <Button
-                type='text'
-                icon={<PlayCircle className='w-4 h-4' />}
+                type="text"
+                icon={<PlayCircle className="w-4 h-4" />}
                 onClick={() => handleDeployVersion(record)}
               />
             </Tooltip>
           )}
           {!record.is_current && record.status === 'active' && (
-            <Tooltip title='回滚'>
+            <Tooltip title="回滚">
               <Button
-                type='text'
-                icon={<RotateCcw className='w-4 h-4' />}
+                type="text"
+                icon={<RotateCcw className="w-4 h-4" />}
                 onClick={() => handleRollbackVersion(record)}
               />
             </Tooltip>
           )}
-          <Tooltip title='比较'>
+          <Tooltip title="比较">
             <Button
-              type='text'
-              icon={<Diff className='w-4 h-4' />}
+              type="text"
+              icon={<Diff className="w-4 h-4" />}
               onClick={() => handleCompareVersions(record, versions[0])}
             />
           </Tooltip>
           {record.status === 'draft' && (
-            <Tooltip title='删除'>
+            <Tooltip title="删除">
               <Button
-                type='text'
+                type="text"
                 danger
-                icon={<Trash2 className='w-4 h-4' />}
+                icon={<Trash2 className="w-4 h-4" />}
                 onClick={() => handleDeleteVersion(record.id)}
               />
             </Tooltip>
@@ -361,16 +361,16 @@ const WorkflowVersionsPage = () => {
   return (
     <>
       {/* 页面头部 */}
-      <div className='mb-6'>
-        <h1 className='text-2xl font-bold text-gray-900'>工作流版本管理</h1>
-        <p className='text-gray-600 mt-1'>管理工作流的不同版本，支持版本控制和回滚</p>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">工作流版本管理</h1>
+        <p className="text-gray-600 mt-1">管理工作流的不同版本，支持版本控制和回滚</p>
       </div>
       {/* 工具栏 */}
-      <Card className='enterprise-card mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="enterprise-card mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={6}>
             <Select
-              placeholder='选择工作流'
+              placeholder="选择工作流"
               value={workflowId}
               onChange={setWorkflowId}
               style={{ width: '100%' }}
@@ -383,58 +383,58 @@ const WorkflowVersionsPage = () => {
           <Col xs={24} sm={12} md={18}>
             <Space>
               <Button
-                type='primary'
-                icon={<Plus className='w-4 h-4' />}
+                type="primary"
+                icon={<Plus className="w-4 h-4" />}
                 onClick={handleCreateVersion}
               >
                 新建版本
               </Button>
-              <Button icon={<Upload className='w-4 h-4' />}>导入版本</Button>
-              <Button icon={<Download className='w-4 h-4' />}>导出版本</Button>
-              <Button icon={<History className='w-4 h-4' />}>版本历史</Button>
+              <Button icon={<Upload className="w-4 h-4" />}>导入版本</Button>
+              <Button icon={<Download className="w-4 h-4" />}>导出版本</Button>
+              <Button icon={<History className="w-4 h-4" />}>版本历史</Button>
             </Space>
           </Col>
         </Row>
       </Card>
 
       {/* 版本统计 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='总版本数'
+              title="总版本数"
               value={versions.length}
-              prefix={<GitBranch className='w-5 h-5' />}
+              prefix={<GitBranch className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='激活版本'
+              title="激活版本"
               value={versions.filter(v => v.status === 'active').length}
-              prefix={<CheckCircle className='w-5 h-5' />}
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='草稿版本'
+              title="草稿版本"
               value={versions.filter(v => v.status === 'draft').length}
-              prefix={<Clock className='w-5 h-5' />}
+              prefix={<Clock className="w-5 h-5" />}
               styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='归档版本'
+              title="归档版本"
               value={versions.filter(v => v.status === 'archived').length}
-              prefix={<AlertCircle className='w-5 h-5' />}
+              prefix={<AlertCircle className="w-5 h-5" />}
               styles={{ content: { color: '#666' } }}
             />
           </Card>
@@ -442,11 +442,11 @@ const WorkflowVersionsPage = () => {
       </Row>
 
       {/* 版本列表 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         <Table
           columns={columns}
           dataSource={versions}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           pagination={false}
           scroll={{ x: 1200 }}
@@ -463,35 +463,35 @@ const WorkflowVersionsPage = () => {
         destroyOnHidden
       >
         {selectedVersion && (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             <Descriptions column={2}>
-              <Descriptions.Item label='版本号'>{selectedVersion.version}</Descriptions.Item>
-              <Descriptions.Item label='状态'>
+              <Descriptions.Item label="版本号">{selectedVersion.version}</Descriptions.Item>
+              <Descriptions.Item label="状态">
                 <Tag color={getStatusColor(selectedVersion.status)}>
                   {getStatusText(selectedVersion.status)}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label='创建人'>{selectedVersion.created_by}</Descriptions.Item>
-              <Descriptions.Item label='创建时间'>
+              <Descriptions.Item label="创建人">{selectedVersion.created_by}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">
                 {new Date(selectedVersion.created_at).toLocaleString('zh-CN')}
               </Descriptions.Item>
-              <Descriptions.Item label='当前版本'>
+              <Descriptions.Item label="当前版本">
                 {selectedVersion.is_current ? '是' : '否'}
               </Descriptions.Item>
             </Descriptions>
 
             <Divider>变更日志</Divider>
-            <div className='bg-gray-50 p-4 rounded'>
+            <div className="bg-gray-50 p-4 rounded">
               <Text>{selectedVersion.change_log}</Text>
             </div>
 
             <Divider>流程变量</Divider>
-            <pre className='bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40'>
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40">
               {JSON.stringify(selectedVersion.process_variables, null, 2)}
             </pre>
 
             <Divider>BPMN XML</Divider>
-            <pre className='bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40'>
+            <pre className="bg-gray-100 p-4 rounded text-sm overflow-auto max-h-40">
               {selectedVersion.bpmn_xml}
             </pre>
           </div>
@@ -500,7 +500,7 @@ const WorkflowVersionsPage = () => {
 
       {/* 版本比较模态框 */}
       <Modal
-        title='版本比较'
+        title="版本比较"
         open={compareModalVisible}
         onCancel={() => setCompareModalVisible(false)}
         footer={null}
@@ -508,37 +508,37 @@ const WorkflowVersionsPage = () => {
         destroyOnHidden
       >
         {comparison && (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             <Row gutter={16}>
               <Col span={12}>
-                <Card title={`版本 ${comparison.version1.version}`} size='small'>
-                  <Descriptions column={1} size='small'>
-                    <Descriptions.Item label='状态'>
+                <Card title={`版本 ${comparison.version1.version}`} size="small">
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="状态">
                       <Tag color={getStatusColor(comparison.version1.status)}>
                         {getStatusText(comparison.version1.status)}
                       </Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label='创建人'>
+                    <Descriptions.Item label="创建人">
                       {comparison.version1.created_by}
                     </Descriptions.Item>
-                    <Descriptions.Item label='创建时间'>
+                    <Descriptions.Item label="创建时间">
                       {new Date(comparison.version1.created_at).toLocaleDateString('zh-CN')}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title={`版本 ${comparison.version2.version}`} size='small'>
-                  <Descriptions column={1} size='small'>
-                    <Descriptions.Item label='状态'>
+                <Card title={`版本 ${comparison.version2.version}`} size="small">
+                  <Descriptions column={1} size="small">
+                    <Descriptions.Item label="状态">
                       <Tag color={getStatusColor(comparison.version2.status)}>
                         {getStatusText(comparison.version2.status)}
                       </Tag>
                     </Descriptions.Item>
-                    <Descriptions.Item label='创建人'>
+                    <Descriptions.Item label="创建人">
                       {comparison.version2.created_by}
                     </Descriptions.Item>
-                    <Descriptions.Item label='创建时间'>
+                    <Descriptions.Item label="创建时间">
                       {new Date(comparison.version2.created_at).toLocaleDateString('zh-CN')}
                     </Descriptions.Item>
                   </Descriptions>
@@ -550,32 +550,32 @@ const WorkflowVersionsPage = () => {
 
             <Row gutter={16}>
               <Col span={12}>
-                <Card title='新增元素' size='small'>
+                <Card title="新增元素" size="small">
                   {comparison.comparison.elements_added.length > 0 ? (
-                    <ul className='list-disc list-inside'>
+                    <ul className="list-disc list-inside">
                       {comparison.comparison.elements_added.map((element, index) => (
-                        <li key={index} className='text-green-600'>
+                        <li key={index} className="text-green-600">
                           {element}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <Text type='secondary'>无新增元素</Text>
+                    <Text type="secondary">无新增元素</Text>
                   )}
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title='删除元素' size='small'>
+                <Card title="删除元素" size="small">
                   {comparison.comparison.elements_removed.length > 0 ? (
-                    <ul className='list-disc list-inside'>
+                    <ul className="list-disc list-inside">
                       {comparison.comparison.elements_removed.map((element, index) => (
-                        <li key={index} className='text-red-600'>
+                        <li key={index} className="text-red-600">
                           {element}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <Text type='secondary'>无删除元素</Text>
+                    <Text type="secondary">无删除元素</Text>
                   )}
                 </Card>
               </Col>
@@ -583,32 +583,32 @@ const WorkflowVersionsPage = () => {
 
             <Row gutter={16}>
               <Col span={12}>
-                <Card title='修改元素' size='small'>
+                <Card title="修改元素" size="small">
                   {comparison.comparison.elements_modified.length > 0 ? (
-                    <ul className='list-disc list-inside'>
+                    <ul className="list-disc list-inside">
                       {comparison.comparison.elements_modified.map((element, index) => (
-                        <li key={index} className='text-orange-600'>
+                        <li key={index} className="text-orange-600">
                           {element}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <Text type='secondary'>无修改元素</Text>
+                    <Text type="secondary">无修改元素</Text>
                   )}
                 </Card>
               </Col>
               <Col span={12}>
-                <Card title='变量变更' size='small'>
+                <Card title="变量变更" size="small">
                   {comparison.comparison.variables_changed.length > 0 ? (
-                    <ul className='list-disc list-inside'>
+                    <ul className="list-disc list-inside">
                       {comparison.comparison.variables_changed.map((variable, index) => (
-                        <li key={index} className='text-blue-600'>
+                        <li key={index} className="text-blue-600">
                           {variable}
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <Text type='secondary'>无变量变更</Text>
+                    <Text type="secondary">无变量变更</Text>
                   )}
                 </Card>
               </Col>

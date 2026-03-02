@@ -43,10 +43,10 @@ const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data
 
   return (
     <DashboardChartCard
-      title='团队工作负载'
-      subtitle='各成员工单处理情况'
+      title="团队工作负载"
+      subtitle="各成员工单处理情况"
       icon={<Users style={{ width: 20, height: 20 }} />}
-      iconColor='#3b82f6'
+      iconColor="#3b82f6"
       extra={
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 12, color: '#8c8c8c' }}>平均完成率</div>

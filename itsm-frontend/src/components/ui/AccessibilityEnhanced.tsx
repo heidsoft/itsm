@@ -162,7 +162,7 @@ export const ScreenReaderOnly: React.FC<{ children: React.ReactNode; className?:
  * 焦点指示器组件
  */
 export const FocusIndicator: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className='focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2'>
+  <div className="focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
     {children}
   </div>
 );
@@ -197,7 +197,7 @@ export const AriaLiveRegion: React.FC<{
   atomic?: boolean;
   children: React.ReactNode;
 }> = ({ politeness = 'polite', atomic = false, children }) => (
-  <div aria-live={politeness} aria-atomic={atomic} className='sr-only'>
+  <div aria-live={politeness} aria-atomic={atomic} className="sr-only">
     {children}
   </div>
 );
@@ -213,14 +213,14 @@ export const KeyboardNavigationHint: React.FC<{
 
   return (
     <div
-      className='fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-50'
-      role='tooltip'
+      className="fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-lg shadow-lg z-50"
+      role="tooltip"
     >
-      <h3 className='font-semibold mb-2'>键盘快捷键</h3>
-      <ul className='space-y-1 text-sm'>
+      <h3 className="font-semibold mb-2">键盘快捷键</h3>
+      <ul className="space-y-1 text-sm">
         {shortcuts.map((shortcut, index) => (
-          <li key={index} className='flex justify-between gap-4'>
-            <kbd className='px-2 py-1 bg-gray-700 rounded text-xs'>{shortcut.key}</kbd>
+          <li key={index} className="flex justify-between gap-4">
+            <kbd className="px-2 py-1 bg-gray-700 rounded text-xs">{shortcut.key}</kbd>
             <span>{shortcut.description}</span>
           </li>
         ))}

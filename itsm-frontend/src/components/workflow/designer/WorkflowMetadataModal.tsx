@@ -32,31 +32,31 @@ export default function WorkflowMetadataModal({
 
   return (
     <Modal
-      title='编辑工作流信息'
+      title="编辑工作流信息"
       open={visible}
       onOk={handleOk}
       onCancel={onClose}
-      okText='保存'
-      cancelText='取消'
+      okText="保存"
+      cancelText="取消"
     >
-      <Form form={form} layout='vertical'>
+      <Form form={form} layout="vertical">
         <Form.Item
-          label='工作流名称'
-          name='name'
+          label="工作流名称"
+          name="name"
           rules={[{ required: true, message: '请输入工作流名称' }]}
         >
-          <Input placeholder='请输入工作流名称' />
+          <Input placeholder="请输入工作流名称" />
         </Form.Item>
-        <Form.Item label='描述' name='description'>
-          <TextArea rows={3} placeholder='请输入工作流描述' />
+        <Form.Item label="描述" name="description">
+          <TextArea rows={3} placeholder="请输入工作流描述" />
         </Form.Item>
-        <Form.Item label='分类' name='category'>
-          <Select placeholder='请选择分类'>
-            <Option value='general'>通用</Option>
-            <Option value='approval'>审批流程</Option>
-            <Option value='ticket'>工单流程</Option>
-            <Option value='incident'>事件流程</Option>
-            <Option value='change'>变更流程</Option>
+        <Form.Item label="分类" name="category">
+          <Select placeholder="请选择分类">
+            <Option value="general">通用</Option>
+            <Option value="approval">审批流程</Option>
+            <Option value="ticket">工单流程</Option>
+            <Option value="incident">事件流程</Option>
+            <Option value="change">变更流程</Option>
           </Select>
         </Form.Item>
       </Form>

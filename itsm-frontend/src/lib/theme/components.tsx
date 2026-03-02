@@ -366,7 +366,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
           }`}
           title={item.label}
         >
-          <span className='mr-1'>{item.icon}</span>
+          <span className="mr-1">{item.icon}</span>
           {item.label}
         </button>
       ))}

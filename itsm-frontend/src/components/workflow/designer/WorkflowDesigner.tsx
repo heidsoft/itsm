@@ -549,7 +549,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   );
 
   return (
-    <Layout className='h-screen'>
+    <Layout className="h-screen">
       {/* 工具栏 */}
       <WorkflowToolbar
         workflow={workflow}
@@ -561,7 +561,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
         currentXML={currentXML}
       />
 
-      <Content className='p-6 bg-gray-50'>
+      <Content className="p-6 bg-gray-50">
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}

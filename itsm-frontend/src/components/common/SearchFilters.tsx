@@ -51,7 +51,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
 
   return (
     <Card className={`mb-4 ${className}`}>
-      <Row gutter={[16, 16]} align='middle'>
+      <Row gutter={[16, 16]} align="middle">
         {/* 搜索框 */}
         <Col xs={24} sm={12} md={8} lg={6}>
           <Input.Search
@@ -59,7 +59,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
             onSearch={handleSearch}
             allowClear
             enterButton={<Search size={16} />}
-            size='large'
+            size="large"
           />
         </Col>
 
@@ -69,7 +69,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
             <Select
               placeholder={filter.placeholder || filter.label}
               allowClear={filter.allowClear !== false}
-              size='large'
+              size="large"
               style={{ width: '100%' }}
               onChange={value => handleFilterChange(filter.key, value)}
             >
@@ -84,12 +84,12 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
 
         {/* 操作按钮 */}
         <Col xs={24} sm={24} md={24} lg={24 - filters.length * 6}>
-          <Space size='middle' className='w-full justify-end'>
+          <Space size="middle" className="w-full justify-end">
             <Button icon={<RefreshCw size={16} />} onClick={handleReset} loading={loading}>
               重置
             </Button>
             {showExport && (
-              <Button icon={<Download size={16} />} onClick={onExport} type='primary'>
+              <Button icon={<Download size={16} />} onClick={onExport} type="primary">
                 导出
               </Button>
             )}

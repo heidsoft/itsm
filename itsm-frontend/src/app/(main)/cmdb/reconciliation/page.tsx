@@ -143,13 +143,13 @@ export default function ReconciliationPage() {
       render: (_: unknown, record: CloudResource) => (
         <Space>
           <Button
-            type='link'
+            type="link"
             onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}
           >
             新建CI
           </Button>
           <Button
-            type='link'
+            type="link"
             onClick={() => {
               setBindResource(record);
               setBindCIID('');
@@ -174,7 +174,7 @@ export default function ReconciliationPage() {
       dataIndex: 'name',
       width: 200,
       render: (value: string, record: ConfigurationItem) => (
-        <Button type='link' onClick={() => router.push(`/cmdb/cis/${record.id}`)}>
+        <Button type="link" onClick={() => router.push(`/cmdb/cis/${record.id}`)}>
           {value}
         </Button>
       ),
@@ -194,7 +194,7 @@ export default function ReconciliationPage() {
   ];
 
   return (
-    <Card variant='borderless'>
+    <Card variant="borderless">
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
@@ -206,7 +206,7 @@ export default function ReconciliationPage() {
       />
 
       <Card style={{ marginBottom: 16 }}>
-        <Space size='large' wrap>
+        <Space size="large" wrap>
           {summaryLabels.map(item => (
             <Statistic
               key={item.key}
@@ -217,27 +217,27 @@ export default function ReconciliationPage() {
         </Space>
       </Card>
 
-      <Card title='待绑定云资源' style={{ marginBottom: 16 }} loading={loading}>
+      <Card title="待绑定云资源" style={{ marginBottom: 16 }} loading={loading}>
         <Table
-          rowKey='id'
+          rowKey="id"
           columns={resourceColumns as any}
           dataSource={unboundResources}
           pagination={{ pageSize: 8 }}
         />
       </Card>
 
-      <Card title='孤儿配置项（引用资源不存在）' style={{ marginBottom: 16 }} loading={loading}>
+      <Card title="孤儿配置项（引用资源不存在）" style={{ marginBottom: 16 }} loading={loading}>
         <Table
-          rowKey='id'
+          rowKey="id"
           columns={ciColumns as any}
           dataSource={orphanCIs}
           pagination={{ pageSize: 8 }}
         />
       </Card>
 
-      <Card title='未关联配置项（有云资源ID但未绑定）' loading={loading}>
+      <Card title="未关联配置项（有云资源ID但未绑定）" loading={loading}>
         <Table
-          rowKey='id'
+          rowKey="id"
           columns={ciColumns as any}
           dataSource={unlinkedCIs}
           pagination={{ pageSize: 8 }}
@@ -245,7 +245,7 @@ export default function ReconciliationPage() {
       </Card>
 
       <Modal
-        title='绑定已有配置项'
+        title="绑定已有配置项"
         open={bindOpen}
         onCancel={() => setBindOpen(false)}
         onOk={handleBindExisting}
@@ -254,7 +254,7 @@ export default function ReconciliationPage() {
         <Input
           value={bindCIID}
           onChange={event => setBindCIID(event.target.value)}
-          placeholder='配置项ID'
+          placeholder="配置项ID"
         />
       </Modal>
     </Card>

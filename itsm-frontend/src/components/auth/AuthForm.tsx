@@ -199,26 +199,26 @@ export const AuthForm: React.FC<AuthFormProps> = ({
     <div className={cn('w-full max-w-md', className)}>
       {/* 移动端Logo */}
       {showMobileLogo && (
-        <div className='lg:hidden text-center mb-8'>
+        <div className="lg:hidden text-center mb-8">
           <div
-            className='inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4'
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
             style={{ backgroundColor: token.colorPrimary }}
           >
             <svg
-              className='w-8 h-8 text-white'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
               <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 strokeWidth={2}
-                d='M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01'
+                d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"
               />
             </svg>
           </div>
-          <h1 className='text-2xl font-bold' style={{ color: token.colorText }}>
+          <h1 className="text-2xl font-bold" style={{ color: token.colorText }}>
             ITSM Pro
           </h1>
           <p style={{ color: token.colorTextSecondary }}>智能IT服务管理平台</p>
@@ -227,7 +227,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
       {/* 表单卡片 */}
       <div
-        className='bg-white rounded-lg shadow-lg border'
+        className="bg-white rounded-lg shadow-lg border"
         style={{
           borderRadius: token.borderRadiusLG,
           boxShadow: token.boxShadowSecondary,
@@ -237,9 +237,9 @@ export const AuthForm: React.FC<AuthFormProps> = ({
       >
         {/* 表单标题 */}
         {(title || subtitle) && (
-          <div className='text-center mb-6'>
+          <div className="text-center mb-6">
             {title && (
-              <h2 className='text-xl font-semibold mb-2' style={{ color: token.colorText }}>
+              <h2 className="text-xl font-semibold mb-2" style={{ color: token.colorText }}>
                 {title}
               </h2>
             )}
@@ -250,14 +250,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         {/* 错误提示 */}
         {error && (
           <div
-            className='mb-4 p-3 rounded-md flex items-center space-x-2'
+            className="mb-4 p-3 rounded-md flex items-center space-x-2"
             style={{
               backgroundColor: token.colorErrorBg,
               border: `1px solid ${token.colorErrorBorder}`,
             }}
           >
             <div
-              className='w-4 h-4 rounded-full flex-shrink-0'
+              className="w-4 h-4 rounded-full flex-shrink-0"
               style={{ backgroundColor: token.colorError }}
             />
             <span style={{ color: token.colorError, fontSize: token.fontSizeSM }}>{error}</span>
@@ -267,14 +267,14 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         {/* 成功提示 */}
         {success && (
           <div
-            className='mb-4 p-3 rounded-md flex items-center space-x-2'
+            className="mb-4 p-3 rounded-md flex items-center space-x-2"
             style={{
               backgroundColor: token.colorSuccessBg,
               border: `1px solid ${token.colorSuccessBorder}`,
             }}
           >
             <div
-              className='w-4 h-4 rounded-full flex-shrink-0'
+              className="w-4 h-4 rounded-full flex-shrink-0"
               style={{ backgroundColor: token.colorSuccess }}
             />
             <span style={{ color: token.colorSuccess, fontSize: token.fontSizeSM }}>{success}</span>
@@ -284,12 +284,12 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         {/* 表单 */}
         <Form
           form={form}
-          layout='vertical'
+          layout="vertical"
           onFinish={handleSubmit}
           onFinishFailed={handleValidationFailed}
           onValuesChange={handleValuesChange}
           initialValues={initialValues}
-          className='space-y-4'
+          className="space-y-4"
         >
           {/* 表单字段 */}
           {fields.map(field => (
@@ -305,10 +305,10 @@ export const AuthForm: React.FC<AuthFormProps> = ({
           ))}
 
           {/* 主要按钮 */}
-          <Form.Item className='mb-0'>
+          <Form.Item className="mb-0">
             <Button
-              type='primary'
-              htmlType='submit'
+              type="primary"
+              htmlType="submit"
               size={
                 primaryButton.size === 'lg'
                   ? 'large'
@@ -340,7 +340,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
         {/* 次要按钮 */}
         {secondaryButton && (
-          <Space orientation='vertical' size='middle' style={{ width: '100%' }}>
+          <Space orientation="vertical" size="middle" style={{ width: '100%' }}>
             <Button
               type={
                 secondaryButton.type === 'primary'
@@ -373,7 +373,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
         )}
 
         {/* 其他操作 */}
-        {extraActions && <div className='mt-4'>{extraActions}</div>}
+        {extraActions && <div className="mt-4">{extraActions}</div>}
       </div>
     </div>
   );

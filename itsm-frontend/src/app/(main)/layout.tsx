@@ -76,8 +76,8 @@ export default function MainLayout({
   // 正在检查认证状态时显示 loading
   if (checkingAuth) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <LoadingSpinner size='lg' />
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function MainLayout({
     <ConfigProvider locale={zhCN}>
       <App>
         <Layout
-          className='min-h-screen bg-[#f5f7fb]'
+          className="min-h-screen bg-[#f5f7fb]"
           style={{
             paddingLeft: isMobile
               ? 0
@@ -106,20 +106,20 @@ export default function MainLayout({
           <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
 
           {/* 主区域 */}
-          <Layout className='bg-[#f5f7fb] min-h-screen'>
+          <Layout className="bg-[#f5f7fb] min-h-screen">
             {/* 顶部导航栏 */}
             <Header collapsed={collapsed} onCollapse={setCollapsed} showBreadcrumb={true} />
 
             {/* 内容区域 */}
             <Content
               onClick={handleContentClick}
-              className='bg-[#f5f7fb] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none'
+              className="bg-[#f5f7fb] w-auto min-w-0 max-w-full overflow-x-hidden shadow-none"
               style={{
                 minHeight: LAYOUT_CONFIG.content.minHeight,
               }}
             >
               <div
-                className='main-content'
+                className="main-content"
                 style={{
                   padding: isMobile ? `${LAYOUT_CONFIG.content.paddingMobile}px` : '16px',
                 }}
@@ -129,7 +129,7 @@ export default function MainLayout({
             </Content>
 
             {/* 页脚（可选） */}
-            <footer className='text-center p-4 bg-transparent text-gray-400 text-xs'>
+            <footer className="text-center p-4 bg-transparent text-gray-400 text-xs">
               ITSM Platform ©{new Date().getFullYear()} - IT服务管理平台
             </footer>
           </Layout>
@@ -139,7 +139,7 @@ export default function MainLayout({
         {!collapsed && isMobile && (
           <div
             onClick={() => setCollapsed(true)}
-            className='fixed inset-0 bg-black/45'
+            className="fixed inset-0 bg-black/45"
             style={{
               zIndex: LAYOUT_CONFIG.zIndex.sider - 1,
             }}

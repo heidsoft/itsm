@@ -187,7 +187,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   const handleViewSubtask = (subtask: Subtask) => {};
 
   return (
-    <div className='max-w-7xl mx-auto bg-gray-50 min-h-screen'>
+    <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen">
       {/* 头部 */}
       <TicketDetailHeader
         ticket={ticket}
@@ -197,12 +197,12 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       />
 
       {/* 主要内容区域 */}
-      <div className='px-6'>
+      <div className="px-6">
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
-          className='bg-white rounded-lg shadow-sm'
-          type='card'
+          className="bg-white rounded-lg shadow-sm"
+          type="card"
           items={[
             {
               key: 'overview',
@@ -232,7 +232,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'attachments',
               label: '附件',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketAttachmentSection
                     ticketId={ticket.id}
                     canUpload={canEdit}
@@ -259,7 +259,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'notifications',
               label: '通知',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketNotificationSection
                     ticketId={ticket.id}
                     canSend={canEdit}
@@ -272,7 +272,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'subtasks',
               label: '子任务',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketSubtasks
                     parentTicket={ticket}
                     subtasks={subtasks as any}
@@ -290,7 +290,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'dependencies',
               label: '依赖关系',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketDependencyManager
                     ticket={ticket}
                     canManage={canEdit}
@@ -303,7 +303,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'approval',
               label: '审批流程',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketMultiLevelApproval
                     ticket={ticket}
                     canManage={canEdit}
@@ -316,7 +316,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'root-cause',
               label: '根因分析',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketRootCauseAnalysis
                     ticketId={ticket.id}
                     autoAnalyze={false}

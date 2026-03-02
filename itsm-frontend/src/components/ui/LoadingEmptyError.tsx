@@ -116,18 +116,18 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
     return (
       <div className={className}>
         {success?.title && (
-          <div className='mb-4 text-center'>
-            <Title level={4} className='text-gray-700'>
+          <div className="mb-4 text-center">
+            <Title level={4} className="text-gray-700">
               {success.title}
             </Title>
             {success.description && (
-              <Text type='secondary' className='text-sm'>
+              <Text type="secondary" className="text-sm">
                 {success.description}
               </Text>
             )}
             {success.showAction && success.actionText && success.onAction && (
-              <div className='mt-3'>
-                <Button type='primary' onClick={success.onAction}>
+              <div className="mt-3">
+                <Button type="primary" onClick={success.onAction}>
                   {success.actionText}
                 </Button>
               </div>
@@ -146,8 +146,8 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
         className={`flex flex-col items-center justify-center ${className}`}
         style={{ minHeight }}
       >
-        <Spin size='large' />
-        <Text className='mt-4 text-gray-500'>{loadingText}</Text>
+        <Spin size="large" />
+        <Text className="mt-4 text-gray-500">{loadingText}</Text>
       </div>
     );
   }
@@ -166,15 +166,15 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
         className={`flex flex-col items-center justify-center ${className}`}
         style={{ minHeight }}
       >
-        <div className='text-gray-300 mb-4'>{config.icon}</div>
-        <Title level={4} className='text-gray-600 mb-2'>
+        <div className="text-gray-300 mb-4">{config.icon}</div>
+        <Title level={4} className="text-gray-600 mb-2">
           {config.title}
         </Title>
-        <Text type='secondary' className='text-center mb-6 max-w-md'>
+        <Text type="secondary" className="text-center mb-6 max-w-md">
           {config.description}
         </Text>
         {config.showAction !== false && config.actionText && config.onAction && (
-          <Button type='primary' icon={<Plus size={16} />} onClick={config.onAction}>
+          <Button type="primary" icon={<Plus size={16} />} onClick={config.onAction}>
             {config.actionText}
           </Button>
         )}
@@ -199,14 +199,14 @@ export const LoadingEmptyError: React.FC<LoadingEmptyErrorProps> = ({
         style={{ minHeight }}
       >
         <Result
-          status='error'
+          status="error"
           icon={<AlertTriangle style={{ color: '#ff4d4f' }} />}
           title={config.title}
           subTitle={config.description}
           extra={
-            <div className='flex gap-2'>
+            <div className="flex gap-2">
               {config.showRetry && (
-                <Button type='primary' icon={<RotateCcw size={16} />} onClick={config.onAction}>
+                <Button type="primary" icon={<RotateCcw size={16} />} onClick={config.onAction}>
                   {config.actionText}
                 </Button>
               )}
@@ -254,7 +254,7 @@ export const WorkflowsLoadingEmptyError = (props: Omit<LoadingEmptyErrorProps, '
 
 // 简化的状态组件
 export const Loading = ({ text = '加载中...', className = '' }) => (
-  <LoadingEmptyError state='loading' loadingText={text} className={className} />
+  <LoadingEmptyError state="loading" loadingText={text} className={className} />
 );
 
 export const Empty = ({
@@ -271,7 +271,7 @@ export const Empty = ({
   className?: string;
 }) => (
   <LoadingEmptyError
-    state='empty'
+    state="empty"
     empty={{ title, description, actionText, onAction }}
     className={className}
   />
@@ -291,7 +291,7 @@ export const Error = ({
   className?: string;
 }) => (
   <LoadingEmptyError
-    state='error'
+    state="error"
     error={{ title, description, actionText, onAction }}
     className={className}
   />

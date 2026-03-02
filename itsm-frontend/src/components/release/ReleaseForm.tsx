@@ -107,7 +107,7 @@ const ReleaseForm: React.FC = () => {
     <Card>
       <Form
         form={form}
-        layout='vertical'
+        layout="vertical"
         onFinish={onFinish}
         initialValues={{
           type: 'minor',
@@ -126,106 +126,106 @@ const ReleaseForm: React.FC = () => {
         <Divider>基本信息</Divider>
 
         <Form.Item
-          name='release_number'
-          label='发布编号'
+          name="release_number"
+          label="发布编号"
           rules={[{ required: true, message: '请输入发布编号' }]}
         >
-          <Input placeholder='例如: REL-20260222-001' />
+          <Input placeholder="例如: REL-20260222-001" />
         </Form.Item>
 
         <Form.Item
-          name='title'
-          label='标题'
+          name="title"
+          label="标题"
           rules={[{ required: true, message: '请输入发布标题' }]}
         >
-          <Input placeholder='发布标题' />
+          <Input placeholder="发布标题" />
         </Form.Item>
 
-        <Form.Item name='description' label='描述'>
-          <TextArea rows={3} placeholder='发布描述' />
+        <Form.Item name="description" label="描述">
+          <TextArea rows={3} placeholder="发布描述" />
         </Form.Item>
 
-        <Form.Item name='type' label='发布类型'>
+        <Form.Item name="type" label="发布类型">
           <Select>
-            <Option value='major'>主版本 (Major)</Option>
-            <Option value='minor'>次版本 (Minor)</Option>
-            <Option value='patch'>补丁 (Patch)</Option>
-            <Option value='hotfix'>紧急修复 (Hotfix)</Option>
+            <Option value="major">主版本 (Major)</Option>
+            <Option value="minor">次版本 (Minor)</Option>
+            <Option value="patch">补丁 (Patch)</Option>
+            <Option value="hotfix">紧急修复 (Hotfix)</Option>
           </Select>
         </Form.Item>
 
-        <Form.Item name='environment' label='目标环境'>
+        <Form.Item name="environment" label="目标环境">
           <Select>
-            <Option value='dev'>开发环境</Option>
-            <Option value='staging'>预发布环境</Option>
-            <Option value='production'>生产环境</Option>
+            <Option value="dev">开发环境</Option>
+            <Option value="staging">预发布环境</Option>
+            <Option value="production">生产环境</Option>
           </Select>
         </Form.Item>
 
-        <Form.Item name='severity' label='严重程度'>
+        <Form.Item name="severity" label="严重程度">
           <Select>
-            <Option value='low'>低</Option>
-            <Option value='medium'>中</Option>
-            <Option value='high'>高</Option>
-            <Option value='critical'>严重</Option>
+            <Option value="low">低</Option>
+            <Option value="medium">中</Option>
+            <Option value="high">高</Option>
+            <Option value="critical">严重</Option>
           </Select>
         </Form.Item>
 
         <Divider>计划信息</Divider>
 
-        <Form.Item name='planned_release_date' label='计划发布日期'>
+        <Form.Item name="planned_release_date" label="计划发布日期">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item name='planned_start_date' label='计划开始时间'>
+        <Form.Item name="planned_start_date" label="计划开始时间">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item name='planned_end_date' label='计划结束时间'>
+        <Form.Item name="planned_end_date" label="计划结束时间">
           <DatePicker showTime style={{ width: '100%' }} />
         </Form.Item>
 
         <Divider>发布内容</Divider>
 
-        <Form.Item name='release_notes' label='发布说明'>
-          <TextArea rows={4} placeholder='发布说明内容' />
+        <Form.Item name="release_notes" label="发布说明">
+          <TextArea rows={4} placeholder="发布说明内容" />
         </Form.Item>
 
-        <Form.Item name='deployment_steps' label='部署步骤'>
-          <TextArea rows={4} placeholder='每行一个步骤' />
+        <Form.Item name="deployment_steps" label="部署步骤">
+          <TextArea rows={4} placeholder="每行一个步骤" />
         </Form.Item>
 
-        <Form.Item name='affected_systems' label='受影响的系统'>
-          <TextArea rows={2} placeholder='每行一个系统' />
+        <Form.Item name="affected_systems" label="受影响的系统">
+          <TextArea rows={2} placeholder="每行一个系统" />
         </Form.Item>
 
-        <Form.Item name='affected_components' label='受影响的组件'>
-          <TextArea rows={2} placeholder='每行一个组件' />
+        <Form.Item name="affected_components" label="受影响的组件">
+          <TextArea rows={2} placeholder="每行一个组件" />
         </Form.Item>
 
         <Divider>回滚与验证</Divider>
 
-        <Form.Item name='rollback_procedure' label='回滚程序'>
-          <TextArea rows={4} placeholder='回滚步骤说明' />
+        <Form.Item name="rollback_procedure" label="回滚程序">
+          <TextArea rows={4} placeholder="回滚步骤说明" />
         </Form.Item>
 
-        <Form.Item name='validation_criteria' label='验证标准'>
-          <TextArea rows={3} placeholder='验证通过的标准' />
+        <Form.Item name="validation_criteria" label="验证标准">
+          <TextArea rows={3} placeholder="验证通过的标准" />
         </Form.Item>
 
         <Divider>其他选项</Divider>
 
-        <Form.Item name='is_emergency' label='紧急发布' valuePropName='checked'>
+        <Form.Item name="is_emergency" label="紧急发布" valuePropName="checked">
           <Switch />
         </Form.Item>
 
-        <Form.Item name='requires_approval' label='需要审批' valuePropName='checked'>
+        <Form.Item name="requires_approval" label="需要审批" valuePropName="checked">
           <Switch />
         </Form.Item>
 
         <Form.Item>
           <Space>
-            <Button type='primary' htmlType='submit' icon={<SaveOutlined />} loading={loading}>
+            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
               {isEdit ? '保存' : '创建'}
             </Button>
             <Button onClick={() => router.push('/releases')}>取消</Button>

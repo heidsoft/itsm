@@ -43,10 +43,10 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
 
   return (
     <DashboardChartCard
-      title='响应时间分布'
-      subtitle='工单首次响应时间统计'
+      title="响应时间分布"
+      subtitle="工单首次响应时间统计"
       icon={<LineChart style={{ width: 20, height: 20 }} />}
-      iconColor='#8b5cf6'
+      iconColor="#8b5cf6"
       extra={
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 12, color: '#8c8c8c' }}>平均响应</div>

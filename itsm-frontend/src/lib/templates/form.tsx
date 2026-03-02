@@ -58,7 +58,7 @@ export function createForm<T extends Record<string, unknown>>({
         {children(form)}
         <Form.Item style={{ marginTop: 24 }}>
           <Space>
-            <Button type='primary' onClick={handleSubmit} loading={loading}>
+            <Button type="primary" onClick={handleSubmit} loading={loading}>
               {submitText}
             </Button>
             {showReset && <Button onClick={() => form.resetFields()}>重置</Button>}
@@ -99,7 +99,7 @@ export function createSearchForm(config: SearchFormConfig) {
       <Form form={form} layout={layout} style={{ marginBottom: 16 }}>
         <Space wrap>
           {children(form)}
-          <Button type='primary' onClick={handleSearch} loading={loading}>
+          <Button type="primary" onClick={handleSearch} loading={loading}>
             搜索
           </Button>
           <Button

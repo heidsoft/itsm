@@ -270,7 +270,7 @@ describe('ErrorBoundary', () => {
     it('使用自定义 fallback 组件', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-      const CustomFallback = () => <div data-testid='custom-fallback'>Custom Error UI</div>;
+      const CustomFallback = () => <div data-testid="custom-fallback">Custom Error UI</div>;
 
       render(
         <ErrorBoundary fallback={<CustomFallback />}>
@@ -343,7 +343,7 @@ describe('ErrorBoundary', () => {
 
       // 重新渲染并改变 props（除了 children）
       rerender(
-        <ErrorBoundary resetOnPropsChange={true} data-test='changed'>
+        <ErrorBoundary resetOnPropsChange={true} data-test="changed">
           <ErrorComponent shouldThrow={false} />
         </ErrorBoundary>
       );
@@ -364,7 +364,7 @@ describe('ErrorBoundary', () => {
       );
 
       rerender(
-        <ErrorBoundary resetOnPropsChange={false} data-test='changed'>
+        <ErrorBoundary resetOnPropsChange={false} data-test="changed">
           <ErrorComponent shouldThrow={false} />
         </ErrorBoundary>
       );
@@ -657,7 +657,7 @@ describe('GlobalErrorBoundary', () => {
     it('使用自定义 fallback', () => {
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       const CustomFallback = () => (
-        <div data-testid='global-custom-fallback'>Global Custom Error</div>
+        <div data-testid="global-custom-fallback">Global Custom Error</div>
       );
 
       render(

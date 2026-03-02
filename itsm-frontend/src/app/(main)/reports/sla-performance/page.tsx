@@ -98,10 +98,10 @@ const SLAPerformanceReport = () => {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className='bg-white p-3 rounded-lg shadow-lg border border-gray-200'>
-          <p className='font-semibold text-gray-800 mb-2'>{`SLA类型: ${label}`}</p>
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="font-semibold text-gray-800 mb-2">{`SLA类型: ${label}`}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className='text-sm' style={{ color: entry.color }}>
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value}%`}
             </p>
           ))}
@@ -118,17 +118,17 @@ const SLAPerformanceReport = () => {
   };
 
   return (
-    <div className='p-6 bg-gray-50 min-h-full'>
-      <header className='mb-6'>
+    <div className="p-6 bg-gray-50 min-h-full">
+      <header className="mb-6">
         <Title level={2}>SLA性能报表</Title>
-        <p className='text-gray-500 mt-1'>展示服务级别协议的达成情况和性能指标</p>
+        <p className="text-gray-500 mt-1">展示服务级别协议的达成情况和性能指标</p>
       </header>
 
       {/* 控制栏 */}
-      <Card className='mb-6'>
-        <Row justify='space-between' align='middle'>
+      <Card className="mb-6">
+        <Row justify="space-between" align="middle">
           <Col>
-            <Text className='text-gray-600'>SLA合规率监控</Text>
+            <Text className="text-gray-600">SLA合规率监控</Text>
           </Col>
           <Col>
             <Button icon={<ReloadOutlined />} onClick={loadData}>
@@ -139,19 +139,19 @@ const SLAPerformanceReport = () => {
       </Card>
 
       {loading ? (
-        <div className='flex items-center justify-center h-64'>
-          <Spin size='large' tip='加载报表数据...' />
+        <div className="flex items-center justify-center h-64">
+          <Spin size="large" tip="加载报表数据..." />
         </div>
       ) : (
         <>
           {/* 统计卡片 */}
-          <Row gutter={[16, 16]} className='mb-6'>
+          <Row gutter={[16, 16]} className="mb-6">
             <Col xs={24} sm={8}>
               <Card>
                 <Statistic
-                  title='平均合规率'
+                  title="平均合规率"
                   value={avgCompliance}
-                  suffix='%'
+                  suffix="%"
                   styles={{
                     content: {
                       color:
@@ -169,7 +169,7 @@ const SLAPerformanceReport = () => {
             <Col xs={24} sm={8}>
               <Card>
                 <Statistic
-                  title='达标次数'
+                  title="达标次数"
                   value={totalMet}
                   styles={{ content: { color: COLORS.met } }}
                   prefix={<CheckCircleOutlined />}
@@ -179,7 +179,7 @@ const SLAPerformanceReport = () => {
             <Col xs={24} sm={8}>
               <Card>
                 <Statistic
-                  title='违规次数'
+                  title="违规次数"
                   value={totalBreached}
                   styles={{ content: { color: COLORS.breached } }}
                   prefix={<CloseCircleOutlined />}
@@ -189,34 +189,34 @@ const SLAPerformanceReport = () => {
           </Row>
 
           {/* 图表区域 */}
-          <Row gutter={[16, 16]} className='mb-6'>
+          <Row gutter={[16, 16]} className="mb-6">
             <Col xs={24} lg={16}>
-              <Card title='各类型SLA达成情况'>
-                <ResponsiveContainer width='100%' height={350}>
+              <Card title="各类型SLA达成情况">
+                <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={slaData}>
-                    <CartesianGrid strokeDasharray='3 3' />
-                    <XAxis dataKey='name' />
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Bar dataKey='met' name='达标' stackId='a' fill={COLORS.met} />
-                    <Bar dataKey='breached' name='违规' stackId='a' fill={COLORS.breached} />
+                    <Bar dataKey="met" name="达标" stackId="a" fill={COLORS.met} />
+                    <Bar dataKey="breached" name="违规" stackId="a" fill={COLORS.breached} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card title='总体达标率'>
-                <div className='text-center py-8'>
-                  <div className='text-5xl font-bold mb-4' style={{ color: COLORS.met }}>
+              <Card title="总体达标率">
+                <div className="text-center py-8">
+                  <div className="text-5xl font-bold mb-4" style={{ color: COLORS.met }}>
                     {((totalMet / (totalMet + totalBreached)) * 100).toFixed(1)}%
                   </div>
-                  <Text type='secondary'>SLA总体达标率</Text>
+                  <Text type="secondary">SLA总体达标率</Text>
                   <Progress
                     percent={(totalMet / (totalMet + totalBreached)) * 100}
                     strokeColor={COLORS.met}
                     showInfo={false}
-                    className='mt-4'
+                    className="mt-4"
                   />
                 </div>
               </Card>
@@ -224,12 +224,12 @@ const SLAPerformanceReport = () => {
           </Row>
 
           {/* 合规率详情 */}
-          <Card title='各SLA合规率详情'>
+          <Card title="各SLA合规率详情">
             <Row gutter={[16, 16]}>
               {slaData.map((sla, index) => (
                 <Col xs={24} sm={12} md={8} key={index}>
-                  <Card size='small' className='h-full'>
-                    <div className='flex items-center justify-between mb-4'>
+                  <Card size="small" className="h-full">
+                    <div className="flex items-center justify-between mb-4">
                       <Text strong>{sla.name}</Text>
                       <Text type={getComplianceStatus(sla.compliance) as any} strong>
                         {sla.compliance}%
@@ -246,17 +246,17 @@ const SLAPerformanceReport = () => {
                       }
                       showInfo={false}
                     />
-                    <div className='flex justify-between mt-2 text-sm text-gray-500'>
+                    <div className="flex justify-between mt-2 text-sm text-gray-500">
                       <span>
                         <CheckCircleOutlined
-                          className='inline mr-1'
+                          className="inline mr-1"
                           style={{ color: COLORS.met }}
                         />
                         {sla.met}%
                       </span>
                       <span>
                         <CloseCircleOutlined
-                          className='inline mr-1'
+                          className="inline mr-1"
                           style={{ color: COLORS.breached }}
                         />
                         {sla.breached}%

@@ -88,7 +88,7 @@ const A2UIComponentRenderer: React.FC<{
     case 'Card': {
       const child = props as { child: string };
       return (
-        <Card size='small' className='my-2'>
+        <Card size="small" className="my-2">
           {renderChild(child.child)}
         </Card>
       );
@@ -233,7 +233,7 @@ const A2UIComponentRenderer: React.FC<{
       return (
         <Form.Item>
           <Button
-            type='primary'
+            type="primary"
             disabled={!isEnabled}
             onClick={() => {
               if (btnProps?.action) {
@@ -255,7 +255,7 @@ const A2UIComponentRenderer: React.FC<{
     }
 
     default:
-      return <div className='text-gray-400 text-xs'>Unknown: {compType}</div>;
+      return <div className="text-gray-400 text-xs">Unknown: {compType}</div>;
   }
 };
 
@@ -475,13 +475,13 @@ export function A2UIFormRenderer() {
   // 成功提交后的显示
   if (submitted) {
     return (
-      <Card className='max-w-2xl mx-auto'>
-        <div className='text-center py-8'>
-          <CheckCircle className='w-16 h-16 text-green-500 mx-auto mb-4' />
-          <h2 className='text-xl font-semibold mb-2'>工单创建成功</h2>
-          <p className='text-gray-500 mb-4'>您的工单已成功提交</p>
+      <Card className="max-w-2xl mx-auto">
+        <div className="text-center py-8">
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">工单创建成功</h2>
+          <p className="text-gray-500 mb-4">您的工单已成功提交</p>
           <Button
-            type='primary'
+            type="primary"
             onClick={() => {
               setSubmitted(false);
               setComponents([]);
@@ -499,16 +499,16 @@ export function A2UIFormRenderer() {
   }
 
   return (
-    <Card className='max-w-2xl mx-auto'>
+    <Card className="max-w-2xl mx-auto">
       {/* AI 输入区 */}
-      <div className='mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg'>
-        <div className='flex items-center gap-2 mb-2'>
-          <Bot className='w-4 h-4 text-purple-500' />
-          <span className='text-sm font-medium'>描述需求，AI 自动生成表单</span>
+      <div className="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+        <div className="flex items-center gap-2 mb-2">
+          <Bot className="w-4 h-4 text-purple-500" />
+          <span className="text-sm font-medium">描述需求，AI 自动生成表单</span>
         </div>
         <Space.Compact style={{ width: '100%' }}>
           <Input
-            placeholder='例如：帮我申请一台 ThinkPad 笔记本，用于 Java 开发...'
+            placeholder="例如：帮我申请一台 ThinkPad 笔记本，用于 Java 开发..."
             value={userIntent}
             onChange={e => setUserIntent(e.target.value)}
             onPressEnter={sendToAI}
@@ -522,7 +522,7 @@ export function A2UIFormRenderer() {
       {/* A2UI 表单渲染 */}
       {components.length > 0 ? (
         <Spin spinning={loading}>
-          <Form form={form} layout='vertical'>
+          <Form form={form} layout="vertical">
             {renderableIds.map(id => {
               const comp = components.find(c => c.id === id);
               if (!comp) return null;
@@ -540,18 +540,18 @@ export function A2UIFormRenderer() {
           </Form>
         </Spin>
       ) : (
-        <div className='text-center text-gray-400 py-8'>
-          <Bot className='w-12 h-12 mx-auto mb-2 opacity-50' />
+        <div className="text-center text-gray-400 py-8">
+          <Bot className="w-12 h-12 mx-auto mb-2 opacity-50" />
           <p>描述您的需求，AI 将生成工单表单</p>
-          <p className='text-xs mt-2'>例如：帮我申请一台 ThinkPad 笔记本</p>
+          <p className="text-xs mt-2">例如：帮我申请一台 ThinkPad 笔记本</p>
         </div>
       )}
 
       {/* 调试信息 */}
       {process.env.NODE_ENV === 'development' && components.length > 0 && (
-        <details className='mt-4 text-xs text-gray-400'>
+        <details className="mt-4 text-xs text-gray-400">
           <summary>A2UI 调试信息</summary>
-          <pre className='mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40'>
+          <pre className="mt-2 p-2 bg-gray-100 rounded overflow-auto max-h-40">
             {JSON.stringify(components, null, 2)}
           </pre>
         </details>

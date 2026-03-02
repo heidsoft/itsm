@@ -54,16 +54,16 @@ export const SystemAlertCard: React.FC<SystemAlertCardProps> = ({
   return (
     <Card
       title={
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center space-x-2'>
-            <Bell size={16} className='text-orange-500' />
-            <span className='font-semibold text-gray-800'>{title}</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Bell size={16} className="text-orange-500" />
+            <span className="font-semibold text-gray-800">{title}</span>
           </div>
-          <div className='flex items-center space-x-2'>
-            {highCount > 0 && <Badge count={highCount} className='bg-red-500' />}
-            {mediumCount > 0 && <Badge count={mediumCount} className='bg-orange-500' />}
+          <div className="flex items-center space-x-2">
+            {highCount > 0 && <Badge count={highCount} className="bg-red-500" />}
+            {mediumCount > 0 && <Badge count={mediumCount} className="bg-orange-500" />}
             {onViewAll && (
-              <Button type='link' size='small' onClick={onViewAll}>
+              <Button type="link" size="small" onClick={onViewAll}>
                 查看全部
               </Button>
             )}
@@ -72,33 +72,33 @@ export const SystemAlertCard: React.FC<SystemAlertCardProps> = ({
       }
       className={`shadow-sm border-0 ${className}`}
     >
-      <div className='space-y-3'>
+      <div className="space-y-3">
         {alerts.length === 0 ? (
-          <div className='text-center py-8 text-gray-500'>
-            <AlertTriangle size={32} className='mx-auto mb-2 text-gray-300' />
+          <div className="text-center py-8 text-gray-500">
+            <AlertTriangle size={32} className="mx-auto mb-2 text-gray-300" />
             <p>暂无系统警报</p>
           </div>
         ) : (
           <List
             dataSource={alerts}
             renderItem={alert => (
-              <List.Item className='border-0 px-0'>
+              <List.Item className="border-0 px-0">
                 <Alert
                   message={
-                    <div className='flex items-center justify-between'>
+                    <div className="flex items-center justify-between">
                       <div>
-                        <span className='font-medium'>{alert.message}</span>
-                        <div className='text-xs text-gray-500 mt-1'>
+                        <span className="font-medium">{alert.message}</span>
+                        <div className="text-xs text-gray-500 mt-1">
                           {alert.time} • {getSeverityText(alert.severity)}
                         </div>
                       </div>
                       {onDismiss && (
                         <Button
-                          type='text'
-                          size='small'
+                          type="text"
+                          size="small"
                           icon={<X size={14} />}
                           onClick={() => onDismiss(alert.message)}
-                          className='text-gray-400 hover:text-gray-600'
+                          className="text-gray-400 hover:text-gray-600"
                         />
                       )}
                     </div>
@@ -106,7 +106,7 @@ export const SystemAlertCard: React.FC<SystemAlertCardProps> = ({
                   description={`严重程度: ${getSeverityText(alert.severity)}`}
                   type={getSeverityColor(alert.type)}
                   showIcon
-                  className='mb-2'
+                  className="mb-2"
                 />
               </List.Item>
             )}

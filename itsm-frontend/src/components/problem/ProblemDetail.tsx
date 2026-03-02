@@ -72,14 +72,14 @@ const ProblemDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <Card variant='borderless'>
+      <Card variant="borderless">
         <Skeleton active />
       </Card>
     );
   }
 
   if (!data) {
-    return <Card variant='borderless'>未找到该问题</Card>;
+    return <Card variant="borderless">未找到该问题</Card>;
   }
 
   const tabItems = [
@@ -87,18 +87,18 @@ const ProblemDetail: React.FC = () => {
       key: 'basic',
       label: '基本信息',
       children: (
-        <Card variant='borderless' bodyStyle={{ padding: '16px 24px' }}>
+        <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
           <Descriptions column={2}>
-            <Descriptions.Item label='创建人ID'>{data.created_by}</Descriptions.Item>
-            <Descriptions.Item label='负责人ID'>{data.assignee_id || '-'}</Descriptions.Item>
-            <Descriptions.Item label='优先级'>
+            <Descriptions.Item label="创建人ID">{data.created_by}</Descriptions.Item>
+            <Descriptions.Item label="负责人ID">{data.assignee_id || '-'}</Descriptions.Item>
+            <Descriptions.Item label="优先级">
               {ProblemPriorityLabels[data.priority]}
             </Descriptions.Item>
-            <Descriptions.Item label='分类'>{data.category}</Descriptions.Item>
-            <Descriptions.Item label='创建时间'>
+            <Descriptions.Item label="分类">{data.category}</Descriptions.Item>
+            <Descriptions.Item label="创建时间">
               {dayjs(data.created_at).format('YYYY-MM-DD HH:mm:ss')}
             </Descriptions.Item>
-            <Descriptions.Item label='更新时间'>
+            <Descriptions.Item label="更新时间">
               {dayjs(data.updated_at).format('YYYY-MM-DD HH:mm:ss')}
             </Descriptions.Item>
           </Descriptions>
@@ -138,9 +138,9 @@ const ProblemDetail: React.FC = () => {
   ];
 
   return (
-    <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
+    <Space orientation="vertical" style={{ width: '100%' }} size="middle">
       {/* 操作栏 */}
-      <Card variant='borderless' bodyStyle={{ padding: '16px 24px' }}>
+      <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
             <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/problems')}>
@@ -161,12 +161,12 @@ const ProblemDetail: React.FC = () => {
               编辑
             </Button>
             {data.status === ProblemStatus.OPEN && (
-              <Button type='primary' onClick={() => handleUpdateStatus(ProblemStatus.IN_PROGRESS)}>
+              <Button type="primary" onClick={() => handleUpdateStatus(ProblemStatus.IN_PROGRESS)}>
                 开始处理
               </Button>
             )}
             {data.status === ProblemStatus.IN_PROGRESS && (
-              <Button type='primary' onClick={() => handleUpdateStatus(ProblemStatus.RESOLVED)}>
+              <Button type="primary" onClick={() => handleUpdateStatus(ProblemStatus.RESOLVED)}>
                 标记解决
               </Button>
             )}
@@ -178,8 +178,8 @@ const ProblemDetail: React.FC = () => {
       </Card>
 
       {/* Tab 内容 */}
-      <Card variant='borderless'>
-        <Tabs items={tabItems} defaultActiveKey='basic' />
+      <Card variant="borderless">
+        <Tabs items={tabItems} defaultActiveKey="basic" />
       </Card>
     </Space>
   );

@@ -68,7 +68,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       {/* 页面头部 */}
       {header && (
         <header
-          className='sticky top-0 z-50'
+          className="sticky top-0 z-50"
           style={{
             backgroundColor: token.colorBgContainer,
             borderBottom: `1px solid ${token.colorBorder}`,
@@ -80,11 +80,11 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
       )}
 
       {/* 主要内容区域 */}
-      <div className='flex flex-1'>
+      <div className="flex flex-1">
         {/* 侧边栏 */}
         {sidebar && (
           <aside
-            className='hidden lg:block'
+            className="hidden lg:block"
             style={{
               width: layout.sidebar.width.lg,
               backgroundColor: token.colorBgContainer,
@@ -96,18 +96,18 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
         )}
 
         {/* 页面内容 */}
-        <main className='flex-1 flex flex-col'>
+        <main className="flex-1 flex flex-col">
           {/* 页面标题区域 */}
           {(title || description || showBreadcrumb) && (
             <div
-              className='px-4 py-6 lg:px-8'
+              className="px-4 py-6 lg:px-8"
               style={{
                 backgroundColor: token.colorBgContainer,
                 borderBottom: `1px solid ${token.colorBorder}`,
               }}
             >
               <div
-                className='mx-auto'
+                className="mx-auto"
                 style={{
                   maxWidth: layout.page.maxWidth,
                   padding: `0 ${semanticSpacing.padding[padding]}`,
@@ -115,19 +115,19 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
               >
                 {/* 面包屑 */}
                 {showBreadcrumb && breadcrumb.length > 0 && (
-                  <nav className='mb-4'>
-                    <ol className='flex items-center space-x-2 text-sm'>
+                  <nav className="mb-4">
+                    <ol className="flex items-center space-x-2 text-sm">
                       {breadcrumb.map((item, index) => (
-                        <li key={index} className='flex items-center'>
+                        <li key={index} className="flex items-center">
                           {index > 0 && (
-                            <span className='mx-2' style={{ color: token.colorTextTertiary }}>
+                            <span className="mx-2" style={{ color: token.colorTextTertiary }}>
                               /
                             </span>
                           )}
                           {item.href ? (
                             <a
                               href={item.href}
-                              className='hover:underline'
+                              className="hover:underline"
                               style={{ color: token.colorPrimary }}
                             >
                               {item.label}
@@ -143,14 +143,14 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
                 {/* 页面标题 */}
                 {title && (
-                  <h1 className='text-3xl font-bold mb-2' style={{ color: token.colorText }}>
+                  <h1 className="text-3xl font-bold mb-2" style={{ color: token.colorText }}>
                     {title}
                   </h1>
                 )}
 
                 {/* 页面描述 */}
                 {description && (
-                  <p className='text-lg' style={{ color: token.colorTextSecondary }}>
+                  <p className="text-lg" style={{ color: token.colorTextSecondary }}>
                     {description}
                   </p>
                 )}
@@ -160,13 +160,13 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
           {/* 页面内容 */}
           <div
-            className='flex-1 px-4 py-6 lg:px-8'
+            className="flex-1 px-4 py-6 lg:px-8"
             style={{
               padding: `${semanticSpacing.padding[padding]} ${semanticSpacing.padding[padding]}`,
             }}
           >
             <div
-              className='mx-auto'
+              className="mx-auto"
               style={{
                 maxWidth: layout.page.maxWidth,
               }}
@@ -187,7 +187,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
           }}
         >
           <div
-            className='mx-auto'
+            className="mx-auto"
             style={{
               maxWidth: layout.page.maxWidth,
             }}
@@ -249,14 +249,14 @@ export const ContentLayout: React.FC<ContentLayoutProps> = ({
     >
       {/* 内容头部 */}
       {(title || description || actions) && (
-        <div className='mb-6'>
-          <div className='flex items-center justify-between mb-2'>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2">
             {title && (
-              <h2 className='text-2xl font-semibold' style={{ color: token.colorText }}>
+              <h2 className="text-2xl font-semibold" style={{ color: token.colorText }}>
                 {title}
               </h2>
             )}
-            {actions && <div className='ml-4'>{actions}</div>}
+            {actions && <div className="ml-4">{actions}</div>}
           </div>
           {description && <p style={{ color: token.colorTextSecondary }}>{description}</p>}
         </div>

@@ -274,7 +274,7 @@ export default function ApprovalChainsPage() {
   }, [loadChains, loadStats]);
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 统计卡片 */}
       <ApprovalChainStatsCards stats={stats} loading={statsLoading} />
 

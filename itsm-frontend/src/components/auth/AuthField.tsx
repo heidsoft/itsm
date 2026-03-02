@@ -142,7 +142,7 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
           : token.colorTextSecondary;
 
       return (
-        <p className='mt-1 text-sm' style={{ color }}>
+        <p className="mt-1 text-sm" style={{ color }}>
           {text}
         </p>
       );
@@ -241,9 +241,9 @@ export const AuthFieldGroup: React.FC<AuthFieldGroupProps> = ({
       style={bordered ? { borderColor: token.colorBorder } : undefined}
     >
       {(title || description) && (
-        <div className='mb-4'>
+        <div className="mb-4">
           {title && (
-            <h3 className='text-lg font-semibold mb-1' style={{ color: token.colorText }}>
+            <h3 className="text-lg font-semibold mb-1" style={{ color: token.colorText }}>
               {title}
             </h3>
           )}

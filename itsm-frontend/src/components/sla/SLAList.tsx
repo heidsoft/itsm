@@ -119,7 +119,7 @@ const SLAList: React.FC = () => {
       width: 100,
       render: (active: boolean, record: SLADefinition) => (
         <Switch
-          size='small'
+          size="small"
           checked={active}
           onChange={checked => handleToggleActive(record, checked)}
         />
@@ -136,24 +136,24 @@ const SLAList: React.FC = () => {
       key: 'action',
       width: 160,
       render: (_: any, record: SLADefinition) => (
-        <Space size='small'>
-          <Tooltip title='编辑'>
+        <Space size="small">
+          <Tooltip title="编辑">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
               onClick={() => router.push(`/sla/definitions/${record.id}/edit`)}
             />
           </Tooltip>
-          <Tooltip title='预警规则'>
+          <Tooltip title="预警规则">
             <Button
-              type='text'
+              type="text"
               icon={<BellOutlined />}
               onClick={() => router.push(`/sla/definitions/${record.id}/alerts`)}
             />
           </Tooltip>
-          <Tooltip title='删除'>
+          <Tooltip title="删除">
             <Button
-              type='text'
+              type="text"
               danger
               icon={<DeleteOutlined />}
               onClick={() => handleDelete(record.id)}
@@ -165,17 +165,17 @@ const SLAList: React.FC = () => {
   ];
 
   return (
-    <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
-      <Breadcrumb className='mb-4'>
+    <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <Breadcrumb className="mb-4">
         <Breadcrumb.Item>首页</Breadcrumb.Item>
         <Breadcrumb.Item>服务级别管理</Breadcrumb.Item>
         <Breadcrumb.Item>SLA 定义</Breadcrumb.Item>
       </Breadcrumb>
 
-      <div className='flex justify-between mb-4'>
+      <div className="flex justify-between mb-4">
         <Space>
           <Button
-            type='primary'
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => router.push('/sla/definitions/new')}
           >
@@ -186,15 +186,15 @@ const SLAList: React.FC = () => {
       </div>
 
       <Table
-        rowKey='id'
+        rowKey="id"
         columns={columns as any}
         dataSource={data}
         loading={loading}
         scroll={{ x: 'max-content' }}
         locale={{
           emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无SLA数据'>
-              <Button type='primary' onClick={() => router.push('/sla/definitions/new')}>
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无SLA数据">
+              <Button type="primary" onClick={() => router.push('/sla/definitions/new')}>
                 创建第一个SLA
               </Button>
             </Empty>

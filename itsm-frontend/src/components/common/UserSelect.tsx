@@ -86,18 +86,18 @@ export const UserSelect: React.FC<UserSelectProps> = ({
       showSearch
       filterOption={false}
       onSearch={handleSearch}
-      notFoundContent={loading ? <Spin size='small' /> : '未找到用户'}
-      optionLabelProp='label'
+      notFoundContent={loading ? <Spin size="small" /> : '未找到用户'}
+      optionLabelProp="label"
     >
       {filteredUsers.map(user => (
         <Option key={user.id} value={user.id} label={user.name || user.username}>
-          <div className='flex items-center space-x-2'>
-            <Avatar size='small' icon={<UserIcon size={14} />}>
+          <div className="flex items-center space-x-2">
+            <Avatar size="small" icon={<UserIcon size={14} />}>
               {user.name?.[0] || user.username?.[0]}
             </Avatar>
-            <div className='flex flex-col'>
-              <span className='text-sm font-medium'>{user.name || user.username}</span>
-              {user.email && <span className='text-xs text-gray-500'>{user.email}</span>}
+            <div className="flex flex-col">
+              <span className="text-sm font-medium">{user.name || user.username}</span>
+              {user.email && <span className="text-xs text-gray-500">{user.email}</span>}
             </div>
           </div>
         </Option>

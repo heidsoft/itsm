@@ -189,31 +189,31 @@ export const ProblemList: React.FC<ProblemListProps> = ({
       key: 'actions',
       width: 150,
       render: (_: unknown, record: Problem) => (
-        <Space size='small'>
-          <Tooltip title='查看详情'>
+        <Space size="small">
+          <Tooltip title="查看详情">
             <Button
-              type='text'
-              size='small'
+              type="text"
+              size="small"
               icon={<Eye size={16} />}
               onClick={() => router.push(`/problems/${record.id}`)}
-              className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200'
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors duration-200"
             />
           </Tooltip>
-          <Tooltip title='编辑问题'>
+          <Tooltip title="编辑问题">
             <Button
-              type='text'
-              size='small'
+              type="text"
+              size="small"
               icon={<Edit size={16} />}
               onClick={() => router.push(`/problems/${record.id}/edit`)}
-              className='text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200'
+              className="text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors duration-200"
             />
           </Tooltip>
-          <Tooltip title='更多操作'>
+          <Tooltip title="更多操作">
             <Button
-              type='text'
-              size='small'
+              type="text"
+              size="small"
               icon={<MoreHorizontal size={16} />}
-              className='text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200'
+              className="text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-md transition-colors duration-200"
             />
           </Tooltip>
         </Space>
@@ -229,7 +229,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
       }}
       columns={columns}
       dataSource={problems}
-      rowKey='id'
+      rowKey="id"
       loading={loading}
       pagination={{
         current: pagination.current,
@@ -241,7 +241,7 @@ export const ProblemList: React.FC<ProblemListProps> = ({
         onChange: onTableChange,
       }}
       scroll={{ x: 1200 }}
-      className='[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:border-b-2 [&_.ant-table-thead>tr>th]:border-gray-200 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-thead>tr>th]:text-gray-900 [&_.ant-table-tbody>tr:hover>td]:bg-blue-50 [&_.ant-table-tbody>tr>td]:border-b [&_.ant-table-tbody>tr>td]:border-gray-100'
+      className="[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:border-b-2 [&_.ant-table-thead>tr>th]:border-gray-200 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-thead>tr>th]:text-gray-900 [&_.ant-table-tbody>tr:hover>td]:bg-blue-50 [&_.ant-table-tbody>tr>td]:border-b [&_.ant-table-tbody>tr>td]:border-gray-100"
     />
   );
 };

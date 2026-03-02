@@ -7,20 +7,20 @@ import { Spin, Skeleton } from 'antd';
 const LoadingSpinner: React.FC<{ size?: 'small' | 'default' | 'large' }> = ({
   size = 'default',
 }) => (
-  <div className='flex items-center justify-center p-8'>
+  <div className="flex items-center justify-center p-8">
     <Spin size={size} />
   </div>
 );
 
 // 骨架屏组件
 const SkeletonCard: React.FC = () => (
-  <div className='p-4 border border-gray-200 rounded-lg'>
+  <div className="p-4 border border-gray-200 rounded-lg">
     <Skeleton active paragraph={{ rows: 3 }} />
   </div>
 );
 
 const SkeletonTable: React.FC = () => (
-  <div className='space-y-2'>
+  <div className="space-y-2">
     <Skeleton active paragraph={{ rows: 1 }} />
     {Array.from({ length: 5 }).map((_, index) => (
       <Skeleton key={index} active paragraph={{ rows: 1 }} />

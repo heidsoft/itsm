@@ -82,48 +82,48 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
   };
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {/* 添加评论 */}
-      <div className='mb-6'>
-        <Card title='添加评论' className='shadow-sm'>
-          <div className='space-y-4'>
-            <div className='flex items-center space-x-4'>
-              <div className='flex items-center space-x-2'>
+      <div className="mb-6">
+        <Card title="添加评论" className="shadow-sm">
+          <div className="space-y-4">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
                 <input
-                  type='checkbox'
-                  id='internal'
+                  type="checkbox"
+                  id="internal"
                   checked={isInternal}
                   onChange={e => setIsInternal(e.target.checked)}
                 />
-                <label htmlFor='internal' className='text-sm text-gray-600'>
+                <label htmlFor="internal" className="text-sm text-gray-600">
                   仅内部可见
                 </label>
               </div>
             </div>
             <div>
-              <div className='mb-2'>
-                <Text type='secondary' className='text-sm'>
-                  <AtSign className='w-4 h-4 inline mr-1' />
+              <div className="mb-2">
+                <Text type="secondary" className="text-sm">
+                  <AtSign className="w-4 h-4 inline mr-1" />
                   @用户（可选）
                 </Text>
               </div>
               <UserSelect
                 value={mentionedUsers}
                 onChange={setMentionedUsers}
-                mode='multiple'
-                placeholder='选择要@的用户'
+                mode="multiple"
+                placeholder="选择要@的用户"
                 style={{ width: '100%' }}
               />
             </div>
             <TextArea
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
-              placeholder='输入您的评论...'
+              placeholder="输入您的评论..."
               rows={4}
             />
-            <div className='flex justify-end'>
+            <div className="flex justify-end">
               <Button
-                type='primary'
+                type="primary"
                 icon={<Send />}
                 onClick={handleAddComment}
                 disabled={!newComment.trim()}
@@ -136,20 +136,20 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
       </div>
 
       {/* 评论列表 */}
-      <div className='space-y-4'>
+      <div className="space-y-4">
         {comments.map(comment => (
-          <Card key={comment.id} className='shadow-sm'>
+          <Card key={comment.id} className="shadow-sm">
             {editingCommentId === comment.id ? (
-              <div className='space-y-3'>
+              <div className="space-y-3">
                 <TextArea
                   value={editingCommentContent}
                   onChange={e => setEditingCommentContent(e.target.value)}
                   rows={3}
                 />
-                <div className='flex justify-end space-x-2'>
+                <div className="flex justify-end space-x-2">
                   <Button onClick={cancelEdit}>取消</Button>
                   <Button
-                    type='primary'
+                    type="primary"
                     onClick={() => handleEditComment(comment.id)}
                     disabled={!editingCommentContent.trim()}
                   >
@@ -158,43 +158,43 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
                 </div>
               </div>
             ) : (
-              <div className='flex items-start space-x-3'>
-                <Avatar size='small' icon={<User />}>
+              <div className="flex items-start space-x-3">
+                <Avatar size="small" icon={<User />}>
                   {comment.user?.name?.[0] || comment.user?.username?.[0]}
                 </Avatar>
-                <div className='flex-1'>
-                  <div className='flex items-center space-x-2 mb-2'>
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2">
                     <Text strong>{comment.user?.name || comment.user?.username || '未知用户'}</Text>
-                    {comment.is_internal && <AntTag color='orange'>仅内部可见</AntTag>}
+                    {comment.is_internal && <AntTag color="orange">仅内部可见</AntTag>}
                     {comment.mentions && comment.mentions.length > 0 && (
-                      <AntTag color='blue' icon={<AtSign className='w-3 h-3' />}>
+                      <AntTag color="blue" icon={<AtSign className="w-3 h-3" />}>
                         @{comment.mentions.length}人
                       </AntTag>
                     )}
-                    <Text type='secondary' className='text-sm'>
+                    <Text type="secondary" className="text-sm">
                       {formatDateTime(comment.created_at)}
                     </Text>
                     {comment.updated_at !== comment.created_at && (
-                      <Text type='secondary' className='text-xs'>
+                      <Text type="secondary" className="text-xs">
                         （已编辑）
                       </Text>
                     )}
                   </div>
-                  <Paragraph className='mb-2 whitespace-pre-wrap'>{comment.content}</Paragraph>
-                  <div className='flex items-center space-x-2'>
+                  <Paragraph className="mb-2 whitespace-pre-wrap">{comment.content}</Paragraph>
+                  <div className="flex items-center space-x-2">
                     <Button
-                      type='link'
-                      size='small'
-                      icon={<Edit className='w-3 h-3' />}
+                      type="link"
+                      size="small"
+                      icon={<Edit className="w-3 h-3" />}
                       onClick={() => startEditComment(comment)}
                     >
                       编辑
                     </Button>
                     <Button
-                      type='link'
-                      size='small'
+                      type="link"
+                      size="small"
                       danger
-                      icon={<Trash2 className='w-3 h-3' />}
+                      icon={<Trash2 className="w-3 h-3" />}
                       onClick={() => {
                         Modal.confirm({
                           title: '确认删除',
@@ -213,8 +213,8 @@ export const TicketComments: React.FC<TicketCommentsProps> = ({
         ))}
 
         {comments.length === 0 && (
-          <div className='text-center py-8 text-gray-500'>
-            <MessageSquare className='w-16 h-16 mx-auto mb-4 text-gray-300' />
+          <div className="text-center py-8 text-gray-500">
+            <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
             <Text>暂无评论</Text>
           </div>
         )}

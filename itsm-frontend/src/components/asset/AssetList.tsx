@@ -119,7 +119,7 @@ const AssetList: React.FC = () => {
       width: 130,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className='truncate block' style={{ maxWidth: '110px' }}>
+          <span className="truncate block" style={{ maxWidth: '110px' }}>
             {text || '-'}
           </span>
         </Tooltip>
@@ -133,7 +133,7 @@ const AssetList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className='truncate block' style={{ maxWidth: '160px' }}>
+          <span className="truncate block" style={{ maxWidth: '160px' }}>
             {text || '-'}
           </span>
         </Tooltip>
@@ -176,7 +176,7 @@ const AssetList: React.FC = () => {
       width: 120,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className='truncate block' style={{ maxWidth: '100px' }}>
+          <span className="truncate block" style={{ maxWidth: '100px' }}>
             {text || '-'}
           </span>
         </Tooltip>
@@ -189,7 +189,7 @@ const AssetList: React.FC = () => {
       width: 120,
       render: (name: string) => (
         <Tooltip title={name}>
-          <span className='truncate block' style={{ maxWidth: '100px' }}>
+          <span className="truncate block" style={{ maxWidth: '100px' }}>
             {name || '-'}
           </span>
         </Tooltip>
@@ -203,7 +203,7 @@ const AssetList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className='truncate block' style={{ maxWidth: '130px' }}>
+          <span className="truncate block" style={{ maxWidth: '130px' }}>
             {text || '-'}
           </span>
         </Tooltip>
@@ -227,18 +227,18 @@ const AssetList: React.FC = () => {
       key: 'action',
       width: 120,
       render: (_: any, record: any) => (
-        <Space aria-label='操作按钮'>
-          <Tooltip title='查看资产详情'>
+        <Space aria-label="操作按钮">
+          <Tooltip title="查看资产详情">
             <Button
-              type='text'
+              type="text"
               icon={<EyeOutlined />}
               onClick={() => router.push(`/assets/${record.id}`)}
               aria-label={`查看资产 ${record.name || record.asset_number}`}
             />
           </Tooltip>
-          <Tooltip title='编辑资产信息'>
+          <Tooltip title="编辑资产信息">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
               onClick={() => router.push(`/assets/${record.id}`)}
               aria-label={`编辑资产 ${record.name || record.asset_number}`}
@@ -254,13 +254,13 @@ const AssetList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title='总资产数' value={stats.total || 0} prefix={<DesktopOutlined />} />
+            <Statistic title="总资产数" value={stats.total || 0} prefix={<DesktopOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title='可用'
+              title="可用"
               value={stats.available || 0}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -268,13 +268,13 @@ const AssetList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title='使用中' value={stats.in_use || 0} valueStyle={{ color: '#1890ff' }} />
+            <Statistic title="使用中" value={stats.in_use || 0} valueStyle={{ color: '#1890ff' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title='维护中'
+              title="维护中"
               value={stats.maintenance || 0}
               valueStyle={{ color: '#faad14' }}
             />
@@ -282,51 +282,51 @@ const AssetList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title='已退役' value={stats.retired || 0} />
+            <Statistic title="已退役" value={stats.retired || 0} />
           </Card>
         </Col>
       </Row>
 
       <Card>
-        <Form form={form} layout='inline' style={{ marginBottom: 16 }}>
-          <Form.Item name='status' label='状态'>
+        <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
+          <Form.Item name="status" label="状态">
             <Select
-              placeholder='选择状态'
+              placeholder="选择状态"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
             >
-              <Option value='available'>可用</Option>
-              <Option value='in-use'>使用中</Option>
-              <Option value='maintenance'>维护中</Option>
-              <Option value='retired'>已退役</Option>
-              <Option value='disposed'>已处置</Option>
+              <Option value="available">可用</Option>
+              <Option value="in-use">使用中</Option>
+              <Option value="maintenance">维护中</Option>
+              <Option value="retired">已退役</Option>
+              <Option value="disposed">已处置</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='type' label='类型'>
+          <Form.Item name="type" label="类型">
             <Select
-              placeholder='选择类型'
+              placeholder="选择类型"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
             >
-              <Option value='hardware'>硬件</Option>
-              <Option value='software'>软件</Option>
-              <Option value='cloud'>云资源</Option>
-              <Option value='license'>许可证</Option>
+              <Option value="hardware">硬件</Option>
+              <Option value="software">软件</Option>
+              <Option value="cloud">云资源</Option>
+              <Option value="license">许可证</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='category' label='分类'>
-            <Input placeholder='分类' style={{ width: 150 }} />
+          <Form.Item name="category" label="分类">
+            <Input placeholder="分类" style={{ width: 150 }} />
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type='primary' icon={<SearchOutlined />} onClick={handleSearch}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
               <Button
-                type='primary'
+                type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => router.push('/assets/new')}
               >
@@ -339,13 +339,13 @@ const AssetList: React.FC = () => {
         <Table
           columns={columns}
           dataSource={data}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无资产数据'>
-                <Button type='primary' onClick={() => router.push('/assets/new')}>
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无资产数据">
+                <Button type="primary" onClick={() => router.push('/assets/new')}>
                   创建第一个资产
                 </Button>
               </Empty>

@@ -79,12 +79,12 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
   return (
     <Card
       title={
-        <div className='flex items-center justify-between flex-wrap gap-2'>
-          <span className='font-semibold text-gray-800'>{title}</span>
-          <div className='flex items-center space-x-2'>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <span className="font-semibold text-gray-800">{title}</span>
+          <div className="flex items-center space-x-2">
             <Badge count={pendingCount} />
             {onViewAll && (
-              <Button type='link' size='small' onClick={onViewAll}>
+              <Button type="link" size="small" onClick={onViewAll}>
                 查看全部
               </Button>
             )}
@@ -103,9 +103,9 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
               ],
             }}
             trigger={['click']}
-            placement='bottomRight'
+            placement="bottomRight"
           >
-            <Button type='text' icon={<MoreHorizontal size={16} />} aria-label='更多选项' />
+            <Button type="text" icon={<MoreHorizontal size={16} />} aria-label="更多选项" />
           </Dropdown>
         ) : null
       }
@@ -114,15 +114,15 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
         dataSource={tickets}
         renderItem={item => (
           <List.Item
-            className='hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3 py-2 cursor-pointer'
+            className="hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3 py-2 cursor-pointer"
             onClick={() => onViewTicket?.(item.id)}
             actions={[
               <Button
-                key='view'
-                type='text'
+                key="view"
+                type="text"
                 icon={<Eye size={14} />}
-                size='small'
-                className='text-blue-500 hover:text-blue-600'
+                size="small"
+                className="text-blue-500 hover:text-blue-600"
                 onClick={e => {
                   e.stopPropagation();
                   onViewTicket?.(item.id);
@@ -132,15 +132,15 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
           >
             <List.Item.Meta
               avatar={
-                <Avatar size='small' className='bg-gradient-to-r from-blue-500 to-purple-600'>
+                <Avatar size="small" className="bg-gradient-to-r from-blue-500 to-purple-600">
                   {item.id.split('-')[2]}
                 </Avatar>
               }
               title={
-                <div className='flex items-center space-x-2'>
+                <div className="flex items-center space-x-2">
                   <Tooltip title={item.title}>
                     <span
-                      className='font-medium text-gray-800 text-sm truncate'
+                      className="font-medium text-gray-800 text-sm truncate"
                       style={{ maxWidth: '200px' }}
                     >
                       {item.title}
@@ -152,8 +152,8 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
                 </div>
               }
               description={
-                <div className='space-y-1'>
-                  <div className='flex items-center space-x-4 text-xs text-gray-500'>
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-4 text-xs text-gray-500">
                     <Space size={4}>
                       <User size={12} />
                       <span>{item.assignee}</span>
@@ -163,9 +163,9 @@ export const TicketListCard: React.FC<TicketListCardProps> = ({
                       <span>{item.time}</span>
                     </Space>
                   </div>
-                  <div className='flex items-center space-x-2'>
+                  <div className="flex items-center space-x-2">
                     <Tag color={getStatusColor(item.status)}>{getStatusText(item.status)}</Tag>
-                    <span className='text-xs text-gray-400'>SLA: {item.sla}</span>
+                    <span className="text-xs text-gray-400">SLA: {item.sla}</span>
                   </div>
                 </div>
               }

@@ -11,8 +11,8 @@ import { Spin } from 'antd';
 const BPMNDesigner = dynamic(() => import('@/components/workflow/BPMNDesigner'), {
   ssr: false,
   loading: () => (
-    <div className='flex items-center justify-center h-full'>
-      <Spin size='large' tip='加载流程设计器...' />
+    <div className="flex items-center justify-center h-full">
+      <Spin size="large" tip="加载流程设计器..." />
     </div>
   ),
 });
@@ -35,7 +35,7 @@ export default function WorkflowCanvas({ currentXML, onSave, onChange }: Workflo
   };
 
   return (
-    <div className='h-[calc(100vh-200px)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+    <div className="h-[calc(100vh-200px)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <BPMNDesigner xml={currentXML} onSave={handleSave} onChange={handleChange} />
     </div>
   );

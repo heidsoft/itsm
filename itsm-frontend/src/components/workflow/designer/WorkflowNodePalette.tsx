@@ -145,28 +145,28 @@ export default function WorkflowNodePalette() {
   };
 
   return (
-    <div className='w-64 bg-white border-r border-gray-200 h-full overflow-y-auto'>
-      <div className='p-4'>
-        <Text strong className='block mb-4 text-base'>
+    <div className="w-64 bg-white border-r border-gray-200 h-full overflow-y-auto">
+      <div className="p-4">
+        <Text strong className="block mb-4 text-base">
           节点面板
         </Text>
 
-        <div className='space-y-4'>
+        <div className="space-y-4">
           {nodeCategories.map(category => (
             <div key={category.key}>
-              <Text type='secondary' className='block mb-2 text-xs uppercase'>
+              <Text type="secondary" className="block mb-2 text-xs uppercase">
                 {category.name}
               </Text>
-              <div className='grid grid-cols-2 gap-2'>
+              <div className="grid grid-cols-2 gap-2">
                 {category.nodes.map(node => (
                   <div
                     key={node.id}
                     draggable
                     onDragStart={e => handleDragStart(e, node)}
-                    className='flex flex-col items-center justify-center p-3 border border-gray-200 rounded-lg cursor-move hover:border-blue-400 hover:bg-blue-50 transition-colors'
+                    className="flex flex-col items-center justify-center p-3 border border-gray-200 rounded-lg cursor-move hover:border-blue-400 hover:bg-blue-50 transition-colors"
                   >
-                    <span className='text-xl mb-1'>{node.icon}</span>
-                    <Text className='text-xs text-center'>{node.name}</Text>
+                    <span className="text-xl mb-1">{node.icon}</span>
+                    <Text className="text-xs text-center">{node.name}</Text>
                   </div>
                 ))}
               </div>
@@ -175,8 +175,8 @@ export default function WorkflowNodePalette() {
         </div>
 
         {/* 使用说明 */}
-        <div className='mt-6 p-3 bg-gray-50 rounded-lg'>
-          <Text type='secondary' className='text-xs'>
+        <div className="mt-6 p-3 bg-gray-50 rounded-lg">
+          <Text type="secondary" className="text-xs">
             提示: 从节点面板拖拽元素到画布上添加节点。双击节点可以编辑属性。
           </Text>
         </div>

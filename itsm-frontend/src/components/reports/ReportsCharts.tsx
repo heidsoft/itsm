@@ -51,14 +51,14 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => <span className='font-medium'>{text}</span>,
+      render: (text: string) => <span className="font-medium">{text}</span>,
     },
     {
       title: '数值',
       dataIndex: 'value',
       key: 'value',
       render: (value: number) => (
-        <span className='text-blue-600 font-semibold'>{value.toLocaleString()}</span>
+        <span className="text-blue-600 font-semibold">{value.toLocaleString()}</span>
       ),
     },
     {
@@ -79,8 +79,8 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className='bg-white p-3 border border-gray-200 rounded shadow-lg'>
-          <p className='font-medium'>{`${label}`}</p>
+        <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
+          <p className="font-medium">{`${label}`}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value.toLocaleString()}`}
@@ -103,10 +103,10 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
       <text
         x={x}
         y={y}
-        fill='white'
+        fill="white"
         textAnchor={x > entry.cx ? 'start' : 'end'}
-        dominantBaseline='central'
-        className='text-xs font-medium'
+        dominantBaseline="central"
+        className="text-xs font-medium"
       >
         {`${entry.percent ? (entry.percent * 100).toFixed(0) : 0}%`}
       </text>
@@ -115,17 +115,17 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
 
   if (loading) {
     return (
-      <div className='flex flex-col justify-center items-center' style={{ height }}>
-        <Spin size='large' />
-        <span className='mt-2 text-gray-500'>加载图表数据...</span>
+      <div className="flex flex-col justify-center items-center" style={{ height }}>
+        <Spin size="large" />
+        <span className="mt-2 text-gray-500">加载图表数据...</span>
       </div>
     );
   }
 
   if (!data || data.length === 0) {
     return (
-      <div className='flex justify-center items-center' style={{ height }}>
-        <Empty description='暂无数据' />
+      <div className="flex justify-center items-center" style={{ height }}>
+        <Empty description="暂无数据" />
       </div>
     );
   }
@@ -135,28 +135,28 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
     switch (chartType) {
       case 'line':
         return (
-          <ResponsiveContainer width='100%' height={height}>
+          <ResponsiveContainer width="100%" height={height}>
             <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='name' />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Line
-                type='monotone'
-                dataKey='value'
-                stroke='#1890ff'
+                type="monotone"
+                dataKey="value"
+                stroke="#1890ff"
                 strokeWidth={2}
                 dot={{ fill: '#1890ff', r: 4 }}
                 activeDot={{ r: 6 }}
               />
               {data.some(item => item.avg_time) && (
                 <Line
-                  type='monotone'
-                  dataKey='avg_time'
-                  stroke='#52c41a'
+                  type="monotone"
+                  dataKey="avg_time"
+                  stroke="#52c41a"
                   strokeWidth={2}
-                  name='平均时间(小时)'
+                  name="平均时间(小时)"
                 />
               )}
             </LineChart>
@@ -165,18 +165,18 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
 
       case 'area':
         return (
-          <ResponsiveContainer width='100%' height={height}>
+          <ResponsiveContainer width="100%" height={height}>
             <AreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='name' />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
               <Area
-                type='monotone'
-                dataKey='value'
-                stroke='#1890ff'
-                fill='#1890ff'
+                type="monotone"
+                dataKey="value"
+                stroke="#1890ff"
+                fill="#1890ff"
                 fillOpacity={0.6}
               />
             </AreaChart>
@@ -185,17 +185,17 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
 
       case 'pie':
         return (
-          <ResponsiveContainer width='100%' height={height}>
+          <ResponsiveContainer width="100%" height={height}>
             <PieChart>
               <Pie
                 data={data}
-                cx='50%'
-                cy='50%'
+                cx="50%"
+                cy="50%"
                 labelLine={false}
                 label={renderCustomLabel}
                 outerRadius={120}
-                fill='#8884d8'
-                dataKey='value'
+                fill="#8884d8"
+                dataKey="value"
               >
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -213,30 +213,30 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
             columns={tableColumns}
             dataSource={data}
             pagination={false}
-            size='middle'
+            size="middle"
             rowKey={record => record.name}
           />
         );
 
       default: // bar
         return (
-          <ResponsiveContainer width='100%' height={height}>
+          <ResponsiveContainer width="100%" height={height}>
             <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray='3 3' />
-              <XAxis dataKey='name' />
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Bar dataKey='value' fill='#1890ff' radius={[4, 4, 0, 0]}>
+              <Bar dataKey="value" fill="#1890ff" radius={[4, 4, 0, 0]}>
                 {data.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Bar>
               {data.some(item => item.avg_time) && (
                 <Bar
-                  dataKey='avg_time'
-                  fill='#52c41a'
-                  name='平均时间(小时)'
+                  dataKey="avg_time"
+                  fill="#52c41a"
+                  name="平均时间(小时)"
                   radius={[4, 4, 0, 0]}
                 />
               )}
@@ -246,7 +246,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
     }
   };
 
-  return <div className='reports-charts'>{renderChart()}</div>;
+  return <div className="reports-charts">{renderChart()}</div>;
 };
 
 export default ReportsCharts;

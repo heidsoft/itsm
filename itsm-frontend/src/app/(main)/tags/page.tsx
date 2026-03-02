@@ -56,8 +56,8 @@ export default function TagsPage() {
       dataIndex: 'color',
       key: 'color',
       render: (color: string) => (
-        <div className='flex items-center'>
-          <div className='w-4 h-4 rounded mr-2' style={{ backgroundColor: color }} />
+        <div className="flex items-center">
+          <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: color }} />
           {color}
         </div>
       ),
@@ -72,10 +72,10 @@ export default function TagsPage() {
       title: '操作',
       key: 'action',
       render: (_: any, record: ITag) => (
-        <Space size='middle'>
-          <Button type='text' icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+        <Space size="middle">
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -136,12 +136,12 @@ export default function TagsPage() {
         breadcrumb: { items: [{ title: '首页' }, { title: '标签管理' }] },
       }}
       extra={[
-        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchTags} loading={fetching}>
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchTags} loading={fetching}>
           刷新
         </Button>,
         <Button
-          key='create'
-          type='primary'
+          key="create"
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => setIsModalVisible(true)}
         >
@@ -149,34 +149,34 @@ export default function TagsPage() {
         </Button>,
       ]}
     >
-      <Table columns={columns} dataSource={tags} rowKey='id' loading={fetching} />
+      <Table columns={columns} dataSource={tags} rowKey="id" loading={fetching} />
 
       <Modal
-        title='新建/编辑标签'
+        title="新建/编辑标签"
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
       >
-        <Form form={form} layout='vertical' initialValues={{ color: '#1890ff' }}>
+        <Form form={form} layout="vertical" initialValues={{ color: '#1890ff' }}>
           <Form.Item
-            name='name'
-            label='标签名称'
+            name="name"
+            label="标签名称"
             rules={[{ required: true, message: '请输入标签名称' }]}
           >
-            <Input placeholder='请输入标签名称' />
+            <Input placeholder="请输入标签名称" />
           </Form.Item>
           <Form.Item
-            name='code'
-            label='标签代码'
+            name="code"
+            label="标签代码"
             rules={[{ required: true, message: '请输入标签代码' }]}
           >
-            <Input placeholder='请输入标签代码' />
+            <Input placeholder="请输入标签代码" />
           </Form.Item>
-          <Form.Item name='color' label='颜色'>
+          <Form.Item name="color" label="颜色">
             <ColorPicker showText />
           </Form.Item>
-          <Form.Item name='description' label='描述'>
+          <Form.Item name="description" label="描述">
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

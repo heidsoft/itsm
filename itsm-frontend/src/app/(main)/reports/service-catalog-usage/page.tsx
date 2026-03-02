@@ -92,10 +92,10 @@ const ServiceCatalogUsagePage = () => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className='bg-white p-3 rounded-lg shadow-lg border border-gray-200'>
-          <p className='font-semibold text-gray-800'>{`${payload[0].name}`}</p>
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="font-semibold text-gray-800">{`${payload[0].name}`}</p>
           <p
-            className='text-sm'
+            className="text-sm"
             style={{ color: payload[0].color }}
           >{`数量: ${payload[0].value}`}</p>
         </div>
@@ -105,21 +105,21 @@ const ServiceCatalogUsagePage = () => {
   };
 
   return (
-    <div className='p-6 bg-gray-50 min-h-full'>
-      <header className='mb-6'>
+    <div className="p-6 bg-gray-50 min-h-full">
+      <header className="mb-6">
         <Title level={2}>服务目录使用报表</Title>
-        <p className='text-gray-500 mt-1'>展示服务目录的使用情况和请求分布</p>
+        <p className="text-gray-500 mt-1">展示服务目录的使用情况和请求分布</p>
       </header>
 
       {/* 控制栏 */}
-      <Card className='mb-6'>
-        <Row justify='space-between' align='middle'>
+      <Card className="mb-6">
+        <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Select defaultValue='all' style={{ width: 120 }}>
-                <Option value='all'>全部服务</Option>
-                <Option value='published'>已发布</Option>
-                <Option value='draft'>草稿</Option>
+              <Select defaultValue="all" style={{ width: 120 }}>
+                <Option value="all">全部服务</Option>
+                <Option value="published">已发布</Option>
+                <Option value="draft">草稿</Option>
               </Select>
               <RangePicker />
             </Space>
@@ -128,7 +128,7 @@ const ServiceCatalogUsagePage = () => {
             <Space>
               <button
                 onClick={loadData}
-                className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 刷新数据
               </button>
@@ -138,38 +138,38 @@ const ServiceCatalogUsagePage = () => {
       </Card>
 
       {loading ? (
-        <div className='flex items-center justify-center h-64'>
-          <Spin size='large' tip='加载报表数据...' />
+        <div className="flex items-center justify-center h-64">
+          <Spin size="large" tip="加载报表数据..." />
         </div>
       ) : (
         <>
           {/* 统计卡片 */}
-          <Row gutter={[16, 16]} className='mb-6'>
+          <Row gutter={[16, 16]} className="mb-6">
             <Col xs={24} sm={8}>
               <Card>
-                <div className='text-center'>
-                  <div className='text-3xl font-bold text-blue-600'>{services.length || 6}</div>
-                  <div className='text-gray-500'>服务总数</div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600">{services.length || 6}</div>
+                  <div className="text-gray-500">服务总数</div>
                 </div>
               </Card>
             </Col>
             <Col xs={24} sm={8}>
               <Card>
-                <div className='text-center'>
-                  <div className='text-3xl font-bold text-green-600'>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600">
                     {requestsByService.reduce((sum, item) => sum + item.value, 0)}
                   </div>
-                  <div className='text-gray-500'>请求总数</div>
+                  <div className="text-gray-500">请求总数</div>
                 </div>
               </Card>
             </Col>
             <Col xs={24} sm={8}>
               <Card>
-                <div className='text-center'>
-                  <div className='text-3xl font-bold text-orange-600'>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-orange-600">
                     {requestsByStatus.find(s => s.name === '已完成')?.value || 0}
                   </div>
-                  <div className='text-gray-500'>已完成请求</div>
+                  <div className="text-gray-500">已完成请求</div>
                 </div>
               </Card>
             </Col>
@@ -178,16 +178,16 @@ const ServiceCatalogUsagePage = () => {
           {/* 图表区域 */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title='按服务类型分布'>
-                <ResponsiveContainer width='100%' height={300}>
+              <Card title="按服务类型分布">
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={requestsByService}
-                      cx='50%'
-                      cy='50%'
+                      cx="50%"
+                      cy="50%"
                       outerRadius={100}
-                      dataKey='value'
-                      nameKey='name'
+                      dataKey="value"
+                      nameKey="name"
                       label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                     >
                       {requestsByService.map((entry, index) => (
@@ -205,15 +205,15 @@ const ServiceCatalogUsagePage = () => {
             </Col>
 
             <Col xs={24} lg={12}>
-              <Card title='按状态分布'>
-                <ResponsiveContainer width='100%' height={300}>
+              <Card title="按状态分布">
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={requestsByStatus}>
-                    <CartesianGrid strokeDasharray='3 3' />
-                    <XAxis dataKey='name' />
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Bar dataKey='value' name='请求数量' fill='#1890ff'>
+                    <Bar dataKey="value" name="请求数量" fill="#1890ff">
                       {requestsByStatus.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}

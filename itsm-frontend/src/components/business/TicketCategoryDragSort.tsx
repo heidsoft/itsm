@@ -106,18 +106,18 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
     return items.map((item, index) => ({
       key: String(item.id),
       title: (
-        <div className='flex items-center justify-between w-full'>
-          <div className='flex items-center'>
-            <GripVertical className='w-4 h-4 mr-2 text-gray-400 cursor-move' />
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center">
+            <GripVertical className="w-4 h-4 mr-2 text-gray-400 cursor-move" />
             {item.children && item.children.length > 0 ? (
-              <FolderOpen className='w-4 h-4 mr-2 text-blue-500' />
+              <FolderOpen className="w-4 h-4 mr-2 text-blue-500" />
             ) : (
-              <FileText className='w-4 h-4 mr-2 text-gray-500' />
+              <FileText className="w-4 h-4 mr-2 text-gray-500" />
             )}
-            <span className='text-sm font-medium'>{item.name}</span>
+            <span className="text-sm font-medium">{item.name}</span>
           </div>
-          <div className='flex items-center space-x-1'>
-            <Text type='secondary' className='text-xs'>
+          <div className="flex items-center space-x-1">
+            <Text type="secondary" className="text-xs">
               {item.code}
             </Text>
           </div>
@@ -357,9 +357,9 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
 
   if (loading) {
     return (
-      <div className='text-center py-8'>
-        <Spin size='large' />
-        <div className='mt-4'>加载分类数据中...</div>
+      <div className="text-center py-8">
+        <Spin size="large" />
+        <div className="mt-4">加载分类数据中...</div>
       </div>
     );
   }
@@ -367,12 +367,12 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   if (error) {
     return (
       <Alert
-        message='加载失败'
+        message="加载失败"
         description={error}
-        type='error'
+        type="error"
         showIcon
         action={
-          <Button size='small' onClick={loadCategories}>
+          <Button size="small" onClick={loadCategories}>
             重试
           </Button>
         }
@@ -383,17 +383,17 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   return (
     <div className={className} style={style}>
       {showActions && (
-        <Card className='mb-4'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center space-x-4'>
+        <Card className="mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
               <Text strong>工单分类排序</Text>
-              {hasChanges && <Text type='warning'>有未保存的更改</Text>}
+              {hasChanges && <Text type="warning">有未保存的更改</Text>}
             </div>
 
             <Space>
-              <Tooltip title='刷新数据'>
+              <Tooltip title="刷新数据">
                 <Button
-                  icon={<RefreshCw className='w-4 h-4' />}
+                  icon={<RefreshCw className="w-4 h-4" />}
                   onClick={handleRefresh}
                   disabled={loading}
                 >
@@ -403,16 +403,16 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
 
               {hasChanges && (
                 <>
-                  <Tooltip title='重置更改'>
-                    <Button icon={<Undo className='w-4 h-4' />} onClick={handleReset}>
+                  <Tooltip title="重置更改">
+                    <Button icon={<Undo className="w-4 h-4" />} onClick={handleReset}>
                       重置
                     </Button>
                   </Tooltip>
 
-                  <Tooltip title='保存更改'>
+                  <Tooltip title="保存更改">
                     <Button
-                      type='primary'
-                      icon={<Save className='w-4 h-4' />}
+                      type="primary"
+                      icon={<Save className="w-4 h-4" />}
                       onClick={handleSave}
                       loading={saving}
                     >
@@ -427,9 +427,9 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
       )}
 
       <DragDropContext onDragEnd={handleTreeDragEnd as unknown as (result: any) => void}>
-        <Droppable droppableId='categories' type='list'>
+        <Droppable droppableId="categories" type="list">
           {provided => (
-            <div ref={provided.innerRef} {...provided.droppableProps} className='space-y-2'>
+            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
               {categories.map((category, index) => (
                 <Draggable key={category.id} draggableId={category.id.toString()} index={index}>
                   {(provided, snapshot) => (
@@ -441,21 +441,21 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                         snapshot.isDragging ? 'shadow-lg' : ''
                       }`}
                     >
-                      <div className='flex items-center justify-between'>
-                        <div className='flex items-center'>
-                          <GripVertical className='w-4 h-4 mr-2 text-gray-400 cursor-move' />
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <GripVertical className="w-4 h-4 mr-2 text-gray-400 cursor-move" />
                           {category.children && category.children.length > 0 ? (
-                            <FolderOpen className='w-4 h-4 mr-2 text-blue-500' />
+                            <FolderOpen className="w-4 h-4 mr-2 text-blue-500" />
                           ) : (
-                            <FileText className='w-4 h-4 mr-2 text-gray-500' />
+                            <FileText className="w-4 h-4 mr-2 text-gray-500" />
                           )}
-                          <span className='font-medium'>{category.name}</span>
-                          <Text type='secondary' className='ml-2 text-xs'>
+                          <span className="font-medium">{category.name}</span>
+                          <Text type="secondary" className="ml-2 text-xs">
                             {category.code}
                           </Text>
                         </div>
 
-                        <div className='flex items-center space-x-2'>
+                        <div className="flex items-center space-x-2">
                           <div
                             className={`px-2 py-1 rounded text-xs ${
                               category.is_active
@@ -466,41 +466,41 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                             {category.is_active ? '启用' : '禁用'}
                           </div>
 
-                          <Text type='secondary' className='text-xs'>
+                          <Text type="secondary" className="text-xs">
                             排序: {category.sort_order}
                           </Text>
 
-                          <Space size='small'>
-                            <Tooltip title='上移'>
+                          <Space size="small">
+                            <Tooltip title="上移">
                               <Button
-                                size='small'
-                                icon={<ArrowUp className='w-3 h-3' />}
+                                size="small"
+                                icon={<ArrowUp className="w-3 h-3" />}
                                 onClick={() => moveNode('up', category.id)}
                                 disabled={index === 0}
                               />
                             </Tooltip>
 
-                            <Tooltip title='下移'>
+                            <Tooltip title="下移">
                               <Button
-                                size='small'
-                                icon={<ArrowDown className='w-3 h-3' />}
+                                size="small"
+                                icon={<ArrowDown className="w-3 h-3" />}
                                 onClick={() => moveNode('down', category.id)}
                                 disabled={index === categories.length - 1}
                               />
                             </Tooltip>
 
-                            <Tooltip title='提升层级'>
+                            <Tooltip title="提升层级">
                               <Button
-                                size='small'
-                                icon={<ArrowLeft className='w-3 h-3' />}
+                                size="small"
+                                icon={<ArrowLeft className="w-3 h-3" />}
                                 onClick={() => moveNode('left', category.id)}
                               />
                             </Tooltip>
 
-                            <Tooltip title='降低层级'>
+                            <Tooltip title="降低层级">
                               <Button
-                                size='small'
-                                icon={<ArrowRight className='w-3 h-3' />}
+                                size="small"
+                                icon={<ArrowRight className="w-3 h-3" />}
                                 onClick={() => moveNode('right', category.id)}
                                 disabled={index === 0}
                               />
@@ -510,13 +510,13 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                       </div>
 
                       {category.children && category.children.length > 0 && (
-                        <div className='mt-3 ml-6'>
-                          <Droppable droppableId={category.id.toString()} type='list'>
+                        <div className="mt-3 ml-6">
+                          <Droppable droppableId={category.id.toString()} type="list">
                             {provided => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.droppableProps}
-                                className='space-y-2'
+                                className="space-y-2"
                               >
                                 {category.children.map((child, childIndex) => (
                                   <Draggable
@@ -533,17 +533,17 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                                           snapshot.isDragging ? 'shadow-lg' : ''
                                         }`}
                                       >
-                                        <div className='flex items-center justify-between'>
-                                          <div className='flex items-center'>
-                                            <GripVertical className='w-4 h-4 mr-2 text-gray-400 cursor-move' />
-                                            <FileText className='w-4 h-4 mr-2 text-gray-500' />
-                                            <span className='text-sm'>{child.name}</span>
-                                            <Text type='secondary' className='ml-2 text-xs'>
+                                        <div className="flex items-center justify-between">
+                                          <div className="flex items-center">
+                                            <GripVertical className="w-4 h-4 mr-2 text-gray-400 cursor-move" />
+                                            <FileText className="w-4 h-4 mr-2 text-gray-500" />
+                                            <span className="text-sm">{child.name}</span>
+                                            <Text type="secondary" className="ml-2 text-xs">
                                               {child.code}
                                             </Text>
                                           </div>
 
-                                          <div className='flex items-center space-x-2'>
+                                          <div className="flex items-center space-x-2">
                                             <div
                                               className={`px-2 py-1 rounded text-xs ${
                                                 child.is_active
@@ -554,7 +554,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                                               {child.is_active ? '启用' : '禁用'}
                                             </div>
 
-                                            <Text type='secondary' className='text-xs'>
+                                            <Text type="secondary" className="text-xs">
                                               排序: {child.sort_order}
                                             </Text>
                                           </div>

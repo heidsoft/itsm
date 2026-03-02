@@ -87,7 +87,7 @@ const AIChat: React.FC = () => {
         </span>
       }
       extra={
-        <Button size='small' icon={<ClearOutlined />} onClick={handleClear}>
+        <Button size="small" icon={<ClearOutlined />} onClick={handleClear}>
           清空
         </Button>
       }
@@ -102,7 +102,7 @@ const AIChat: React.FC = () => {
     >
       <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
         <List
-          itemLayout='horizontal'
+          itemLayout="horizontal"
           dataSource={messages}
           renderItem={item => (
             <List.Item style={{ border: 'none', padding: '12px 0' }}>
@@ -134,7 +134,7 @@ const AIChat: React.FC = () => {
         />
         {loading && (
           <div style={{ textAlign: 'center', margin: '20px 0' }}>
-            <Spin tip='思考中...' />
+            <Spin tip="思考中..." />
           </div>
         )}
       </div>
@@ -144,13 +144,13 @@ const AIChat: React.FC = () => {
       <div style={{ padding: '16px' }}>
         <Space.Compact style={{ width: '100%' }}>
           <Input
-            placeholder='请输入您的问题...'
+            placeholder="请输入您的问题..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             onPressEnter={handleSend}
             disabled={loading}
           />
-          <Button type='primary' icon={<SendOutlined />} onClick={handleSend} loading={loading}>
+          <Button type="primary" icon={<SendOutlined />} onClick={handleSend} loading={loading}>
             发送
           </Button>
         </Space.Compact>

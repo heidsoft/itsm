@@ -214,23 +214,23 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
     return (
       <Card
-        size='small'
+        size="small"
         hoverable
-        className='mb-3 cursor-move'
+        className="mb-3 cursor-move"
         style={{
           borderLeft: `4px solid ${priorityConfig.color}`,
           margin: '0 0 12px 0',
         }}
         actions={[
-          <Dropdown key='more' menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
-            <Button type='text' icon={<MoreOutlined />} size='small' />
+          <Dropdown key="more" menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
+            <Button type="text" icon={<MoreOutlined />} size="small" />
           </Dropdown>,
         ]}
       >
-        <div className='space-y-2'>
+        <div className="space-y-2">
           {/* 工单标题 */}
-          <div className='flex items-start justify-between'>
-            <Text strong className='text-sm flex-1 mr-2'>
+          <div className="flex items-start justify-between">
+            <Text strong className="text-sm flex-1 mr-2">
               {ticket.title}
             </Text>
             <Badge
@@ -244,40 +244,40 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           </div>
 
           {/* 工单号和类型 */}
-          <div className='flex items-center justify-between'>
-            <Text code className='text-xs'>
+          <div className="flex items-center justify-between">
+            <Text code className="text-xs">
               {ticket.ticketNumber || '-'}
             </Text>
-            <Tag color='blue'>{ticket.type}</Tag>
+            <Tag color="blue">{ticket.type}</Tag>
           </div>
 
           {/* 工单描述 */}
           <Paragraph
             ellipsis={{ rows: 2, expandable: false }}
-            className='text-xs text-gray-500 mb-2'
+            className="text-xs text-gray-500 mb-2"
           >
             {ticket.description}
           </Paragraph>
 
           {/* 时间信息 */}
-          <div className='flex items-center text-xs text-gray-400'>
-            <ClockCircleOutlined className='mr-1' />
+          <div className="flex items-center text-xs text-gray-400">
+            <ClockCircleOutlined className="mr-1" />
             {dayjs(ticket.createdAt).fromNow()}
           </div>
 
           {/* 分配人信息 */}
           {ticket.assignee && (
-            <div className='flex items-center mt-2'>
-              <Avatar size='small' icon={<UserOutlined />} className='mr-2' />
-              <Text className='text-xs'>{ticket.assignee.name || ticket.assignee.username}</Text>
+            <div className="flex items-center mt-2">
+              <Avatar size="small" icon={<UserOutlined />} className="mr-2" />
+              <Text className="text-xs">{ticket.assignee.name || ticket.assignee.username}</Text>
             </div>
           )}
 
           {/* 截止时间 */}
           {ticket.dueTime && (
-            <div className='flex items-center mt-1'>
-              <CalendarOutlined className='mr-1 text-xs text-red-500' />
-              <Text className='text-xs text-red-500'>
+            <div className="flex items-center mt-1">
+              <CalendarOutlined className="mr-1 text-xs text-red-500" />
+              <Text className="text-xs text-red-500">
                 截止: {dayjs(ticket.dueTime).format('MM-DD HH:mm')}
               </Text>
             </div>
@@ -288,21 +288,21 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   };
 
   return (
-    <div className='ticket-kanban p-4'>
+    <div className="ticket-kanban p-4">
       {/* 工具栏 */}
-      <Card className='mb-4'>
-        <Row gutter={[16, 16]} align='middle'>
-          <Col flex='auto'>
-            <Space size='middle'>
+      <Card className="mb-4">
+        <Row gutter={[16, 16]} align="middle">
+          <Col flex="auto">
+            <Space size="middle">
               <Search
-                placeholder='搜索工单...'
+                placeholder="搜索工单..."
                 value={searchValue}
                 onChange={e => setSearchValue(e.target.value)}
                 style={{ width: 300 }}
                 allowClear
               />
               <Select
-                placeholder='状态'
+                placeholder="状态"
                 value={selectedStatus}
                 onChange={setSelectedStatus}
                 allowClear
@@ -313,7 +313,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 }))}
               />
               <Select
-                placeholder='优先级'
+                placeholder="优先级"
                 value={selectedPriority}
                 onChange={setSelectedPriority}
                 allowClear
@@ -342,7 +342,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           <Col>
             <Space>
               <Button
-                type='primary'
+                type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => router.push('/tickets/create')}
               >
@@ -359,10 +359,10 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
           <Col span={4} key={status.key}>
             <Card
               title={
-                <div className='flex items-center justify-between'>
-                  <div className='flex items-center'>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
                     <div
-                      className='w-2 h-2 rounded-full mr-2'
+                      className="w-2 h-2 rounded-full mr-2"
                       style={{ backgroundColor: status.color }}
                     />
                     <Text strong>{status.title}</Text>
@@ -373,17 +373,17 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                   />
                 </div>
               }
-              size='small'
-              className='h-full'
+              size="small"
+              className="h-full"
               style={{ minHeight: '600px' }}
             >
-              <div className='space-y-2'>
+              <div className="space-y-2">
                 {ticketsByStatus[status.key]?.map(ticket => (
                   <TicketCard key={ticket.id} ticket={ticket} />
                 ))}
                 {(!ticketsByStatus[status.key] || ticketsByStatus[status.key].length === 0) && (
-                  <div className='text-center text-gray-400 py-8'>
-                    <Text type='secondary'>暂无工单</Text>
+                  <div className="text-center text-gray-400 py-8">
+                    <Text type="secondary">暂无工单</Text>
                   </div>
                 )}
               </div>
@@ -394,16 +394,16 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
       {/* 工单详情模态框 */}
       <Modal
-        title='工单详情'
+        title="工单详情"
         open={viewModalVisible}
         onCancel={() => setViewModalVisible(false)}
         footer={[
-          <Button key='close' onClick={() => setViewModalVisible(false)}>
+          <Button key="close" onClick={() => setViewModalVisible(false)}>
             关闭
           </Button>,
           <Button
-            key='view'
-            type='primary'
+            key="view"
+            type="primary"
             onClick={() => {
               if (selectedTicket) {
                 router.push(`/tickets/${selectedTicket.id}`);
@@ -417,7 +417,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         width={800}
       >
         {selectedTicket && (
-          <div className='space-y-4'>
+          <div className="space-y-4">
             <div>
               <Text strong>{selectedTicket.ticketNumber || '-'}</Text>
               <Title level={4}>{selectedTicket.title}</Title>
@@ -426,7 +426,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
               <Text>描述:</Text>
               <Paragraph>{selectedTicket.description}</Paragraph>
             </div>
-            <div className='grid grid-cols-2 gap-4'>
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Text>状态:</Text>
                 <div>{selectedTicket.status}</div>

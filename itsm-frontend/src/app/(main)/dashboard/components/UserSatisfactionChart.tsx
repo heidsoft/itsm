@@ -64,10 +64,10 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
 
   return (
     <DashboardChartCard
-      title='用户满意度趋势'
-      subtitle='月度服务满意度评分变化'
+      title="用户满意度趋势"
+      subtitle="月度服务满意度评分变化"
       icon={<Smile style={{ width: 20, height: 20 }} />}
-      iconColor='#ec4899'
+      iconColor="#ec4899"
       trend={{ value: trend, isPositive: trend > 0 }}
       extra={
         <div style={{ textAlign: 'right' }}>
@@ -83,21 +83,21 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
       </div>
 
       {/* 满意度统计摘要 */}
-      <div className='mt-4 pt-4 border-t border-gray-100'>
-        <div className='grid grid-cols-3 gap-4'>
-          <div className='text-center'>
-            <div className='text-xs text-gray-500 mb-1'>总反馈数</div>
-            <div className='text-lg font-bold text-gray-900'>{totalResponses}</div>
+      <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-1">总反馈数</div>
+            <div className="text-lg font-bold text-gray-900">{totalResponses}</div>
           </div>
-          <div className='text-center'>
-            <div className='text-xs text-gray-500 mb-1'>最高评分</div>
-            <div className='text-lg font-bold text-pink-600'>
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-1">最高评分</div>
+            <div className="text-lg font-bold text-pink-600">
               {Math.max(...data.map(d => d.rating)).toFixed(1)}
             </div>
           </div>
-          <div className='text-center'>
-            <div className='text-xs text-gray-500 mb-1'>最低评分</div>
-            <div className='text-lg font-bold text-orange-600'>
+          <div className="text-center">
+            <div className="text-xs text-gray-500 mb-1">最低评分</div>
+            <div className="text-lg font-bold text-orange-600">
               {Math.min(...data.map(d => d.rating)).toFixed(1)}
             </div>
           </div>

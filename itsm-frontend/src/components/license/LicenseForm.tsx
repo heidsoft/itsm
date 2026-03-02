@@ -91,7 +91,7 @@ const LicenseForm: React.FC = () => {
     <Card>
       <Form
         form={form}
-        layout='vertical'
+        layout="vertical"
         onFinish={onFinish}
         initialValues={{
           license_type: 'subscription',
@@ -107,82 +107,82 @@ const LicenseForm: React.FC = () => {
         <Divider>基本信息</Divider>
 
         <Form.Item
-          name='name'
-          label='许可证名称'
+          name="name"
+          label="许可证名称"
           rules={[{ required: true, message: '请输入许可证名称' }]}
         >
-          <Input placeholder='例如: Microsoft 365 E3' />
+          <Input placeholder="例如: Microsoft 365 E3" />
         </Form.Item>
 
-        <Form.Item name='description' label='描述'>
-          <TextArea rows={3} placeholder='许可证描述' />
+        <Form.Item name="description" label="描述">
+          <TextArea rows={3} placeholder="许可证描述" />
         </Form.Item>
 
-        <Form.Item name='vendor' label='供应商'>
-          <Input placeholder='例如: Microsoft' />
+        <Form.Item name="vendor" label="供应商">
+          <Input placeholder="例如: Microsoft" />
         </Form.Item>
 
-        <Form.Item name='license_type' label='许可证类型'>
+        <Form.Item name="license_type" label="许可证类型">
           <Select>
-            <Option value='perpetual'>永久 (Perpetual)</Option>
-            <Option value='subscription'>订阅 (Subscription)</Option>
-            <Option value='per-user'>按用户 (Per-User)</Option>
-            <Option value='per-seat'>按席位 (Per-Seat)</Option>
-            <Option value='site'>站点 (Site)</Option>
+            <Option value="perpetual">永久 (Perpetual)</Option>
+            <Option value="subscription">订阅 (Subscription)</Option>
+            <Option value="per-user">按用户 (Per-User)</Option>
+            <Option value="per-seat">按席位 (Per-Seat)</Option>
+            <Option value="site">站点 (Site)</Option>
           </Select>
         </Form.Item>
 
-        <Form.Item name='license_key' label='许可证密钥'>
-          <TextArea rows={2} placeholder='许可证密钥' />
+        <Form.Item name="license_key" label="许可证密钥">
+          <TextArea rows={2} placeholder="许可证密钥" />
         </Form.Item>
 
         <Divider>数量与使用</Divider>
 
-        <Form.Item name='total_quantity' label='总数量'>
+        <Form.Item name="total_quantity" label="总数量">
           <InputNumber min={1} style={{ width: '100%' }} />
         </Form.Item>
 
         <Divider>采购与财务</Divider>
 
-        <Form.Item name='purchase_date' label='采购日期'>
-          <DatePicker style={{ width: '100%' }} placeholder='选择采购日期' />
+        <Form.Item name="purchase_date" label="采购日期">
+          <DatePicker style={{ width: '100%' }} placeholder="选择采购日期" />
         </Form.Item>
 
-        <Form.Item name='purchase_price' label='采购价格'>
-          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder='采购价格' />
+        <Form.Item name="purchase_price" label="采购价格">
+          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="采购价格" />
         </Form.Item>
 
-        <Form.Item name='expiry_date' label='到期日期'>
-          <DatePicker style={{ width: '100%' }} placeholder='选择到期日期' />
+        <Form.Item name="expiry_date" label="到期日期">
+          <DatePicker style={{ width: '100%' }} placeholder="选择到期日期" />
         </Form.Item>
 
-        <Form.Item name='renewal_cost' label='续费成本'>
-          <Input placeholder='续费成本' />
+        <Form.Item name="renewal_cost" label="续费成本">
+          <Input placeholder="续费成本" />
         </Form.Item>
 
         <Divider>支持信息</Divider>
 
-        <Form.Item name='support_vendor' label='支持供应商'>
-          <Input placeholder='支持供应商' />
+        <Form.Item name="support_vendor" label="支持供应商">
+          <Input placeholder="支持供应商" />
         </Form.Item>
 
-        <Form.Item name='support_contact' label='支持联系方式'>
-          <Input placeholder='支持联系方式' />
+        <Form.Item name="support_contact" label="支持联系方式">
+          <Input placeholder="支持联系方式" />
         </Form.Item>
 
         <Divider>其他</Divider>
 
-        <Form.Item name='notes' label='备注'>
-          <TextArea rows={3} placeholder='备注信息' />
+        <Form.Item name="notes" label="备注">
+          <TextArea rows={3} placeholder="备注信息" />
         </Form.Item>
 
-        <Form.Item name='tags' label='标签'>
-          <Input placeholder='标签，用逗号分隔' />
+        <Form.Item name="tags" label="标签">
+          <Input placeholder="标签，用逗号分隔" />
         </Form.Item>
 
         <Form.Item>
           <Space>
-            <Button type='primary' htmlType='submit' icon={<SaveOutlined />} loading={loading}>
+            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
               {isEdit ? '保存' : '创建'}
             </Button>
             <Button onClick={() => router.push('/licenses')}>取消</Button>

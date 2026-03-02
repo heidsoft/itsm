@@ -47,34 +47,77 @@ interface ServiceRequest {
 }
 
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import { useI18n } from '@/lib/i18n';
 
-const RequestStatusBadge = ({ status, t }: { status: string; t: (key: string) => string }) => {
-  const statusConfig: Record<string, { color: string; icon: React.ElementType; pulse: boolean }> = {
-    submitted: { color: 'gold', icon: Clock, pulse: true },
-    manager_approved: { color: 'blue', icon: Hourglass, pulse: true },
-    it_approved: { color: 'blue', icon: Hourglass, pulse: true },
-    security_approved: { color: 'green', icon: CheckCircle, pulse: false },
-    provisioning: { color: 'processing', icon: Hourglass, pulse: true },
-    delivered: { color: 'success', icon: CheckCircle, pulse: false },
-    failed: { color: 'error', icon: XCircle, pulse: false },
-    rejected: { color: 'error', icon: XCircle, pulse: false },
-    cancelled: { color: 'default', icon: XCircle, pulse: false },
+const RequestStatusBadge = ({ status }: { status: string }) => {
+  const statusConfig = {
+    submitted: {
+      label: '已提交',
+      color: 'gold',
+      icon: Clock,
+      pulse: true,
+    },
+    manager_approved: {
+      label: '主管已批',
+      color: 'blue',
+      icon: Hourglass,
+      pulse: true,
+    },
+    it_approved: {
+      label: 'IT已批',
+      color: 'blue',
+      icon: Hourglass,
+      pulse: true,
+    },
+    security_approved: {
+      label: '安全已批',
+      color: 'green',
+      icon: CheckCircle,
+      pulse: false,
+    },
+    provisioning: {
+      label: '交付中',
+      color: 'processing',
+      icon: Hourglass,
+      pulse: true,
+    },
+    delivered: {
+      label: '已交付',
+      color: 'success',
+      icon: CheckCircle,
+      pulse: false,
+    },
+    failed: {
+      label: '交付失败',
+      color: 'error',
+      icon: XCircle,
+      pulse: false,
+    },
+    rejected: {
+      label: '已拒绝',
+      color: 'error',
+      icon: XCircle,
+      pulse: false,
+    },
+    cancelled: {
+      label: '已取消',
+      color: 'default',
+      icon: XCircle,
+      pulse: false,
+    },
   };
 
-  const config = statusConfig[status] || statusConfig.submitted;
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted;
   const Icon = config.icon;
-  const label = t(`serviceRequestStatus.${status}`) || t('serviceRequestStatus.submitted');
 
   return (
-    <Tag color={config.color} className='flex items-center gap-1 px-2 py-1'>
-      <Icon className='w-3 h-3' />
-      {label}
+    <Tag color={config.color} className="flex items-center gap-1 px-2 py-1">
+      <Icon className="w-3 h-3" />
+      {config.label}
     </Tag>
   );
 };
 
-const RequestCard = ({ request, t }: { request: ServiceRequest; t: (key: string) => string }) => {
+const RequestCard = ({ request }: { request: ServiceRequest }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('zh-CN', {
       year: 'numeric',
@@ -87,41 +130,41 @@ const RequestCard = ({ request, t }: { request: ServiceRequest; t: (key: string)
 
   return (
     <Card
-      className='mb-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow'
-      variant='borderless'
+      className="mb-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+      variant="borderless"
     >
-      <div className='flex items-start justify-between mb-4'>
-        <div className='flex-1'>
-          <div className='flex items-center gap-3 mb-2'>
-            <span className='text-sm font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded'>
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <span className="text-sm font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded">
               REQ-{String(request.id).padStart(5, '0')}
             </span>
-            <RequestStatusBadge status={request.status} t={t} />
+            <RequestStatusBadge status={request.status} />
           </div>
-          <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-            {request.catalog?.name || t('myRequests.unknownService')}
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {request.catalog?.name || '未知服务'}
           </h3>
-          <p className='text-sm text-gray-600 mb-3'>
+          <p className="text-sm text-gray-600 mb-3">
             {request.catalog?.description || request.reason}
           </p>
         </div>
       </div>
 
-      <div className='flex items-center justify-between text-sm text-gray-500'>
-        <div className='flex items-center gap-4'>
-          <div className='flex items-center gap-1'>
-            <Calendar className='w-4 h-4' />
+      <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1">
+            <Calendar className="w-4 h-4" />
             <span>{formatDate(request.created_at)}</span>
           </div>
-          <div className='flex items-center gap-1'>
-            <FileText className='w-4 h-4' />
-            <span>{request.catalog?.category || t('myRequests.other')}</span>
+          <div className="flex items-center gap-1">
+            <FileText className="w-4 h-4" />
+            <span>{request.catalog?.category || '其他'}</span>
           </div>
         </div>
         <Link href={`/my-requests/${request.id}`}>
-          <Button type='link' className='flex items-center gap-1 p-0 h-auto'>
-            {t('myRequests.viewDetails')}
-            <ChevronRight className='w-4 h-4' />
+          <Button type="link" className="flex items-center gap-1 p-0 h-auto">
+            查看详情
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </Link>
       </div>
@@ -130,7 +173,6 @@ const RequestCard = ({ request, t }: { request: ServiceRequest; t: (key: string)
 };
 
 const MyRequestsPage = () => {
-  const { t } = useI18n();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -154,7 +196,7 @@ const MyRequestsPage = () => {
       setTotal(data.total || 0);
       setTotalPages(Math.max(1, Math.ceil((data.total || 0) / pageSize)));
     } catch (error) {
-      console.error(t('myRequests.apiFailed') + ':', error);
+      console.error('API调用失败:', error);
       setRequests([]);
       setTotal(0);
       setTotalPages(1);
@@ -177,26 +219,26 @@ const MyRequestsPage = () => {
   });
 
   const filterOptions = [
-    { value: 'all', label: t('myRequests.all'), count: total },
-    { value: 'submitted', label: t('serviceRequestStatus.submitted'), count: 0 },
-    { value: 'provisioning', label: t('serviceRequestStatus.provisioning'), count: 0 },
-    { value: 'delivered', label: t('serviceRequestStatus.delivered'), count: 0 },
-    { value: 'rejected', label: t('serviceRequestStatus.rejected'), count: 0 },
+    { value: 'all', label: '全部', count: total },
+    { value: 'submitted', label: '已提交', count: 0 },
+    { value: 'provisioning', label: '交付中', count: 0 },
+    { value: 'delivered', label: '已交付', count: 0 },
+    { value: 'rejected', label: '已拒绝', count: 0 },
   ];
 
   return (
-    <div className='min-h-screen p-6 bg-gray-50'>
-      <div className='max-w-7xl mx-auto'>
+    <div className="min-h-screen p-6 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
         {/* 页面头部 */}
-        <div className='mb-8'>
-          <div className='flex items-center justify-between'>
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className='text-2xl font-bold text-gray-900 mb-1'>{t('myRequests.title')}</h1>
-              <p className='text-gray-500'>{t('myRequests.description')}</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">我的请求</h1>
+              <p className="text-gray-500">查看和跟踪您提交的所有服务请求</p>
             </div>
             <Button
               onClick={() => fetchRequests(currentPage, filter)}
-              icon={<RefreshCw className='w-4 h-4' />}
+              icon={<RefreshCw className="w-4 h-4" />}
             >
               刷新
             </Button>
@@ -204,23 +246,23 @@ const MyRequestsPage = () => {
         </div>
 
         {/* 搜索和筛选 */}
-        <Card className='mb-6 rounded-lg shadow-sm border border-gray-200' variant='borderless'>
-          <div className='flex flex-col lg:flex-row gap-4'>
+        <Card className="mb-6 rounded-lg shadow-sm border border-gray-200" variant="borderless">
+          <div className="flex flex-col lg:flex-row gap-4">
             {/* 搜索框 */}
-            <div className='flex-1'>
+            <div className="flex-1">
               <Input
-                placeholder={t('serviceCatalog.searchPlaceholder')}
-                prefix={<Search className='text-gray-400 w-4 h-4' />}
+                placeholder="搜索服务名称或描述..."
+                prefix={<Search className="text-gray-400 w-4 h-4" />}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className='w-full'
+                className="w-full"
               />
             </div>
 
             {/* 状态筛选 */}
-            <div className='flex items-center gap-2'>
-              <Filter className='w-5 h-5 text-gray-500' />
-              <div className='flex gap-2 flex-wrap'>
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-gray-500" />
+              <div className="flex gap-2 flex-wrap">
                 {filterOptions.map(option => (
                   <Button
                     key={option.value}
@@ -233,7 +275,7 @@ const MyRequestsPage = () => {
                   >
                     {option.label}
                     {option.count > 0 && (
-                      <span className='ml-1.5 text-xs opacity-75'>({option.count})</span>
+                      <span className="ml-1.5 text-xs opacity-75">({option.count})</span>
                     )}
                   </Button>
                 ))}
@@ -244,31 +286,31 @@ const MyRequestsPage = () => {
 
         {/* 请求列表 */}
         {loading ? (
-          <div className='flex items-center justify-center py-12'>
-            <Spin size='large' />
+          <div className="flex items-center justify-center py-12">
+            <Spin size="large" />
           </div>
         ) : filteredRequests.length > 0 ? (
-          <div className='space-y-4'>
+          <div className="space-y-4">
             {filteredRequests.map(request => (
-              <RequestCard key={request.id} request={request} t={t} />
+              <RequestCard key={request.id} request={request} />
             ))}
           </div>
         ) : (
           <Card
-            className='text-center py-12 rounded-lg shadow-sm border border-gray-200'
-            variant='borderless'
+            className="text-center py-12 rounded-lg shadow-sm border border-gray-200"
+            variant="borderless"
           >
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
-                <div className='mb-4'>
-                  <h3 className='text-lg font-medium text-gray-900 mb-2'>暂无请求</h3>
-                  <p className='text-gray-500'>您还没有提交任何服务请求</p>
+                <div className="mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">暂无请求</h3>
+                  <p className="text-gray-500">您还没有提交任何服务请求</p>
                 </div>
               }
             >
-              <Link href='/service-catalog'>
-                <Button type='primary' icon={<FileText className='w-4 h-4' />}>
+              <Link href="/service-catalog">
+                <Button type="primary" icon={<FileText className="w-4 h-4" />}>
                   浏览服务目录
                 </Button>
               </Link>
@@ -279,12 +321,12 @@ const MyRequestsPage = () => {
         {/* 分页 */}
         {totalPages > 1 && (
           <Card
-            className='mt-8 rounded-lg shadow-sm border border-gray-200'
-            variant='borderless'
+            className="mt-8 rounded-lg shadow-sm border border-gray-200"
+            variant="borderless"
             bodyStyle={{ padding: '16px 24px' }}
           >
-            <div className='flex items-center justify-between'>
-              <div className='text-sm text-gray-500'>
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-500">
                 显示第 {(currentPage - 1) * pageSize + 1} -{' '}
                 {Math.min(currentPage * pageSize, total)} 条，共 {total} 条记录
               </div>

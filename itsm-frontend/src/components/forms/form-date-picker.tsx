@@ -119,7 +119,7 @@ const DatePicker = forwardRef<
       <div ref={containerRef} className={`relative ${className}`}>
         <input
           ref={ref}
-          type='text'
+          type="text"
           value={inputValue}
           placeholder={placeholder || (showTime ? '请选择日期时间' : '请选择日期')}
           disabled={disabled}
@@ -136,79 +136,79 @@ const DatePicker = forwardRef<
           {...props}
         />
 
-        <div className='absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none'>
+        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
           <svg
-            className='h-4 w-4 text-gray-400'
-            fill='none'
-            viewBox='0 0 24 24'
-            stroke='currentColor'
+            className="h-4 w-4 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
             <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
+              strokeLinecap="round"
+              strokeLinejoin="round"
               strokeWidth={2}
-              d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
         </div>
 
         {isOpen && (
-          <div className='absolute z-50 mt-1 bg-white border border-gray-200 rounded-md shadow-lg'>
-            <div className='p-4'>
+          <div className="absolute z-50 mt-1 bg-white border border-gray-200 rounded-md shadow-lg">
+            <div className="p-4">
               {/* 月份导航 */}
-              <div className='flex items-center justify-between mb-4'>
+              <div className="flex items-center justify-between mb-4">
                 <button
-                  type='button'
+                  type="button"
                   onClick={() => {
                     const newDate = new Date(year, month - 1, 1);
                     setSelectedDate(newDate);
                   }}
-                  className='p-1 hover:bg-gray-100 rounded'
+                  className="p-1 hover:bg-gray-100 rounded"
                 >
-                  <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeWidth={2}
-                      d='M15 19l-7-7 7-7'
+                      d="M15 19l-7-7 7-7"
                     />
                   </svg>
                 </button>
 
-                <span className='font-medium'>
+                <span className="font-medium">
                   {year}年{month + 1}月
                 </span>
 
                 <button
-                  type='button'
+                  type="button"
                   onClick={() => {
                     const newDate = new Date(year, month + 1, 1);
                     setSelectedDate(newDate);
                   }}
-                  className='p-1 hover:bg-gray-100 rounded'
+                  className="p-1 hover:bg-gray-100 rounded"
                 >
-                  <svg className='h-4 w-4' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeWidth={2}
-                      d='M9 5l7 7-7 7'
+                      d="M9 5l7 7-7 7"
                     />
                   </svg>
                 </button>
               </div>
 
               {/* 星期标题 */}
-              <div className='grid grid-cols-7 gap-1 mb-2'>
+              <div className="grid grid-cols-7 gap-1 mb-2">
                 {['日', '一', '二', '三', '四', '五', '六'].map(day => (
-                  <div key={day} className='text-center text-sm text-gray-500 py-1'>
+                  <div key={day} className="text-center text-sm text-gray-500 py-1">
                     {day}
                   </div>
                 ))}
               </div>
 
               {/* 日期网格 */}
-              <div className='grid grid-cols-7 gap-1'>
+              <div className="grid grid-cols-7 gap-1">
                 {days.map((day, index) => {
                   const isCurrentMonth = day.getMonth() === month;
                   const isSelected =
@@ -222,7 +222,7 @@ const DatePicker = forwardRef<
                   return (
                     <button
                       key={index}
-                      type='button'
+                      type="button"
                       onClick={() => handleDateSelect(day)}
                       disabled={isDisabled}
                       className={`
@@ -240,20 +240,20 @@ const DatePicker = forwardRef<
               </div>
 
               {/* 底部按钮 */}
-              <div className='flex justify-between items-center mt-4 pt-3 border-t border-gray-200'>
+              <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-200">
                 {showToday && (
                   <button
-                    type='button'
+                    type="button"
                     onClick={handleToday}
-                    className='text-sm text-blue-600 hover:text-blue-700'
+                    className="text-sm text-blue-600 hover:text-blue-700"
                   >
                     今天
                   </button>
                 )}
                 <button
-                  type='button'
+                  type="button"
                   onClick={() => setIsOpen(false)}
-                  className='text-sm text-gray-600 hover:text-gray-700'
+                  className="text-sm text-gray-600 hover:text-gray-700"
                 >
                   确定
                 </button>

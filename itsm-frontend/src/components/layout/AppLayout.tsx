@@ -47,7 +47,7 @@ export function AppLayout({
   // 移动端Drawer侧边栏
   const MobileSidebar = () => (
     <Drawer
-      placement='left'
+      placement="left"
       onClose={() => setMobileDrawerVisible(false)}
       open={mobileDrawerVisible}
       width={280}
@@ -69,7 +69,7 @@ export function AppLayout({
       {/* 移动端顶部菜单按钮 */}
       {isMobile && (
         <Button
-          type='text'
+          type="text"
           icon={<Menu />}
           onClick={() => setMobileDrawerVisible(true)}
           style={{
@@ -127,12 +127,12 @@ export function AppLayout({
             borderRadius: LAYOUT_CONFIG.borderRadius.lg,
             transition: LAYOUT_CONFIG.transitions.base,
           }}
-          className='responsive-content'
+          className="responsive-content"
         >
           {/* 返回按钮 */}
           {showBackButton && (
             <div style={{ marginBottom: LAYOUT_CONFIG.spacing.md }}>
-              <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()} size='small'>
+              <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()} size="small">
                 返回
               </Button>
             </div>

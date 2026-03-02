@@ -216,7 +216,7 @@ describe('Layout ErrorBoundary', () => {
 
   describe('自定义配置', () => {
     it('使用自定义 fallback 组件', () => {
-      const CustomFallback = () => <div data-testid='custom-fallback'>Custom Error UI</div>;
+      const CustomFallback = () => <div data-testid="custom-fallback">Custom Error UI</div>;
 
       render(
         <ErrorBoundary fallback={<CustomFallback />}>

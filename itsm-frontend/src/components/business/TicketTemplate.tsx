@@ -288,8 +288,8 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
       key: 'name',
       render: (text: string, record: TicketTemplate) => (
         <div>
-          <div className='font-medium'>{text}</div>
-          <div className='text-sm text-gray-500'>{record.description}</div>
+          <div className="font-medium">{text}</div>
+          <div className="text-sm text-gray-500">{record.description}</div>
         </div>
       ),
     },
@@ -299,8 +299,8 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
       key: 'category',
       render: (category: string, record: TicketTemplate) => (
         <div>
-          <Tag color='blue'>{category}</Tag>
-          {record.subcategory && <Tag color='cyan'>{record.subcategory}</Tag>}
+          <Tag color="blue">{category}</Tag>
+          {record.subcategory && <Tag color="cyan">{record.subcategory}</Tag>}
         </div>
       ),
     },
@@ -322,17 +322,17 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
       title: '状态',
       key: 'status',
       render: (record: TicketTemplate) => (
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <Switch
             checked={record.isActive}
-            size='small'
+            size="small"
             onChange={checked => {
               setTemplates(prev =>
                 prev.map(t => (t.id === record.id ? { ...t, isActive: checked } : t))
               );
             }}
           />
-          {record.isDefault && <Tag color='green'>默认</Tag>}
+          {record.isDefault && <Tag color="green">默认</Tag>}
         </div>
       ),
     },
@@ -340,7 +340,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
       title: 'SLA',
       dataIndex: 'sla',
       key: 'sla',
-      render: (sla: string) => <Tag color='orange'>{sla}</Tag>,
+      render: (sla: string) => <Tag color="orange">{sla}</Tag>,
     },
     {
       title: '操作',
@@ -348,13 +348,13 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
       render: (record: TicketTemplate) => (
         <Space>
           {mode === 'select' && (
-            <Button type='primary' size='small' onClick={() => handleSelectTemplate(record)}>
+            <Button type="primary" size="small" onClick={() => handleSelectTemplate(record)}>
               使用模板
             </Button>
           )}
-          <Tooltip title='查看详情'>
+          <Tooltip title="查看详情">
             <Button
-              size='small'
+              size="small"
               icon={<Eye size={14} />}
               onClick={() => {
                 setEditingTemplate(record);
@@ -362,27 +362,27 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
               }}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              size='small'
+              size="small"
               icon={<Edit size={14} />}
               onClick={() => handleEditTemplate(record)}
             />
           </Tooltip>
-          <Tooltip title='复制'>
+          <Tooltip title="复制">
             <Button
-              size='small'
+              size="small"
               icon={<Copy size={14} />}
               onClick={() => handleCopyTemplate(record)}
             />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个模板吗？'
+            title="确定要删除这个模板吗？"
             onConfirm={() => handleDeleteTemplate(record.id)}
-            okText='确定'
-            cancelText='取消'
+            okText="确定"
+            cancelText="取消"
           >
-            <Button size='small' danger icon={<Delete size={14} />} />
+            <Button size="small" danger icon={<Delete size={14} />} />
           </Popconfirm>
         </Space>
       ),
@@ -390,13 +390,13 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
   ];
 
   if (loading) {
-    return <LoadingSkeleton type='table' rows={5} columns={6} />;
+    return <LoadingSkeleton type="table" rows={5} columns={6} />;
   }
 
   if (templates.length === 0) {
     return (
       <LoadingEmptyError
-        state='empty'
+        state="empty"
         empty={{
           title: '暂无工单模板',
           description: '创建第一个工单模板来标准化工单创建流程',
@@ -408,18 +408,18 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
   }
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 头部操作区 */}
       <Card>
-        <div className='flex justify-between items-center'>
+        <div className="flex justify-between items-center">
           <div>
-            <Title level={4} className='mb-1'>
+            <Title level={4} className="mb-1">
               工单模板管理
             </Title>
-            <Text type='secondary'>管理和配置工单创建模板，提高工单处理效率</Text>
+            <Text type="secondary">管理和配置工单创建模板，提高工单处理效率</Text>
           </div>
           {mode === 'manage' && (
-            <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateTemplate}>
+            <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateTemplate}>
               创建模板
             </Button>
           )}
@@ -431,7 +431,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
         <Table
           columns={columns}
           dataSource={templates}
-          rowKey='id'
+          rowKey="id"
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -447,33 +447,33 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
         open={modalVisible}
         onOk={handleSaveTemplate}
         onCancel={() => setModalVisible(false)}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
         width={800}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='name'
-                label='模板名称'
+                name="name"
+                label="模板名称"
                 rules={[{ required: true, message: '请输入模板名称' }]}
               >
-                <Input placeholder='请输入模板名称' />
+                <Input placeholder="请输入模板名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name='category'
-                label='主分类'
+                name="category"
+                label="主分类"
                 rules={[{ required: true, message: '请选择主分类' }]}
               >
-                <Select placeholder='请选择主分类'>
-                  <Option value='网络故障'>网络故障</Option>
-                  <Option value='硬件故障'>硬件故障</Option>
-                  <Option value='软件故障'>软件故障</Option>
-                  <Option value='权限问题'>权限问题</Option>
-                  <Option value='其他'>其他</Option>
+                <Select placeholder="请选择主分类">
+                  <Option value="网络故障">网络故障</Option>
+                  <Option value="硬件故障">硬件故障</Option>
+                  <Option value="软件故障">软件故障</Option>
+                  <Option value="权限问题">权限问题</Option>
+                  <Option value="其他">其他</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -481,21 +481,21 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='subcategory' label='子分类'>
-                <Input placeholder='请输入子分类' />
+              <Form.Item name="subcategory" label="子分类">
+                <Input placeholder="请输入子分类" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name='priority'
-                label='默认优先级'
+                name="priority"
+                label="默认优先级"
                 rules={[{ required: true, message: '请选择默认优先级' }]}
               >
-                <Select placeholder='请选择默认优先级'>
-                  <Option value='low'>低</Option>
-                  <Option value='medium'>中</Option>
-                  <Option value='high'>高</Option>
-                  <Option value='critical'>紧急</Option>
+                <Select placeholder="请选择默认优先级">
+                  <Option value="low">低</Option>
+                  <Option value="medium">中</Option>
+                  <Option value="high">高</Option>
+                  <Option value="critical">紧急</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -504,62 +504,62 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='impact'
-                label='影响程度'
+                name="impact"
+                label="影响程度"
                 rules={[{ required: true, message: '请选择影响程度' }]}
               >
-                <Select placeholder='请选择影响程度'>
-                  <Option value='low'>低</Option>
-                  <Option value='medium'>中</Option>
-                  <Option value='high'>高</Option>
+                <Select placeholder="请选择影响程度">
+                  <Option value="low">低</Option>
+                  <Option value="medium">中</Option>
+                  <Option value="high">高</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name='urgency'
-                label='紧急程度'
+                name="urgency"
+                label="紧急程度"
                 rules={[{ required: true, message: '请选择紧急程度' }]}
               >
-                <Select placeholder='请选择紧急程度'>
-                  <Option value='low'>低</Option>
-                  <Option value='medium'>中</Option>
-                  <Option value='high'>高</Option>
+                <Select placeholder="请选择紧急程度">
+                  <Option value="low">低</Option>
+                  <Option value="medium">中</Option>
+                  <Option value="high">高</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name='description' label='模板描述'>
-            <TextArea rows={3} placeholder='请输入模板描述' />
+          <Form.Item name="description" label="模板描述">
+            <TextArea rows={3} placeholder="请输入模板描述" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='workflow' label='关联工作流'>
-                <Select placeholder='请选择工作流' allowClear>
-                  <Option value='标准处理流程'>标准处理流程</Option>
-                  <Option value='紧急处理流程'>紧急处理流程</Option>
-                  <Option value='变更审批流程'>变更审批流程</Option>
+              <Form.Item name="workflow" label="关联工作流">
+                <Select placeholder="请选择工作流" allowClear>
+                  <Option value="标准处理流程">标准处理流程</Option>
+                  <Option value="紧急处理流程">紧急处理流程</Option>
+                  <Option value="变更审批流程">变更审批流程</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='sla' label='SLA目标'>
-                <Input placeholder='如：4小时' />
+              <Form.Item name="sla" label="SLA目标">
+                <Input placeholder="如：4小时" />
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name='tags' label='标签'>
-            <Select mode='tags' placeholder='请输入标签'>
-              <Option value='标准'>标准</Option>
-              <Option value='常用'>常用</Option>
-              <Option value='紧急'>紧急</Option>
+          <Form.Item name="tags" label="标签">
+            <Select mode="tags" placeholder="请输入标签">
+              <Option value="标准">标准</Option>
+              <Option value="常用">常用</Option>
+              <Option value="紧急">紧急</Option>
             </Select>
           </Form.Item>
 
-          <Form.Item name='isActive' label='启用状态' valuePropName='checked'>
+          <Form.Item name="isActive" label="启用状态" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
@@ -567,33 +567,33 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
 
       {/* 模板详情抽屉 */}
       <Drawer
-        title='模板详情'
-        placement='right'
+        title="模板详情"
+        placement="right"
         width={600}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
       >
         {editingTemplate && (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             <div>
               <Title level={5}>基本信息</Title>
-              <div className='bg-gray-50 p-4 rounded-lg space-y-2'>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>模板名称:</span>
-                  <span className='font-medium'>{editingTemplate.name}</span>
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">模板名称:</span>
+                  <span className="font-medium">{editingTemplate.name}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>分类:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">分类:</span>
                   <span>
                     {editingTemplate.category} / {editingTemplate.subcategory}
                   </span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>优先级:</span>
-                  <Tag color='orange'>{editingTemplate.priority}</Tag>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">优先级:</span>
+                  <Tag color="orange">{editingTemplate.priority}</Tag>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>状态:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">状态:</span>
                   <Tag color={editingTemplate.isActive ? 'green' : 'red'}>
                     {editingTemplate.isActive ? '启用' : '禁用'}
                   </Tag>
@@ -604,50 +604,50 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
             <div>
               <Title level={5}>自定义字段</Title>
               {editingTemplate.fields.length > 0 ? (
-                <div className='space-y-2'>
+                <div className="space-y-2">
                   {editingTemplate.fields.map(field => (
-                    <div key={field.id} className='border rounded p-3'>
-                      <div className='flex justify-between items-center mb-2'>
-                        <span className='font-medium'>{field.label}</span>
+                    <div key={field.id} className="border rounded p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">{field.label}</span>
                         <Tag color={field.required ? 'red' : 'blue'}>
                           {field.required ? '必填' : '选填'}
                         </Tag>
                       </div>
-                      <div className='text-sm text-gray-500'>
+                      <div className="text-sm text-gray-500">
                         类型: {field.type} • 顺序: {field.order}
                       </div>
                       {field.helpText && (
-                        <div className='text-sm text-gray-600 mt-1'>{field.helpText}</div>
+                        <div className="text-sm text-gray-600 mt-1">{field.helpText}</div>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className='text-center text-gray-500 py-4'>暂无自定义字段</div>
+                <div className="text-center text-gray-500 py-4">暂无自定义字段</div>
               )}
             </div>
 
             <div>
               <Title level={5}>其他信息</Title>
-              <div className='bg-gray-50 p-4 rounded-lg space-y-2'>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>工作流:</span>
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">工作流:</span>
                   <span>{editingTemplate.workflow || '未设置'}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>SLA:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">SLA:</span>
                   <span>{editingTemplate.sla || '未设置'}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>创建人:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">创建人:</span>
                   <span>{editingTemplate.createdBy}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>创建时间:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">创建时间:</span>
                   <span>{editingTemplate.createdAt}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>更新时间:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">更新时间:</span>
                   <span>{editingTemplate.updatedAt}</span>
                 </div>
               </div>

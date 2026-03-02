@@ -110,7 +110,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             }}
           >
             <Result
-              status='error'
+              status="error"
               icon={<BugOutlined style={{ fontSize: 72, color: '#ff4d4f' }} />}
               title={
                 <span>
@@ -118,21 +118,21 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                   页面遇到了一些问题
                 </span>
               }
-              subTitle='我们已经记录了这个错误，开发团队会尽快修复。您可以尝试刷新页面或返回首页。'
+              subTitle="我们已经记录了这个错误，开发团队会尽快修复。您可以尝试刷新页面或返回首页。"
               extra={[
                 <Button
-                  key='reload'
-                  type='primary'
+                  key="reload"
+                  type="primary"
                   icon={<ReloadOutlined />}
                   onClick={this.handleReload}
-                  size='large'
+                  size="large"
                 >
                   刷新页面
                 </Button>,
-                <Button key='home' icon={<HomeOutlined />} onClick={this.handleGoHome} size='large'>
+                <Button key="home" icon={<HomeOutlined />} onClick={this.handleGoHome} size="large">
                   返回首页
                 </Button>,
-                <Button key='reset' onClick={this.handleReset} size='large'>
+                <Button key="reset" onClick={this.handleReset} size="large">
                   尝试恢复
                 </Button>,
               ]}
@@ -156,7 +156,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                           <>
                             <div style={{ marginBottom: 16 }}>
                               <Text strong>错误次数: </Text>
-                              <Text type='danger'>{errorCount}</Text>
+                              <Text type="danger">{errorCount}</Text>
                             </div>
 
                             <div style={{ marginBottom: 16 }}>
@@ -223,7 +223,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
               {/* 生产环境提示 */}
               {process.env.NODE_ENV === 'production' && (
                 <div style={{ marginTop: 24 }}>
-                  <Text type='secondary'>错误ID: {Date.now().toString(36).toUpperCase()}</Text>
+                  <Text type="secondary">错误ID: {Date.now().toString(36).toUpperCase()}</Text>
                 </div>
               )}
             </Result>

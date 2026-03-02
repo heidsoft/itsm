@@ -73,10 +73,10 @@ const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ da
 
   return (
     <DashboardChartCard
-      title='工单趋势分析'
-      subtitle='过去7天工单状态变化趋势'
+      title="工单趋势分析"
+      subtitle="过去7天工单状态变化趋势"
       icon={<LineChart style={{ width: 20, height: 20 }} />}
-      iconColor='#3b82f6'
+      iconColor="#3b82f6"
       trend={{ value: trend, isPositive: trend > 0 }}
       extra={
         <Badge

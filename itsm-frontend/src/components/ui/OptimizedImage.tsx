@@ -105,7 +105,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   return (
     <div className={`relative ${className}`} style={{ width, height }}>
       {showSkeleton && isLoading && (
-        <div className='absolute inset-0 z-10'>
+        <div className="absolute inset-0 z-10">
           <Skeleton.Image
             active
             style={{
@@ -210,7 +210,7 @@ export const AvatarImage: React.FC<AvatarImageProps> = ({
         width={size}
         height={size}
         quality={75}
-        loading='lazy'
+        loading="lazy"
         style={{
           objectFit: 'cover',
         }}
@@ -257,9 +257,9 @@ export const ThumbnailImage: React.FC<ThumbnailImageProps> = ({
         alt={alt}
         width={width}
         height={height}
-        objectFit='cover'
+        objectFit="cover"
         quality={60}
-        loading='lazy'
+        loading="lazy"
       />
     </div>
   );
@@ -296,15 +296,15 @@ export const BackgroundImage: React.FC<BackgroundImageProps> = ({
         fill
         priority={priority}
         quality={75}
-        sizes='100vw'
+        sizes="100vw"
         style={{
           objectFit: 'cover',
         }}
       />
 
-      {overlay && <div className='absolute inset-0 bg-black' style={{ opacity: overlayOpacity }} />}
+      {overlay && <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} />}
 
-      {children && <div className='relative z-10'>{children}</div>}
+      {children && <div className="relative z-10">{children}</div>}
     </div>
   );
 };
@@ -338,7 +338,7 @@ export const LogoImage: React.FC<LogoImageProps> = ({
       height={height}
       priority={priority}
       quality={90}
-      objectFit='contain'
+      objectFit="contain"
       className={className}
     />
   );

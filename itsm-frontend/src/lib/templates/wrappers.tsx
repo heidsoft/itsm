@@ -43,18 +43,18 @@ export function AsyncDataWrapper<T>({
   emptyFallback,
 }: AsyncDataWrapperProps<T>) {
   if (isLoading) {
-    return <>{loadingFallback ?? <Spin tip='加载中...' spinning />}</>;
+    return <>{loadingFallback ?? <Spin tip="加载中..." spinning />}</>;
   }
 
   if (error) {
     return (
       errorFallback ?? (
         <Alert
-          type='error'
-          message='加载失败'
+          type="error"
+          message="加载失败"
           description={error.message}
           action={
-            <Button size='small' danger onClick={() => window.location.reload()}>
+            <Button size="small" danger onClick={() => window.location.reload()}>
               刷新
             </Button>
           }
@@ -98,14 +98,14 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         this.props.fallback ?? (
           <Result
-            status='error'
-            title='出错了'
+            status="error"
+            title="出错了"
             subTitle={this.state.error?.message || '未知错误'}
             extra={[
-              <Button key='retry' onClick={() => this.setState({ hasError: false, error: null })}>
+              <Button key="retry" onClick={() => this.setState({ hasError: false, error: null })}>
                 重试
               </Button>,
-              <Button key='reload' type='primary' onClick={() => window.location.reload()}>
+              <Button key="reload" type="primary" onClick={() => window.location.reload()}>
                 刷新页面
               </Button>,
             ]}

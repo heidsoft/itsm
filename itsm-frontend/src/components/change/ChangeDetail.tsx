@@ -93,11 +93,11 @@ const ChangeDetail: React.FC = () => {
     return (
       <Card>
         <Result
-          status='404'
-          title='404'
-          subTitle='抱歉，您访问的变更不存在'
+          status="404"
+          title="404"
+          subTitle="抱歉，您访问的变更不存在"
           extra={
-            <Button type='primary' onClick={() => router.push('/changes')}>
+            <Button type="primary" onClick={() => router.push('/changes')}>
               返回列表
             </Button>
           }
@@ -107,7 +107,7 @@ const ChangeDetail: React.FC = () => {
   }
 
   return (
-    <Space orientation='vertical' style={{ width: '100%' }} size='large'>
+    <Space orientation="vertical" style={{ width: '100%' }} size="large">
       <Card>
         <div style={{ marginBottom: 24 }}>
           <Button
@@ -128,32 +128,32 @@ const ChangeDetail: React.FC = () => {
         </div>
 
         <Descriptions bordered column={2}>
-          <Descriptions.Item label='变更编号'>{change.id}</Descriptions.Item>
-          <Descriptions.Item label='变更类型'>{ChangeTypeLabels[change.type]}</Descriptions.Item>
-          <Descriptions.Item label='优先级'>
+          <Descriptions.Item label="变更编号">{change.id}</Descriptions.Item>
+          <Descriptions.Item label="变更类型">{ChangeTypeLabels[change.type]}</Descriptions.Item>
+          <Descriptions.Item label="优先级">
             {ChangePriorityLabels[change.priority]}
           </Descriptions.Item>
-          <Descriptions.Item label='风险等级'>
+          <Descriptions.Item label="风险等级">
             {ChangeRiskLabels[change.risk_level]}
           </Descriptions.Item>
-          <Descriptions.Item label='影响范围'>
+          <Descriptions.Item label="影响范围">
             {ChangeImpactLabels[change.impact_scope]}
           </Descriptions.Item>
-          <Descriptions.Item label='负责人'>{change.assignee_name || '未分配'}</Descriptions.Item>
-          <Descriptions.Item label='计划起始'>
+          <Descriptions.Item label="负责人">{change.assignee_name || '未分配'}</Descriptions.Item>
+          <Descriptions.Item label="计划起始">
             {change.planned_start_date
               ? dayjs(change.planned_start_date).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
-          <Descriptions.Item label='计划截止'>
+          <Descriptions.Item label="计划截止">
             {change.planned_end_date
               ? dayjs(change.planned_end_date).format('YYYY-MM-DD HH:mm')
               : '-'}
           </Descriptions.Item>
         </Descriptions>
 
-        <Tabs defaultActiveKey='1' style={{ marginTop: 24 }}>
-          <Tabs.TabPane tab='基础信息' key='1'>
+        <Tabs defaultActiveKey="1" style={{ marginTop: 24 }}>
+          <Tabs.TabPane tab="基础信息" key="1">
             <Title level={5}>变更原因 / 理由</Title>
             <Paragraph>{change.justification || '无'}</Paragraph>
 
@@ -173,10 +173,10 @@ const ChangeDetail: React.FC = () => {
             </Paragraph>
           </Tabs.TabPane>
 
-          <Tabs.TabPane tab='审批记录' key='2'>
+          <Tabs.TabPane tab="审批记录" key="2">
             {approvals.length > 0 ? (
               <List
-                itemLayout='horizontal'
+                itemLayout="horizontal"
                 dataSource={approvals}
                 renderItem={record => (
                   <List.Item>
@@ -194,7 +194,7 @@ const ChangeDetail: React.FC = () => {
                           <Tag color={statusColors[record.status]}>
                             {ChangeStatusLabels[record.status]}
                           </Tag>
-                          <Text type='secondary'>
+                          <Text type="secondary">
                             {dayjs(record.created_at).format('YYYY-MM-DD HH:mm')}
                           </Text>
                         </Space>
@@ -205,7 +205,7 @@ const ChangeDetail: React.FC = () => {
                 )}
               />
             ) : (
-              <Empty description='暂无审批记录' />
+              <Empty description="暂无审批记录" />
             )}
           </Tabs.TabPane>
         </Tabs>

@@ -129,10 +129,10 @@ const ChangeSuccessReport = () => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className='bg-white p-3 rounded-lg shadow-lg border border-gray-200'>
-          <p className='font-semibold text-gray-800'>{`${payload[0].name}`}</p>
+        <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
+          <p className="font-semibold text-gray-800">{`${payload[0].name}`}</p>
           <p
-            className='text-sm'
+            className="text-sm"
             style={{ color: payload[0].color }}
           >{`数量: ${payload[0].value}`}</p>
         </div>
@@ -143,24 +143,24 @@ const ChangeSuccessReport = () => {
 
   if (!data) {
     return (
-      <div className='p-6 flex items-center justify-center h-64'>
-        <Spin size='large' />
+      <div className="p-6 flex items-center justify-center h-64">
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className='p-6 bg-gray-50 min-h-full'>
-      <header className='mb-6'>
+    <div className="p-6 bg-gray-50 min-h-full">
+      <header className="mb-6">
         <Title level={2}>变更成功率报表</Title>
-        <p className='text-gray-500 mt-1'>展示变更管理的状态分布和成功率统计</p>
+        <p className="text-gray-500 mt-1">展示变更管理的状态分布和成功率统计</p>
       </header>
 
       {/* 控制栏 */}
-      <Card className='mb-6'>
-        <Row justify='space-between' align='middle'>
+      <Card className="mb-6">
+        <Row justify="space-between" align="middle">
           <Col>
-            <Text className='text-gray-600'>变更执行情况监控</Text>
+            <Text className="text-gray-600">变更执行情况监控</Text>
           </Col>
           <Col>
             <Button icon={<ReloadOutlined />} onClick={loadData}>
@@ -171,17 +171,17 @@ const ChangeSuccessReport = () => {
       </Card>
 
       {loading ? (
-        <div className='flex items-center justify-center h-64'>
-          <Spin size='large' tip='加载报表数据...' />
+        <div className="flex items-center justify-center h-64">
+          <Spin size="large" tip="加载报表数据..." />
         </div>
       ) : (
         <>
           {/* 统计卡片 */}
-          <Row gutter={[16, 16]} className='mb-6'>
+          <Row gutter={[16, 16]} className="mb-6">
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title='变更总数'
+                  title="变更总数"
                   value={data.totalChanges}
                   styles={{ content: { color: '#1890ff' } }}
                 />
@@ -190,7 +190,7 @@ const ChangeSuccessReport = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title='已完成'
+                  title="已完成"
                   value={data.byStatus.find(s => s.name === '已完成')?.value || 0}
                   styles={{ content: { color: '#52c41a' } }}
                 />
@@ -199,7 +199,7 @@ const ChangeSuccessReport = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title='实施中'
+                  title="实施中"
                   value={data.byStatus.find(s => s.name === '实施中')?.value || 0}
                   styles={{ content: { color: '#1890ff' } }}
                 />
@@ -208,9 +208,9 @@ const ChangeSuccessReport = () => {
             <Col xs={24} sm={12} lg={6}>
               <Card>
                 <Statistic
-                  title='成功率'
+                  title="成功率"
                   value={data.successRate}
-                  suffix='%'
+                  suffix="%"
                   styles={{ content: { color: data.successRate >= 80 ? '#52c41a' : '#ff4d4f' } }}
                 />
               </Card>
@@ -220,16 +220,16 @@ const ChangeSuccessReport = () => {
           {/* 图表区域 */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title='变更状态分布'>
-                <ResponsiveContainer width='100%' height={300}>
+              <Card title="变更状态分布">
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={data.byStatus}
-                      cx='50%'
-                      cy='50%'
+                      cx="50%"
+                      cy="50%"
                       outerRadius={100}
-                      dataKey='value'
-                      nameKey='name'
+                      dataKey="value"
+                      nameKey="name"
                       label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                     >
                       {data.byStatus.map((entry, index) => (
@@ -244,15 +244,15 @@ const ChangeSuccessReport = () => {
             </Col>
 
             <Col xs={24} lg={12}>
-              <Card title='变更类型分布'>
-                <ResponsiveContainer width='100%' height={300}>
+              <Card title="变更类型分布">
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart data={data.byType}>
-                    <CartesianGrid strokeDasharray='3 3' />
-                    <XAxis dataKey='type' />
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="type" />
                     <YAxis />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend />
-                    <Bar dataKey='count' name='变更数量' fill='#1890ff'>
+                    <Bar dataKey="count" name="变更数量" fill="#1890ff">
                       {data.byType.map((entry, index) => (
                         <Cell
                           key={`cell-${index}`}
@@ -267,15 +267,15 @@ const ChangeSuccessReport = () => {
           </Row>
 
           {/* 状态说明 */}
-          <Card title='状态说明' className='mt-6'>
+          <Card title="状态说明" className="mt-6">
             <Row gutter={[16, 16]}>
               {data.byStatus.map((status, index) => (
                 <Col xs={12} sm={8} md={4} key={index}>
-                  <div className='flex items-center gap-2'>
-                    <Tag color={status.color} className='m-0'>
+                  <div className="flex items-center gap-2">
+                    <Tag color={status.color} className="m-0">
                       {status.name}
                     </Tag>
-                    <span className='text-lg font-semibold'>{status.value}</span>
+                    <span className="text-lg font-semibold">{status.value}</span>
                   </div>
                 </Col>
               ))}

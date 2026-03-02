@@ -305,73 +305,73 @@ const TicketApprovalWorkflowPage = () => {
           status,
           icon:
             node.type === 'start' ? (
-              <Play className='w-4 h-4' />
+              <Play className="w-4 h-4" />
             ) : node.type === 'approval' ? (
-              <Users className='w-4 h-4' />
+              <Users className="w-4 h-4" />
             ) : node.type === 'condition' ? (
-              <GitBranch className='w-4 h-4' />
+              <GitBranch className="w-4 h-4" />
             ) : node.type === 'action' ? (
-              <Zap className='w-4 h-4' />
+              <Zap className="w-4 h-4" />
             ) : node.type === 'end' ? (
-              <CheckCircle className='w-4 h-4' />
+              <CheckCircle className="w-4 h-4" />
             ) : null,
         };
       }) || [];
 
     modal.info({
       title: (
-        <div className='flex items-center gap-2'>
-          <Eye className='w-5 h-5' />
+        <div className="flex items-center gap-2">
+          <Eye className="w-5 h-5" />
           {t('workflow.workflowPreview')}
         </div>
       ),
       width: 800,
       content: (
-        <div className='space-y-6'>
+        <div className="space-y-6">
           <Alert
             message={t('workflow.workflowOverview')}
             description={t('workflow.workflowOverviewDescription', {
               total: workflow.nodes?.length || 0,
               approval: workflow.nodes?.filter((n: any) => n.type === 'approval').length || 0,
             })}
-            type='info'
+            type="info"
             showIcon
           />
 
           <div>
             <Title level={5}>{t('workflow.processSteps')}</Title>
-            <Steps direction='vertical' size='small' current={0} items={previewSteps} />
+            <Steps direction="vertical" size="small" current={0} items={previewSteps} />
           </div>
 
           <div>
             <Title level={5}>{t('workflow.nodeDetails')}</Title>
             <List
-              size='small'
+              size="small"
               dataSource={workflow.nodes || []}
               renderItem={(node: any, index: number) => (
                 <List.Item>
-                  <div className='flex items-center gap-3 w-full'>
-                    <Badge count={index + 1} color='blue' />
-                    <div className='flex-1'>
-                      <div className='flex items-center gap-2'>
+                  <div className="flex items-center gap-3 w-full">
+                    <Badge count={index + 1} color="blue" />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
                         <Text strong>{node.name}</Text>
                         <Tag color={getNodeTypeColor(node.type)}>
                           {getNodeTypeName(node.type, t)}
                         </Tag>
                       </div>
                       {node.description && (
-                        <Text type='secondary' className='text-sm'>
+                        <Text type="secondary" className="text-sm">
                           {node.description}
                         </Text>
                       )}
                       {node.type === 'approval' && node.config?.approvers && (
-                        <div className='mt-1'>
-                          <Tag color='blue' className='text-xs'>
+                        <div className="mt-1">
+                          <Tag color="blue" className="text-xs">
                             {t('workflow.approversCount', {
                               count: node.config.approvers.value?.length || 0,
                             })}
                           </Tag>
-                          <Tag color='orange' className='text-xs'>
+                          <Tag color="orange" className="text-xs">
                             {t('workflow.timeoutHours', { hours: node.config.timeout || 24 })}
                           </Tag>
                         </div>
@@ -390,39 +390,39 @@ const TicketApprovalWorkflowPage = () => {
   // getNodeTypeName 已在文件顶部定义，使用国际化版本
 
   return (
-    <div className='h-screen flex flex-col'>
+    <div className="h-screen flex flex-col">
       {/* 页面头部 */}
-      <div className='border-b border-gray-200 bg-white'>
-        <div className='px-6 py-4'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-4'>
-              <Button icon={<ArrowLeft className='w-4 h-4' />} onClick={handleCancel}>
+      <div className="border-b border-gray-200 bg-white">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button icon={<ArrowLeft className="w-4 h-4" />} onClick={handleCancel}>
                 {t('workflow.backToWorkflowList')}
               </Button>
-              <Divider type='vertical' />
+              <Divider type="vertical" />
               <div>
-                <Title level={3} className='!mb-1'>
-                  <GitBranch className='inline-block w-6 h-6 mr-2' />
+                <Title level={3} className="!mb-1">
+                  <GitBranch className="inline-block w-6 h-6 mr-2" />
                   {t('workflow.ticketApprovalDesigner')}
                 </Title>
-                <Text type='secondary'>{t('workflow.ticketApprovalDesignerDescription')}</Text>
+                <Text type="secondary">{t('workflow.ticketApprovalDesignerDescription')}</Text>
               </div>
             </div>
 
             <Space>
               <Button
-                icon={<Eye className='w-4 h-4' />}
+                icon={<Eye className="w-4 h-4" />}
                 onClick={handlePreview}
                 disabled={!workflow}
               >
                 {t('workflow.preview')}
               </Button>
-              <Button icon={<Download className='w-4 h-4' />} disabled={!workflow}>
+              <Button icon={<Download className="w-4 h-4" />} disabled={!workflow}>
                 {t('workflow.export')}
               </Button>
               <Button
-                type='primary'
-                icon={<Save className='w-4 h-4' />}
+                type="primary"
+                icon={<Save className="w-4 h-4" />}
                 disabled={!workflow}
                 onClick={() => setSaveModalVisible(true)}
               >
@@ -434,12 +434,12 @@ const TicketApprovalWorkflowPage = () => {
       </div>
 
       {/* BPMN 设计器区域 */}
-      <div className='flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <BPMNDesigner
           xml={currentXML}
           onSave={handleSave}
           onChange={handleBPMNChange}
-          height='100%'
+          height="100%"
         />
       </div>
 
@@ -454,55 +454,55 @@ const TicketApprovalWorkflowPage = () => {
         okText={t('workflow.confirmSave')}
         cancelText={t('workflow.cancel')}
       >
-        <div className='space-y-6'>
+        <div className="space-y-6">
           <Alert
             message={t('workflow.saveConfirmation')}
             description={t('workflow.saveConfirmationDescription')}
-            type='info'
+            type="info"
             showIcon
           />
 
           {workflow && (
-            <Card size='small' title={t('workflow.processStatistics')}>
+            <Card size="small" title={t('workflow.processStatistics')}>
               <Row gutter={16}>
                 <Col span={6}>
                   <Statistic
                     title={t('workflow.totalNodes')}
                     value={workflow.metadata?.nodeCount || 0}
-                    prefix={<GitBranch className='w-4 h-4' />}
+                    prefix={<GitBranch className="w-4 h-4" />}
                   />
                 </Col>
                 <Col span={6}>
                   <Statistic
                     title={t('workflow.approvalNodes')}
                     value={workflow.metadata?.approvalCount || 0}
-                    prefix={<Users className='w-4 h-4' />}
+                    prefix={<Users className="w-4 h-4" />}
                   />
                 </Col>
                 <Col span={6}>
                   <Statistic
                     title={t('workflow.conditionNodes')}
                     value={workflow.nodes?.filter((n: any) => n.type === 'condition').length || 0}
-                    prefix={<Settings className='w-4 h-4' />}
+                    prefix={<Settings className="w-4 h-4" />}
                   />
                 </Col>
                 <Col span={6}>
                   <Statistic
                     title={t('workflow.actionNodes')}
                     value={workflow.nodes?.filter((n: any) => n.type === 'action').length || 0}
-                    prefix={<Zap className='w-4 h-4' />}
+                    prefix={<Zap className="w-4 h-4" />}
                   />
                 </Col>
               </Row>
             </Card>
           )}
 
-          <Form form={form} layout='vertical'>
+          <Form form={form} layout="vertical">
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item
                   label={t('workflow.processName')}
-                  name='name'
+                  name="name"
                   rules={[{ required: true, message: t('workflow.processNameRequired') }]}
                 >
                   <Input placeholder={t('workflow.processNamePlaceholder')} />
@@ -511,7 +511,7 @@ const TicketApprovalWorkflowPage = () => {
               <Col span={12}>
                 <Form.Item
                   label={t('workflow.processCategory')}
-                  name='category'
+                  name="category"
                   rules={[{ required: true, message: t('workflow.processCategoryRequired') }]}
                 >
                   <Select placeholder={t('workflow.processCategoryPlaceholder')}>
@@ -534,7 +534,7 @@ const TicketApprovalWorkflowPage = () => {
 
             <Form.Item
               label={t('workflow.processDescription')}
-              name='description'
+              name="description"
               rules={[{ required: true, message: t('workflow.processDescriptionRequired') }]}
             >
               <Input.TextArea rows={3} placeholder={t('workflow.processDescriptionPlaceholder')} />
@@ -544,18 +544,18 @@ const TicketApprovalWorkflowPage = () => {
               <Col span={12}>
                 <Form.Item
                   label={t('workflow.version')}
-                  name='version'
+                  name="version"
                   rules={[{ required: true, message: t('workflow.versionRequired') }]}
                 >
                   <Input placeholder={t('workflow.versionPlaceholder')} />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label={t('workflow.initialStatus')} name='status' initialValue='draft'>
+                <Form.Item label={t('workflow.initialStatus')} name="status" initialValue="draft">
                   <Select disabled>
-                    <Option value='draft'>{t('workflow.draft')}</Option>
-                    <Option value='active'>{t('workflow.statusEnabled')}</Option>
-                    <Option value='inactive'>{t('workflow.statusDisabled')}</Option>
+                    <Option value="draft">{t('workflow.draft')}</Option>
+                    <Option value="active">{t('workflow.statusEnabled')}</Option>
+                    <Option value="inactive">{t('workflow.statusDisabled')}</Option>
                   </Select>
                 </Form.Item>
               </Col>

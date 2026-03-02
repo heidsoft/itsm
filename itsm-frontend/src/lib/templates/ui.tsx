@@ -139,19 +139,19 @@ export function createActionColumn({
         maxVisible > 0 && actions.length > maxVisible ? actions.slice(maxVisible) : [];
 
       return (
-        <Space size='small'>
+        <Space size="small">
           {visibleActions.map(action =>
             action.key === 'delete' ? (
-              <Popconfirm key={action.key} title='确定要删除吗？' okText='确定' cancelText='取消'>
-                <Button type='link' danger size='small' icon={action.icon}>
+              <Popconfirm key={action.key} title="确定要删除吗？" okText="确定" cancelText="取消">
+                <Button type="link" danger size="small" icon={action.icon}>
                   {action.label}
                 </Button>
               </Popconfirm>
             ) : (
               <Button
                 key={action.key}
-                type='link'
-                size='small'
+                type="link"
+                size="small"
                 icon={action.icon}
                 danger={action.danger}
               >
@@ -164,7 +164,7 @@ export function createActionColumn({
               menu={{ items: moreActions.map(a => ({ ...a, danger: undefined })) }}
               trigger={['click']}
             >
-              <Button type='link' size='small' icon={<MoreOutlined />} />
+              <Button type="link" size="small" icon={<MoreOutlined />} />
             </Dropdown>
           )}
         </Space>
@@ -298,7 +298,7 @@ interface DetailDescriptionsProps {
 
 export function DetailDescriptions({ title, items, column = 2 }: DetailDescriptionsProps) {
   return (
-    <Descriptions title={title} column={column} bordered size='small'>
+    <Descriptions title={title} column={column} bordered size="small">
       {items.map((item, index) => (
         <Descriptions.Item key={index} label={item.label} span={item.span}>
           {item.children}
@@ -333,7 +333,7 @@ interface LoadingStateProps {
 
 export function LoadingState({ tip = '加载中...', children }: LoadingStateProps) {
   return (
-    <Spin tip={tip} size='large'>
+    <Spin tip={tip} size="large">
       <div style={{ padding: 50 }}>{children}</div>
     </Spin>
   );
@@ -350,7 +350,7 @@ interface ErrorStateProps {
 export function ErrorState({ message = '出错了', description, onRetry }: ErrorStateProps) {
   return (
     <Alert
-      type='error'
+      type="error"
       showIcon
       message={message}
       description={
@@ -358,7 +358,7 @@ export function ErrorState({ message = '出错了', description, onRetry }: Erro
           <span>
             加载失败，
             {onRetry && (
-              <Button type='link' onClick={onRetry} size='small'>
+              <Button type="link" onClick={onRetry} size="small">
                 重试
               </Button>
             )}
@@ -367,7 +367,7 @@ export function ErrorState({ message = '出错了', description, onRetry }: Erro
       }
       action={
         onRetry && (
-          <Button size='small' danger onClick={onRetry}>
+          <Button size="small" danger onClick={onRetry}>
             重试
           </Button>
         )
@@ -490,17 +490,17 @@ export function TimelineList({ items }: TimelineListProps) {
   return (
     <Collapse
       defaultActiveKey={[0]}
-      expandIconPosition='end'
+      expandIconPosition="end"
       items={items.map((item, index) => ({
         key: index,
         label: (
           <Space>
             <Badge color={item.color || 'blue'} />
             <Typography.Text strong>{item.title}</Typography.Text>
-            <Typography.Text type='secondary'>{item.time}</Typography.Text>
+            <Typography.Text type="secondary">{item.time}</Typography.Text>
           </Space>
         ),
-        children: <Typography.Paragraph type='secondary'>{item.description}</Typography.Paragraph>,
+        children: <Typography.Paragraph type="secondary">{item.description}</Typography.Paragraph>,
       }))}
     />
   );

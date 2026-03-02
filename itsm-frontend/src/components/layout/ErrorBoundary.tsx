@@ -93,23 +93,23 @@ class ErrorBoundary extends Component<Props, State> {
             }}
           >
             <Result
-              status='error'
-              title='System encountered some issues'
-              subTitle='Sorry, an error occurred while loading the page. Our technical team has been notified and is actively working on it.'
+              status="error"
+              title="System encountered some issues"
+              subTitle="Sorry, an error occurred while loading the page. Our technical team has been notified and is actively working on it."
               extra={[
                 <Button
-                  key='reload'
-                  type='primary'
+                  key="reload"
+                  type="primary"
                   icon={<RefreshCw />}
                   onClick={this.handleReload}
-                  size='large'
+                  size="large"
                 >
                   Reload Page
                 </Button>,
-                <Button key='home' icon={<Home />} onClick={this.handleGoHome} size='large'>
+                <Button key="home" icon={<Home />} onClick={this.handleGoHome} size="large">
                   Back to Home
                 </Button>,
-                <Button key='report' icon={<Bug />} onClick={this.handleReportError} size='large'>
+                <Button key="report" icon={<Bug />} onClick={this.handleReportError} size="large">
                   Report Issue
                 </Button>,
               ]}
@@ -130,12 +130,12 @@ class ErrorBoundary extends Component<Props, State> {
                   maxHeight: '200px',
                 }}
               >
-                <Text type='secondary'>{this.state.error?.message}</Text>
+                <Text type="secondary">{this.state.error?.message}</Text>
                 {process.env.NODE_ENV === 'development' && (
                   <details style={{ marginTop: '12px' }}>
                     <summary style={{ cursor: 'pointer', color: '#1890ff' }}>Stack Trace</summary>
                     <div style={{ marginTop: '8px' }}>
-                      <Text type='secondary' style={{ whiteSpace: 'pre-wrap' }}>
+                      <Text type="secondary" style={{ whiteSpace: 'pre-wrap' }}>
                         {this.state.error?.stack}
                       </Text>
                     </div>
@@ -152,7 +152,7 @@ class ErrorBoundary extends Component<Props, State> {
                   borderRadius: '6px',
                 }}
               >
-                <Text type='secondary' style={{ fontSize: '12px' }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
                   If the problem persists, please contact technical support or try refreshing the
                   page.
                 </Text>
@@ -211,7 +211,7 @@ export const SimpleErrorFallback: React.FC<{
       <Bug style={{ fontSize: '48px', color: '#ff4d4f', marginBottom: '16px' }} />
       <h2 style={{ color: '#ff4d4f', marginBottom: '8px' }}>Something went wrong</h2>
       <p style={{ color: '#666', marginBottom: '24px' }}>{error?.message || 'Unknown error'}</p>
-      <Button type='primary' onClick={() => window.location.reload()} key='reload'>
+      <Button type="primary" onClick={() => window.location.reload()} key="reload">
         Reload Page
       </Button>
     </div>

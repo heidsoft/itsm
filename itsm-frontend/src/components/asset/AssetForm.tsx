@@ -140,7 +140,7 @@ const AssetForm: React.FC = () => {
     <Card>
       <Form
         form={form}
-        layout='vertical'
+        layout="vertical"
         onFinish={onFinish}
         initialValues={{
           type: 'hardware',
@@ -156,7 +156,7 @@ const AssetForm: React.FC = () => {
         <Divider>基本信息</Divider>
 
         <Form.Item
-          name='asset_number'
+          name="asset_number"
           label={
             <Tooltip title={fieldHelps.assetNumber}>
               <span>资产编号</span>
@@ -165,11 +165,11 @@ const AssetForm: React.FC = () => {
           rules={formRules.assetNumber}
           help={fieldHelps.assetNumber}
         >
-          <Input placeholder='例如: ASSET-001' autoComplete='off' />
+          <Input placeholder="例如: ASSET-001" autoComplete="off" />
         </Form.Item>
 
         <Form.Item
-          name='name'
+          name="name"
           label={
             <Tooltip title={fieldHelps.assetName}>
               <span>资产名称</span>
@@ -178,11 +178,11 @@ const AssetForm: React.FC = () => {
           rules={formRules.assetName}
           help={fieldHelps.assetName}
         >
-          <Input placeholder='资产名称' autoComplete='off' />
+          <Input placeholder="资产名称" autoComplete="off" />
         </Form.Item>
 
         <Form.Item
-          name='description'
+          name="description"
           label={
             <Tooltip title={fieldHelps.description}>
               <span>描述</span>
@@ -190,11 +190,11 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.description}
         >
-          <TextArea rows={3} placeholder='资产描述' maxLength={1000} showCount />
+          <TextArea rows={3} placeholder="资产描述" maxLength={1000} showCount />
         </Form.Item>
 
         <Form.Item
-          name='type'
+          name="type"
           label={
             <Tooltip title={fieldHelps.assetType}>
               <span>资产类型</span>
@@ -203,15 +203,15 @@ const AssetForm: React.FC = () => {
           help={fieldHelps.assetType}
         >
           <Select>
-            <Option value='hardware'>硬件</Option>
-            <Option value='software'>软件</Option>
-            <Option value='cloud'>云资源</Option>
-            <Option value='license'>许可证</Option>
+            <Option value="hardware">硬件</Option>
+            <Option value="software">软件</Option>
+            <Option value="cloud">云资源</Option>
+            <Option value="license">许可证</Option>
           </Select>
         </Form.Item>
 
         <Form.Item
-          name='category'
+          name="category"
           label={
             <Tooltip title={fieldHelps.category}>
               <span>分类</span>
@@ -219,17 +219,17 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.category}
         >
-          <Input placeholder='资产分类' />
+          <Input placeholder="资产分类" />
         </Form.Item>
 
-        <Form.Item name='subcategory' label='子分类'>
-          <Input placeholder='资产子分类' />
+        <Form.Item name="subcategory" label="子分类">
+          <Input placeholder="资产子分类" />
         </Form.Item>
 
         <Divider>硬件信息</Divider>
 
         <Form.Item
-          name='serial_number'
+          name="serial_number"
           label={
             <Tooltip title={fieldHelps.serialNumber}>
               <span>序列号</span>
@@ -238,25 +238,25 @@ const AssetForm: React.FC = () => {
           rules={formRules.serialNumber}
           help={fieldHelps.serialNumber}
         >
-          <Input placeholder='序列号' />
+          <Input placeholder="序列号" />
         </Form.Item>
 
-        <Form.Item name='model' label='型号'>
-          <Input placeholder='型号' />
+        <Form.Item name="model" label="型号">
+          <Input placeholder="型号" />
         </Form.Item>
 
-        <Form.Item name='manufacturer' label='制造商'>
-          <Input placeholder='制造商' />
+        <Form.Item name="manufacturer" label="制造商">
+          <Input placeholder="制造商" />
         </Form.Item>
 
-        <Form.Item name='vendor' label='供应商'>
-          <Input placeholder='供应商' />
+        <Form.Item name="vendor" label="供应商">
+          <Input placeholder="供应商" />
         </Form.Item>
 
         <Divider>采购与财务</Divider>
 
         <Form.Item
-          name='purchase_date'
+          name="purchase_date"
           label={
             <Tooltip title={fieldHelps.purchaseDate}>
               <span>采购日期</span>
@@ -264,11 +264,11 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.purchaseDate}
         >
-          <DatePicker style={{ width: '100%' }} placeholder='选择采购日期' />
+          <DatePicker style={{ width: '100%' }} placeholder="选择采购日期" />
         </Form.Item>
 
         <Form.Item
-          name='purchase_price'
+          name="purchase_price"
           label={
             <Tooltip title={fieldHelps.purchasePrice}>
               <span>采购价格</span>
@@ -277,11 +277,11 @@ const AssetForm: React.FC = () => {
           rules={formRules.purchasePrice}
           help={fieldHelps.purchasePrice}
         >
-          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder='采购价格' />
+          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="采购价格" />
         </Form.Item>
 
         <Form.Item
-          name='warranty_expiry'
+          name="warranty_expiry"
           label={
             <Tooltip title={fieldHelps.warrantyExpiry}>
               <span>保修期到期</span>
@@ -289,11 +289,11 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.warrantyExpiry}
         >
-          <DatePicker style={{ width: '100%' }} placeholder='选择保修到期日期' />
+          <DatePicker style={{ width: '100%' }} placeholder="选择保修到期日期" />
         </Form.Item>
 
         <Form.Item
-          name='support_expiry'
+          name="support_expiry"
           label={
             <Tooltip title={fieldHelps.supportExpiry}>
               <span>支持期到期</span>
@@ -301,13 +301,13 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.supportExpiry}
         >
-          <DatePicker style={{ width: '100%' }} placeholder='选择支持到期日期' />
+          <DatePicker style={{ width: '100%' }} placeholder="选择支持到期日期" />
         </Form.Item>
 
         <Divider>位置与归属</Divider>
 
         <Form.Item
-          name='location'
+          name="location"
           label={
             <Tooltip title={fieldHelps.location}>
               <span>物理位置</span>
@@ -315,11 +315,11 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.location}
         >
-          <Input placeholder='物理位置' />
+          <Input placeholder="物理位置" />
         </Form.Item>
 
         <Form.Item
-          name='department'
+          name="department"
           label={
             <Tooltip title={fieldHelps.department}>
               <span>所属部门</span>
@@ -327,11 +327,11 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.department}
         >
-          <Input placeholder='所属部门' />
+          <Input placeholder="所属部门" />
         </Form.Item>
 
         <Form.Item
-          name='tags'
+          name="tags"
           label={
             <Tooltip title={fieldHelps.tags}>
               <span>标签</span>
@@ -339,12 +339,12 @@ const AssetForm: React.FC = () => {
           }
           help={fieldHelps.tags}
         >
-          <Input placeholder='标签，用逗号分隔' />
+          <Input placeholder="标签，用逗号分隔" />
         </Form.Item>
 
         <Form.Item>
           <Space>
-            <Button type='primary' htmlType='submit' icon={<SaveOutlined />} loading={loading}>
+            <Button type="primary" htmlType="submit" icon={<SaveOutlined />} loading={loading}>
               {isEdit ? '保存' : '创建'}
             </Button>
             <Button onClick={() => router.push('/assets')}>取消</Button>

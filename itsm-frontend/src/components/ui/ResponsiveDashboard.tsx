@@ -178,12 +178,12 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
     if (widget.refreshable && onWidgetRefresh) {
       actions.push(
         <Button
-          key='refresh'
-          type='text'
-          size='small'
+          key="refresh"
+          type="text"
+          size="small"
           icon={<ReloadOutlined />}
           onClick={() => onWidgetRefresh(widget.id)}
-          title='刷新'
+          title="刷新"
         />
       );
     }
@@ -191,12 +191,12 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
     if (widget.configurable && onWidgetConfigure) {
       actions.push(
         <Button
-          key='configure'
-          type='text'
-          size='small'
+          key="configure"
+          type="text"
+          size="small"
           icon={<SettingOutlined />}
           onClick={() => onWidgetConfigure(widget.id)}
-          title='配置'
+          title="配置"
         />
       );
     }
@@ -204,19 +204,19 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
     if (editable && widget.removable && onWidgetRemove) {
       actions.push(
         <Button
-          key='remove'
-          type='text'
-          size='small'
+          key="remove"
+          type="text"
+          size="small"
           danger
           onClick={() => onWidgetRemove(widget.id)}
-          title='移除'
+          title="移除"
         >
           ×
         </Button>
       );
     }
 
-    return actions.length > 0 ? <Space size='small'>{actions}</Space> : null;
+    return actions.length > 0 ? <Space size="small">{actions}</Space> : null;
   };
 
   // 渲染单个widget
@@ -226,7 +226,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
     if (loading) {
       return (
-        <Card title={widget.title} extra={actions} className='h-full'>
+        <Card title={widget.title} extra={actions} className="h-full">
           <Skeleton active paragraph={{ rows: 4 }} />
         </Card>
       );
@@ -236,16 +236,16 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
       <motion.div
         key={widget.id}
         variants={widgetVariants}
-        initial='hidden'
-        animate='visible'
-        exit='exit'
-        className='h-full'
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="h-full"
       >
         <Card
           title={widget.title}
           extra={actions}
           hoverable
-          className='h-full'
+          className="h-full"
           styles={{ body: { height: 'calc(100% - 60px)', overflow: 'auto' } }}
         >
           <Component {...widget.props} />
@@ -256,12 +256,12 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
   // 渲染工具栏
   const renderToolbar = () => (
-    <div className='flex justify-between items-center mb-6'>
+    <div className="flex justify-between items-center mb-6">
       <div>
-        <Title level={2} className='!mb-1'>
+        <Title level={2} className="!mb-1">
           {mergedConfig.title}
         </Title>
-        {mergedConfig.description && <Text type='secondary'>{mergedConfig.description}</Text>}
+        {mergedConfig.description && <Text type="secondary">{mergedConfig.description}</Text>}
       </div>
       <Space>
         <Button
@@ -342,7 +342,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
     return (
       <ResponsiveGridLayout
-        className='responsive-dashboard-grid'
+        className="responsive-dashboard-grid"
         layouts={layouts.lg ? layouts : generateLayouts}
         breakpoints={breakpoints}
         cols={cols}
@@ -355,7 +355,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
         containerPadding={[0, 0]}
         useCSSTransforms={true}
         preventCollision={false}
-        compactType='vertical'
+        compactType="vertical"
       >
         {widgets.map(renderWidget)}
       </ResponsiveGridLayout>
@@ -364,7 +364,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
   // 瀑布流布局渲染
   const renderMasonryLayout = () => (
-    <div className='masonry-layout'>
+    <div className="masonry-layout">
       <Row gutter={[16, 16]}>
         {widgets.map(widget => (
           <Col key={widget.id} xs={24} sm={12} md={8} lg={6} xl={6}>
@@ -379,9 +379,9 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
   const renderFlexLayout = () => (
     <motion.div
       variants={containerVariants}
-      initial='hidden'
-      animate='visible'
-      className='flex-layout space-y-4'
+      initial="hidden"
+      animate="visible"
+      className="flex-layout space-y-4"
     >
       {widgets.map(renderWidget)}
     </motion.div>
@@ -404,7 +404,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
     <div className={`responsive-dashboard ${className || ''}`}>
       {renderToolbar()}
 
-      <AnimatePresence mode='wait'>{renderLayout()}</AnimatePresence>
+      <AnimatePresence mode="wait">{renderLayout()}</AnimatePresence>
 
       <style jsx global>{`
         .responsive-dashboard-grid {

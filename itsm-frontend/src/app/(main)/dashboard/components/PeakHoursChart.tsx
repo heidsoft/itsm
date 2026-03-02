@@ -17,10 +17,10 @@ const PeakHoursChart: React.FC<{ data: PeakHourData[] }> = React.memo(({ data })
   if (validData.length === 0) {
     return (
       <DashboardChartCard
-        title='高峰时段分析'
-        subtitle='24小时工单创建分布'
+        title="高峰时段分析"
+        subtitle="24小时工单创建分布"
         icon={<TrendingUp style={{ width: 20, height: 20 }} />}
-        iconColor='#06b6d4'
+        iconColor="#06b6d4"
       >
         <div
           style={{
@@ -67,11 +67,11 @@ const PeakHoursChart: React.FC<{ data: PeakHourData[] }> = React.memo(({ data })
 
   return (
     <DashboardChartCard
-      title='高峰时段分析'
-      subtitle='24小时工单创建分布'
+      title="高峰时段分析"
+      subtitle="24小时工单创建分布"
       icon={<TrendingUp style={{ width: 20, height: 20 }} />}
-      iconColor='#06b6d4'
-      extra={<Tag color='cyan'>高峰时段: {peakHour.hour}:00</Tag>}
+      iconColor="#06b6d4"
+      extra={<Tag color="cyan">高峰时段: {peakHour.hour}:00</Tag>}
     >
       <div style={{ height: '280px' }}>
         <Column {...config} />

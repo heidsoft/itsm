@@ -242,23 +242,23 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
 
   if (loading) {
     return (
-      <div className='flex justify-center items-center h-32'>
-        <Spin size='large' />
+      <div className="flex justify-center items-center h-32">
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* 推荐解决方案 */}
       <Card
         title={
-          <span className='flex items-center space-x-2'>
-            <BookOpen className='w-5 h-5 text-blue-500' />
+          <span className="flex items-center space-x-2">
+            <BookOpen className="w-5 h-5 text-blue-500" />
             <span>推荐解决方案</span>
           </span>
         }
-        className='shadow-sm'
+        className="shadow-sm"
       >
         {recommendations.length > 0 ? (
           <List
@@ -266,34 +266,34 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             renderItem={item => (
               <List.Item
                 actions={[
-                  <Button key='view' type='link' icon={<Eye />}>
+                  <Button key="view" type="link" icon={<Eye />}>
                     查看
                   </Button>,
-                  <Button key='associate' type='link' icon={<Link />}>
+                  <Button key="associate" type="link" icon={<Link />}>
                     关联
                   </Button>,
                 ]}
               >
                 <List.Item.Meta
                   title={
-                    <div className='flex items-center space-x-2'>
+                    <div className="flex items-center space-x-2">
                       <span>{item.title}</span>
-                      <Tag color='blue'>{item.category}</Tag>
-                      <div className='flex items-center space-x-1'>
+                      <Tag color="blue">{item.category}</Tag>
+                      <div className="flex items-center space-x-1">
                         <Rate disabled defaultValue={item.rating} />
-                        <span className='text-sm text-gray-500'>({item.rating})</span>
+                        <span className="text-sm text-gray-500">({item.rating})</span>
                       </div>
                     </div>
                   }
                   description={
-                    <div className='space-y-2'>
-                      <p className='text-gray-600'>{item.summary}</p>
-                      <div className='flex items-center space-x-2 text-sm text-gray-500'>
+                    <div className="space-y-2">
+                      <p className="text-gray-600">{item.summary}</p>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <span>相关度: {item.relevance}%</span>
                         <span>浏览量: {item.view_count}</span>
                         <span>更新: {item.updated_at}</span>
                       </div>
-                      <div className='flex flex-wrap gap-1'>
+                      <div className="flex flex-wrap gap-1">
                         {(item.tags || []).map(tag => (
                           <Tag key={tag}>{tag}</Tag>
                         ))}
@@ -305,62 +305,62 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             )}
           />
         ) : (
-          <Empty description='暂无推荐解决方案' />
+          <Empty description="暂无推荐解决方案" />
         )}
       </Card>
 
       {/* AI智能推荐 */}
       <Card
         title={
-          <span className='flex items-center space-x-2'>
-            <RobotOutlined className='w-5 h-5 text-purple-500' />
+          <span className="flex items-center space-x-2">
+            <RobotOutlined className="w-5 h-5 text-purple-500" />
             <span>AI智能推荐</span>
           </span>
         }
-        className='shadow-sm'
+        className="shadow-sm"
       >
         {aiRecommendations.length > 0 ? (
-          <div className='space-y-4'>
+          <div className="space-y-4">
             {aiRecommendations.map(rec => (
               <div
                 key={`${rec.type}-${rec.value}`}
-                className='flex items-center justify-between p-3 bg-purple-50 rounded-md'
+                className="flex items-center justify-between p-3 bg-purple-50 rounded-md"
               >
-                <div className='flex items-center space-x-3'>
-                  <div className='w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center'>
-                    <Sparkles className='w-4 h-4 text-purple-600' />
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-purple-600" />
                   </div>
                   <div>
-                    <div className='font-medium'>
+                    <div className="font-medium">
                       {rec.type === 'category' && '分类建议'}
                       {rec.type === 'priority' && '优先级建议'}
                       {rec.type === 'tags' && '标签建议'}
                       {rec.type === 'assignee' && '处理人建议'}
                     </div>
-                    <div className='text-sm text-gray-600'>{rec.reasoning}</div>
+                    <div className="text-sm text-gray-600">{rec.reasoning}</div>
                   </div>
                 </div>
-                <div className='text-right'>
-                  <div className='font-medium text-purple-600'>{rec.value}</div>
-                  <div className='text-sm text-gray-500'>置信度: {rec.confidence}%</div>
+                <div className="text-right">
+                  <div className="font-medium text-purple-600">{rec.value}</div>
+                  <div className="text-sm text-gray-500">置信度: {rec.confidence}%</div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <Empty description='暂无AI推荐' />
+          <Empty description="暂无AI推荐" />
         )}
       </Card>
 
       {/* 知识库关联 */}
       <Card
         title={
-          <span className='flex items-center space-x-2'>
-            <Link className='w-5 h-5 text-green-500' />
+          <span className="flex items-center space-x-2">
+            <Link className="w-5 h-5 text-green-500" />
             <span>知识库关联</span>
             <Button
-              type='primary'
-              size='small'
+              type="primary"
+              size="small"
               icon={<Plus />}
               onClick={() => setAssociateModalVisible(true)}
             >
@@ -368,7 +368,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             </Button>
           </span>
         }
-        className='shadow-sm'
+        className="shadow-sm"
       >
         {associations.length > 0 ? (
           <List
@@ -376,12 +376,12 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             renderItem={item => (
               <List.Item
                 actions={[
-                  <Button key='view' type='link' icon={<Eye />}>
+                  <Button key="view" type="link" icon={<Eye />}>
                     查看
                   </Button>,
                   <Button
-                    key='remove'
-                    type='link'
+                    key="remove"
+                    type="link"
                     danger
                     icon={<AlertCircle />}
                     onClick={() => handleRemoveAssociation(item.id)}
@@ -392,7 +392,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
               >
                 <List.Item.Meta
                   title={
-                    <div className='flex items-center space-x-2'>
+                    <div className="flex items-center space-x-2">
                       <span>{item.articleTitle}</span>
                       <Tag
                         color={
@@ -412,7 +412,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                     </div>
                   }
                   description={
-                    <div className='text-sm text-gray-500'>
+                    <div className="text-sm text-gray-500">
                       关联时间: {item.associatedAt} | 关联人: {item.associatedBy}
                     </div>
                   }
@@ -421,19 +421,19 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             )}
           />
         ) : (
-          <Empty description='暂无关联文章' />
+          <Empty description="暂无关联文章" />
         )}
       </Card>
 
       {/* 相关文章 */}
       <Card
         title={
-          <span className='flex items-center space-x-2'>
-            <MessageSquare className='w-5 h-5 text-orange-500' />
+          <span className="flex items-center space-x-2">
+            <MessageSquare className="w-5 h-5 text-orange-500" />
             <span>相关文章</span>
             <Button
-              type='default'
-              size='small'
+              type="default"
+              size="small"
               icon={<Search />}
               onClick={() => setSearchModalVisible(true)}
             >
@@ -441,7 +441,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             </Button>
           </span>
         }
-        className='shadow-sm'
+        className="shadow-sm"
       >
         {relatedArticles.length > 0 ? (
           <List
@@ -449,33 +449,33 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             renderItem={item => (
               <List.Item
                 actions={[
-                  <Button key='view' type='link' icon={<Eye />}>
+                  <Button key="view" type="link" icon={<Eye />}>
                     查看
                   </Button>,
-                  <Button key='associate' type='link' icon={<Link />}>
+                  <Button key="associate" type="link" icon={<Link />}>
                     关联
                   </Button>,
                 ]}
               >
                 <List.Item.Meta
                   title={
-                    <div className='flex items-center space-x-2'>
+                    <div className="flex items-center space-x-2">
                       <span>{item.title}</span>
-                      <Tag color='blue'>{item.category}</Tag>
-                      <div className='flex items-center space-x-1'>
+                      <Tag color="blue">{item.category}</Tag>
+                      <div className="flex items-center space-x-1">
                         <Rate disabled defaultValue={item.rating} />
-                        <span className='text-sm text-gray-500'>({item.rating})</span>
+                        <span className="text-sm text-gray-500">({item.rating})</span>
                       </div>
                     </div>
                   }
                   description={
-                    <div className='space-y-2'>
-                      <p className='text-gray-600'>{item.summary}</p>
-                      <div className='flex items-center space-x-2 text-sm text-gray-500'>
+                    <div className="space-y-2">
+                      <p className="text-gray-600">{item.summary}</p>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
                         <span>浏览量: {item.view_count}</span>
                         <span>更新: {item.updated_at}</span>
                       </div>
-                      <div className='flex flex-wrap gap-1'>
+                      <div className="flex flex-wrap gap-1">
                         {(item.tags || []).map(tag => (
                           <Tag key={tag}>{tag}</Tag>
                         ))}
@@ -487,22 +487,22 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             )}
           />
         ) : (
-          <Empty description='暂无相关文章' />
+          <Empty description="暂无相关文章" />
         )}
       </Card>
 
       {/* 搜索知识库模态框 */}
       <Modal
-        title='搜索知识库'
+        title="搜索知识库"
         open={searchModalVisible}
         onCancel={() => setSearchModalVisible(false)}
         footer={null}
         width={800}
       >
-        <div className='space-y-4'>
-          <div className='flex space-x-2'>
+        <div className="space-y-4">
+          <div className="flex space-x-2">
             <Input
-              placeholder='输入关键词，用逗号分隔'
+              placeholder="输入关键词，用逗号分隔"
               value={searchKeywords.join(', ')}
               onChange={e =>
                 setSearchKeywords(
@@ -514,26 +514,26 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
               }
               onPressEnter={handleSearch}
             />
-            <Button type='primary' icon={<Search />} onClick={handleSearch}>
+            <Button type="primary" icon={<Search />} onClick={handleSearch}>
               搜索
             </Button>
           </div>
 
           {searchResults.length > 0 && (
-            <div className='space-y-2'>
+            <div className="space-y-2">
               <Divider>搜索结果</Divider>
               <List
                 dataSource={searchResults}
                 renderItem={item => (
                   <List.Item
                     actions={[
-                      <Button key='view' type='link' icon={<Eye />}>
+                      <Button key="view" type="link" icon={<Eye />}>
                         查看
                       </Button>,
                       <Button
-                        key='select'
-                        type='primary'
-                        size='small'
+                        key="select"
+                        type="primary"
+                        size="small"
                         onClick={() => {
                           setSelectedArticle(item);
                           setAssociateModalVisible(true);
@@ -546,15 +546,15 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
                   >
                     <List.Item.Meta
                       title={
-                        <div className='flex items-center space-x-2'>
+                        <div className="flex items-center space-x-2">
                           <span>{item.title}</span>
-                          <Tag color='blue'>{item.category}</Tag>
+                          <Tag color="blue">{item.category}</Tag>
                         </div>
                       }
                       description={
-                        <div className='space-y-2'>
-                          <p className='text-gray-600'>{item.summary}</p>
-                          <div className='flex items-center space-x-2 text-sm text-gray-500'>
+                        <div className="space-y-2">
+                          <p className="text-gray-600">{item.summary}</p>
+                          <div className="flex items-center space-x-2 text-sm text-gray-500">
                             <span>浏览量: {item.view_count}</span>
                             <span>评分: {item.rating}</span>
                           </div>
@@ -571,26 +571,26 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
 
       {/* 关联文章模态框 */}
       <Modal
-        title='关联知识库文章'
+        title="关联知识库文章"
         open={associateModalVisible}
         onCancel={() => {
           setAssociateModalVisible(false);
           setSelectedArticle(null);
         }}
         onOk={handleAssociate}
-        okText='确认关联'
-        cancelText='取消'
+        okText="确认关联"
+        cancelText="取消"
       >
-        <div className='space-y-4'>
+        <div className="space-y-4">
           {selectedArticle && (
-            <div className='p-3 bg-gray-50 rounded-md'>
-              <div className='font-medium'>{selectedArticle.title}</div>
-              <div className='text-sm text-gray-600'>{selectedArticle.summary}</div>
+            <div className="p-3 bg-gray-50 rounded-md">
+              <div className="font-medium">{selectedArticle.title}</div>
+              <div className="text-sm text-gray-600">{selectedArticle.summary}</div>
             </div>
           )}
 
           <div>
-            <label className='block text-sm font-medium text-gray-700 mb-2'>关联类型</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">关联类型</label>
             <Select
               value={associationType}
               onChange={setAssociationType}
@@ -602,7 +602,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
             />
           </div>
 
-          <div className='text-sm text-gray-500'>
+          <div className="text-sm text-gray-500">
             关联后，该文章将显示在工单的知识库关联列表中，帮助处理人员快速找到相关解决方案。
           </div>
         </div>

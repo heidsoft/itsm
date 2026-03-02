@@ -91,26 +91,26 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
   ];
 
   return (
-    <div className='flex items-center justify-between mb-4 p-4 bg-white rounded-lg shadow-sm'>
+    <div className="flex items-center justify-between mb-4 p-4 bg-white rounded-lg shadow-sm">
       {/* 左侧：标题和信息 */}
-      <div className='flex items-center space-x-4'>
-        <h2 className='text-lg font-semibold text-gray-800'>工单列表</h2>
+      <div className="flex items-center space-x-4">
+        <h2 className="text-lg font-semibold text-gray-800">工单列表</h2>
         {selectedCount > 0 && (
-          <span className='text-sm text-gray-600'>
-            已选择 <span className='font-semibold text-blue-600'>{selectedCount}</span> 项
+          <span className="text-sm text-gray-600">
+            已选择 <span className="font-semibold text-blue-600">{selectedCount}</span> 项
           </span>
         )}
       </div>
 
       {/* 右侧：操作按钮 */}
-      <Space size='middle'>
+      <Space size="middle">
         {/* 刷新按钮 */}
-        <Tooltip title='刷新数据'>
+        <Tooltip title="刷新数据">
           <Button
             icon={<ReloadOutlined spin={loading} />}
             onClick={onRefresh}
             loading={loading}
-            data-testid='refresh-button'
+            data-testid="refresh-button"
           >
             刷新
           </Button>
@@ -118,7 +118,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
 
         {/* 导出按钮 */}
         {canExport && (
-          <Tooltip title='导出工单'>
+          <Tooltip title="导出工单">
             <Button icon={<DownloadOutlined />} onClick={onExport}>
               导出
             </Button>
@@ -127,20 +127,20 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
 
         {/* 批量操作按钮（仅在有选中项时显示） */}
         {selectedCount > 0 && (
-          <Dropdown menu={{ items: batchMenuItems }} placement='bottomRight'>
+          <Dropdown menu={{ items: batchMenuItems }} placement="bottomRight">
             <Button icon={<MoreOutlined />}>批量操作</Button>
           </Dropdown>
         )}
 
         {/* 创建工单按钮 */}
         {canCreate && (
-          <Button type='primary' icon={<PlusOutlined />} onClick={onCreate}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={onCreate}>
             创建工单
           </Button>
         )}
 
         {/* 更多操作 */}
-        <Dropdown menu={{ items: moreMenuItems }} placement='bottomRight'>
+        <Dropdown menu={{ items: moreMenuItems }} placement="bottomRight">
           <Button icon={<MoreOutlined />} />
         </Dropdown>
       </Space>

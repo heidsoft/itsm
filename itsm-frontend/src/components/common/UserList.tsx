@@ -51,7 +51,7 @@ const UserList: React.FC = () => {
       dataIndex: 'role',
       key: 'role',
       render: (role: string) => (
-        <Tag color='blue'>{UserRoleLabels[role as keyof typeof UserRoleLabels] || role}</Tag>
+        <Tag color="blue">{UserRoleLabels[role as keyof typeof UserRoleLabels] || role}</Tag>
       ),
     },
     {
@@ -86,7 +86,7 @@ const UserList: React.FC = () => {
       <Table
         dataSource={users}
         columns={columns}
-        rowKey='id'
+        rowKey="id"
         loading={loading}
         pagination={{ pageSize: 10 }}
       />

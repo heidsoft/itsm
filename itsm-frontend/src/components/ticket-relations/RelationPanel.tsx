@@ -127,16 +127,16 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
   const renderRelationsList = () => {
     if (isLoading) {
       return (
-        <div className='flex justify-center items-center py-12'>
-          <Spin size='large' />
+        <div className="flex justify-center items-center py-12">
+          <Spin size="large" />
         </div>
       );
     }
 
     if (!relations || relations.length === 0) {
       return (
-        <Empty description='暂无关联工单' image={Empty.PRESENTED_IMAGE_SIMPLE}>
-          <Button type='primary' icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
+        <Empty description="暂无关联工单" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+          <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
             添加关联
           </Button>
         </Empty>
@@ -153,10 +153,10 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
           return (
             <List.Item
               actions={[
-                <Tooltip key='view' title='查看工单'>
+                <Tooltip key="view" title="查看工单">
                   <Button
-                    type='link'
-                    size='small'
+                    type="link"
+                    size="small"
                     onClick={() =>
                       onRelationClick?.(
                         isSource ? relation.targetTicketId : relation.sourceTicketId
@@ -167,13 +167,13 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
                   </Button>
                 </Tooltip>,
                 <Popconfirm
-                  key='delete'
-                  title='确认删除此关联？'
+                  key="delete"
+                  title="确认删除此关联？"
                   onConfirm={() => handleDeleteRelation(relation.id)}
-                  okText='确认'
-                  cancelText='取消'
+                  okText="确认"
+                  cancelText="取消"
                 >
-                  <Button type='link' danger size='small' icon={<DeleteOutlined />}>
+                  <Button type="link" danger size="small" icon={<DeleteOutlined />}>
                     删除
                   </Button>
                 </Popconfirm>,
@@ -244,10 +244,10 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       }
       extra={
         <Button
-          type='primary'
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => setModalVisible(true)}
-          size='small'
+          size="small"
         >
           添加关联
         </Button>
@@ -257,7 +257,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
 
       {/* 创建关联模态框 */}
       <Modal
-        title='添加工单关联'
+        title="添加工单关联"
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -266,13 +266,13 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
         onOk={handleCreateRelation}
         confirmLoading={createMutation.isPending}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            label='关联类型'
-            name='relationType'
+            label="关联类型"
+            name="relationType"
             rules={[{ required: true, message: '请选择关联类型' }]}
           >
-            <Select placeholder='选择关联类型'>
+            <Select placeholder="选择关联类型">
               <Option value={TicketRelationType.RELATES_TO}>相关</Option>
               <Option value={TicketRelationType.BLOCKS}>阻塞</Option>
               <Option value={TicketRelationType.DEPENDS_ON}>依赖于</Option>
@@ -282,15 +282,15 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
           </Form.Item>
 
           <Form.Item
-            label='目标工单'
-            name='targetTicketId'
+            label="目标工单"
+            name="targetTicketId"
             rules={[{ required: true, message: '请输入目标工单ID' }]}
           >
-            <Input type='number' placeholder='输入工单ID' addonBefore='#' />
+            <Input type="number" placeholder="输入工单ID" addonBefore="#" />
           </Form.Item>
 
-          <Form.Item label='描述' name='description'>
-            <TextArea rows={3} placeholder='添加关联描述（可选）' />
+          <Form.Item label="描述" name="description">
+            <TextArea rows={3} placeholder="添加关联描述（可选）" />
           </Form.Item>
         </Form>
       </Modal>

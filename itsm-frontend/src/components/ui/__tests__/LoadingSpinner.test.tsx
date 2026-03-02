@@ -20,19 +20,19 @@ describe('LoadingSpinner', () => {
   });
 
   it('applies custom className', () => {
-    render(<LoadingSpinner className='custom-spinner' />);
+    render(<LoadingSpinner className="custom-spinner" />);
     // The custom class should be applied to the spinner container
     const spinner = screen.getByRole('img', { name: /loading/i });
     expect(spinner.closest('span')).toHaveClass('custom-spinner');
   });
 
   it('renders with custom size', () => {
-    render(<LoadingSpinner size='sm' />);
+    render(<LoadingSpinner size="sm" />);
     expect(screen.getByRole('img', { name: /loading/i })).toBeInTheDocument();
   });
 
   it('renders with default large size', () => {
-    render(<LoadingSpinner size='lg' />);
+    render(<LoadingSpinner size="lg" />);
     expect(screen.getByRole('img', { name: /loading/i })).toBeInTheDocument();
   });
 });

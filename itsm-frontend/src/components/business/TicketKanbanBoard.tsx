@@ -108,26 +108,26 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
   ];
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className='mb-3 cursor-move'>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="mb-3 cursor-move">
       <Card
-        size='small'
-        className='hover:shadow-md transition-shadow duration-200'
+        size="small"
+        className="hover:shadow-md transition-shadow duration-200"
         onClick={onClick}
         actions={[
-          <Dropdown menu={{ items: menuItems }} trigger={['click']} key='more'>
+          <Dropdown menu={{ items: menuItems }} trigger={['click']} key="more">
             <MoreOutlined />
           </Dropdown>,
         ]}
       >
-        <div className='space-y-2'>
+        <div className="space-y-2">
           {/* 标题和编号 */}
           <div>
-            <div className='font-medium text-sm text-gray-900 line-clamp-2'>{ticket.title}</div>
-            <div className='text-xs text-gray-500 mt-1'>#{ticket.ticketNumber || ticket.id}</div>
+            <div className="font-medium text-sm text-gray-900 line-clamp-2">{ticket.title}</div>
+            <div className="text-xs text-gray-500 mt-1">#{ticket.ticketNumber || ticket.id}</div>
           </div>
 
           {/* 状态和优先级 */}
-          <div className='flex items-center gap-2 flex-wrap'>
+          <div className="flex items-center gap-2 flex-wrap">
             <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
             <Tag color={priorityConfig.color}>
               {priorityConfig.icon} {priorityConfig.text}
@@ -135,8 +135,8 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
           </div>
 
           {/* 处理人和时间 */}
-          <div className='flex items-center justify-between text-xs text-gray-500'>
-            <div className='flex items-center gap-1'>
+          <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center gap-1">
               {ticket.assignee ? (
                 <>
                   <Avatar size={16} src={(ticket.assignee as any).avatar}>
@@ -159,11 +159,11 @@ const KanbanCard: React.FC<KanbanCardProps> = ({ ticket, onClick, onEdit }) => {
 
           {/* 分类和标签 */}
           {(ticket.category || (ticket.tags && ticket.tags.length > 0)) && (
-            <div className='flex items-center gap-1 flex-wrap'>
-              {ticket.category && <Tag color='blue'>{ticket.category}</Tag>}
+            <div className="flex items-center gap-1 flex-wrap">
+              {ticket.category && <Tag color="blue">{ticket.category}</Tag>}
               {ticket.tags &&
                 ticket.tags.slice(0, 2).map((tag, index) => (
-                  <Tag key={index} color='default'>
+                  <Tag key={index} color="default">
                     {tag}
                   </Tag>
                 ))}
@@ -192,18 +192,18 @@ const KanbanColumnComponent: React.FC<KanbanColumnProps> = ({
   const sortableTickets = useMemo(() => tickets.map(t => String(t.id)), [tickets]);
 
   return (
-    <div className='flex-1 min-w-[300px] bg-gray-50 rounded-lg p-4'>
+    <div className="flex-1 min-w-[300px] bg-gray-50 rounded-lg p-4">
       {/* 列标题 */}
-      <div className='flex items-center justify-between mb-4'>
-        <div className='flex items-center gap-2'>
-          <div className='w-3 h-3 rounded-full' style={{ backgroundColor: column.color }} />
-          <span className='font-semibold text-gray-900'>{column.title}</span>
-          <Badge count={tickets.length} showZero className='ml-2' />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: column.color }} />
+          <span className="font-semibold text-gray-900">{column.title}</span>
+          <Badge count={tickets.length} showZero className="ml-2" />
         </div>
       </div>
 
       {/* 工单列表 */}
-      <div className='space-y-2 min-h-[200px]'>
+      <div className="space-y-2 min-h-[200px]">
         {tickets.map(ticket => (
           <KanbanCard
             key={ticket.id}
@@ -213,7 +213,7 @@ const KanbanColumnComponent: React.FC<KanbanColumnProps> = ({
           />
         ))}
         {tickets.length === 0 && (
-          <div className='text-center text-gray-400 py-8 text-sm'>暂无工单</div>
+          <div className="text-center text-gray-400 py-8 text-sm">暂无工单</div>
         )}
       </div>
     </div>
@@ -375,19 +375,19 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
 
   if (loading) {
     return (
-      <div className='flex items-center justify-center h-96'>
-        <div className='text-gray-500'>加载中...</div>
+      <div className="flex items-center justify-center h-96">
+        <div className="text-gray-500">加载中...</div>
       </div>
     );
   }
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* 工具栏 */}
-      <div className='flex items-center justify-between flex-wrap gap-4 bg-white p-4 rounded-lg shadow-sm'>
-        <div className='flex items-center gap-3 flex-1 min-w-[300px]'>
+      <div className="flex items-center justify-between flex-wrap gap-4 bg-white p-4 rounded-lg shadow-sm">
+        <div className="flex items-center gap-3 flex-1 min-w-[300px]">
           <Search
-            placeholder='搜索工单...'
+            placeholder="搜索工单..."
             allowClear
             value={searchKeyword}
             onChange={e => setSearchKeyword(e.target.value)}
@@ -398,9 +398,9 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
             value={filterStatus}
             onChange={setFilterStatus}
             style={{ width: 120 }}
-            placeholder='状态'
+            placeholder="状态"
           >
-            <Option value='all'>全部状态</Option>
+            <Option value="all">全部状态</Option>
             {statusColumns.map(col => (
               <Option key={col.id} value={col.status}>
                 {col.title}
@@ -411,16 +411,16 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
             value={filterPriority}
             onChange={setFilterPriority}
             style={{ width: 120 }}
-            placeholder='优先级'
+            placeholder="优先级"
           >
-            <Option value='all'>全部优先级</Option>
-            <Option value='low'>低</Option>
-            <Option value='medium'>中</Option>
-            <Option value='high'>高</Option>
-            <Option value='urgent'>紧急</Option>
+            <Option value="all">全部优先级</Option>
+            <Option value="low">低</Option>
+            <Option value="medium">中</Option>
+            <Option value="high">高</Option>
+            <Option value="urgent">紧急</Option>
           </Select>
         </div>
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <Dropdown menu={{ items: viewMenuItems }} trigger={['click']}>
             <Button icon={<SettingOutlined />}>视图设置</Button>
           </Dropdown>
@@ -434,9 +434,9 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className='flex gap-4 overflow-x-auto pb-4' style={{ minHeight: '600px' }}>
+        <div className="flex gap-4 overflow-x-auto pb-4" style={{ minHeight: '600px' }}>
           {statusColumnsData.map(column => (
-            <div key={column.id} data-status={column.status} className='flex-shrink-0'>
+            <div key={column.id} data-status={column.status} className="flex-shrink-0">
               <SortableContext
                 items={column.tickets.map(t => String(t.id))}
                 strategy={verticalListSortingStrategy}
@@ -456,9 +456,9 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
 
         <DragOverlay>
           {activeId ? (
-            <div className='opacity-50'>
-              <Card size='small' style={{ width: 280 }}>
-                <div className='text-sm font-medium'>拖拽中...</div>
+            <div className="opacity-50">
+              <Card size="small" style={{ width: 280 }}>
+                <div className="text-sm font-medium">拖拽中...</div>
               </Card>
             </div>
           ) : null}
@@ -467,7 +467,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
 
       {/* 保存视图模态框 */}
       <Modal
-        title='保存看板视图'
+        title="保存看板视图"
         open={saveViewModalVisible}
         onOk={handleSaveView}
         onCancel={() => {
@@ -475,16 +475,16 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
           form.resetFields();
         }}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='视图名称'
+            name="name"
+            label="视图名称"
             rules={[{ required: true, message: '请输入视图名称' }]}
           >
-            <Input placeholder='例如：我的看板视图' />
+            <Input placeholder="例如：我的看板视图" />
           </Form.Item>
-          <Form.Item name='description' label='描述'>
-            <Input.TextArea rows={3} placeholder='视图描述（可选）' />
+          <Form.Item name="description" label="描述">
+            <Input.TextArea rows={3} placeholder="视图描述（可选）" />
           </Form.Item>
         </Form>
       </Modal>

@@ -304,90 +304,90 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
 
   return (
     <Modal
-      title='导出工单分类'
+      title="导出工单分类"
       open={visible}
       onCancel={handleCancel}
       footer={null}
       width={700}
       destroyOnHidden
     >
-      <div className='space-y-6'>
+      <div className="space-y-6">
         {/* 导出选项表单 */}
-        <Form form={form} layout='vertical' initialValues={defaultOptions} onFinish={handleExport}>
+        <Form form={form} layout="vertical" initialValues={defaultOptions} onFinish={handleExport}>
           {/* 基本选项 */}
-          <Card size='small' title='基本选项'>
-            <div className='grid grid-cols-2 gap-4'>
+          <Card size="small" title="基本选项">
+            <div className="grid grid-cols-2 gap-4">
               <Form.Item
-                name='format'
-                label='导出格式'
+                name="format"
+                label="导出格式"
                 rules={[{ required: true, message: '请选择导出格式' }]}
               >
                 <Select>
-                  <Option value='excel'>
+                  <Option value="excel">
                     <Space>
-                      <FileExcel className='w-4 h-4 text-green-600' />
+                      <FileExcel className="w-4 h-4 text-green-600" />
                       Excel (.xlsx)
                     </Space>
                   </Option>
-                  <Option value='csv'>
+                  <Option value="csv">
                     <Space>
-                      <FileCsv className='w-4 h-4 text-blue-600' />
+                      <FileCsv className="w-4 h-4 text-blue-600" />
                       CSV (.csv)
                     </Space>
                   </Option>
-                  <Option value='json'>
+                  <Option value="json">
                     <Space>
-                      <FileText className='w-4 h-4 text-orange-600' />
+                      <FileText className="w-4 h-4 text-orange-600" />
                       JSON (.json)
                     </Space>
                   </Option>
                 </Select>
               </Form.Item>
 
-              <Form.Item name='encoding' label='文件编码'>
+              <Form.Item name="encoding" label="文件编码">
                 <Select>
-                  <Option value='utf8'>UTF-8</Option>
-                  <Option value='gbk'>GBK (中文)</Option>
+                  <Option value="utf8">UTF-8</Option>
+                  <Option value="gbk">GBK (中文)</Option>
                 </Select>
               </Form.Item>
             </div>
           </Card>
 
           {/* 数据选项 */}
-          <Card size='small' title='数据选项'>
-            <div className='space-y-4'>
-              <div className='grid grid-cols-2 gap-4'>
-                <Form.Item name='includeInactive' label='包含禁用分类' valuePropName='checked'>
+          <Card size="small" title="数据选项">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item name="includeInactive" label="包含禁用分类" valuePropName="checked">
                   <Switch />
                 </Form.Item>
 
-                <Form.Item name='includeSystem' label='包含系统分类' valuePropName='checked'>
+                <Form.Item name="includeSystem" label="包含系统分类" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </div>
 
-              <Form.Item name='includeMetadata' label='包含元数据' valuePropName='checked'>
+              <Form.Item name="includeMetadata" label="包含元数据" valuePropName="checked">
                 <Switch />
               </Form.Item>
 
-              <Form.Item name='flattenStructure' label='扁平化结构' valuePropName='checked'>
+              <Form.Item name="flattenStructure" label="扁平化结构" valuePropName="checked">
                 <Switch />
               </Form.Item>
             </div>
           </Card>
 
           {/* 字段选择 */}
-          <Card size='small' title='导出字段'>
+          <Card size="small" title="导出字段">
             <Form.Item
-              name='selectedFields'
+              name="selectedFields"
               rules={[{ required: true, message: '请选择至少一个字段' }]}
             >
-              <Checkbox.Group className='grid grid-cols-2 gap-2'>
+              <Checkbox.Group className="grid grid-cols-2 gap-2">
                 {availableFields.map(field => (
                   <Checkbox key={field.key} value={field.key} disabled={field.required}>
                     <Space>
                       {field.label}
-                      {field.required && <Text type='danger'>*</Text>}
+                      {field.required && <Text type="danger">*</Text>}
                     </Space>
                   </Checkbox>
                 ))}
@@ -396,7 +396,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
           </Card>
 
           {/* 操作按钮 */}
-          <div className='flex justify-between items-center'>
+          <div className="flex justify-between items-center">
             <Button onClick={handleReset} disabled={exporting}>
               重置选项
             </Button>
@@ -406,10 +406,10 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
                 取消
               </Button>
               <Button
-                type='primary'
-                htmlType='submit'
+                type="primary"
+                htmlType="submit"
                 loading={exporting}
-                icon={<Download className='w-4 h-4' />}
+                icon={<Download className="w-4 h-4" />}
               >
                 {exporting ? '导出中...' : '开始导出'}
               </Button>
@@ -419,12 +419,12 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
 
         {/* 导出进度 */}
         {exporting && (
-          <Card size='small' title='导出进度'>
-            <div className='space-y-4'>
-              <div className='flex items-center justify-center'>
-                <Spin size='large' />
+          <Card size="small" title="导出进度">
+            <div className="space-y-4">
+              <div className="flex items-center justify-center">
+                <Spin size="large" />
               </div>
-              <div className='text-center text-sm text-gray-500'>正在导出数据，请稍候...</div>
+              <div className="text-center text-sm text-gray-500">正在导出数据，请稍候...</div>
             </div>
           </Card>
         )}

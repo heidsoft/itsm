@@ -19,17 +19,17 @@ const Radio = forwardRef<HTMLInputElement, Omit<FormRadioProps, 'label' | 'error
       <label
         className={`inline-flex items-center cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       >
-        <div className='relative'>
+        <div className="relative">
           <input
             ref={ref}
-            type='radio'
+            type="radio"
             checked={checked}
             value={value}
             disabled={disabled}
             onChange={handleChange}
             onBlur={onBlur}
             onFocus={onFocus}
-            className='sr-only'
+            className="sr-only"
             {...props}
           />
           <div
@@ -44,7 +44,7 @@ const Radio = forwardRef<HTMLInputElement, Omit<FormRadioProps, 'label' | 'error
             `}
           >
             {checked && (
-              <div className='w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2' />
+              <div className="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
             )}
           </div>
         </div>

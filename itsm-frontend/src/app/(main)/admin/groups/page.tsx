@@ -175,153 +175,153 @@ const GroupManagement = () => {
   const totalMembers = groups.reduce((sum, g) => sum + g.memberCount, 0);
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 页面头部 */}
-      <div className='flex justify-between items-center'>
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className='text-2xl font-bold text-gray-900'>用户组管理</h1>
-          <p className='text-gray-600 mt-1'>管理用户组、权限分配和成员关系</p>
+          <h1 className="text-2xl font-bold text-gray-900">用户组管理</h1>
+          <p className="text-gray-600 mt-1">管理用户组、权限分配和成员关系</p>
         </div>
         <button
           onClick={() => {
             setSelectedGroup(null);
             setShowModal(true);
           }}
-          className='bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors'
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
-          <Plus className='w-4 h-4' />
+          <Plus className="w-4 h-4" />
           新建用户组
         </button>
       </div>
 
       {/* 统计卡片 */}
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
-        <div className='bg-white p-6 rounded-lg shadow-sm border'>
-          <div className='flex items-center justify-between'>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm font-medium text-gray-600'>总用户组数</p>
-              <p className='text-2xl font-bold text-gray-900'>{groups.length}</p>
+              <p className="text-sm font-medium text-gray-600">总用户组数</p>
+              <p className="text-2xl font-bold text-gray-900">{groups.length}</p>
             </div>
-            <div className='p-3 bg-blue-100 rounded-full'>
-              <Users className='w-6 h-6 text-blue-600' />
+            <div className="p-3 bg-blue-100 rounded-full">
+              <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white p-6 rounded-lg shadow-sm border'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm font-medium text-gray-600'>活跃用户组</p>
-              <p className='text-2xl font-bold text-green-600'>{activeGroups}</p>
+              <p className="text-sm font-medium text-gray-600">活跃用户组</p>
+              <p className="text-2xl font-bold text-green-600">{activeGroups}</p>
             </div>
-            <div className='p-3 bg-green-100 rounded-full'>
-              <Shield className='w-6 h-6 text-green-600' />
+            <div className="p-3 bg-green-100 rounded-full">
+              <Shield className="w-6 h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white p-6 rounded-lg shadow-sm border'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm font-medium text-gray-600'>系统用户组</p>
-              <p className='text-2xl font-bold text-purple-600'>{systemGroups}</p>
+              <p className="text-sm font-medium text-gray-600">系统用户组</p>
+              <p className="text-2xl font-bold text-purple-600">{systemGroups}</p>
             </div>
-            <div className='p-3 bg-purple-100 rounded-full'>
-              <Shield className='w-6 h-6 text-purple-600' />
+            <div className="p-3 bg-purple-100 rounded-full">
+              <Shield className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
 
-        <div className='bg-white p-6 rounded-lg shadow-sm border'>
-          <div className='flex items-center justify-between'>
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm font-medium text-gray-600'>总成员数</p>
-              <p className='text-2xl font-bold text-orange-600'>{totalMembers}</p>
+              <p className="text-sm font-medium text-gray-600">总成员数</p>
+              <p className="text-2xl font-bold text-orange-600">{totalMembers}</p>
             </div>
-            <div className='p-3 bg-orange-100 rounded-full'>
-              <UserPlus className='w-6 h-6 text-orange-600' />
+            <div className="p-3 bg-orange-100 rounded-full">
+              <UserPlus className="w-6 h-6 text-orange-600" />
             </div>
           </div>
         </div>
       </div>
 
       {/* 搜索和过滤 */}
-      <div className='bg-white p-6 rounded-lg shadow-sm border'>
-        <div className='flex flex-col md:flex-row gap-4'>
-          <div className='flex-1'>
-            <div className='relative'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4' />
+      <div className="bg-white p-6 rounded-lg shadow-sm border">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
-                type='text'
-                placeholder='搜索用户组名称或描述...'
+                type="text"
+                placeholder="搜索用户组名称或描述..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
-          <div className='flex gap-4'>
+          <div className="flex gap-4">
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value)}
-              className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value='all'>所有类型</option>
-              <option value='system'>系统组</option>
-              <option value='custom'>自定义组</option>
+              <option value="all">所有类型</option>
+              <option value="system">系统组</option>
+              <option value="custom">自定义组</option>
             </select>
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className='px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value='all'>所有状态</option>
-              <option value='active'>活跃</option>
-              <option value='inactive'>停用</option>
+              <option value="all">所有状态</option>
+              <option value="active">活跃</option>
+              <option value="inactive">停用</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* 用户组列表 */}
-      <div className='bg-white rounded-lg shadow-sm border overflow-hidden'>
-        <div className='overflow-x-auto'>
-          <table className='w-full'>
-            <thead className='bg-gray-50 border-b border-gray-200'>
+      <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   用户组信息
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   类型
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   成员数量
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   权限
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   状态
                 </th>
-                <th className='px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   更新时间
                 </th>
-                <th className='px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider'>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   操作
                 </th>
               </tr>
             </thead>
-            <tbody className='bg-white divide-y divide-gray-200'>
+            <tbody className="bg-white divide-y divide-gray-200">
               {paginatedGroups.map(group => (
-                <tr key={group.id} className='hover:bg-gray-50'>
-                  <td className='px-6 py-4 whitespace-nowrap'>
+                <tr key={group.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className='text-sm font-medium text-gray-900'>{group.name}</div>
-                      <div className='text-sm text-gray-500'>{group.description}</div>
+                      <div className="text-sm font-medium text-gray-900">{group.name}</div>
+                      <div className="text-sm text-gray-500">{group.description}</div>
                     </div>
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap'>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeStyle(
                         group.type
@@ -330,30 +330,30 @@ const GroupManagement = () => {
                       {getTypeText(group.type)}
                     </span>
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap'>
-                    <div className='flex items-center'>
-                      <Users className='w-4 h-4 text-gray-400 mr-2' />
-                      <span className='text-sm text-gray-900'>{group.memberCount}</span>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <Users className="w-4 h-4 text-gray-400 mr-2" />
+                      <span className="text-sm text-gray-900">{group.memberCount}</span>
                     </div>
                   </td>
-                  <td className='px-6 py-4'>
-                    <div className='flex flex-wrap gap-1'>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
                       {group.permissions.slice(0, 2).map((permission, index) => (
                         <span
                           key={index}
-                          className='inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded'
+                          className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded"
                         >
                           {permission}
                         </span>
                       ))}
                       {group.permissions.length > 2 && (
-                        <span className='inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded'>
+                        <span className="inline-flex px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">
                           +{group.permissions.length - 2}
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap'>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusStyle(
                         group.status
@@ -362,17 +362,17 @@ const GroupManagement = () => {
                       {getStatusText(group.status)}
                     </span>
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {group.updatedAt}
                   </td>
-                  <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium'>
-                    <div className='flex items-center justify-end gap-2'>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleEditGroup(group)}
-                        className='text-blue-600 hover:text-blue-900 p-1 rounded'
-                        title='编辑'
+                        className="text-blue-600 hover:text-blue-900 p-1 rounded"
+                        title="编辑"
                       >
-                        <Edit className='w-4 h-4' />
+                        <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleToggleStatus(group.id)}
@@ -384,25 +384,25 @@ const GroupManagement = () => {
                         title={group.status === 'active' ? '停用' : '启用'}
                       >
                         {group.status === 'active' ? (
-                          <UserMinus className='w-4 h-4' />
+                          <UserMinus className="w-4 h-4" />
                         ) : (
-                          <UserPlus className='w-4 h-4' />
+                          <UserPlus className="w-4 h-4" />
                         )}
                       </button>
                       {group.type !== 'system' && (
                         <button
                           onClick={() => handleDeleteGroup(group.id)}
-                          className='text-red-600 hover:text-red-900 p-1 rounded'
-                          title='删除'
+                          className="text-red-600 hover:text-red-900 p-1 rounded"
+                          title="删除"
                         >
-                          <Trash2 className='w-4 h-4' />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                       <button
-                        className='text-gray-600 hover:text-gray-900 p-1 rounded'
-                        title='更多操作'
+                        className="text-gray-600 hover:text-gray-900 p-1 rounded"
+                        title="更多操作"
                       >
-                        <MoreHorizontal className='w-4 h-4' />
+                        <MoreHorizontal className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -414,40 +414,40 @@ const GroupManagement = () => {
 
         {/* 分页 */}
         {totalPages > 1 && (
-          <div className='bg-white px-4 py-3 border-t border-gray-200 sm:px-6'>
-            <div className='flex items-center justify-between'>
-              <div className='flex-1 flex justify-between sm:hidden'>
+          <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 flex justify-between sm:hidden">
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className='relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   上一页
                 </button>
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className='ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   下一页
                 </button>
               </div>
-              <div className='hidden sm:flex-1 sm:flex sm:items-center sm:justify-between'>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className='text-sm text-gray-700'>
-                    显示第 <span className='font-medium'>{startIndex + 1}</span> 到{' '}
-                    <span className='font-medium'>
+                  <p className="text-sm text-gray-700">
+                    显示第 <span className="font-medium">{startIndex + 1}</span> 到{' '}
+                    <span className="font-medium">
                       {Math.min(startIndex + itemsPerPage, filteredGroups.length)}
                     </span>{' '}
-                    条，共 <span className='font-medium'>{filteredGroups.length}</span> 条记录
+                    条，共 <span className="font-medium">{filteredGroups.length}</span> 条记录
                   </p>
                 </div>
                 <div>
-                  <nav className='relative z-0 inline-flex rounded-md shadow-sm -space-x-px'>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                     <button
                       onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                       disabled={currentPage === 1}
-                      className='relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       上一页
                     </button>
@@ -467,7 +467,7 @@ const GroupManagement = () => {
                     <button
                       onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                       disabled={currentPage === totalPages}
-                      className='relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed'
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       下一页
                     </button>
@@ -481,22 +481,22 @@ const GroupManagement = () => {
 
       {/* 模态框占位符 */}
       {showModal && (
-        <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50'>
-          <div className='bg-white rounded-lg p-6 w-full max-w-md'>
-            <h3 className='text-lg font-medium text-gray-900 mb-4'>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
               {selectedGroup ? '编辑用户组' : '新建用户组'}
             </h3>
-            <p className='text-gray-600 mb-4'>用户组编辑功能正在开发中...</p>
-            <div className='flex justify-end gap-2'>
+            <p className="text-gray-600 mb-4">用户组编辑功能正在开发中...</p>
+            <div className="flex justify-end gap-2">
               <button
                 onClick={() => setShowModal(false)}
-                className='px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300'
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
               >
                 取消
               </button>
               <button
                 onClick={() => setShowModal(false)}
-                className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700'
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 确定
               </button>

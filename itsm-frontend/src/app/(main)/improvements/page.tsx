@@ -87,7 +87,7 @@ const ImprovementListPage = () => {
       key: 'id',
       width: 120,
       render: (id: string) => (
-        <Button type='link' onClick={() => router.push(`/improvements/${id}`)}>
+        <Button type="link" onClick={() => router.push(`/improvements/${id}`)}>
           {id}
         </Button>
       ),
@@ -126,19 +126,19 @@ const ImprovementListPage = () => {
   ];
 
   return (
-    <div className='p-6 bg-gray-50 min-h-full'>
+    <div className="p-6 bg-gray-50 min-h-full">
       <Card>
-        <div className='mb-6 flex justify-between items-center'>
+        <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className='text-2xl font-bold text-gray-800'>持续改进</h2>
-            <p className='text-gray-500 mt-1'>识别、规划和实施IT服务和流程的改进</p>
+            <h2 className="text-2xl font-bold text-gray-800">持续改进</h2>
+            <p className="text-gray-500 mt-1">识别、规划和实施IT服务和流程的改进</p>
           </div>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={loadImprovements} loading={loading}>
               刷新
             </Button>
             <Button
-              type='primary'
+              type="primary"
               icon={<PlusOutlined />}
               onClick={() => router.push('/improvements/new')}
             >
@@ -148,15 +148,15 @@ const ImprovementListPage = () => {
         </div>
 
         {/* 筛选器 */}
-        <div className='mb-4 flex items-center gap-2'>
-          <span className='text-sm font-semibold'>筛选:</span>
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-sm font-semibold">筛选:</span>
           <Space>
             {['全部', '进行中', '待评估', '已完成'].map(f => (
               <Button
                 key={f}
                 type={filter === f ? 'primary' : 'default'}
                 onClick={() => setFilter(f)}
-                size='small'
+                size="small"
               >
                 {f}
               </Button>
@@ -166,8 +166,8 @@ const ImprovementListPage = () => {
 
         {/* 改进计划列表 */}
         {filteredImprovements.length === 0 && !loading ? (
-          <Empty description='暂无改进计划'>
-            <Button type='primary' onClick={() => router.push('/improvements/new')}>
+          <Empty description="暂无改进计划">
+            <Button type="primary" onClick={() => router.push('/improvements/new')}>
               创建第一个改进计划
             </Button>
           </Empty>
@@ -175,7 +175,7 @@ const ImprovementListPage = () => {
           <Table
             columns={columns}
             dataSource={filteredImprovements}
-            rowKey='id'
+            rowKey="id"
             loading={loading}
             pagination={{
               pageSize: 10,

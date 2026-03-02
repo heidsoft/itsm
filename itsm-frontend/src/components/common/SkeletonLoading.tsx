@@ -24,7 +24,7 @@ export const CardSkeleton: React.FC<{ count?: number }> = ({ count = 1 }) => {
 export const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
   return (
     <Card>
-      <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
+      <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {/* 表格头部 */}
         <Skeleton.Button active style={{ width: '100%', height: 40 }} />
 
@@ -45,17 +45,17 @@ export const StatCardSkeleton: React.FC<{ count?: number }> = ({ count = 4 }) =>
     <Row gutter={[12, 12]}>
       {Array.from({ length: count }).map((_, index) => (
         <Col xs={24} sm={12} md={6} lg={6} xl={6} key={index}>
-          <Card className='border-0 shadow-sm' styles={{ body: { padding: '16px' } }}>
-            <div className='flex items-center justify-between'>
+          <Card className="border-0 shadow-sm" styles={{ body: { padding: '16px' } }}>
+            <div className="flex items-center justify-between">
               <div style={{ flex: 1 }}>
                 <Skeleton.Button
                   active
-                  size='small'
+                  size="small"
                   style={{ width: 80, height: 16, marginBottom: 8 }}
                 />
-                <Skeleton.Button active size='default' style={{ width: 100, height: 24 }} />
+                <Skeleton.Button active size="default" style={{ width: 100, height: 24 }} />
               </div>
-              <Skeleton.Avatar active size='large' shape='square' />
+              <Skeleton.Avatar active size="large" shape="square" />
             </div>
           </Card>
         </Col>
@@ -70,12 +70,12 @@ export const StatCardSkeleton: React.FC<{ count?: number }> = ({ count = 4 }) =>
 export const FormSkeleton: React.FC<{ fields?: number }> = ({ fields = 5 }) => {
   return (
     <Card>
-      <Space orientation='vertical' style={{ width: '100%' }} size='large'>
+      <Space orientation="vertical" style={{ width: '100%' }} size="large">
         {Array.from({ length: fields }).map((_, index) => (
           <div key={index}>
             <Skeleton.Button
               active
-              size='small'
+              size="small"
               style={{ width: 100, height: 16, marginBottom: 8 }}
             />
             <Skeleton.Input active style={{ width: '100%' }} />
@@ -92,7 +92,7 @@ export const FormSkeleton: React.FC<{ fields?: number }> = ({ fields = 5 }) => {
  */
 export const DetailSkeleton: React.FC = () => {
   return (
-    <Space orientation='vertical' style={{ width: '100%' }} size='large'>
+    <Space orientation="vertical" style={{ width: '100%' }} size="large">
       {/* 标题区域 */}
       <Card>
         <Skeleton active avatar paragraph={{ rows: 2 }} title={{ width: '60%' }} />
@@ -121,7 +121,7 @@ export const DetailSkeleton: React.FC = () => {
 export const ListSkeleton: React.FC<{ count?: number }> = ({ count = 5 }) => {
   return (
     <Card>
-      <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
+      <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {Array.from({ length: count }).map((_, index) => (
           <Skeleton key={index} active avatar paragraph={{ rows: 1 }} />
         ))}
@@ -162,7 +162,7 @@ export const ChartSkeleton: React.FC<{ height?: number }> = ({ height = 300 }) =
  */
 export const DashboardSkeleton: React.FC = () => {
   return (
-    <Space orientation='vertical' style={{ width: '100%' }} size='large'>
+    <Space orientation="vertical" style={{ width: '100%' }} size="large">
       {/* 统计卡片 */}
       <StatCardSkeleton count={4} />
 

@@ -19,15 +19,15 @@ export const ChartPlaceholder: React.FC<ChartPlaceholderProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'line':
-        return <TrendingUp className='mx-auto mb-2 text-4xl text-blue-500' />;
+        return <TrendingUp className="mx-auto mb-2 text-4xl text-blue-500" />;
       case 'bar':
-        return <BarChart3 className='mx-auto mb-2 text-4xl text-green-500' />;
+        return <BarChart3 className="mx-auto mb-2 text-4xl text-green-500" />;
       case 'pie':
-        return <PieChart className='mx-auto mb-2 text-4xl text-purple-500' />;
+        return <PieChart className="mx-auto mb-2 text-4xl text-purple-500" />;
       case 'area':
-        return <Activity className='mx-auto mb-2 text-4xl text-orange-500' />;
+        return <Activity className="mx-auto mb-2 text-4xl text-orange-500" />;
       default:
-        return <BarChart3 className='mx-auto mb-2 text-4xl text-gray-500' />;
+        return <BarChart3 className="mx-auto mb-2 text-4xl text-gray-500" />;
     }
   };
 
@@ -51,12 +51,12 @@ export const ChartPlaceholder: React.FC<ChartPlaceholderProps> = ({
       className={`flex items-center justify-center bg-gray-50 rounded border ${className}`}
       style={{ height: `${height}px` }}
     >
-      <div className='text-center text-gray-500'>
+      <div className="text-center text-gray-500">
         {getIcon()}
-        <div className='text-lg font-medium mb-1'>{title}</div>
-        <div className='text-sm mb-2'>{getTypeText()}</div>
-        {description && <div className='text-xs text-gray-400'>{description}</div>}
-        <div className='text-xs text-gray-400 mt-2'>图表组件暂未实现，显示占位符</div>
+        <div className="text-lg font-medium mb-1">{title}</div>
+        <div className="text-sm mb-2">{getTypeText()}</div>
+        {description && <div className="text-xs text-gray-400">{description}</div>}
+        <div className="text-xs text-gray-400 mt-2">图表组件暂未实现，显示占位符</div>
       </div>
     </div>
   );

@@ -166,16 +166,16 @@ const ReportsPage: React.FC = () => {
         </Space>
       ),
       children: (
-        <div className='space-y-6'>
+        <div className="space-y-6">
           {/* 快速统计 */}
           {analyticsData && (
             <Row gutter={[16, 16]}>
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='总工单数'
+                    title="总工单数"
                     value={analyticsData.summary.total}
-                    prefix={<FileText className='w-4 h-4' />}
+                    prefix={<FileText className="w-4 h-4" />}
                     styles={{ content: { color: '#1890ff' } }}
                   />
                 </Card>
@@ -183,12 +183,12 @@ const ReportsPage: React.FC = () => {
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='已解决'
+                    title="已解决"
                     value={analyticsData.summary.resolved}
-                    prefix={<CheckCircle className='w-4 h-4' />}
+                    prefix={<CheckCircle className="w-4 h-4" />}
                     styles={{ content: { color: '#52c41a' } }}
                     suffix={
-                      <Text type='secondary'>
+                      <Text type="secondary">
                         (
                         {(
                           (analyticsData.summary.resolved / analyticsData.summary.total) *
@@ -203,10 +203,10 @@ const ReportsPage: React.FC = () => {
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='平均响应时间'
+                    title="平均响应时间"
                     value={analyticsData.summary.avg_response_time}
-                    suffix='小时'
-                    prefix={<Clock className='w-4 h-4' />}
+                    suffix="小时"
+                    prefix={<Clock className="w-4 h-4" />}
                     styles={{ content: { color: '#fa8c16' } }}
                   />
                 </Card>
@@ -214,10 +214,10 @@ const ReportsPage: React.FC = () => {
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='SLA合规率'
+                    title="SLA合规率"
                     value={analyticsData.summary.sla_compliance}
-                    suffix='%'
-                    prefix={<Target className='w-4 h-4' />}
+                    suffix="%"
+                    prefix={<Target className="w-4 h-4" />}
                     styles={{
                       content: {
                         color: analyticsData.summary.sla_compliance >= 95 ? '#52c41a' : '#f5222d',
@@ -231,11 +231,11 @@ const ReportsPage: React.FC = () => {
 
           {/* 图表区域 */}
           <Card
-            title='工单趋势分析'
+            title="工单趋势分析"
             extra={
               <Space>
                 <Select
-                  defaultValue='ticket_trends'
+                  defaultValue="ticket_trends"
                   style={{ width: 200 }}
                   onChange={value => {
                     fetchAnalyticsData(predefinedReports[value as keyof typeof predefinedReports]);
@@ -253,7 +253,7 @@ const ReportsPage: React.FC = () => {
               </Space>
             }
           >
-            <ReportsCharts data={analyticsData?.data || []} loading={loading} chartType='line' />
+            <ReportsCharts data={analyticsData?.data || []} loading={loading} chartType="line" />
           </Card>
         </div>
       ),
@@ -267,7 +267,7 @@ const ReportsPage: React.FC = () => {
         </Space>
       ),
       children: (
-        <div className='space-y-6'>
+        <div className="space-y-6">
           <AdvancedAnalytics />
         </div>
       ),
@@ -281,8 +281,8 @@ const ReportsPage: React.FC = () => {
         </Space>
       ),
       children: (
-        <div className='space-y-6'>
-          <Card title='自定义分析报告'>
+        <div className="space-y-6">
+          <Card title="自定义分析报告">
             <ReportGenerator
               onGenerate={fetchAnalyticsData}
               loading={loading}
@@ -301,7 +301,7 @@ const ReportsPage: React.FC = () => {
         </Space>
       ),
       children: (
-        <div className='space-y-6'>
+        <div className="space-y-6">
           <RealTimeMonitoring autoRefresh={true} refreshInterval={30} />
         </div>
       ),
@@ -315,28 +315,28 @@ const ReportsPage: React.FC = () => {
         </Space>
       ),
       children: (
-        <div className='space-y-6'>
-          <Card title='报告导出中心'>
-            <Space orientation='vertical' size='large' style={{ width: '100%' }}>
+        <div className="space-y-6">
+          <Card title="报告导出中心">
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
               <div>
                 <Title level={4}>选择导出格式</Title>
                 <Space wrap>
                   <Button
-                    size='large'
+                    size="large"
                     onClick={() => handleExport('excel')}
                     icon={<Download size={16} />}
                   >
                     导出 Excel
                   </Button>
                   <Button
-                    size='large'
+                    size="large"
                     onClick={() => handleExport('pdf')}
                     icon={<Download size={16} />}
                   >
                     导出 PDF
                   </Button>
                   <Button
-                    size='large'
+                    size="large"
                     onClick={() => handleExport('csv')}
                     icon={<Download size={16} />}
                   >
@@ -347,12 +347,12 @@ const ReportsPage: React.FC = () => {
 
               <div>
                 <Title level={4}>时间范围</Title>
-                <Space orientation='vertical'>
+                <Space orientation="vertical">
                   <div>
-                    <Text type='secondary'>开始日期: {timeRange[0]}</Text>
+                    <Text type="secondary">开始日期: {timeRange[0]}</Text>
                   </div>
                   <div>
-                    <Text type='secondary'>结束日期: {timeRange[1]}</Text>
+                    <Text type="secondary">结束日期: {timeRange[1]}</Text>
                   </div>
                 </Space>
               </div>
@@ -364,12 +364,12 @@ const ReportsPage: React.FC = () => {
   ];
 
   return (
-    <div className='p-6'>
-      <div className='mb-6'>
-        <Title level={2} className='mb-2'>
+    <div className="p-6">
+      <div className="mb-6">
+        <Title level={2} className="mb-2">
           报表中心
         </Title>
-        <Text type='secondary'>全面的ITSM数据分析与报告中心，提供多维度数据洞察和决策支持</Text>
+        <Text type="secondary">全面的ITSM数据分析与报告中心，提供多维度数据洞察和决策支持</Text>
       </div>
 
       <Card>

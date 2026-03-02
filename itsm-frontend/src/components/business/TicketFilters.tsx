@@ -58,9 +58,9 @@ const DEFAULT_VALUE: TicketFilterState = {
 };
 
 const TicketFiltersSkeleton: React.FC = () => (
-  <Card className='mb-4' styles={{ body: { padding: '16px' } }}>
-    <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
-      <Row gutter={[12, 12]} align='middle'>
+  <Card className="mb-4" styles={{ body: { padding: '16px' } }}>
+    <Space orientation="vertical" style={{ width: '100%' }} size="middle">
+      <Row gutter={[12, 12]} align="middle">
         <Col xs={24} sm={24} md={8} lg={6}>
           <Skeleton.Input active style={{ width: '100%' }} />
         </Col>
@@ -237,8 +237,8 @@ function TicketFilters({
   }
 
   return (
-    <Card className='mb-4' styles={{ body: { padding: '16px' } }} data-testid='ticket-filters'>
-      <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
+    <Card className="mb-4" styles={{ body: { padding: '16px' } }} data-testid="ticket-filters">
+      <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {/* 视图选择器和筛选预设 */}
         <Row gutter={[12, 12]}>
           {onViewChange && (
@@ -256,17 +256,17 @@ function TicketFilters({
           </Col>
         </Row>
 
-        <Row gutter={[12, 12]} align='middle'>
+        <Row gutter={[12, 12]} align="middle">
           {/* 搜索框 */}
           <Col xs={24} sm={24} md={8} lg={6}>
             <Input
-              placeholder='搜索工单标题或描述...'
+              placeholder="搜索工单标题或描述..."
               prefix={<SearchOutlined />}
               value={localKeyword}
               onChange={handleSearchInputChange}
               onPressEnter={handleSearch}
               allowClear
-              data-testid='filter-keyword-input'
+              data-testid="filter-keyword-input"
               disabled={loading}
             />
           </Col>
@@ -275,10 +275,10 @@ function TicketFilters({
           <Col xs={12} sm={8} md={4} lg={3}>
             <Select
               style={{ width: '100%' }}
-              placeholder='状态'
+              placeholder="状态"
               value={filters?.status || 'all'}
               onChange={handleStatusChange}
-              data-testid='filter-status-select'
+              data-testid="filter-status-select"
               options={[
                 { label: '全部状态', value: 'all' },
                 { label: '待处理', value: 'open' },
@@ -294,10 +294,10 @@ function TicketFilters({
           <Col xs={12} sm={8} md={4} lg={3}>
             <Select
               style={{ width: '100%' }}
-              placeholder='优先级'
+              placeholder="优先级"
               value={filters?.priority || 'all'}
               onChange={handlePriorityChange}
-              data-testid='filter-priority-select'
+              data-testid="filter-priority-select"
               options={[
                 { label: '全部优先级', value: 'all' },
                 { label: 'P1-紧急', value: 'p1' },
@@ -315,9 +315,9 @@ function TicketFilters({
               style={{ width: '100%' }}
               value={dateRange as any}
               onChange={handleDateRangeChange}
-              format='YYYY-MM-DD'
+              format="YYYY-MM-DD"
               placeholder={['开始日期', '结束日期']}
-              data-testid='filter-date-range'
+              data-testid="filter-date-range"
               disabled={loading}
             />
           </Col>
@@ -326,10 +326,10 @@ function TicketFilters({
           <Col xs={12} sm={8} md={4} lg={3}>
             <Select
               style={{ width: '100%' }}
-              placeholder='排序'
+              placeholder="排序"
               value={filters?.sortBy || 'createdAt_desc'}
               onChange={handleSortChange}
-              data-testid='filter-sort-select'
+              data-testid="filter-sort-select"
               options={[
                 { label: '最新创建', value: 'createdAt_desc' },
                 { label: '最早创建', value: 'createdAt_asc' },
@@ -348,7 +348,7 @@ function TicketFilters({
                 type={activeFilters.length > 0 ? 'primary' : 'default'}
                 onClick={handleSearch}
                 loading={loading}
-                data-testid='filter-apply-btn'
+                data-testid="filter-apply-btn"
                 disabled={loading}
               >
                 搜索
@@ -359,7 +359,7 @@ function TicketFilters({
               <Button
                 icon={<ClearOutlined />}
                 onClick={handleReset}
-                data-testid='filter-reset-btn'
+                data-testid="filter-reset-btn"
                 disabled={loading || activeFilters.length === 0}
               >
                 重置
@@ -369,7 +369,7 @@ function TicketFilters({
                   icon={<ReloadOutlined />}
                   onClick={onRefresh}
                   loading={loading}
-                  data-testid='filter-refresh-btn'
+                  data-testid="filter-refresh-btn"
                   disabled={loading}
                 >
                   刷新
@@ -383,8 +383,8 @@ function TicketFilters({
         {activeFilters.length > 0 && (
           <Row>
             <Col span={24}>
-              <div className='flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100'>
-                <span className='text-sm text-gray-500 flex items-center gap-1'>
+              <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-gray-100">
+                <span className="text-sm text-gray-500 flex items-center gap-1">
                   <FilterOutlined />
                   已应用筛选：
                 </span>
@@ -393,18 +393,18 @@ function TicketFilters({
                     key={filter.key}
                     closable
                     onClose={() => handleRemoveFilter(filter.key)}
-                    color='blue'
-                    className='mb-0'
+                    color="blue"
+                    className="mb-0"
                   >
                     {filter.label}: {filter.value}
                   </Tag>
                 ))}
                 <Button
-                  type='link'
-                  size='small'
+                  type="link"
+                  size="small"
                   icon={<CloseOutlined />}
                   onClick={handleReset}
-                  className='p-0 h-auto'
+                  className="p-0 h-auto"
                 >
                   清除全部
                 </Button>

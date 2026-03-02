@@ -277,7 +277,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
             {record.target_ticket_number}
           </Text>
           <br />
-          <Text type='secondary' className='text-sm'>
+          <Text type="secondary" className="text-sm">
             {record.target_ticket_title}
           </Text>
         </div>
@@ -318,10 +318,10 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       key: 'actions',
       render: (_: any, record: TicketDependency) => (
         <Space>
-          <Tooltip title='查看工单详情'>
+          <Tooltip title="查看工单详情">
             <Button
-              type='link'
-              size='small'
+              type="link"
+              size="small"
               icon={<EyeOutlined />}
               onClick={() => {
                 // 跳转到工单详情页
@@ -334,8 +334,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
           {canManage && (
             <>
               <Button
-                type='link'
-                size='small'
+                type="link"
+                size="small"
                 icon={<EditOutlined />}
                 onClick={() => {
                   setEditingDependency(record);
@@ -346,10 +346,10 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                 编辑
               </Button>
               <Popconfirm
-                title='确定要删除这个依赖关系吗？'
+                title="确定要删除这个依赖关系吗？"
                 onConfirm={() => handleDeleteDependency(record.id)}
               >
-                <Button type='link' size='small' danger icon={<DeleteOutlined />}>
+                <Button type="link" size="small" danger icon={<DeleteOutlined />}>
                   删除
                 </Button>
               </Popconfirm>
@@ -371,7 +371,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
             {record.ticket_number}
           </Text>
           <br />
-          <Text type='secondary' className='text-sm'>
+          <Text type="secondary" className="text-sm">
             {record.ticket_title}
           </Text>
         </div>
@@ -415,7 +415,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       render: (fields: string[]) => (
         <Space>
           {fields.map(field => (
-            <Tag key={field} color='blue'>
+            <Tag key={field} color="blue">
               {field === 'status'
                 ? '状态'
                 : field === 'progress'
@@ -433,7 +433,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       dataIndex: 'estimated_delay_hours',
       key: 'estimated_delay_hours',
       render: (hours?: number) =>
-        hours ? <Text type='warning'>{hours} 小时</Text> : <Text type='secondary'>-</Text>,
+        hours ? <Text type="warning">{hours} 小时</Text> : <Text type="secondary">-</Text>,
     },
   ];
 
@@ -453,23 +453,23 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     const treeData = [
       {
         title: (
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <Text strong>{ticket.ticketNumber || `T-${ticket.id}`}</Text>
-            <Tag color='blue'>当前工单</Tag>
+            <Tag color="blue">当前工单</Tag>
           </div>
         ),
         key: `ticket-${ticket.id}`,
         children: dependencies.map(dep => ({
           title: (
-            <div className='flex items-center gap-2'>
+            <div className="flex items-center gap-2">
               <Tag color={getRelationTypeColor(dep.relation_type)}>
                 {getRelationTypeText(dep.relation_type)}
               </Tag>
               <Text>{dep.target_ticket_number}</Text>
-              <Text type='secondary' className='text-sm'>
+              <Text type="secondary" className="text-sm">
                 {dep.target_ticket_title}
               </Text>
-              {dep.is_blocking && <Badge status='error' text='阻塞中' />}
+              {dep.is_blocking && <Badge status="error" text="阻塞中" />}
             </div>
           ),
           key: `dep-${dep.id}`,
@@ -481,13 +481,13 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
   }, [dependencies, ticket]);
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       <Card>
         <Tabs
           activeKey={activeTab}
           onChange={key => setActiveTab(key as 'dependencies' | 'impact' | 'graph' | 'stats')}
-          type='card'
-          size='large'
+          type="card"
+          size="large"
           items={[
             {
               key: 'dependencies',
@@ -495,19 +495,19 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                 <span>
                   <LinkOutlined /> 依赖关系
                   {dependencies.length > 0 && (
-                    <Badge count={dependencies.length} className='ml-2' />
+                    <Badge count={dependencies.length} className="ml-2" />
                   )}
                 </span>
               ),
               children: (
-                <div className='space-y-4'>
-                  <div className='flex items-center justify-between mb-4'>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between mb-4">
                     <Title level={5} style={{ margin: 0 }}>
                       工单依赖关系
                     </Title>
                     {canManage && (
                       <Button
-                        type='primary'
+                        type="primary"
                         icon={<PlusOutlined />}
                         onClick={() => {
                           setEditingDependency(null);
@@ -526,10 +526,10 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                   </div>
 
                   {dependencies.length === 0 ? (
-                    <Empty description='暂无依赖关系' image={Empty.PRESENTED_IMAGE_SIMPLE}>
+                    <Empty description="暂无依赖关系" image={Empty.PRESENTED_IMAGE_SIMPLE}>
                       {canManage && (
                         <Button
-                          type='primary'
+                          type="primary"
                           icon={<PlusOutlined />}
                           onClick={() => {
                             setEditingDependency(null);
@@ -549,16 +549,16 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                   ) : (
                     <>
                       <Alert
-                        message='依赖关系说明'
-                        description='依赖关系用于管理工单之间的关联和影响。硬依赖表示必须等待，软依赖表示建议等待。'
-                        type='info'
+                        message="依赖关系说明"
+                        description="依赖关系用于管理工单之间的关联和影响。硬依赖表示必须等待，软依赖表示建议等待。"
+                        type="info"
                         showIcon
-                        className='mb-4'
+                        className="mb-4"
                       />
                       <Table
                         columns={dependencyColumns}
                         dataSource={dependencies}
-                        rowKey='id'
+                        rowKey="id"
                         loading={loading}
                         pagination={false}
                       />
@@ -573,26 +573,26 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                 <span>
                   <WarningOutlined /> 影响分析
                   {impactAnalysis.length > 0 && (
-                    <Badge count={impactAnalysis.length} className='ml-2' />
+                    <Badge count={impactAnalysis.length} className="ml-2" />
                   )}
                 </span>
               ),
               children: (
-                <div className='space-y-4'>
+                <div className="space-y-4">
                   <Alert
-                    message='影响分析'
-                    description='系统自动分析当前工单对其他工单的影响，包括阻塞、延迟和影响范围。'
-                    type='warning'
+                    message="影响分析"
+                    description="系统自动分析当前工单对其他工单的影响，包括阻塞、延迟和影响范围。"
+                    type="warning"
                     showIcon
-                    className='mb-4'
+                    className="mb-4"
                   />
                   {impactAnalysis.length === 0 ? (
-                    <Empty description='暂无影响分析数据' />
+                    <Empty description="暂无影响分析数据" />
                   ) : (
                     <Table
                       columns={impactColumns}
                       dataSource={impactAnalysis}
-                      rowKey='ticket_id'
+                      rowKey="ticket_id"
                       pagination={false}
                     />
                   )}
@@ -607,9 +607,9 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                 </span>
               ),
               children: (
-                <div className='space-y-4'>
+                <div className="space-y-4">
                   {dependencyTreeData.length === 0 ? (
-                    <Empty description='暂无依赖关系，无法显示图谱' />
+                    <Empty description="暂无依赖关系，无法显示图谱" />
                   ) : (
                     <Card>
                       <Tree
@@ -630,17 +630,17 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                 </span>
               ),
               children: (
-                <div className='space-y-4'>
+                <div className="space-y-4">
                   <Row gutter={16}>
                     <Col xs={24} sm={12} md={6}>
                       <Card>
-                        <Statistic title='总依赖数' value={stats.total} prefix={<LinkOutlined />} />
+                        <Statistic title="总依赖数" value={stats.total} prefix={<LinkOutlined />} />
                       </Card>
                     </Col>
                     <Col xs={24} sm={12} md={6}>
                       <Card>
                         <Statistic
-                          title='阻塞中'
+                          title="阻塞中"
                           value={stats.blocking}
                           styles={{ content: { color: '#ff4d4f' } }}
                           prefix={<WarningOutlined />}
@@ -650,7 +650,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                     <Col xs={24} sm={12} md={6}>
                       <Card>
                         <Statistic
-                          title='硬依赖'
+                          title="硬依赖"
                           value={stats.hardDeps}
                           styles={{ content: { color: '#faad14' } }}
                           prefix={<LinkOutlined />}
@@ -660,7 +660,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                     <Col xs={24} sm={12} md={6}>
                       <Card>
                         <Statistic
-                          title='高影响'
+                          title="高影响"
                           value={stats.highImpact}
                           styles={{ content: { color: '#ff4d4f' } }}
                           prefix={<WarningOutlined />}
@@ -687,19 +687,19 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
         }}
         width={700}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='target_ticket_id'
-            label='目标工单ID'
+            name="target_ticket_id"
+            label="目标工单ID"
             rules={[{ required: true, message: '请输入目标工单ID' }]}
           >
             <Input
-              type='number'
-              placeholder='请输入目标工单ID'
+              type="number"
+              placeholder="请输入目标工单ID"
               addonAfter={
                 <Button
-                  type='link'
-                  size='small'
+                  type="link"
+                  size="small"
                   onClick={() => {
                     // 工单选择器需要单独的Modal组件实现
                     antMessage.info('工单选择器功能开发中');
@@ -711,11 +711,11 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
             />
           </Form.Item>
           <Form.Item
-            name='relation_type'
-            label='关系类型'
+            name="relation_type"
+            label="关系类型"
             rules={[{ required: true, message: '请选择关系类型' }]}
           >
-            <Select placeholder='请选择关系类型'>
+            <Select placeholder="请选择关系类型">
               <Option value={TicketRelationType.BLOCKS}>阻塞</Option>
               <Option value={TicketRelationType.BLOCKED_BY}>被阻塞</Option>
               <Option value={TicketRelationType.DEPENDS_ON}>依赖于</Option>
@@ -729,18 +729,18 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='dependency_type'
-                label='依赖类型'
+                name="dependency_type"
+                label="依赖类型"
                 rules={[{ required: true, message: '请选择依赖类型' }]}
               >
                 <Select>
-                  <Option value='hard'>硬依赖（必须等待）</Option>
-                  <Option value='soft'>软依赖（建议等待）</Option>
+                  <Option value="hard">硬依赖（必须等待）</Option>
+                  <Option value="soft">软依赖（建议等待）</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='is_blocking' label='是否阻塞' valuePropName='checked'>
+              <Form.Item name="is_blocking" label="是否阻塞" valuePropName="checked">
                 <Select>
                   <Option value={true}>是</Option>
                   <Option value={false}>否</Option>
@@ -748,8 +748,8 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item name='description' label='描述'>
-            <TextArea rows={3} placeholder='依赖关系描述（可选）' />
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} placeholder="依赖关系描述（可选）" />
           </Form.Item>
         </Form>
       </Modal>

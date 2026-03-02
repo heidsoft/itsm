@@ -202,11 +202,11 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       title: '关联CI',
       key: 'related_ci',
       render: (_: any, record: CIRelationship) => (
-        <Space orientation='vertical' size={0}>
+        <Space orientation="vertical" size={0}>
           <Text strong>
             {createType === 'outgoing' ? record.target_ci_name : record.source_ci_name}
           </Text>
-          <Text type='secondary' style={{ fontSize: 12 }}>
+          <Text type="secondary" style={{ fontSize: 12 }}>
             {createType === 'outgoing' ? record.target_ci_type : record.source_ci_type}
           </Text>
         </Space>
@@ -254,13 +254,13 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       width: 100,
       render: (_: any, record: CIRelationship) => (
         <Space>
-          <Tooltip title='删除'>
+          <Tooltip title="删除">
             <Popconfirm
-              title='确认删除'
-              description='确定要删除此关系吗？'
+              title="确认删除"
+              description="确定要删除此关系吗？"
               onConfirm={() => handleDelete(record.id)}
             >
-              <Button type='text' danger icon={<DeleteOutlined />} size='small' />
+              <Button type="text" danger icon={<DeleteOutlined />} size="small" />
             </Popconfirm>
           </Tooltip>
         </Space>
@@ -280,9 +280,9 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         <Table
           columns={columns}
           dataSource={outgoingRelations}
-          rowKey='id'
+          rowKey="id"
           pagination={false}
-          size='small'
+          size="small"
           loading={loading}
         />
       ),
@@ -298,9 +298,9 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         <Table
           columns={columns}
           dataSource={incomingRelations}
-          rowKey='id'
+          rowKey="id"
           pagination={false}
-          size='small'
+          size="small"
           loading={loading}
         />
       ),
@@ -314,13 +314,13 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           <Space>
             <LinkOutlined />
             <span>CI关系管理</span>
-            <Text type='secondary'>({ciName})</Text>
+            <Text type="secondary">({ciName})</Text>
           </Space>
         }
         extra={
           <Space>
             <Button
-              type='primary'
+              type="primary"
               icon={<PlusOutlined />}
               onClick={() => handleOpenCreate('outgoing')}
             >
@@ -332,7 +332,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           </Space>
         }
       >
-        <Tabs items={tabItems} defaultActiveKey='outgoing' />
+        <Tabs items={tabItems} defaultActiveKey="outgoing" />
       </Card>
 
       {/* 创建关系模态框 */}
@@ -343,16 +343,16 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         footer={null}
         width={500}
       >
-        <Form form={form} layout='vertical' onFinish={handleCreate}>
+        <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item
-            name='target_ci_id'
+            name="target_ci_id"
             label={createType === 'outgoing' ? '目标CI' : '源CI'}
             rules={[{ required: true, message: '请选择CI' }]}
           >
             <Select
               showSearch
-              placeholder='搜索CI名称'
-              optionFilterProp='children'
+              placeholder="搜索CI名称"
+              optionFilterProp="children"
               onSearch={loadAvailableCIs}
               style={{ width: '100%' }}
             >
@@ -368,11 +368,11 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           </Form.Item>
 
           <Form.Item
-            name='relationship_type'
-            label='关系类型'
+            name="relationship_type"
+            label="关系类型"
             rules={[{ required: true, message: '请选择关系类型' }]}
           >
-            <Select placeholder='选择关系类型' style={{ width: '100%' }}>
+            <Select placeholder="选择关系类型" style={{ width: '100%' }}>
               {relationshipTypes.map(type => (
                 <Option key={type.type} value={type.type}>
                   <Tooltip title={type.description}>
@@ -386,34 +386,34 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
             </Select>
           </Form.Item>
 
-          <Space style={{ width: '100%' }} size='large'>
-            <Form.Item name='strength' label='关系强度' style={{ width: '50%' }}>
-              <Select placeholder='选择强度' defaultValue='medium'>
-                <Option value='critical'>关键</Option>
-                <Option value='high'>高</Option>
-                <Option value='medium'>中</Option>
-                <Option value='low'>低</Option>
+          <Space style={{ width: '100%' }} size="large">
+            <Form.Item name="strength" label="关系强度" style={{ width: '50%' }}>
+              <Select placeholder="选择强度" defaultValue="medium">
+                <Option value="critical">关键</Option>
+                <Option value="high">高</Option>
+                <Option value="medium">中</Option>
+                <Option value="low">低</Option>
               </Select>
             </Form.Item>
 
-            <Form.Item name='impact_level' label='影响程度' style={{ width: '50%' }}>
-              <Select placeholder='选择程度' defaultValue='medium'>
-                <Option value='critical'>致命</Option>
-                <Option value='high'>高</Option>
-                <Option value='medium'>中</Option>
-                <Option value='low'>低</Option>
+            <Form.Item name="impact_level" label="影响程度" style={{ width: '50%' }}>
+              <Select placeholder="选择程度" defaultValue="medium">
+                <Option value="critical">致命</Option>
+                <Option value="high">高</Option>
+                <Option value="medium">中</Option>
+                <Option value="low">低</Option>
               </Select>
             </Form.Item>
           </Space>
 
-          <Form.Item name='description' label='描述'>
-            <TextArea rows={3} placeholder='输入关系描述（可选）' />
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} placeholder="输入关系描述（可选）" />
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
             <Space>
               <Button onClick={() => setCreateModalOpen(false)}>取消</Button>
-              <Button type='primary' htmlType='submit'>
+              <Button type="primary" htmlType="submit">
                 创建
               </Button>
             </Space>

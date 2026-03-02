@@ -149,11 +149,11 @@ const CIDetail: React.FC = () => {
     return (
       <Card>
         <Result
-          status='404'
-          title='404'
-          subTitle='抱歉，您访问的配置项不存在'
+          status="404"
+          title="404"
+          subTitle="抱歉，您访问的配置项不存在"
           extra={
-            <Button type='primary' onClick={() => router.push('/cmdb')}>
+            <Button type="primary" onClick={() => router.push('/cmdb')}>
               返回列表
             </Button>
           }
@@ -188,11 +188,11 @@ const CIDetail: React.FC = () => {
           <div
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
           >
-            <Space orientation='vertical' size={0}>
+            <Space orientation="vertical" size={0}>
               <Title level={3} style={{ margin: 0 }}>
                 {ci.name}
               </Title>
-              <Text type='secondary'>配置项 ID: {ci.id}</Text>
+              <Text type="secondary">配置项 ID: {ci.id}</Text>
             </Space>
             <Tag color={statusColors[ci.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
               {CIStatusLabels[ci.status] || ci.status}
@@ -200,46 +200,46 @@ const CIDetail: React.FC = () => {
           </div>
         </div>
 
-        <Tabs defaultActiveKey='basic'>
-          <TabPane tab='基本信息' key='basic'>
+        <Tabs defaultActiveKey="basic">
+          <TabPane tab="基本信息" key="basic">
             <Descriptions bordered column={2}>
-              <Descriptions.Item label='资产分类'>
+              <Descriptions.Item label="资产分类">
                 {typeInfo?.name || `类型 ${ci.ci_type_id}`}
               </Descriptions.Item>
-              <Descriptions.Item label='资产标签'>{ci.asset_tag || '-'}</Descriptions.Item>
-              <Descriptions.Item label='序列号'>{ci.serial_number || '-'}</Descriptions.Item>
-              <Descriptions.Item label='型号'>{ci.model || '-'}</Descriptions.Item>
-              <Descriptions.Item label='厂商'>{ci.vendor || '-'}</Descriptions.Item>
-              <Descriptions.Item label='所在位置'>{ci.location || '-'}</Descriptions.Item>
-              <Descriptions.Item label='环境'>{ci.environment || '-'}</Descriptions.Item>
-              <Descriptions.Item label='重要性'>{ci.criticality || '-'}</Descriptions.Item>
-              <Descriptions.Item label='分配给'>{ci.assigned_to || '-'}</Descriptions.Item>
-              <Descriptions.Item label='拥有者'>{ci.owned_by || '-'}</Descriptions.Item>
-              <Descriptions.Item label='发现源'>{ci.discovery_source || '-'}</Descriptions.Item>
-              <Descriptions.Item label='数据来源'>{ci.source || '-'}</Descriptions.Item>
-              <Descriptions.Item label='云厂商'>{ci.cloud_provider || '-'}</Descriptions.Item>
-              <Descriptions.Item label='云账号'>{ci.cloud_account_id || '-'}</Descriptions.Item>
-              <Descriptions.Item label='Region'>{ci.cloud_region || '-'}</Descriptions.Item>
-              <Descriptions.Item label='Zone'>{ci.cloud_zone || '-'}</Descriptions.Item>
-              <Descriptions.Item label='云资源ID'>{ci.cloud_resource_id || '-'}</Descriptions.Item>
-              <Descriptions.Item label='云资源类型'>
+              <Descriptions.Item label="资产标签">{ci.asset_tag || '-'}</Descriptions.Item>
+              <Descriptions.Item label="序列号">{ci.serial_number || '-'}</Descriptions.Item>
+              <Descriptions.Item label="型号">{ci.model || '-'}</Descriptions.Item>
+              <Descriptions.Item label="厂商">{ci.vendor || '-'}</Descriptions.Item>
+              <Descriptions.Item label="所在位置">{ci.location || '-'}</Descriptions.Item>
+              <Descriptions.Item label="环境">{ci.environment || '-'}</Descriptions.Item>
+              <Descriptions.Item label="重要性">{ci.criticality || '-'}</Descriptions.Item>
+              <Descriptions.Item label="分配给">{ci.assigned_to || '-'}</Descriptions.Item>
+              <Descriptions.Item label="拥有者">{ci.owned_by || '-'}</Descriptions.Item>
+              <Descriptions.Item label="发现源">{ci.discovery_source || '-'}</Descriptions.Item>
+              <Descriptions.Item label="数据来源">{ci.source || '-'}</Descriptions.Item>
+              <Descriptions.Item label="云厂商">{ci.cloud_provider || '-'}</Descriptions.Item>
+              <Descriptions.Item label="云账号">{ci.cloud_account_id || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Region">{ci.cloud_region || '-'}</Descriptions.Item>
+              <Descriptions.Item label="Zone">{ci.cloud_zone || '-'}</Descriptions.Item>
+              <Descriptions.Item label="云资源ID">{ci.cloud_resource_id || '-'}</Descriptions.Item>
+              <Descriptions.Item label="云资源类型">
                 {ci.cloud_resource_type || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label='云资源引用ID'>
+              <Descriptions.Item label="云资源引用ID">
                 {ci.cloud_resource_ref_id || '-'}
               </Descriptions.Item>
-              <Descriptions.Item label='同步状态'>{ci.cloud_sync_status || '-'}</Descriptions.Item>
-              <Descriptions.Item label='同步时间'>
+              <Descriptions.Item label="同步状态">{ci.cloud_sync_status || '-'}</Descriptions.Item>
+              <Descriptions.Item label="同步时间">
                 {ci.cloud_sync_time ? dayjs(ci.cloud_sync_time).format('YYYY-MM-DD HH:mm:ss') : '-'}
               </Descriptions.Item>
-              <Descriptions.Item label='所属租户'>{ci.tenant_id}</Descriptions.Item>
-              <Descriptions.Item label='创建时间'>
+              <Descriptions.Item label="所属租户">{ci.tenant_id}</Descriptions.Item>
+              <Descriptions.Item label="创建时间">
                 {dayjs(ci.created_at).format('YYYY-MM-DD HH:mm:ss')}
               </Descriptions.Item>
-              <Descriptions.Item label='最后更新'>
+              <Descriptions.Item label="最后更新">
                 {dayjs(ci.updated_at).format('YYYY-MM-DD HH:mm:ss')}
               </Descriptions.Item>
-              <Descriptions.Item label='描述' span={2}>
+              <Descriptions.Item label="描述" span={2}>
                 {ci.description || '无'}
               </Descriptions.Item>
             </Descriptions>
@@ -251,7 +251,7 @@ const CIDetail: React.FC = () => {
                 <NodeIndexOutlined /> 服务拓扑
               </span>
             }
-            key='topology'
+            key="topology"
           >
             <TopologyGraph ciId={ci.id} initialDepth={2} height={500} />
           </TabPane>
@@ -262,7 +262,7 @@ const CIDetail: React.FC = () => {
                 <LinkOutlined /> 关系管理
               </span>
             }
-            key='relationships'
+            key="relationships"
           >
             <CIRelationshipManager
               ciId={ci.id}
@@ -279,11 +279,11 @@ const CIDetail: React.FC = () => {
                 <ClusterOutlined /> 影响分析
               </span>
             }
-            key='impact'
+            key="impact"
           >
-            <Card title='CI影响分析' size='small'>
+            <Card title="CI影响分析" size="small">
               <Button
-                type='primary'
+                type="primary"
                 onClick={loadImpactAnalysis}
                 loading={impactLoading}
                 style={{ marginBottom: 16 }}
@@ -294,7 +294,7 @@ const CIDetail: React.FC = () => {
               {impactAnalysis && (
                 <>
                   <Alert
-                    message='风险等级'
+                    message="风险等级"
                     description={
                       <Space>
                         <Tag
@@ -338,7 +338,7 @@ const CIDetail: React.FC = () => {
                           impactAnalysis.upstream_impact &&
                           impactAnalysis.upstream_impact.length > 0 ? (
                             <List
-                              size='small'
+                              size="small"
                               dataSource={impactAnalysis.upstream_impact}
                               renderItem={(item: ImpactAnalysisItem) => (
                                 <List.Item>
@@ -355,14 +355,14 @@ const CIDetail: React.FC = () => {
                                       {item.impact_level}
                                     </Tag>
                                     <Text>{item.ci_name}</Text>
-                                    <Text type='secondary'>({item.ci_type})</Text>
-                                    <Text type='secondary'>- {item.relationship}</Text>
+                                    <Text type="secondary">({item.ci_type})</Text>
+                                    <Text type="secondary">- {item.relationship}</Text>
                                   </Space>
                                 </List.Item>
                               )}
                             />
                           ) : (
-                            <Empty description='无上游依赖' />
+                            <Empty description="无上游依赖" />
                           ),
                       },
                       {
@@ -372,7 +372,7 @@ const CIDetail: React.FC = () => {
                           impactAnalysis.downstream_impact &&
                           impactAnalysis.downstream_impact.length > 0 ? (
                             <List
-                              size='small'
+                              size="small"
                               dataSource={impactAnalysis.downstream_impact}
                               renderItem={(item: ImpactAnalysisItem) => (
                                 <List.Item>
@@ -389,14 +389,14 @@ const CIDetail: React.FC = () => {
                                       {item.impact_level}
                                     </Tag>
                                     <Text>{item.ci_name}</Text>
-                                    <Text type='secondary'>({item.ci_type})</Text>
-                                    <Text type='secondary'>- {item.relationship}</Text>
+                                    <Text type="secondary">({item.ci_type})</Text>
+                                    <Text type="secondary">- {item.relationship}</Text>
                                   </Space>
                                 </List.Item>
                               )}
                             />
                           ) : (
-                            <Empty description='无下游影响' />
+                            <Empty description="无下游影响" />
                           ),
                       },
                       {
@@ -406,20 +406,20 @@ const CIDetail: React.FC = () => {
                           impactAnalysis.affected_tickets &&
                           impactAnalysis.affected_tickets.length > 0 ? (
                             <List
-                              size='small'
+                              size="small"
                               dataSource={impactAnalysis.affected_tickets}
                               renderItem={(item: any) => (
                                 <List.Item>
                                   <Space>
                                     <Tag>{item.status}</Tag>
                                     <Text>{item.title}</Text>
-                                    <Text type='secondary'>优先级: {item.priority}</Text>
+                                    <Text type="secondary">优先级: {item.priority}</Text>
                                   </Space>
                                 </List.Item>
                               )}
                             />
                           ) : (
-                            <Empty description='无关联工单' />
+                            <Empty description="无关联工单" />
                           ),
                       },
                       {
@@ -429,7 +429,7 @@ const CIDetail: React.FC = () => {
                           impactAnalysis.affected_incidents &&
                           impactAnalysis.affected_incidents.length > 0 ? (
                             <List
-                              size='small'
+                              size="small"
                               dataSource={impactAnalysis.affected_incidents}
                               renderItem={(item: any) => (
                                 <List.Item>
@@ -452,7 +452,7 @@ const CIDetail: React.FC = () => {
                               )}
                             />
                           ) : (
-                            <Empty description='无关联事件' />
+                            <Empty description="无关联事件" />
                           ),
                       },
                     ]}
@@ -461,7 +461,7 @@ const CIDetail: React.FC = () => {
               )}
 
               {!impactAnalysis && !impactLoading && (
-                <Empty description='点击上方按钮执行影响分析' />
+                <Empty description="点击上方按钮执行影响分析" />
               )}
             </Card>
           </TabPane>
@@ -472,9 +472,9 @@ const CIDetail: React.FC = () => {
                 <HistoryOutlined /> 变更历史
               </span>
             }
-            key='history'
+            key="history"
           >
-            <Card title='CI变更历史' size='small'>
+            <Card title="CI变更历史" size="small">
               <Button
                 onClick={loadChangeHistory}
                 loading={historyLoading}
@@ -507,12 +507,12 @@ const CIDetail: React.FC = () => {
                           <Text>{log.resource}</Text>
                         </Space>
                         <div>
-                          <Text type='secondary'>
+                          <Text type="secondary">
                             {log.path} - {log.Method} - {log.StatusCode}
                           </Text>
                         </div>
                         <div>
-                          <Text type='secondary'>
+                          <Text type="secondary">
                             {dayjs(log.created_at).format('YYYY-MM-DD HH:mm:ss')}
                           </Text>
                         </div>

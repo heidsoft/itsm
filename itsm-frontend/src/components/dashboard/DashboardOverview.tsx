@@ -274,7 +274,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   if (loading && !ticketStats) {
     return (
       <div style={{ textAlign: 'center', padding: '50px' }}>
-        <Spin size='large' />
+        <Spin size="large" />
       </div>
     );
   }
@@ -282,7 +282,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   return (
     <div>
       {/* 头部操作栏 */}
-      <Row justify='space-between' align='middle' style={{ marginBottom: 24 }}>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 24 }}>
         <Col>
           <h2 style={{ margin: 0 }}>仪表盘概览</h2>
         </Col>
@@ -298,7 +298,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title='总工单数'
+              title="总工单数"
               value={ticketStats?.total || 0}
               prefix={<FileText />}
               styles={{ content: { color: '#1890ff' } }}
@@ -308,12 +308,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title='待处理'
+              title="待处理"
               value={ticketStats?.open || 0}
               prefix={<AlertTriangle />}
               styles={{ content: { color: '#faad14' } }}
               suffix={
-                <Tooltip title='较昨日'>
+                <Tooltip title="较昨日">
                   <TrendingUp style={{ color: '#cf1322', fontSize: '12px' }} />
                 </Tooltip>
               }
@@ -323,7 +323,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title='处理中'
+              title="处理中"
               value={ticketStats?.inProgress || 0}
               prefix={<Clock />}
               styles={{ content: { color: '#fa8c16' } }}
@@ -333,12 +333,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title='已解决'
+              title="已解决"
               value={ticketStats?.resolved || 0}
               prefix={<CheckCircle />}
               styles={{ content: { color: '#52c41a' } }}
               suffix={
-                <Tooltip title='较昨日'>
+                <Tooltip title="较昨日">
                   <TrendingUp style={{ color: '#389e0d', fontSize: '12px' }} />
                 </Tooltip>
               }
@@ -350,9 +350,9 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* 性能指标 */}
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} lg={8}>
-          <Card title='SLA 合规率' extra={<Trophy />}>
+          <Card title="SLA 合规率" extra={<Trophy />}>
             <Progress
-              type='circle'
+              type="circle"
               percent={ticketStats?.slaCompliance || 0}
               format={percent => `${percent}%`}
               strokeColor={{
@@ -361,7 +361,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               }}
             />
             <div style={{ textAlign: 'center', marginTop: 16 }}>
-              <Space orientation='vertical' size='small'>
+              <Space orientation="vertical" size="small">
                 <div>
                   <span style={{ color: '#999' }}>平均解决时间: </span>
                   <span>{ticketStats?.avgResolutionTime || 0}小时</span>
@@ -375,18 +375,18 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card title='用户统计' extra={<Users />}>
+          <Card title="用户统计" extra={<Users />}>
             <Row gutter={16}>
               <Col span={12}>
                 <Statistic
-                  title='总用户'
+                  title="总用户"
                   value={userStats?.total || 0}
                   styles={{ content: { fontSize: '20px' } }}
                 />
               </Col>
               <Col span={12}>
                 <Statistic
-                  title='在线用户'
+                  title="在线用户"
                   value={userStats?.online || 0}
                   styles={{ content: { fontSize: '20px', color: '#52c41a' } }}
                 />
@@ -409,8 +409,8 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card title='系统状态' extra={<BarChart3 />}>
-            <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
+          <Card title="系统状态" extra={<BarChart3 />}>
+            <Space orientation="vertical" style={{ width: '100%' }} size="middle">
               <div>
                 <div style={{ marginBottom: 4 }}>
                   <span>CPU 使用率</span>
@@ -440,25 +440,25 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* 详细信息 */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
-          <Card title='最近工单' extra={<Button type='link'>查看全部</Button>}>
+          <Card title="最近工单" extra={<Button type="link">查看全部</Button>}>
             {recentTickets.length > 0 ? (
               <Table
                 columns={ticketColumns}
                 dataSource={recentTickets}
-                rowKey='id'
+                rowKey="id"
                 pagination={false}
-                size='small'
+                size="small"
               />
             ) : (
-              <Empty description='暂无数据' />
+              <Empty description="暂无数据" />
             )}
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card title='活跃用户' extra={<Button type='link'>查看全部</Button>}>
+          <Card title="活跃用户" extra={<Button type="link">查看全部</Button>}>
             {activeUsers.length > 0 ? (
               <List
-                itemLayout='horizontal'
+                itemLayout="horizontal"
                 dataSource={activeUsers}
                 renderItem={user => (
                   <List.Item>
@@ -478,7 +478,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 )}
               />
             ) : (
-              <Empty description='暂无数据' />
+              <Empty description="暂无数据" />
             )}
           </Card>
         </Col>

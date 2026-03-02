@@ -59,7 +59,7 @@ export default function ApplicationsPage() {
       render: (text: string) => (
         <Space>
           <AppstoreOutlined />
-          <span className='font-medium'>{text}</span>
+          <span className="font-medium">{text}</span>
         </Space>
       ),
     },
@@ -75,27 +75,27 @@ export default function ApplicationsPage() {
       title: '类型',
       dataIndex: 'type',
       key: 'type',
-      render: (type: string) => <Tag color='blue'>{(type || 'UNKNOWN').toUpperCase()}</Tag>,
+      render: (type: string) => <Tag color="blue">{(type || 'UNKNOWN').toUpperCase()}</Tag>,
     },
     {
       title: '微服务数',
       key: 'microservices',
       render: (_: any, record: Application) => (
-        <Tag color='purple'>{record.edges?.microservices?.length || 0}</Tag>
+        <Tag color="purple">{record.edges?.microservices?.length || 0}</Tag>
       ),
     },
     {
       title: '操作',
       key: 'action',
       render: (_: any, record: Application) => (
-        <Space size='middle'>
+        <Space size="middle">
           <Button
-            type='text'
+            type="text"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record, 'application')}
           />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -113,7 +113,7 @@ export default function ApplicationsPage() {
       render: (text: string) => (
         <Space>
           <ApiOutlined />
-          <span className='font-medium'>{text}</span>
+          <span className="font-medium">{text}</span>
         </Space>
       ),
     },
@@ -138,14 +138,14 @@ export default function ApplicationsPage() {
       title: '操作',
       key: 'action',
       render: (_: any, record: Microservice) => (
-        <Space size='middle'>
+        <Space size="middle">
           <Button
-            type='text'
+            type="text"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record, 'microservice')}
           />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -217,20 +217,20 @@ export default function ApplicationsPage() {
         breadcrumb: { items: [{ title: '首页' }, { title: '应用管理' }] },
       }}
       extra={[
-        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchData} loading={fetching}>
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchData} loading={fetching}>
           刷新
         </Button>,
-        <Button key='create' type='primary' icon={<PlusOutlined />} onClick={handleCreate}>
+        <Button key="create" type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
           新建{activeTab === 'applications' ? '应用' : '微服务'}
         </Button>,
       ]}
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab} type='card'>
-        <TabPane tab='应用系统' key='applications'>
-          <Table columns={appColumns} dataSource={applications} rowKey='id' loading={fetching} />
+      <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
+        <TabPane tab="应用系统" key="applications">
+          <Table columns={appColumns} dataSource={applications} rowKey="id" loading={fetching} />
         </TabPane>
-        <TabPane tab='微服务' key='microservices'>
-          <Table columns={msColumns} dataSource={microservices} rowKey='id' loading={fetching} />
+        <TabPane tab="微服务" key="microservices">
+          <Table columns={msColumns} dataSource={microservices} rowKey="id" loading={fetching} />
         </TabPane>
       </Tabs>
 
@@ -242,22 +242,22 @@ export default function ApplicationsPage() {
         confirmLoading={loading}
         width={600}
       >
-        <Form form={form} layout='vertical'>
-          <Form.Item name='name' label='名称' rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder='请输入名称' />
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
+            <Input placeholder="请输入名称" />
           </Form.Item>
-          <Form.Item name='code' label='代码' rules={[{ required: true, message: '请输入代码' }]}>
-            <Input placeholder='请输入代码' />
+          <Form.Item name="code" label="代码" rules={[{ required: true, message: '请输入代码' }]}>
+            <Input placeholder="请输入代码" />
           </Form.Item>
 
           {modalType === 'application' ? (
             <>
-              <Form.Item name='project_id' label='所属项目'>
-                <Select placeholder='请选择项目' options={[{ label: 'ITSM 系统重构', value: 1 }]} />
+              <Form.Item name="project_id" label="所属项目">
+                <Select placeholder="请选择项目" options={[{ label: 'ITSM 系统重构', value: 1 }]} />
               </Form.Item>
-              <Form.Item name='type' label='应用类型'>
+              <Form.Item name="type" label="应用类型">
                 <Select
-                  placeholder='请选择类型'
+                  placeholder="请选择类型"
                   options={[
                     { label: 'Web应用', value: 'web' },
                     { label: '移动应用', value: 'mobile' },
@@ -269,22 +269,22 @@ export default function ApplicationsPage() {
           ) : (
             <>
               <Form.Item
-                name='application_id'
-                label='所属应用'
+                name="application_id"
+                label="所属应用"
                 rules={[{ required: true, message: '请选择所属应用' }]}
               >
                 <Select
-                  placeholder='请选择应用'
+                  placeholder="请选择应用"
                   options={applications.map(app => ({
                     label: app.name,
                     value: app.id,
                   }))}
                 />
               </Form.Item>
-              <div className='grid grid-cols-2 gap-4'>
-                <Form.Item name='language' label='开发语言'>
+              <div className="grid grid-cols-2 gap-4">
+                <Form.Item name="language" label="开发语言">
                   <Select
-                    placeholder='请选择语言'
+                    placeholder="请选择语言"
                     options={[
                       { label: 'Go', value: 'go' },
                       { label: 'Java', value: 'java' },
@@ -293,8 +293,8 @@ export default function ApplicationsPage() {
                     ]}
                   />
                 </Form.Item>
-                <Form.Item name='framework' label='框架'>
-                  <Input placeholder='如: Gin, Spring Boot' />
+                <Form.Item name="framework" label="框架">
+                  <Input placeholder="如: Gin, Spring Boot" />
                 </Form.Item>
               </div>
             </>

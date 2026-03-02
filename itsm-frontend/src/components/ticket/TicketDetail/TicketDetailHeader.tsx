@@ -88,16 +88,16 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
   const statusConfig = getStatusConfig(ticket.status || '待处理');
 
   return (
-    <div className='sticky top-0 z-10 bg-white shadow-sm border-b mb-6'>
-      <div className='px-6 py-4'>
-        <div className='flex items-start justify-between mb-4'>
-          <div className='flex items-center space-x-3'>
-            <TypeIcon className='w-8 h-8 text-blue-600' />
+    <div className="sticky top-0 z-10 bg-white shadow-sm border-b mb-6">
+      <div className="px-6 py-4">
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <TypeIcon className="w-8 h-8 text-blue-600" />
             <div>
-              <Title level={2} className='mb-1'>
+              <Title level={2} className="mb-1">
                 {ticket.title}
               </Title>
-              <Text type='secondary'>
+              <Text type="secondary">
                 {ticket.type || 'Service Request'} #{ticket.ticketNumber || ticket.id}
               </Text>
             </div>
@@ -117,7 +117,7 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
         </div>
 
         {/* 关键信息：状态、优先级、处理人 */}
-        <div className='flex items-center flex-wrap gap-4 mb-4'>
+        <div className="flex items-center flex-wrap gap-4 mb-4">
           <Badge
             status={
               ticket.status === 'open'
@@ -131,18 +131,18 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
           <AntTag color={priorityConfig.color} style={{ fontSize: '14px', padding: '4px 12px' }}>
             优先级: {ticket.priority || '中'}
           </AntTag>
-          <div className='flex items-center space-x-2'>
-            <User className='w-4 h-4 text-gray-500' />
+          <div className="flex items-center space-x-2">
+            <User className="w-4 h-4 text-gray-500" />
             <Text>
-              <Text type='secondary' className='text-sm'>
+              <Text type="secondary" className="text-sm">
                 处理人：
               </Text>
               <Text strong>{ticket.assignee?.name || '未分配'}</Text>
             </Text>
           </div>
-          {ticket.category && <AntTag color='blue'>{ticket.category}</AntTag>}
+          {ticket.category && <AntTag color="blue">{ticket.category}</AntTag>}
           {ticket.tags?.slice(0, 3).map((tag: string, index: number) => (
-            <AntTag key={index} color='green'>
+            <AntTag key={index} color="green">
               {tag}
             </AntTag>
           ))}
@@ -150,40 +150,40 @@ export const TicketDetailHeader: React.FC<TicketDetailHeaderProps> = ({
         </div>
 
         {/* 次要信息：快速查看 */}
-        <div className='grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-gray-100'>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-gray-100">
           <div>
-            <Text type='secondary' className='text-xs'>
+            <Text type="secondary" className="text-xs">
               报告人
             </Text>
-            <div className='flex items-center space-x-1 mt-1'>
-              <User className='w-3 h-3 text-gray-400' />
-              <Text className='text-sm'>{ticket.requester?.name || '未知'}</Text>
+            <div className="flex items-center space-x-1 mt-1">
+              <User className="w-3 h-3 text-gray-400" />
+              <Text className="text-sm">{ticket.requester?.name || '未知'}</Text>
             </div>
           </div>
           <div>
-            <Text type='secondary' className='text-xs'>
+            <Text type="secondary" className="text-xs">
               创建时间
             </Text>
-            <div className='flex items-center space-x-1 mt-1'>
-              <Calendar className='w-3 h-3 text-gray-400' />
-              <Text className='text-sm'>{formatDateTime(ticket.createdAt)}</Text>
+            <div className="flex items-center space-x-1 mt-1">
+              <Calendar className="w-3 h-3 text-gray-400" />
+              <Text className="text-sm">{formatDateTime(ticket.createdAt)}</Text>
             </div>
           </div>
           <div>
-            <Text type='secondary' className='text-xs'>
+            <Text type="secondary" className="text-xs">
               最后更新
             </Text>
-            <div className='flex items-center space-x-1 mt-1'>
-              <Clock className='w-3 h-3 text-gray-400' />
-              <Text className='text-sm'>{formatDateTime(ticket.updatedAt)}</Text>
+            <div className="flex items-center space-x-1 mt-1">
+              <Clock className="w-3 h-3 text-gray-400" />
+              <Text className="text-sm">{formatDateTime(ticket.updatedAt)}</Text>
             </div>
           </div>
           <div>
-            <Text type='secondary' className='text-xs'>
+            <Text type="secondary" className="text-xs">
               工单类型
             </Text>
-            <div className='mt-1'>
-              <Text className='text-sm'>{ticket.type || 'Service Request'}</Text>
+            <div className="mt-1">
+              <Text className="text-sm">{ticket.type || 'Service Request'}</Text>
             </div>
           </div>
         </div>

@@ -339,7 +339,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       key: 'levels',
       render: (_: any, record: ApprovalWorkflow) => (
         <Badge count={record.nodes.length} showZero>
-          <Tag color='blue'>{record.nodes.length} 级</Tag>
+          <Tag color="blue">{record.nodes.length} 级</Tag>
         </Badge>
       ),
     },
@@ -357,8 +357,8 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       render: (_: any, record: ApprovalWorkflow) => (
         <Space>
           <Button
-            type='link'
-            size='small'
+            type="link"
+            size="small"
             icon={<EyeOutlined />}
             onClick={() => {
               setCurrentWorkflow(record);
@@ -370,8 +370,8 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
           {canManage && (
             <>
               <Button
-                type='link'
-                size='small'
+                type="link"
+                size="small"
                 icon={<EditOutlined />}
                 onClick={() => {
                   setEditingWorkflow(record);
@@ -383,14 +383,14 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                 编辑
               </Button>
               <Popconfirm
-                title='确定要删除这个工作流吗？'
+                title="确定要删除这个工作流吗？"
                 onConfirm={async () => {
                   // 注意：删除工作流API尚未实现
                   antMessage.success('工作流已删除（模拟）');
                   loadWorkflows();
                 }}
               >
-                <Button type='link' size='small' danger icon={<DeleteOutlined />}>
+                <Button type="link" size="small" danger icon={<DeleteOutlined />}>
                   删除
                 </Button>
               </Popconfirm>
@@ -477,13 +477,13 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
   }, [approvalRecords]);
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       <Card>
         <Tabs
           activeKey={activeTab}
           onChange={key => setActiveTab(key as 'workflow' | 'history' | 'stats')}
-          type='card'
-          size='large'
+          type="card"
+          size="large"
           items={[
             {
               key: 'workflow',
@@ -493,15 +493,15 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                 </span>
               ),
               children: (
-                <div className='space-y-4'>
+                <div className="space-y-4">
                   {/* 工作流列表 */}
-                  <div className='flex items-center justify-between mb-4'>
+                  <div className="flex items-center justify-between mb-4">
                     <Title level={5} style={{ margin: 0 }}>
                       审批工作流列表
                     </Title>
                     {canManage && (
                       <Button
-                        type='primary'
+                        type="primary"
                         icon={<PlusOutlined />}
                         onClick={() => {
                           setEditingWorkflow(null);
@@ -517,7 +517,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                   <Table
                     columns={workflowColumns}
                     dataSource={workflows}
-                    rowKey='id'
+                    rowKey="id"
                     loading={loading}
                     pagination={false}
                     onRow={record => ({
@@ -532,12 +532,12 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                   {currentWorkflow && (
                     <Card
                       title={
-                        <div className='flex items-center justify-between'>
+                        <div className="flex items-center justify-between">
                           <span>工作流详情: {currentWorkflow.name}</span>
                           {canManage && (
                             <Button
-                              type='primary'
-                              size='small'
+                              type="primary"
+                              size="small"
                               icon={<PlusOutlined />}
                               onClick={() => {
                                 setEditingNode(null);
@@ -557,7 +557,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                           )}
                         </div>
                       }
-                      className='mt-4'
+                      className="mt-4"
                     >
                       <Timeline>
                         {currentWorkflow.nodes.map((node, index) => (
@@ -571,13 +571,13 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                                   : 'blue'
                             }
                           >
-                            <div className='flex items-start justify-between'>
-                              <div className='flex-1'>
-                                <div className='flex items-center gap-2 mb-2'>
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
                                   <Text strong>
                                     级别 {node.level}: {node.name}
                                   </Text>
-                                  <Tag color='blue'>
+                                  <Tag color="blue">
                                     {node.approvalMode === 'sequential'
                                       ? '串行'
                                       : node.approvalMode === 'parallel'
@@ -587,10 +587,10 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                                           : '全部'}
                                   </Tag>
                                   {node.timeoutHours && (
-                                    <Tag color='orange'>超时: {node.timeoutHours}小时</Tag>
+                                    <Tag color="orange">超时: {node.timeoutHours}小时</Tag>
                                   )}
                                 </div>
-                                <div className='text-sm text-gray-600 space-y-1'>
+                                <div className="text-sm text-gray-600 space-y-1">
                                   <div>
                                     审批人类型:{' '}
                                     <Tag>
@@ -612,8 +612,8 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                               {canManage && (
                                 <Space>
                                   <Button
-                                    type='link'
-                                    size='small'
+                                    type="link"
+                                    size="small"
                                     icon={<EditOutlined />}
                                     onClick={() => {
                                       setEditingNode(node);
@@ -624,12 +624,12 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                                     编辑
                                   </Button>
                                   <Popconfirm
-                                    title='确定要删除这个节点吗？'
+                                    title="确定要删除这个节点吗？"
                                     onConfirm={() => handleDeleteNode(node.id)}
                                   >
                                     <Button
-                                      type='link'
-                                      size='small'
+                                      type="link"
+                                      size="small"
                                       danger
                                       icon={<DeleteOutlined />}
                                     >
@@ -658,7 +658,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                 <Table
                   columns={recordColumns}
                   dataSource={approvalRecords}
-                  rowKey='id'
+                  rowKey="id"
                   pagination={{
                     pageSize: 10,
                     showSizeChanger: true,
@@ -675,12 +675,12 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                 </span>
               ),
               children: (
-                <div className='space-y-4'>
+                <div className="space-y-4">
                   <Row gutter={16}>
                     <Col xs={24} sm={12} md={6}>
                       <Card>
                         <Statistic
-                          title='总审批数'
+                          title="总审批数"
                           value={stats.total}
                           prefix={<CheckCircleOutlined />}
                         />
@@ -689,7 +689,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                     <Col xs={24} sm={12} md={6}>
                       <Card>
                         <Statistic
-                          title='待审批'
+                          title="待审批"
                           value={stats.pending}
                           styles={{ content: { color: '#faad14' } }}
                           prefix={<ClockCircleOutlined />}
@@ -699,7 +699,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                     <Col xs={24} sm={12} md={6}>
                       <Card>
                         <Statistic
-                          title='已批准'
+                          title="已批准"
                           value={stats.approved}
                           styles={{ content: { color: '#3f8600' } }}
                           prefix={<CheckCircleOutlined />}
@@ -709,10 +709,10 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
                     <Col xs={24} sm={12} md={6}>
                       <Card>
                         <Statistic
-                          title='批准率'
+                          title="批准率"
                           value={stats.approvalRate}
                           precision={1}
-                          suffix='%'
+                          suffix="%"
                           styles={{ content: { color: '#1890ff' } }}
                           prefix={<BarChartOutlined />}
                         />
@@ -738,34 +738,34 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
         }}
         width={700}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='工作流名称'
+            name="name"
+            label="工作流名称"
             rules={[{ required: true, message: '请输入工作流名称' }]}
           >
-            <Input placeholder='例如：标准工单审批流程' />
+            <Input placeholder="例如：标准工单审批流程" />
           </Form.Item>
-          <Form.Item name='description' label='描述'>
-            <TextArea rows={3} placeholder='工作流描述（可选）' />
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} placeholder="工作流描述（可选）" />
           </Form.Item>
-          <Form.Item name='ticketType' label='适用工单类型'>
-            <Select placeholder='请选择工单类型' allowClear>
-              <Option value='incident'>事件</Option>
-              <Option value='service_request'>服务请求</Option>
-              <Option value='problem'>问题</Option>
-              <Option value='change'>变更</Option>
+          <Form.Item name="ticketType" label="适用工单类型">
+            <Select placeholder="请选择工单类型" allowClear>
+              <Option value="incident">事件</Option>
+              <Option value="service_request">服务请求</Option>
+              <Option value="problem">问题</Option>
+              <Option value="change">变更</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='priority' label='适用优先级'>
-            <Select placeholder='请选择优先级' allowClear>
-              <Option value='low'>低</Option>
-              <Option value='medium'>中</Option>
-              <Option value='high'>高</Option>
-              <Option value='urgent'>紧急</Option>
+          <Form.Item name="priority" label="适用优先级">
+            <Select placeholder="请选择优先级" allowClear>
+              <Option value="low">低</Option>
+              <Option value="medium">中</Option>
+              <Option value="high">高</Option>
+              <Option value="urgent">紧急</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='isActive' label='启用状态' valuePropName='checked' initialValue={true}>
+          <Form.Item name="isActive" label="启用状态" valuePropName="checked" initialValue={true}>
             <Switch />
           </Form.Item>
         </Form>
@@ -783,12 +783,12 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
         }}
         width={800}
       >
-        <Form form={nodeForm} layout='vertical'>
+        <Form form={nodeForm} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='level'
-                label='审批级别'
+                name="level"
+                label="审批级别"
                 rules={[{ required: true, message: '请输入审批级别' }]}
               >
                 <InputNumber min={1} max={10} style={{ width: '100%' }} />
@@ -796,47 +796,47 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             </Col>
             <Col span={12}>
               <Form.Item
-                name='name'
-                label='节点名称'
+                name="name"
+                label="节点名称"
                 rules={[{ required: true, message: '请输入节点名称' }]}
               >
-                <Input placeholder='例如：直属主管审批' />
+                <Input placeholder="例如：直属主管审批" />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item
-            name='approverType'
-            label='审批人类型'
+            name="approverType"
+            label="审批人类型"
             rules={[{ required: true, message: '请选择审批人类型' }]}
           >
             <Radio.Group>
-              <Radio value='user'>用户</Radio>
-              <Radio value='role'>角色</Radio>
-              <Radio value='department'>部门</Radio>
-              <Radio value='dynamic'>动态</Radio>
+              <Radio value="user">用户</Radio>
+              <Radio value="role">角色</Radio>
+              <Radio value="department">部门</Radio>
+              <Radio value="dynamic">动态</Radio>
             </Radio.Group>
           </Form.Item>
           <Form.Item
-            name='approvalMode'
-            label='审批模式'
+            name="approvalMode"
+            label="审批模式"
             rules={[{ required: true, message: '请选择审批模式' }]}
           >
             <Select>
-              <Option value='sequential'>串行（按顺序审批）</Option>
-              <Option value='parallel'>并行（同时审批）</Option>
-              <Option value='any'>任一（任意一人通过即可）</Option>
-              <Option value='all'>全部（所有人都需通过）</Option>
+              <Option value="sequential">串行（按顺序审批）</Option>
+              <Option value="parallel">并行（同时审批）</Option>
+              <Option value="any">任一（任意一人通过即可）</Option>
+              <Option value="all">全部（所有人都需通过）</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='timeoutHours' label='超时时间（小时）'>
+          <Form.Item name="timeoutHours" label="超时时间（小时）">
             <InputNumber min={1} max={720} style={{ width: '100%' }} />
           </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='allowReject'
-                label='允许拒绝'
-                valuePropName='checked'
+                name="allowReject"
+                label="允许拒绝"
+                valuePropName="checked"
                 initialValue={true}
               >
                 <Switch />
@@ -844,9 +844,9 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             </Col>
             <Col span={12}>
               <Form.Item
-                name='allowDelegate'
-                label='允许委派'
-                valuePropName='checked'
+                name="allowDelegate"
+                label="允许委派"
+                valuePropName="checked"
                 initialValue={false}
               >
                 <Switch />
@@ -854,14 +854,14 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
             </Col>
           </Row>
           <Form.Item
-            name='rejectAction'
-            label='拒绝后的操作'
+            name="rejectAction"
+            label="拒绝后的操作"
             rules={[{ required: true, message: '请选择拒绝后的操作' }]}
           >
             <Select>
-              <Option value='end'>结束流程</Option>
-              <Option value='return'>返回上一级</Option>
-              <Option value='custom'>自定义</Option>
+              <Option value="end">结束流程</Option>
+              <Option value="return">返回上一级</Option>
+              <Option value="custom">自定义</Option>
             </Select>
           </Form.Item>
         </Form>

@@ -118,9 +118,9 @@ export const ChangeList: React.FC<ChangeListProps> = ({
       width: 300,
       render: (_: unknown, record: Change) => (
         <div>
-          <div className='font-medium text-gray-900 mb-1'>{record.title}</div>
-          <div className='text-sm text-gray-500 mb-2'>{record.description}</div>
-          <div className='flex items-center space-x-2'>
+          <div className="font-medium text-gray-900 mb-1">{record.title}</div>
+          <div className="text-sm text-gray-500 mb-2">{record.description}</div>
+          <div className="flex items-center space-x-2">
             <Badge
               color={
                 record.type === 'emergency' ? 'red' : record.type === 'standard' ? 'green' : 'blue'
@@ -204,30 +204,30 @@ export const ChangeList: React.FC<ChangeListProps> = ({
       key: 'action',
       width: 120,
       render: (_: unknown, record: Change) => (
-        <Space size='small'>
+        <Space size="small">
           <Button
-            type='text'
+            type="text"
             icon={<Eye size={16} />}
-            className='text-blue-600 hover:text-blue-800 hover:bg-blue-50'
-            title='查看详情'
+            className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+            title="查看详情"
             onClick={() => {
               // 查看详情处理逻辑
             }}
           />
           <Button
-            type='text'
+            type="text"
             icon={<Edit size={16} />}
-            className='text-green-600 hover:text-green-800 hover:bg-green-50'
-            title='编辑变更'
+            className="text-green-600 hover:text-green-800 hover:bg-green-50"
+            title="编辑变更"
             onClick={() => {
               // 编辑变更处理逻辑
             }}
           />
           <Button
-            type='text'
+            type="text"
             icon={<MoreHorizontal size={16} />}
-            className='text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-            title='更多操作'
+            className="text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+            title="更多操作"
             onClick={() => {
               // 更多操作处理逻辑
             }}
@@ -241,7 +241,7 @@ export const ChangeList: React.FC<ChangeListProps> = ({
     <Table
       columns={columns}
       dataSource={changes}
-      rowKey='id'
+      rowKey="id"
       loading={loading}
       pagination={{
         ...pagination,
@@ -254,7 +254,7 @@ export const ChangeList: React.FC<ChangeListProps> = ({
         selectedRowKeys,
         onChange: onSelectedRowKeysChange,
       }}
-      className='[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50 [&_.ant-table-tbody>tr>td]:border-gray-100'
+      className="[&_.ant-table-thead>tr>th]:bg-gray-50 [&_.ant-table-thead>tr>th]:font-semibold [&_.ant-table-tbody>tr:hover>td]:bg-blue-50 [&_.ant-table-tbody>tr>td]:border-gray-100"
     />
   );
 };

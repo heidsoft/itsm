@@ -256,8 +256,8 @@ const ServiceCatalogManagement = () => {
       key: 'name',
       render: (name: string, record: ServiceItem) => (
         <div>
-          <div className='font-medium text-gray-900'>{name}</div>
-          <div className='text-sm text-gray-500 mt-1'>{record.shortDescription}</div>
+          <div className="font-medium text-gray-900">{name}</div>
+          <div className="text-sm text-gray-500 mt-1">{record.shortDescription}</div>
         </div>
       ),
     },
@@ -266,7 +266,7 @@ const ServiceCatalogManagement = () => {
       dataIndex: 'category',
       key: 'category',
       width: 120,
-      render: (category: string) => <Tag color='blue'>{category}</Tag>,
+      render: (category: string) => <Tag color="blue">{category}</Tag>,
     },
     {
       title: '关联CI类型',
@@ -294,8 +294,8 @@ const ServiceCatalogManagement = () => {
       key: 'delivery_time',
       width: 120,
       render: (_: unknown, record: ServiceItem) => (
-        <span className='text-sm flex items-center'>
-          <Clock className='w-4 h-4 mr-1' />
+        <span className="text-sm flex items-center">
+          <Clock className="w-4 h-4 mr-1" />
           {record.availability?.responseTime ? `${record.availability.responseTime}小时` : '-'}
         </span>
       ),
@@ -310,9 +310,9 @@ const ServiceCatalogManagement = () => {
           color={status === 'published' ? 'green' : status === 'draft' ? 'orange' : 'red'}
           icon={
             status === 'published' ? (
-              <CheckCircle className='w-3 h-3' />
+              <CheckCircle className="w-3 h-3" />
             ) : (
-              <AlertCircle className='w-3 h-3' />
+              <AlertCircle className="w-3 h-3" />
             )
           }
         >
@@ -326,7 +326,7 @@ const ServiceCatalogManagement = () => {
       key: 'created_at',
       width: 150,
       render: (date: string) => (
-        <span className='text-sm text-gray-600'>{new Date(date).toLocaleDateString('zh-CN')}</span>
+        <span className="text-sm text-gray-600">{new Date(date).toLocaleDateString('zh-CN')}</span>
       ),
     },
     {
@@ -335,25 +335,25 @@ const ServiceCatalogManagement = () => {
       width: 180,
       render: (_: unknown, record: ServiceItem) => (
         <Space>
-          <Tooltip title='查看详情'>
-            <Button type='text' icon={<Eye className='w-4 h-4' />} size='small' />
+          <Tooltip title="查看详情">
+            <Button type="text" icon={<Eye className="w-4 h-4" />} size="small" />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              type='text'
-              icon={<Edit className='w-4 h-4' />}
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
               onClick={() => handleEdit(record)}
-              size='small'
+              size="small"
             />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个服务目录吗？'
+            title="确定要删除这个服务目录吗？"
             onConfirm={() => handleDelete(record.id)}
-            okText='确定'
-            cancelText='取消'
+            okText="确定"
+            cancelText="取消"
           >
-            <Tooltip title='删除'>
-              <Button type='text' icon={<Trash2 className='w-4 h-4' />} danger size='small' />
+            <Tooltip title="删除">
+              <Button type="text" icon={<Trash2 className="w-4 h-4" />} danger size="small" />
             </Tooltip>
           </Popconfirm>
           <Dropdown
@@ -362,14 +362,14 @@ const ServiceCatalogManagement = () => {
                 {
                   key: 'enable',
                   label: '启用',
-                  icon: <CheckCircle className='w-4 h-4' />,
+                  icon: <CheckCircle className="w-4 h-4" />,
                   disabled: record.status === 'published',
                   onClick: () => handleBatchStatusChange('published'),
                 },
                 {
                   key: 'disable',
                   label: '禁用',
-                  icon: <AlertCircle className='w-4 h-4' />,
+                  icon: <AlertCircle className="w-4 h-4" />,
                   disabled: record.status === 'retired',
                   onClick: () => handleBatchStatusChange('retired'),
                 },
@@ -379,12 +379,12 @@ const ServiceCatalogManagement = () => {
                 {
                   key: 'duplicate',
                   label: '复制',
-                  icon: <Plus className='w-4 h-4' />,
+                  icon: <Plus className="w-4 h-4" />,
                 },
               ],
             }}
           >
-            <Button type='text' icon={<MoreHorizontal className='w-4 h-4' />} size='small' />
+            <Button type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
           </Dropdown>
         </Space>
       ),
@@ -392,54 +392,54 @@ const ServiceCatalogManagement = () => {
   ];
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div className='mb-6'>
-        <Title level={2} className='!mb-2'>
-          <BookOpen className='inline-block w-6 h-6 mr-2' />
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <BookOpen className="inline-block w-6 h-6 mr-2" />
           服务目录管理
         </Title>
-        <Text type='secondary'>管理IT服务目录和服务分类</Text>
+        <Text type="secondary">管理IT服务目录和服务分类</Text>
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='总服务数'
+              title="总服务数"
               value={stats.total}
-              prefix={<BookOpen className='w-5 h-5' />}
+              prefix={<BookOpen className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='启用服务'
+              title="启用服务"
               value={stats.enabled}
-              prefix={<CheckCircle className='w-5 h-5' />}
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='禁用服务'
+              title="禁用服务"
               value={stats.disabled}
-              prefix={<AlertCircle className='w-5 h-5' />}
+              prefix={<AlertCircle className="w-5 h-5" />}
               styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='服务分类'
+              title="服务分类"
               value={stats.categories}
-              prefix={<Filter className='w-5 h-5' />}
+              prefix={<Filter className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
@@ -447,12 +447,12 @@ const ServiceCatalogManagement = () => {
       </Row>
 
       {/* 工具栏 */}
-      <Card className='enterprise-card mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="enterprise-card mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={6}>
             <Input
-              placeholder='搜索服务目录...'
-              prefix={<Search className='w-4 h-4' />}
+              placeholder="搜索服务目录..."
+              prefix={<Search className="w-4 h-4" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               allowClear
@@ -460,33 +460,33 @@ const ServiceCatalogManagement = () => {
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
-              placeholder='状态筛选'
+              placeholder="状态筛选"
               value={statusFilter}
               onChange={setStatusFilter}
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value='enabled'>启用</Option>
-              <Option value='disabled'>禁用</Option>
+              <Option value="enabled">启用</Option>
+              <Option value="disabled">禁用</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={4}>
             <Select
-              placeholder='分类筛选'
+              placeholder="分类筛选"
               value={categoryFilter}
               onChange={setCategoryFilter}
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value='云服务'>云服务</Option>
-              <Option value='基础设施'>基础设施</Option>
-              <Option value='应用服务'>应用服务</Option>
-              <Option value='数据服务'>数据服务</Option>
+              <Option value="云服务">云服务</Option>
+              <Option value="基础设施">基础设施</Option>
+              <Option value="应用服务">应用服务</Option>
+              <Option value="数据服务">数据服务</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={5}>
             <Select
-              placeholder='CI类型筛选'
+              placeholder="CI类型筛选"
               value={ciTypeFilter}
               onChange={setCiTypeFilter}
               allowClear
@@ -502,13 +502,13 @@ const ServiceCatalogManagement = () => {
           </Col>
           <Col xs={24} sm={12} md={5}>
             <Select
-              placeholder='云服务筛选'
+              placeholder="云服务筛选"
               value={cloudServiceFilter}
               onChange={setCloudServiceFilter}
               allowClear
               loading={optionsLoading}
               showSearch
-              optionFilterProp='label'
+              optionFilterProp="label"
               style={{ width: '100%' }}
             >
               {cloudServices.map(service => (
@@ -525,8 +525,8 @@ const ServiceCatalogManagement = () => {
           <Col xs={24} sm={24} md={24}>
             <Space>
               <Button
-                type='primary'
-                icon={<Plus className='w-4 h-4' />}
+                type="primary"
+                icon={<Plus className="w-4 h-4" />}
                 onClick={() => {
                   setEditingCatalog(null);
                   form.resetFields();
@@ -535,9 +535,9 @@ const ServiceCatalogManagement = () => {
               >
                 新建服务目录
               </Button>
-              <Button icon={<Upload className='w-4 h-4' />}>导入</Button>
-              <Button icon={<Download className='w-4 h-4' />}>导出</Button>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={fetchCatalogs}>
+              <Button icon={<Upload className="w-4 h-4" />}>导入</Button>
+              <Button icon={<Download className="w-4 h-4" />}>导出</Button>
+              <Button icon={<RefreshCw className="w-4 h-4" />} onClick={fetchCatalogs}>
                 刷新
               </Button>
             </Space>
@@ -547,30 +547,30 @@ const ServiceCatalogManagement = () => {
 
       {/* 批量操作工具栏 */}
       {selectedRowKeys.length > 0 && (
-        <Card className='enterprise-card mb-4'>
-          <Row justify='space-between' align='middle'>
+        <Card className="enterprise-card mb-4">
+          <Row justify="space-between" align="middle">
             <Col>
               <Text>已选择 {selectedRowKeys.length} 个服务目录</Text>
             </Col>
             <Col>
               <Space>
-                <Button size='small' onClick={() => handleBatchStatusChange('published')}>
+                <Button size="small" onClick={() => handleBatchStatusChange('published')}>
                   批量发布
                 </Button>
-                <Button size='small' onClick={() => handleBatchStatusChange('retired')}>
+                <Button size="small" onClick={() => handleBatchStatusChange('retired')}>
                   批量停用
                 </Button>
                 <Popconfirm
-                  title='确定要删除选中的服务目录吗？'
+                  title="确定要删除选中的服务目录吗？"
                   onConfirm={handleBatchDelete}
-                  okText='确定'
-                  cancelText='取消'
+                  okText="确定"
+                  cancelText="取消"
                 >
-                  <Button size='small' danger>
+                  <Button size="small" danger>
                     批量删除
                   </Button>
                 </Popconfirm>
-                <Button size='small' onClick={() => setSelectedRowKeys([])}>
+                <Button size="small" onClick={() => setSelectedRowKeys([])}>
                   取消选择
                 </Button>
               </Space>
@@ -580,11 +580,11 @@ const ServiceCatalogManagement = () => {
       )}
 
       {/* 服务目录表格 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         <Table
           columns={columns}
           dataSource={filteredCatalogs}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           rowSelection={{
             selectedRowKeys,
@@ -604,7 +604,7 @@ const ServiceCatalogManagement = () => {
       <Modal
         title={
           <span>
-            <BookOpen className='w-4 h-4 mr-2' />
+            <BookOpen className="w-4 h-4 mr-2" />
             {editingCatalog ? '编辑服务目录' : '新建服务目录'}
           </span>
         }
@@ -619,105 +619,105 @@ const ServiceCatalogManagement = () => {
       >
         <Form
           form={form}
-          layout='vertical'
+          layout="vertical"
           onFinish={handleSubmit}
           initialValues={{ status: 'enabled' }}
         >
           <Form.Item
-            name='name'
-            label='服务名称'
+            name="name"
+            label="服务名称"
             rules={[{ required: true, message: '请输入服务名称' }]}
           >
-            <Input placeholder='请输入服务名称' />
+            <Input placeholder="请输入服务名称" />
           </Form.Item>
 
           <Form.Item
-            name='category'
-            label='服务分类'
+            name="category"
+            label="服务分类"
             rules={[{ required: true, message: '请选择服务分类' }]}
           >
-            <Select placeholder='请选择服务分类'>
-              <Option value='云服务'>云服务</Option>
-              <Option value='基础设施'>基础设施</Option>
-              <Option value='应用服务'>应用服务</Option>
-              <Option value='数据服务'>数据服务</Option>
+            <Select placeholder="请选择服务分类">
+              <Option value="云服务">云服务</Option>
+              <Option value="基础设施">基础设施</Option>
+              <Option value="应用服务">应用服务</Option>
+              <Option value="数据服务">数据服务</Option>
             </Select>
           </Form.Item>
 
           <Form.Item
-            name='description'
-            label='服务描述'
+            name="description"
+            label="服务描述"
             rules={[{ required: true, message: '请输入服务描述' }]}
           >
-            <Input.TextArea rows={3} placeholder='请输入服务描述' showCount maxLength={500} />
+            <Input.TextArea rows={3} placeholder="请输入服务描述" showCount maxLength={500} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='serviceType' label='服务类型' tooltip='用于动态加载对应的申请表单'>
-                <Select placeholder='选择服务类型' allowClear>
-                  <Option value='vm'>云服务器 (VM)</Option>
-                  <Option value='rds'>数据库 (RDS)</Option>
-                  <Option value='oss'>对象存储 (OSS)</Option>
-                  <Option value='network'>网络服务</Option>
-                  <Option value='storage'>存储服务</Option>
-                  <Option value='security'>安全服务</Option>
-                  <Option value='custom'>自定义服务</Option>
+              <Form.Item name="serviceType" label="服务类型" tooltip="用于动态加载对应的申请表单">
+                <Select placeholder="选择服务类型" allowClear>
+                  <Option value="vm">云服务器 (VM)</Option>
+                  <Option value="rds">数据库 (RDS)</Option>
+                  <Option value="oss">对象存储 (OSS)</Option>
+                  <Option value="network">网络服务</Option>
+                  <Option value="storage">存储服务</Option>
+                  <Option value="security">安全服务</Option>
+                  <Option value="custom">自定义服务</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='delivery_time' label='交付时间'>
-                <Input placeholder='例如：1-3个工作日' />
+              <Form.Item name="delivery_time" label="交付时间">
+                <Input placeholder="例如：1-3个工作日" />
               </Form.Item>
             </Col>
           </Row>
 
           {/* 审批配置 */}
-          <div className='bg-gray-50 p-4 rounded-lg mb-4'>
-            <Text strong className='block mb-3'>
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <Text strong className="block mb-3">
               审批配置
             </Text>
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item name='requiresApproval' label='需要审批' valuePropName='checked'>
-                  <Select placeholder='是否需要审批'>
+                <Form.Item name="requiresApproval" label="需要审批" valuePropName="checked">
+                  <Select placeholder="是否需要审批">
                     <Option value={true}>是</Option>
                     <Option value={false}>否</Option>
                   </Select>
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item name='approvalLevel' label='审批级别'>
-                  <InputNumber min={1} max={3} placeholder='1-3' style={{ width: '100%' }} />
+                <Form.Item name="approvalLevel" label="审批级别">
+                  <InputNumber min={1} max={3} placeholder="1-3" style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item name='sortOrder' label='排序'>
-                  <InputNumber min={0} placeholder='0' style={{ width: '100%' }} />
+                <Form.Item name="sortOrder" label="排序">
+                  <InputNumber min={0} placeholder="0" style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
             </Row>
           </div>
 
           {/* SLA配置 */}
-          <div className='bg-blue-50 p-4 rounded-lg mb-4'>
-            <Text strong className='block mb-3'>
+          <div className="bg-blue-50 p-4 rounded-lg mb-4">
+            <Text strong className="block mb-3">
               SLA配置
             </Text>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name='slaResponseTime' label='响应时间(分钟)' tooltip='SLA响应时间要求'>
-                  <InputNumber min={0} placeholder='例如：30' style={{ width: '100%' }} />
+                <Form.Item name="slaResponseTime" label="响应时间(分钟)" tooltip="SLA响应时间要求">
+                  <InputNumber min={0} placeholder="例如：30" style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
               <Col span={12}>
                 <Form.Item
-                  name='slaResolutionTime'
-                  label='解决时间(分钟)'
-                  tooltip='SLA解决时间要求'
+                  name="slaResolutionTime"
+                  label="解决时间(分钟)"
+                  tooltip="SLA解决时间要求"
                 >
-                  <InputNumber min={0} placeholder='例如：240' style={{ width: '100%' }} />
+                  <InputNumber min={0} placeholder="例如：240" style={{ width: '100%' }} />
                 </Form.Item>
               </Col>
             </Row>
@@ -725,8 +725,8 @@ const ServiceCatalogManagement = () => {
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='ciTypeId' label='关联CI类型'>
-                <Select placeholder='选择CI类型' allowClear loading={optionsLoading}>
+              <Form.Item name="ciTypeId" label="关联CI类型">
+                <Select placeholder="选择CI类型" allowClear loading={optionsLoading}>
                   {ciTypes.map(type => (
                     <Option key={type.id} value={type.id}>
                       {type.name}
@@ -736,13 +736,13 @@ const ServiceCatalogManagement = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='cloudServiceId' label='关联云服务'>
+              <Form.Item name="cloudServiceId" label="关联云服务">
                 <Select
-                  placeholder='选择云服务'
+                  placeholder="选择云服务"
                   allowClear
                   loading={optionsLoading}
                   showSearch
-                  optionFilterProp='label'
+                  optionFilterProp="label"
                 >
                   {cloudServices.map(service => (
                     <Option
@@ -761,20 +761,20 @@ const ServiceCatalogManagement = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='status'
-                label='状态'
+                name="status"
+                label="状态"
                 rules={[{ required: true, message: '请选择状态' }]}
               >
                 <Select>
-                  <Option value='enabled'>启用</Option>
-                  <Option value='disabled'>禁用</Option>
+                  <Option value="enabled">启用</Option>
+                  <Option value="disabled">禁用</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item className='mb-0 mt-6'>
-            <Space className='w-full justify-end'>
+          <Form.Item className="mb-0 mt-6">
+            <Space className="w-full justify-end">
               <Button
                 onClick={() => {
                   setShowModal(false);
@@ -784,7 +784,7 @@ const ServiceCatalogManagement = () => {
               >
                 取消
               </Button>
-              <Button type='primary' htmlType='submit'>
+              <Button type="primary" htmlType="submit">
                 {editingCatalog ? '更新' : '创建'}
               </Button>
             </Space>

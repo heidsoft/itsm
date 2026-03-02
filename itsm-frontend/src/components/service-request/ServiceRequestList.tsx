@@ -90,9 +90,9 @@ const ServiceRequestList: React.FC = () => {
       title: '标题',
       dataIndex: 'title',
       render: (text: string, record: ServiceRequest) => (
-        <div className='flex flex-col'>
-          <span className='font-medium text-gray-900'>{text || `请求 #${record.id}`}</span>
-          <span className='text-xs text-gray-500'>{record.catalog?.name || '未知服务'}</span>
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-900">{text || `请求 #${record.id}`}</span>
+          <span className="text-xs text-gray-500">{record.catalog?.name || '未知服务'}</span>
         </div>
       ),
     },
@@ -125,21 +125,21 @@ const ServiceRequestList: React.FC = () => {
       key: 'action',
       width: 120,
       render: (_: any, record: ServiceRequest) => (
-        <Space size='small'>
-          <Tooltip title='查看详情'>
+        <Space size="small">
+          <Tooltip title="查看详情">
             <Button
-              type='text'
+              type="text"
               icon={<EyeOutlined />}
-              className='text-blue-600 hover:text-blue-800 hover:bg-blue-50'
+              className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
               onClick={() => router.push(`/service-requests/${record.id}`)}
             />
           </Tooltip>
           {activeTab === 'approvals' && (
-            <Tooltip title='审批'>
+            <Tooltip title="审批">
               <Button
-                type='text'
+                type="text"
                 icon={<CheckCircleOutlined />}
-                className='text-green-600 hover:text-green-800 hover:bg-green-50'
+                className="text-green-600 hover:text-green-800 hover:bg-green-50"
                 onClick={() => router.push(`/service-requests/${record.id}`)}
               />
             </Tooltip>
@@ -150,13 +150,13 @@ const ServiceRequestList: React.FC = () => {
   ];
 
   return (
-    <Card className='rounded-lg shadow-sm border border-gray-200' variant='borderless'>
-      <div className='flex justify-between items-center mb-4'>
+    <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+      <div className="flex justify-between items-center mb-4">
         <Tabs
           activeKey={activeTab}
           onChange={handleTabChange}
-          size='large'
-          className='flex-1'
+          size="large"
+          className="flex-1"
           items={[
             { label: '我的请求', key: 'my-requests' },
             { label: '待办审批', key: 'approvals' },
@@ -168,15 +168,15 @@ const ServiceRequestList: React.FC = () => {
       </div>
 
       <Table
-        rowKey='id'
+        rowKey="id"
         columns={columns as any}
         dataSource={data}
         loading={loading}
         scroll={{ x: 'max-content' }}
         locale={{
           emptyText: (
-            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无服务请求数据'>
-              <Button type='primary' onClick={() => router.push('/service-requests/new')}>
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无服务请求数据">
+              <Button type="primary" onClick={() => router.push('/service-requests/new')}>
                 创建第一个服务请求
               </Button>
             </Empty>

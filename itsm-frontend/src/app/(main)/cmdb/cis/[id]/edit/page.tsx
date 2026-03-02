@@ -256,7 +256,7 @@ const EditCIPage: React.FC = () => {
   };
 
   return (
-    <Card variant='borderless' loading={loading}>
+    <Card variant="borderless" loading={loading}>
       <Breadcrumb
         style={{ marginBottom: 16 }}
         items={[
@@ -267,22 +267,22 @@ const EditCIPage: React.FC = () => {
         ]}
       />
 
-      <Form form={form} layout='vertical' onFinish={handleSubmit}>
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
-          label='资产名称'
-          name='name'
+          label="资产名称"
+          name="name"
           rules={[{ required: true, message: '请输入资产名称' }]}
         >
-          <Input placeholder='请输入资产名称' />
+          <Input placeholder="请输入资产名称" />
         </Form.Item>
 
         <Form.Item
-          label='资产类型'
-          name='ci_type_id'
+          label="资产类型"
+          name="ci_type_id"
           rules={[{ required: true, message: '请选择资产类型' }]}
         >
           <Select
-            placeholder='请选择资产类型'
+            placeholder="请选择资产类型"
             loading={typesLoading}
             options={types.map(type => ({
               label: type.name,
@@ -292,12 +292,12 @@ const EditCIPage: React.FC = () => {
         </Form.Item>
 
         <Form.Item
-          label='状态'
-          name='status'
+          label="状态"
+          name="status"
           rules={[{ required: true, message: '请选择资产状态' }]}
         >
           <Select
-            placeholder='请选择资产状态'
+            placeholder="请选择资产状态"
             options={statusOptions.map(status => ({
               label: CIStatusLabels[status],
               value: status,
@@ -305,41 +305,41 @@ const EditCIPage: React.FC = () => {
           />
         </Form.Item>
 
-        <Form.Item label='描述' name='description'>
-          <TextArea rows={4} placeholder='补充描述信息（可选）' />
+        <Form.Item label="描述" name="description">
+          <TextArea rows={4} placeholder="补充描述信息（可选）" />
         </Form.Item>
 
-        <Form.Item label='序列号' name='serial_number'>
-          <Input placeholder='请输入序列号（可选）' />
+        <Form.Item label="序列号" name="serial_number">
+          <Input placeholder="请输入序列号（可选）" />
         </Form.Item>
 
-        <Form.Item label='型号' name='model'>
-          <Input placeholder='请输入型号（可选）' />
+        <Form.Item label="型号" name="model">
+          <Input placeholder="请输入型号（可选）" />
         </Form.Item>
 
-        <Form.Item label='厂商' name='vendor'>
-          <Input placeholder='请输入厂商（可选）' />
+        <Form.Item label="厂商" name="vendor">
+          <Input placeholder="请输入厂商（可选）" />
         </Form.Item>
 
-        <Form.Item label='位置' name='location'>
-          <Input placeholder='请输入位置（可选）' />
+        <Form.Item label="位置" name="location">
+          <Input placeholder="请输入位置（可选）" />
         </Form.Item>
 
-        <Form.Item label='资产标签' name='asset_tag'>
-          <Input placeholder='请输入资产标签（可选）' />
+        <Form.Item label="资产标签" name="asset_tag">
+          <Input placeholder="请输入资产标签（可选）" />
         </Form.Item>
 
-        <Form.Item label='分配给' name='assigned_to'>
-          <Input placeholder='请输入分配人（可选）' />
+        <Form.Item label="分配给" name="assigned_to">
+          <Input placeholder="请输入分配人（可选）" />
         </Form.Item>
 
-        <Form.Item label='拥有者' name='owned_by'>
-          <Input placeholder='请输入拥有者（可选）' />
+        <Form.Item label="拥有者" name="owned_by">
+          <Input placeholder="请输入拥有者（可选）" />
         </Form.Item>
 
-        <Form.Item label='环境' name='environment'>
+        <Form.Item label="环境" name="environment">
           <Select
-            placeholder='请选择环境'
+            placeholder="请选择环境"
             allowClear
             options={[
               { label: '生产', value: 'production' },
@@ -349,9 +349,9 @@ const EditCIPage: React.FC = () => {
           />
         </Form.Item>
 
-        <Form.Item label='重要性' name='criticality'>
+        <Form.Item label="重要性" name="criticality">
           <Select
-            placeholder='请选择重要性'
+            placeholder="请选择重要性"
             allowClear
             options={[
               { label: '低', value: 'low' },
@@ -362,13 +362,13 @@ const EditCIPage: React.FC = () => {
           />
         </Form.Item>
 
-        <Form.Item label='发现源' name='discovery_source'>
-          <Input placeholder='请输入发现源（可选）' />
+        <Form.Item label="发现源" name="discovery_source">
+          <Input placeholder="请输入发现源（可选）" />
         </Form.Item>
 
-        <Form.Item label='数据来源' name='source'>
+        <Form.Item label="数据来源" name="source">
           <Select
-            placeholder='请选择数据来源'
+            placeholder="请选择数据来源"
             allowClear
             options={[
               { label: '手工录入', value: 'manual' },
@@ -380,9 +380,9 @@ const EditCIPage: React.FC = () => {
 
         <Divider>云资源信息</Divider>
 
-        <Form.Item label='云厂商' name='cloud_provider'>
+        <Form.Item label="云厂商" name="cloud_provider">
           <Select
-            placeholder='请选择云厂商'
+            placeholder="请选择云厂商"
             allowClear
             options={[
               { label: '阿里云', value: 'aliyun' },
@@ -394,13 +394,13 @@ const EditCIPage: React.FC = () => {
           />
         </Form.Item>
 
-        <Form.Item label='云资源引用' name='cloud_resource_ref_id'>
+        <Form.Item label="云资源引用" name="cloud_resource_ref_id">
           <Select
-            placeholder='请选择云资源（可选）'
+            placeholder="请选择云资源（可选）"
             allowClear
             loading={cloudLoading}
             showSearch
-            optionFilterProp='label'
+            optionFilterProp="label"
             onChange={handleCloudResourceChange}
             options={cloudResources.map(resource => {
               const service = cloudServiceMap.get(resource.service_id);
@@ -413,24 +413,24 @@ const EditCIPage: React.FC = () => {
           />
         </Form.Item>
 
-        <Form.Item label='云账号ID' name='cloud_account_id'>
-          <Input placeholder='请输入云账号ID（可选）' />
+        <Form.Item label="云账号ID" name="cloud_account_id">
+          <Input placeholder="请输入云账号ID（可选）" />
         </Form.Item>
 
-        <Form.Item label='Region' name='cloud_region'>
-          <Input placeholder='请输入Region（可选）' />
+        <Form.Item label="Region" name="cloud_region">
+          <Input placeholder="请输入Region（可选）" />
         </Form.Item>
 
-        <Form.Item label='Zone' name='cloud_zone'>
-          <Input placeholder='请输入Zone（可选）' />
+        <Form.Item label="Zone" name="cloud_zone">
+          <Input placeholder="请输入Zone（可选）" />
         </Form.Item>
 
-        <Form.Item label='云资源ID' name='cloud_resource_id'>
-          <Input placeholder='请输入云资源ID（可选）' />
+        <Form.Item label="云资源ID" name="cloud_resource_id">
+          <Input placeholder="请输入云资源ID（可选）" />
         </Form.Item>
 
-        <Form.Item label='云资源类型' name='cloud_resource_type'>
-          <Input placeholder='请输入云资源类型（可选）' />
+        <Form.Item label="云资源类型" name="cloud_resource_type">
+          <Input placeholder="请输入云资源类型（可选）" />
         </Form.Item>
 
         {schemaFields.length > 0 && (
@@ -465,9 +465,9 @@ const EditCIPage: React.FC = () => {
           </>
         )}
 
-        <Form.Item label='同步状态' name='cloud_sync_status'>
+        <Form.Item label="同步状态" name="cloud_sync_status">
           <Select
-            placeholder='请选择同步状态'
+            placeholder="请选择同步状态"
             allowClear
             options={[
               { label: '成功', value: 'success' },
@@ -477,13 +477,13 @@ const EditCIPage: React.FC = () => {
           />
         </Form.Item>
 
-        <Form.Item label='扩展属性' name='attributes'>
-          <TextArea rows={4} placeholder='请输入扩展属性 JSON（可选）' />
+        <Form.Item label="扩展属性" name="attributes">
+          <TextArea rows={4} placeholder="请输入扩展属性 JSON（可选）" />
         </Form.Item>
 
         <Space>
           <Button onClick={() => router.back()}>取消</Button>
-          <Button type='primary' htmlType='submit' loading={saving}>
+          <Button type="primary" htmlType="submit" loading={saving}>
             保存
           </Button>
         </Space>

@@ -129,40 +129,40 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       const { error, errorInfo } = this.state;
 
       return (
-        <div className='min-h-screen flex items-center justify-center bg-gray-50 p-4'>
-          <Card className='max-w-2xl w-full'>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <Card className="max-w-2xl w-full">
             <Result
-              status='error'
-              title='页面出现错误'
-              subTitle='抱歉，页面遇到了一个意外错误。我们已经记录了这个问题，请尝试刷新页面或联系技术支持。'
+              status="error"
+              title="页面出现错误"
+              subTitle="抱歉，页面遇到了一个意外错误。我们已经记录了这个问题，请尝试刷新页面或联系技术支持。"
               extra={[
                 <Button
-                  key='retry'
-                  type='primary'
+                  key="retry"
+                  type="primary"
                   icon={<RefreshCw size={16} />}
                   onClick={this.handleRetry}
-                  className='mr-2'
+                  className="mr-2"
                 >
                   重试
                 </Button>,
                 <Button
-                  key='home'
+                  key="home"
                   icon={<Home size={16} />}
                   onClick={this.handleGoHome}
-                  className='mr-2'
+                  className="mr-2"
                 >
                   返回首页
                 </Button>,
-                <Button key='report' icon={<Bug size={16} />} onClick={this.handleReportBug}>
+                <Button key="report" icon={<Bug size={16} />} onClick={this.handleReportBug}>
                   报告问题
                 </Button>,
               ]}
             />
 
             {this.props.showDetails && error && (
-              <div className='mt-6 p-4 bg-red-50 rounded-lg'>
-                <h4 className='text-sm font-medium text-red-800 mb-2'>错误详情</h4>
-                <div className='text-xs text-red-700 space-y-2'>
+              <div className="mt-6 p-4 bg-red-50 rounded-lg">
+                <h4 className="text-sm font-medium text-red-800 mb-2">错误详情</h4>
+                <div className="text-xs text-red-700 space-y-2">
                   <div>
                     <strong>错误信息:</strong> {error.message}
                   </div>
@@ -172,7 +172,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   {error.stack && (
                     <div>
                       <strong>堆栈信息:</strong>
-                      <pre className='mt-1 p-2 bg-red-100 rounded text-xs overflow-auto max-h-32'>
+                      <pre className="mt-1 p-2 bg-red-100 rounded text-xs overflow-auto max-h-32">
                         {error.stack}
                       </pre>
                     </div>
@@ -180,7 +180,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                   {errorInfo?.componentStack && (
                     <div>
                       <strong>组件堆栈:</strong>
-                      <pre className='mt-1 p-2 bg-red-100 rounded text-xs overflow-auto max-h-32'>
+                      <pre className="mt-1 p-2 bg-red-100 rounded text-xs overflow-auto max-h-32">
                         {errorInfo.componentStack}
                       </pre>
                     </div>

@@ -97,20 +97,20 @@ export const TicketCard: React.FC<TicketCardProps> = ({
         </div>
       </Tooltip>
 
-      <h3 className='mb-2 text-lg font-semibold text-gray-800 truncate' title={title}>
+      <h3 className="mb-2 text-lg font-semibold text-gray-800 truncate" title={title}>
         {title}
       </h3>
-      <p className='mb-4 text-sm text-gray-600'>
+      <p className="mb-4 text-sm text-gray-600">
         {type}ID: {id}
       </p>
 
-      <div className='flex items-center justify-between text-sm text-gray-500'>
-        <div className='flex items-center'>
+      <div className="flex items-center justify-between text-sm text-gray-500">
+        <div className="flex items-center">
           <Icon className={`mr-2 h-4 w-4 ${config.iconColor}`} />
           <span>状态: {status}</span>
         </div>
-        <div className='flex items-center'>
-          <Clock className='mr-1 h-4 w-4' />
+        <div className="flex items-center">
+          <Clock className="mr-1 h-4 w-4" />
           <span>{lastUpdate}</span>
         </div>
       </div>

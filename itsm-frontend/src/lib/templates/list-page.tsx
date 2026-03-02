@@ -57,7 +57,7 @@ export function createListPage<T extends DataItem>(config: {
         title: '操作',
         render: (_: unknown, record: T) => (
           <Space>
-            <Button size='small' danger onClick={() => handleDelete(record.id)}>
+            <Button size="small" danger onClick={() => handleDelete(record.id)}>
               删除
             </Button>
           </Space>
@@ -73,7 +73,7 @@ export function createListPage<T extends DataItem>(config: {
             <Button icon={<ReloadOutlined />} onClick={loadData}>
               刷新
             </Button>
-            <Button type='primary' icon={<PlusOutlined />}>
+            <Button type="primary" icon={<PlusOutlined />}>
               新建{config.name}
             </Button>
           </Space>
@@ -82,7 +82,7 @@ export function createListPage<T extends DataItem>(config: {
         <Table<T>
           loading={loading}
           dataSource={data}
-          rowKey='id'
+          rowKey="id"
           columns={columns}
           pagination={{
             current: pagination.page,

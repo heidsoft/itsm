@@ -98,21 +98,21 @@ const IncidentDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <Card variant='borderless'>
+      <Card variant="borderless">
         <Skeleton active />
       </Card>
     );
   }
 
   if (!data) {
-    return <Card variant='borderless'>未找到事件</Card>;
+    return <Card variant="borderless">未找到事件</Card>;
   }
 
   return (
     <>
-      <Space orientation='vertical' style={{ width: '100%' }} size='middle'>
+      <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {/* 头部操作栏 */}
-        <Card variant='borderless' bodyStyle={{ padding: '16px 24px' }}>
+        <Card variant="borderless" bodyStyle={{ padding: '16px 24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <span style={{ fontSize: 20, fontWeight: 500, marginRight: 16 }}>
@@ -133,7 +133,7 @@ const IncidentDetail: React.FC = () => {
                 升级
               </Button>
               {data.status !== IncidentStatus.RESOLVED && (
-                <Button type='primary' icon={<CheckCircleOutlined />}>
+                <Button type="primary" icon={<CheckCircleOutlined />}>
                   解决
                 </Button>
               )}
@@ -142,33 +142,33 @@ const IncidentDetail: React.FC = () => {
         </Card>
 
         {/* 基本信息 */}
-        <Card variant='borderless' title='基本信息'>
+        <Card variant="borderless" title="基本信息">
           <Descriptions column={2}>
-            <Descriptions.Item label='报告人ID'>{data.reporter_id}</Descriptions.Item>
-            <Descriptions.Item label='负责人ID'>{data.assignee_id || '-'}</Descriptions.Item>
-            <Descriptions.Item label='优先级'>
+            <Descriptions.Item label="报告人ID">{data.reporter_id}</Descriptions.Item>
+            <Descriptions.Item label="负责人ID">{data.assignee_id || '-'}</Descriptions.Item>
+            <Descriptions.Item label="优先级">
               {IncidentPriorityLabels[data.priority]}
             </Descriptions.Item>
-            <Descriptions.Item label='严重程度'>
+            <Descriptions.Item label="严重程度">
               {IncidentSeverityLabels[data.severity]}
             </Descriptions.Item>
-            <Descriptions.Item label='分类'>{data.category}</Descriptions.Item>
-            <Descriptions.Item label='子分类'>{data.subcategory}</Descriptions.Item>
-            <Descriptions.Item label='检测时间'>
+            <Descriptions.Item label="分类">{data.category}</Descriptions.Item>
+            <Descriptions.Item label="子分类">{data.subcategory}</Descriptions.Item>
+            <Descriptions.Item label="检测时间">
               {dayjs(data.detected_at).format('YYYY-MM-DD HH:mm:ss')}
             </Descriptions.Item>
-            <Descriptions.Item label='来源'>{data.source}</Descriptions.Item>
+            <Descriptions.Item label="来源">{data.source}</Descriptions.Item>
           </Descriptions>
           <Divider />
-          <Descriptions title='详细描述' column={1}>
-            <Descriptions.Item label='描述'>{data.description}</Descriptions.Item>
+          <Descriptions title="详细描述" column={1}>
+            <Descriptions.Item label="描述">{data.description}</Descriptions.Item>
           </Descriptions>
 
           {/* 影响分析 (如果有) */}
           {data.impact_analysis && (
             <>
               <Divider />
-              <Descriptions title='影响分析' column={1}>
+              <Descriptions title="影响分析" column={1}>
                 <Descriptions.Item>
                   <pre>{JSON.stringify(data.impact_analysis, null, 2)}</pre>
                 </Descriptions.Item>
@@ -179,7 +179,7 @@ const IncidentDetail: React.FC = () => {
 
         {/* 解决记录 (如果有) */}
         {data.resolution_steps && data.resolution_steps.length > 0 && (
-          <Card variant='borderless' title='处理流程'>
+          <Card variant="borderless" title="处理流程">
             <Timeline>
               {data.resolution_steps.map((step, index) => (
                 <Timeline.Item key={index}>
@@ -194,19 +194,19 @@ const IncidentDetail: React.FC = () => {
 
       {escalateModalVisible && (
         <Modal
-          title='升级事件'
+          title="升级事件"
           open={escalateModalVisible}
           onCancel={() => setEscalateModalVisible(false)}
           confirmLoading={escalating}
           onOk={() => form.submit()}
         >
-          <Form form={form} layout='vertical' onFinish={handleEscalateSubmit}>
+          <Form form={form} layout="vertical" onFinish={handleEscalateSubmit}>
             <Form.Item
-              name='escalation_level'
-              label='升级级别'
+              name="escalation_level"
+              label="升级级别"
               rules={[{ required: true, message: '请选择升级级别' }]}
             >
-              <Select placeholder='请选择升级级别'>
+              <Select placeholder="请选择升级级别">
                 <Select.Option value={1}>级别 1 - 主管</Select.Option>
                 <Select.Option value={2}>级别 2 - 经理</Select.Option>
                 <Select.Option value={3}>级别 3 - 总监</Select.Option>
@@ -214,14 +214,14 @@ const IncidentDetail: React.FC = () => {
               </Select>
             </Form.Item>
             <Form.Item
-              name='reason'
-              label='升级原因'
+              name="reason"
+              label="升级原因"
               rules={[{ required: true, message: '请输入升级原因' }]}
             >
-              <Input.TextArea rows={3} placeholder='请输入升级原因' />
+              <Input.TextArea rows={3} placeholder="请输入升级原因" />
             </Form.Item>
-            <Form.Item name='auto_assign' label='自动分配'>
-              <Select placeholder='是否自动分配给上级'>
+            <Form.Item name="auto_assign" label="自动分配">
+              <Select placeholder="是否自动分配给上级">
                 <Select.Option value={true}>是</Select.Option>
                 <Select.Option value={false}>否</Select.Option>
               </Select>

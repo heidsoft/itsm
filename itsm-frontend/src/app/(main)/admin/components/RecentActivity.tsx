@@ -63,12 +63,12 @@ export const RecentActivity: React.FC = () => {
     <Card
       title={
         <Space>
-          <Activity className='w-5 h-5' />
+          <Activity className="w-5 h-5" />
           {t('admin.recentActivity')}
         </Space>
       }
       extra={
-        <Button type='link' size='small'>
+        <Button type="link" size="small">
           {t('admin.viewAll')}
         </Button>
       }
@@ -100,7 +100,7 @@ export const RecentActivity: React.FC = () => {
                     style={{
                       backgroundColor: getActivityColor(activity.color),
                     }}
-                    icon={<Icon className='w-4 h-4' />}
+                    icon={<Icon className="w-4 h-4" />}
                   />
                 }
                 title={
@@ -113,13 +113,13 @@ export const RecentActivity: React.FC = () => {
                   >
                     <Text strong>{activity.title}</Text>
                     <Space
-                      align='center'
+                      align="center"
                       style={{
                         color: token.colorTextSecondary,
                         fontSize: token.fontSizeSM,
                       }}
                     >
-                      <Clock className='w-3 h-3' />
+                      <Clock className="w-3 h-3" />
                       {activity.time}
                     </Space>
                   </div>

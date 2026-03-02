@@ -36,13 +36,13 @@ export function ResponsiveLayout({
     <div className={cn('min-h-screen flex flex-col bg-gray-50', className)}>
       {/* Header */}
       {header && (
-        <header className='sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm'>
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
           <div className={containerClasses[variant]}>{header}</div>
         </header>
       )}
 
       {/* Main Content Area */}
-      <div className='flex-1 flex'>
+      <div className="flex-1 flex">
         {/* Sidebar */}
         {sidebar && (
           <aside
@@ -57,7 +57,7 @@ export function ResponsiveLayout({
         )}
 
         {/* Main Content */}
-        <main className='flex-1 flex flex-col'>
+        <main className="flex-1 flex flex-col">
           <div className={cn('flex-1', variant !== 'full-width' && 'px-4 sm:px-6 lg:px-8 py-6')}>
             {children}
           </div>
@@ -66,7 +66,7 @@ export function ResponsiveLayout({
 
       {/* Footer */}
       {footer && (
-        <footer className='bg-white border-t border-gray-200'>
+        <footer className="bg-white border-t border-gray-200">
           <div className={containerClasses[variant]}>{footer}</div>
         </footer>
       )}
@@ -95,29 +95,29 @@ export function PageHeader({
     <div className={cn('space-y-4', className)}>
       {/* Breadcrumbs */}
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className='flex text-sm text-gray-500' aria-label='Breadcrumb'>
-          <ol className='flex items-center space-x-2'>
+        <nav className="flex text-sm text-gray-500" aria-label="Breadcrumb">
+          <ol className="flex items-center space-x-2">
             {breadcrumbs.map((crumb, index) => (
-              <li key={index} className='flex items-center'>
+              <li key={index} className="flex items-center">
                 {index > 0 && (
                   <svg
-                    className='h-4 w-4 text-gray-300 mx-2'
-                    fill='currentColor'
-                    viewBox='0 0 20 20'
+                    className="h-4 w-4 text-gray-300 mx-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
                   >
                     <path
-                      fillRule='evenodd'
-                      d='M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z'
-                      clipRule='evenodd'
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
                     />
                   </svg>
                 )}
                 {crumb.href ? (
-                  <a href={crumb.href} className='hover:text-gray-700 transition-colors'>
+                  <a href={crumb.href} className="hover:text-gray-700 transition-colors">
                     {crumb.label}
                   </a>
                 ) : (
-                  <span className='text-gray-900 font-medium'>{crumb.label}</span>
+                  <span className="text-gray-900 font-medium">{crumb.label}</span>
                 )}
               </li>
             ))}
@@ -126,14 +126,14 @@ export function PageHeader({
       )}
 
       {/* Header Content */}
-      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-        <div className='min-w-0 flex-1'>
-          <h1 className='text-2xl font-bold text-gray-900 truncate'>{title}</h1>
-          {subtitle && <p className='mt-1 text-sm text-gray-500 truncate'>{subtitle}</p>}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-bold text-gray-900 truncate">{title}</h1>
+          {subtitle && <p className="mt-1 text-sm text-gray-500 truncate">{subtitle}</p>}
         </div>
 
         {/* Actions */}
-        {actions && <div className='flex-shrink-0'>{actions}</div>}
+        {actions && <div className="flex-shrink-0">{actions}</div>}
       </div>
 
       {/* Additional content */}
@@ -188,11 +188,11 @@ export function Card({
             sizes[size]
           )}
         >
-          <div className='min-w-0 flex-1'>
-            {title && <h3 className='text-lg font-medium text-gray-900 truncate'>{title}</h3>}
-            {subtitle && <p className='mt-1 text-sm text-gray-500 truncate'>{subtitle}</p>}
+          <div className="min-w-0 flex-1">
+            {title && <h3 className="text-lg font-medium text-gray-900 truncate">{title}</h3>}
+            {subtitle && <p className="mt-1 text-sm text-gray-500 truncate">{subtitle}</p>}
           </div>
-          {headerActions && <div className='flex-shrink-0 ml-4'>{headerActions}</div>}
+          {headerActions && <div className="flex-shrink-0 ml-4">{headerActions}</div>}
         </div>
       )}
 
@@ -341,10 +341,10 @@ export function LoadingState({ isLoading, children, skeleton, className }: Loadi
 
 function DefaultSkeleton() {
   return (
-    <div className='space-y-4'>
-      <div className='h-4 bg-gray-200 rounded w-3/4'></div>
-      <div className='h-4 bg-gray-200 rounded w-1/2'></div>
-      <div className='h-4 bg-gray-200 rounded w-5/6'></div>
+    <div className="space-y-4">
+      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+      <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+      <div className="h-4 bg-gray-200 rounded w-5/6"></div>
     </div>
   );
 }
@@ -360,13 +360,13 @@ interface EmptyStateProps {
 export function EmptyState({ title, description, icon, action, className }: EmptyStateProps) {
   return (
     <div className={cn('text-center py-12', className)}>
-      {icon && <div className='mx-auto h-12 w-12 text-gray-400 mb-4'>{icon}</div>}
+      {icon && <div className="mx-auto h-12 w-12 text-gray-400 mb-4">{icon}</div>}
 
-      <h3 className='mt-2 text-sm font-medium text-gray-900'>{title}</h3>
+      <h3 className="mt-2 text-sm font-medium text-gray-900">{title}</h3>
 
-      {description && <p className='mt-1 text-sm text-gray-500'>{description}</p>}
+      {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
 
-      {action && <div className='mt-6'>{action}</div>}
+      {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }
@@ -378,40 +378,40 @@ interface ErrorBoundaryFallbackProps {
 
 export function ErrorBoundaryFallback({ error, resetErrorBoundary }: ErrorBoundaryFallbackProps) {
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-      <div className='max-w-md w-full bg-white shadow-lg rounded-lg p-6'>
-        <div className='flex items-center mb-4'>
-          <div className='flex-shrink-0'>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+        <div className="flex items-center mb-4">
+          <div className="flex-shrink-0">
             <svg
-              className='h-6 w-6 text-red-500'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
+              className="h-6 w-6 text-red-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
               <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
+                strokeLinecap="round"
+                strokeLinejoin="round"
                 strokeWidth={2}
-                d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z'
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 19.5c-.77.833.192 2.5 1.732 2.5z"
               />
             </svg>
           </div>
-          <div className='ml-3'>
-            <h3 className='text-sm font-medium text-gray-900'>应用程序遇到错误</h3>
+          <div className="ml-3">
+            <h3 className="text-sm font-medium text-gray-900">应用程序遇到错误</h3>
           </div>
         </div>
 
-        <div className='mb-4'>
-          <p className='text-sm text-gray-500 mb-2'>{error.message}</p>
-          <details className='text-xs text-gray-400'>
-            <summary className='cursor-pointer hover:text-gray-600'>查看详细信息</summary>
-            <pre className='mt-2 whitespace-pre-wrap break-all'>{error.stack}</pre>
+        <div className="mb-4">
+          <p className="text-sm text-gray-500 mb-2">{error.message}</p>
+          <details className="text-xs text-gray-400">
+            <summary className="cursor-pointer hover:text-gray-600">查看详细信息</summary>
+            <pre className="mt-2 whitespace-pre-wrap break-all">{error.stack}</pre>
           </details>
         </div>
 
         <button
           onClick={resetErrorBoundary}
-          className='w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors'
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
         >
           重试
         </button>

@@ -121,7 +121,7 @@ const ReleaseList: React.FC = () => {
       width: 140,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className='truncate block' style={{ maxWidth: '120px' }}>
+          <span className="truncate block" style={{ maxWidth: '120px' }}>
             {text || '-'}
           </span>
         </Tooltip>
@@ -135,7 +135,7 @@ const ReleaseList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className='truncate block' style={{ maxWidth: '180px' }}>
+          <span className="truncate block" style={{ maxWidth: '180px' }}>
             {text || '-'}
           </span>
         </Tooltip>
@@ -186,7 +186,7 @@ const ReleaseList: React.FC = () => {
       width: 120,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className='truncate block' style={{ maxWidth: '100px' }}>
+          <span className="truncate block" style={{ maxWidth: '100px' }}>
             {text || '-'}
           </span>
         </Tooltip>
@@ -204,18 +204,18 @@ const ReleaseList: React.FC = () => {
       key: 'action',
       width: 120,
       render: (_: any, record: any) => (
-        <Space aria-label='操作按钮'>
-          <Tooltip title='查看发布详情'>
+        <Space aria-label="操作按钮">
+          <Tooltip title="查看发布详情">
             <Button
-              type='text'
+              type="text"
               icon={<EyeOutlined />}
               onClick={() => router.push(`/releases/${record.id}`)}
               aria-label={`查看发布 ${record.title || record.release_number || '详情'}`}
             />
           </Tooltip>
-          <Tooltip title='编辑发布信息'>
+          <Tooltip title="编辑发布信息">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
               onClick={() => router.push(`/releases/${record.id}`)}
               aria-label={`编辑发布 ${record.title || record.release_number || '详情'}`}
@@ -231,13 +231,13 @@ const ReleaseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title='总发布数' value={stats.total || 0} prefix={<RocketOutlined />} />
+            <Statistic title="总发布数" value={stats.total || 0} prefix={<RocketOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title='进行中'
+              title="进行中"
               value={stats.in_progress || 0}
               valueStyle={{ color: '#1890ff' }}
             />
@@ -246,7 +246,7 @@ const ReleaseList: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
             <Statistic
-              title='已完成'
+              title="已完成"
               value={stats.completed || 0}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -254,54 +254,54 @@ const ReleaseList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title='已取消' value={stats.cancelled || 0} />
+            <Statistic title="已取消" value={stats.cancelled || 0} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic title='失败' value={stats.failed || 0} valueStyle={{ color: '#ff4d4f' }} />
+            <Statistic title="失败" value={stats.failed || 0} valueStyle={{ color: '#ff4d4f' }} />
           </Card>
         </Col>
       </Row>
 
       <Card>
-        <Form form={form} layout='inline' style={{ marginBottom: 16 }}>
-          <Form.Item name='status' label='状态'>
+        <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
+          <Form.Item name="status" label="状态">
             <Select
-              placeholder='选择状态'
+              placeholder="选择状态"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
             >
-              <Option value='draft'>草稿</Option>
-              <Option value='scheduled'>已计划</Option>
-              <Option value='in-progress'>进行中</Option>
-              <Option value='completed'>已完成</Option>
-              <Option value='cancelled'>已取消</Option>
-              <Option value='failed'>失败</Option>
+              <Option value="draft">草稿</Option>
+              <Option value="scheduled">已计划</Option>
+              <Option value="in-progress">进行中</Option>
+              <Option value="completed">已完成</Option>
+              <Option value="cancelled">已取消</Option>
+              <Option value="failed">失败</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='type' label='类型'>
+          <Form.Item name="type" label="类型">
             <Select
-              placeholder='选择类型'
+              placeholder="选择类型"
               allowClear
               style={{ width: 150 }}
               onChange={handleSearch}
             >
-              <Option value='major'>主版本</Option>
-              <Option value='minor'>次版本</Option>
-              <Option value='patch'>补丁</Option>
-              <Option value='hotfix'>紧急修复</Option>
+              <Option value="major">主版本</Option>
+              <Option value="minor">次版本</Option>
+              <Option value="patch">补丁</Option>
+              <Option value="hotfix">紧急修复</Option>
             </Select>
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type='primary' icon={<SearchOutlined />} onClick={handleSearch}>
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
               <Button
-                type='primary'
+                type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => router.push('/releases/new')}
               >
@@ -314,13 +314,13 @@ const ReleaseList: React.FC = () => {
         <Table
           columns={columns}
           dataSource={data}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description='暂无发布数据'>
-                <Button type='primary' onClick={() => router.push('/releases/new')}>
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无发布数据">
+                <Button type="primary" onClick={() => router.push('/releases/new')}>
                   创建第一个发布
                 </Button>
               </Empty>

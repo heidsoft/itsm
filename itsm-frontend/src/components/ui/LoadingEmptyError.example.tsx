@@ -12,8 +12,8 @@ export const BasicExample = () => {
   const simulateSuccess = () => setState('success');
 
   return (
-    <Card title='基础用法示例' className='mb-6'>
-      <Space className='mb-4'>
+    <Card title="基础用法示例" className="mb-6">
+      <Space className="mb-4">
         <Button onClick={simulateLoading}>加载状态</Button>
         <Button onClick={simulateEmpty}>空状态</Button>
         <Button onClick={simulateError}>错误状态</Button>
@@ -22,7 +22,7 @@ export const BasicExample = () => {
 
       <LoadingEmptyError
         state={state}
-        loadingText='正在加载数据...'
+        loadingText="正在加载数据..."
         empty={{
           title: '暂无数据',
           description: '当前没有相关数据，您可以创建新的记录',
@@ -40,9 +40,9 @@ export const BasicExample = () => {
         }}
       >
         {state === 'success' && (
-          <div className='p-4 text-center'>
-            <h3 className='text-lg font-semibold text-green-600'>数据加载成功！</h3>
-            <p className='text-gray-600'>这里显示实际的数据内容</p>
+          <div className="p-4 text-center">
+            <h3 className="text-lg font-semibold text-green-600">数据加载成功！</h3>
+            <p className="text-gray-600">这里显示实际的数据内容</p>
           </div>
         )}
       </LoadingEmptyError>
@@ -88,8 +88,8 @@ export const TicketListExample = () => {
   };
 
   return (
-    <Card title='工单列表示例' className='mb-6'>
-      <Space className='mb-4'>
+    <Card title="工单列表示例" className="mb-6">
+      <Space className="mb-4">
         <Button onClick={fetchTickets} loading={loading}>
           获取工单列表
         </Button>
@@ -97,7 +97,7 @@ export const TicketListExample = () => {
 
       <LoadingEmptyError
         state={getState()}
-        loadingText='正在加载工单列表...'
+        loadingText="正在加载工单列表..."
         empty={{
           title: '暂无工单',
           description: '当前没有工单数据，点击下方按钮创建第一个工单',
@@ -115,9 +115,9 @@ export const TicketListExample = () => {
         }}
       >
         {tickets.length > 0 && (
-          <div className='space-y-2'>
+          <div className="space-y-2">
             {tickets.map(ticket => (
-              <div key={ticket.id} className='p-3 border rounded'>
+              <div key={ticket.id} className="p-3 border rounded">
                 {ticket.title}
               </div>
             ))}
@@ -131,11 +131,11 @@ export const TicketListExample = () => {
 // 示例3: 模块化示例
 export const ModuleExamples = () => {
   return (
-    <div className='space-y-6'>
-      <Card title='不同模块的空状态'>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+    <div className="space-y-6">
+      <Card title="不同模块的空状态">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <LoadingEmptyError
-            state='empty'
+            state="empty"
             empty={{
               title: '暂无事件',
               description: '当前没有事件数据',
@@ -147,7 +147,7 @@ export const ModuleExamples = () => {
           />
 
           <LoadingEmptyError
-            state='empty'
+            state="empty"
             empty={{
               title: '暂无问题',
               description: '当前没有问题数据',
@@ -166,11 +166,11 @@ export const ModuleExamples = () => {
 // 主示例组件
 export const LoadingEmptyErrorExamples = () => {
   return (
-    <div className='p-6 space-y-6'>
-      <h1 className='text-2xl font-bold mb-6'>LoadingEmptyError 组件示例</h1>
-      <BasicExample key='basic' />
-      <TicketListExample key='ticket' />
-      <ModuleExamples key='module' />
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold mb-6">LoadingEmptyError 组件示例</h1>
+      <BasicExample key="basic" />
+      <TicketListExample key="ticket" />
+      <ModuleExamples key="module" />
     </div>
   );
 };

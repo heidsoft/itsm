@@ -151,10 +151,10 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className='bg-white p-4 rounded-lg shadow-lg border border-gray-200'>
-          <p className='font-semibold text-gray-800 mb-2'>{`日期: ${label}`}</p>
+        <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+          <p className="font-semibold text-gray-800 mb-2">{`日期: ${label}`}</p>
           {payload.map((entry: any, index: number) => (
-            <p key={index} className='text-sm' style={{ color: entry.color }}>
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value}${entry.dataKey.includes('rate') ? '%' : entry.dataKey.includes('time') ? '小时' : ''}`}
             </p>
           ))}
@@ -166,28 +166,28 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
 
   if (loading && chartData.length === 0) {
     return (
-      <div className='flex items-center justify-center h-64'>
-        <Spin size='large' tip='加载图表数据...' />
+      <div className="flex items-center justify-center h-64">
+        <Spin size="large" tip="加载图表数据..." />
       </div>
     );
   }
 
   return (
-    <div className='sla-dashboard-charts space-y-6'>
+    <div className="sla-dashboard-charts space-y-6">
       {/* 控制面板 */}
       <Card>
-        <Row justify='space-between' align='middle'>
+        <Row justify="space-between" align="middle">
           <Col>
             <Space>
               <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 120 }}>
-                <Option value='7d'>最近7天</Option>
-                <Option value='30d'>最近30天</Option>
-                <Option value='90d'>最近90天</Option>
+                <Option value="7d">最近7天</Option>
+                <Option value="30d">最近30天</Option>
+                <Option value="90d">最近90天</Option>
               </Select>
               <Select
                 value={selectedSla}
                 onChange={setSelectedSla}
-                placeholder='选择SLA'
+                placeholder="选择SLA"
                 style={{ width: 200 }}
                 allowClear
               >
@@ -221,22 +221,22 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                 <span>SLA合规趋势</span>
               </Space>
             }
-            extra={<Text type='secondary'>百分比 (%)</Text>}
+            extra={<Text type="secondary">百分比 (%)</Text>}
           >
-            <ResponsiveContainer width='100%' height={300}>
+            <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='date' />
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 <Area
-                  type='monotone'
-                  dataKey='compliance_rate'
+                  type="monotone"
+                  dataKey="compliance_rate"
                   stroke={colors.success}
                   fill={colors.success}
                   fillOpacity={0.3}
-                  name='合规率'
+                  name="合规率"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -252,25 +252,25 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                 <span>响应时间趋势</span>
               </Space>
             }
-            extra={<Text type='secondary'>小时</Text>}
+            extra={<Text type="secondary">小时</Text>}
           >
-            <ResponsiveContainer width='100%' height={300}>
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={getResponseTimeData()}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='date' />
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 <Line
-                  type='monotone'
-                  dataKey='响应时间'
+                  type="monotone"
+                  dataKey="响应时间"
                   stroke={colors.primary}
                   strokeWidth={2}
                   dot={{ fill: colors.primary }}
                 />
                 <Line
-                  type='monotone'
-                  dataKey='解决时间'
+                  type="monotone"
+                  dataKey="解决时间"
                   stroke={colors.warning}
                   strokeWidth={2}
                   dot={{ fill: colors.warning }}
@@ -289,19 +289,19 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                 <span>SLA合规分布</span>
               </Space>
             }
-            extra={<Text type='secondary'>总体统计</Text>}
+            extra={<Text type="secondary">总体统计</Text>}
           >
-            <ResponsiveContainer width='100%' height={300}>
+            <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
                   data={getPieData()}
-                  cx='50%'
-                  cy='50%'
+                  cx="50%"
+                  cy="50%"
                   labelLine={false}
                   label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                   outerRadius={80}
-                  fill='#8884d8'
-                  dataKey='value'
+                  fill="#8884d8"
+                  dataKey="value"
                 >
                   {getPieData().map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -322,17 +322,17 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                 <span>工单量与违规统计</span>
               </Space>
             }
-            extra={<Text type='secondary'>数量</Text>}
+            extra={<Text type="secondary">数量</Text>}
           >
-            <ResponsiveContainer width='100%' height={300}>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray='3 3' />
-                <XAxis dataKey='date' />
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
-                <Bar dataKey='ticket_count' fill={colors.primary} name='工单数量' />
-                <Bar dataKey='violation_count' fill={colors.error} name='违规数量' />
+                <Bar dataKey="ticket_count" fill={colors.primary} name="工单数量" />
+                <Bar dataKey="violation_count" fill={colors.error} name="违规数量" />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -340,19 +340,19 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
       </Row>
 
       {/* 统计摘要 */}
-      <Card title='数据统计摘要'>
+      <Card title="数据统计摘要">
         <Row gutter={16}>
           <Col xs={24} sm={6}>
-            <div className='text-center'>
-              <div className='text-2xl font-bold text-green-600'>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-600">
                 {chartData.length > 0 ? Math.max(...chartData.map(d => d.compliance_rate)) : 0}%
               </div>
-              <div className='text-gray-600'>最高合规率</div>
+              <div className="text-gray-600">最高合规率</div>
             </div>
           </Col>
           <Col xs={24} sm={6}>
-            <div className='text-center'>
-              <div className='text-2xl font-bold text-blue-600'>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-600">
                 {chartData.length > 0
                   ? (
                       chartData.reduce((sum, d) => sum + d.avg_response_time, 0) / chartData.length
@@ -360,12 +360,12 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                   : 0}
                 h
               </div>
-              <div className='text-gray-600'>平均响应时间</div>
+              <div className="text-gray-600">平均响应时间</div>
             </div>
           </Col>
           <Col xs={24} sm={6}>
-            <div className='text-center'>
-              <div className='text-2xl font-bold text-orange-600'>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-orange-600">
                 {chartData.length > 0
                   ? (
                       chartData.reduce((sum, d) => sum + d.avg_resolution_time, 0) /
@@ -374,15 +374,15 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
                   : 0}
                 h
               </div>
-              <div className='text-gray-600'>平均解决时间</div>
+              <div className="text-gray-600">平均解决时间</div>
             </div>
           </Col>
           <Col xs={24} sm={6}>
-            <div className='text-center'>
-              <div className='text-2xl font-bold text-red-600'>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-red-600">
                 {chartData.reduce((sum, d) => sum + d.violation_count, 0)}
               </div>
-              <div className='text-gray-600'>总违规数</div>
+              <div className="text-gray-600">总违规数</div>
             </div>
           </Col>
         </Row>

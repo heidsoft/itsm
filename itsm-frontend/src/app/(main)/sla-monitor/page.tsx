@@ -8,10 +8,10 @@ const { Title } = Typography;
 
 const SLAMonitorPage = () => {
   return (
-    <div className='p-6'>
-      <div className='mb-6'>
+    <div className="p-6">
+      <div className="mb-6">
         <Title level={2}>SLA实时监控大屏</Title>
-        <p className='text-gray-600'>实时监控SLA执行情况和关键指标</p>
+        <p className="text-gray-600">实时监控SLA执行情况和关键指标</p>
       </div>
 
       <Card>
