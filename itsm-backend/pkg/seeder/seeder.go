@@ -8,14 +8,19 @@ import (
 	"time"
 
 	"itsm-backend/ent"
+	"itsm-backend/ent/approvalworkflow"
 	"itsm-backend/ent/asset"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/cloudservice"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/slaalertrule"
+	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
@@ -52,6 +57,12 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedAssets(ctx)
 	s.seedAssetLicenses(ctx)
 	s.seedReleases(ctx)
+	// 新增初始化
+	s.seedSLADefinitions(ctx)
+	s.seedSLAAlertRules(ctx)
+	s.seedApprovalWorkflows(ctx)
+	s.seedProcessBindings(ctx)
+	s.seedTicketViews(ctx)
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -748,4 +759,342 @@ func (s *Seeder) seedReleases(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("releases seeded")
+}
+
+// seedSLADefinitions seeds default SLA definitions
+func (s *Seeder) seedSLADefinitions(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip SLA definitions seed", "error", err)
+		return
+	}
+
+	// 检查是否已有 SLA 定义
+	existing, err := s.client.SLADefinition.Query().Where(sladefinition.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing SLA definitions failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("SLA definitions already seeded")
+		return
+	}
+
+	// 创建 SLA 定义
+	slas := []struct {
+		Name          string
+		Desc          string
+		ServiceType   string
+		Priority      string
+		ResponseTime  int
+		ResolutionTime int
+	}{
+		{"SLA-P0-紧急", "P0紧急级别SLA，15分钟响应，2小时解决", "incident", "urgent", 15, 120},
+		{"SLA-P1-高", "P1高级别SLA，30分钟响应，4小时解决", "incident", "high", 30, 240},
+		{"SLA-P2-中", "P2中级别SLA，2小时响应，8小时解决", "incident", "medium", 120, 480},
+		{"SLA-P3-低", "P3低级别SLA，4小时响应，24小时解决", "incident", "low", 240, 1440},
+		{"SLA-服务请求", "服务请求标准SLA，8小时响应，3天解决", "service_request", "medium", 480, 4320},
+		{"SLA-变更", "变更请求SLA，1小时响应，24小时解决", "change", "high", 60, 1440},
+	}
+
+	slaIDs := make(map[string]int)
+	for _, sla := range slas {
+		entity, err := s.client.SLADefinition.Create().
+			SetName(sla.Name).
+			SetDescription(sla.Desc).
+			SetServiceType(sla.ServiceType).
+			SetPriority(sla.Priority).
+			SetResponseTime(sla.ResponseTime).
+			SetResolutionTime(sla.ResolutionTime).
+			SetIsActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed SLA definition failed", "error", err, "name", sla.Name)
+			continue
+		}
+		slaIDs[sla.Name] = entity.ID
+	}
+	s.sugar.Infow("SLA definitions seeded")
+	_ = slaIDs // 用于后续告警规则关联
+}
+
+// seedSLAAlertRules seeds default SLA alert rules
+func (s *Seeder) seedSLAAlertRules(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip SLA alert rules seed", "error", err)
+		return
+	}
+
+	// 检查是否已有告警规则
+	existing, err := s.client.SLAAlertRule.Query().Where(slaalertrule.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing SLA alert rules failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("SLA alert rules already seeded")
+		return
+	}
+
+	// 获取 SLA 定义 ID
+	slas, err := s.client.SLADefinition.Query().Where(sladefinition.TenantIDEQ(t.ID)).All(ctx)
+	if err != nil || len(slas) == 0 {
+		s.sugar.Warnw("no SLA definitions found; skip alert rules seed", "error", err)
+		return
+	}
+
+	slaMap := make(map[string]int)
+	for _, sla := range slas {
+		slaMap[sla.Name] = sla.ID
+	}
+
+	// 创建告警规则
+	alertRules := []struct {
+		Name               string
+		SLAKey             string
+		AlertLevel         string
+		Threshold          int
+		NotificationChans  []string
+		EscalationEnabled  bool
+	}{
+		{"SLA-P0-响应告警", "SLA-P0-紧急", "warning", 50, []string{"email", "sms"}, true},
+		{"SLA-P0-解决告警", "SLA-P0-紧急", "critical", 80, []string{"email", "sms", "phone"}, true},
+		{"SLA-P1-响应告警", "SLA-P1-高", "warning", 50, []string{"email"}, true},
+		{"SLA-P1-解决告警", "SLA-P1-高", "warning", 80, []string{"email"}, true},
+		{"SLA-P2-响应告警", "SLA-P2-中", "info", 50, []string{"email"}, false},
+		{"SLA-P2-解决告警", "SLA-P2-中", "warning", 80, []string{"email"}, true},
+		{"SLA-服务请求-响应告警", "SLA-服务请求", "info", 50, []string{"email"}, false},
+		{"SLA-变更-响应告警", "SLA-变更", "warning", 50, []string{"email"}, true},
+	}
+
+	for _, rule := range alertRules {
+		slaID, ok := slaMap[rule.SLAKey]
+		if !ok {
+			continue
+		}
+		_, err := s.client.SLAAlertRule.Create().
+			SetName(rule.Name).
+			SetSLADefinitionID(slaID).
+			SetAlertLevel(rule.AlertLevel).
+			SetThresholdPercentage(rule.Threshold).
+			SetNotificationChannels(rule.NotificationChans).
+			SetEscalationEnabled(rule.EscalationEnabled).
+			SetIsActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed SLA alert rule failed", "error", err, "name", rule.Name)
+		}
+	}
+	s.sugar.Infow("SLA alert rules seeded")
+}
+
+// seedApprovalWorkflows seeds default approval workflows
+func (s *Seeder) seedApprovalWorkflows(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip approval workflows seed", "error", err)
+		return
+	}
+
+	// 检查是否已有审批工作流
+	existing, err := s.client.ApprovalWorkflow.Query().Where(approvalworkflow.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing approval workflows failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("approval workflows already seeded")
+		return
+	}
+
+	// 创建审批工作流
+	workflows := []struct {
+		Name        string
+		Desc        string
+		TicketType  string
+		Priority    string
+		Nodes       []map[string]interface{}
+	}{
+		{
+			Name:       "P0/P1 事件审批",
+			Desc:       "紧急和高优先级事件需要主管审批",
+			TicketType: "incident",
+			Priority:   "urgent,high",
+			Nodes: []map[string]interface{}{
+				{"type": "approval", "name": "主管审批", "approver_type": "manager", "timeout": 60},
+			},
+		},
+		{
+			Name:       "变更审批",
+			Desc:       "所有变更请求需要多级审批",
+			TicketType: "change",
+			Priority:   "",
+			Nodes: []map[string]interface{}{
+				{"type": "approval", "name": "技术审批", "approver_type": "role", "role": "engineer", "timeout": 240},
+				{"type": "approval", "name:": "经理审批", "approver_type": "role", "role": "manager", "timeout": 480},
+			},
+		},
+		{
+			Name:       "服务请求审批",
+			Desc:       "高价值服务请求需要审批",
+			TicketType: "service_request",
+			Priority:   "high",
+			Nodes: []map[string]interface{}{
+				{"type": "approval", "name": "服务审批", "approver_type": "manager", "timeout": 120},
+			},
+		},
+	}
+
+	for _, wf := range workflows {
+		_, err := s.client.ApprovalWorkflow.Create().
+			SetName(wf.Name).
+			SetDescription(wf.Desc).
+			SetTicketType(wf.TicketType).
+			SetPriority(wf.Priority).
+			SetNodes(wf.Nodes).
+			SetIsActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed approval workflow failed", "error", err, "name", wf.Name)
+		}
+	}
+	s.sugar.Infow("approval workflows seeded")
+}
+
+// seedProcessBindings seeds default BPMN process bindings
+func (s *Seeder) seedProcessBindings(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip process bindings seed", "error", err)
+		return
+	}
+
+	// 检查是否已有流程绑定
+	existing, err := s.client.ProcessBinding.Query().Where(processbinding.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing process bindings failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("process bindings already seeded")
+		return
+	}
+
+	// 创建流程绑定
+	bindings := []struct {
+		BusinessType string
+		ProcessKey   string
+	}{
+		{"incident", "incident_process"},
+		{"problem", "problem_process"},
+		{"change", "change_process"},
+		{"service_request", "service_request_process"},
+		{"improvement", "improvement_process"},
+	}
+
+	for _, b := range bindings {
+		_, err := s.client.ProcessBinding.Create().
+			SetBusinessType(b.BusinessType).
+			SetProcessDefinitionKey(b.ProcessKey).
+			SetIsDefault(true).
+			SetIsActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed process binding failed", "error", err, "business_type", b.BusinessType)
+		}
+	}
+	s.sugar.Infow("process bindings seeded")
+}
+
+// seedTicketViews seeds default ticket views
+func (s *Seeder) seedTicketViews(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip ticket views seed", "error", err)
+		return
+	}
+
+	// 获取 admin 用户 ID
+	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("admin user not found; skip ticket views seed", "error", err)
+		return
+	}
+
+	// 检查是否已有工单视图
+	existing, err := s.client.TicketView.Query().Where(ticketview.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing ticket views failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("ticket views already seeded")
+		return
+	}
+
+	// 创建工单视图
+	views := []struct {
+		Name        string
+		Desc        string
+		Filters     map[string]interface{}
+		Columns     []string
+		IsShared    bool
+	}{
+		{
+			Name:     "我的待办工单",
+			Desc:     "分配给我的未关闭工单",
+			Filters:  map[string]interface{}{"assignee_id": admin.ID, "status": []string{"open", "in_progress", "pending"}},
+			Columns:  []string{"id", "title", "priority", "status", "assignee", "created_at"},
+			IsShared: false,
+		},
+		{
+			Name:     "我创建的工单",
+			Desc:     "我提交的工单",
+			Filters:  map[string]interface{}{"creator_id": admin.ID},
+			Columns:  []string{"id", "title", "priority", "status", "assignee", "created_at"},
+			IsShared: false,
+		},
+		{
+			Name:     "紧急工单",
+			Desc:     "所有紧急和高优先级工单",
+			Filters:  map[string]interface{}{"priority": []string{"urgent", "high"}},
+			Columns:  []string{"id", "title", "priority", "status", "assignee", "created_at"},
+			IsShared: true,
+		},
+		{
+			Name:     "未分配工单",
+			Desc:     "尚未分配给任何人的工单",
+			Filters:  map[string]interface{}{"assignee_id": nil, "status": []string{"open"}},
+			Columns:  []string{"id", "title", "priority", "status", "creator", "created_at"},
+			IsShared: true,
+		},
+		{
+			Name:     "已关闭工单",
+			Desc:     "已完成的工单",
+			Filters:  map[string]interface{}{"status": []string{"closed", "resolved"}},
+			Columns:  []string{"id", "title", "priority", "status", "assignee", "closed_at"},
+			IsShared: false,
+		},
+	}
+
+	for _, v := range views {
+		_, err := s.client.TicketView.Create().
+			SetName(v.Name).
+			SetDescription(v.Desc).
+			SetFilters(v.Filters).
+			SetColumns(v.Columns).
+			SetIsShared(v.IsShared).
+			SetCreatedBy(admin.ID).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed ticket view failed", "error", err, "name", v.Name)
+		}
+	}
+	s.sugar.Infow("ticket views seeded")
 }
