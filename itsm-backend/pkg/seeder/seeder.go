@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"time"
 
 	"itsm-backend/ent"
@@ -110,7 +111,53 @@ func NewSeeder(client *ent.Client, sugar *zap.SugaredLogger) *Seeder {
 
 // loadSeedConfig 从 JSON 文件加载种子配置
 func loadSeedConfig(sugar *zap.SugaredLogger) *SeedConfig {
-	// 尝试多个可能的配置文件路径
+	// 配置加载优先级：
+	// 1. 环境变量 ITSM_SEED_CONFIG 指定的文件
+	// 2. 用户主目录 ~/.itsm/seed.json
+	// 3. /etc/itsm/seed.json (Linux)
+	// 4. 当前目录 config/seed/default.json
+	// 5. 内置默认配置
+
+	// 1. 环境变量
+	if configPath := os.Getenv("ITSM_SEED_CONFIG"); configPath != "" {
+		if data, err := os.ReadFile(configPath); err == nil {
+			var config SeedConfig
+			if err := json.Unmarshal(data, &config); err == nil {
+				sugar.Infow("loaded seed config from env", "path", configPath)
+				return &config
+			}
+		}
+	}
+
+	// 2. 用户主目录
+	homeDir, err := os.UserHomeDir()
+	if err == nil {
+		userConfigPath := filepath.Join(homeDir, ".itsm", "seed.json")
+		if data, err := os.ReadFile(userConfigPath); err == nil {
+			var config SeedConfig
+			if err := json.Unmarshal(data, &config); err == nil {
+				sugar.Infow("loaded seed config from user home", "path", userConfigPath)
+				return &config
+			}
+		}
+	}
+
+	// 3. 系统配置目录
+	systemPaths := []string{
+		"/etc/itsm/seed.json",
+		"C:\\ProgramData\\itsm\\seed.json", // Windows
+	}
+	for _, path := range systemPaths {
+		if data, err := os.ReadFile(path); err == nil {
+			var config SeedConfig
+			if err := json.Unmarshal(data, &config); err == nil {
+				sugar.Infow("loaded seed config from system", "path", path)
+				return &config
+			}
+		}
+	}
+
+	// 4. 项目内置配置
 	paths := []string{
 		"config/seed/default.json",
 		"../config/seed/default.json",
@@ -122,13 +169,13 @@ func loadSeedConfig(sugar *zap.SugaredLogger) *SeedConfig {
 		data, err := os.ReadFile(path)
 		if err == nil {
 			if err := json.Unmarshal(data, &config); err == nil {
-				sugar.Infow("loaded seed config from file", "path", path)
+				sugar.Infow("loaded seed config from project", "path", path)
 				return config
 			}
 		}
 	}
 
-	// 使用内置默认配置
+	// 5. 使用内置默认配置
 	sugar.Infow("using embedded default seed config")
 	return getEmbeddedConfig()
 }
