@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/release"
 	"itsm-backend/ent/role"
+	"itsm-backend/ent/servicecatalog"
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/team"
@@ -63,6 +64,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedApprovalWorkflows(ctx)
 	s.seedProcessBindings(ctx)
 	s.seedTicketViews(ctx)
+	s.seedServiceCatalog(ctx)
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -140,7 +142,7 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 	}
 }
 
-// seedDepartments seeds default departments
+// seedDepartments seeds enterprise departments (complex structure)
 func (s *Seeder) seedDepartments(ctx context.Context) {
 	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
 	if err != nil {
@@ -159,28 +161,50 @@ func (s *Seeder) seedDepartments(ctx context.Context) {
 		return
 	}
 
-	// 创建部门
+	// 创建复杂的企业部门架构
 	departments := []struct {
-		Name string
-		Code string
-		Desc string
+		Name        string
+		Code        string
+		Desc        string
+		ParentCode  string
+		ManagerID   int
 	}{
-		{"IT部门", "IT", "信息技术部门"},
-		{"运维部门", "OPS", "运维支持部门"},
-		{"客服部门", "CS", "客户服务部门"},
+		// 信息技术部
+		{"信息技术部", "IT", "IT整体管理", "", 0},
+		{"IT基础架构", "IT-INFRA", "基础设施运维", "IT", 0},
+		{"IT应用服务", "IT-APP", "应用系统运维", "IT", 0},
+		{"IT安全", "IT-SEC", "信息安全管理", "IT", 0},
+		{"IT项目管理", "IT-PMO", "IT项目管理办公室", "IT", 0},
+		// 运营管理
+		{"运营管理部", "OPS", "IT运营管理", "", 0},
+		{"服务台", "OPS-SD", "一线服务支持", "OPS", 0},
+		{"运维中心", "OPS-NOC", "7x24运维监控", "OPS", 0},
+		{"客户服务", "OPS-CS", "客户服务体验", "OPS", 0},
+		// 业务部门
+		{"研发部", "RD", "产品研发", "", 0},
+		{"测试部", "QA", "质量保证", "", 0},
+		// 职能部门
+		{"人力资源部", "HR", "人力资源管理", "", 0},
+		{"财务部", "FIN", "财务管理", "", 0},
+		{"行政部", "ADMIN", "行政管理", "", 0},
 	}
 
+	deptMap := make(map[string]int)
 	for _, d := range departments {
-		if _, err := s.client.Department.Create().
+		entity, err := s.client.Department.Create().
 			SetName(d.Name).
 			SetCode(d.Code).
 			SetDescription(d.Desc).
 			SetTenantID(t.ID).
-			Save(ctx); err != nil {
+			Save(ctx)
+		if err != nil {
 			s.sugar.Warnw("seed department failed", "error", err, "name", d.Name)
+			continue
 		}
+		deptMap[d.Code] = entity.ID
 	}
-	s.sugar.Infow("departments seeded")
+	s.sugar.Infow("enterprise departments seeded", "count", len(departments))
+	_ = deptMap
 }
 
 // seedTeams seeds default teams
@@ -202,25 +226,49 @@ func (s *Seeder) seedTeams(ctx context.Context) {
 		return
 	}
 
-	// 创建团队
+	// 创建复杂的企业团队结构
 	teams := []struct {
-		Name string
-		Desc string
+		Name   string
+		Desc   string
+		Status string
 	}{
-		{"一线支持", "一线技术支持团队"},
-		{"二线支持", "二线技术支持团队"},
+		// IT服务支持团队
+		{"服务台-L1", "一线服务支持，处理简单问题", "active"},
+		{"服务台-L2", "二线技术支持，处理复杂问题", "active"},
+		{"服务台-L3", "三线技术专家，处理疑难问题", "active"},
+		// 基础设施团队
+		{"服务器运维", "服务器运维管理", "active"},
+		{"网络运维", "网络设备运维", "active"},
+		{"数据库运维", "数据库运维管理", "active"},
+		{"云平台运维", "云计算平台运维", "active"},
+		// 应用服务团队
+		{"ERP支持", "ERP系统支持", "active"},
+		{"CRM支持", "CRM系统支持", "active"},
+		{"OA支持", "OA办公系统支持", "active"},
+		// 安全团队
+		{"安全运营", "安全监控与响应", "active"},
+		{"安全合规", "安全合规管理", "active"},
+		// 研发团队
+		{"后端开发", "后端开发团队", "active"},
+		{"前端开发", "前端开发团队", "active"},
+		{"移动开发", "移动端开发团队", "active"},
+		{"测试团队", "测试与质量保证", "active"},
+		// 客户服务
+		{"客户成功", "客户成功管理", "active"},
+		{"技术支持", "客户服务技术支持", "active"},
 	}
 
 	for _, tm := range teams {
 		if _, err := s.client.Team.Create().
 			SetName(tm.Name).
 			SetDescription(tm.Desc).
+			SetStatus(tm.Status).
 			SetTenantID(t.ID).
 			Save(ctx); err != nil {
 			s.sugar.Warnw("seed team failed", "error", err, "name", tm.Name)
 		}
 	}
-	s.sugar.Infow("teams seeded")
+	s.sugar.Infow("enterprise teams seeded", "count", len(teams))
 }
 
 // seedRoles seeds default roles
@@ -242,15 +290,39 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 		return
 	}
 
-	// 创建角色
+	// 创建企业级复杂角色体系
 	roles := []struct {
 		Name string
 		Code string
 		Desc string
 	}{
-		{"管理员", "admin", "系统管理员"},
-		{"工程师", "engineer", "IT工程师"},
-		{"用户", "user", "普通用户"},
+		// 高层管理
+		{"IT总监", "it_director", "IT部门总监，全面负责IT管理"},
+		{"运维总监", "ops_director", "运维部门总监"},
+		// 系统管理
+		{"系统管理员", "sysadmin", "系统管理员，拥有全部管理权限"},
+		{"安全管理员", "security_admin", "安全管理角色"},
+		{"审计管理员", "audit_admin", "审计管理角色"},
+		// 运维角色
+		{"运维经理", "ops_manager", "运维团队经理"},
+		{"运维工程师", "ops_engineer", "运维工程师"},
+		{"DBA工程师", "dba", "数据库管理员"},
+		{"网络安全工程师", "network_eng", "网络工程师"},
+		// 服务台
+		{"服务台主管", "sd_manager", "服务台主管"},
+		{"一线工程师", "l1_support", "一线支持工程师"},
+		{"二线工程师", "l2_support", "二线支持工程师"},
+		{"三线专家", "l3_expert", "三线技术专家"},
+		// 研发角色
+		{"研发经理", "rd_manager", "研发团队经理"},
+		{"开发工程师", "developer", "开发工程师"},
+		{"测试工程师", "qa_engineer", "测试工程师"},
+		// 业务角色
+		{"部门经理", "dept_manager", "部门经理"},
+		{"团队主管", "team_lead", "团队主管"},
+		// 普通用户
+		{"普通用户", "end_user", "普通终端用户"},
+		{"访客", "guest", "访客用户，权限受限"},
 	}
 
 	for _, r := range roles {
@@ -263,7 +335,7 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 			s.sugar.Warnw("seed role failed", "error", err, "name", r.Name)
 		}
 	}
-	s.sugar.Infow("roles seeded")
+	s.sugar.Infow("enterprise roles seeded", "count", len(roles))
 }
 
 // backfillAdminRole ensures default admin account has admin role
@@ -1097,4 +1169,87 @@ func (s *Seeder) seedTicketViews(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("ticket views seeded")
+}
+
+// seedServiceCatalog seeds enterprise service catalog
+func (s *Seeder) seedServiceCatalog(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip service catalog seed", "error", err)
+		return
+	}
+
+	// 检查是否已有服务目录
+	existing, err := s.client.ServiceCatalog.Query().Where(servicecatalog.TenantIDEQ(t.ID)).Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("check existing service catalog failed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("service catalog already seeded")
+		return
+	}
+
+	// 创建企业服务目录
+	services := []struct {
+		Name             string
+		Desc             string
+		Category         string
+		ServiceType      string
+		RequiresApproval bool
+		ApprovalLevel    int
+		DeliveryTime     int
+		Price            float64
+		Unit             string
+		Status           string
+	}{
+		// 基础设施服务
+		{"云服务器 ECS", "弹性云服务器，支持按需扩容", "云计算", "vm", true, 1, 1, 0, "月", "active"},
+		{"云数据库 RDS", "MySQL/PostgreSQL 数据库服务", "数据库", "rds", true, 1, 1, 0, "月", "active"},
+		{"对象存储 OSS", "海量、安全、低成本云存储", "存储", "oss", false, 0, 0, 0, "月", "active"},
+		{"CDN 加速", "内容分发加速服务", "网络", "network", false, 0, 0, 0, "月", "active"},
+		{"负载均衡 SLB", "流量分发负载均衡服务", "网络", "network", true, 1, 1, 0, "月", "active"},
+		{"VPN 网关", "VPN 加密通道服务", "安全", "security", true, 2, 2, 0, "月", "active"},
+		// 应用服务
+		{"企业邮箱", "企业域名邮箱服务", "通讯", "custom", false, 0, 1, 0, "用户/月", "active"},
+		{"企业网盘", "企业级文件存储与共享", "协作", "custom", false, 0, 0, 0, "用户/月", "active"},
+		{"视频会议", "高清视频会议服务", "通讯", "custom", false, 0, 0, 0, "用户/月", "active"},
+		{"企业IM", "企业即时通讯工具", "通讯", "custom", false, 0, 0, 0, "用户/月", "active"},
+		// 安全服务
+		{"漏洞扫描", "Web应用漏洞扫描服务", "安全", "security", true, 1, 1, 0, "次", "active"},
+		{"渗透测试", "安全渗透测试服务", "安全", "security", true, 2, 5, 0, "次", "active"},
+		{"等保合规", "等级保护合规咨询", "安全", "security", true, 3, 30, 0, "次", "active"},
+		// IT支持服务
+		{"IT服务台", "IT问题咨询与支持", "支持", "custom", false, 0, 0, 0, "用户/月", "active"},
+		{"软件安装", "标准软件安装申请", "支持", "custom", false, 0, 1, 0, "次", "active"},
+		{"账户申请", "新员工账户开通", "支持", "custom", true, 1, 1, 0, "次", "active"},
+		{"网络接入", "有线/无线网络接入申请", "支持", "custom", true, 1, 2, 0, "次", "active"},
+		{"域名申请", "内部域名注册申请", "支持", "custom", true, 2, 3, 0, "次", "active"},
+		// 开发服务
+		{"代码仓库", "Git 代码仓库服务", "开发", "custom", false, 0, 0, 0, "用户/月", "active"},
+		{"CI/CD流水线", "自动化持续集成/部署", "开发", "custom", false, 0, 0, 0, "用户/月", "active"},
+		{"测试环境", "预发布测试环境申请", "开发", "custom", true, 1, 2, 0, "次", "active"},
+		{"API网关", "API 接口管理与发布", "开发", "custom", true, 2, 3, 0, "月", "active"},
+	}
+
+	for _, svc := range services {
+		_, err := s.client.ServiceCatalog.Create().
+			SetName(svc.Name).
+			SetDescription(svc.Desc).
+			SetCategory(svc.Category).
+			SetServiceType(svc.ServiceType).
+			SetRequiresApproval(svc.RequiresApproval).
+			SetApprovalLevel(svc.ApprovalLevel).
+			SetDeliveryTime(svc.DeliveryTime).
+			SetPrice(svc.Price).
+			SetUnit(svc.Unit).
+			SetStatus(svc.Status).
+			SetIsActive(true).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed service catalog failed", "error", err, "name", svc.Name)
+		}
+	}
+	s.sugar.Infow("enterprise service catalog seeded", "count", len(services))
 }
