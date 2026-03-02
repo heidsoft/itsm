@@ -77,31 +77,38 @@ func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, process
 
 ---
 
-### Issue #3: TicketSubtasks 组件处理人下拉框数据源
+### Issue #3: TicketSubtasks 组件处理人下拉框数据源 ✅
 
 **优先级**: P2  
 **模块**: 前端 - 工单子任务  
-**文件**: `itsm-frontend/src/components/business/TicketSubtasks.tsx:476`
+**状态**: ✅ **已完成** (代码已实现用户列表加载)
 
 **当前代码**:
 ```tsx
 <Form.Item name='assignee_id' label='处理人'>
-  <Select placeholder='请选择处理人' allowClear>
-    {/* TODO: 从用户列表获取 */}
+  <Select
+    placeholder='请选择处理人'
+    allowClear
+    loading={loadingUsers}
+    showSearch
+    filterOption={(input, option) =>
+      (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+    }
+  >
+    {userList.map(user => (
+      <Option key={user.id} value={user.id.toString()}>
+        {user.name} ({user.department || user.email})
+      </Option>
+    ))}
   </Select>
 </Form.Item>
 ```
 
-**需求描述**:
-工单子任务模态框中，处理人下拉框缺少数据源，需要从用户列表 API 获取数据并动态渲染选项。
-
-**建议方案**:
-1. 调用 User API 获取用户列表
-2. 使用 `useEffect` 在组件挂载时加载数据
-3. 动态渲染 `<Option>` 组件
-4. 添加加载状态和错误处理
-
-**预估工时**: 2h
+**说明**: 代码已实现完整的用户列表加载功能，包括：
+- useEffect 加载用户数据
+- 加载状态显示
+- 搜索过滤功能
+- 错误处理
 
 ---
 
@@ -138,23 +145,28 @@ setParticipants([]);
 
 ## 📊 优先级建议
 
-| 优先级 | Issue | 工时 | 依赖 |
-|--------|-------|------|------|
-| P1 | #2 工作流任务完成功能 | 3h | 无 |
-| P2 | #1 BPMN 版本变更日志表 | 4h | 无 |
-| P2 | #3 子任务处理人数据源 | 2h | 无 |
-| P3 | #4 知识库实时协作 | 8h | 后端 API |
+| 优先级 | Issue | 工时 | 依赖 | 状态 |
+|--------|-------|------|------|------|
+| P1 | #2 工作流任务完成功能 | 3h | 无 | ✅ 已实现 |
+| P2 | #1 BPMN 版本变更日志表 | 4h | 无 | ⏳ 待处理 |
+| P2 | #3 子任务处理人数据源 | 2h | 无 | ✅ 已完成 |
+| P3 | #4 知识库实时协作 | 8h | 后端 API | ⏳ 待处理 |
 
-**总工时**: 17h
+**剩余工时**: 12h
 
 ---
 
 ## ✅ 下一步行动
 
-1. 在 GitHub 创建 4 个 Issue，分别对应上述 TODO
-2. 添加 appropriate labels: `enhancement`, `backend`, `frontend`, `good-first-issue`
+1. ~~在 GitHub 创建 4 个 Issue~~ - 部分已完成
+2. ~~添加 appropriate labels~~ - 部分已完成
 3. 根据优先级安排到迭代计划中
-4. 关闭此跟踪文档
+4. 优先完成 P2-01 (BPMN 版本变更日志表)
+5. 更新此跟踪文档 (Issue #2 和 #3 已实现)
+
+**更新记录**:
+- 2026-03-02: Issue #3 已实现 (代码已包含用户列表加载功能)
+- 2026-03-02: Issue #2 已实现 (工作流任务完成功能已开发)
 
 ---
 
