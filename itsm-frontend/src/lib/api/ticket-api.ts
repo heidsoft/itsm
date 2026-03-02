@@ -66,7 +66,10 @@ export class TicketApi {
     success: boolean;
     message: string;
   }> {
-    return httpClient.post(`/api/v1/tickets/workflow/approve`, data);
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/workflow/approve`, data),
+      { errorMessage: 'Failed to approve ticket', showSuccess: true }
+    );
   }
 
   // Add comment
@@ -82,7 +85,10 @@ export class TicketApi {
       username: string;
     };
   }> {
-    return httpClient.post(`/api/v1/tickets/${id}/comment`, { content });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/${id}/comment`, { content }),
+      { errorMessage: 'Failed to add comment', showSuccess: true }
+    );
   }
 
   // Assign ticket
@@ -91,7 +97,10 @@ export class TicketApi {
     assigneeIdOrData: number | { assignee_id: number; comment?: string }
   ): Promise<Ticket> {
     const payload = typeof assigneeIdOrData === 'number' ? { assignee_id: assigneeIdOrData } : assigneeIdOrData;
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, payload);
+    return handleApiRequest(
+      httpClient.post<Ticket>(`/api/v1/tickets/${id}/assign`, payload),
+      { errorMessage: 'Failed to assign ticket', showSuccess: true }
+    );
   }
 
   // Escalate ticket
@@ -100,7 +109,10 @@ export class TicketApi {
     reasonOrData: string | { level: string; reason: string; assignee_id?: number }
   ): Promise<Ticket> {
     const payload = typeof reasonOrData === 'string' ? { reason: reasonOrData } : reasonOrData;
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, payload);
+    return handleApiRequest(
+      httpClient.post<Ticket>(`/api/v1/tickets/${id}/escalate`, payload),
+      { errorMessage: 'Failed to escalate ticket', showSuccess: true }
+    );
   }
 
   // Resolve ticket
@@ -112,7 +124,10 @@ export class TicketApi {
       typeof resolutionOrData === 'string'
         ? { resolution: resolutionOrData }
         : { resolution: resolutionOrData.solution, resolution_code: resolutionOrData.resolution_code };
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, payload);
+    return handleApiRequest(
+      httpClient.post<Ticket>(`/api/v1/tickets/${id}/resolve`, payload),
+      { errorMessage: 'Failed to resolve ticket', showSuccess: true }
+    );
   }
 
   // Close ticket
@@ -126,47 +141,71 @@ export class TicketApi {
         : feedbackOrData
         ? { feedback: feedbackOrData.close_notes }
         : {};
-    return httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, payload);
+    return handleApiRequest(
+      httpClient.post<Ticket>(`/api/v1/tickets/${id}/close`, payload),
+      { errorMessage: 'Failed to close ticket', showSuccess: true }
+    );
   }
 
   // Search tickets
   static async searchTickets(query: string): Promise<Ticket[]> {
-    return httpClient.get<Ticket[]>('/api/v1/tickets/search', { q: query });
+    return handleApiRequest(
+      httpClient.get<Ticket[]>('/api/v1/tickets/search', { q: query }),
+      { errorMessage: 'Failed to search tickets' }
+    );
   }
 
   // Get overdue tickets
   static async getOverdueTickets(): Promise<Ticket[]> {
-    return httpClient.get<Ticket[]>('/api/v1/tickets/overdue');
+    return handleApiRequest(
+      httpClient.get<Ticket[]>('/api/v1/tickets/overdue'),
+      { errorMessage: 'Failed to fetch overdue tickets' }
+    );
   }
 
   // Get subtasks (child tickets)
   static async getSubtasks(parentTicketId: number): Promise<Ticket[]> {
-    const response = await httpClient.get<{ tickets?: Ticket[]; data?: Ticket[] }>(`/api/v1/tickets/${parentTicketId}/subtasks`);
+    const response = await handleApiRequest(
+      httpClient.get<{ tickets?: Ticket[]; data?: Ticket[] }>(`/api/v1/tickets/${parentTicketId}/subtasks`),
+      { errorMessage: 'Failed to fetch subtasks' }
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (response as any).tickets || (response as any).data || response || [];
   }
 
   // Create subtask
   static async createSubtask(parentTicketId: number, data: Partial<Ticket>): Promise<Ticket> {
-    return httpClient.post<Ticket>(`/api/v1/tickets/${parentTicketId}/subtasks`, {
-      ...data,
-      parent_ticket_id: parentTicketId,
-    });
+    return handleApiRequest(
+      httpClient.post<Ticket>(`/api/v1/tickets/${parentTicketId}/subtasks`, {
+        ...data,
+        parent_ticket_id: parentTicketId,
+      }),
+      { errorMessage: 'Failed to create subtask', showSuccess: true }
+    );
   }
 
   // Update subtask
   static async updateSubtask(parentTicketId: number, subtaskId: number, data: Partial<Ticket>): Promise<Ticket> {
-    return httpClient.patch<Ticket>(`/api/v1/tickets/${parentTicketId}/subtasks/${subtaskId}`, data);
+    return handleApiRequest(
+      httpClient.patch<Ticket>(`/api/v1/tickets/${parentTicketId}/subtasks/${subtaskId}`, data),
+      { errorMessage: 'Failed to update subtask', showSuccess: true }
+    );
   }
 
   // Delete subtask
   static async deleteSubtask(parentTicketId: number, subtaskId: number): Promise<void> {
-    return httpClient.delete(`/api/v1/tickets/${parentTicketId}/subtasks/${subtaskId}`);
+    return handleApiRequest(
+      httpClient.delete(`/api/v1/tickets/${parentTicketId}/subtasks/${subtaskId}`),
+      { errorMessage: 'Failed to delete subtask', showSuccess: true }
+    );
   }
 
   // Get tickets by assignee
   static async getTicketsByAssignee(assigneeId: number): Promise<Ticket[]> {
-    return httpClient.get<Ticket[]>(`/api/v1/tickets/assignee/${assigneeId}`);
+    return handleApiRequest(
+      httpClient.get<Ticket[]>(`/api/v1/tickets/assignee/${assigneeId}`),
+      { errorMessage: 'Failed to fetch assignee tickets' }
+    );
   }
 
   // Get ticket activity log
@@ -176,7 +215,10 @@ export class TicketApi {
     user_id: number;
     details: string;
   }>> {
-    return httpClient.get(`/api/v1/tickets/${id}/activity`);
+    return handleApiRequest(
+      httpClient.get(`/api/v1/tickets/${id}/activity`),
+      { errorMessage: 'Failed to fetch ticket activity' }
+    );
   }
 
   // Get ticket comments
@@ -203,7 +245,10 @@ export class TicketApi {
     }>;
     total: number;
   }> {
-    return httpClient.get(`/api/v1/tickets/${id}/comments`);
+    return handleApiRequest(
+      httpClient.get(`/api/v1/tickets/${id}/comments`),
+      { errorMessage: 'Failed to fetch comments' }
+    );
   }
 
   // Add ticket comment
@@ -232,7 +277,10 @@ export class TicketApi {
     created_at: string;
     updated_at: string;
   }> {
-    return httpClient.post(`/api/v1/tickets/${id}/comments`, data);
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/${id}/comments`, data),
+      { errorMessage: 'Failed to add comment', showSuccess: true }
+    );
   }
 
   // Update ticket comment
@@ -260,12 +308,18 @@ export class TicketApi {
     created_at: string;
     updated_at: string;
   }> {
-    return httpClient.put(`/api/v1/tickets/${ticketId}/comments/${commentId}`, data);
+    return handleApiRequest(
+      httpClient.put(`/api/v1/tickets/${ticketId}/comments/${commentId}`, data),
+      { errorMessage: 'Failed to update comment', showSuccess: true }
+    );
   }
 
   // Delete ticket comment
   static async deleteTicketComment(ticketId: number, commentId: number): Promise<void> {
-    return httpClient.delete(`/api/v1/tickets/${ticketId}/comments/${commentId}`);
+    return handleApiRequest(
+      httpClient.delete(`/api/v1/tickets/${ticketId}/comments/${commentId}`),
+      { errorMessage: 'Failed to delete comment', showSuccess: true }
+    );
   }
 
   // Get ticket attachments
@@ -293,7 +347,10 @@ export class TicketApi {
     }>;
     total: number;
   }> {
-    return httpClient.get(`/api/v1/tickets/${id}/attachments`);
+    return handleApiRequest(
+      httpClient.get(`/api/v1/tickets/${id}/attachments`),
+      { errorMessage: 'Failed to fetch attachments' }
+    );
   }
 
   // Upload ticket attachment
@@ -335,10 +392,13 @@ export class TicketApi {
 
   // Delete ticket attachment
   static async deleteTicketAttachment(ticketId: number, attachmentId: number): Promise<void> {
-    return httpClient.delete(`/api/v1/tickets/${ticketId}/attachments/${attachmentId}`);
+    return handleApiRequest(
+      httpClient.delete(`/api/v1/tickets/${ticketId}/attachments/${attachmentId}`),
+      { errorMessage: 'Failed to delete attachment', showSuccess: true }
+    );
   }
 
-  // Get ticket workflow state - 使用后端实际的 workflow/state 端点
+  // Get ticket workflow state
   static async getTicketWorkflow(id: number): Promise<{
     ticket_id: number;
     current_status: string;
@@ -356,37 +416,58 @@ export class TicketApi {
       comment?: string;
     }>;
   }> {
-    return httpClient.get(`/api/v1/tickets/${id}/workflow/state`);
+    return handleApiRequest(
+      httpClient.get(`/api/v1/tickets/${id}/workflow/state`),
+      { errorMessage: 'Failed to fetch workflow state' }
+    );
   }
 
   // Accept ticket (接单)
   static async acceptTicket(ticketId: number): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/accept`, { ticket_id: ticketId });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/workflow/accept`, { ticket_id: ticketId }),
+      { errorMessage: 'Failed to accept ticket', showSuccess: true }
+    );
   }
 
   // Reject ticket (驳回)
   static async rejectTicket(ticketId: number, reason: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/reject`, { ticket_id: ticketId, reason });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/workflow/reject`, { ticket_id: ticketId, reason }),
+      { errorMessage: 'Failed to reject ticket', showSuccess: true }
+    );
   }
 
   // Withdraw ticket (撤回)
   static async withdrawTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/withdraw`, { ticket_id: ticketId, reason });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/workflow/withdraw`, { ticket_id: ticketId, reason }),
+      { errorMessage: 'Failed to withdraw ticket', showSuccess: true }
+    );
   }
 
   // Forward ticket (转发)
   static async forwardTicket(ticketId: number, toUserId: number, comment?: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/forward`, { ticket_id: ticketId, to_user_id: toUserId, comment });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/workflow/forward`, { ticket_id: ticketId, to_user_id: toUserId, comment }),
+      { errorMessage: 'Failed to forward ticket', showSuccess: true }
+    );
   }
 
   // CC ticket (抄送)
   static async ccTicket(ticketId: number, ccUserIds: number[], comment?: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/cc`, { ticket_id: ticketId, cc_user_ids: ccUserIds, comment });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/workflow/cc`, { ticket_id: ticketId, cc_user_ids: ccUserIds, comment }),
+      { errorMessage: 'Failed to CC ticket', showSuccess: true }
+    );
   }
 
   // Reopen ticket (重开)
   static async reopenTicket(ticketId: number, reason?: string): Promise<{ message: string }> {
-    return httpClient.post(`/api/v1/tickets/workflow/reopen`, { ticket_id: ticketId, reason });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/workflow/reopen`, { ticket_id: ticketId, reason }),
+      { errorMessage: 'Failed to reopen ticket', showSuccess: true }
+    );
   }
 
   // Update workflow step
@@ -404,7 +485,10 @@ export class TicketApi {
     completed_at?: string;
     comments?: string;
   }> {
-    return httpClient.put(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data);
+    return handleApiRequest(
+      httpClient.put(`/api/v1/tickets/${ticketId}/workflow/${stepId}`, data),
+      { errorMessage: 'Failed to update workflow step', showSuccess: true }
+    );
   }
 
   // Add ticket tags
@@ -414,7 +498,10 @@ export class TicketApi {
     tags: string[];
     message: string;
   }> {
-    return httpClient.post(`/api/v1/tickets/${id}/tags`, { tags });
+    return handleApiRequest(
+      httpClient.post(`/api/v1/tickets/${id}/tags`, { tags }),
+      { errorMessage: 'Failed to add tags', showSuccess: true }
+    );
   }
 
   // Remove ticket tags
@@ -425,11 +512,14 @@ export class TicketApi {
     remaining_tags: string[];
     message: string;
   }> {
-    return httpClient.request({
-      method: 'DELETE',
-      url: `/api/v1/tickets/${id}/tags`,
-      data: { tags }
-    });
+    return handleApiRequest(
+      httpClient.request({
+        method: 'DELETE',
+        url: `/api/v1/tickets/${id}/tags`,
+        data: { tags }
+      }),
+      { errorMessage: 'Failed to remove tags', showSuccess: true }
+    );
   }
 
   // Get ticket history
@@ -446,16 +536,22 @@ export class TicketApi {
       name: string;
     };
   }>> {
-    return httpClient.get(`/api/v1/tickets/${id}/history`);
+    return handleApiRequest(
+      httpClient.get(`/api/v1/tickets/${id}/history`),
+      { errorMessage: 'Failed to fetch ticket history' }
+    );
   }
 
   // Batch delete tickets
   static async batchDeleteTickets(ticketIds: number[]): Promise<void> {
-    return httpClient.request({
-      method: 'DELETE',
-      url: '/api/v1/tickets/batch',
-      data: { ticket_ids: ticketIds }
-    });
+    return handleApiRequest(
+      httpClient.request({
+        method: 'DELETE',
+        url: '/api/v1/tickets/batch',
+        data: { ticket_ids: ticketIds }
+      }),
+      { errorMessage: 'Failed to batch delete tickets', showSuccess: true }
+    );
   }
 
   // Get ticket statistics
@@ -467,7 +563,10 @@ export class TicketApi {
     high_priority: number;
     overdue: number;
   }> {
-    return httpClient.get('/api/v1/tickets/stats');
+    return handleApiRequest(
+      httpClient.get('/api/v1/tickets/stats'),
+      { errorMessage: 'Failed to fetch ticket statistics' }
+    );
   }
 
   // Export tickets
@@ -486,11 +585,14 @@ export class TicketApi {
 
   // Batch update tickets
   static async batchUpdateTickets(ticketIds: number[], action: string, data?: Record<string, unknown>): Promise<void> {
-    return httpClient.put('/api/v1/tickets/batch', {
-      ticket_ids: ticketIds,
-      action,
-      data
-    });
+    return handleApiRequest(
+      httpClient.put('/api/v1/tickets/batch', {
+        ticket_ids: ticketIds,
+        action,
+        data
+      }),
+      { errorMessage: 'Failed to batch update tickets', showSuccess: true }
+    );
   }
 
   // Get ticket templates

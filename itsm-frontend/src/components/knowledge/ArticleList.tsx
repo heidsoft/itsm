@@ -82,7 +82,6 @@ const ArticleList: React.FC = () => {
       setData(articles as unknown as KnowledgeArticle[]);
       setTotal(total);
     } catch (error) {
-      console.error('加载文章列表失败:', error);
       message.error('加载文章列表失败: ' + (error instanceof Error ? error.message : '未知错误'));
     } finally {
       setLoading(false);

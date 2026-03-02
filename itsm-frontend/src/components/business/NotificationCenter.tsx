@@ -273,7 +273,6 @@ const NotificationCenter: React.FC<{
         avg_response_time: 2.3,
       });
     } catch (error) {
-      console.error('加载通知数据失败:', error);
       message.error('加载数据失败');
     } finally {
       setLoading(false);
@@ -354,7 +353,7 @@ const NotificationCenter: React.FC<{
       setSelectedTemplate(null);
       form.resetFields();
     } catch (error) {
-      console.error('保存模板失败:', error);
+      message.error('保存模板失败');
     }
   };
 
@@ -381,7 +380,7 @@ const NotificationCenter: React.FC<{
       setSelectedChannel(null);
       channelForm.resetFields();
     } catch (error) {
-      console.error('保存通道失败:', error);
+      message.error('保存通道失败');
     }
   };
 

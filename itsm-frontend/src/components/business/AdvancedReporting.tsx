@@ -292,7 +292,6 @@ const AdvancedReporting: React.FC = () => {
 
       setDashboardWidgets(initialWidgets);
     } catch (error) {
-      console.error('加载报表数据失败:', error);
       message.error('加载数据失败');
     } finally {
       setLoading(false);
@@ -316,7 +315,7 @@ const AdvancedReporting: React.FC = () => {
       setShowReportModal(false);
       form.resetFields();
     } catch (error) {
-      console.error('创建报表失败:', error);
+      message.error('创建报表失败');
     }
   };
 
@@ -338,7 +337,7 @@ const AdvancedReporting: React.FC = () => {
         form.resetFields();
       }
     } catch (error) {
-      console.error('更新报表失败:', error);
+      message.error('更新报表失败');
     }
   };
 
@@ -373,7 +372,6 @@ const AdvancedReporting: React.FC = () => {
       setReportData(reportData);
       setShowExecutionModal(true);
     } catch (error) {
-      console.error('执行报表失败:', error);
       message.error('执行报表失败');
     } finally {
       setLoading(false);

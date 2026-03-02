@@ -121,7 +121,6 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       if (relations.length === 0) {
       }
     } catch (error) {
-      console.error('Failed to load dependencies:', error);
       antMessage.error('加载依赖关系失败');
     } finally {
       setLoading(false);
@@ -140,7 +139,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
         // 暂时返回空数据，禁止使用mock数据
         setImpactAnalysis([]);
       } catch (error) {
-        console.error('Failed to load impact analysis:', error);
+        antMessage.error('加载影响分析失败');
       }
     },
     [dependencies]
@@ -187,7 +186,6 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
       loadDependencies();
       onDependencyChange?.();
     } catch (error) {
-      console.error('Failed to save dependency:', error);
       antMessage.error('保存失败');
     }
   }, [form, editingDependency, ticket, antMessage, loadDependencies, onDependencyChange]);
@@ -202,7 +200,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
         loadDependencies();
         onDependencyChange?.();
       } catch (error) {
-        console.error('Failed to delete dependency:', error);
+        antMessage.error('删除失败');
         antMessage.error('删除失败');
       }
     },

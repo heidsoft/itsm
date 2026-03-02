@@ -237,9 +237,9 @@ const TicketAnalytics: React.FC = () => {
           <Space>
             <RangePicker
               value={dateRange}
-              onChange={(dates: [dayjs.Dayjs, dayjs.Dayjs] | null) => {
-                if (dates) {
-                  setDateRange(dates);
+              onChange={(dates: any) => {
+                if (dates && dates.length === 2) {
+                  setDateRange([dates[0], dates[1]]);
                 }
               }}
               format='YYYY-MM-DD'

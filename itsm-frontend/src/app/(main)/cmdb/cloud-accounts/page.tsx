@@ -26,19 +26,30 @@ export default function CloudAccountPage() {
   const [createOpen, setCreateOpen] = useState(false);
 
   const loadData = async () => {
+    const isMounted = true;
     setLoading(true);
     try {
       const list = await CMDBApi.getCloudAccounts();
-      setData(list || []);
+      if (isMounted) {
+        setData(list || []);
+      }
     } catch (error) {
-      message.error('加载云账号失败');
+      if (isMounted) {
+        message.error('加载云账号失败');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
     loadData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleCreate = async () => {

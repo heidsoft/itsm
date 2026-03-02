@@ -81,7 +81,6 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
       const response = await UserApi.getUsers({ page: 1, page_size: 100, status: 'active' });
       setUsers(response.users);
     } catch (error) {
-      console.error('加载用户列表失败:', error);
       message.error('无法加载用户列表');
     }
   };

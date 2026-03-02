@@ -20,6 +20,7 @@ import {
   Rate,
   Avatar,
   Divider,
+  message,
 } from "antd";
 import {
   Smile,
@@ -136,7 +137,7 @@ export const SatisfactionDashboard: React.FC = () => {
 
       setSatisfactionData(data);
     } catch (error) {
-      console.error("加载满意度数据失败:", error);
+      message.error("加载满意度数据失败");
       // 失败时不显示mock数据
     } finally {
       setLoading(false);

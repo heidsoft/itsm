@@ -27,6 +27,9 @@ import {
   Radio,
   Tabs,
   List,
+  Empty,
+  Spin,
+  Result,
 } from 'antd';
 import {
   Plus,
@@ -50,7 +53,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 import {
   ticketTemplateService,
   type CreateTemplateRequest,
@@ -58,6 +60,7 @@ import {
   type TemplateField,
   type TicketTemplate as ServiceTicketTemplate,
 } from '@/lib/services/ticket-template-service';
+import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -96,6 +99,7 @@ interface TemplateFilters {
 }
 
 const TicketTemplatePage: React.FC = () => {
+  const { t } = useI18n();
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -202,9 +206,9 @@ const TicketTemplatePage: React.FC = () => {
       await ticketTemplateService.deleteTemplate(id);
 
       setTemplates(templates.filter(t => t.id !== id));
-      message.success('模板删除成功');
+      message.success(t('tickets.templateDeleted'));
     } catch (error) {
-      message.error('删除失败');
+      message.error(t('common.deleteFailed'));
       console.error('删除失败:', error);
     }
   };
@@ -216,9 +220,9 @@ const TicketTemplatePage: React.FC = () => {
       const copiedTemplate = await ticketTemplateService.copyTemplate(template.id, newName);
 
       setTemplates([copiedTemplate, ...templates]);
-      message.success('模板复制成功');
+      message.success(t('tickets.templateCopied'));
     } catch (error) {
-      message.error('复制失败');
+      message.error(t('common.operationFailed'));
       console.error('复制失败:', error);
     }
   };
@@ -248,7 +252,7 @@ const TicketTemplatePage: React.FC = () => {
         const updatedTemplate = await ticketTemplateService.updateTemplate(editingTemplate.id, updatePayload);
 
         setTemplates(templates.map(t => (t.id === editingTemplate.id ? updatedTemplate : t)));
-        message.success('模板更新成功');
+        message.success(t('tickets.templateUpdated'));
       } else {
         // 创建新模板
         const createPayload: CreateTemplateRequest = {
@@ -260,7 +264,7 @@ const TicketTemplatePage: React.FC = () => {
         const newTemplate = await ticketTemplateService.createTemplate(createPayload);
 
         setTemplates([newTemplate, ...templates]);
-        message.success('模板创建成功');
+        message.success(t('tickets.templateCreated'));
       }
 
       setModalVisible(false);
@@ -269,7 +273,7 @@ const TicketTemplatePage: React.FC = () => {
       setWorkflowSteps([]);
       form.resetFields();
     } catch (error) {
-      message.error('操作失败');
+      message.error(t('common.operationFailed'));
       console.error('操作失败:', error);
     }
   };
@@ -581,23 +585,32 @@ const TicketTemplatePage: React.FC = () => {
       </Card>
 
       {/* 模板列表 */}
-      <LoadingEmptyError
-        state={getCurrentState()}
-        loadingText='正在加载模板数据...'
-        empty={{
-          title: '暂无模板',
-          description: '当前没有找到匹配的工单模板',
-          actionText: '创建模板',
-          onAction: handleCreateTemplate,
-          icon: <FileText className='w-10 h-10' />,
-        }}
-        error={{
-          title: '加载失败',
-          description: error || '无法获取模板数据，请稍后重试',
-          actionText: '重试',
-          onAction: loadTemplates,
-        }}
-      >
+      {loading ? (
+        <div className='flex flex-col items-center justify-center py-20'>
+          <Spin size='large' />
+          <Text type='secondary' className='mt-4'>正在加载模板数据...</Text>
+        </div>
+      ) : error ? (
+        <Result
+          status='error'
+          title='加载失败'
+          subTitle={error || '无法获取模板数据，请稍后重试'}
+          extra={[
+            <Button type='primary' key='retry' icon={<RefreshCw size={16} />} onClick={loadTemplates}>
+              重试
+            </Button>,
+          ]}
+        />
+      ) : filteredTemplates.length === 0 ? (
+        <Empty
+          description='暂无模板'
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+        >
+          <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateTemplate}>
+            创建模板
+          </Button>
+        </Empty>
+      ) : (
         <Card className='shadow-sm'>
           <Table
             columns={columns}
@@ -611,7 +624,7 @@ const TicketTemplatePage: React.FC = () => {
             scroll={{ x: 1200 }}
           />
         </Card>
-      </LoadingEmptyError>
+      )}
 
       {/* 创建/编辑模板模态框 */}
       <Modal

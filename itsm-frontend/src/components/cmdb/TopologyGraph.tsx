@@ -170,7 +170,6 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       }));
       setEdges(flowEdges);
     } catch (error) {
-      console.error('加载拓扑图失败:', error);
       message.error('加载拓扑图失败');
     } finally {
       setLoading(false);
@@ -225,7 +224,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       const analysis = await CIRelationshipAPI.analyzeImpact(node.id);
       setImpactAnalysis(analysis);
     } catch (error) {
-      console.error('获取影响分析失败:', error);
+      message.error('获取影响分析失败');
     }
   };
 

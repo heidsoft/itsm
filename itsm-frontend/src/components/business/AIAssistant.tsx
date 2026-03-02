@@ -16,6 +16,7 @@ import {
   Divider,
   List,
   Avatar,
+  message,
 } from 'antd';
 import { Bot, Lightbulb, Users, Search, CheckCircle, Clock, Target } from 'lucide-react';
 import {
@@ -129,7 +130,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         error: null,
       });
     } catch (error) {
-      console.error('AI分析失败:', error);
       setAnalysisState(prev => ({
         ...prev,
         loading: false,
@@ -149,7 +149,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       });
       setSearchResults(results);
     } catch (error) {
-      console.error('智能搜索失败:', error);
+      message.error('智能搜索失败');
     } finally {
       setSearchLoading(false);
     }

@@ -73,8 +73,12 @@ export default function IncidentsPage() {
   };
 
   useEffect(() => {
+    let isMounted = true;
     fetchIncidents();
     fetchStats();
+    return () => {
+      isMounted = false;
+    };
   }, [page, pageSize]);
 
   const handleEdit = (incident: Incident) => {

@@ -5,8 +5,10 @@ import { Table, Button, Tag, Space, Modal, Form, Input, ColorPicker, message } f
 import { PlusOutlined, EditOutlined, DeleteOutlined, TagOutlined, SyncOutlined } from "@ant-design/icons";
 import { PageContainer } from "@/app/components/PageContainer";
 import { tagService, Tag as ITag } from "@/lib/services/tag-service";
+import { useI18n } from "@/lib/i18n";
 
 export default function TagsPage() {
+  const { t } = useI18n();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -20,7 +22,7 @@ export default function TagsPage() {
       setTags(data);
     } catch (error) {
       console.error("Failed to fetch tags:", error);
-      message.error("获取标签列表失败");
+      message.error(t('common.getFailed'));
     } finally {
       setFetching(false);
     }
@@ -86,10 +88,10 @@ export default function TagsPage() {
       onOk: async () => {
         try {
           await tagService.deleteTag(record.id);
-          message.success("删除成功");
+          message.success(t('common.deleteSuccess'));
           fetchTags();
         } catch (error) {
-          message.error("删除失败");
+          message.error(t('common.deleteFailed'));
         }
       },
     });
@@ -105,14 +107,14 @@ export default function TagsPage() {
       
       setLoading(true);
       await tagService.createTag(values);
-      
-      message.success("保存成功");
+
+      message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
       form.resetFields();
       fetchTags();
     } catch (error) {
       console.error("Operation Failed:", error);
-      message.error("操作失败");
+      message.error(t('common.operationFailed'));
     } finally {
       setLoading(false);
     }

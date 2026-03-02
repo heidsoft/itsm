@@ -33,6 +33,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { TicketApi } from '@/lib/api/ticket-api';
+import { useI18n } from '@/lib/i18n';
 import {
   ticketTypePresets,
   ticketTypeCategories,
@@ -64,6 +65,7 @@ const iconMap: Record<string, React.ReactNode> = {
 export default function CreateTicketPage() {
   const router = useRouter();
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -125,6 +127,7 @@ export default function CreateTicketPage() {
         description: description,
         priority: values.priority,
         category: values.category,
+        formFields: selectedType ? { type: selectedType.id } : undefined,
       });
 
       message.success('工单创建成功');
@@ -387,7 +390,7 @@ export default function CreateTicketPage() {
                 <Button type='primary' onClick={handleSubmit} loading={loading}>
                   创建工单
                 </Button>
-                <Button onClick={() => router.push('/tickets')}>取消</Button>
+                <Button onClick={() => router.push('/tickets')}>{t('common.cancel')}</Button>
               </Space>
             </Form>
           </Col>

@@ -197,7 +197,6 @@ const SLADefinitionManagement = () => {
       const transformed = (data.items || data || []).map(transformSLA);
       setSlaDefinitions(transformed);
     } catch (error) {
-      console.error('Failed to load SLA definitions:', error);
       message.error('加载SLA定义失败');
     } finally {
       setLoading(false);
@@ -252,7 +251,6 @@ const SLADefinitionManagement = () => {
       );
       message.success('SLA状态已更新');
     } catch (error) {
-      console.error('Failed to update SLA status:', error);
       message.error('更新状态失败');
     }
   };
@@ -264,7 +262,6 @@ const SLADefinitionManagement = () => {
       setSlaDefinitions(prev => prev.filter(sla => sla.id !== slaId));
       message.success('SLA定义已删除');
     } catch (error) {
-      console.error('Failed to delete SLA:', error);
       message.error('删除失败');
     }
   };

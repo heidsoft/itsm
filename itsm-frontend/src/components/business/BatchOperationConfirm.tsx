@@ -4,6 +4,7 @@ import React from 'react';
 import { Modal, Typography, List, Tag, Space, Divider } from 'antd';
 import { ExclamationCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { Ticket } from '@/lib/services/ticket-service';
+import { useI18n } from '@/lib/i18n';
 
 const { Text, Paragraph } = Typography;
 
@@ -237,6 +238,7 @@ export const BatchOperationConfirm: React.FC<BatchOperationConfirmProps> = ({
   onCancel,
   loading = false,
 }) => {
+  const { t } = useI18n();
   const config = OPERATION_CONFIG[operationType];
 
   if (!config) {
@@ -255,8 +257,8 @@ export const BatchOperationConfirm: React.FC<BatchOperationConfirmProps> = ({
       onOk={onConfirm}
       onCancel={onCancel}
       confirmLoading={loading}
-      okText="确认"
-      cancelText="取消"
+      okText={t('common.confirm')}
+      cancelText={t('common.cancel')}
       okButtonProps={{
         danger: config.danger,
         type: config.danger ? 'primary' : 'default',

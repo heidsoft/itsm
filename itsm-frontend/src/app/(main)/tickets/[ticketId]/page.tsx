@@ -23,6 +23,7 @@ import {
   Input,
 } from 'antd';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -46,6 +47,7 @@ const TicketDetailPage: React.FC = () => {
   const params = useParams();
   const { message: antMessage } = App.useApp();
   const { user: currentUser } = useAuthStore();
+  const { t } = useI18n();
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -455,7 +457,7 @@ const TicketDetailPage: React.FC = () => {
           title={
             <Space>
               <Edit className='w-5 h-5 text-green-600' />
-              编辑工单
+              {t('tickets.edit')}
             </Space>
           }
           open={editModalVisible}
@@ -552,7 +554,7 @@ const TicketDetailPage: React.FC = () => {
                   取消
                 </Button>
                 <Button type='primary' htmlType='submit' icon={<Save />}>
-                  保存修改
+                  {t('common.save')}
                 </Button>
               </Space>
             </Form.Item>

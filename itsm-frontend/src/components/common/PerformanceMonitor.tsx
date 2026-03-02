@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Card, 
-  Progress, 
-  Statistic, 
-  Row, 
-  Col, 
-  Tag, 
+import {
+  Card,
+  Progress,
+  Statistic,
+  Row,
+  Col,
+  Tag,
   Timeline,
   Typography,
   Space,
-  Button
+  Button,
+  message
 } from 'antd';
 import { 
   Activity, 
@@ -173,7 +174,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
       setAlerts(prev => [...newAlerts, ...prev.slice(0, 10)]); // 保留最新10条告警
     } catch (error) {
-      console.error('获取性能指标失败:', error);
+      message.error('获取性能指标失败');
       // 出错时不显示错误UI，保持加载状态或空状态
     } finally {
       setLoading(false);

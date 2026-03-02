@@ -34,6 +34,7 @@ import type { UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { TicketAttachmentApi, TicketAttachment } from '@/lib/api/ticket-attachment-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
+import { useI18n } from '@/lib/i18n';
 
 const { Text } = Typography;
 
@@ -55,6 +56,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
   onAttachmentUploaded,
   onAttachmentDeleted,
 }) => {
+  const { t } = useI18n();
   const { message: antMessage } = App.useApp();
   const [attachments, setAttachments] = useState<TicketAttachment[]>([]);
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,6 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       const response = await TicketAttachmentApi.listAttachments(ticketId);
       setAttachments(response.attachments || []);
     } catch (error) {
-      console.error('Failed to load attachments:', error);
       antMessage.error('加载附件列表失败');
     } finally {
       setLoading(false);
@@ -113,7 +114,6 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
         onSuccess(attachment);
       }
     } catch (error: any) {
-      console.error('Failed to upload attachment:', error);
       antMessage.error(error.message || '附件上传失败');
       if (onError) {
         onError(error);
@@ -131,7 +131,6 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       await loadAttachments();
       onAttachmentDeleted?.(attachment.id);
     } catch (error: any) {
-      console.error('Failed to delete attachment:', error);
       antMessage.error(error.message || '附件删除失败');
     }
   };
@@ -260,12 +259,12 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
                   canDelete(attachment) && (
                     <Popconfirm
                       key="delete"
-                      title="确定要删除这个附件吗？"
+                      title={t('common.confirmDeleteContent')}
                       onConfirm={() => handleDelete(attachment)}
-                      okText="确定"
-                      cancelText="取消"
+                      okText={t('common.confirm')}
+                      cancelText={t('common.cancel')}
                     >
-                      <Tooltip title="删除">
+                      <Tooltip title={t('common.delete')}>
                         <Button type="text" danger icon={<DeleteOutlined />} />
                       </Tooltip>
                     </Popconfirm>

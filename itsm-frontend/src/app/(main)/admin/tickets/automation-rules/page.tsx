@@ -50,7 +50,6 @@ const AutomationRulesPage: React.FC = () => {
       const response = await TicketAutomationRuleApi.listRules();
       setRules(response.rules || []);
     } catch (error) {
-      console.error('Failed to load automation rules:', error);
       message.error('加载自动化规则失败');
     } finally {
       setLoading(false);
@@ -95,7 +94,6 @@ const AutomationRulesPage: React.FC = () => {
       message.success('规则删除成功');
       loadRules();
     } catch (error) {
-      console.error('Failed to delete rule:', error);
       message.error('删除失败');
     }
   };
@@ -109,7 +107,6 @@ const AutomationRulesPage: React.FC = () => {
       message.success(rule.is_active ? '规则已禁用' : '规则已启用');
       loadRules();
     } catch (error) {
-      console.error('Failed to toggle rule:', error);
       message.error('操作失败');
     }
   };
@@ -139,7 +136,6 @@ const AutomationRulesPage: React.FC = () => {
       setModalVisible(false);
       loadRules();
     } catch (error) {
-      console.error('Failed to save rule:', error);
       message.error('保存失败');
     }
   };

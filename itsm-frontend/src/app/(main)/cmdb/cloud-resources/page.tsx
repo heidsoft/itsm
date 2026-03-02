@@ -36,15 +36,21 @@ export default function CloudResourcePage() {
   }, [services]);
 
   const loadServices = async () => {
+    const isMounted = true;
     try {
       const list = await CMDBApi.getCloudServices();
-      setServices(list || []);
+      if (isMounted) {
+        setServices(list || []);
+      }
     } catch (error) {
-      message.error('加载云服务目录失败');
+      if (isMounted) {
+        message.error('加载云服务目录失败');
+      }
     }
   };
 
   const loadResources = async () => {
+    const isMounted = true;
     setLoading(true);
     try {
       const values = form.getFieldsValue();
@@ -53,17 +59,27 @@ export default function CloudResourcePage() {
         service_id: values.service_id,
         region: values.region,
       });
-      setResources(list || []);
+      if (isMounted) {
+        setResources(list || []);
+      }
     } catch (error) {
-      message.error('加载云资源失败');
+      if (isMounted) {
+        message.error('加载云资源失败');
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
     loadServices();
     loadResources();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const columns = [

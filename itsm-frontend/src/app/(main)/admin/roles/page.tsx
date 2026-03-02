@@ -170,7 +170,6 @@ export default function RoleManagement() {
         totalUsers: 128, // 模拟用户数
       });
     } catch (error) {
-      console.error('加载角色数据失败:', error);
       message.error('加载角色数据失败');
     } finally {
       setLoading(false);
@@ -183,7 +182,6 @@ export default function RoleManagement() {
       const permissions = await RoleAPI.getPermissions();
       setAvailablePermissions(permissions);
     } catch (error) {
-      console.error('加载权限列表失败:', error);
       // 使用默认权限列表
       const defaultPermissions: string[] = [];
       Object.values(PERMISSION_MODULES).forEach(module => {
@@ -239,7 +237,6 @@ export default function RoleManagement() {
       setSelectedRole(null);
       loadRoles(); // 重新加载数据
     } catch (error) {
-      console.error('保存角色失败:', error);
       message.error('保存角色失败');
     }
   };
@@ -251,7 +248,6 @@ export default function RoleManagement() {
       message.success('角色删除成功');
       loadRoles(); // 重新加载数据
     } catch (error) {
-      console.error('删除角色失败:', error);
       message.error('删除角色失败');
     }
   };

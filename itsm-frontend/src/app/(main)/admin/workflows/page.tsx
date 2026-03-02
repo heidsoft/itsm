@@ -233,7 +233,6 @@ const WorkflowManagement = () => {
       }));
       setWorkflows(workflowList);
     } catch (error) {
-      console.error('Failed to load workflows:', error);
       // 失败时使用mock数据
       setWorkflows(mockWorkflows);
     } finally {

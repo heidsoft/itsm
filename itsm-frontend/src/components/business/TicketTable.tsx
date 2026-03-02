@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Button, Space, Badge, Table } from 'antd';
+import { Button, Space, Badge, Table, Empty } from 'antd';
 import { AlertTriangle } from 'lucide-react';
 import {
   Ticket,
@@ -12,7 +12,6 @@ import {
 import { VirtualizedTicketList } from './VirtualizedTicketList';
 import { LazyWrapper, LoadingSpinner } from '../common/LazyComponents';
 import { TicketListSkeleton } from './TicketListSkeleton';
-import { LoadingEmptyError } from '../ui/LoadingEmptyError';
 
 interface TicketTableProps {
   tickets: Ticket[];
@@ -230,13 +229,9 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
       return (
         <div className='space-y-4'>
           {renderActionBar()}
-          <LoadingEmptyError
-            state='empty'
-            empty={{
-              title: '暂无工单',
-              description: '当前没有工单数据，请使用页面顶部的"创建工单"按钮创建第一个工单',
-              // 移除 actionText 和 onAction，引导用户使用页面顶部的创建按钮
-            }}
+          <Empty
+            description='暂无工单'
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         </div>
       );

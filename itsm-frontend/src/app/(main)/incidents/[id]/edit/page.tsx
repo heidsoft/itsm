@@ -6,12 +6,14 @@ import { Button, Card, Form, Input, Select, message, Row, Col, Space, Divider } 
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { IncidentAPI } from '@/lib/api/incident-api';
 import type { Incident } from '@/lib/api/types';
+import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
 export default function IncidentEditPage() {
   const router = useRouter();
+  const { t } = useI18n();
   const params = useParams();
   const id = params?.id as string;
   const [form] = Form.useForm();
@@ -23,10 +25,12 @@ export default function IncidentEditPage() {
   useEffect(() => {
     if (!id) return;
 
+    let isMounted = true;
     const fetchIncident = async () => {
       setFetching(true);
       try {
         const resp = await IncidentAPI.getIncident(Number(id));
+        if (!isMounted) return;
         const data = resp as any;
         setIncidentData(data);
         form.setFieldsValue({
@@ -39,14 +43,21 @@ export default function IncidentEditPage() {
           status: data.status,
         });
       } catch (error) {
-        message.error('获取事件失败');
-        router.push('/incidents');
+        if (isMounted) {
+          message.error(t('common.getFailed'));
+          router.push('/incidents');
+        }
       } finally {
-        setFetching(false);
+        if (isMounted) {
+          setFetching(false);
+        }
       }
     };
 
     fetchIncident();
+    return () => {
+      isMounted = false;
+    };
   }, [id, form, router]);
 
   const handleSubmit = async (values: any) => {
@@ -55,10 +66,10 @@ export default function IncidentEditPage() {
     setLoading(true);
     try {
       await IncidentAPI.updateIncident(Number(id), values);
-      message.success('更新成功');
+      message.success(t('incidents.updateSuccess'));
       router.push(`/incidents/${id}`);
     } catch (error) {
-      message.error('更新失败');
+      message.error(t('incidents.updateFailed'));
     } finally {
       setLoading(false);
     }

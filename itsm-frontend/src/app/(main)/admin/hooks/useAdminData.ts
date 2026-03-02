@@ -49,7 +49,7 @@ export const useAdminData = () => {
             const instances = await WorkflowAPI.getInstances({ status: 'running', pageSize: 1 });
             newStats.runningWorkflows = instances.total;
         } catch (e) {
-            console.warn('Failed to fetch running workflow instances', e);
+            // 忽略错误，使用默认值
         }
 
         setStats(prev => ({
@@ -61,7 +61,7 @@ export const useAdminData = () => {
         }));
 
       } catch (error) {
-        console.error('Failed to fetch admin data:', error);
+        // 忽略错误，使用默认值
       } finally {
         setLoading(false);
       }

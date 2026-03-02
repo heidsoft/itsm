@@ -7,6 +7,7 @@ import { Breadcrumb, Button, Card, Divider, Form, Input, Select, Space, message 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import { CIStatus, CIStatusLabels } from '@/constants/cmdb';
 import type { CIType, CloudResource, CloudService } from '@/types/biz/cmdb';
+import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 
@@ -73,6 +74,7 @@ const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
 };
 
 const CreateCIPage: React.FC = () => {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
@@ -94,7 +96,7 @@ const CreateCIPage: React.FC = () => {
         const res = await CMDBApi.getTypes();
         setTypes(res || []);
       } catch (error) {
-        message.error('加载资产类型失败');
+        message.error(t('cmdb.loadCITypesFailed'));
       } finally {
         setTypesLoading(false);
       }
@@ -113,7 +115,7 @@ const CreateCIPage: React.FC = () => {
         setCloudResources(resources || []);
         setCloudServices(services || []);
       } catch (error) {
-        message.error('加载云资源数据失败');
+        message.error(t('cmdb.loadCloudResourcesFailed'));
       } finally {
         setCloudLoading(false);
       }
@@ -197,7 +199,7 @@ const CreateCIPage: React.FC = () => {
               ? JSON.parse(values.attributes)
               : values.attributes;
         } catch (parseError) {
-          message.error('扩展属性需要是有效的 JSON');
+          message.error(t('cmdb.invalidJSON'));
           return;
         }
       }
@@ -228,13 +230,13 @@ const CreateCIPage: React.FC = () => {
         cloud_resource_ref_id: values.cloud_resource_ref_id,
         cloud_metadata: values.cloud_metadata,
       } as any);
-      message.success('配置项创建成功');
+      message.success(t('cmdb.createCISuccess'));
       router.push('/cmdb');
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message || '创建配置项失败');
+        message.error(error.message || t('cmdb.createCIFailed'));
       } else {
-        message.error('创建配置项失败');
+        message.error(t('cmdb.createCIFailed'));
       }
     } finally {
       setSaving(false);

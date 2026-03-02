@@ -6,6 +6,7 @@
 import React from 'react';
 import { Modal, Alert, Typography, Tag } from 'antd';
 import type { WorkflowDefinition } from './WorkflowTypes';
+import { useI18n } from '@/lib/i18n';
 
 const { Text } = Typography;
 
@@ -22,14 +23,15 @@ export default function WorkflowVersionModal({
   onCreate,
   workflow,
 }: WorkflowVersionModalProps) {
+  const { t } = useI18n();
   return (
     <Modal
       title="创建新版本"
       open={visible}
       onOk={onCreate}
       onCancel={onClose}
-      okText="创建"
-      cancelText="取消"
+      okText={t('common.create')}
+      cancelText={t('common.cancel')}
     >
       <div className="space-y-4">
         <Alert

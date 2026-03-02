@@ -99,7 +99,6 @@ const ServiceCatalogManagement = () => {
         categories: categories,
       });
     } catch (error) {
-      console.error('Failed to fetch catalogs:', error);
       message.error('获取服务目录失败');
     } finally {
       setLoading(false);
@@ -163,7 +162,6 @@ const ServiceCatalogManagement = () => {
       form.resetFields();
       fetchCatalogs();
     } catch (error) {
-      console.error('Failed to save catalog:', error);
       message.error(editingCatalog ? '更新失败' : '创建失败');
     }
   };
@@ -190,7 +188,6 @@ const ServiceCatalogManagement = () => {
       message.success('删除成功');
       fetchCatalogs();
     } catch (error) {
-      console.error('Failed to delete catalog:', error);
       message.error('删除失败');
     }
   };
@@ -203,7 +200,6 @@ const ServiceCatalogManagement = () => {
       setSelectedRowKeys([]);
       fetchCatalogs();
     } catch (error) {
-      console.error('Failed to batch delete:', error);
       message.error('批量删除失败');
     }
   };
@@ -228,7 +224,6 @@ const ServiceCatalogManagement = () => {
       setSelectedRowKeys([]);
       fetchCatalogs();
     } catch (error) {
-      console.error('Failed to batch update status:', error);
       message.error('批量操作失败');
     }
   };

@@ -183,7 +183,6 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
         antMessage.info('未找到符合条件的数据');
       }
     } catch (error) {
-      console.error('Failed to load analytics data:', error);
       antMessage.error('加载分析数据失败');
       // 出错时重置为空状态
       setChartData([]);
@@ -218,7 +217,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
       antMessage.success('配置已保存');
       loadAnalyticsData();
     } catch (error) {
-      console.error('Failed to save config:', error);
+      antMessage.error('保存配置失败');
     }
   }, [form, config, onConfigChange, antMessage, loadAnalyticsData]);
 

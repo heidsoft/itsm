@@ -188,7 +188,6 @@ const TicketList: React.FC<TicketListProps> = ({
         setDeleteModalVisible(false);
         setTicketToDelete(null);
       } catch (error) {
-        console.error('Delete ticket error:', error);
         message.error('删除失败');
       }
     },
@@ -208,7 +207,6 @@ const TicketList: React.FC<TicketListProps> = ({
       message.success(`成功删除 ${selectedTickets.size} 个工单`);
       deselectAll();
     } catch (error) {
-      console.error('Batch delete error:', error);
       message.error('批量删除失败');
     }
   }, [selectedTickets, batchDeleteTickets, deselectAll]);
@@ -227,7 +225,6 @@ const TicketList: React.FC<TicketListProps> = ({
       document.body.removeChild(a);
       message.success('导出成功');
     } catch (error) {
-      console.error('Export error:', error);
       message.error('导出失败');
     }
   }, [filters]);
@@ -239,11 +236,25 @@ const TicketList: React.FC<TicketListProps> = ({
       const endKey = field === 'created' ? 'created_before' : 'due_before';
 
       if (dates && dates[0] && dates[1]) {
+        // 完整日期范围
         updateFilters({
           [startKey]: dates[0].format('YYYY-MM-DD'),
           [endKey]: dates[1].format('YYYY-MM-DD'),
         });
+      } else if (dates && dates[0] && !dates[1]) {
+        // 只选择了开始日期
+        updateFilters({
+          [startKey]: dates[0].format('YYYY-MM-DD'),
+          [endKey]: undefined,
+        });
+      } else if (dates && !dates[0] && dates[1]) {
+        // 只选择了结束日期
+        updateFilters({
+          [startKey]: undefined,
+          [endKey]: dates[1].format('YYYY-MM-DD'),
+        });
       } else {
+        // 清空日期过滤器
         updateFilters({
           [startKey]: undefined,
           [endKey]: undefined,

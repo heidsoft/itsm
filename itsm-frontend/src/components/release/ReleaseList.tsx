@@ -20,6 +20,7 @@ import {
   Row,
   Col,
   Empty,
+  message,
 } from 'antd';
 import {
   SearchOutlined,
@@ -90,7 +91,7 @@ const ReleaseList: React.FC = () => {
       const resp = await ReleaseApi.getReleaseStats();
       setStats(resp);
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      message.error('加载统计数据失败');
     }
   };
 

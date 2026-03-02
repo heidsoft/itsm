@@ -144,8 +144,8 @@ function TicketFilters({
     }
   };
 
-  const handleDateRangeChange = (dates: dayjs.Dayjs[] | null, dateStrings: [string, string]) => {
-    if (dates && dateStrings[0] && dateStrings[1]) {
+  const handleDateRangeChange = (dates: any, dateStrings: any) => {
+    if (dates && dateStrings && dateStrings[0] && dateStrings[1]) {
       onFilterChange({
         dateStart: dateStrings[0],
         dateEnd: dateStrings[1],

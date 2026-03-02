@@ -17,6 +17,7 @@ import {
   Select,
   TimePicker,
   Checkbox,
+  message,
 } from 'antd';
 import {
   RotateCcw,
@@ -184,7 +185,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       
       onSave?.(rollbackData);
     } catch (error) {
-      console.error('Form validation failed:', error);
+      message.error('表单验证失败');
     }
   };
 

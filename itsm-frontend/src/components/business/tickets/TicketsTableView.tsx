@@ -14,6 +14,7 @@ import {
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import type { Ticket } from '@/types/ticket';
 import { AvatarImage } from '@/components/ui/OptimizedImage';
+import { useI18n } from '@/lib/i18n';
 
 export interface TicketsTableViewProps {
   tickets: Ticket[];
@@ -45,6 +46,7 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
   canEdit = true,
   canDelete = true,
 }) => {
+  const { t } = useI18n();
   // 状态颜色映射
   const statusColorMap: Record<string, string> = {
     new: 'blue',
@@ -228,12 +230,12 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
           
           {canDelete && (
             <Popconfirm
-              title="确定要删除这个工单吗？"
+              title={t('common.confirmDeleteContent')}
               onConfirm={() => onDelete(record)}
-              okText="确定"
-              cancelText="取消"
+              okText={t('common.confirm')}
+              cancelText={t('common.cancel')}
             >
-              <Tooltip title="删除">
+              <Tooltip title={t('common.delete')}>
                 <Button
                   type="link"
                   size="small"

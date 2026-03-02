@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Select, Avatar, Spin } from 'antd';
+import { Select, Avatar, Spin, message } from 'antd';
 import { UserApi } from '@/lib/api/user-api';
 import type { User } from '@/lib/api/user-api';
 import { User as UserIcon } from 'lucide-react';
@@ -42,7 +42,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
       });
       setUsers(response.users || []);
     } catch (error) {
-      console.error('Failed to fetch users:', error);
+      message.error('获取用户列表失败');
     } finally {
       setLoading(false);
     }

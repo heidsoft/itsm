@@ -32,12 +32,14 @@ import {
 } from "lucide-react";
 import { dashboardService, DashboardOverviewResponse } from "@/lib/services/analytics-service";
 import { ticketService } from "@/lib/services/ticket-service";
+import { useI18n } from "@/lib/i18n";
 
 const { Option } = Select;
 const { Text, Title } = Typography;
 const { TabPane } = Tabs;
 
 const TicketDashboardPage = () => {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [timeRange, setTimeRange] = useState("7d");
   const [selectedTeam, setSelectedTeam] = useState("all");
@@ -61,7 +63,7 @@ const TicketDashboardPage = () => {
       setTicketStats(statsRes);
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
-      message.error("加载仪表盘数据失败");
+      message.error(t('common.getFailed'));
     } finally {
       setLoading(false);
     }

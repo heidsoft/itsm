@@ -341,7 +341,6 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
         antMessage.success('工单已移动');
       }
     } catch (error) {
-      console.error('Failed to move ticket:', error);
       antMessage.error('移动工单失败');
     }
   };
@@ -356,7 +355,6 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
       setSaveViewModalVisible(false);
       form.resetFields();
     } catch (error) {
-      console.error('Failed to save view:', error);
     }
   };
 

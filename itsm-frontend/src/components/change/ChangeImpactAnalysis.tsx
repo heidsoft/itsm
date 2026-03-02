@@ -17,6 +17,7 @@ import {
   Alert,
   Transfer,
   Checkbox,
+  message,
 } from 'antd';
 import {
   Target,
@@ -154,7 +155,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       
       onSave?.(analysisData);
     } catch (error) {
-      console.error('Form validation failed:', error);
+      message.error('表单验证失败');
     }
   };
 

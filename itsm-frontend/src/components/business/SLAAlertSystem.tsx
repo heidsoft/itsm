@@ -100,7 +100,6 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       const data = await SLAApi.getAlertRules({ sla_definition_id: slaDefinitionId });
       setAlertRules(data);
     } catch (error) {
-      console.error('Failed to load alert rules:', error);
       antMessage.error('加载预警规则失败');
       setAlertRules([]);
     } finally {
@@ -116,7 +115,6 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       const data = await SLAApi.getAlertHistory({ sla_definition_id: slaDefinitionId });
       setAlertHistory((data.items || []) as unknown as AlertHistory[]);
     } catch (error) {
-      console.error('Failed to load alert history:', error);
       // 失败时设置为空数组，不使用Mock数据
       setAlertHistory([]);
     }
@@ -162,7 +160,6 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       form.resetFields();
       loadAlertRules();
     } catch (error) {
-      console.error('Failed to save alert rule:', error);
       antMessage.error('保存预警规则失败');
     }
   }, [form, editingRule, slaDefinitionId, antMessage, loadAlertRules]);
@@ -176,7 +173,6 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         antMessage.success('预警规则已删除');
         loadAlertRules();
       } catch (error) {
-        console.error('Failed to delete alert rule:', error);
         antMessage.error('删除预警规则失败');
       }
     },
@@ -192,7 +188,6 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         antMessage.success(`预警规则已${!isActive ? '启用' : '禁用'}`);
         loadAlertRules();
       } catch (error) {
-        console.error('Failed to toggle rule status:', error);
         antMessage.error('更新规则状态失败');
       }
     },

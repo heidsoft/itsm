@@ -71,7 +71,6 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       setVersions(versionHistory.sort((a, b) => b.version - a.version));
     } catch (error) {
       message.error('加载版本历史失败');
-      console.error('Load versions failed:', error);
     } finally {
       setLoading(false);
     }
@@ -92,7 +91,6 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       });
     } catch (error) {
       message.error('恢复版本失败');
-      console.error('Restore version failed:', error);
     }
   };
 
@@ -114,7 +112,6 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       setCompareModalVisible(true);
     } catch (error) {
       message.error('比较版本失败');
-      console.error('Compare versions failed:', error);
     } finally {
       setLoading(false);
     }

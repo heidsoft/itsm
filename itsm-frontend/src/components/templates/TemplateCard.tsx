@@ -34,6 +34,7 @@ import {
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import type { TicketTemplate } from '@/types/template';
+import { useI18n } from '@/lib/i18n';
 
 export interface TemplateCardProps {
   template: TicketTemplate;
@@ -58,6 +59,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
   isFavorite = false,
   viewMode = 'grid',
 }) => {
+  const { t } = useI18n();
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isFavorite) {
@@ -365,8 +367,8 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               e?.stopPropagation();
               onDelete?.(template.id);
             }}
-            okText="确认"
-            cancelText="取消"
+            okText={t('common.confirm')}
+            cancelText={t('common.cancel')}
           >
             <Button
               type="text"

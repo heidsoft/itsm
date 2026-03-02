@@ -15,6 +15,7 @@ import {
   Statistic,
   Row,
   Col,
+  message,
 } from "antd";
 import {
   Clock,
@@ -150,7 +151,7 @@ export const SmartSLAMonitor: React.FC = () => {
       setBreachedTickets(mockBreached);
       setAlerts(mockAlerts);
     } catch (error) {
-      console.error("加载SLA数据失败:", error);
+      message.error("加载SLA数据失败");
     } finally {
       setLoading(false);
     }

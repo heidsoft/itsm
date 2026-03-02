@@ -182,7 +182,6 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
       setAlerts(mockAlerts);
       lastUpdateTimeRef.current = new Date();
     } catch (error) {
-      console.error('Failed to load SLA data:', error);
       antMessage.error('加载SLA数据失败');
     } finally {
       setLoading(false);

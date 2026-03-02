@@ -131,7 +131,6 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       setEditingSubtask(null);
       form.resetFields();
     } catch (error) {
-      console.error('Failed to save subtask:', error);
       antMessage.error('保存失败');
     }
   }, [form, editingSubtask, parentTicket.id, onCreateSubtask, onUpdateSubtask, antMessage]);
@@ -143,7 +142,6 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
         await onDeleteSubtask?.(id);
         antMessage.success('子任务已删除');
       } catch (error) {
-        console.error('Failed to delete subtask:', error);
         antMessage.error('删除失败');
       }
     },

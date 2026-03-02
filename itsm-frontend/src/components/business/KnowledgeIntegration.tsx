@@ -156,7 +156,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
       }));
       setRecommendations(mapped);
     } catch (error) {
-      console.error('Failed to load recommendations:', error);
+      message.error('加载推荐失败');
     }
   };
 
@@ -176,7 +176,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
       const data = await KnowledgeBaseApi.getRecentArticles({ limit: 5 });
       setRelatedArticles(data as unknown as KnowledgeArticle[]);
     } catch (error) {
-      console.error('Failed to load related articles:', error);
+      message.error('加载相关文章失败');
     }
   };
 

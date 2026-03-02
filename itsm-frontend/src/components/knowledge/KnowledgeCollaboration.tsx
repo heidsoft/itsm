@@ -129,8 +129,7 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
         setSession(null);
         setParticipants([]);
       } catch (error) {
-        console.error('加载协作数据失败:', error);
-        // 不显示错误提示，以免干扰用户，因为这是附加功能
+        message.error('加载协作数据失败');
       }
     };
 
@@ -158,7 +157,6 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
       setNewComment('');
       message.success('评论添加成功');
     } catch (error) {
-      console.error('添加评论失败:', error);
       message.error('添加评论失败');
     }
   };
@@ -184,7 +182,6 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
       );
       message.success('评论状态已更新');
     } catch (error) {
-      console.error('更新评论状态失败:', error);
       message.error('操作失败');
     }
   };
@@ -205,7 +202,6 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
       setShowShareModal(false);
       setShareEmail('');
     } catch (error) {
-      console.error('分享失败:', error);
       message.error('分享失败');
     } finally {
       setIsSharing(false);

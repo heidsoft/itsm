@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Modal, Form, Input, Select, Button, Row, Col, DatePicker, Avatar, Steps, Card, Alert, Upload } from 'antd';
+import { Modal, Form, Input, Select, Button, Row, Col, DatePicker, Avatar, Steps, Card, Alert, Upload, message } from 'antd';
 import { Plus, Edit, BookOpen, FileText, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 import { App } from 'antd';
 import {
@@ -10,6 +10,7 @@ import {
   TicketPriority,
   TicketType,
 } from '../../lib/services/ticket-service';
+import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 
@@ -33,6 +34,7 @@ const TicketForm: React.FC<{
   isEditing?: boolean;
 }> = React.memo(({ form, onSubmit, loading = false, isEditing = false }) => {
   const { message: antMessage } = App.useApp();
+  const { t } = useI18n();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<any>({});
 
@@ -82,7 +84,7 @@ const TicketForm: React.FC<{
         setCurrentStep(currentStep + 1);
       }
     } catch (error) {
-      console.error('Validation failed:', error);
+      message.error('表单验证失败');
     }
   }, [currentStep, form, steps.length]);
 
@@ -327,7 +329,7 @@ const TicketForm: React.FC<{
       setFormData({});
       setCurrentStep(0);
     } catch (error) {
-      console.error('Submit failed:', error);
+      message.error('提交失败');
     }
   }, [formData, form, onSubmit]);
 
@@ -524,6 +526,7 @@ TicketForm.displayName = 'TicketForm';
 
 export const TicketModal: React.FC<TicketModalProps> = React.memo(
   ({ visible, editingTicket, onCancel, onSubmit, loading = false }) => {
+    const { t } = useI18n();
     const [form] = Form.useForm();
 
     // 当编辑工单时，初始化表单数据
@@ -569,10 +572,10 @@ export const TicketModal: React.FC<TicketModalProps> = React.memo(
             </div>
             <div>
               <h3 className='text-lg font-semibold text-gray-900'>
-                {editingTicket ? '编辑工单' : '创建工单'}
+                {editingTicket ? t('tickets.edit') : t('tickets.create')}
               </h3>
               <p className='text-sm text-gray-500'>
-                {editingTicket ? '修改工单信息' : '填写工单详细信息'}
+                {editingTicket ? t('tickets.editDescription') || '修改工单信息' : t('tickets.createDescription') || '填写工单详细信息'}
               </p>
             </div>
           </div>

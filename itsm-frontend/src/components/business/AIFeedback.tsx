@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ThumbsUp, ThumbsDown, Star, MessageSquare } from 'lucide-react';
 import { aiSaveFeedback, AIFeedbackRequest } from '@/lib/api/ai-api';
+import { message } from 'antd';
 
 interface AIFeedbackProps {
   kind: string;
@@ -64,7 +65,7 @@ export const AIFeedback: React.FC<AIFeedbackProps> = ({
       setSubmitted(true);
       onFeedbackSubmitted?.();
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      message.error('提交反馈失败，请稍后重试');
       // Reset feedback state on error
       setFeedback(null);
       setScore(0);

@@ -25,8 +25,10 @@ import { PageContainer } from '@/app/components/PageContainer';
 import { teamService, Team } from '@/lib/services/team-service';
 
 import { UserApi } from '@/lib/api/user-api';
+import { useI18n } from '@/lib/i18n';
 
 export default function TeamsPage() {
+  const { t } = useI18n();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -55,7 +57,7 @@ export default function TeamsPage() {
       setTeams(data);
     } catch (error) {
       console.error('Failed to fetch teams:', error);
-      message.error('获取团队列表失败');
+      message.error(t('common.getFailed'));
     } finally {
       setFetching(false);
     }
@@ -68,25 +70,25 @@ export default function TeamsPage() {
 
   const columns = [
     {
-      title: '团队名称',
+      title: t('enterprise.teams.teamName'),
       dataIndex: 'name',
       key: 'name',
       render: (text: string) => <span className='font-medium'>{text}</span>,
     },
     {
-      title: '团队代码',
+      title: t('enterprise.teams.teamCode'),
       dataIndex: 'code',
       key: 'code',
       render: (text: string) => <Tag>{text}</Tag>,
     },
     {
-      title: '负责人',
+      title: t('enterprise.teams.manager'),
       dataIndex: 'manager_id',
       key: 'manager',
       render: (text: number) => <span>{text ? `用户ID: ${text}` : '-'}</span>,
     },
     {
-      title: '成员',
+      title: t('enterprise.teams.members'),
       key: 'members',
       render: (_: any, record: Team) => {
         const members = record.edges?.users || [];
@@ -104,12 +106,12 @@ export default function TeamsPage() {
       },
     },
     {
-      title: '描述',
+      title: t('common.description'),
       dataIndex: 'description',
       key: 'description',
     },
     {
-      title: '操作',
+      title: t('common.action'),
       key: 'action',
       render: (_: any, record: Team) => (
         <Space size='middle'>
@@ -132,15 +134,15 @@ export default function TeamsPage() {
 
   const handleDelete = (record: Team) => {
     Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除团队 "${record.name}" 吗？`,
+      title: t('common.confirmDelete'),
+      content: t('enterprise.teams.deleteConfirm', { name: record.name }),
       onOk: async () => {
         try {
           await teamService.deleteTeam(record.id);
-          message.success('删除成功');
+          message.success(t('common.deleteSuccess'));
           fetchTeams();
         } catch (error) {
-          message.error('删除失败');
+          message.error(t('common.deleteFailed'));
         }
       },
     });
@@ -153,13 +155,13 @@ export default function TeamsPage() {
 
       await teamService.createTeam(values);
 
-      message.success('保存成功');
+      message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
       form.resetFields();
       fetchTeams();
     } catch (error) {
       console.error('Operation Failed:', error);
-      message.error('操作失败');
+      message.error(t('common.operationFailed'));
     } finally {
       setLoading(false);
     }
@@ -168,12 +170,12 @@ export default function TeamsPage() {
   return (
     <PageContainer
       header={{
-        title: '团队管理',
-        breadcrumb: { items: [{ title: '首页' }, { title: '企业管理' }, { title: '团队管理' }] },
+        title: t('enterprise.teams.title'),
+        breadcrumb: { items: [{ title: t('common.back') }, { title: '企业管理' }, { title: t('enterprise.teams.title') }] },
       }}
       extra={[
         <Button key='refresh' icon={<SyncOutlined />} onClick={fetchTeams} loading={fetching}>
-          刷新
+          {t('common.refresh')}
         </Button>,
         <Button
           key='create'
@@ -184,14 +186,14 @@ export default function TeamsPage() {
             setIsModalVisible(true);
           }}
         >
-          新建团队
+          {t('enterprise.teams.create')}
         </Button>,
       ]}
     >
       <Table columns={columns} dataSource={teams} rowKey='id' loading={fetching} />
 
       <Modal
-        title='新建/编辑团队'
+        title={t('enterprise.teams.createOrEdit')}
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => setIsModalVisible(false)}
@@ -200,40 +202,40 @@ export default function TeamsPage() {
         <Form form={form} layout='vertical'>
           <Form.Item
             name='name'
-            label='团队名称'
-            rules={[{ required: true, message: '请输入团队名称' }]}
+            label={t('enterprise.teams.teamName')}
+            rules={[{ required: true, message: t('common.inputPlaceholder') + t('enterprise.teams.teamName') }]}
           >
-            <Input placeholder='请输入团队名称' />
+            <Input placeholder={t('common.inputPlaceholder') + t('enterprise.teams.teamName')} />
           </Form.Item>
           <Form.Item
             name='code'
-            label='团队代码'
-            rules={[{ required: true, message: '请输入团队代码' }]}
+            label={t('enterprise.teams.teamCode')}
+            rules={[{ required: true, message: t('common.inputPlaceholder') + t('enterprise.teams.teamCode') }]}
           >
-            <Input placeholder='请输入团队代码' />
+            <Input placeholder={t('common.inputPlaceholder') + t('enterprise.teams.teamCode')} />
           </Form.Item>
-          <Form.Item name='manager_id' label='负责人'>
-            <Select 
-              placeholder='请选择负责人' 
-              options={users} 
-              showSearch 
-              filterOption={(input, option) => 
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-              }
-            />
-          </Form.Item>
-          <Form.Item name='members' label='成员'>
-            <Select 
-              mode='multiple' 
-              placeholder='请选择成员' 
+          <Form.Item name='manager_id' label={t('enterprise.teams.manager')}>
+            <Select
+              placeholder={t('common.selectPlaceholder') + t('enterprise.teams.manager')}
               options={users}
               showSearch
-              filterOption={(input, option) => 
+              filterOption={(input, option) =>
                 (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
               }
             />
           </Form.Item>
-          <Form.Item name='description' label='描述'>
+          <Form.Item name='members' label={t('enterprise.teams.members')}>
+            <Select
+              mode='multiple'
+              placeholder={t('common.selectPlaceholder') + t('enterprise.teams.members')}
+              options={users}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+              }
+            />
+          </Form.Item>
+          <Form.Item name='description' label={t('common.description')}>
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

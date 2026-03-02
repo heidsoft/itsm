@@ -57,7 +57,7 @@ export default function ServiceCatalogPage() {
         setCiTypes(types || []);
         setCloudServices(services || []);
       } catch (error) {
-        message.error('加载CMDB选项失败');
+        message.error(t('common.getFailed'));
       } finally {
         setOptionsLoading(false);
       }

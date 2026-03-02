@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Save, X } from 'lucide-react';
 
-import { Button, Space, Typography, App, Tabs, Divider } from 'antd';
+import { Button, Space, Typography, App, Tabs, Divider, message } from 'antd';
 import { TicketApi } from '@/lib/api/ticket-api';
 import { TicketNotificationApi, TicketNotification } from '@/lib/api/ticket-notification-api';
 import { Ticket, Attachment, WorkflowStep, SLAInfo } from '@/lib/api/api-config';
@@ -131,7 +131,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         setNotifications((data.notifications || data.data || []) as TicketNotification[]);
       }
     } catch (error) {
-      console.error('获取工单数据失败:', error);
+      message.error('获取工单数据失败');
     } finally {
       setLoading(false);
     }
@@ -173,7 +173,6 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       }
       fetchTicketData();
     } catch (error) {
-      console.error('Failed to assign ticket:', error);
       antMessage.error('分配失败');
     }
   };

@@ -120,7 +120,6 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
       setIsTyping(false);
       onTyping?.(false);
     } catch (error) {
-      console.error('Failed to send message:', error);
       antMessage.error('发送消息失败');
     }
   }, [newMessage, onSendMessage, onTyping, canCollaborate, antMessage]);

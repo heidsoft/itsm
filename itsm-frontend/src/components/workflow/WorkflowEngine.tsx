@@ -24,6 +24,7 @@ import {
   Alert,
   Divider,
   Switch,
+  Empty,
 } from 'antd';
 import {
   Plus,
@@ -45,7 +46,6 @@ import {
   GitCommit,
   GitPullRequest,
 } from 'lucide-react';
-import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
 const { TextArea } = Input;
@@ -674,15 +674,14 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
 
   if (workflows.length === 0) {
     return (
-      <LoadingEmptyError
-        state='empty'
-        empty={{
-          title: '暂无工作流',
-          description: '创建第一个工作流来标准化业务流程',
-          actionText: '创建工作流',
-          onAction: handleCreateWorkflow,
-        }}
-      />
+      <Empty
+        description='暂无工作流'
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+      >
+        <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateWorkflow}>
+          创建工作流
+        </Button>
+      </Empty>
     );
   }
 

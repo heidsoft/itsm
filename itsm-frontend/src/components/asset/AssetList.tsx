@@ -20,6 +20,7 @@ import {
   Row,
   Col,
   Empty,
+  message,
 } from 'antd';
 import {
   SearchOutlined,
@@ -88,7 +89,7 @@ const AssetList: React.FC = () => {
       const resp = await AssetApi.getAssetStats();
       setStats(resp);
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      message.error('加载统计数据失败');
     }
   };
 

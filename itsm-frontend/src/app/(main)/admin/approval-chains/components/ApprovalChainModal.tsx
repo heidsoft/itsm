@@ -107,7 +107,7 @@ export function ApprovalChainModal({
       await onSubmit(data);
       resetForm();
     } catch (error) {
-      console.error('Form validation failed:', error);
+      // 表单验证失败
     }
   }, [form, steps, onSubmit, resetForm]);
 

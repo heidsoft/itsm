@@ -255,7 +255,7 @@ const PermissionConfiguration = () => {
       if (permissions && permissions.length > 0) {
       }
     } catch (error) {
-      console.error('Failed to load permissions:', error);
+      message.error('加载权限失败');
     } finally {
       setLoading(false);
     }

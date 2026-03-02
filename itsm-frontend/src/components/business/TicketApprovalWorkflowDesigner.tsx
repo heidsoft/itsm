@@ -38,6 +38,7 @@ import {
   Clock,
   Settings,
 } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -231,6 +232,7 @@ const TicketApprovalWorkflowDesigner: React.FC<
   TicketApprovalWorkflowDesignerProps
 > = ({ workflow, onSave, onCancel }) => {
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [nodes, setNodes] = useState<ApprovalNode[]>([]);
   const [selectedNode, setSelectedNode] = useState<ApprovalNode | null>(null);
   const [activeTab, setActiveTab] = useState("design");
@@ -1013,8 +1015,8 @@ const TicketApprovalWorkflowDesigner: React.FC<
           form.resetFields();
         }}
         width={600}
-        okText="保存配置"
-        cancelText="取消"
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
       >
         <Form form={form} layout="vertical">
           <Form.Item

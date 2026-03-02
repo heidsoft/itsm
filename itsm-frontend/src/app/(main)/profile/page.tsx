@@ -18,8 +18,6 @@ import {
   Select,
   Switch,
   Alert,
-  Statistic,
-  Progress,
   Tag,
 } from 'antd';
 import { User, Mail, Phone, Building, Shield, Bell, Key, Camera, Save, Edit } from 'lucide-react';
@@ -27,6 +25,7 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
+import { useSearchParams } from 'next/navigation';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -57,6 +56,7 @@ interface UserStats {
 export default function ProfilePage() {
   const { t } = useI18n();
   const { user } = useAuthStore();
+  const searchParams = useSearchParams();
   // 手动触发 auth store 的 hydration
   useAuthStoreHydration();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -64,9 +64,18 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('profile');
   const [profileForm] = Form.useForm();
   const [passwordForm] = Form.useForm();
   const [preferencesForm] = Form.useForm();
+
+  // 从 URL 参数获取初始标签页
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && ['profile', 'security', 'preferences'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadProfile();
@@ -128,7 +137,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error('加载用户信息失败:', error);
-      message.error('加载用户信息失败');
+      message.error(t('profile.loadProfileFailed'));
     } finally {
       setLoading(false);
     }
@@ -159,12 +168,12 @@ export default function ProfilePage() {
         phone: values.phone as string,
         department: values.department as string,
       });
-      message.success('个人信息更新成功');
+      message.success(t('profile.updateProfileSuccess'));
       setEditing(false);
       await loadProfile();
     } catch (error) {
       console.error('更新个人信息失败:', error);
-      message.error('更新个人信息失败');
+      message.error(t('profile.updateProfileFailed'));
     } finally {
       setLoading(false);
     }
@@ -174,11 +183,11 @@ export default function ProfilePage() {
     try {
       setLoading(true);
       // 调用 API 更改密码
-      message.success('密码修改成功');
+      message.success(t('profile.changePasswordSuccess'));
       passwordForm.resetFields();
     } catch (error) {
       console.error('修改密码失败:', error);
-      message.error('修改密码失败');
+      message.error(t('profile.changePasswordFailed'));
     } finally {
       setLoading(false);
     }
@@ -187,10 +196,10 @@ export default function ProfilePage() {
   const handlePreferencesUpdate = async (values: Record<string, unknown>) => {
     try {
       // 保存用户偏好设置
-      message.success('偏好设置已保存');
+      message.success(t('profile.preferencesSaved'));
     } catch (error) {
       console.error('保存偏好设置失败:', error);
-      message.error('保存偏好设置失败');
+      message.error(t('profile.preferencesSaveFailed'));
     }
   };
 
@@ -238,9 +247,10 @@ export default function ProfilePage() {
 
       <Row gutter={[24, 24]}>
         {/* 左侧：个人信息 */}
-        <Col xs={24} lg={16}>
+        <Col xs={24}>
           <Tabs 
-            defaultActiveKey='profile' 
+            activeKey={activeTab}
+            onChange={setActiveTab}
             size='large'
             items={[
               {
@@ -508,95 +518,35 @@ export default function ProfilePage() {
           />
         </Col>
 
-        {/* 右侧：统计信息和账户状态 */}
-        <Col xs={24} lg={8}>
-          <div className='space-y-6'>
-            {/* 账户状态 */}
-            <Card title={t('profile.accountStatus')} className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-              <div className='space-y-4'>
-                <div className='flex items-center justify-between'>
-                  <Text>{t('profile.accountStatus')}</Text>
-                  <Tag color='success'>{t('profile.active')}</Tag>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <Text>{t('profile.registrationTime')}</Text>
-                  <Text>{profile.created_at}</Text>
-                </div>
-                <div className='flex items-center justify-between'>
-                  <Text>{t('profile.lastLogin') || '最后登录'}</Text>
-                  <Text>{profile.last_login || '从未登录'}</Text>
+        {/* 右侧：账户状态（简洁版） */}
+        <Col xs={24}>
+          <Card className="mb-4" variant="borderless" styles={{ body: { padding: '16px 20px' } }}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Avatar
+                  size={56}
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)',
+                    fontSize: '24px',
+                    fontWeight: 600
+                  }}
+                >
+                  {profile.name?.charAt(0) || profile.username?.charAt(0) || 'U'}
+                </Avatar>
+                <div>
+                  <div className="text-base font-semibold text-gray-900">{profile.name || profile.username}</div>
+                  <div className="text-sm text-gray-500">{profile.email}</div>
+                  <Tag color="green" className="mt-1">活跃</Tag>
                 </div>
               </div>
-            </Card>
-
-            {/* 工作统计 */}
-            {stats && (
-              <Card title={t('profile.workStats')} className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-                <div className='space-y-4'>
-                  <div className='text-center'>
-                    <Statistic
-                      title={t('profile.totalTickets')}
-                      value={stats.totalTickets}
-                      prefix={<User size={16} />}
-                    />
-                  </div>
-                  <div className='text-center'>
-                    <Statistic
-                      title={t('profile.resolvedTickets')}
-                      value={stats.resolvedTickets}
-                      prefix={<User size={16} />}
-                      suffix={`/ ${stats.totalTickets}`}
-                    />
-                    <Progress
-                      percent={Math.round((stats.resolvedTickets / stats.totalTickets) * 100)}
-                      size='small'
-                      className='mt-2'
-                    />
-                  </div>
-                  <div className='text-center'>
-                    <Statistic
-                      title={t('profile.avgResolutionTime')}
-                      value={stats.avgResolutionTime}
-                      suffix='h'
-                    />
-                  </div>
-                  <div className='text-center'>
-                    <Statistic
-                      title={t('profile.satisfactionScore')}
-                      value={stats.satisfactionScore}
-                      precision={1}
-                      suffix='/5.0'
-                      styles={{ content: {
-                        color: getSatisfactionColor(stats.satisfactionScore),
-                      }}}
-                    />
-                  </div>
-                  <div className='text-center'>
-                    <Statistic
-                      title={t('profile.responseRate')}
-                      value={stats.responseRate}
-                      suffix='%'
-                    />
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            {/* 快速操作 */}
-            <Card title={t('profile.quickActions')} className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-              <div className='space-y-2'>
-                <Button block icon={<Shield size={16} />}>
-                  {t('profile.viewPermissions')}
-                </Button>
-                <Button block icon={<Bell size={16} />}>
-                  {t('profile.notificationSettings')}
-                </Button>
-                <Button block icon={<User size={16} />}>
-                  {t('profile.switchAccount')}
-                </Button>
+              <div className="text-right">
+                <div className="text-sm text-gray-500">注册时间</div>
+                <div className="text-sm font-medium text-gray-700">{profile.created_at?.split('T')[0] || '-'}</div>
+                <div className="text-sm text-gray-500 mt-2">最后登录</div>
+                <div className="text-sm font-medium text-gray-700">{profile.last_login?.split('T')[0] || '首次'}</div>
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </Col>
       </Row>
     </div>

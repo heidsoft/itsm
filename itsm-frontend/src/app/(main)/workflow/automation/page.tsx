@@ -38,12 +38,14 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import { TicketAutomationRuleApi, AutomationRule } from '@/lib/api/ticket-automation-rule-api';
+import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const WorkflowAutomationPage = () => {
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -62,7 +64,7 @@ const WorkflowAutomationPage = () => {
       setRules(response.rules || []);
     } catch (error) {
       console.error('加载自动化规则失败:', error);
-      message.error('加载自动化规则失败');
+      message.error(t('common.loadRulesFailed'));
     } finally {
       setLoading(false);
     }
@@ -81,10 +83,10 @@ const WorkflowAutomationPage = () => {
   const handleDeleteRule = async (id: number) => {
     try {
       await TicketAutomationRuleApi.deleteRule(id);
-      message.success('规则删除成功');
+      message.success(t('common.ruleDeleted'));
       loadRules();
     } catch (error) {
-      message.error('删除失败');
+      message.error(t('common.deleteFailed'));
     }
   };
 
@@ -99,10 +101,10 @@ const WorkflowAutomationPage = () => {
         priority: rule.priority,
         is_active: !rule.is_active,
       });
-      message.success(rule.is_active ? '规则已禁用' : '规则已启用');
+      message.success(rule.is_active ? t('common.ruleDisabled') : t('common.ruleEnabled'));
       loadRules();
     } catch (error) {
-      message.error('操作失败');
+      message.error(t('common.operationFailed'));
     }
   };
 
@@ -381,11 +383,20 @@ const WorkflowAutomationPage = () => {
           }
           onFinish={async values => {
             try {
-              message.success(editingRule ? '规则更新成功' : '规则创建成功');
+              if (editingRule) {
+                await TicketAutomationRuleApi.updateRule(String(editingRule.id), {
+                  ...values,
+                } as any);
+              } else {
+                await TicketAutomationRuleApi.createRule({
+                  ...values,
+                } as any);
+              }
+              message.success(editingRule ? t('common.ruleUpdated') : t('common.ruleCreated'));
               setModalVisible(false);
               loadRules();
             } catch (error) {
-              message.error('操作失败');
+              message.error(t('common.operationFailed') + (error as Error).message);
             }
           }}
         >

@@ -17,6 +17,7 @@ import {
   Badge,
   Table,
   Tag,
+  message,
 } from "antd";
 import {
   TrendingUp,
@@ -161,7 +162,7 @@ export const PredictiveAnalytics: React.FC = () => {
       setMetrics(mappedMetrics);
       setTrendData(mappedTrendData);
     } catch (error) {
-      console.error("加载预测数据失败:", error);
+      message.error("加载预测数据失败");
       // 出错时不显示Mock数据，保持空状态或显示错误
       setMetrics(null);
       setTrendData([]);

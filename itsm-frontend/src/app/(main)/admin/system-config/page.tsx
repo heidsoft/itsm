@@ -74,7 +74,6 @@ export default function SystemConfiguration() {
       setInitialConfig(configMap);
       form.setFieldsValue(configMap);
     } catch (error) {
-      console.error('加载系统配置失败:', error);
       message.error('加载系统配置失败');
     }
   };
@@ -125,7 +124,6 @@ export default function SystemConfiguration() {
       setHasChanges(false);
       setInitialConfig(values);
     } catch (error) {
-      console.error('保存配置失败:', error);
       message.error('保存配置失败');
     } finally {
       setIsSaving(false);

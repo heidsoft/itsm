@@ -32,6 +32,7 @@ import {
 } from '@ant-design/icons';
 import type { AutomationRule } from '@/lib/api/ticket-automation-rule-api';
 import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
+import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -48,6 +49,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
   onSave,
   onCancel,
 }) => {
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [testModalVisible, setTestModalVisible] = useState(false);
   const [testTicketId, setTestTicketId] = useState<number | null>(null);
@@ -78,7 +80,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
       const values = await form.validateFields();
       onSave(values);
     } catch (error) {
-      console.error('Form validation failed:', error);
+      message.error('表单验证失败');
     }
   };
 
@@ -125,7 +127,6 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
         ),
       });
     } catch (error) {
-      console.error('Failed to test rule:', error);
       message.error('测试规则失败');
     }
   };
@@ -439,8 +440,8 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
           setTestModalVisible(false);
           setTestTicketId(null);
         }}
-        okText="测试"
-        cancelText="取消"
+        okText={t('common.test') || '测试'}
+        cancelText={t('common.cancel')}
       >
         <Form.Item label="工单ID" required>
           <Input

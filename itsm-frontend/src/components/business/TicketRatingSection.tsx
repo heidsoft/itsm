@@ -24,6 +24,7 @@ import {
 import { TicketRatingApi, TicketRating, SubmitTicketRatingRequest } from '@/lib/api/ticket-rating-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
+import { useI18n } from '@/lib/i18n';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -46,6 +47,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
   canRate = true,
   onRatingSubmitted,
 }) => {
+  const { t } = useI18n();
   const { message: antMessage } = App.useApp();
   const { user } = useAuthStore();
   const [rating, setRating] = useState<TicketRating | null>(null);
@@ -70,7 +72,6 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
       const ratingData = await TicketRatingApi.getRating(ticketId);
       setRating(ratingData);
     } catch (error) {
-      console.error('Failed to load rating:', error);
       // 如果获取失败，可能是还没有评分，不显示错误
     } finally {
       setLoading(false);
@@ -100,7 +101,6 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
         onRatingSubmitted(newRating);
       }
     } catch (error: any) {
-      console.error('Failed to submit rating:', error);
       antMessage.error(error.message || '提交评分失败');
     } finally {
       setSubmitting(false);
@@ -241,8 +241,8 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             setShowRatingModal(false);
             form.resetFields();
           }}
-          okText="提交评分"
-          cancelText="取消"
+          okText={t('common.submit')}
+          cancelText={t('common.cancel')}
           confirmLoading={submitting}
           width={500}
         >

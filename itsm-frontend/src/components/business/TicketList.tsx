@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Table,
   Card,
@@ -46,6 +47,7 @@ interface TicketListProps {
 }
 
 export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefresh }) => {
+  const router = useRouter();
   const { message } = App.useApp();
   const { currentTenant } = useAuthStore();
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -94,7 +96,11 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
 
   // 监听参数变化，重新获取数据
   useEffect(() => {
+    let isMounted = true;
     fetchTickets();
+    return () => {
+      isMounted = false;
+    };
   }, [fetchTickets]);
 
   // 处理搜索
@@ -244,7 +250,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `tickets_${new Date().toISOString().split('T')[0]}.csv`;
+            a.download = `tickets_${new Date().toISOString().slice(0, 19).replace(/[T:]/g, '-')}.csv`;
             a.click();
             window.URL.revokeObjectURL(url);
             message.success('导出成功');
@@ -419,10 +425,15 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
           <RangePicker
             placeholder={['开始日期', '结束日期']}
             onChange={dates => {
-              if (dates) {
+              if (dates && dates[0] && dates[1]) {
                 handleFilterChange({
-                  created_after: dates[0]?.toISOString(),
-                  created_before: dates[1]?.toISOString(),
+                  created_after: dates[0].toISOString(),
+                  created_before: dates[1].toISOString(),
+                });
+              } else if (!dates) {
+                handleFilterChange({
+                  created_after: undefined,
+                  created_before: undefined,
                 });
               }
             }}
@@ -446,6 +457,18 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         }}
         rowSelection={rowSelection}
         onChange={handleTableChange}
+        onRow={(record) => ({
+          tabIndex: 0,
+          onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === 'Enter') {
+              router.push(`/tickets/${record.id}`);
+            }
+          },
+          onClick: () => {
+            router.push(`/tickets/${record.id}`);
+          },
+          style: { cursor: 'pointer' },
+        })}
         scroll={{ x: 1200 }}
       />
     </Card>

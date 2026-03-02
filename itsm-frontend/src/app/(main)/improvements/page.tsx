@@ -5,6 +5,7 @@ import { Table, Button, Tag, Space, Card, App, Empty } from 'antd';
 import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import type { ColumnsType } from 'antd/es/table';
+import { useI18n } from '@/lib/i18n';
 
 type ImprovementStatus = '进行中' | '待评估' | '已完成';
 
@@ -26,6 +27,7 @@ const statusColors: Record<ImprovementStatus, string> = {
 const ImprovementListPage = () => {
   const router = useRouter();
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [improvements, setImprovements] = useState<Improvement[]>([]);
   const [filter, setFilter] = useState<string>('全部');
   const [loading, setLoading] = useState(false);
@@ -52,8 +54,8 @@ const ImprovementListPage = () => {
 
       setImprovements(mappedImprovements);
     } catch (error) {
-      console.error('加载改进计划失败:', error);
-      message.error('加载改进计划失败');
+      console.error(t('common.getFailed') + ':', error);
+      message.error(t('common.getFailed'));
     } finally {
       setLoading(false);
     }

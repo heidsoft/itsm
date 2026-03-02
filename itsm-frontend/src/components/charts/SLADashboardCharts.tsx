@@ -11,6 +11,7 @@ import {
   Typography,
   Spin,
   App,
+  message,
 } from 'antd';
 import {
   LineChart,
@@ -85,7 +86,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
       const response = await SLAApi.getSLADefinitions({ page: 1, size: 100 });
       setSlaDefinitions(response.items);
     } catch (error) {
-      console.error('加载SLA定义失败:', error);
+      message.error('加载SLA定义失败');
     }
   };
 
@@ -112,7 +113,6 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
         setChartData([]);
       }
     } catch (error) {
-      console.error('加载图表数据失败:', error);
       message.error('加载图表数据失败');
     } finally {
       setLoading(false);
@@ -213,9 +213,9 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
               </Select>
               <RangePicker
                 value={dateRange}
-                onChange={(dates: [string, string] | null) => {
-                  if (dates) {
-                    setDateRange([dates[0]!, dates[1]!]);
+                onChange={(dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => {
+                  if (dates && dates[0] && dates[1]) {
+                    setDateRange([dates[0], dates[1]]);
                   }
                 }}
               />

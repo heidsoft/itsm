@@ -193,12 +193,20 @@ export const useTickets = (): UseTicketsReturn => {
 
   // Initial statistics fetch
   useEffect(() => {
+    let isMounted = true;
     fetchStats();
+    return () => {
+      isMounted = false;
+    };
   }, [fetchStats]);
 
   // Refetch tickets when filters or pagination change (including initial mount)
   useEffect(() => {
+    let isMounted = true;
     fetchTickets();
+    return () => {
+      isMounted = false;
+    };
   }, [fetchTickets]);
 
   return {

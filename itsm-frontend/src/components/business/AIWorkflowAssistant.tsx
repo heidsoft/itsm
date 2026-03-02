@@ -99,7 +99,6 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
 
       message.success('AI分析完成');
     } catch (error) {
-      console.error('AI分析失败:', error);
       message.error('AI分析失败，请稍后重试');
     } finally {
       setLoading(false);

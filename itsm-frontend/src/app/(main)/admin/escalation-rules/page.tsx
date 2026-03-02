@@ -143,7 +143,6 @@ const EscalationRuleManagement = () => {
       }));
       setEscalationRules(rules);
     } catch (error) {
-      console.error('Failed to load escalation rules:', error);
       message.error('加载升级规则失败');
       setEscalationRules([]);
     } finally {
@@ -216,7 +215,6 @@ const EscalationRuleManagement = () => {
       setEscalationRules(prev => prev.filter(rule => rule.id !== ruleId));
       message.success('升级规则已删除');
     } catch (error) {
-      console.error('Failed to delete rule:', error);
       message.error('删除失败');
     }
   };

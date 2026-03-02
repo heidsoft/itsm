@@ -964,13 +964,23 @@ const WorkflowManagementPage = () => {
         <Form
           layout='vertical'
           initialValues={editingWorkflow || {}}
-          onFinish={async () => {
+          onFinish={async (values) => {
             try {
+              if (editingWorkflow) {
+                await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
+                  ...values,
+                } as any);
+              } else {
+                await WorkflowAPI.createWorkflow({
+                  ...values,
+                  code: values.code || `workflow_${Date.now()}`,
+                } as any);
+              }
               message.success(editingWorkflow ? t('workflow.updateSuccess') : t('workflow.createWorkflowSuccess'));
               setModalVisible(false);
               loadWorkflows();
-            } catch {
-              message.error(t('workflow.operationFailed'));
+            } catch (error) {
+              message.error(t('workflow.operationFailed') + (error as Error).message);
             }
           }}
         >

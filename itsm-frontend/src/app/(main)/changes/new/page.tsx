@@ -7,9 +7,11 @@ import { FormInput } from '@/components/forms/FormInput';
 import { FormTextarea } from '@/components/forms/FormTextarea';
 import { App } from 'antd';
 import { ChangeApi, ChangeRequest } from '@/lib/api/change-api';
+import { useI18n } from '@/lib/i18n';
 
 const CreateChangePage = () => {
   const router = useRouter();
+  const { t } = useI18n();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
 
@@ -64,11 +66,11 @@ const CreateChangePage = () => {
 
     try {
       await ChangeApi.createChange(changeData);
-      message.success('变更请求已成功提交！');
+      message.success(t('changes.createSuccess'));
       router.push('/changes');
     } catch (error) {
       console.error('提交变更失败:', error);
-      message.error('提交失败，请稍后重试');
+      message.error(t('changes.createFailed'));
     } finally {
       setLoading(false);
     }

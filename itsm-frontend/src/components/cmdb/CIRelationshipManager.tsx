@@ -81,7 +81,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         const types = await CIRelationshipAPI.getRelationshipTypes();
         setRelationshipTypes(types);
       } catch (error) {
-        console.error('加载关系类型失败:', error);
+        message.error('加载关系类型失败');
       }
     };
     loadTypes();
@@ -99,7 +99,6 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       setOutgoingRelations(data.outgoing_relations);
       setIncomingRelations(data.incoming_relations);
     } catch (error) {
-      console.error('加载关系失败:', error);
       message.error('加载关系失败');
     } finally {
       setLoading(false);
@@ -122,11 +121,16 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
 
   // 加载可用CI列表
   const loadAvailableCIs = async (search?: string) => {
+    const isMounted = true;
     try {
       const cIs = await CIRelationshipAPI.getAvailableCIs(ciId, search);
-      setAvailableCIs(cIs.map(c => ({ id: c.id, name: c.name, type: c.type })));
+      if (isMounted) {
+        setAvailableCIs(cIs.map(c => ({ id: c.id, name: c.name, type: c.type })));
+      }
     } catch (error) {
-      console.error('加载可用CI失败:', error);
+      if (isMounted) {
+        message.error('加载可用CI失败，请稍后重试');
+      }
     }
   };
 
@@ -152,7 +156,6 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       loadRelations();
       onRefresh?.();
     } catch (error) {
-      console.error('创建关系失败:', error);
       message.error('创建关系失败');
     }
   };
@@ -165,7 +168,6 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       loadRelations();
       onRefresh?.();
     } catch (error) {
-      console.error('删除关系失败:', error);
       message.error('删除关系失败');
     }
   };

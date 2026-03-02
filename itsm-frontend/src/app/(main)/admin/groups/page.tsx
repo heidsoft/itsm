@@ -62,7 +62,6 @@ const GroupManagement = () => {
       
       setGroups(mappedGroups);
     } catch (error) {
-      console.error('加载用户组失败:', error);
       message.error('加载用户组失败');
     }
   };

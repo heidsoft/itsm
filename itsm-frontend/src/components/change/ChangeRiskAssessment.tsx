@@ -15,6 +15,7 @@ import {
   Divider,
   Tag,
   Progress,
+  message,
 } from 'antd';
 import {
   Shield,
@@ -116,7 +117,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
       
       onSave?.(assessmentData);
     } catch (error) {
-      console.error('Form validation failed:', error);
+      message.error('表单验证失败');
     }
   };
 

@@ -8,6 +8,7 @@ import { FormTextarea } from '@/components/forms/FormTextarea';
 import { App } from 'antd';
 import { incidentService, IncidentPriority, IncidentSource } from '@/lib/services/incident-service';
 import { CMDBApi, ConfigurationItem } from '@/lib/api/cmdb-api';
+import { useI18n } from '@/lib/i18n';
 
 interface ConfigItem extends Pick<ConfigurationItem, 'id' | 'name' | 'ci_type' | 'status'> {
   id: number;
@@ -16,6 +17,7 @@ interface ConfigItem extends Pick<ConfigurationItem, 'id' | 'name' | 'ci_type' |
 export default function NewIncidentPage() {
   const router = useRouter();
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [selectedCIs, setSelectedCIs] = useState<ConfigItem[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,11 +70,11 @@ export default function NewIncidentPage() {
 
     try {
       await incidentService.createIncident(data);
-      message.success('事件创建成功');
+      message.success(t('incidents.createSuccess'));
       router.push('/incidents');
     } catch (error) {
       console.error('Failed to create incident:', error);
-      message.error('创建事件失败，请重试');
+      message.error(t('incidents.createFailed'));
     } finally {
       setLoading(false);
     }
@@ -86,30 +88,30 @@ export default function NewIncidentPage() {
           className='flex items-center text-blue-600 hover:underline mb-4'
         >
           <ArrowLeft className='w-5 h-5 mr-2' />
-          返回
+          {t('common.back')}
         </button>
-        <h2 className='text-4xl font-bold text-gray-800'>创建新事件</h2>
-        <p className='text-gray-500 mt-1'>手动记录一个新的IT事件</p>
+        <h2 className='text-4xl font-bold text-gray-800'>{t('incidents.newIncident')}</h2>
+        <p className='text-gray-500 mt-1'>{t('incidents.newIncidentDesc')}</p>
       </header>
 
       <div className='bg-white p-8 rounded-lg shadow-md'>
         <form onSubmit={handleSubmit}>
           <div className='space-y-6'>
             <FormInput
-              label='事件标题'
+              label={t('incidents.incidentTitle')}
               id='title'
               name='title'
               type='text'
               required
-              placeholder='简要描述该事件'
+              placeholder={t('common.inputPlaceholder') + t('incidents.incidentTitle')}
             />
             <FormTextarea
-              label='详细描述'
+              label={t('incidents.incidentDescription')}
               id='description'
               name='description'
               rows={6}
               required
-              placeholder='请提供该事件的详细信息，包括影响范围、发生时间等...'
+              placeholder={t('common.inputPlaceholder') + t('incidents.incidentDescription')}
             />
 
             {/* Configuration Items Selection */}

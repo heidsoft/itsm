@@ -21,6 +21,7 @@ import {
   Empty,
   Tooltip,
   Divider,
+  message,
 } from 'antd';
 import {
   UserOutlined,
@@ -64,7 +65,6 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
       const response = await TicketAssignmentApi.getRecommendations(ticketId);
       setRecommendations(response.recommendations || []);
     } catch (error) {
-      console.error('Failed to load recommendations:', error);
       message.error('获取分配推荐失败');
     } finally {
       setLoading(false);
@@ -92,7 +92,6 @@ export const SmartAssignmentModal: React.FC<SmartAssignmentModalProps> = ({
         message.warning('自动分配失败，请手动选择处理人');
       }
     } catch (error) {
-      console.error('Failed to auto assign:', error);
       message.error('自动分配失败');
     } finally {
       setAutoAssigning(false);

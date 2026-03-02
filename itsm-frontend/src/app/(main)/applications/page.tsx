@@ -5,10 +5,12 @@ import { Table, Button, Tag, Space, Modal, Form, Input, Select, Tabs, message } 
 import { PlusOutlined, EditOutlined, DeleteOutlined, AppstoreOutlined, ApiOutlined, SyncOutlined } from "@ant-design/icons";
 import { PageContainer } from "@/app/components/PageContainer";
 import { applicationService, Application, Microservice } from "@/lib/services/application-service";
+import { useI18n } from "@/lib/i18n";
 
 const { TabPane } = Tabs;
 
 export default function ApplicationsPage() {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState("applications");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalType, setModalType] = useState<"application" | "microservice">("application");
@@ -34,7 +36,7 @@ export default function ApplicationsPage() {
       setMicroservices(allMicroservices);
     } catch (error) {
       console.error("Failed to fetch applications:", error);
-      message.error("获取应用列表失败");
+      message.error(t('common.getFailed'));
     } finally {
       setFetching(false);
     }
@@ -141,10 +143,10 @@ export default function ApplicationsPage() {
           } else {
             await applicationService.deleteMicroservice(record.id);
           }
-          message.success("删除成功");
+          message.success(t('common.deleteSuccess'));
           fetchData();
         } catch (error) {
-          message.error("删除失败");
+          message.error(t('common.deleteFailed'));
         }
       },
     });
@@ -160,14 +162,14 @@ export default function ApplicationsPage() {
       } else {
         await applicationService.createMicroservice(values);
       }
-      
-      message.success("保存成功");
+
+      message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
       form.resetFields();
       fetchData();
     } catch (error) {
       console.error("Operation Failed:", error);
-      message.error("操作失败");
+      message.error(t('common.operationFailed'));
     } finally {
       setLoading(false);
     }

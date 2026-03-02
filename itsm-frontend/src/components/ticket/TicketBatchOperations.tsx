@@ -201,10 +201,6 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         message.warning(`操作完成！成功 ${successCount} 个，失败 ${failCount} 个`);
       }
 
-      if (errors.length > 0 && operation === 'delete') {
-        console.error('批量操作错误:', errors);
-      }
-
       setTimeout(() => {
         setOperationProgress({ visible: false, current: 0, total: 0, status: '' });
         setOperationModal({ visible: false, type: '', title: '' });

@@ -78,7 +78,7 @@ const AssetDetail: React.FC = () => {
       const data = await AssetApi.getAsset(Number(id));
       setAsset(data);
     } catch (error) {
-      console.error('Failed to load asset:', error);
+      message.error('加载资产详情失败');
     } finally {
       setLoading(false);
     }

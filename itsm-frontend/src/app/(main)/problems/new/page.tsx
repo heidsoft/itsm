@@ -5,12 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Form, Input, Select, Button, Card, message, Alert, Spin } from 'antd';
 import { problemService, ProblemPriority } from '@/lib/services/problem-service';
+import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
 
 const CreateProblemPageContent = () => {
   const router = useRouter();
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -43,11 +45,11 @@ const CreateProblemPageContent = () => {
         assignee_id: values.assignee_id,
       });
 
-      message.success('问题创建成功！');
+      message.success(t('problems.createSuccess'));
       router.push('/problems');
     } catch (error) {
       console.error('创建问题失败:', error);
-      message.error('创建问题失败，请重试');
+      message.error(t('problems.createFailed'));
     } finally {
       setLoading(false);
     }

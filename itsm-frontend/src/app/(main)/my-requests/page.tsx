@@ -47,77 +47,34 @@ interface ServiceRequest {
 }
 
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import { useI18n } from '@/lib/i18n';
 
-const RequestStatusBadge = ({ status }: { status: string }) => {
-  const statusConfig = {
-    submitted: {
-      label: '已提交',
-      color: 'gold',
-      icon: Clock,
-      pulse: true,
-    },
-    manager_approved: {
-      label: '主管已批',
-      color: 'blue',
-      icon: Hourglass,
-      pulse: true,
-    },
-    it_approved: {
-      label: 'IT已批',
-      color: 'blue',
-      icon: Hourglass,
-      pulse: true,
-    },
-    security_approved: {
-      label: '安全已批',
-      color: 'green',
-      icon: CheckCircle,
-      pulse: false,
-    },
-    provisioning: {
-      label: '交付中',
-      color: 'processing',
-      icon: Hourglass,
-      pulse: true,
-    },
-    delivered: {
-      label: '已交付',
-      color: 'success',
-      icon: CheckCircle,
-      pulse: false,
-    },
-    failed: {
-      label: '交付失败',
-      color: 'error',
-      icon: XCircle,
-      pulse: false,
-    },
-    rejected: {
-      label: '已拒绝',
-      color: 'error',
-      icon: XCircle,
-      pulse: false,
-    },
-    cancelled: {
-      label: '已取消',
-      color: 'default',
-      icon: XCircle,
-      pulse: false,
-    },
+const RequestStatusBadge = ({ status, t }: { status: string; t: (key: string) => string }) => {
+  const statusConfig: Record<string, { color: string; icon: React.ElementType; pulse: boolean }> = {
+    submitted: { color: 'gold', icon: Clock, pulse: true },
+    manager_approved: { color: 'blue', icon: Hourglass, pulse: true },
+    it_approved: { color: 'blue', icon: Hourglass, pulse: true },
+    security_approved: { color: 'green', icon: CheckCircle, pulse: false },
+    provisioning: { color: 'processing', icon: Hourglass, pulse: true },
+    delivered: { color: 'success', icon: CheckCircle, pulse: false },
+    failed: { color: 'error', icon: XCircle, pulse: false },
+    rejected: { color: 'error', icon: XCircle, pulse: false },
+    cancelled: { color: 'default', icon: XCircle, pulse: false },
   };
 
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted;
+  const config = statusConfig[status] || statusConfig.submitted;
   const Icon = config.icon;
+  const label = t(`serviceRequestStatus.${status}`) || t('serviceRequestStatus.submitted');
 
   return (
     <Tag color={config.color} className='flex items-center gap-1 px-2 py-1'>
       <Icon className='w-3 h-3' />
-      {config.label}
+      {label}
     </Tag>
   );
 };
 
-const RequestCard = ({ request }: { request: ServiceRequest }) => {
+const RequestCard = ({ request, t }: { request: ServiceRequest; t: (key: string) => string }) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString('zh-CN', {
       year: 'numeric',
@@ -139,10 +96,10 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
             <span className='text-sm font-mono text-gray-500 bg-gray-50 px-2 py-1 rounded'>
               REQ-{String(request.id).padStart(5, '0')}
             </span>
-            <RequestStatusBadge status={request.status} />
+            <RequestStatusBadge status={request.status} t={t} />
           </div>
           <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-            {request.catalog?.name || '未知服务'}
+            {request.catalog?.name || t('myRequests.unknownService')}
           </h3>
           <p className='text-sm text-gray-600 mb-3'>
             {request.catalog?.description || request.reason}
@@ -158,12 +115,12 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
           </div>
           <div className='flex items-center gap-1'>
             <FileText className='w-4 h-4' />
-            <span>{request.catalog?.category || '其他'}</span>
+            <span>{request.catalog?.category || t('myRequests.other')}</span>
           </div>
         </div>
         <Link href={`/my-requests/${request.id}`}>
           <Button type='link' className='flex items-center gap-1 p-0 h-auto'>
-            查看详情
+            {t('myRequests.viewDetails')}
             <ChevronRight className='w-4 h-4' />
           </Button>
         </Link>
@@ -173,6 +130,7 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
 };
 
 const MyRequestsPage = () => {
+  const { t } = useI18n();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -196,7 +154,7 @@ const MyRequestsPage = () => {
       setTotal(data.total || 0);
       setTotalPages(Math.max(1, Math.ceil((data.total || 0) / pageSize)));
     } catch (error) {
-      console.error('API调用失败:', error);
+      console.error(t('myRequests.apiFailed') + ':', error);
       setRequests([]);
       setTotal(0);
       setTotalPages(1);
@@ -219,11 +177,11 @@ const MyRequestsPage = () => {
   });
 
   const filterOptions = [
-    { value: 'all', label: '全部', count: total },
-    { value: 'submitted', label: '已提交', count: 0 },
-    { value: 'provisioning', label: '交付中', count: 0 },
-    { value: 'delivered', label: '已交付', count: 0 },
-    { value: 'rejected', label: '已拒绝', count: 0 },
+    { value: 'all', label: t('myRequests.all'), count: total },
+    { value: 'submitted', label: t('serviceRequestStatus.submitted'), count: 0 },
+    { value: 'provisioning', label: t('serviceRequestStatus.provisioning'), count: 0 },
+    { value: 'delivered', label: t('serviceRequestStatus.delivered'), count: 0 },
+    { value: 'rejected', label: t('serviceRequestStatus.rejected'), count: 0 },
   ];
 
   return (
@@ -233,8 +191,8 @@ const MyRequestsPage = () => {
         <div className='mb-8'>
           <div className='flex items-center justify-between'>
             <div>
-              <h1 className='text-2xl font-bold text-gray-900 mb-1'>我的请求</h1>
-              <p className='text-gray-500'>查看和跟踪您提交的所有服务请求</p>
+              <h1 className='text-2xl font-bold text-gray-900 mb-1'>{t('myRequests.title')}</h1>
+              <p className='text-gray-500'>{t('myRequests.description')}</p>
             </div>
             <Button
               onClick={() => fetchRequests(currentPage, filter)}
@@ -251,7 +209,7 @@ const MyRequestsPage = () => {
             {/* 搜索框 */}
             <div className='flex-1'>
               <Input
-                placeholder='搜索服务名称或描述...'
+                placeholder={t('serviceCatalog.searchPlaceholder')}
                 prefix={<Search className='text-gray-400 w-4 h-4' />}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -292,7 +250,7 @@ const MyRequestsPage = () => {
         ) : filteredRequests.length > 0 ? (
           <div className='space-y-4'>
             {filteredRequests.map(request => (
-              <RequestCard key={request.id} request={request} />
+              <RequestCard key={request.id} request={request} t={t} />
             ))}
           </div>
         ) : (

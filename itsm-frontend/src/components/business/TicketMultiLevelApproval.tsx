@@ -198,7 +198,6 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
         }
       }
     } catch (error) {
-      console.error('Failed to load workflows:', error);
       antMessage.error('加载审批工作流失败');
     } finally {
       setLoading(false);
@@ -241,7 +240,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       ];
       setApprovalRecords(mockRecords);
     } catch (error) {
-      console.error('Failed to load approval records:', error);
+      antMessage.error('加载审批记录失败');
     }
   }, [ticket]);
 
@@ -276,7 +275,6 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       form.resetFields();
       loadWorkflows();
     } catch (error) {
-      console.error('Failed to save workflow:', error);
       antMessage.error('保存失败');
     }
   }, [form, editingWorkflow, currentWorkflow, antMessage, loadWorkflows]);
@@ -305,7 +303,6 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
       setEditingNode(null);
       nodeForm.resetFields();
     } catch (error) {
-      console.error('Failed to save node:', error);
       antMessage.error('保存节点失败');
     }
   }, [nodeForm, editingNode, currentWorkflow, antMessage]);

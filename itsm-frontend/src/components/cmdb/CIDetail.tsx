@@ -99,26 +99,40 @@ const CIDetail: React.FC = () => {
     };
 
     const loadImpactAnalysis = async () => {
+        const isMounted = true;
         setImpactLoading(true);
         try {
             const data = await CMDBApi.getCIImpactAnalysis(Number(id));
-            setImpactAnalysis(data);
+            if (isMounted) {
+                setImpactAnalysis(data);
+            }
         } catch (error) {
-            console.error('加载影响分析失败:', error);
+            if (isMounted) {
+                message.error('加载影响分析失败，请稍后重试');
+            }
         } finally {
-            setImpactLoading(false);
+            if (isMounted) {
+                setImpactLoading(false);
+            }
         }
     };
 
     const loadChangeHistory = async () => {
+        const isMounted = true;
         setHistoryLoading(true);
         try {
             const data = await CMDBApi.getCIChangeHistory(Number(id));
-            setChangeHistory(data);
+            if (isMounted) {
+                setChangeHistory(data);
+            }
         } catch (error) {
-            console.error('加载变更历史失败:', error);
+            if (isMounted) {
+                message.error('加载变更历史失败，请稍后重试');
+            }
         } finally {
-            setHistoryLoading(false);
+            if (isMounted) {
+                setHistoryLoading(false);
+            }
         }
     };
 

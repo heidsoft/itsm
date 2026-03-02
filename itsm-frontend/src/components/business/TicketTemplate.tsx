@@ -22,6 +22,7 @@ import {
   Col,
   Upload,
   Checkbox,
+  Empty,
 } from "antd";
 import {
   Plus,
@@ -37,8 +38,8 @@ import {
   Info,
   Upload as UploadIcon,
 } from "lucide-react";
-import { LoadingEmptyError } from "../ui/LoadingEmptyError";
 import { LoadingSkeleton } from "../ui/LoadingSkeleton";
+import { useI18n } from "@/lib/i18n";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -86,6 +87,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
   onSelectTemplate,
   mode = 'manage'
 }) => {
+  const { t } = useI18n();
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -273,7 +275,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      console.error("保存模板失败:", error);
+      message.error('保存模板失败');
     }
   };
 
@@ -383,10 +385,10 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
             />
           </Tooltip>
           <Popconfirm
-            title="确定要删除这个模板吗？"
+            title={t('common.confirmDeleteContent')}
             onConfirm={() => handleDeleteTemplate(record.id)}
-            okText="确定"
-            cancelText="取消"
+            okText={t('common.confirm')}
+            cancelText={t('common.cancel')}
           >
             <Button 
               size="small" 
@@ -405,15 +407,14 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
 
   if (templates.length === 0) {
     return (
-      <LoadingEmptyError
-        state="empty"
-        empty={{
-          title: "暂无工单模板",
-          description: "创建第一个工单模板来标准化工单创建流程",
-          actionText: "创建模板",
-          onAction: handleCreateTemplate
-        }}
-      />
+      <Empty
+        description="暂无工单模板"
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+      >
+        <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateTemplate}>
+          创建模板
+        </Button>
+      </Empty>
     );
   }
 
@@ -460,8 +461,8 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
         open={modalVisible}
         onOk={handleSaveTemplate}
         onCancel={() => setModalVisible(false)}
-        okText="保存"
-        cancelText="取消"
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
         width={800}
       >
         <Form form={form} layout="vertical">

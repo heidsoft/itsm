@@ -17,6 +17,7 @@ import {
   Steps,
   Divider,
   Typography,
+  message,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -79,7 +80,7 @@ const ReleaseDetail: React.FC = () => {
       const data = await ReleaseApi.getRelease(Number(id));
       setRelease(data);
     } catch (error) {
-      console.error('Failed to load release:', error);
+      message.error('加载发布详情失败');
     } finally {
       setLoading(false);
     }
@@ -260,7 +261,7 @@ const ReleaseDetail: React.FC = () => {
                   await ReleaseApi.updateReleaseStatus(release.id, 'scheduled');
                   loadDetail();
                 } catch (error) {
-                  console.error('Failed to update status:', error);
+                  message.error('更新状态失败');
                 }
               }}
             >
@@ -274,7 +275,7 @@ const ReleaseDetail: React.FC = () => {
                   await ReleaseApi.updateReleaseStatus(release.id, 'in-progress');
                   loadDetail();
                 } catch (error) {
-                  console.error('Failed to update status:', error);
+                  message.error('更新状态失败');
                 }
               }}
             >
@@ -289,7 +290,7 @@ const ReleaseDetail: React.FC = () => {
                   await ReleaseApi.updateReleaseStatus(release.id, 'completed');
                   loadDetail();
                 } catch (error) {
-                  console.error('Failed to update status:', error);
+                  message.error('更新状态失败');
                 }
               }}
             >

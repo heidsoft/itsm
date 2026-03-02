@@ -112,7 +112,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      console.error('创建关联失败:', error);
+      message.error('创建关联失败');
     }
   };
 
@@ -120,7 +120,7 @@ export const RelationPanel: React.FC<RelationPanelProps> = ({
     try {
       await deleteMutation.mutateAsync({ relationId });
     } catch (error) {
-      console.error('删除关联失败:', error);
+      message.error('删除关联失败');
     }
   };
 

@@ -33,6 +33,7 @@ import { TicketNotificationApi, TicketNotification, SendTicketNotificationReques
 import { UserSelect } from '@/components/common/UserSelect';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
+import { useI18n } from '@/lib/i18n';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -53,6 +54,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
   onNotificationSent,
 }) => {
   const { message: antMessage } = App.useApp();
+  const { t } = useI18n();
   const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<TicketNotification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,7 +68,6 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
       const response = await TicketNotificationApi.getTicketNotifications(ticketId);
       setNotifications(response.notifications || []);
     } catch (error) {
-      console.error('Failed to load notifications:', error);
       antMessage.error('加载通知列表失败');
     } finally {
       setLoading(false);
@@ -114,7 +115,6 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
         onNotificationSent(tempNotification);
       }
     } catch (error: any) {
-      console.error('Failed to send notification:', error);
       antMessage.error(error.message || '通知发送失败');
     }
   };
@@ -126,7 +126,6 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
       antMessage.success('已标记为已读');
       await loadNotifications();
     } catch (error: any) {
-      console.error('Failed to mark notification as read:', error);
       antMessage.error(error.message || '标记失败');
     }
   };
@@ -309,8 +308,8 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
           setSendModalVisible(false);
           form.resetFields();
         }}
-        okText="发送"
-        cancelText="取消"
+        okText={t('common.submit') || '发送'}
+        cancelText={t('common.cancel')}
         width={600}
       >
         <Form

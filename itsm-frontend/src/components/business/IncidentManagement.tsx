@@ -139,7 +139,6 @@ export const IncidentManagement: React.FC = () => {
       setTotal(totalCount);
     } catch (error) {
       message.error('获取事件列表失败');
-      console.error('获取事件列表失败:', error);
     } finally {
       setLoading(false);
     }
@@ -537,7 +536,6 @@ const IncidentDetailDrawer: React.FC<{
       setAlerts(Array.isArray(alertsData) ? alertsData : []);
       setMetrics((metricsData as any)?.data || metricsData || {});
     } catch (error) {
-      console.error('获取事件详情失败:', error);
       message.error('获取事件详情失败');
     } finally {
       setLoading(false);
@@ -1199,7 +1197,6 @@ const IncidentMonitoringPanel: React.FC<{
       });
       setMonitoringData(data);
     } catch (error) {
-      console.error('获取监控数据失败:', error);
       message.error('获取监控数据失败');
     } finally {
       setLoading(false);

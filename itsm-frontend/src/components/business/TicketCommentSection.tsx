@@ -15,6 +15,7 @@ import {
   Divider,
   Switch,
   Tooltip,
+  message,
 } from 'antd';
 import {
   Send,
@@ -69,7 +70,6 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       const response = await TicketCommentApi.getComments(ticketId);
       setComments(response.comments || []);
     } catch (error) {
-      console.error('Failed to load comments:', error);
       message.error(t('comments.loadFailed') || '加载评论失败');
     } finally {
       setLoading(false);
@@ -101,7 +101,6 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       message.success(t('comments.addSuccess') || '评论添加成功');
       onCommentAdded?.(comment);
     } catch (error) {
-      console.error('Failed to add comment:', error);
       message.error(t('comments.addFailed') || '添加评论失败');
     } finally {
       setSubmitting(false);
@@ -139,7 +138,6 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       message.success(t('comments.updateSuccess') || '评论更新成功');
       onCommentUpdated?.(updated);
     } catch (error) {
-      console.error('Failed to update comment:', error);
       message.error(t('comments.updateFailed') || '更新评论失败');
     }
   };
@@ -152,7 +150,7 @@ export const TicketCommentSection: React.FC<TicketCommentSectionProps> = ({
       message.success(t('comments.deleteSuccess') || '评论删除成功');
       onCommentDeleted?.(commentId);
     } catch (error) {
-      console.error('Failed to delete comment:', error);
+      message.error(t('comments.deleteFailed') || '删除评论失败');
       message.error(t('comments.deleteFailed') || '删除评论失败');
     }
   };

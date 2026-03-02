@@ -6,6 +6,7 @@
 import React from 'react';
 import { Modal, Form, Tabs, Select, Input, Checkbox, Row, Col } from 'antd';
 import type { FormInstance } from 'antd';
+import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 
@@ -22,6 +23,7 @@ export default function WorkflowSettingsModal({
   onSave,
   form,
 }: WorkflowSettingsModalProps) {
+  const { t } = useI18n();
   return (
     <Modal
       title="流程设置"
@@ -29,8 +31,8 @@ export default function WorkflowSettingsModal({
       onOk={onSave}
       onCancel={onClose}
       width={800}
-      okText="保存"
-      cancelText="取消"
+      okText={t('common.save')}
+      cancelText={t('common.cancel')}
     >
       <Form form={form} layout="vertical">
         <Tabs

@@ -6,6 +6,7 @@ import { Button, Card, Form, Input, Select, App, Row, Col, Space, Divider } from
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { ProblemApi } from '@/lib/api/problem-api';
 import { problemService } from '@/lib/services/problem-service';
+import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -15,6 +16,7 @@ export default function ProblemEditPage() {
   const params = useParams();
   const id = params?.id as string;
   const { message } = App.useApp();
+  const { t } = useI18n();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -40,7 +42,7 @@ export default function ProblemEditPage() {
           impact: data.impact,
         });
       } catch (error) {
-        message.error('获取问题失败');
+        message.error(t('problems.getFailed'));
         router.push('/problems');
       } finally {
         setFetching(false);
@@ -56,10 +58,10 @@ export default function ProblemEditPage() {
     setLoading(true);
     try {
       await ProblemApi.updateProblem(Number(id), values);
-      message.success('更新成功');
+      message.success(t('problems.updateSuccess'));
       router.push(`/problems/${id}`);
     } catch (error) {
-      message.error('更新失败');
+      message.error(t('problems.updateFailed'));
     } finally {
       setLoading(false);
     }

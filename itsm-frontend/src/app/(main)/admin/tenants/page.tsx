@@ -126,7 +126,6 @@ export default function TenantManagement() {
         trial,
       });
     } catch (error) {
-      console.error('加载租户数据失败:', error);
       message.error('加载租户数据失败');
     } finally {
       setLoading(false);
@@ -158,7 +157,6 @@ export default function TenantManagement() {
       setSelectedTenant(null);
       loadTenants(); // 重新加载数据
     } catch (error) {
-      console.error('保存租户失败:', error);
       message.error('保存租户失败');
     }
   };
@@ -170,7 +168,6 @@ export default function TenantManagement() {
       message.success('租户删除成功');
       loadTenants(); // 重新加载数据
     } catch (error) {
-      console.error('删除租户失败:', error);
       message.error('删除租户失败');
     }
   };

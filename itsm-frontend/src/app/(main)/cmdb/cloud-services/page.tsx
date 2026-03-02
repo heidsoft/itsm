@@ -6,6 +6,7 @@ import { Breadcrumb, Button, Card, Form, Input, Modal, Select, Space, Table, Tag
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
 import type { CloudService } from '@/types/biz/cmdb';
+import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -19,6 +20,7 @@ const providerOptions = [
 ];
 
 export default function CloudServicePage() {
+  const { t } = useI18n();
   const router = useRouter();
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
@@ -33,20 +35,31 @@ export default function CloudServicePage() {
   const createProvider = Form.useWatch('provider', createForm);
 
   const loadData = async () => {
+    const isMounted = true;
     setLoading(true);
     try {
       const values = form.getFieldsValue();
       const list = await CMDBApi.getCloudServices(values.provider);
-      setData(list || []);
+      if (isMounted) {
+        setData(list || []);
+      }
     } catch (error) {
-      message.error('加载云服务目录失败');
+      if (isMounted) {
+        message.error(t('cmdb.loadCloudServicesFailed'));
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
+    let isMounted = true;
     loadData();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleCreate = async () => {
@@ -62,34 +75,34 @@ export default function CloudServicePage() {
           const fields = payload.attribute_schema?.fields;
           if (fields) {
             if (!Array.isArray(fields)) {
-              message.error('属性模板字段必须为数组');
+              message.error(t('cmdb.propertyTemplateMustBeArray'));
               return;
             }
             for (const field of fields) {
               const type = field?.type;
               if (type !== 'select') {
-                message.error('属性模板字段类型仅支持 select');
+                message.error(t('cmdb.propertyTemplateOnlySelect'));
                 return;
               }
               if (!Array.isArray(field?.options) || field.options.length === 0) {
-                message.error('枚举类型必须提供非空 options');
+                message.error(t('cmdb.enumMustHaveOptions'));
                 return;
               }
             }
           }
         } catch (error) {
-          message.error('属性模板需要是有效的 JSON');
+          message.error(t('cmdb.propertyTemplateInvalidJSON'));
           return;
         }
       }
       await CMDBApi.createCloudService(payload);
-      message.success('云服务已创建');
+      message.success(t('cmdb.cloudServiceCreated'));
       setCreateOpen(false);
       createForm.resetFields();
       loadData();
     } catch (error) {
       if (error instanceof Error) {
-        message.error(error.message || '创建失败');
+        message.error(error.message || t('cmdb.cloudServiceCreateFailed'));
       }
     }
   };

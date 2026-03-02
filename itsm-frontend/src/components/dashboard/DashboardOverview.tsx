@@ -16,6 +16,7 @@ import {
   Tooltip,
   Empty,
   Spin,
+  message,
 } from 'antd';
 import {
   TrendingUp,
@@ -182,8 +183,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
         }))
       );
     } catch (error) {
-      console.error('Failed to fetch stats:', error);
-      // 失败时不显示mock数据
+      message.error('获取统计数据失败');
     } finally {
       setLoading(false);
     }

@@ -22,6 +22,7 @@ import {
   Tooltip,
   Popconfirm,
   Drawer,
+  message,
 } from 'antd';
 import {
   AlertTriangle,
@@ -128,7 +129,6 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       
       setStats({ total, open, resolved, critical });
     } catch (error) {
-      console.error('加载SLA违规记录失败:', error);
       message.error('加载违规记录失败');
     } finally {
       setLoading(false);
@@ -154,7 +154,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
         created_at: rule.created_at || new Date().toISOString(),
       })));
     } catch (error) {
-      console.error('加载告警规则失败:', error);
+      message.error('加载告警规则失败');
     }
   };
 
@@ -519,9 +519,9 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               </Select>
               <RangePicker
                 value={filters.dateRange}
-                onChange={(dates: [string, string] | null) => setFilters(prev => ({ 
-                  ...prev, 
-                  dateRange: dates && dates[0] && dates[1] ? [dates[0], dates[1]] : null 
+                onChange={(dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => setFilters(prev => ({
+                  ...prev,
+                  dateRange: dates && dates[0] && dates[1] ? [dates[0], dates[1]] : null
                 }))}
               />
             </Space>

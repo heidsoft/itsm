@@ -123,7 +123,6 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
         antMessage.info('未发现明确的根因');
       }
     } catch (error) {
-      console.error('Failed to perform analysis:', error);
       antMessage.error('根因分析失败');
       setAnalysisReport(null);
     } finally {

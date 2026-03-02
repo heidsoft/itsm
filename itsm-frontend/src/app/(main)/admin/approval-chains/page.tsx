@@ -20,7 +20,6 @@ export default function ApprovalChainsPage() {
 
   // 临时错误处理函数
   const handleError = (error: unknown, errorMessage?: string) => {
-    console.error(errorMessage || '操作失败', error);
     if (error instanceof Error) {
       message.error(error.message);
     } else {

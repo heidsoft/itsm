@@ -5,10 +5,12 @@ import { Table, Button, Tag, Space, Modal, Form, Input, Select, DatePicker, Prog
 import { PlusOutlined, EditOutlined, DeleteOutlined, ProjectOutlined, SyncOutlined } from "@ant-design/icons";
 import { PageContainer } from "@/app/components/PageContainer";
 import { projectService, Project } from "@/lib/services/project-service";
+import { useI18n } from "@/lib/i18n";
 
 const { RangePicker } = DatePicker;
 
 export default function ProjectsPage() {
+  const { t } = useI18n();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,7 @@ export default function ProjectsPage() {
       setProjects(data);
     } catch (error) {
       console.error("Failed to fetch projects:", error);
-      message.error("获取项目列表失败");
+      message.error(t('common.getFailed'));
     } finally {
       setFetching(false);
     }
@@ -101,10 +103,10 @@ export default function ProjectsPage() {
       onOk: async () => {
         try {
           await projectService.deleteProject(record.id);
-          message.success("删除成功");
+          message.success(t('common.deleteSuccess'));
           fetchProjects();
         } catch (error) {
-          message.error("删除失败");
+          message.error(t('common.deleteFailed'));
         }
       },
     });
@@ -116,14 +118,14 @@ export default function ProjectsPage() {
       setLoading(true);
       
       await projectService.createProject(values);
-      
-      message.success("保存成功");
+
+      message.success(t('common.saveSuccess'));
       setIsModalVisible(false);
       form.resetFields();
       fetchProjects();
     } catch (error) {
       console.error("Operation Failed:", error);
-      message.error("操作失败");
+      message.error(t('common.operationFailed'));
     } finally {
       setLoading(false);
     }
