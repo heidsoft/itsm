@@ -96,12 +96,17 @@ const WorkflowInstancesPage = () => {
   const [votingTaskId, setVotingTaskId] = useState<string | null>(null);
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedInstance, setSelectedInstance] = useState<WorkflowInstanceRecord | null>(null);
+  const [completeTaskVisible, setCompleteTaskVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<WorkflowTaskRecord | null>(null);
+  const [completingTaskId, setCompletingTaskId] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     status: '',
     workflow_id: '',
     business_key: '',
     started_by: '',
   });
+  const [taskComment, setTaskComment] = useState('');
+  const [taskVariables, setTaskVariables] = useState<Record<string, any>>({});
   const [stats, setStats] = useState({
     total: 0,
     running: 0,
@@ -318,6 +323,62 @@ const WorkflowInstancesPage = () => {
       loadInstances();
     } catch (error) {
       message.error('终止失败');
+    }
+  };
+
+  // 打开完成任务模态框
+  const handleOpenCompleteTask = (task: WorkflowTaskRecord) => {
+    setSelectedTask(task);
+    setTaskComment('');
+    setTaskVariables({});
+    setCompleteTaskVisible(true);
+  };
+
+  // 完成任务
+  const handleCompleteTask = async () => {
+    if (!selectedTask) return;
+
+    try {
+      setCompletingTaskId(selectedTask.id);
+      // 准备输出变量
+      const output = {
+        ...taskVariables,
+        comment: taskComment,
+        completed_at: new Date().toISOString(),
+      };
+
+      await WorkflowAPI.completeNode({
+        instanceId: selectedInstance?.id || '',
+        nodeId: selectedTask.id,
+        output,
+      });
+
+      message.success('任务已完成');
+      setCompleteTaskVisible(false);
+      setSelectedTask(null);
+      setTaskComment('');
+      setTaskVariables({});
+
+      // 刷新任务列表
+      if (selectedInstance) {
+        const tasksResponse = await WorkflowAPI.listWorkflowTasks(selectedInstance.id);
+        const normalized = (tasksResponse as any[]).map(t => ({
+          ...t,
+          name: t.name || t.nodeName,
+          activity_id: t.activity_id || t.nodeId,
+          type: t.type || t.nodeType || 'task',
+          assignee: t.assigneeName || t.assignee || '',
+          created_at: t.created_at || t.startTime,
+          due_date: t.due_date,
+        })) as WorkflowTaskRecord[];
+        setTasks(normalized);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('完成任务失败:', error);
+      message.error('完成任务失败：' + errorMessage);
+    } finally {
+      setCompletingTaskId(null);
     }
   };
 
@@ -573,12 +634,9 @@ const WorkflowInstancesPage = () => {
           <Space>
             {record.status === 'pending' && (
               <Button
-                type='link'
+                type='primary'
                 size='small'
-                onClick={() => {
-                  // TODO: 完成任务的处理
-                  message.info('完成任务功能开发中');
-                }}
+                onClick={() => handleOpenCompleteTask(record)}
               >
                 处理
               </Button>
@@ -788,6 +846,71 @@ const WorkflowInstancesPage = () => {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* 完成任务模态框 */}
+      <Modal
+        title={`处理任务 - ${selectedTask?.name}`}
+        open={completeTaskVisible}
+        onOk={handleCompleteTask}
+        onCancel={() => {
+          setCompleteTaskVisible(false);
+          setSelectedTask(null);
+          setTaskComment('');
+          setTaskVariables({});
+        }}
+        confirmLoading={completingTaskId !== null}
+        width={600}
+      >
+        <div className='space-y-4'>
+          <Alert
+            message='任务信息'
+            description={
+              <div className='space-y-1 text-sm'>
+                <div>任务 ID: {selectedTask?.id}</div>
+                <div>活动 ID: {selectedTask?.activity_id}</div>
+                <div>类型：{selectedTask?.type}</div>
+                <div>
+                  创建时间：{selectedTask?.created_at ? new Date(selectedTask.created_at).toLocaleString('zh-CN') : '-'}
+                </div>
+              </div>
+            }
+            type='info'
+            showIcon
+          />
+
+          <div>
+            <label className='block text-sm font-medium mb-2'>处理意见</label>
+            <Input.TextArea
+              rows={4}
+              placeholder='请输入处理意见或备注...'
+              value={taskComment}
+              onChange={e => setTaskComment(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className='block text-sm font-medium mb-2'>
+              输出变量 (可选，JSON 格式)
+            </label>
+            <Input.TextArea
+              rows={4}
+              placeholder='{"key": "value"}'
+              value={JSON.stringify(taskVariables, null, 2)}
+              onChange={e => {
+                try {
+                  const parsed = JSON.parse(e.target.value);
+                  setTaskVariables(parsed);
+                } catch {
+                  // 忽略解析错误，用户还在输入中
+                }
+              }}
+            />
+            <div className='text-xs text-gray-500 mt-1'>
+              用于传递数据到下一个节点
+            </div>
+          </div>
+        </div>
       </Modal>
     </>
   );

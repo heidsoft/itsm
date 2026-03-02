@@ -36,6 +36,8 @@ import { Ticket } from '@/lib/services/ticket-service';
 import { getStatusConfig, getPriorityConfig } from '@/lib/constants/ticket-constants';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
+import { UserApi, User } from '@/lib/api/user-api';
+import { useEffect } from 'react';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -76,6 +78,28 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
   const [editingSubtask, setEditingSubtask] = useState<Subtask | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [form] = Form.useForm();
+  const [userList, setUserList] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  // 加载用户列表
+  useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        setLoadingUsers(true);
+        const response = await UserApi.getUsers({ page: 1, page_size: 100, status: 'active' });
+        setUserList(response.users || []);
+      } catch (error) {
+        console.error('Failed to load users:', error);
+        antMessage.error('加载用户列表失败');
+      } finally {
+        setLoadingUsers(false);
+      }
+    };
+
+    if (canEdit) {
+      loadUsers();
+    }
+  }, [canEdit, antMessage]);
 
   // 计算父工单进度
   const parentProgress = useMemo(() => {
@@ -470,8 +494,21 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
             </Select>
           </Form.Item>
           <Form.Item name='assignee_id' label='处理人'>
-            <Select placeholder='请选择处理人' allowClear>
-              {/* TODO: 从用户列表获取 */}
+            <Select
+              placeholder='请选择处理人'
+              allowClear
+              loading={loadingUsers}
+              showSearch
+              filterOption={(input, option) =>
+                (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase()) ||
+                (option?.value as string)?.includes(input)
+              }
+            >
+              {userList.map(user => (
+                <Option key={user.id} value={user.id.toString()}>
+                  {user.name} ({user.department || user.email})
+                </Option>
+              ))}
             </Select>
           </Form.Item>
           <Form.Item name='due_date' label='截止时间'>
