@@ -140,7 +140,7 @@ describe('Auth Token Refresh Mechanism', () => {
     });
 
     it('should return false when no refresh token exists', async () => {
-      localStorageMock.store['refresh_token'] = undefined;
+      delete localStorageMock.store['refresh_token'];
 
       const result = await AuthService.refreshToken();
 
@@ -345,7 +345,7 @@ describe('Auth Token Refresh Mechanism', () => {
     });
 
     it('should return false when no refresh token exists', async () => {
-      localStorageMock.store['refresh_token'] = undefined;
+      delete localStorageMock.store['refresh_token'];
 
       const result = await (httpClient as any).refreshTokenInternal();
 

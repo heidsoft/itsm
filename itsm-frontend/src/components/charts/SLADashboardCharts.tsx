@@ -199,9 +199,9 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
               </Select>
               <RangePicker
                 value={dateRange}
-                onChange={(dates: [string, string] | null) => {
-                  if (dates) {
-                    setDateRange([dates[0]!, dates[1]!]);
+                onChange={dates => {
+                  if (dates && dates[0] && dates[1]) {
+                    setDateRange([dates[0], dates[1]]);
                   }
                 }}
               />

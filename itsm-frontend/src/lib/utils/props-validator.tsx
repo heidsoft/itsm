@@ -117,7 +117,7 @@ export function safeGetNested<T>(obj: unknown, path: string, defaultValue?: T): 
       current = (current as Record<string, unknown>)[key];
     }
 
-    return current !== undefined ? current as T : defaultValue;
+    return (current as T | undefined) ?? defaultValue;
   } catch (error) {
     console.warn(`Error accessing nested property: ${path}`, error);
     return defaultValue;

@@ -274,7 +274,10 @@ describe('Layout ErrorBoundary', () => {
 
     it('开发环境显示堆栈跟踪详情', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'development',
+        writable: true,
+      });
 
       render(
         <ErrorBoundary>
@@ -285,12 +288,18 @@ describe('Layout ErrorBoundary', () => {
       // 开发环境应该显示 Stack Trace 摘要
       expect(screen.getByText(/Stack Trace/i)).toBeInTheDocument();
 
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true,
+      });
     });
 
     it('生产环境不显示堆栈跟踪详情', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'production',
+        writable: true,
+      });
 
       render(
         <ErrorBoundary>
@@ -301,7 +310,10 @@ describe('Layout ErrorBoundary', () => {
       // 生产环境不应该显示 Stack Trace 摘要
       expect(screen.queryByText(/Stack Trace/i)).not.toBeInTheDocument();
 
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true,
+      });
     });
   });
 
@@ -652,20 +664,20 @@ describe('性能和边界情况', () => {
   });
 
   it('处理空子组件', () => {
-    const { container } = render(<ErrorBoundary />);
+    const { container } = render(<ErrorBoundary><></></ErrorBoundary>);
 
     // 没有子组件时应该渲染空内容
     expect(container.firstChild).toBeNull();
   });
 
   it('处理 null 子组件', () => {
-    const { container } = render(<ErrorBoundary>{null}</ErrorBoundary>);
+    const { container } = render(<ErrorBoundary>{null as any}</ErrorBoundary>);
 
     expect(container.firstChild).toBeNull();
   });
 
   it('处理 undefined 子组件', () => {
-    const { container } = render(<ErrorBoundary>{undefined}</ErrorBoundary>);
+    const { container } = render(<ErrorBoundary>{undefined as any}</ErrorBoundary>);
 
     expect(container.firstChild).toBeNull();
   });
@@ -681,8 +693,8 @@ describe('性能和边界情况', () => {
   });
 
   it('错误消息包含特殊字符', () => {
-    class SpecialErrorComponent extends Component {
-      render() {
+    class SpecialErrorComponent extends Component<{}, {}> {
+      render(): React.ReactNode {
         throw new Error('Error with <special> & "characters"');
       }
     }

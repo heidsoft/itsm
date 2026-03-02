@@ -130,6 +130,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
         setPredictionReport(null);
       }
     } catch (error) {
+      console.error('Failed to load prediction:', error);
       antMessage.error('加载预测数据失败');
       setPredictionReport(null);
     } finally {
@@ -269,7 +270,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
         <Space className="mb-4" wrap>
           <RangePicker
             value={timeRange}
-            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
+            onChange={(dates, dateStrings) => {
               if (dates && dates[0] && dates[1]) {
                 setTimeRange([dates[0], dates[1]]);
               }
