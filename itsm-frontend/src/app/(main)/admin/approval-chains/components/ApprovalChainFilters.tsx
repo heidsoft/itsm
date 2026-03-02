@@ -54,10 +54,10 @@ export function ApprovalChainFilters({
   );
 
   const handleDateRangeChange = useCallback(
-    (dates: any, dateStrings: any) => {
+    (dates: any, dateStrings: [string, string]) => {
       const newFilters = {
         ...localFilters,
-        dateRange: dates && dateStrings
+        dateRange: dates
           ? {
               field: 'created' as const,
               start: dateStrings[0],

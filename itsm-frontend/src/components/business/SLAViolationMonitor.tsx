@@ -539,7 +539,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               </Select>
               <RangePicker
                 value={filters.dateRange}
-                onChange={(dates: [string, string] | null) =>
+                onChange={(dates: any) =>
                   setFilters(prev => ({
                     ...prev,
                     dateRange: dates && dates[0] && dates[1] ? [dates[0], dates[1]] : null,
