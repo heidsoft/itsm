@@ -27,14 +27,14 @@ export const BasicExample = () => {
           title: '暂无数据',
           description: '当前没有相关数据，您可以创建新的记录',
           actionText: '创建记录',
-          onAction: () => console.log('创建记录'),
+          onAction: () => // console.log('创建记录'),
           showAction: true,
         }}
         error={{
           title: '加载失败',
           description: '数据加载过程中发生错误，请稍后重试',
           actionText: '重试',
-          onAction: () => console.log('重试'),
+          onAction: () => // console.log('重试'),
           showRetry: true,
           showAction: true,
         }}
@@ -102,7 +102,7 @@ export const TicketListExample = () => {
           title: '暂无工单',
           description: '当前没有工单数据，点击下方按钮创建第一个工单',
           actionText: '创建工单',
-          onAction: () => console.log('创建工单'),
+          onAction: () => // console.log('创建工单'),
           showAction: true,
         }}
         error={{
@@ -140,7 +140,7 @@ export const ModuleExamples = () => {
               title: '暂无事件',
               description: '当前没有事件数据',
               actionText: '创建事件',
-              onAction: () => console.log('创建事件'),
+              onAction: () => // console.log('创建事件'),
               showAction: true,
             }}
             minHeight={150}
@@ -152,7 +152,7 @@ export const ModuleExamples = () => {
               title: '暂无问题',
               description: '当前没有问题数据',
               actionText: '创建问题',
-              onAction: () => console.log('创建问题'),
+              onAction: () => // console.log('创建问题'),
               showAction: true,
             }}
             minHeight={150}

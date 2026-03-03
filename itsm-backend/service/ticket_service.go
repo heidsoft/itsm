@@ -102,6 +102,21 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		return nil, fmt.Errorf("无效的优先级")
 	}
 
+	// 验证 requester_id 是否有效
+	if req.RequesterID <= 0 {
+		return nil, fmt.Errorf("创建人工单无效")
+	}
+	requesterExists, err := s.client.User.Query().
+		Where(user.ID(req.RequesterID), user.TenantID(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to verify requester", "error", err)
+		return nil, fmt.Errorf("验证创建人失败")
+	}
+	if !requesterExists {
+		return nil, fmt.Errorf("创建的用户不存在或不属于当前租户")
+	}
+
 	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
 	if req.AssigneeID > 0 {
 		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)
@@ -123,8 +138,8 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	if err != nil {
 		s.logger.Warnw("Failed to calculate SLA deadline", "error", err)
 		// SLA计算失败不阻止工单创建，使用默认值
-		defaultRespDeadline := time.Now().Add(8 * time.Hour)
-		defaultResDeadline := time.Now().Add(24 * time.Hour)
+		defaultRespDeadline := time.Now().Add(time.Duration(s.config.DefaultResponseHours) * time.Hour)
+		defaultResDeadline := time.Now().Add(time.Duration(s.config.DefaultResolutionHours) * time.Hour)
 		slaResult = &SLADeadlineResult{
 			SLADefinitionID:    0,
 			ResponseDeadline:   &defaultRespDeadline,
@@ -189,10 +204,17 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 			First(ctx)
 		if err == nil {
 			createBuilder = createBuilder.SetCategoryID(cat.ID)
-		} else if ent.IsNotFound(err) {
-			// 如果分类不存在，尝试查找公共分类或记录警告
-			s.logger.Warnw("Category not found by name", "name", req.Category)
+	} else if ent.IsNotFound(err) {
+		// 查找默认分类
+		defaultCat, err := s.client.TicketCategory.Query().
+			Where(ticketcategory.IsDefault(true), ticketcategory.TenantID(tenantID)).
+			First(ctx)
+		if err == nil {
+			createBuilder = createBuilder.SetCategoryID(defaultCat.ID)
+		} else {
+			s.logger.Warnw("Default category not found", "error", err)
 		}
+	}
 	}
 
 	// 如果指定了模板ID，设置模板
@@ -495,6 +517,21 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 	if req.Status != "" {
 		updateQuery.SetStatus(req.Status)
 	}
+	// 验证 requester_id 是否有效
+	if req.RequesterID <= 0 {
+		return nil, fmt.Errorf("创建人工单无效")
+	}
+	requesterExists, err := s.client.User.Query().
+		Where(user.ID(req.RequesterID), user.TenantID(tenantID)).
+		Exist(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to verify requester", "error", err)
+		return nil, fmt.Errorf("验证创建人失败")
+	}
+	if !requesterExists {
+		return nil, fmt.Errorf("创建的用户不存在或不属于当前租户")
+	}
+
 	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
 	if req.AssigneeID > 0 {
 		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)

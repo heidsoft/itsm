@@ -48,7 +48,7 @@ export const logger = {
   // 开发环境日志
   debug: (...args: unknown[]) => {
     if (env.features.consoleLogs) {
-      console.log('[DEBUG]', ...args);
+      // console.log('[DEBUG]', ...args);
     }
   },
 
@@ -80,14 +80,14 @@ export const logger = {
   // 性能日志
   performance: (label: string, data: Record<string, unknown>) => {
     if (env.features.performanceMonitoring) {
-      console.log(`[PERFORMANCE] ${label}:`, data);
+      // console.log(`[PERFORMANCE] ${label}:`, data);
     }
   },
 
   // 安全日志
   security: (event: string, data: Record<string, unknown>) => {
     if (env.features.consoleLogs) {
-      console.log('[SECURITY]', event, data);
+      // console.log('[SECURITY]', event, data);
     }
 
     // 生产环境安全事件上报
