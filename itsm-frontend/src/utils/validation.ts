@@ -35,15 +35,12 @@ export const validateURL = (url: string): boolean => {
 
 // IP地址验证
 export const validateIP = (ip: string): boolean => {
-  const ipRegex =
-    /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
   return ipRegex.test(ip);
 };
 
 // 密码强度验证
-export const validatePasswordStrength = (
-  password: string
-): {
+export const validatePasswordStrength = (password: string): {
   isValid: boolean;
   strength: 'weak' | 'medium' | 'strong';
   message: string;
@@ -53,20 +50,20 @@ export const validatePasswordStrength = (
   }
 
   let strength = 0;
-
+  
   // 检查长度
   if (password.length >= 8) strength += 1;
   if (password.length >= 12) strength += 1;
-
+  
   // 检查包含小写字母
   if (/[a-z]/.test(password)) strength += 1;
-
+  
   // 检查包含大写字母
   if (/[A-Z]/.test(password)) strength += 1;
-
+  
   // 检查包含数字
   if (/[0-9]/.test(password)) strength += 1;
-
+  
   // 检查包含特殊字符
   if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
 
@@ -80,13 +77,8 @@ export const validatePasswordStrength = (
 };
 
 // 必填验证
-export const validateRequired = (value: any, fieldName: string = '此字段'): string | undefined => {
-  if (
-    value === null ||
-    value === undefined ||
-    value === '' ||
-    (Array.isArray(value) && value.length === 0)
-  ) {
+export const validateRequired = (value: unknown, fieldName: string = '此字段'): string | undefined => {
+  if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
     return `${fieldName}不能为空`;
   }
   return undefined;
@@ -147,10 +139,10 @@ export const createValidator = (rules: {
   min?: number;
   max?: number;
   pattern?: { regex: RegExp; message: string };
-  custom?: (value: any) => string | undefined;
+  custom?: (value: unknown) => string | undefined;
   fieldName?: string;
 }) => {
-  return (value: any): string | undefined => {
+  return (value: unknown): string | undefined => {
     const fieldName = rules.fieldName || '此字段';
 
     // 必填验证
@@ -206,10 +198,10 @@ export const createValidator = (rules: {
 };
 
 // Ant Design Form 规则适配器
-export const toAntdRules = (validator: (value: any) => string | undefined) => {
+export const toAntdRules = (validator: (value: unknown) => string | undefined) => {
   return [
     {
-      validator: async (_: any, value: any) => {
+      validator: async (_: unknown, value: unknown) => {
         const error = validator(value);
         if (error) {
           return Promise.reject(new Error(error));
@@ -223,7 +215,7 @@ export const toAntdRules = (validator: (value: any) => string | undefined) => {
 // 批量验证
 export const validateFields = (
   data: Record<string, any>,
-  validators: Record<string, (value: any) => string | undefined>
+  validators: Record<string, (value: unknown) => string | undefined>
 ): { isValid: boolean; errors: Record<string, string> } => {
   const errors: Record<string, string> = {};
   let isValid = true;

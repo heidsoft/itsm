@@ -426,7 +426,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
         </Card>
       )}
 
-      <DragDropContext onDragEnd={handleTreeDragEnd as unknown as (result: any) => void}>
+      <DragDropContext onDragEnd={handleTreeDragEnd as unknown as (result: unknown) => void}>
         <Droppable droppableId="categories" type="list">
           {provided => (
             <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">

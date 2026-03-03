@@ -101,7 +101,7 @@ export const Header: React.FC<HeaderProps> = ({
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  const handleNotificationClick = (item: any) => {
+  const handleNotificationClick = (item: unknown) => {
     if (!item.read) {
       markAsRead(item.id);
     }

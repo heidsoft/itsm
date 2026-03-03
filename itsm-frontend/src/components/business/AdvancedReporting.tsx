@@ -87,8 +87,8 @@ interface ReportParameter {
   type: 'string' | 'number' | 'date' | 'select' | 'boolean';
   label: string;
   required: boolean;
-  default_value?: any;
-  options?: { label: string; value: any }[];
+  default_value?: unknown;
+  options?: { label: string; value: unknown }[];
 }
 
 interface ReportExecution {
@@ -105,7 +105,7 @@ interface ReportExecution {
 
 interface ReportData {
   columns: string[];
-  rows: any[][];
+  rows: unknown[][];
   total: number;
   summary: Record<string, any>;
 }
@@ -114,7 +114,7 @@ interface DashboardWidget {
   id: string;
   title: string;
   type: 'chart' | 'metric' | 'table';
-  config: any;
+  config: unknown;
   position: { x: number; y: number; w: number; h: number };
 }
 
@@ -912,7 +912,7 @@ const AdvancedReporting: React.FC = () => {
                   key: col,
                 }))}
                 dataSource={reportData.rows.map((row, index) => {
-                  const obj: any = { key: index };
+                  const obj: unknown = { key: index };
                   row.forEach((cell, cellIndex) => {
                     obj[reportData.columns[cellIndex]] = cell;
                   });

@@ -13,7 +13,7 @@ export interface UseFetchOptions<T> {
   // 是否立即执行
   immediate?: boolean;
   // 依赖项
-  dependencies?: any[];
+  dependencies?: unknown[];
   // 成功回调
   onSuccess?: (data: T) => void;
   // 错误回调
@@ -35,7 +35,7 @@ export interface UseFetchResult<T> {
 }
 
 // 简单的内存缓存
-const cache = new Map<string, { data: any; timestamp: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number }>();
 
 /**
  * 数据获取Hook

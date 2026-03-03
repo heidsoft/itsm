@@ -26,7 +26,7 @@ export default function CreateArticlePage() {
       try {
         const res = await KnowledgeBaseApi.getCategories();
         // Map KnowledgeCategory objects to strings for backward compatibility
-        const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
+        const categoryNames = (res || []).map((cat: unknown) => cat.name || cat.id || String(cat));
         setCategories(categoryNames);
       } catch (error) {
         // Use default categories if API fails
@@ -36,7 +36,7 @@ export default function CreateArticlePage() {
     loadCategories();
   }, []);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: unknown) => {
     setLoading(true);
     try {
       await KnowledgeBaseApi.createArticle({

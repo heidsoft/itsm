@@ -95,7 +95,7 @@ const ServiceRequestDetail: React.FC = () => {
       message.success('操作成功');
       setActionModalVisible(false);
       loadDetail(); // 刷新数据
-    } catch (error: any) {
+    } catch (error: unknown) {
       // console.error(error);
       message.error(error.message || '操作失败');
     } finally {

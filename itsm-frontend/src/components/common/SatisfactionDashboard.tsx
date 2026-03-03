@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Card,
   Statistic,
@@ -20,7 +20,8 @@ import {
   Rate,
   Avatar,
   Divider,
-} from 'antd';
+  message,
+} from "antd";
 import {
   Smile,
   Meh,
@@ -40,7 +41,7 @@ import {
   ThumbsDown,
   AlertTriangle,
   CheckCircle,
-} from 'lucide-react';
+} from "lucide-react";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -50,12 +51,12 @@ interface SatisfactionData {
   overallScore: number;
   totalResponses: number;
   responseRate: number;
-  trend: 'up' | 'down' | 'stable';
+  trend: "up" | "down" | "stable";
   categoryScores: {
     category: string;
     score: number;
     count: number;
-    trend: 'up' | 'down' | 'stable';
+    trend: "up" | "down" | "stable";
   }[];
   monthlyTrend: {
     month: string;
@@ -84,9 +85,10 @@ interface SatisfactionData {
 }
 
 export const SatisfactionDashboard: React.FC = () => {
-  const [satisfactionData, setSatisfactionData] = useState<SatisfactionData | null>(null);
-  const [timeRange, setTimeRange] = useState<[string, string]>(['30d', '7d']);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [satisfactionData, setSatisfactionData] =
+    useState<SatisfactionData | null>(null);
+  const [timeRange, setTimeRange] = useState<[string, string]>(["30d", "7d"]);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export const SatisfactionDashboard: React.FC = () => {
   const loadSatisfactionData = async () => {
     try {
       const { TicketRatingApi } = await import('@/lib/api/ticket-rating-api');
-
+      
       // 计算日期范围
       const endDate = new Date();
       const startDate = new Date();
@@ -104,38 +106,38 @@ export const SatisfactionDashboard: React.FC = () => {
       if (!isNaN(days)) {
         startDate.setDate(endDate.getDate() - days);
       }
-
+      
       const stats = await TicketRatingApi.getRatingStats({
         start_date: startDate.toISOString(),
-        end_date: endDate.toISOString(),
+        end_date: endDate.toISOString()
       });
 
       const data: SatisfactionData = {
         overallScore: stats.average_rating || 0,
         totalResponses: stats.total_ratings || 0,
         responseRate: 0, // API暂不支持
-        trend: 'stable', // API暂不支持
-        categoryScores: Object.values(stats.by_category || {}).map((c: any) => ({
+        trend: "stable", // API暂不支持
+        categoryScores: Object.values(stats.by_category || {}).map((c: unknown) => ({
           category: c.category_name,
           score: c.average_rating,
           count: c.total_ratings,
-          trend: 'stable',
+          trend: "stable"
         })),
         monthlyTrend: [], // API暂不支持
-        agentPerformance: Object.values(stats.by_assignee || {}).map((a: any) => ({
+        agentPerformance: Object.values(stats.by_assignee || {}).map((a: unknown) => ({
           agent: a.assignee_name,
           avatar: a.assignee_name?.[0] || 'U',
           score: a.average_rating,
           tickets: a.total_ratings,
           responseTime: 0,
-          satisfaction: (a.average_rating / 5) * 100,
+          satisfaction: (a.average_rating / 5) * 100
         })),
-        recentFeedback: [], // API暂不支持列表查询
+        recentFeedback: [] // API暂不支持列表查询
       };
 
       setSatisfactionData(data);
     } catch (error) {
-      console.error('加载满意度数据失败:', error);
+      message.error("加载满意度数据失败");
       // 失败时不显示mock数据
     } finally {
       setLoading(false);
@@ -143,25 +145,25 @@ export const SatisfactionDashboard: React.FC = () => {
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 4.5) return '#52c41a';
-    if (score >= 4.0) return '#1890ff';
-    if (score >= 3.5) return '#faad14';
-    return '#f5222d';
+    if (score >= 4.5) return "#52c41a";
+    if (score >= 4.0) return "#1890ff";
+    if (score >= 3.5) return "#faad14";
+    return "#f5222d";
   };
 
   const getScoreLevel = (score: number): string => {
-    if (score >= 4.5) return '非常满意';
-    if (score >= 4.0) return '满意';
-    if (score >= 3.5) return '一般';
-    if (score >= 3.0) return '不满意';
-    return '非常不满意';
+    if (score >= 4.5) return "非常满意";
+    if (score >= 4.0) return "满意";
+    if (score >= 3.5) return "一般";
+    if (score >= 3.0) return "不满意";
+    return "非常不满意";
   };
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case 'up':
+      case "up":
         return <TrendingUp className="text-green-500" />;
-      case 'down':
+      case "down":
         return <TrendingDown className="text-red-500" />;
       default:
         return <TrendingUp className="text-blue-500" />;
@@ -170,22 +172,22 @@ export const SatisfactionDashboard: React.FC = () => {
 
   const getTrendColor = (trend: string): string => {
     switch (trend) {
-      case 'up':
-        return 'green';
-      case 'down':
-        return 'red';
+      case "up":
+        return "green";
+      case "down":
+        return "red";
       default:
-        return 'blue';
+        return "blue";
     }
   };
 
   const agentColumns = [
     {
-      title: '处理人',
-      key: 'agent',
-      render: (record: any) => (
+      title: "处理人",
+      key: "agent",
+      render: (record: unknown) => (
         <Space>
-          <Avatar size="small" style={{ backgroundColor: '#1890ff' }}>
+          <Avatar size="small" style={{ backgroundColor: "#1890ff" }}>
             {record.avatar}
           </Avatar>
           <Text strong>{record.agent}</Text>
@@ -193,9 +195,9 @@ export const SatisfactionDashboard: React.FC = () => {
       ),
     },
     {
-      title: '满意度评分',
-      dataIndex: 'score',
-      key: 'score',
+      title: "满意度评分",
+      dataIndex: "score",
+      key: "score",
       render: (score: number) => (
         <Space>
           <Rate disabled defaultValue={score} style={{ fontSize: 14 }} />
@@ -206,26 +208,32 @@ export const SatisfactionDashboard: React.FC = () => {
       ),
     },
     {
-      title: '处理工单数',
-      dataIndex: 'tickets',
-      key: 'tickets',
+      title: "处理工单数",
+      dataIndex: "tickets",
+      key: "tickets",
       render: (tickets: number) => <Text>{tickets}</Text>,
     },
     {
-      title: '平均响应时间',
-      dataIndex: 'responseTime',
-      key: 'responseTime',
+      title: "平均响应时间",
+      dataIndex: "responseTime",
+      key: "responseTime",
       render: (time: number) => <Text>{time} 小时</Text>,
     },
     {
-      title: '满意度率',
-      dataIndex: 'satisfaction',
-      key: 'satisfaction',
+      title: "满意度率",
+      dataIndex: "satisfaction",
+      key: "satisfaction",
       render: (satisfaction: number) => (
         <Progress
           percent={satisfaction}
           size="small"
-          status={satisfaction >= 90 ? 'success' : satisfaction >= 80 ? 'normal' : 'exception'}
+          status={
+            satisfaction >= 90
+              ? "success"
+              : satisfaction >= 80
+              ? "normal"
+              : "exception"
+          }
         />
       ),
     },
@@ -233,50 +241,52 @@ export const SatisfactionDashboard: React.FC = () => {
 
   const feedbackColumns = [
     {
-      title: '工单号',
-      dataIndex: 'ticketNumber',
-      key: 'ticketNumber',
+      title: "工单号",
+      dataIndex: "ticketNumber",
+      key: "ticketNumber",
       render: (text: string) => <Text strong>{text}</Text>,
     },
     {
-      title: '标题',
-      dataIndex: 'title',
-      key: 'title',
+      title: "标题",
+      dataIndex: "title",
+      key: "title",
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: '评分',
-      dataIndex: 'score',
-      key: 'score',
+      title: "评分",
+      dataIndex: "score",
+      key: "score",
       render: (score: number) => (
         <Space>
           <Rate disabled defaultValue={score} style={{ fontSize: 12 }} />
-          <Tag color={score >= 4.0 ? 'green' : 'orange'}>{getScoreLevel(score)}</Tag>
+          <Tag color={score >= 4.0 ? "green" : "orange"}>
+            {getScoreLevel(score)}
+          </Tag>
         </Space>
       ),
     },
     {
-      title: '处理人',
-      dataIndex: 'agent',
-      key: 'agent',
+      title: "处理人",
+      dataIndex: "agent",
+      key: "agent",
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: '分类',
-      dataIndex: 'category',
-      key: 'category',
+      title: "分类",
+      dataIndex: "category",
+      key: "category",
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: '评价时间',
-      dataIndex: 'date',
-      key: 'date',
+      title: "评价时间",
+      dataIndex: "date",
+      key: "date",
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: '操作',
-      key: 'action',
-      render: (record: any) => (
+      title: "操作",
+      key: "action",
+      render: (record: unknown) => (
         <Button size="small" icon={<Eye />}>
           查看详情
         </Button>
@@ -314,7 +324,7 @@ export const SatisfactionDashboard: React.FC = () => {
           <Space>
             <Select
               value={timeRange[0]}
-              onChange={value => setTimeRange([value, timeRange[1]])}
+              onChange={(value) => setTimeRange([value, timeRange[1]])}
               style={{ width: 100 }}
             >
               <Option value="7d">7天</Option>
@@ -346,7 +356,7 @@ export const SatisfactionDashboard: React.FC = () => {
                     {getScoreLevel(satisfactionData?.overallScore || 0)}
                   </div>
                   <div className="flex items-center">
-                    {getTrendIcon(satisfactionData?.trend || 'stable')}
+                    {getTrendIcon(satisfactionData?.trend || "stable")}
                     <span className="ml-1 text-xs">较上月</span>
                   </div>
                 </div>
@@ -369,7 +379,8 @@ export const SatisfactionDashboard: React.FC = () => {
             <Statistic
               title="非常满意"
               value={Math.round(
-                ((satisfactionData?.recentFeedback.filter(f => f.score >= 4.5).length || 0) /
+                ((satisfactionData?.recentFeedback.filter((f) => f.score >= 4.5)
+                  .length || 0) /
                   (satisfactionData?.recentFeedback.length || 1)) *
                   100
               )}
@@ -381,7 +392,8 @@ export const SatisfactionDashboard: React.FC = () => {
             <Statistic
               title="不满意"
               value={Math.round(
-                ((satisfactionData?.recentFeedback.filter(f => f.score < 3.5).length || 0) /
+                ((satisfactionData?.recentFeedback.filter((f) => f.score < 3.5)
+                  .length || 0) /
                   (satisfactionData?.recentFeedback.length || 1)) *
                   100
               )}
@@ -400,9 +412,9 @@ export const SatisfactionDashboard: React.FC = () => {
             percent={((satisfactionData?.overallScore || 0) / 5) * 100}
             status="success"
             strokeColor={{
-              '0%': '#f5222d',
-              '50%': '#faad14',
-              '100%': '#52c41a',
+              "0%": "#f5222d",
+              "50%": "#faad14",
+              "100%": "#52c41a",
             }}
           />
         </div>
@@ -430,7 +442,11 @@ export const SatisfactionDashboard: React.FC = () => {
                   </Text>
                   <Tag color={getTrendColor(category.trend)}>
                     {getTrendIcon(category.trend)}
-                    {category.trend === 'up' ? '上升' : category.trend === 'down' ? '下降' : '稳定'}
+                    {category.trend === "up"
+                      ? "上升"
+                      : category.trend === "down"
+                      ? "下降"
+                      : "稳定"}
                   </Tag>
                 </div>
                 <div className="flex items-center text-sm text-gray-500">
@@ -442,7 +458,7 @@ export const SatisfactionDashboard: React.FC = () => {
                 <Progress
                   percent={(category.score / 5) * 100}
                   size="small"
-                  status={category.score >= 4.0 ? 'success' : 'normal'}
+                  status={category.score >= 4.0 ? "success" : "normal"}
                   strokeColor={getScoreColor(category.score)}
                 />
               </div>
@@ -485,11 +501,13 @@ export const SatisfactionDashboard: React.FC = () => {
           rowKey="id"
           pagination={{ pageSize: 5 }}
           expandable={{
-            expandedRowRender: record => (
+            expandedRowRender: (record) => (
               <div className="p-4 bg-gray-50 rounded">
                 <div className="mb-3">
                   <Text strong>评价内容:</Text>
-                  <div className="mt-1 p-2 bg-white rounded border">{record.comment}</div>
+                  <div className="mt-1 p-2 bg-white rounded border">
+                    {record.comment}
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {record.tags.map((tag, index) => (

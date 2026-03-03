@@ -67,7 +67,7 @@ export interface ResponsiveDashboardProps {
   onWidgetRefresh?: (widgetId: string) => void;
   onWidgetRemove?: (widgetId: string) => void;
   onWidgetConfigure?: (widgetId: string) => void;
-  onLayoutChange?: (layouts: any) => void;
+  onLayoutChange?: (layouts: unknown) => void;
   onConfigChange?: (config: DashboardConfig) => void;
   className?: string;
 }
@@ -141,7 +141,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
   // 生成布局配置
   const generateLayouts = useMemo(() => {
-    const layoutsMap: any = {};
+    const layoutsMap: unknown = {};
 
     Object.keys(cols).forEach(breakpoint => {
       layoutsMap[breakpoint] = widgets.map(widget => ({
@@ -161,7 +161,7 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
   }, [widgets]);
 
   // 处理布局变化
-  const handleLayoutChange = (layout: any, layouts: any) => {
+  const handleLayoutChange = (layout: unknown, layouts: unknown) => {
     setLayouts(layouts);
     onLayoutChange?.(layouts);
   };

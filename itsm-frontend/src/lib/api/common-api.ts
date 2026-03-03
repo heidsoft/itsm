@@ -16,7 +16,7 @@ export class CommonApi {
   /**
    * 获取用户列表
    */
-  static async getUsers(params?: any): Promise<User[]> {
+  static async getUsers(params?: unknown): Promise<User[]> {
     return httpClient.get('/api/v1/users', params);
   }
 
@@ -30,7 +30,7 @@ export class CommonApi {
   /**
    * 列出用户
    */
-  static async listUsers(params?: any): Promise<User[]> {
+  static async listUsers(params?: unknown): Promise<User[]> {
     return this.getUsers(params);
   }
 
@@ -65,7 +65,7 @@ export class CommonApi {
   /**
    * 获取审计日志
    */
-  static async getAuditLogs(params?: any): Promise<{ items: AuditLog[]; total: number }> {
+  static async getAuditLogs(params?: unknown): Promise<{ items: AuditLog[]; total: number }> {
     return httpClient.get('/api/v1/audit-logs', params);
   }
 }

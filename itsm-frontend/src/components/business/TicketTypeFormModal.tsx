@@ -41,7 +41,7 @@ interface TicketTypeFormModalProps {
   visible: boolean;
   editingType: TicketTypeDefinition | null;
   onCancel: () => void;
-  onSubmit: (values: any) => Promise<void>;
+  onSubmit: (values: unknown) => Promise<void>;
 }
 
 export const TicketTypeFormModal: React.FC<TicketTypeFormModalProps> = ({

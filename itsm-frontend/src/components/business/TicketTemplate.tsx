@@ -70,8 +70,8 @@ interface TemplateField {
   label: string;
   type: 'text' | 'textarea' | 'select' | 'number' | 'date' | 'checkbox' | 'radio' | 'file';
   required: boolean;
-  defaultValue?: any;
-  options?: Array<{ label: string; value: any }>;
+  defaultValue?: unknown;
+  options?: Array<{ label: string; value: unknown }>;
   placeholder?: string;
   helpText?: string;
   order: number;

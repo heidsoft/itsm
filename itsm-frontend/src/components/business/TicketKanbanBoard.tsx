@@ -294,12 +294,12 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   }, [filteredTickets]);
 
   // 拖拽开始
-  const handleDragStart = (event: any) => {
+  const handleDragStart = (event: unknown) => {
     setActiveId(event.active.id);
   };
 
   // 拖拽结束
-  const handleDragEnd = async (event: any) => {
+  const handleDragEnd = async (event: unknown) => {
     const { active, over } = event;
     setActiveId(null);
 

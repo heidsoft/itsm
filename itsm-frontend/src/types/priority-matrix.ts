@@ -224,7 +224,7 @@ export interface PriorityRule {
 export interface PriorityRuleCondition {
   field: string;
   operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'regex';
-  value: any;
+  value: unknown;
   caseSensitive?: boolean;
 }
 

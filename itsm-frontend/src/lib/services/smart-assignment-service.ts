@@ -95,7 +95,7 @@ export interface AssignmentCondition {
   id: number;
   field: string; // 字段名
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
-  value: any;
+  value: unknown;
   logic: 'and' | 'or'; // 逻辑连接符
 }
 
@@ -290,14 +290,14 @@ export class SmartAssignmentService {
   }
 
   // 分配历史
-  async getAssignmentHistory(params?: any): Promise<PaginatedResponse<AssignmentHistory>> {
+  async getAssignmentHistory(params?: unknown): Promise<PaginatedResponse<AssignmentHistory>> {
     const response = await fetch(`${this.baseUrl}/history?${new URLSearchParams(params)}`);
     if (!response.ok) throw new Error('Failed to get assignment history');
     return response.json();
   }
 
   // 分配统计
-  async getAssignmentStats(params?: any): Promise<AssignmentStats> {
+  async getAssignmentStats(params?: unknown): Promise<AssignmentStats> {
     const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params)}`);
     if (!response.ok) throw new Error('Failed to get assignment stats');
     return response.json();

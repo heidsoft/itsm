@@ -6,7 +6,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { BatchOperationsApi } from '@/lib/api/batch-operations-api';
-import type { BatchOperationRequest, BatchExportConfig } from '@/types/batch-operations';
+import type {
+  BatchOperationRequest,
+  BatchExportConfig,
+} from '@/types/batch-operations';
 
 // ==================== Query Keys ====================
 
@@ -15,12 +18,15 @@ export const BATCH_OPERATION_KEYS = {
   progress: (operationId: string) =>
     [...BATCH_OPERATION_KEYS.all, 'progress', operationId] as const,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  logs: (filters?: any) => [...BATCH_OPERATION_KEYS.all, 'logs', filters] as const,
+  logs: (filters?: unknown) =>
+    [...BATCH_OPERATION_KEYS.all, 'logs', filters] as const,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  stats: (filters?: any) => [...BATCH_OPERATION_KEYS.all, 'stats', filters] as const,
+  stats: (filters?: unknown) =>
+    [...BATCH_OPERATION_KEYS.all, 'stats', filters] as const,
   permissions: () => [...BATCH_OPERATION_KEYS.all, 'permissions'] as const,
   scheduled: () => [...BATCH_OPERATION_KEYS.all, 'scheduled'] as const,
-  exportStatus: (exportId: string) => [...BATCH_OPERATION_KEYS.all, 'export', exportId] as const,
+  exportStatus: (exportId: string) =>
+    [...BATCH_OPERATION_KEYS.all, 'export', exportId] as const,
 };
 
 // ==================== Mutation Hooks ====================
@@ -39,13 +45,15 @@ export function useBatchAssignMutation() {
       assignmentRule?: 'round_robin' | 'load_balance' | 'manual';
       comment?: string;
     }) => BatchOperationsApi.batchAssignTickets(data),
-    onSuccess: response => {
-      message.success(`批量分配成功：${response.successCount}个工单已分配`);
+    onSuccess: (response) => {
+      message.success(
+        `批量分配成功：${response.successCount}个工单已分配`
+      );
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量分配失败：${error.message || '未知错误'}`);
     },
   });
@@ -64,13 +72,15 @@ export function useBatchUpdateStatusMutation() {
       resolution?: string;
       comment?: string;
     }) => BatchOperationsApi.batchUpdateStatus(data),
-    onSuccess: response => {
-      message.success(`批量更新成功：${response.successCount}个工单已更新`);
+    onSuccess: (response) => {
+      message.success(
+        `批量更新成功：${response.successCount}个工单已更新`
+      );
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量更新失败：${error.message || '未知错误'}`);
     },
   });
@@ -83,15 +93,20 @@ export function useBatchUpdatePriorityMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { ticketIds: number[]; priority: string; comment?: string }) =>
-      BatchOperationsApi.batchUpdatePriority(data),
-    onSuccess: response => {
-      message.success(`批量更新优先级成功：${response.successCount}个工单`);
+    mutationFn: (data: {
+      ticketIds: number[];
+      priority: string;
+      comment?: string;
+    }) => BatchOperationsApi.batchUpdatePriority(data),
+    onSuccess: (response) => {
+      message.success(
+        `批量更新优先级成功：${response.successCount}个工单`
+      );
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量更新优先级失败：${error.message || '未知错误'}`);
     },
   });
@@ -110,13 +125,15 @@ export function useBatchUpdateFieldsMutation() {
       customFields: Record<string, any>;
       comment?: string;
     }) => BatchOperationsApi.batchUpdateFields(data),
-    onSuccess: response => {
-      message.success(`批量更新字段成功：${response.successCount}个工单`);
+    onSuccess: (response) => {
+      message.success(
+        `批量更新字段成功：${response.successCount}个工单`
+      );
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量更新字段失败：${error.message || '未知错误'}`);
     },
   });
@@ -129,14 +146,17 @@ export function useBatchAddTagsMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { ticketIds: number[]; tags: string[]; comment?: string }) =>
-      BatchOperationsApi.batchAddTags(data),
-    onSuccess: response => {
+    mutationFn: (data: {
+      ticketIds: number[];
+      tags: string[];
+      comment?: string;
+    }) => BatchOperationsApi.batchAddTags(data),
+    onSuccess: (response) => {
       message.success(`批量添加标签成功：${response.successCount}个工单`);
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量添加标签失败：${error.message || '未知错误'}`);
     },
   });
@@ -149,15 +169,18 @@ export function useBatchRemoveTagsMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { ticketIds: number[]; tags: string[]; comment?: string }) =>
-      BatchOperationsApi.batchRemoveTags(data),
-    onSuccess: response => {
+    mutationFn: (data: {
+      ticketIds: number[];
+      tags: string[];
+      comment?: string;
+    }) => BatchOperationsApi.batchRemoveTags(data),
+    onSuccess: (response) => {
       message.success(`批量删除标签成功：${response.successCount}个工单`);
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量删除标签失败：${error.message || '未知错误'}`);
     },
   });
@@ -170,15 +193,18 @@ export function useBatchDeleteMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { ticketIds: number[]; reason?: string; hardDelete?: boolean }) =>
-      BatchOperationsApi.batchDeleteTickets(data),
-    onSuccess: response => {
+    mutationFn: (data: {
+      ticketIds: number[];
+      reason?: string;
+      hardDelete?: boolean;
+    }) => BatchOperationsApi.batchDeleteTickets(data),
+    onSuccess: (response) => {
       message.success(`批量删除成功：${response.successCount}个工单`);
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量删除失败：${error.message || '未知错误'}`);
     },
   });
@@ -197,12 +223,12 @@ export function useBatchCloseMutation() {
       resolution?: string;
       comment?: string;
     }) => BatchOperationsApi.batchCloseTickets(data),
-    onSuccess: response => {
+    onSuccess: (response) => {
       message.success(`批量关闭成功：${response.successCount}个工单`);
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量关闭失败：${error.message || '未知错误'}`);
     },
   });
@@ -215,14 +241,17 @@ export function useBatchReopenMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { ticketIds: number[]; reason?: string; comment?: string }) =>
-      BatchOperationsApi.batchReopenTickets(data),
-    onSuccess: response => {
+    mutationFn: (data: {
+      ticketIds: number[];
+      reason?: string;
+      comment?: string;
+    }) => BatchOperationsApi.batchReopenTickets(data),
+    onSuccess: (response) => {
       message.success(`批量重新打开成功：${response.successCount}个工单`);
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量重新打开失败：${error.message || '未知错误'}`);
     },
   });
@@ -252,7 +281,7 @@ export function useBatchExportMutation() {
       message.success('导出成功！');
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`导出失败：${error.message || '未知错误'}`);
     },
   });
@@ -265,14 +294,15 @@ export function useUndoBatchOperationMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (operationId: string) => BatchOperationsApi.undoBatchOperation(operationId),
-    onSuccess: response => {
+    mutationFn: (operationId: string) =>
+      BatchOperationsApi.undoBatchOperation(operationId),
+    onSuccess: (response) => {
       message.success(`撤销成功：${response.successCount}个工单已恢复`);
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`撤销失败：${error.message || '未知错误'}`);
     },
   });
@@ -287,7 +317,7 @@ export function useBatchOperationMutation() {
   return useMutation({
     mutationFn: (request: BatchOperationRequest) =>
       BatchOperationsApi.executeBatchOperation(request),
-    onSuccess: response => {
+    onSuccess: (response) => {
       message.success(
         `批量操作成功：${response.successCount}个工单，失败${response.failedCount}个`
       );
@@ -295,7 +325,7 @@ export function useBatchOperationMutation() {
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量操作失败：${error.message || '未知错误'}`);
     },
   });
@@ -426,3 +456,4 @@ const BatchOperationHooks = {
 };
 
 export default BatchOperationHooks;
+

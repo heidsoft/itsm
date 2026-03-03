@@ -46,7 +46,7 @@ const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ da
     tooltip: {
       shared: true,
       showCrosshairs: true,
-      customItems: (originalItems: any[]) => {
+      customItems: (originalItems: unknown[]) => {
         return originalItems.map(item => {
           return {
             ...item,

@@ -179,7 +179,7 @@ export function safeGet<T>(obj: unknown, path: string, defaultValue: T): T {
   }
 
   const keys = path.split('.');
-  let current: any = obj;
+  let current: unknown = obj;
 
   for (const key of keys) {
     if (current === null || current === undefined || typeof current !== 'object') {

@@ -406,7 +406,7 @@ export class BatchOperationsApi {
     name: string;
     description?: string;
     operationType: string;
-    defaultData: any;
+    defaultData: unknown;
   }): Promise<{ id: string }> {
     return httpClient.post('/api/v1/tickets/batch/operations/templates', data);
   }
@@ -432,7 +432,7 @@ export class BatchOperationsApi {
   static async executeBatchOperationFromTemplate(data: {
     templateId: string;
     ticketIds: number[];
-    overrides?: any;
+    overrides?: unknown;
   }): Promise<BatchOperationResponse> {
     return httpClient.post<BatchOperationResponse>(
       '/api/v1/tickets/batch/operations/execute-template',

@@ -30,9 +30,9 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 
 interface AssignmentRuleFormProps {
-  form: any;
+  form: unknown;
   editingRule: AssignmentRule | null;
-  onSave: (values: any) => void;
+  onSave: (values: unknown) => void;
   onCancel: () => void;
 }
 

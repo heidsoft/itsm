@@ -15,14 +15,16 @@ import {
   Tag,
   Empty,
 } from 'antd';
-import { Star, MessageSquare, CheckCircle, Clock } from 'lucide-react';
 import {
-  TicketRatingApi,
-  TicketRating,
-  SubmitTicketRatingRequest,
-} from '@/lib/api/ticket-rating-api';
+  Star,
+  MessageSquare,
+  CheckCircle,
+  Clock,
+} from 'lucide-react';
+import { TicketRatingApi, TicketRating, SubmitTicketRatingRequest } from '@/lib/api/ticket-rating-api';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
+import { useI18n } from '@/lib/i18n';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -45,6 +47,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
   canRate = true,
   onRatingSubmitted,
 }) => {
+  const { t } = useI18n();
   const { message: antMessage } = App.useApp();
   const { user } = useAuthStore();
   const [rating, setRating] = useState<TicketRating | null>(null);
@@ -69,7 +72,6 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
       const ratingData = await TicketRatingApi.getRating(ticketId);
       setRating(ratingData);
     } catch (error) {
-      console.error('Failed to load rating:', error);
       // 如果获取失败，可能是还没有评分，不显示错误
     } finally {
       setLoading(false);
@@ -98,8 +100,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
       if (onRatingSubmitted) {
         onRatingSubmitted(newRating);
       }
-    } catch (error: any) {
-      console.error('Failed to submit rating:', error);
+    } catch (error: unknown) {
       antMessage.error(error.message || '提交评分失败');
     } finally {
       setSubmitting(false);
@@ -158,9 +159,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
               <Text strong style={{ fontSize: 18, color: getRatingColor(rating.rating) }}>
                 {rating.rating} 星
               </Text>
-              <Tag
-                color={rating.rating >= 4 ? 'success' : rating.rating >= 3 ? 'warning' : 'error'}
-              >
+              <Tag color={rating.rating >= 4 ? 'success' : rating.rating >= 3 ? 'warning' : 'error'}>
                 {getRatingDescription(rating.rating)}
               </Tag>
             </div>
@@ -170,9 +169,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             <div>
               <div className="flex items-center space-x-2 mb-2">
                 <MessageSquare style={{ fontSize: 16, color: '#8c8c8c' }} />
-                <Text type="secondary" strong>
-                  评分评论
-                </Text>
+                <Text type="secondary" strong>评分评论</Text>
               </div>
               <div className="p-3 bg-gray-50 rounded-md">
                 <Text>{rating.comment}</Text>
@@ -244,8 +241,8 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             setShowRatingModal(false);
             form.resetFields();
           }}
-          okText="提交评分"
-          cancelText="取消"
+          okText={t('common.submit')}
+          cancelText={t('common.cancel')}
           confirmLoading={submitting}
           width={500}
         >
@@ -262,10 +259,17 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
               name="rating"
               rules={[{ required: true, message: '请选择评分' }]}
             >
-              <Rate allowClear={false} style={{ fontSize: 32 }} character={<Star />} />
+              <Rate
+                allowClear={false}
+                style={{ fontSize: 32 }}
+                character={<Star />}
+              />
             </Form.Item>
 
-            <Form.Item label="评分评论（可选）" name="comment">
+            <Form.Item
+              label="评分评论（可选）"
+              name="comment"
+            >
               <TextArea
                 rows={4}
                 placeholder="请分享您对本次服务的评价..."
@@ -275,7 +279,10 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
             </Form.Item>
 
             <div className="text-sm text-gray-500 mt-4">
-              <Text type="secondary">您的评分将帮助我 们改进服务质量，感谢您的反馈！</Text>
+              <Text type="secondary">
+                您的评分将帮助我
+们改进服务质量，感谢您的反馈！
+              </Text>
             </div>
           </Form>
         </Modal>
@@ -286,3 +293,4 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
   // 如果不满足评分条件，不显示任何内容
   return null;
 };
+

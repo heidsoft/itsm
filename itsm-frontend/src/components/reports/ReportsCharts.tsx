@@ -76,12 +76,12 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
   ];
 
   // 自定义Tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: unknown) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
           <p className="font-medium">{`${label}`}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: unknown, index: number) => (
             <p key={index} style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value.toLocaleString()}`}
             </p>
@@ -93,7 +93,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
   };
 
   // 饼图自定义标签
-  const renderCustomLabel = (entry: any) => {
+  const renderCustomLabel = (entry: unknown) => {
     const RADIAN = Math.PI / 180;
     const radius = entry.innerRadius + (entry.outerRadius - entry.innerRadius) * 0.5;
     const x = entry.cx + radius * Math.cos(-entry.midAngle * RADIAN);

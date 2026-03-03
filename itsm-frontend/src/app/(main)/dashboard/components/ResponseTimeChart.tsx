@@ -26,10 +26,10 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
         fontSize: 12,
         fontWeight: 'bold',
       },
-      formatter: (datum: any) => `${datum.percentage}%`,
+      formatter: (datum: unknown) => `${datum.percentage}%`,
     },
     tooltip: {
-      formatter: (datum: any) => ({
+      formatter: (datum: unknown) => ({
         name: '工单数',
         value: `${datum.count}个 (${datum.percentage}%)`,
       }),

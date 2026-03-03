@@ -34,7 +34,7 @@ const { Sider } = Layout;
 const iconStyle = { width: 16, height: 16 };
 
 // 菜单配置
-const getMenuConfig = (t: any) => ({
+const getMenuConfig = (t: unknown) => ({
   main: [
     {
       key: '/dashboard',
@@ -214,7 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   // 渲染菜单项，支持徽章和描述
-  const renderMenuItems = (items: any[]) => {
+  const renderMenuItems = (items: unknown[]) => {
     return items.map(item => {
       // 如果有子菜单
       if (item.children) {
@@ -226,7 +226,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
               <span className="truncate">{item.label}</span>
             </div>
           ),
-          children: item.children.map((child: any) => ({
+          children: item.children.map((child: unknown) => ({
             key: child.key,
             icon: child.icon,
             label: child.label,

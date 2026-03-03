@@ -161,7 +161,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
     setRollbackSteps([...rollbackSteps, newStep]);
   };
 
-  const updateRollbackStep = (index: number, field: keyof RollbackStep, value: any) => {
+  const updateRollbackStep = (index: number, field: keyof RollbackStep, value: unknown) => {
     const updatedSteps = [...rollbackSteps];
     updatedSteps[index] = { ...updatedSteps[index], [field]: value };
     setRollbackSteps(updatedSteps);
@@ -196,7 +196,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       dataIndex: 'id',
       key: 'id',
       width: 80,
-      render: (_: any, __: any, index: number) => index + 1,
+      render: (_: unknown, __: unknown, index: number) => index + 1,
     },
     {
       title: '标题',
@@ -268,7 +268,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       title: '操作',
       key: 'actions',
       width: 80,
-      render: (_: any, record: RollbackStep, index: number) =>
+      render: (_: unknown, record: RollbackStep, index: number) =>
         !readOnly ? (
           <Button type="text" danger size="small" onClick={() => deleteRollbackStep(index)}>
             删除

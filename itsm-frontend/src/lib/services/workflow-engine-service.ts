@@ -77,7 +77,7 @@ export class WorkflowEngineService {
   private readonly baseUrl = '/api/v1/bpmn';
 
   // 工作流定义管理
-  async getWorkflowDefinitions(params?: any): Promise<PaginatedResponse<WorkflowDefinition>> {
+  async getWorkflowDefinitions(params?: unknown): Promise<PaginatedResponse<WorkflowDefinition>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.pageSize) query.append('page_size', params.pageSize.toString());
@@ -143,7 +143,7 @@ export class WorkflowEngineService {
   }
 
   // 工作流实例管理
-  async getWorkflowInstances(params?: any): Promise<PaginatedResponse<WorkflowInstance>> {
+  async getWorkflowInstances(params?: unknown): Promise<PaginatedResponse<WorkflowInstance>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.pageSize) query.append('page_size', params.pageSize.toString());
@@ -183,7 +183,7 @@ export class WorkflowEngineService {
   }
 
   // 任务管理
-  async getUserTasks(params?: any): Promise<PaginatedResponse<WorkflowTask>> {
+  async getUserTasks(params?: unknown): Promise<PaginatedResponse<WorkflowTask>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.assignee) query.append('assignee', params.assignee);

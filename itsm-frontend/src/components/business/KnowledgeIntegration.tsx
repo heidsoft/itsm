@@ -143,7 +143,7 @@ const KnowledgeIntegration: React.FC<KnowledgeIntegrationProps> = ({
       const { KnowledgeBaseApi } = await import('@/lib/api/knowledge-base-api');
       const data = await KnowledgeBaseApi.getRecommendations(undefined, 5);
       // Map API response to component type if necessary
-      const mapped: SolutionRecommendation[] = data.map((item: any) => ({
+      const mapped: SolutionRecommendation[] = data.map((item: unknown) => ({
         id: item.id,
         title: item.title,
         summary: item.summary || '',

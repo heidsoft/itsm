@@ -62,7 +62,7 @@ const ReleaseForm: React.FC = () => {
     }
   };
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (values: unknown) => {
     setLoading(true);
     try {
       const data: ReleaseRequest = {

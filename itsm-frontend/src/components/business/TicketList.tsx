@@ -66,7 +66,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
     setLoading(true);
     try {
       // 构建符合ListTicketsParams的参数
-      const params: any = {
+      const params: unknown = {
         page: currentPage,
         page_size: pageSize,
         keyword: searchText || undefined,
@@ -116,7 +116,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
   }, []);
 
   // 处理分页
-  const handleTableChange = useCallback((pagination: any) => {
+  const handleTableChange = useCallback((pagination: unknown) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
   }, []);
@@ -325,7 +325,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         dataIndex: 'assignee',
         key: 'assignee',
         width: 100,
-        render: (assignee: any) => (
+        render: (assignee: unknown) => (
           <span>
             <UserOutlined className="mr-1" />
             {assignee?.name || '未分配'}

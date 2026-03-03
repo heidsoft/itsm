@@ -40,7 +40,7 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
         fontSize: 13,
         fontWeight: 'bold',
       },
-      formatter: (datum: any) => `${datum.rating}`,
+      formatter: (datum: unknown) => `${datum.rating}`,
     },
     animation: {
       appear: {
@@ -49,7 +49,7 @@ const UserSatisfactionChart: React.FC<{ data: SatisfactionData[] }> = React.memo
       },
     },
     tooltip: {
-      formatter: (datum: any) => ({
+      formatter: (datum: unknown) => ({
         name: '满意度评分',
         value: `${datum.rating}/5.0 (${datum.responses}份反馈)`,
       }),

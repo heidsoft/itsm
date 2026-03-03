@@ -100,7 +100,7 @@ export interface ImpactAnalysis {
 export interface ClassificationRuleCondition {
   field: string;
   operator: 'equals' | 'contains' | 'greater_than' | 'less_than' | 'in' | 'between';
-  value: any;
+  value: unknown;
 }
 
 /**

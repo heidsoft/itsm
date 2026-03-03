@@ -134,7 +134,7 @@ export const useCreateTicketMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (ticketData: any) => {
+    mutationFn: async (ticketData: unknown) => {
       const response = await ticketService.createTicket(ticketData);
       return response;
     },
@@ -154,7 +154,7 @@ export const useCreateTicketMutation = () => {
         };
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const errorMessage = error?.message || 'Failed to create ticket';
       message.error(errorMessage);
     },
@@ -166,7 +166,7 @@ export const useUpdateTicketMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+    mutationFn: async ({ id, data }: { id: number; data: unknown }) => {
       const response = await ticketService.updateTicket(id, data);
       return response;
     },
@@ -180,7 +180,7 @@ export const useUpdateTicketMutation = () => {
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.stats() });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const errorMessage = error?.message || 'Failed to update ticket';
       message.error(errorMessage);
     },
@@ -215,7 +215,7 @@ export const useDeleteTicketMutation = () => {
         };
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const errorMessage = error?.message || 'Failed to delete ticket';
       message.error(errorMessage);
     },
@@ -252,7 +252,7 @@ export const useBatchDeleteTicketsMutation = () => {
         };
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       const errorMessage = error?.message || 'Failed to delete tickets';
       message.error(errorMessage);
     },

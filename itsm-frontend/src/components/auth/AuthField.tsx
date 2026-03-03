@@ -47,7 +47,7 @@ export interface AuthFieldProps {
   /** 是否可清除 */
   clearable?: boolean;
   /** 验证规则 */
-  rules?: any[];
+  rules?: unknown[];
   /** 值变化回调 */
   onChange?: (value: string) => void;
   /** 焦点事件回调 */

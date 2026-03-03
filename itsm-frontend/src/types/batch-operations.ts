@@ -89,14 +89,14 @@ export interface BatchOperationError {
   ticketNumber: string;
   error: string;
   errorCode?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface BatchOperationWarning {
   ticketId: number;
   ticketNumber: string;
   warning: string;
-  details?: any;
+  details?: unknown;
 }
 
 // ==================== 批量操作进度 ====================
@@ -243,8 +243,8 @@ export interface BatchOperationChange {
   ticketId: number;
   ticketNumber: string;
   field: string;
-  currentValue: any;
-  newValue: any;
+  currentValue: unknown;
+  newValue: unknown;
   willAffectSLA: boolean;
   willTriggerWorkflow: boolean;
   willSendNotification: boolean;

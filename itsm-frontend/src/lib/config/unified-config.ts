@@ -443,7 +443,7 @@ export const getConfig = (path?: string) => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return path.split('.').reduce((obj: any, key: string) => {
+  return path.split('.').reduce((obj: unknown, key: string) => {
     return obj?.[key];
   }, config);
 };

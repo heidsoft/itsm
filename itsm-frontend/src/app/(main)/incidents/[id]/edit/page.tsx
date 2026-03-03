@@ -60,7 +60,7 @@ export default function IncidentEditPage() {
     };
   }, [id, form, router]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: unknown) => {
     if (!id) return;
 
     setLoading(true);

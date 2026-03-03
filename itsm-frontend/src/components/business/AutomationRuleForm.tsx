@@ -39,7 +39,7 @@ const { Title, Text } = Typography;
 
 interface AutomationRuleFormProps {
   editingRule: AutomationRule | null;
-  onSave: (values: any) => void;
+  onSave: (values: unknown) => void;
   onCancel: () => void;
 }
 

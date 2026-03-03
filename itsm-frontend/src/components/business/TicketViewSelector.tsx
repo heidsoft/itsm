@@ -68,7 +68,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
       } else {
         setViews([]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to load views:', error);
       // 检查错误信息，如果是"无效的工单ID"，说明可能是API参数问题
       const errorMessage = error?.message || error?.toString() || '';

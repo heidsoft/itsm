@@ -107,7 +107,7 @@ const UserManagement: React.FC = () => {
   }, [pagination.current, pagination.pageSize, filters]);
 
   // 创建用户
-  const handleCreateUser = async (values: any) => {
+  const handleCreateUser = async (values: unknown) => {
     setLoading(true);
     try {
       await UserApi.createUser({
@@ -131,7 +131,7 @@ const UserManagement: React.FC = () => {
   };
 
   // 更新用户
-  const handleUpdateUser = async (values: any) => {
+  const handleUpdateUser = async (values: unknown) => {
     if (!selectedUser) return;
     setLoading(true);
     try {

@@ -136,7 +136,7 @@ const WorkflowInstancesPage = () => {
         page_size: pageSize,
         ...filters,
       });
-      const normalized = response.instances.map((instance: any) => ({
+      const normalized = response.instances.map((instance: unknown) => ({
         ...instance,
         instance_id: instance.instance_id || instance.id,
         business_key: instance.business_key || instance.businessKey || '',
@@ -165,7 +165,7 @@ const WorkflowInstancesPage = () => {
   };
 
   // 分页/排序/筛选变化处理
-  const handleTableChange = async (newPagination: any) => {
+  const handleTableChange = async (newPagination: unknown) => {
     await loadInstances(newPagination.current, newPagination.pageSize);
     // 分页变化后更新统计数据
     loadStats();
@@ -572,7 +572,7 @@ const WorkflowInstancesPage = () => {
       title: '操作',
       key: 'action',
       width: 180,
-      render: (_: any, record: WorkflowTaskRecord) => {
+      render: (_: unknown, record: WorkflowTaskRecord) => {
         const csStatus = counterSignStatus[record.activity_id || record.id];
 
         // 如果是会签任务，显示投票按钮

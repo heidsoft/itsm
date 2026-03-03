@@ -161,7 +161,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 创建调查步骤
-  const handleCreateStep = async (values: any) => {
+  const handleCreateStep = async (values: unknown) => {
     try {
       const data: CreateStepRequest = {
         investigation_id: summary?.investigation?.id!,
@@ -195,7 +195,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 创建根本原因分析
-  const handleCreateRootCause = async (values: any) => {
+  const handleCreateRootCause = async (values: unknown) => {
     try {
       const data: CreateRootCauseRequest = {
         problem_id: Number(id) || problemId,
@@ -216,7 +216,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 创建解决方案
-  const handleCreateSolution = async (values: any) => {
+  const handleCreateSolution = async (values: unknown) => {
     try {
       const data: CreateSolutionRequest = {
         problem_id: Number(id) || problemId,
@@ -238,7 +238,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 沉淀到知识库
-  const handleCreateKnowledgeArticle = async (values: any) => {
+  const handleCreateKnowledgeArticle = async (values: unknown) => {
     try {
       const data: CreateKnowledgeArticleRequest = {
         problem_id: Number(id) || problemId,
@@ -296,7 +296,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
     {
       title: '操作',
       key: 'action',
-      render: (_: any, record: InvestigationStep) => (
+      render: (_: unknown, record: InvestigationStep) => (
         <Space>
           {record.status !== 'completed' && (
             <Button

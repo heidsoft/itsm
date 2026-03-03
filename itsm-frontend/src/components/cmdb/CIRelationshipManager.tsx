@@ -153,7 +153,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   };
 
   // 创建关系
-  const handleCreate = async (values: any) => {
+  const handleCreate = async (values: unknown) => {
     try {
       const targetCiId = values.target_ci_id;
       delete values.target_ci_id;
@@ -201,7 +201,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
     {
       title: '关联CI',
       key: 'related_ci',
-      render: (_: any, record: CIRelationship) => (
+      render: (_: unknown, record: CIRelationship) => (
         <Space orientation="vertical" size={0}>
           <Text strong>
             {createType === 'outgoing' ? record.target_ci_name : record.source_ci_name}
@@ -252,7 +252,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       title: '操作',
       key: 'action',
       width: 100,
-      render: (_: any, record: CIRelationship) => (
+      render: (_: unknown, record: CIRelationship) => (
         <Space>
           <Tooltip title="删除">
             <Popconfirm
