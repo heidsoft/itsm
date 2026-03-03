@@ -115,7 +115,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
         // API returns { ticket_id, current_status, available_actions, workflow_history }
         // We need to map this to WorkflowStep[] if possible, or leave empty if the UI expects different data
         // Currently casting to any to avoid type error, as the response structure doesn't match WorkflowStep[]
-        setWorkflowSteps([]); 
+        setWorkflowSteps([]);
       }
       if (slaRes.status === 'fulfilled') {
         setSlaInfo((slaRes.value as any) || null);
@@ -178,20 +178,16 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
   };
 
   // 子任务处理函数
-  const handleCreateSubtask = async (data: Partial<Ticket>) => {
-  };
+  const handleCreateSubtask = async (data: Partial<Ticket>) => {};
 
-  const handleUpdateSubtask = async (id: number, data: Partial<Ticket>) => {
-  };
+  const handleUpdateSubtask = async (id: number, data: Partial<Ticket>) => {};
 
-  const handleDeleteSubtask = async (id: number) => {
-  };
+  const handleDeleteSubtask = async (id: number) => {};
 
-  const handleViewSubtask = (subtask: Subtask) => {
-  };
+  const handleViewSubtask = (subtask: Subtask) => {};
 
   return (
-    <div className='max-w-7xl mx-auto bg-gray-50 min-h-screen'>
+    <div className="max-w-7xl mx-auto bg-gray-50 min-h-screen">
       {/* 头部 */}
       <TicketDetailHeader
         ticket={ticket}
@@ -201,12 +197,12 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
       />
 
       {/* 主要内容区域 */}
-      <div className='px-6'>
+      <div className="px-6">
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
-          className='bg-white rounded-lg shadow-sm'
-          type='card'
+          className="bg-white rounded-lg shadow-sm"
+          type="card"
           items={[
             {
               key: 'overview',
@@ -236,7 +232,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'attachments',
               label: '附件',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketAttachmentSection
                     ticketId={ticket.id}
                     canUpload={canEdit}
@@ -263,7 +259,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'notifications',
               label: '通知',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketNotificationSection
                     ticketId={ticket.id}
                     canSend={canEdit}
@@ -276,7 +272,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'subtasks',
               label: '子任务',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketSubtasks
                     parentTicket={ticket}
                     subtasks={subtasks as any}
@@ -294,7 +290,7 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'dependencies',
               label: '依赖关系',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketDependencyManager
                     ticket={ticket}
                     canManage={canEdit}
@@ -307,12 +303,11 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'approval',
               label: '审批流程',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketMultiLevelApproval
                     ticket={ticket}
                     canManage={canEdit}
-                    onWorkflowChange={workflowId => {
-                    }}
+                    onWorkflowChange={workflowId => {}}
                   />
                 </div>
               ),
@@ -321,12 +316,11 @@ export const TicketDetail: React.FC<TicketDetailProps> = ({
               key: 'root-cause',
               label: '根因分析',
               children: (
-                <div className='p-6'>
+                <div className="p-6">
                   <TicketRootCauseAnalysis
                     ticketId={ticket.id}
                     autoAnalyze={false}
-                    onAnalysisComplete={report => {
-                    }}
+                    onAnalysisComplete={report => {}}
                   />
                 </div>
               ),

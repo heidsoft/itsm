@@ -58,7 +58,7 @@ export default function IncidentsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      const stats = await IncidentAPI.getIncidentMetrics() as unknown as Record<string, unknown>;
+      const stats = (await IncidentAPI.getIncidentMetrics()) as unknown as Record<string, unknown>;
       // Transform snake_case to camelCase for IncidentStats component
       setMetrics({
         totalIncidents: Number(stats.total_incidents) || 0,
@@ -81,37 +81,40 @@ export default function IncidentsPage() {
     };
   }, [page, pageSize]);
 
-  const handleEdit = (incident: Incident) => {
-  };
+  const handleEdit = (incident: Incident) => {};
 
-  const handleView = (incident: Incident) => {
-  };
+  const handleView = (incident: Incident) => {};
 
   return (
-    <div className='p-6 min-h-screen bg-gray-50'>
-      <div className='mb-6 flex justify-between items-center'>
+    <div className="p-6 min-h-screen bg-gray-50">
+      <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className='text-2xl font-bold text-gray-900'>事件管理</h1>
-          <p className='text-gray-500 mt-1'>管理和追踪系统中的所有事件记录</p>
+          <h1 className="text-2xl font-bold text-gray-900">事件管理</h1>
+          <p className="text-gray-500 mt-1">管理和追踪系统中的所有事件记录</p>
         </div>
-        <Button type='primary' icon={<Plus className='w-4 h-4' />} size='large' onClick={() => router.push('/incidents/new')}>
+        <Button
+          type="primary"
+          icon={<Plus className="w-4 h-4" />}
+          size="large"
+          onClick={() => router.push('/incidents/new')}
+        >
           新建事件
         </Button>
       </div>
 
       <IncidentStats metrics={metrics || undefined} />
 
-      <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
-        <div className='mb-4 flex justify-between items-center'>
-          <Space size='middle'>
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <div className="mb-4 flex justify-between items-center">
+          <Space size="middle">
             <Input
-              prefix={<Search className='w-4 h-4 text-gray-400' />}
-              placeholder='搜索事件ID、标题或描述...'
-              className='w-64'
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
+              placeholder="搜索事件ID、标题或描述..."
+              className="w-64"
               allowClear
             />
             <Button
-              icon={<Filter className='w-4 h-4' />}
+              icon={<Filter className="w-4 h-4" />}
               onClick={() => setShowFilters(!showFilters)}
               type={showFilters ? 'primary' : 'default'}
               ghost={showFilters}
@@ -122,17 +125,14 @@ export default function IncidentsPage() {
         </div>
 
         {showFilters && (
-          <div className='mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100'>
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-100">
             <IncidentFilters />
           </div>
         )}
 
         {incidents.length === 0 && !loading ? (
-          <Empty
-            description='暂无事件记录'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
-            <Button type='primary' onClick={() => router.push('/incidents/new')}>
+          <Empty description="暂无事件记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Button type="primary" onClick={() => router.push('/incidents/new')}>
               创建第一个事件
             </Button>
           </Empty>
@@ -148,7 +148,7 @@ export default function IncidentsPage() {
         )}
 
         {incidents.length > 0 && (
-          <div className='mt-4 flex justify-end'>
+          <div className="mt-4 flex justify-end">
             <Pagination
               current={page}
               pageSize={pageSize}
@@ -158,7 +158,7 @@ export default function IncidentsPage() {
                 setPageSize(ps);
               }}
               showSizeChanger
-              showTotal={(total) => `共 ${total} 条记录`}
+              showTotal={total => `共 ${total} 条记录`}
             />
           </div>
         )}

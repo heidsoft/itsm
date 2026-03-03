@@ -88,7 +88,10 @@ export class TicketApprovalApi {
   }
 
   // 更新审批工作流
-  static async updateWorkflow(id: number, data: Partial<ApprovalWorkflow>): Promise<ApprovalWorkflow> {
+  static async updateWorkflow(
+    id: number,
+    data: Partial<ApprovalWorkflow>
+  ): Promise<ApprovalWorkflow> {
     return httpClient.put<ApprovalWorkflow>(`/api/tickets/approval/workflows/${id}`, data);
   }
 
@@ -133,4 +136,3 @@ export class TicketApprovalApi {
     return httpClient.post('/api/tickets/approval/submit', data);
   }
 }
-

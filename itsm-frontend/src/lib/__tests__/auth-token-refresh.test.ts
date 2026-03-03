@@ -1,6 +1,6 @@
 /**
  * Auth Token Refresh Mechanism Tests
- * 
+ *
  * 测试覆盖:
  * - AuthService.refreshToken() 方法
  * - HttpClient.refreshTokenInternal() 方法
@@ -8,13 +8,19 @@
  * - Token 存储和检索
  * - Token 过期处理
  * - 刷新失败场景
- * 
+ *
  * 任务：P1-05 Auth Token 刷新机制测试
  */
 
 import { AuthService } from '@/lib/services/auth-service';
 import { httpClient } from '@/lib/api/http-client';
-import { getAccessToken, getRefreshToken, setAccessToken, setRefreshToken, clearAuthStorage } from '@/lib/auth/token-storage';
+import {
+  getAccessToken,
+  getRefreshToken,
+  setAccessToken,
+  setRefreshToken,
+  clearAuthStorage,
+} from '@/lib/auth/token-storage';
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -24,11 +30,21 @@ const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: jest.fn((key: string) => store[key] || null),
-    setItem: jest.fn((key: string, value: string) => { store[key] = value; }),
-    removeItem: jest.fn((key: string) => { delete store[key]; }),
-    clear: jest.fn(() => { store = {}; }),
-    get store() { return store; },
-    set store(value: Record<string, string>) { store = value; },
+    setItem: jest.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: jest.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: jest.fn(() => {
+      store = {};
+    }),
+    get store() {
+      return store;
+    },
+    set store(value: Record<string, string>) {
+      store = value;
+    },
   };
 })();
 
@@ -55,7 +71,7 @@ let mockAuthState = {
 jest.mock('@/lib/store/auth-store', () => ({
   useAuthStore: {
     getState: () => mockAuthState,
-    setState: jest.fn((fn) => {
+    setState: jest.fn(fn => {
       mockAuthState = typeof fn === 'function' ? fn(mockAuthState) : fn;
     }),
     subscribe: jest.fn(),
@@ -90,7 +106,7 @@ describe('Auth Token Refresh Mechanism', () => {
     it('should successfully refresh token with valid refresh token', async () => {
       const mockRefreshToken = 'valid-refresh-token-123';
       const mockNewAccessToken = 'new-access-token-456';
-      
+
       localStorageMock.store['refresh_token'] = mockRefreshToken;
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -124,7 +140,7 @@ describe('Auth Token Refresh Mechanism', () => {
     });
 
     it('should return false when no refresh token exists', async () => {
-      localStorageMock.store['refresh_token'] = undefined;
+      delete localStorageMock.store['refresh_token'];
 
       const result = await AuthService.refreshToken();
 
@@ -253,7 +269,7 @@ describe('Auth Token Refresh Mechanism', () => {
         const payload = { exp: Math.floor(Date.now() / 1000) + 3600 }; // Expires in 1 hour
         const encodedPayload = btoa(JSON.stringify(payload));
         const mockToken = `header.${encodedPayload}.signature`;
-        
+
         localStorageMock.store['access_token'] = mockToken;
 
         const result = AuthService.isAuthenticated();
@@ -265,7 +281,7 @@ describe('Auth Token Refresh Mechanism', () => {
         const payload = { exp: Math.floor(Date.now() / 1000) - 3600 }; // Expired 1 hour ago
         const encodedPayload = btoa(JSON.stringify(payload));
         const mockToken = `header.${encodedPayload}.signature`;
-        
+
         localStorageMock.store['access_token'] = mockToken;
 
         const result = AuthService.isAuthenticated();
@@ -305,7 +321,7 @@ describe('Auth Token Refresh Mechanism', () => {
     it('should successfully refresh token', async () => {
       const mockRefreshToken = 'http-refresh-token';
       const mockNewAccessToken = 'http-new-access-token';
-      
+
       localStorageMock.store['refresh_token'] = mockRefreshToken;
 
       (fetch as jest.Mock).mockResolvedValueOnce({
@@ -329,7 +345,7 @@ describe('Auth Token Refresh Mechanism', () => {
     });
 
     it('should return false when no refresh token exists', async () => {
-      localStorageMock.store['refresh_token'] = undefined;
+      delete localStorageMock.store['refresh_token'];
 
       const result = await (httpClient as any).refreshTokenInternal();
 
@@ -373,7 +389,7 @@ describe('Auth Token Refresh Mechanism', () => {
     it('should automatically retry request after successful token refresh on 401', async () => {
       const mockRefreshToken = 'retry-refresh-token';
       const mockNewAccessToken = 'retry-new-access-token';
-      
+
       localStorageMock.store['refresh_token'] = mockRefreshToken;
       localStorageMock.store['access_token'] = 'old-token';
 
@@ -434,7 +450,7 @@ describe('Auth Token Refresh Mechanism', () => {
         });
 
       await expect(httpClient.get('/api/v1/tickets')).rejects.toThrow('Authentication failed');
-      
+
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('access_token');
       expect(localStorageMock.removeItem).toHaveBeenCalledWith('refresh_token');
     });
@@ -442,13 +458,13 @@ describe('Auth Token Refresh Mechanism', () => {
     it('should not redirect if already on login page', async () => {
       localStorageMock.store['refresh_token'] = 'expired';
       localStorageMock.store['access_token'] = 'expired';
-      
+
       // Mock window location
       const originalLocation = window.location;
       Object.defineProperty(window, 'location', {
-        value: { 
+        value: {
           pathname: '/login',
-          href: 'http://localhost/login'
+          href: 'http://localhost/login',
         },
         writable: true,
       });
@@ -466,10 +482,10 @@ describe('Auth Token Refresh Mechanism', () => {
         });
 
       await expect(httpClient.get('/api/v1/tickets')).rejects.toThrow('Authentication failed');
-      
+
       // Should not have redirected
       expect(window.location.href).not.toContain('redirect');
-      
+
       // Restore
       Object.defineProperty(window, 'location', { value: originalLocation, writable: true });
     });
@@ -555,7 +571,7 @@ describe('Auth Token Refresh Mechanism', () => {
       const payload = { sub: 'user123' }; // No exp field
       const encodedPayload = btoa(JSON.stringify(payload));
       const mockToken = `header.${encodedPayload}.signature`;
-      
+
       localStorageMock.store['access_token'] = mockToken;
 
       const result = AuthService.isAuthenticated();
@@ -633,7 +649,10 @@ describe('Auth Token Refresh Mechanism', () => {
 
       // Verify tokens were stored
       expect(localStorageMock.setItem).toHaveBeenCalledWith('access_token', 'initial-access-token');
-      expect(localStorageMock.setItem).toHaveBeenCalledWith('refresh_token', 'initial-refresh-token');
+      expect(localStorageMock.setItem).toHaveBeenCalledWith(
+        'refresh_token',
+        'initial-refresh-token'
+      );
 
       // Simulate token expiration and refresh
       const refreshResult = await AuthService.refreshToken();

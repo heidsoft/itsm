@@ -27,7 +27,7 @@ export const TableSkeleton: React.FC<{ rows?: number }> = ({ rows = 5 }) => {
       <Space orientation="vertical" style={{ width: '100%' }} size="middle">
         {/* 表格头部 */}
         <Skeleton.Button active style={{ width: '100%', height: 40 }} />
-        
+
         {/* 表格行 */}
         {Array.from({ length: rows }).map((_, index) => (
           <Skeleton key={index} active paragraph={false} />
@@ -45,10 +45,7 @@ export const StatCardSkeleton: React.FC<{ count?: number }> = ({ count = 4 }) =>
     <Row gutter={[12, 12]}>
       {Array.from({ length: count }).map((_, index) => (
         <Col xs={24} sm={12} md={6} lg={6} xl={6} key={index}>
-          <Card
-            className="border-0 shadow-sm"
-            styles={{ body: { padding: '16px' } }}
-          >
+          <Card className="border-0 shadow-sm" styles={{ body: { padding: '16px' } }}>
             <div className="flex items-center justify-between">
               <div style={{ flex: 1 }}>
                 <Skeleton.Button
@@ -56,11 +53,7 @@ export const StatCardSkeleton: React.FC<{ count?: number }> = ({ count = 4 }) =>
                   size="small"
                   style={{ width: 80, height: 16, marginBottom: 8 }}
                 />
-                <Skeleton.Button
-                  active
-                  size="default"
-                  style={{ width: 100, height: 24 }}
-                />
+                <Skeleton.Button active size="default" style={{ width: 100, height: 24 }} />
               </div>
               <Skeleton.Avatar active size="large" shape="square" />
             </div>
@@ -102,12 +95,7 @@ export const DetailSkeleton: React.FC = () => {
     <Space orientation="vertical" style={{ width: '100%' }} size="large">
       {/* 标题区域 */}
       <Card>
-        <Skeleton
-          active
-          avatar
-          paragraph={{ rows: 2 }}
-          title={{ width: '60%' }}
-        />
+        <Skeleton active avatar paragraph={{ rows: 2 }} title={{ width: '60%' }} />
       </Card>
 
       {/* 内容区域 */}
@@ -197,9 +185,9 @@ export const DashboardSkeleton: React.FC = () => {
 /**
  * 页面加载骨架屏（通用）
  */
-export const PageSkeleton: React.FC<{ type?: 'list' | 'detail' | 'form' | 'dashboard' | 'table' }> = ({
-  type = 'list',
-}) => {
+export const PageSkeleton: React.FC<{
+  type?: 'list' | 'detail' | 'form' | 'dashboard' | 'table';
+}> = ({ type = 'list' }) => {
   const skeletonMap = {
     list: <ListSkeleton />,
     detail: <DetailSkeleton />,
@@ -208,11 +196,7 @@ export const PageSkeleton: React.FC<{ type?: 'list' | 'detail' | 'form' | 'dashb
     table: <TableSkeleton />,
   };
 
-  return (
-    <div style={{ padding: '24px' }}>
-      {skeletonMap[type] || <CardSkeleton />}
-    </div>
-  );
+  return <div style={{ padding: '24px' }}>{skeletonMap[type] || <CardSkeleton />}</div>;
 };
 
 /**
@@ -273,4 +257,3 @@ export default {
   Page: PageSkeleton,
   AnimatedContainer: AnimatedSkeletonContainer,
 };
-

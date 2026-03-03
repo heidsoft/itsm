@@ -236,9 +236,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   // 确认告警
   const acknowledgeAlert = (alertId: string) => {
     setActiveAlerts(prev =>
-      prev.map(alert =>
-        alert.id === alertId ? { ...alert, acknowledged: true } : alert
-      )
+      prev.map(alert => (alert.id === alertId ? { ...alert, acknowledged: true } : alert))
     );
   };
 
@@ -318,7 +316,9 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
       render: (title: string, record: ActiveAlert) => (
         <div>
           <div className="font-medium">{title}</div>
-          <Text type="secondary" className="text-xs">{record.description}</Text>
+          <Text type="secondary" className="text-xs">
+            {record.description}
+          </Text>
         </div>
       ),
     },
@@ -329,9 +329,13 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
       width: 80,
       render: (severity: string) => (
         <Tag color={getSeverityColor(severity)}>
-          {severity === 'critical' ? '严重' :
-           severity === 'high' ? '高' :
-           severity === 'medium' ? '中' : '低'}
+          {severity === 'critical'
+            ? '严重'
+            : severity === 'high'
+              ? '高'
+              : severity === 'medium'
+                ? '中'
+                : '低'}
         </Tag>
       ),
     },
@@ -352,27 +356,25 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
   return (
     <div className="space-y-6">
       {/* 控制面板 */}
-      <Card title="实时监控控制台" extra={
-        <Space>
-          <Text type="secondary">
-            最后更新: {lastRefresh.toLocaleTimeString()}
-          </Text>
-          <Tooltip title={refreshEnabled ? '关闭自动刷新' : '开启自动刷新'}>
-            <Switch
-              checked={refreshEnabled}
-              onChange={setRefreshEnabled}
-              checkedChildren="自动"
-              unCheckedChildren="手动"
-            />
-          </Tooltip>
-          <Button
-            icon={<RefreshCw className="w-4 h-4" />}
-            onClick={handleManualRefresh}
-          >
-            刷新
-          </Button>
-        </Space>
-      }>
+      <Card
+        title="实时监控控制台"
+        extra={
+          <Space>
+            <Text type="secondary">最后更新: {lastRefresh.toLocaleTimeString()}</Text>
+            <Tooltip title={refreshEnabled ? '关闭自动刷新' : '开启自动刷新'}>
+              <Switch
+                checked={refreshEnabled}
+                onChange={setRefreshEnabled}
+                checkedChildren="自动"
+                unCheckedChildren="手动"
+              />
+            </Tooltip>
+            <Button icon={<RefreshCw className="w-4 h-4" />} onClick={handleManualRefresh}>
+              刷新
+            </Button>
+          </Space>
+        }
+      >
         <div className="flex items-center space-x-4 text-sm text-gray-600">
           <Activity className="w-4 h-4" />
           <span>实时监控已启用</span>
@@ -391,22 +393,24 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
                   {metric.icon}
                   <Text type="secondary">{metric.name}</Text>
                 </div>
-                <div className="flex items-center space-x-1">
-                  {getTrendIcon(metric.trend)}
-                </div>
+                <div className="flex items-center space-x-1">{getTrendIcon(metric.trend)}</div>
               </div>
               <div className="flex items-baseline space-x-2">
                 <Statistic
                   value={metric.value}
                   suffix={metric.unit}
-                  styles={{ content: {
-                    color: getStatusColor(metric.status),
-                    fontSize: '20px',
-                  }}}
+                  styles={{
+                    content: {
+                      color: getStatusColor(metric.status),
+                      fontSize: '20px',
+                    },
+                  }}
                 />
               </div>
               <Progress
-                percent={metric.unit === '%' ? metric.value : Math.min((metric.value / 100) * 100, 100)}
+                percent={
+                  metric.unit === '%' ? metric.value : Math.min((metric.value / 100) * 100, 100)
+                }
                 strokeColor={getStatusColor(metric.status)}
                 showInfo={false}
                 size="small"
@@ -429,11 +433,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
                 <Badge count={activeAlerts.filter(a => !a.acknowledged).length} />
               </Space>
             }
-            extra={
-              <Text type="secondary">
-                总计: {activeAlerts.length}个
-              </Text>
-            }
+            extra={<Text type="secondary">总计: {activeAlerts.length}个</Text>}
           >
             <Table
               columns={alertColumns}
@@ -441,7 +441,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
               rowKey="id"
               pagination={false}
               size="small"
-              onRow={(record) => ({
+              onRow={record => ({
                 onClick: () => !record.acknowledged && acknowledgeAlert(record.id),
                 style: { cursor: !record.acknowledged ? 'pointer' : 'default' },
               })}
@@ -458,13 +458,14 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
                 <span>最近活动</span>
               </Space>
             }
-            >
+          >
             <div className="space-y-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-0">
-                  <div className="mt-1">
-                    {getActivityIcon(activity.type)}
-                  </div>
+              {recentActivities.map(activity => (
+                <div
+                  key={activity.id}
+                  className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-0"
+                >
+                  <div className="mt-1">{getActivityIcon(activity.type)}</div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <Text className="font-medium">{activity.description}</Text>

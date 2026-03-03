@@ -52,7 +52,11 @@ export class TicketCommentApi {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const response: any = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
     const data = response?.data || response;
-    const comments = Array.isArray(data?.comments) ? data.comments : Array.isArray(data) ? data : [];
+    const comments = Array.isArray(data?.comments)
+      ? data.comments
+      : Array.isArray(data)
+        ? data
+        : [];
     return {
       comments,
       total: typeof data?.total === 'number' ? data.total : comments.length,
@@ -77,10 +81,7 @@ export class TicketCommentApi {
     commentId: number,
     data: UpdateTicketCommentRequest
   ): Promise<TicketComment> {
-    return httpClient.put<TicketComment>(
-      `/api/v1/tickets/${ticketId}/comments/${commentId}`,
-      data
-    );
+    return httpClient.put<TicketComment>(`/api/v1/tickets/${ticketId}/comments/${commentId}`, data);
   }
 
   /**
@@ -90,4 +91,3 @@ export class TicketCommentApi {
     return httpClient.delete(`/api/v1/tickets/${ticketId}/comments/${commentId}`);
   }
 }
-

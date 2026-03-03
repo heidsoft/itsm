@@ -88,14 +88,16 @@ export class TicketCategoryApi {
   }
 
   // 预览导入数据
-  static async previewImport(formData: FormData): Promise<{
-    name: string;
-    code: string;
-    description: string;
-    parent_code: string;
-    sort_order: number;
-    is_active: boolean;
-  }[]> {
+  static async previewImport(formData: FormData): Promise<
+    {
+      name: string;
+      code: string;
+      description: string;
+      parent_code: string;
+      sort_order: number;
+      is_active: boolean;
+    }[]
+  > {
     return httpClient.post('/api/v1/ticket-categories/import/preview', formData);
   }
 

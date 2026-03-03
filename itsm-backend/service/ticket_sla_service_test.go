@@ -143,7 +143,7 @@ func TestTicketSLAService_GetTicketStats(t *testing.T) {
 			SetDescription("描述").
 			SetPriority("medium").
 			SetStatus(status).
-			SetTicketNumber("TICKET-00"+string(rune('1'+i))).
+			SetTicketNumber("TICKET-00" + string(rune('1'+i))).
 			SetRequesterID(testUser.ID).
 			SetTenantID(testTenant.ID).
 			Save(ctx)
@@ -184,7 +184,7 @@ func TestTicketSLAService_CalculateSLADeadline(t *testing.T) {
 		SetName("测试 SLA").
 		SetServiceType("incident").
 		SetPriority("high").
-		SetResponseTime(30).  // 30分钟
+		SetResponseTime(30).    // 30分钟
 		SetResolutionTime(120). // 2小时
 		SetIsActive(true).
 		SetTenantID(testTenant.ID).
@@ -222,7 +222,7 @@ func TestTicketSLAService_CalculateSLADeadlineFromRequest(t *testing.T) {
 		SetName("测试 SLA").
 		SetServiceType("incident").
 		SetPriority("medium").
-		SetResponseTime(60).  // 60分钟
+		SetResponseTime(60).    // 60分钟
 		SetResolutionTime(480). // 8小时
 		SetIsActive(true).
 		SetTenantID(testTenant.ID).
@@ -232,16 +232,16 @@ func TestTicketSLAService_CalculateSLADeadlineFromRequest(t *testing.T) {
 	tests := []struct {
 		name          string
 		tenantID      int
-		ticketType   string
-		priority     string
+		ticketType    string
+		priority      string
 		expectedError bool
 		checkResult   func(*testing.T, *SLADeadlineResult)
 	}{
 		{
 			name:          "使用精确匹配的SLA定义",
 			tenantID:      testTenant.ID,
-			ticketType:   "incident",
-			priority:     "medium",
+			ticketType:    "incident",
+			priority:      "medium",
 			expectedError: false,
 			checkResult: func(t *testing.T, result *SLADeadlineResult) {
 				assert.Equal(t, slaDef.ID, result.SLADefinitionID)
@@ -252,8 +252,8 @@ func TestTicketSLAService_CalculateSLADeadlineFromRequest(t *testing.T) {
 		{
 			name:          "使用默认值(找不到SLA定义)",
 			tenantID:      testTenant.ID,
-			ticketType:   "unknown_type",
-			priority:     "low",
+			ticketType:    "unknown_type",
+			priority:      "low",
 			expectedError: false,
 			checkResult: func(t *testing.T, result *SLADeadlineResult) {
 				// 找不到精确匹配时会 fallback 到类型匹配的定义（如果存在）
@@ -289,12 +289,12 @@ func TestTicketSLAService_AdjustToBusinessHours(t *testing.T) {
 	slaService := NewTicketSLAService(client, logger)
 
 	tests := []struct {
-		name          string
-		inputTime     time.Time
-		checkResult   func(*testing.T, time.Time)
+		name        string
+		inputTime   time.Time
+		checkResult func(*testing.T, time.Time)
 	}{
 		{
-			name: "工作时间内的周五",
+			name:      "工作时间内的周五",
 			inputTime: time.Date(2024, time.January, 5, 10, 0, 0, 0, time.UTC), // 2024-01-05 是周五
 			checkResult: func(t *testing.T, result time.Time) {
 				// 应该保持原时间
@@ -302,7 +302,7 @@ func TestTicketSLAService_AdjustToBusinessHours(t *testing.T) {
 			},
 		},
 		{
-			name: "周六调整到周一",
+			name:      "周六调整到周一",
 			inputTime: time.Date(2024, time.January, 6, 10, 0, 0, 0, time.UTC), // 2024-01-06 是周六
 			checkResult: func(t *testing.T, result time.Time) {
 				// 应该调整到周一
@@ -311,7 +311,7 @@ func TestTicketSLAService_AdjustToBusinessHours(t *testing.T) {
 			},
 		},
 		{
-			name: "周日调整到周一",
+			name:      "周日调整到周一",
 			inputTime: time.Date(2024, time.January, 7, 10, 0, 0, 0, time.UTC), // 2024-01-07 是周日
 			checkResult: func(t *testing.T, result time.Time) {
 				// 应该调整到周一
@@ -320,7 +320,7 @@ func TestTicketSLAService_AdjustToBusinessHours(t *testing.T) {
 			},
 		},
 		{
-			name: "早于工作时间调整到9点",
+			name:      "早于工作时间调整到9点",
 			inputTime: time.Date(2024, time.January, 8, 7, 0, 0, 0, time.UTC), // 2024-01-08 是周一
 			checkResult: func(t *testing.T, result time.Time) {
 				// 应该调整到9点
@@ -328,7 +328,7 @@ func TestTicketSLAService_AdjustToBusinessHours(t *testing.T) {
 			},
 		},
 		{
-			name: "晚于工作时间调整到次日9点",
+			name:      "晚于工作时间调整到次日9点",
 			inputTime: time.Date(2024, time.January, 8, 20, 0, 0, 0, time.UTC), // 2024-01-08 20:00 是周一
 			checkResult: func(t *testing.T, result time.Time) {
 				// 应该调整到次日9点
@@ -390,31 +390,31 @@ func TestTicketSLAService_getSLADefinition(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name          string
-		ticketType   string
-		priority     string
-		expectedResponseTime int
+		name                   string
+		ticketType             string
+		priority               string
+		expectedResponseTime   int
 		expectedResolutionTime int
 	}{
 		{
-			name:                  "精确匹配",
-			ticketType:           "incident",
-			priority:             "critical",
-			expectedResponseTime:  exactMatch.ResponseTime,
+			name:                   "精确匹配",
+			ticketType:             "incident",
+			priority:               "critical",
+			expectedResponseTime:   exactMatch.ResponseTime,
 			expectedResolutionTime: exactMatch.ResolutionTime,
 		},
 		{
-			name:                  "类型匹配",
-			ticketType:           "service_request",
-			priority:             "low",
-			expectedResponseTime:  typeMatch.ResponseTime,
+			name:                   "类型匹配",
+			ticketType:             "service_request",
+			priority:               "low",
+			expectedResponseTime:   typeMatch.ResponseTime,
 			expectedResolutionTime: typeMatch.ResolutionTime,
 		},
 		{
-			name:                  "默认SLA",
-			ticketType:           "unknown_type",
-			priority:             "low",
-			expectedResponseTime:  60,
+			name:                   "默认SLA",
+			ticketType:             "unknown_type",
+			priority:               "low",
+			expectedResponseTime:   60,
 			expectedResolutionTime: 480,
 		},
 	}

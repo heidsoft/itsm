@@ -67,9 +67,7 @@ export class ServiceCatalogApi {
   /**
    * 获取服务列表
    */
-  static async getServices(
-    query?: ServiceQuery
-  ): Promise<{
+  static async getServices(query?: ServiceQuery): Promise<{
     services: ServiceItem[];
     total: number;
   }> {
@@ -94,7 +92,11 @@ export class ServiceCatalogApi {
     // 后端当前不支持 search；先在前端做兜底过滤
     if (query?.search) {
       const q = query.search.toLowerCase();
-      services = services.filter(s => (s.name || '').toLowerCase().includes(q) || (s.shortDescription || '').toLowerCase().includes(q));
+      services = services.filter(
+        s =>
+          (s.name || '').toLowerCase().includes(q) ||
+          (s.shortDescription || '').toLowerCase().includes(q)
+      );
     }
 
     return { services, total: resp.total || 0 };
@@ -111,16 +113,16 @@ export class ServiceCatalogApi {
   /**
    * 创建服务
    */
-  static async createService(
-    request: CreateServiceItemRequest
-  ): Promise<ServiceItem> {
+  static async createService(request: CreateServiceItemRequest): Promise<ServiceItem> {
     const payload = {
       name: request.name,
       category: String(request.category),
       description: request.shortDescription || request.fullDescription || '',
       ci_type_id: request.ciTypeId,
       cloud_service_id: request.cloudServiceId,
-      delivery_time: String(request.availability?.responseTime ?? request.availability?.resolutionTime ?? 1),
+      delivery_time: String(
+        request.availability?.responseTime ?? request.availability?.resolutionTime ?? 1
+      ),
       status: ServiceCatalogApi.toBackendStatus((request as any).status) || 'enabled',
     };
     const resp = await httpClient.post<any>('/api/v1/service-catalogs', payload);
@@ -130,10 +132,7 @@ export class ServiceCatalogApi {
   /**
    * 更新服务
    */
-  static async updateService(
-    id: string,
-    request: UpdateServiceItemRequest
-  ): Promise<ServiceItem> {
+  static async updateService(id: string, request: UpdateServiceItemRequest): Promise<ServiceItem> {
     const payload: Record<string, unknown> = {};
     if (request.name !== undefined) payload.name = request.name;
     if (request.category !== undefined) payload.category = String(request.category);
@@ -182,10 +181,7 @@ export class ServiceCatalogApi {
   /**
    * 复制服务
    */
-  static async cloneService(
-    id: string,
-    name: string
-  ): Promise<ServiceItem> {
+  static async cloneService(id: string, name: string): Promise<ServiceItem> {
     const src = await ServiceCatalogApi.getService(id);
     return ServiceCatalogApi.createService({
       ...src,
@@ -199,9 +195,7 @@ export class ServiceCatalogApi {
   /**
    * 获取服务请求列表
    */
-  static async getServiceRequests(
-    query?: ServiceRequestQuery
-  ): Promise<{
+  static async getServiceRequests(query?: ServiceRequestQuery): Promise<{
     requests: any[];
     total: number;
   }> {
@@ -227,9 +221,7 @@ export class ServiceCatalogApi {
   /**
    * 创建服务请求
    */
-  static async createServiceRequest(
-    request: CreateServiceRequestRequest
-  ): Promise<any> {
+  static async createServiceRequest(request: CreateServiceRequestRequest): Promise<any> {
     // 前端 CreateServiceRequestRequest: { serviceId, formData, ... }
     // 后端 CreateServiceRequestRequest: { catalog_id, title, reason, form_data, ... , compliance_ack }
     const reason =
@@ -237,8 +229,7 @@ export class ServiceCatalogApi {
       request.additionalNotes ||
       '';
 
-    const title =
-      (request.formData && (request.formData.title || request.formData.name)) || '';
+    const title = (request.formData && (request.formData.title || request.formData.name)) || '';
 
     // V0：最小字段集合。复杂字段（成本中心/分级/到期/公网白名单）可先从 formData 透传，后续再做强校验与表单化。
     const payload: any = {
@@ -249,8 +240,12 @@ export class ServiceCatalogApi {
       compliance_ack: Boolean(request.formData?.compliance_ack ?? true), // 以表单勾选为准，兜底为 true
       data_classification: String(request.formData?.data_classification || 'internal'),
       needs_public_ip: Boolean(request.formData?.needs_public_ip || false),
-      source_ip_whitelist: Array.isArray(request.formData?.source_ip_whitelist) ? request.formData?.source_ip_whitelist : undefined,
-      cost_center: request.formData?.cost_center ? String(request.formData?.cost_center) : undefined,
+      source_ip_whitelist: Array.isArray(request.formData?.source_ip_whitelist)
+        ? request.formData?.source_ip_whitelist
+        : undefined,
+      cost_center: request.formData?.cost_center
+        ? String(request.formData?.cost_center)
+        : undefined,
       expire_at: request.formData?.expire_at ? request.formData?.expire_at : undefined,
     };
 
@@ -260,21 +255,17 @@ export class ServiceCatalogApi {
   /**
    * 取消服务请求
    */
-  static async cancelServiceRequest(
-    id: number,
-    reason?: string
-  ): Promise<void> {
+  static async cancelServiceRequest(id: number, reason?: string): Promise<void> {
     // 后端未提供 cancelled 状态（V0）；避免静默错误，直接提示上层处理
-    throw new Error(`后端暂不支持取消服务请求（id=${id}），请先实现 cancelled 状态或取消接口。原因: ${reason || ''}`);
+    throw new Error(
+      `后端暂不支持取消服务请求（id=${id}），请先实现 cancelled 状态或取消接口。原因: ${reason || ''}`
+    );
   }
 
   /**
    * 审批服务请求
    */
-  static async approveServiceRequest(
-    id: number,
-    comment?: string
-  ): Promise<void> {
+  static async approveServiceRequest(id: number, comment?: string): Promise<void> {
     await httpClient.post(`/api/v1/service-requests/${id}/approvals`, {
       action: 'approve',
       comment,
@@ -284,10 +275,7 @@ export class ServiceCatalogApi {
   /**
    * 拒绝服务请求
    */
-  static async rejectServiceRequest(
-    id: number,
-    reason: string
-  ): Promise<void> {
+  static async rejectServiceRequest(id: number, reason: string): Promise<void> {
     await httpClient.post(`/api/v1/service-requests/${id}/approvals`, {
       action: 'reject',
       comment: reason,
@@ -297,10 +285,7 @@ export class ServiceCatalogApi {
   /**
    * 完成服务请求
    */
-  static async completeServiceRequest(
-    id: number,
-    notes?: string
-  ): Promise<void> {
+  static async completeServiceRequest(id: number, notes?: string): Promise<void> {
     await httpClient.put(`/api/v1/service-requests/${id}/status`, {
       status: 'completed',
       comment: notes,
@@ -429,9 +414,7 @@ export class ServiceCatalogApi {
   /**
    * 更新门户配置
    */
-  static async updatePortalConfig(
-    config: Partial<PortalConfig>
-  ): Promise<PortalConfig> {
+  static async updatePortalConfig(config: Partial<PortalConfig>): Promise<PortalConfig> {
     // 后端暂未实现门户配置，直接返回更新后的配置
     const fullConfig: PortalConfig = {
       id: config.id || 'default',
@@ -460,7 +443,10 @@ export class ServiceCatalogApi {
    */
   static async getCatalogStats(): Promise<ServiceCatalogStats> {
     // V0：后端未提供 stats；前端可用 getServices + 本地统计
-    const { services, total } = await ServiceCatalogApi.getServices({ page: 1, pageSize: 1000 } as any);
+    const { services, total } = await ServiceCatalogApi.getServices({
+      page: 1,
+      pageSize: 1000,
+    } as any);
     return {
       totalServices: total,
       publishedServices: services.filter(s => String((s as any).status) === 'published').length,
@@ -484,11 +470,13 @@ export class ServiceCatalogApi {
   ): Promise<ServiceAnalytics> {
     // 后端暂未实现服务分析，返回空数据
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const _unused = serviceId; 
+    const _unused = serviceId;
     return {
       serviceId,
       period: {
-        start: params?.startDate ? new Date(params.startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        start: params?.startDate
+          ? new Date(params.startDate)
+          : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
         end: params?.endDate ? new Date(params.endDate) : new Date(),
       },
       metrics: {
@@ -516,9 +504,7 @@ export class ServiceCatalogApi {
   /**
    * 导出服务目录
    */
-  static async exportCatalog(
-    format: 'excel' | 'pdf'
-  ): Promise<Blob> {
+  static async exportCatalog(format: 'excel' | 'pdf'): Promise<Blob> {
     // 后端暂未实现导出功能
     throw new Error(`服务目录导出功能暂未实现（format=${format}），请待后端支持后重试`);
   }

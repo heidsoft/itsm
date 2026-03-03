@@ -180,45 +180,45 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
       <Card
         title={
           <Space>
-            <Bot className='text-blue-600' />
+            <Bot className="text-blue-600" />
             <span>AI工作流助手</span>
           </Space>
         }
         extra={
-          <Tooltip title='AI将分析工单内容并提供智能建议'>
-            <Lightbulb className='text-yellow-500' />
+          <Tooltip title="AI将分析工单内容并提供智能建议">
+            <Lightbulb className="text-yellow-500" />
           </Tooltip>
         }
       >
-        <div className='space-y-4'>
+        <div className="space-y-4">
           <div>
             <Text strong>工单标题 *</Text>
             <Input
-              placeholder='请输入工单标题...'
+              placeholder="请输入工单标题..."
               value={title}
               onChange={e => setTitle(e.target.value)}
-              className='mt-2'
+              className="mt-2"
             />
           </div>
 
           <div>
             <Text strong>工单描述</Text>
             <TextArea
-              placeholder='请详细描述问题...'
+              placeholder="请详细描述问题..."
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={3}
-              className='mt-2'
+              className="mt-2"
             />
           </div>
 
           <Button
-            type='primary'
+            type="primary"
             icon={<Brain />}
             loading={loading}
             onClick={handleAnalyze}
             disabled={!title.trim()}
-            className='w-full'
+            className="w-full"
           >
             {loading ? 'AI分析中...' : '开始AI分析'}
           </Button>
@@ -229,7 +229,7 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
         <Card
           title={
             <Space>
-              <Workflow className='text-green-600' />
+              <Workflow className="text-green-600" />
               <span>AI工作流建议</span>
               <Tag color={getPriorityColor(suggestion.priority)}>
                 {suggestion.priority.toUpperCase()}
@@ -237,42 +237,42 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
             </Space>
           }
         >
-          <div className='space-y-4'>
-            <div className='grid grid-cols-2 gap-4'>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Text type='secondary'>分类</Text>
-                <div className='flex items-center mt-1'>
-                  <span className='text-lg mr-2'>{getCategoryIcon(suggestion.category)}</span>
+                <Text type="secondary">分类</Text>
+                <div className="flex items-center mt-1">
+                  <span className="text-lg mr-2">{getCategoryIcon(suggestion.category)}</span>
                   <Text strong>{suggestion.category}</Text>
                 </div>
               </div>
               <div>
-                <Text type='secondary'>预计处理时间</Text>
-                <div className='flex items-center mt-1'>
-                  <Clock className='mr-2 text-blue-500' />
+                <Text type="secondary">预计处理时间</Text>
+                <div className="flex items-center mt-1">
+                  <Clock className="mr-2 text-blue-500" />
                   <Text strong>{suggestion.estimatedTime}</Text>
                 </div>
               </div>
             </div>
 
             <div>
-              <Text type='secondary'>置信度</Text>
-              <div className='flex items-center mt-1'>
+              <Text type="secondary">置信度</Text>
+              <div className="flex items-center mt-1">
                 <Progress
                   percent={Math.round(suggestion.confidence * 100)}
-                  size='small'
-                  className='flex-1 mr-2'
+                  size="small"
+                  className="flex-1 mr-2"
                 />
                 <Text strong>{Math.round(suggestion.confidence * 100)}%</Text>
               </div>
             </div>
 
             <div>
-              <Text type='secondary'>推荐工作流</Text>
-              <div className='mt-2 space-y-2'>
+              <Text type="secondary">推荐工作流</Text>
+              <div className="mt-2 space-y-2">
                 {suggestion.workflow.map((step, index) => (
-                  <div key={index} className='flex items-center'>
-                    <div className='w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium mr-3'>
+                  <div key={index} className="flex items-center">
+                    <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium mr-3">
                       {index + 1}
                     </div>
                     <Text>{step}</Text>
@@ -282,8 +282,8 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
             </div>
 
             <div>
-              <Text type='secondary'>AI推理</Text>
-              <div className='mt-1 p-3 bg-gray-50 rounded'>
+              <Text type="secondary">AI推理</Text>
+              <div className="mt-1 p-3 bg-gray-50 rounded">
                 <Text>{suggestion.reasoning}</Text>
               </div>
             </div>
@@ -295,24 +295,24 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
         <Card
           title={
             <Space>
-              <BookOpen className='text-purple-600' />
+              <BookOpen className="text-purple-600" />
               <span>相关知识库</span>
             </Space>
           }
         >
-          <div className='space-y-3'>
+          <div className="space-y-3">
             {knowledgeResults.map((item, index) => (
-              <div key={index} className='p-3 border rounded hover:bg-gray-50'>
-                <div className='flex items-start justify-between'>
-                  <div className='flex-1'>
-                    <Text strong className='block mb-1'>
+              <div key={index} className="p-3 border rounded hover:bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <Text strong className="block mb-1">
                       {item.title || `知识库条目 ${index + 1}`}
                     </Text>
-                    <Text type='secondary' className='text-sm'>
+                    <Text type="secondary" className="text-sm">
                       {item.snippet}
                     </Text>
                   </div>
-                  <Tag color='purple'>{Math.round((item.score || 0) * 100)}%</Tag>
+                  <Tag color="purple">{Math.round((item.score || 0) * 100)}%</Tag>
                 </div>
               </div>
             ))}
@@ -324,24 +324,24 @@ export const AIWorkflowAssistant: React.FC<AIWorkflowAssistantProps> = ({
         <Card
           title={
             <Space>
-              <TrendingUp className='text-orange-600' />
+              <TrendingUp className="text-orange-600" />
               <span>相似事件</span>
             </Space>
           }
         >
-          <div className='space-y-3'>
+          <div className="space-y-3">
             {similarIncidents.map((incident, index) => (
-              <div key={index} className='p-3 border rounded hover:bg-gray-50'>
-                <div className='flex items-start justify-between'>
-                  <div className='flex-1'>
-                    <Text strong className='block mb-1'>
+              <div key={index} className="p-3 border rounded hover:bg-gray-50">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <Text strong className="block mb-1">
                       {incident.title || `事件 ${incident.id}`}
                     </Text>
-                    <Text type='secondary' className='text-sm'>
+                    <Text type="secondary" className="text-sm">
                       {incident.snippet}
                     </Text>
                   </div>
-                  <Tag color='orange'>{Math.round((incident.score || 0) * 100)}%</Tag>
+                  <Tag color="orange">{Math.round((incident.score || 0) * 100)}%</Tag>
                 </div>
               </div>
             ))}

@@ -30,14 +30,14 @@ export interface OptimizedImageProps {
 
 /**
  * 优化的图片组件
- * 
+ *
  * 特性：
  * - 自动图片优化
  * - 懒加载
  * - 占位符
  * - 错误处理
  * - 加载状态
- * 
+ *
  * @example
  * ```tsx
  * <OptimizedImage
@@ -115,7 +115,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
           />
         </div>
       )}
-      
+
       <Image
         {...imageProps}
         src={imageSrc}
@@ -175,7 +175,7 @@ export const AvatarImage: React.FC<AvatarImageProps> = ({
       'bg-indigo-500',
     ];
     const colorIndex = name.charCodeAt(0) % colors.length;
-    
+
     return (
       <div
         className={`
@@ -301,19 +301,10 @@ export const BackgroundImage: React.FC<BackgroundImageProps> = ({
           objectFit: 'cover',
         }}
       />
-      
-      {overlay && (
-        <div
-          className="absolute inset-0 bg-black"
-          style={{ opacity: overlayOpacity }}
-        />
-      )}
-      
-      {children && (
-        <div className="relative z-10">
-          {children}
-        </div>
-      )}
+
+      {overlay && <div className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} />}
+
+      {children && <div className="relative z-10">{children}</div>}
     </div>
   );
 };
@@ -355,4 +346,3 @@ export const LogoImage: React.FC<LogoImageProps> = ({
 
 // 导出所有组件
 export default OptimizedImage;
-

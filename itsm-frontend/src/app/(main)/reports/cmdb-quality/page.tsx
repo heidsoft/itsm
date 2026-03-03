@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Spin,
-  message,
-  Statistic,
-  Space,
-  Button,
-} from 'antd';
+import { Card, Row, Col, Typography, Spin, message, Statistic, Space, Button } from 'antd';
 import {
   BarChart,
   Bar,
@@ -81,15 +71,18 @@ const CMDBQualityReport = () => {
     loadData();
   }, []);
 
-  const avgCompleteness = qualityData.length > 0
-    ? qualityData.reduce((sum, d) => sum + d.completeness, 0) / qualityData.length
-    : 0;
-  const avgAccuracy = qualityData.length > 0
-    ? qualityData.reduce((sum, d) => sum + d.accuracy, 0) / qualityData.length
-    : 0;
-  const avgConsistency = qualityData.length > 0
-    ? qualityData.reduce((sum, d) => sum + d.consistency, 0) / qualityData.length
-    : 0;
+  const avgCompleteness =
+    qualityData.length > 0
+      ? qualityData.reduce((sum, d) => sum + d.completeness, 0) / qualityData.length
+      : 0;
+  const avgAccuracy =
+    qualityData.length > 0
+      ? qualityData.reduce((sum, d) => sum + d.accuracy, 0) / qualityData.length
+      : 0;
+  const avgConsistency =
+    qualityData.length > 0
+      ? qualityData.reduce((sum, d) => sum + d.consistency, 0) / qualityData.length
+      : 0;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {

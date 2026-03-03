@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Spin,
-  message,
-  Statistic,
-  Button,
-  Tag,
-  Space,
-} from 'antd';
+import { Card, Row, Col, Typography, Spin, message, Statistic, Button, Tag, Space } from 'antd';
 import {
   PieChart,
   Pie,
@@ -83,7 +72,7 @@ const ChangeSuccessReport = () => {
             { type: '普通变更', count: Math.floor(stats.total * 0.5) },
             { type: '紧急变更', count: Math.floor(stats.total * 0.2) },
           ],
-          successRate: stats.completed > 0 ? ((stats.completed / stats.total) * 100) : 0,
+          successRate: stats.completed > 0 ? (stats.completed / stats.total) * 100 : 0,
           totalChanges: stats.total,
         });
       } else {
@@ -142,7 +131,10 @@ const ChangeSuccessReport = () => {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800">{`${payload[0].name}`}</p>
-          <p className="text-sm" style={{ color: payload[0].color }}>{`数量: ${payload[0].value}`}</p>
+          <p
+            className="text-sm"
+            style={{ color: payload[0].color }}
+          >{`数量: ${payload[0].value}`}</p>
         </div>
       );
     }
@@ -262,7 +254,10 @@ const ChangeSuccessReport = () => {
                     <Legend />
                     <Bar dataKey="count" name="变更数量" fill="#1890ff">
                       {data.byType.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={TYPE_COLORS[index % TYPE_COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={TYPE_COLORS[index % TYPE_COLORS.length]}
+                        />
                       ))}
                     </Bar>
                   </BarChart>

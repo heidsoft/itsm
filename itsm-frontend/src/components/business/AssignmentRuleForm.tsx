@@ -22,12 +22,7 @@ import {
   Tag,
   message,
 } from 'antd';
-import {
-  PlusOutlined,
-  DeleteOutlined,
-  SaveOutlined,
-  CloseOutlined,
-} from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, SaveOutlined, CloseOutlined } from '@ant-design/icons';
 import type { AssignmentRule } from '@/lib/api/ticket-assignment-api';
 
 const { TextArea } = Input;
@@ -135,11 +130,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item
-            name="is_active"
-            label="启用状态"
-            valuePropName="checked"
-          >
+          <Form.Item name="is_active" label="启用状态" valuePropName="checked">
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
         </Col>
@@ -217,12 +208,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
                   </Card>
                 );
               })}
-              <Button
-                type="dashed"
-                onClick={() => add()}
-                block
-                icon={<PlusOutlined />}
-              >
+              <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
                 添加条件
               </Button>
             </div>
@@ -237,10 +223,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
         label="分配方式"
         rules={[{ required: true, message: '请选择分配方式' }]}
       >
-        <Select
-          placeholder="选择分配方式"
-          onChange={(value) => setActionType(value)}
-        >
+        <Select placeholder="选择分配方式" onChange={value => setActionType(value)}>
           {actionTypes.map(type => (
             <Option key={type.value} value={type.value}>
               {type.label}
@@ -270,10 +253,7 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
       )}
 
       {actionType === 'assign_by_skill' && (
-        <Form.Item
-          name={['actions', 'skill_required']}
-          label="所需技能"
-        >
+        <Form.Item name={['actions', 'skill_required']} label="所需技能">
           <Input placeholder="技能名称或ID" />
         </Form.Item>
       )}
@@ -291,4 +271,3 @@ export const AssignmentRuleForm: React.FC<AssignmentRuleFormProps> = ({
     </Form>
   );
 };
-

@@ -13,7 +13,7 @@ import (
 // 5 attempts per minute per IP address using ulule/limiter v3
 func LoginRateLimiter() gin.HandlerFunc {
 	rate := limiter.Rate{
-		Limit:  5,    // 5 attempts
+		Limit:  5,               // 5 attempts
 		Period: 1 * time.Minute, // per minute
 	}
 	store := memoryStore.NewStore()
@@ -21,7 +21,7 @@ func LoginRateLimiter() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		key := c.ClientIP() // Use IP address as the key
-		
+
 		// Peek checks without incrementing (to check if already limited)
 		ctx, err := limiterInstance.Peek(c.Request.Context(), key)
 		if err != nil {
@@ -35,8 +35,8 @@ func LoginRateLimiter() gin.HandlerFunc {
 
 		if ctx.Reached {
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"code":     1001,
-				"message":  "登录请求过于频繁，请稍后再试",
+				"code":      1001,
+				"message":   "登录请求过于频繁，请稍后再试",
 				"remaining": ctx.Remaining,
 			})
 			c.Abort()

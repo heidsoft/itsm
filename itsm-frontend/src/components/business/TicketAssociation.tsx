@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Button,
@@ -20,7 +20,7 @@ import {
   Col,
   Form,
   Checkbox,
-} from "antd";
+} from 'antd';
 import {
   Link,
   Unlink,
@@ -35,7 +35,7 @@ import {
   Clock,
   Users,
   FileText,
-} from "lucide-react";
+} from 'lucide-react';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -57,13 +57,7 @@ interface TicketRelation {
   id: number;
   sourceTicket: Ticket;
   targetTicket: Ticket;
-  relationType:
-    | "parent"
-    | "child"
-    | "duplicate"
-    | "related"
-    | "blocked_by"
-    | "blocks";
+  relationType: 'parent' | 'child' | 'duplicate' | 'related' | 'blocked_by' | 'blocks';
   description: string;
   created_at: string;
 }
@@ -79,7 +73,7 @@ export const TicketAssociation: React.FC = () => {
   const [relations, setRelations] = useState<TicketRelation[]>([]);
   const [mergeCandidates, setMergeCandidates] = useState<MergeCandidate[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedTickets, setSelectedTickets] = useState<number[]>([]);
   const [showMergeModal, setShowMergeModal] = useState(false);
   const [showRelationModal, setShowRelationModal] = useState(false);
@@ -95,48 +89,48 @@ export const TicketAssociation: React.FC = () => {
 
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case "open":
-        return "blue";
-      case "in_progress":
-        return "orange";
-      case "resolved":
-        return "green";
-      case "closed":
-        return "default";
+      case 'open':
+        return 'blue';
+      case 'in_progress':
+        return 'orange';
+      case 'resolved':
+        return 'green';
+      case 'closed':
+        return 'default';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getPriorityColor = (priority: string): string => {
     switch (priority) {
-      case "urgent":
-        return "red";
-      case "high":
-        return "orange";
-      case "medium":
-        return "blue";
-      case "low":
-        return "green";
+      case 'urgent':
+        return 'red';
+      case 'high':
+        return 'orange';
+      case 'medium':
+        return 'blue';
+      case 'low':
+        return 'green';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getRelationTypeLabel = (type: string): string => {
     switch (type) {
-      case "parent":
-        return "父工单";
-      case "child":
-        return "子工单";
-      case "duplicate":
-        return "重复工单";
-      case "related":
-        return "相关工单";
-      case "blocked_by":
-        return "被阻塞";
-      case "blocks":
-        return "阻塞其他";
+      case 'parent':
+        return '父工单';
+      case 'child':
+        return '子工单';
+      case 'duplicate':
+        return '重复工单';
+      case 'related':
+        return '相关工单';
+      case 'blocked_by':
+        return '被阻塞';
+      case 'blocks':
+        return '阻塞其他';
       default:
         return type;
     }
@@ -144,20 +138,20 @@ export const TicketAssociation: React.FC = () => {
 
   const getRelationTypeColor = (type: string): string => {
     switch (type) {
-      case "parent":
-        return "blue";
-      case "child":
-        return "green";
-      case "duplicate":
-        return "red";
-      case "related":
-        return "purple";
-      case "blocked_by":
-        return "orange";
-      case "blocks":
-        return "red";
+      case 'parent':
+        return 'blue';
+      case 'child':
+        return 'green';
+      case 'duplicate':
+        return 'red';
+      case 'related':
+        return 'purple';
+      case 'blocked_by':
+        return 'orange';
+      case 'blocks':
+        return 'red';
       default:
-        return "default";
+        return 'default';
     }
   };
 
@@ -166,55 +160,50 @@ export const TicketAssociation: React.FC = () => {
       // 模拟创建关联关系
       const newRelation: TicketRelation = {
         id: Date.now(),
-        sourceTicket: tickets.find((t) => t.id === values.sourceTicketId)!,
-        targetTicket: tickets.find((t) => t.id === values.targetTicketId)!,
+        sourceTicket: tickets.find(t => t.id === values.sourceTicketId)!,
+        targetTicket: tickets.find(t => t.id === values.targetTicketId)!,
         relationType: values.relationType,
         description: values.description,
         created_at: new Date().toISOString(),
       };
 
       setRelations([...relations, newRelation]);
-      message.success("关联关系创建成功");
+      message.success('关联关系创建成功');
       setShowRelationModal(false);
       relationForm.resetFields();
     } catch (error) {
-      message.error("创建关联关系失败");
+      message.error('创建关联关系失败');
     }
   };
 
-  const handleMergeTickets = async (
-    primaryTicketId: number,
-    secondaryTicketIds: number[]
-  ) => {
+  const handleMergeTickets = async (primaryTicketId: number, secondaryTicketIds: number[]) => {
     try {
       // 模拟合并工单
       message.success(`工单合并成功，主工单: ${primaryTicketId}`);
       setShowMergeModal(false);
       setSelectedTickets([]);
     } catch (error) {
-      message.error("工单合并失败");
+      message.error('工单合并失败');
     }
   };
 
   const removeRelation = (relationId: number) => {
-    setRelations(relations.filter((r) => r.id !== relationId));
-    message.success("关联关系已移除");
+    setRelations(relations.filter(r => r.id !== relationId));
+    message.success('关联关系已移除');
   };
 
   const columns = [
     {
-      title: "工单号",
-      dataIndex: "ticketNumber",
-      key: "ticketNumber",
+      title: '工单号',
+      dataIndex: 'ticketNumber',
+      key: 'ticketNumber',
       render: (text: string, record: Ticket) => (
         <Space>
           <Text strong>{text}</Text>
           <Badge
             count={
               relations.filter(
-                (r) =>
-                  r.sourceTicket.id === record.id ||
-                  r.targetTicket.id === record.id
+                r => r.sourceTicket.id === record.id || r.targetTicket.id === record.id
               ).length
             }
           />
@@ -222,56 +211,56 @@ export const TicketAssociation: React.FC = () => {
       ),
     },
     {
-      title: "标题",
-      dataIndex: "title",
-      key: "title",
+      title: '标题',
+      dataIndex: 'title',
+      key: 'title',
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: "状态",
-      dataIndex: "status",
-      key: "status",
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
       render: (status: string) => (
         <Tag color={getStatusColor(status)}>
-          {status === "open"
-            ? "待处理"
-            : status === "in_progress"
-            ? "处理中"
-            : status === "resolved"
-            ? "已解决"
-            : "已关闭"}
+          {status === 'open'
+            ? '待处理'
+            : status === 'in_progress'
+              ? '处理中'
+              : status === 'resolved'
+                ? '已解决'
+                : '已关闭'}
         </Tag>
       ),
     },
     {
-      title: "优先级",
-      dataIndex: "priority",
-      key: "priority",
+      title: '优先级',
+      dataIndex: 'priority',
+      key: 'priority',
       render: (priority: string) => (
         <Tag color={getPriorityColor(priority)}>{priority.toUpperCase()}</Tag>
       ),
     },
     {
-      title: "分类",
-      dataIndex: "category",
-      key: "category",
+      title: '分类',
+      dataIndex: 'category',
+      key: 'category',
       render: (category: string) => <Text>{category}</Text>,
     },
     {
-      title: "处理人",
-      dataIndex: "assignee",
-      key: "assignee",
+      title: '处理人',
+      dataIndex: 'assignee',
+      key: 'assignee',
       render: (assignee: string) => <Text>{assignee}</Text>,
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (_: any, record: Ticket) => (
         <Space>
           <Button
             size="small"
             icon={<Eye />}
-            onClick={() => window.open(`/tickets/${record.id}`, "_blank")}
+            onClick={() => window.open(`/tickets/${record.id}`, '_blank')}
           >
             查看
           </Button>
@@ -292,61 +281,50 @@ export const TicketAssociation: React.FC = () => {
 
   const relationColumns = [
     {
-      title: "源工单",
-      key: "source",
+      title: '源工单',
+      key: 'source',
       render: (record: TicketRelation) => (
         <div>
           <div className="font-medium">{record.sourceTicket.ticketNumber}</div>
-          <div className="text-sm text-gray-500">
-            {record.sourceTicket.title}
-          </div>
+          <div className="text-sm text-gray-500">{record.sourceTicket.title}</div>
         </div>
       ),
     },
     {
-      title: "关系类型",
-      dataIndex: "relationType",
-      key: "relationType",
+      title: '关系类型',
+      dataIndex: 'relationType',
+      key: 'relationType',
       render: (type: string) => (
-        <Tag color={getRelationTypeColor(type)}>
-          {getRelationTypeLabel(type)}
-        </Tag>
+        <Tag color={getRelationTypeColor(type)}>{getRelationTypeLabel(type)}</Tag>
       ),
     },
     {
-      title: "目标工单",
-      key: "target",
+      title: '目标工单',
+      key: 'target',
       render: (record: TicketRelation) => (
         <div>
           <div className="font-medium">{record.targetTicket.ticketNumber}</div>
-          <div className="text-sm text-gray-500">
-            {record.targetTicket.title}
-          </div>
+          <div className="text-sm text-gray-500">{record.targetTicket.title}</div>
         </div>
       ),
     },
     {
-      title: "描述",
-      dataIndex: "description",
-      key: "description",
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: "创建时间",
-      dataIndex: "created_at",
-      key: "created_at",
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
       render: (text: string) => <Text>{text}</Text>,
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (_: any, record: TicketRelation) => (
-        <Button
-          size="small"
-          danger
-          icon={<Unlink />}
-          onClick={() => removeRelation(record.id)}
-        >
+        <Button size="small" danger icon={<Unlink />} onClick={() => removeRelation(record.id)}>
           移除
         </Button>
       ),
@@ -387,9 +365,9 @@ export const TicketAssociation: React.FC = () => {
           <Input.Search
             placeholder="搜索工单..."
             value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
+            onChange={e => setSearchKeyword(e.target.value)}
             style={{ width: 300 }}
-            onSearch={(value) => {
+            onSearch={value => {
               // 可以在这里添加搜索逻辑
             }}
           />
@@ -400,10 +378,9 @@ export const TicketAssociation: React.FC = () => {
           dataSource={tickets}
           rowKey="id"
           rowSelection={{
-            type: "checkbox",
+            type: 'checkbox',
             selectedRowKeys: selectedTickets,
-            onChange: (selectedRowKeys) =>
-              setSelectedTickets(selectedRowKeys as number[]),
+            onChange: selectedRowKeys => setSelectedTickets(selectedRowKeys as number[]),
           }}
           pagination={{ pageSize: 10 }}
         />
@@ -489,20 +466,16 @@ export const TicketAssociation: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form
-          form={relationForm}
-          layout="vertical"
-          onFinish={handleCreateRelation}
-        >
+        <Form form={relationForm} layout="vertical" onFinish={handleCreateRelation}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="sourceTicketId"
                 label="源工单"
-                rules={[{ required: true, message: "请选择源工单" }]}
+                rules={[{ required: true, message: '请选择源工单' }]}
               >
                 <Select placeholder="选择源工单">
-                  {tickets.map((ticket) => (
+                  {tickets.map(ticket => (
                     <Option key={ticket.id} value={ticket.id}>
                       {ticket.ticketNumber} - {ticket.title}
                     </Option>
@@ -514,10 +487,10 @@ export const TicketAssociation: React.FC = () => {
               <Form.Item
                 name="targetTicketId"
                 label="目标工单"
-                rules={[{ required: true, message: "请选择目标工单" }]}
+                rules={[{ required: true, message: '请选择目标工单' }]}
               >
                 <Select placeholder="选择目标工单">
-                  {tickets.map((ticket) => (
+                  {tickets.map(ticket => (
                     <Option key={ticket.id} value={ticket.id}>
                       {ticket.ticketNumber} - {ticket.title}
                     </Option>
@@ -530,7 +503,7 @@ export const TicketAssociation: React.FC = () => {
           <Form.Item
             name="relationType"
             label="关联类型"
-            rules={[{ required: true, message: "请选择关联类型" }]}
+            rules={[{ required: true, message: '请选择关联类型' }]}
           >
             <Select placeholder="选择关联类型">
               <Option value="parent">父工单</Option>
@@ -545,7 +518,7 @@ export const TicketAssociation: React.FC = () => {
           <Form.Item
             name="description"
             label="关联说明"
-            rules={[{ required: true, message: "请填写关联说明" }]}
+            rules={[{ required: true, message: '请填写关联说明' }]}
           >
             <TextArea rows={3} placeholder="请描述工单间的关联关系..." />
           </Form.Item>
@@ -578,13 +551,10 @@ export const TicketAssociation: React.FC = () => {
         <div className="space-y-4">
           <div>
             <Text strong>选择主工单（保留）:</Text>
-            <Select
-              placeholder="选择要保留的主工单"
-              style={{ width: "100%", marginTop: 8 }}
-            >
+            <Select placeholder="选择要保留的主工单" style={{ width: '100%', marginTop: 8 }}>
               {tickets
-                .filter((t) => selectedTickets.includes(t.id))
-                .map((ticket) => (
+                .filter(t => selectedTickets.includes(t.id))
+                .map(ticket => (
                   <Option key={ticket.id} value={ticket.id}>
                     {ticket.ticketNumber} - {ticket.title}
                   </Option>
@@ -596,8 +566,8 @@ export const TicketAssociation: React.FC = () => {
             <Text strong>选择要合并的工单:</Text>
             <div className="mt-2 space-y-2">
               {tickets
-                .filter((t) => selectedTickets.includes(t.id))
-                .map((ticket) => (
+                .filter(t => selectedTickets.includes(t.id))
+                .map(ticket => (
                   <div key={ticket.id} className="flex items-center space-x-2">
                     <Checkbox defaultChecked />
                     <Text>
@@ -610,11 +580,7 @@ export const TicketAssociation: React.FC = () => {
 
           <div>
             <Text strong>合并说明:</Text>
-            <TextArea
-              rows={3}
-              placeholder="请描述合并的原因和注意事项..."
-              className="mt-2"
-            />
+            <TextArea rows={3} placeholder="请描述合并的原因和注意事项..." className="mt-2" />
           </div>
         </div>
 

@@ -97,9 +97,7 @@ export function handlePaginatedResponse<T>(
  * @param response API响应数据
  * @returns 处理后的数组
  */
-export function handleArrayResponse<T>(
-  response: ApiResponse<T[]> | T[] | null | undefined
-): T[] {
+export function handleArrayResponse<T>(response: ApiResponse<T[]> | T[] | null | undefined): T[] {
   if (!response) {
     return [];
   }
@@ -175,11 +173,7 @@ export function validateResponse<T>(
  * @param defaultValue 默认值
  * @returns 属性值
  */
-export function safeGet<T>(
-  obj: unknown,
-  path: string,
-  defaultValue: T
-): T {
+export function safeGet<T>(obj: unknown, path: string, defaultValue: T): T {
   if (!obj || typeof obj !== 'object') {
     return defaultValue;
   }
@@ -196,4 +190,3 @@ export function safeGet<T>(
 
   return current !== undefined && current !== null ? current : defaultValue;
 }
-

@@ -6,11 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { httpClient } from '@/lib/api/http-client';
 
 // 基础查询 Hook
-export function useList<T>(
-  key: string | string[],
-  endpoint: string,
-  params?: object
-) {
+export function useList<T>(key: string | string[], endpoint: string, params?: object) {
   return useQuery({
     queryKey: Array.isArray(key) ? key : [key],
     queryFn: () => httpClient.get<{ list: T[]; total: number }>(endpoint, params),
@@ -27,10 +23,7 @@ export function useDetail<T>(key: string, id: number, endpoint: string) {
 }
 
 // 创建 Mutation Hook
-export function useCreate<T>(
-  endpoint: string,
-  queryKeyToInvalidate: string | string[]
-) {
+export function useCreate<T>(endpoint: string, queryKeyToInvalidate: string | string[]) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: T) => httpClient.post<T>(endpoint, data),

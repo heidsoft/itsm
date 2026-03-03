@@ -6,12 +6,28 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Card, Table, Button, Space, Tag, Modal, Form, Select,
-  Input, Tooltip, message, Popconfirm, Typography, Badge, Tabs
+  Card,
+  Table,
+  Button,
+  Space,
+  Tag,
+  Modal,
+  Form,
+  Select,
+  Input,
+  Tooltip,
+  message,
+  Popconfirm,
+  Typography,
+  Badge,
+  Tabs,
 } from 'antd';
 import {
-  PlusOutlined, DeleteOutlined, LinkOutlined,
-  NodeIndexOutlined, EyeOutlined
+  PlusOutlined,
+  DeleteOutlined,
+  LinkOutlined,
+  NodeIndexOutlined,
+  EyeOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -20,7 +36,7 @@ import {
   type CIRelationship,
   type CIRelationshipType,
   type RelationshipTypeInfo,
-  type CreateRelationshipRequest
+  type CreateRelationshipRequest,
 } from '@/lib/api/cmdb-relationship';
 
 const { Text, Title } = Typography;
@@ -61,7 +77,7 @@ interface CIRelationshipManagerProps {
 const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   ciId,
   ciName,
-  onRefresh
+  onRefresh,
 }) => {
   const [loading, setLoading] = useState(true);
   const [outgoingRelations, setOutgoingRelations] = useState<CIRelationship[]>([]);
@@ -72,7 +88,9 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   const [createType, setCreateType] = useState<'outgoing' | 'incoming'>('outgoing');
   const [form] = Form.useForm();
 
-  const [availableCIs, setAvailableCIs] = useState<{ id: number; name: string; type: string }[]>([]);
+  const [availableCIs, setAvailableCIs] = useState<{ id: number; name: string; type: string }[]>(
+    []
+  );
 
   // 加载关系类型
   useEffect(() => {
@@ -185,7 +203,9 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
       key: 'related_ci',
       render: (_: any, record: CIRelationship) => (
         <Space orientation="vertical" size={0}>
-          <Text strong>{createType === 'outgoing' ? record.target_ci_name : record.source_ci_name}</Text>
+          <Text strong>
+            {createType === 'outgoing' ? record.target_ci_name : record.source_ci_name}
+          </Text>
           <Text type="secondary" style={{ fontSize: 12 }}>
             {createType === 'outgoing' ? record.target_ci_type : record.source_ci_type}
           </Text>
@@ -306,10 +326,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
             >
               添加出向关系
             </Button>
-            <Button
-              icon={<PlusOutlined />}
-              onClick={() => handleOpenCreate('incoming')}
-            >
+            <Button icon={<PlusOutlined />} onClick={() => handleOpenCreate('incoming')}>
               添加入向关系
             </Button>
           </Space>
@@ -326,11 +343,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
         footer={null}
         width={500}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreate}
-        >
+        <Form form={form} layout="vertical" onFinish={handleCreate}>
           <Form.Item
             name="target_ci_id"
             label={createType === 'outgoing' ? '目标CI' : '源CI'}
@@ -374,11 +387,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           </Form.Item>
 
           <Space style={{ width: '100%' }} size="large">
-            <Form.Item
-              name="strength"
-              label="关系强度"
-              style={{ width: '50%' }}
-            >
+            <Form.Item name="strength" label="关系强度" style={{ width: '50%' }}>
               <Select placeholder="选择强度" defaultValue="medium">
                 <Option value="critical">关键</Option>
                 <Option value="high">高</Option>
@@ -387,11 +396,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
               </Select>
             </Form.Item>
 
-            <Form.Item
-              name="impact_level"
-              label="影响程度"
-              style={{ width: '50%' }}
-            >
+            <Form.Item name="impact_level" label="影响程度" style={{ width: '50%' }}>
               <Select placeholder="选择程度" defaultValue="medium">
                 <Option value="critical">致命</Option>
                 <Option value="high">高</Option>

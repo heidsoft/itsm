@@ -26,14 +26,14 @@ export const ResourceDistributionChart: React.FC = () => {
   ];
 
   return (
-    <ResponsiveContainer width='100%' height={300}>
+    <ResponsiveContainer width="100%" height={300}>
       <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray='3 3' vertical={false} />
-        <XAxis dataKey='name' />
+        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="name" />
         <YAxis />
         <Tooltip />
         <Legend />
-        <Bar dataKey='value' fill='#8884d8' radius={[4, 4, 0, 0]} />
+        <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -49,16 +49,16 @@ export const ResourceHealthPieChart: React.FC = () => {
   ];
 
   return (
-    <ResponsiveContainer width='100%' height={300}>
+    <ResponsiveContainer width="100%" height={300}>
       <PieChart margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         <Pie
           data={data}
-          cx='50%'
-          cy='50%'
+          cx="50%"
+          cy="50%"
           labelLine={false}
           outerRadius={100}
-          fill='#8884d8'
-          dataKey='value'
+          fill="#8884d8"
+          dataKey="value"
           label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
         >
           {data.map((entry, index) => (

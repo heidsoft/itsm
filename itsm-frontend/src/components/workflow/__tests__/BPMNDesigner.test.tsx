@@ -81,9 +81,7 @@ describe('BPMNDesigner', () => {
   });
 
   it('should accept custom height prop', () => {
-    const { container } = render(
-      <BPMNDesigner xml="" onSave={mockOnSave} height={800} />
-    );
+    const { container } = render(<BPMNDesigner xml="" onSave={mockOnSave} height={800} />);
 
     const designerElement = container.firstChild as HTMLElement;
     expect(designerElement).toHaveStyle({ height: '800px' });

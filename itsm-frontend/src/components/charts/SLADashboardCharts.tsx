@@ -1,18 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Card,
-  Row,
-  Col,
-  Select,
-  DatePicker,
-  Space,
-  Typography,
-  Spin,
-  App,
-  message,
-} from 'antd';
+import { Card, Row, Col, Select, DatePicker, Space, Typography, Spin, App } from 'antd';
 import {
   LineChart,
   Line,
@@ -86,7 +75,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
       const response = await SLAApi.getSLADefinitions({ page: 1, size: 100 });
       setSlaDefinitions(response.items);
     } catch (error) {
-      message.error('加载SLA定义失败');
+      console.error('加载SLA定义失败:', error);
     }
   };
 
@@ -113,6 +102,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
         setChartData([]);
       }
     } catch (error) {
+      console.error('加载图表数据失败:', error);
       message.error('加载图表数据失败');
     } finally {
       setLoading(false);
@@ -189,11 +179,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Select
-                value={selectedPeriod}
-                onChange={setSelectedPeriod}
-                style={{ width: 120 }}
-              >
+              <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 120 }}>
                 <Option value="7d">最近7天</Option>
                 <Option value="30d">最近30天</Option>
                 <Option value="90d">最近90天</Option>
@@ -213,7 +199,7 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
               </Select>
               <RangePicker
                 value={dateRange}
-                onChange={(dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => {
+                onChange={dates => {
                   if (dates && dates[0] && dates[1]) {
                     setDateRange([dates[0], dates[1]]);
                   }
@@ -367,7 +353,12 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
           <Col xs={24} sm={6}>
             <div className="text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {chartData.length > 0 ? (chartData.reduce((sum, d) => sum + d.avg_response_time, 0) / chartData.length).toFixed(2) : 0}h
+                {chartData.length > 0
+                  ? (
+                      chartData.reduce((sum, d) => sum + d.avg_response_time, 0) / chartData.length
+                    ).toFixed(2)
+                  : 0}
+                h
               </div>
               <div className="text-gray-600">平均响应时间</div>
             </div>
@@ -375,7 +366,13 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
           <Col xs={24} sm={6}>
             <div className="text-center">
               <div className="text-2xl font-bold text-orange-600">
-                {chartData.length > 0 ? (chartData.reduce((sum, d) => sum + d.avg_resolution_time, 0) / chartData.length).toFixed(2) : 0}h
+                {chartData.length > 0
+                  ? (
+                      chartData.reduce((sum, d) => sum + d.avg_resolution_time, 0) /
+                      chartData.length
+                    ).toFixed(2)
+                  : 0}
+                h
               </div>
               <div className="text-gray-600">平均解决时间</div>
             </div>

@@ -45,6 +45,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/processvariable"
+	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
@@ -1506,6 +1507,36 @@ func init() {
 	processvariable.DefaultUpdatedAt = processvariableDescUpdatedAt.Default.(func() time.Time)
 	// processvariable.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	processvariable.UpdateDefaultUpdatedAt = processvariableDescUpdatedAt.UpdateDefault.(func() time.Time)
+	processversionchangelogFields := schema.ProcessVersionChangelog{}.Fields()
+	_ = processversionchangelogFields
+	// processversionchangelogDescProcessDefinitionID is the schema descriptor for process_definition_id field.
+	processversionchangelogDescProcessDefinitionID := processversionchangelogFields[0].Descriptor()
+	// processversionchangelog.ProcessDefinitionIDValidator is a validator for the "process_definition_id" field. It is called by the builders before save.
+	processversionchangelog.ProcessDefinitionIDValidator = processversionchangelogDescProcessDefinitionID.Validators[0].(func(int) error)
+	// processversionchangelogDescVersion is the schema descriptor for version field.
+	processversionchangelogDescVersion := processversionchangelogFields[1].Descriptor()
+	// processversionchangelog.VersionValidator is a validator for the "version" field. It is called by the builders before save.
+	processversionchangelog.VersionValidator = processversionchangelogDescVersion.Validators[0].(func(string) error)
+	// processversionchangelogDescChangeLog is the schema descriptor for change_log field.
+	processversionchangelogDescChangeLog := processversionchangelogFields[2].Descriptor()
+	// processversionchangelog.ChangeLogValidator is a validator for the "change_log" field. It is called by the builders before save.
+	processversionchangelog.ChangeLogValidator = processversionchangelogDescChangeLog.Validators[0].(func(string) error)
+	// processversionchangelogDescChangeType is the schema descriptor for change_type field.
+	processversionchangelogDescChangeType := processversionchangelogFields[4].Descriptor()
+	// processversionchangelog.DefaultChangeType holds the default value on creation for the change_type field.
+	processversionchangelog.DefaultChangeType = processversionchangelogDescChangeType.Default.(string)
+	// processversionchangelogDescCreatedBy is the schema descriptor for created_by field.
+	processversionchangelogDescCreatedBy := processversionchangelogFields[5].Descriptor()
+	// processversionchangelog.CreatedByValidator is a validator for the "created_by" field. It is called by the builders before save.
+	processversionchangelog.CreatedByValidator = processversionchangelogDescCreatedBy.Validators[0].(func(int) error)
+	// processversionchangelogDescTenantID is the schema descriptor for tenant_id field.
+	processversionchangelogDescTenantID := processversionchangelogFields[7].Descriptor()
+	// processversionchangelog.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	processversionchangelog.TenantIDValidator = processversionchangelogDescTenantID.Validators[0].(func(int) error)
+	// processversionchangelogDescCreatedAt is the schema descriptor for created_at field.
+	processversionchangelogDescCreatedAt := processversionchangelogFields[8].Descriptor()
+	// processversionchangelog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	processversionchangelog.DefaultCreatedAt = processversionchangelogDescCreatedAt.Default.(func() time.Time)
 	projectFields := schema.Project{}.Fields()
 	_ = projectFields
 	// projectDescName is the schema descriptor for name field.

@@ -1,6 +1,6 @@
 /**
  * 智能分配机制 - 符合ITIL 4.0标准
- * 
+ *
  * 核心功能：
  * 1. 基于技能的智能分配
  * 2. 工作负载均衡
@@ -14,30 +14,30 @@ import { ApiResponse, PaginatedResponse } from '@/types/api';
 
 // 分配策略枚举
 export enum AssignmentStrategy {
-  SKILL_BASED = 'skill_based',           // 基于技能
+  SKILL_BASED = 'skill_based', // 基于技能
   WORKLOAD_BALANCED = 'workload_balanced', // 工作负载均衡
-  GEOGRAPHIC = 'geographic',             // 地理位置
-  ROUND_ROBIN = 'round_robin',           // 轮询分配
-  PRIORITY_BASED = 'priority_based',     // 基于优先级
+  GEOGRAPHIC = 'geographic', // 地理位置
+  ROUND_ROBIN = 'round_robin', // 轮询分配
+  PRIORITY_BASED = 'priority_based', // 基于优先级
   EXPERIENCE_BASED = 'experience_based', // 基于经验
 }
 
 // 分配状态枚举
 export enum AssignmentStatus {
-  PENDING = 'pending',       // 待分配
-  ASSIGNED = 'assigned',     // 已分配
-  ACCEPTED = 'accepted',     // 已接受
-  REJECTED = 'rejected',     // 已拒绝
+  PENDING = 'pending', // 待分配
+  ASSIGNED = 'assigned', // 已分配
+  ACCEPTED = 'accepted', // 已接受
+  REJECTED = 'rejected', // 已拒绝
   TRANSFERRED = 'transferred', // 已转移
-  ESCALATED = 'escalated',   // 已升级
+  ESCALATED = 'escalated', // 已升级
 }
 
 // 技能等级枚举
 export enum SkillLevel {
-  BEGINNER = 'beginner',     // 初级
+  BEGINNER = 'beginner', // 初级
   INTERMEDIATE = 'intermediate', // 中级
-  ADVANCED = 'advanced',     // 高级
-  EXPERT = 'expert',         // 专家
+  ADVANCED = 'advanced', // 高级
+  EXPERT = 'expert', // 专家
 }
 
 // 用户技能
@@ -225,7 +225,11 @@ export class SmartAssignmentService {
   }
 
   // 更新用户技能
-  async updateUserSkill(userId: number, skillId: number, data: Partial<UserSkill>): Promise<UserSkill> {
+  async updateUserSkill(
+    userId: number,
+    skillId: number,
+    data: Partial<UserSkill>
+  ): Promise<UserSkill> {
     const response = await fetch(`${this.baseUrl}/users/${userId}/skills/${skillId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -256,7 +260,9 @@ export class SmartAssignmentService {
     return response.json();
   }
 
-  async createAssignmentRule(data: Omit<AssignmentRule, 'id' | 'createdAt' | 'updatedAt'>): Promise<AssignmentRule> {
+  async createAssignmentRule(
+    data: Omit<AssignmentRule, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<AssignmentRule> {
     const response = await fetch(`${this.baseUrl}/rules`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -300,14 +306,15 @@ export class SmartAssignmentService {
   // 技能匹配算法
   calculateSkillMatch(requiredSkills: string[], userSkills: UserSkill[]): number {
     if (!requiredSkills || requiredSkills.length === 0) return 100;
-    
+
     let totalScore = 0;
     let matchedSkills = 0;
 
     for (const requiredSkill of requiredSkills) {
-      const userSkill = userSkills.find(skill => 
-        skill.skillName.toLowerCase().includes(requiredSkill.toLowerCase()) ||
-        skill.skillCategory.toLowerCase().includes(requiredSkill.toLowerCase())
+      const userSkill = userSkills.find(
+        skill =>
+          skill.skillName.toLowerCase().includes(requiredSkill.toLowerCase()) ||
+          skill.skillCategory.toLowerCase().includes(requiredSkill.toLowerCase())
       );
 
       if (userSkill) {
@@ -316,22 +323,29 @@ export class SmartAssignmentService {
         const levelScore = this.getSkillLevelScore(userSkill.level);
         const experienceScore = userSkill.experience / 100;
         const successRateScore = userSkill.successRate;
-        
-        totalScore += (levelScore * 0.4 + experienceScore * 0.3 + successRateScore * 0.3);
+
+        totalScore += levelScore * 0.4 + experienceScore * 0.3 + successRateScore * 0.3;
       }
     }
 
-    return matchedSkills > 0 ? (totalScore / matchedSkills) * (matchedSkills / requiredSkills.length) * 100 : 0;
+    return matchedSkills > 0
+      ? (totalScore / matchedSkills) * (matchedSkills / requiredSkills.length) * 100
+      : 0;
   }
 
   // 获取技能等级分数
   private getSkillLevelScore(level: SkillLevel): number {
     switch (level) {
-      case SkillLevel.BEGINNER: return 0.3;
-      case SkillLevel.INTERMEDIATE: return 0.6;
-      case SkillLevel.ADVANCED: return 0.8;
-      case SkillLevel.EXPERT: return 1.0;
-      default: return 0;
+      case SkillLevel.BEGINNER:
+        return 0.3;
+      case SkillLevel.INTERMEDIATE:
+        return 0.6;
+      case SkillLevel.ADVANCED:
+        return 0.8;
+      case SkillLevel.EXPERT:
+        return 1.0;
+      default:
+        return 0;
     }
   }
 
@@ -339,7 +353,7 @@ export class SmartAssignmentService {
   calculateWorkloadScore(userWorkload: UserWorkload): number {
     const utilizationScore = 1 - userWorkload.currentUtilization; // 利用率越低分数越高
     const capacityScore = userWorkload.availableCapacity / userWorkload.maxCapacity;
-    const performanceScore = 1 - (userWorkload.averageResolutionTime / 1440); // 假设最大解决时间为24小时
+    const performanceScore = 1 - userWorkload.averageResolutionTime / 1440; // 假设最大解决时间为24小时
 
     return (utilizationScore * 0.4 + capacityScore * 0.3 + performanceScore * 0.3) * 100;
   }
@@ -347,11 +361,11 @@ export class SmartAssignmentService {
   // 地理位置匹配算法
   calculateGeographicScore(userLocation: string, ticketLocation: string): number {
     if (!ticketLocation) return 100; // 如果没有位置要求，返回满分
-    
+
     // 简单的位置匹配逻辑，实际应用中可以使用更复杂的地理位置API
     if (userLocation === ticketLocation) return 100;
     if (userLocation.includes(ticketLocation) || ticketLocation.includes(userLocation)) return 80;
-    
+
     return 50; // 默认分数
   }
 
@@ -393,12 +407,18 @@ export class SmartAssignmentService {
     const baseTime = userWorkload.averageResolutionTime;
     const skillFactor = this.calculateSkillMatch([], userSkills) / 100;
     const workloadFactor = userWorkload.currentUtilization;
-    
+
     let complexityFactor = 1;
     switch (ticketComplexity) {
-      case 'low': complexityFactor = 0.7; break;
-      case 'medium': complexityFactor = 1.0; break;
-      case 'high': complexityFactor = 1.5; break;
+      case 'low':
+        complexityFactor = 0.7;
+        break;
+      case 'medium':
+        complexityFactor = 1.0;
+        break;
+      case 'high':
+        complexityFactor = 1.5;
+        break;
     }
 
     return Math.round(baseTime * complexityFactor * (1 + workloadFactor) * (1 - skillFactor * 0.3));
@@ -416,9 +436,15 @@ export class SmartAssignmentService {
 
     let complexityFactor = 1;
     switch (ticketComplexity) {
-      case 'low': complexityFactor = 1.2; break;
-      case 'medium': complexityFactor = 1.0; break;
-      case 'high': complexityFactor = 0.8; break;
+      case 'low':
+        complexityFactor = 1.2;
+        break;
+      case 'medium':
+        complexityFactor = 1.0;
+        break;
+      case 'high':
+        complexityFactor = 0.8;
+        break;
     }
 
     return Math.min(1, skillMatch * workloadFactor * performanceFactor * complexityFactor);

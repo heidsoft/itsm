@@ -54,8 +54,12 @@ export const useServiceCatalogData = () => {
     const matchesCategory = categoryFilter ? categoryLabel === categoryFilter : true;
     const matchesPriority = priorityFilter ? (catalog as any).priority === priorityFilter : true;
     const matchesCIType = ciTypeFilter ? catalog.ciTypeId === ciTypeFilter : true;
-    const matchesCloudService = cloudServiceFilter ? catalog.cloudServiceId === cloudServiceFilter : true;
-    return matchesSearch && matchesCategory && matchesPriority && matchesCIType && matchesCloudService;
+    const matchesCloudService = cloudServiceFilter
+      ? catalog.cloudServiceId === cloudServiceFilter
+      : true;
+    return (
+      matchesSearch && matchesCategory && matchesPriority && matchesCIType && matchesCloudService
+    );
   });
 
   return {

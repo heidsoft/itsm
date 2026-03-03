@@ -5,27 +5,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import type {
-  ServiceQuery,
-  ServiceRequestQuery,
-} from '@/types/service-catalog';
+import type { ServiceQuery, ServiceRequestQuery } from '@/types/service-catalog';
 
 export const SERVICE_CATALOG_KEYS = {
   all: ['service-catalog'] as const,
   services: () => [...SERVICE_CATALOG_KEYS.all, 'services'] as const,
   serviceList: (query?: ServiceQuery) =>
     [...SERVICE_CATALOG_KEYS.services(), 'list', query] as const,
-  serviceDetail: (id: string) =>
-    [...SERVICE_CATALOG_KEYS.services(), 'detail', id] as const,
-  serviceRatings: (id: string) =>
-    [...SERVICE_CATALOG_KEYS.services(), 'ratings', id] as const,
-  serviceAnalytics: (id: string) =>
-    [...SERVICE_CATALOG_KEYS.services(), 'analytics', id] as const,
+  serviceDetail: (id: string) => [...SERVICE_CATALOG_KEYS.services(), 'detail', id] as const,
+  serviceRatings: (id: string) => [...SERVICE_CATALOG_KEYS.services(), 'ratings', id] as const,
+  serviceAnalytics: (id: string) => [...SERVICE_CATALOG_KEYS.services(), 'analytics', id] as const,
   requests: () => [...SERVICE_CATALOG_KEYS.all, 'requests'] as const,
   requestList: (query?: ServiceRequestQuery) =>
     [...SERVICE_CATALOG_KEYS.requests(), 'list', query] as const,
-  requestDetail: (id: number) =>
-    [...SERVICE_CATALOG_KEYS.requests(), 'detail', id] as const,
+  requestDetail: (id: number) => [...SERVICE_CATALOG_KEYS.requests(), 'detail', id] as const,
   favorites: () => [...SERVICE_CATALOG_KEYS.all, 'favorites'] as const,
   portal: () => [...SERVICE_CATALOG_KEYS.all, 'portal'] as const,
   stats: () => [...SERVICE_CATALOG_KEYS.all, 'stats'] as const,
@@ -287,4 +280,3 @@ export default {
   useRemoveFavoriteMutation,
   useRateServiceMutation,
 };
-

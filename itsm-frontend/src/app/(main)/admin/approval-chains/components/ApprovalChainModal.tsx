@@ -139,38 +139,38 @@ export function ApprovalChainModal({
   // 渲染步骤配置
   const renderStepConfig = useCallback(() => {
     return (
-      <div className='space-y-4'>
-        <div className='flex justify-between items-center'>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
           <Title level={5}>审批步骤配置</Title>
-          <Button type='dashed' icon={<PlusOutlined />} onClick={handleAddStep}>
+          <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddStep}>
             添加步骤
           </Button>
         </div>
 
         {steps.map((step, index) => (
-          <Card key={index} size='small' className='relative'>
-            <div className='flex justify-between items-start mb-4'>
-              <div className='flex items-center gap-2'>
-                <span className='font-medium'>步骤 {index + 1}</span>
+          <Card key={index} size="small" className="relative">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">步骤 {index + 1}</span>
                 <Input
                   value={step.stepName}
                   onChange={e => handleUpdateStep(index, 'stepName', e.target.value)}
-                  placeholder='步骤名称'
+                  placeholder="步骤名称"
                   style={{ width: 200 }}
                 />
               </div>
               <Button
-                type='text'
+                type="text"
                 danger
                 icon={<MinusCircleOutlined />}
                 onClick={() => handleRemoveStep(index)}
-                size='small'
+                size="small"
               />
             </div>
 
             <Row gutter={16}>
               <Col span={8}>
-                <div className='mb-2'>
+                <div className="mb-2">
                   <Text strong>审批人类型</Text>
                 </div>
                 <Select
@@ -178,25 +178,25 @@ export function ApprovalChainModal({
                   onChange={value => handleUpdateStep(index, 'approverType', value)}
                   style={{ width: '100%' }}
                 >
-                  <Option value='user'>用户</Option>
-                  <Option value='role'>角色</Option>
-                  <Option value='group'>组</Option>
+                  <Option value="user">用户</Option>
+                  <Option value="role">角色</Option>
+                  <Option value="group">组</Option>
                 </Select>
               </Col>
 
               <Col span={8}>
-                <div className='mb-2'>
+                <div className="mb-2">
                   <Text strong>审批人</Text>
                 </div>
                 <Input
                   value={step.approverName}
                   onChange={e => handleUpdateStep(index, 'approverName', e.target.value)}
-                  placeholder='审批人名称'
+                  placeholder="审批人名称"
                 />
               </Col>
 
               <Col span={8}>
-                <div className='mb-2'>
+                <div className="mb-2">
                   <Text strong>超时时间(小时)</Text>
                 </div>
                 <InputNumber
@@ -209,19 +209,19 @@ export function ApprovalChainModal({
               </Col>
             </Row>
 
-            <div className='mt-4'>
+            <div className="mt-4">
               <Switch
                 checked={step.isRequired}
                 onChange={checked => handleUpdateStep(index, 'isRequired', checked)}
-                checkedChildren='必审'
-                unCheckedChildren='可选'
+                checkedChildren="必审"
+                unCheckedChildren="可选"
               />
             </div>
           </Card>
         ))}
 
         {steps.length === 0 && (
-          <div className='text-center py-8 text-gray-500'>
+          <div className="text-center py-8 text-gray-500">
             <Text>暂无审批步骤，请添加步骤</Text>
           </div>
         )}
@@ -251,42 +251,46 @@ export function ApprovalChainModal({
       width={800}
       destroyOnHidden
     >
-      <Steps current={currentStep} className='mb-6' items={stepItems.map((item, index) => ({
-        key: index,
-        title: item.title,
-        description: item.description,
-      }))} />
+      <Steps
+        current={currentStep}
+        className="mb-6"
+        items={stepItems.map((item, index) => ({
+          key: index,
+          title: item.title,
+          description: item.description,
+        }))}
+      />
 
       {currentStep === 0 && (
-        <Form form={form} layout='vertical' preserve={false}>
+        <Form form={form} layout="vertical" preserve={false}>
           <Form.Item
-            name='name'
-            label='审批链名称'
+            name="name"
+            label="审批链名称"
             rules={[
               { required: true, message: '请输入审批链名称' },
               { max: 100, message: '名称不能超过100个字符' },
             ]}
           >
-            <Input placeholder='请输入审批链名称' />
+            <Input placeholder="请输入审批链名称" />
           </Form.Item>
 
           <Form.Item
-            name='description'
-            label='描述'
+            name="description"
+            label="描述"
             rules={[{ max: 500, message: '描述不能超过500个字符' }]}
           >
-            <TextArea rows={3} placeholder='请输入审批链描述' />
+            <TextArea rows={3} placeholder="请输入审批链描述" />
           </Form.Item>
 
-          <Form.Item name='isActive' label='状态' valuePropName='checked' initialValue={true}>
-            <Switch checkedChildren='启用' unCheckedChildren='禁用' />
+          <Form.Item name="isActive" label="状态" valuePropName="checked" initialValue={true}>
+            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
         </Form>
       )}
 
       {currentStep === 1 && renderStepConfig()}
 
-      <div className='flex justify-between mt-6'>
+      <div className="flex justify-between mt-6">
         <Button onClick={onCancel}>取消</Button>
 
         <Space>
@@ -295,11 +299,11 @@ export function ApprovalChainModal({
           )}
 
           {currentStep < stepItems.length - 1 ? (
-            <Button type='primary' onClick={() => setCurrentStep(currentStep + 1)}>
+            <Button type="primary" onClick={() => setCurrentStep(currentStep + 1)}>
               下一步
             </Button>
           ) : (
-            <Button type='primary' onClick={handleSubmit} loading={loading}>
+            <Button type="primary" onClick={handleSubmit} loading={loading}>
               {editingChain ? '更新' : '创建'}
             </Button>
           )}

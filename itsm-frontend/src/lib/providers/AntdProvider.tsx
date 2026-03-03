@@ -13,9 +13,7 @@ export const AntdProvider: React.FC<AntdProviderProps> = ({ children }) => {
   return (
     <AntdRegistry>
       <ConfigProvider theme={antdTheme} locale={zhCN}>
-        <App>
-          {children}
-        </App>
+        <App>{children}</App>
       </ConfigProvider>
     </AntdRegistry>
   );

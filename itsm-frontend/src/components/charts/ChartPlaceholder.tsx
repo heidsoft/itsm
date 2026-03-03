@@ -47,7 +47,7 @@ export const ChartPlaceholder: React.FC<ChartPlaceholderProps> = ({
   };
 
   return (
-    <div 
+    <div
       className={`flex items-center justify-center bg-gray-50 rounded border ${className}`}
       style={{ height: `${height}px` }}
     >
@@ -55,12 +55,8 @@ export const ChartPlaceholder: React.FC<ChartPlaceholderProps> = ({
         {getIcon()}
         <div className="text-lg font-medium mb-1">{title}</div>
         <div className="text-sm mb-2">{getTypeText()}</div>
-        {description && (
-          <div className="text-xs text-gray-400">{description}</div>
-        )}
-        <div className="text-xs text-gray-400 mt-2">
-          图表组件暂未实现，显示占位符
-        </div>
+        {description && <div className="text-xs text-gray-400">{description}</div>}
+        <div className="text-xs text-gray-400 mt-2">图表组件暂未实现，显示占位符</div>
       </div>
     </div>
   );

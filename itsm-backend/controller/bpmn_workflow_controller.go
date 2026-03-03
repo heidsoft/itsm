@@ -72,6 +72,10 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.PUT("/versions/:key/:version/activate", c.ActivateVersion)
 		bpmn.PUT("/versions/:key/:version/rollback", c.RollbackVersion)
 		bpmn.GET("/versions/:key/compare", c.CompareVersions)
+
+		// 版本变更日志
+		bpmn.GET("/process-definitions/:key/changelogs", c.GetVersionChangeLogs)
+		bpmn.GET("/process-definitions/:id/changelogs", c.GetVersionChangeLogsByID)
 	}
 }
 

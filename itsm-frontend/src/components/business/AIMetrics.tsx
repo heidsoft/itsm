@@ -76,12 +76,12 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
   if (loading) {
     return (
       <div className={`p-4 bg-white rounded-lg shadow ${className}`}>
-        <div className='animate-pulse'>
-          <div className='h-4 bg-gray-200 rounded w-1/3 mb-4'></div>
-          <div className='space-y-3'>
-            <div className='h-3 bg-gray-200 rounded'></div>
-            <div className='h-3 bg-gray-200 rounded w-5/6'></div>
-            <div className='h-3 bg-gray-200 rounded w-4/6'></div>
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
+          <div className="space-y-3">
+            <div className="h-3 bg-gray-200 rounded"></div>
+            <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+            <div className="h-3 bg-gray-200 rounded w-4/6"></div>
           </div>
         </div>
       </div>
@@ -91,10 +91,10 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
   if (error) {
     return (
       <div className={`p-4 bg-red-50 border border-red-200 rounded-lg ${className}`}>
-        <div className='text-red-600 text-sm'>{error}</div>
+        <div className="text-red-600 text-sm">{error}</div>
         <button
           onClick={loadMetrics}
-          className='mt-2 text-xs text-red-700 hover:text-red-800 underline'
+          className="mt-2 text-xs text-red-700 hover:text-red-800 underline"
         >
           重试
         </button>
@@ -109,71 +109,71 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
   return (
     <div className={`bg-white rounded-lg shadow ${className}`}>
       {/* Header */}
-      <div className='p-4 border-b border-gray-200'>
-        <div className='flex items-center justify-between'>
-          <h3 className='text-lg font-semibold text-gray-800 flex items-center'>
-            <BarChart3 className='w-5 h-5 mr-2 text-blue-600' />
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center">
+            <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
             AI 使用指标
           </h3>
-          <span className='text-sm text-gray-500'>最近 {days} 天</span>
+          <span className="text-sm text-gray-500">最近 {days} 天</span>
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className='p-4'>
-        <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mb-6'>
+      <div className="p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {/* Total Requests */}
-          <div className='text-center p-3 bg-blue-50 rounded-lg'>
-            <div className='text-2xl font-bold text-blue-600'>{metrics.total_requests}</div>
-            <div className='text-sm text-gray-600 flex items-center justify-center'>
-              <TrendingUp className='w-4 h-4 mr-1' />
+          <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="text-2xl font-bold text-blue-600">{metrics.total_requests}</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 mr-1" />
               总请求数
             </div>
           </div>
 
           {/* Total Feedback */}
-          <div className='text-center p-3 bg-green-50 rounded-lg'>
-            <div className='text-2xl font-bold text-green-600'>{metrics.total_feedback}</div>
-            <div className='text-sm text-gray-600 flex items-center justify-center'>
-              <MessageSquare className='w-4 h-4 mr-1' />
+          <div className="text-center p-3 bg-green-50 rounded-lg">
+            <div className="text-2xl font-bold text-green-600">{metrics.total_feedback}</div>
+            <div className="text-sm text-gray-600 flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 mr-1" />
               反馈总数
             </div>
           </div>
 
           {/* Useful Rate */}
-          <div className='text-center p-3 bg-yellow-50 rounded-lg'>
-            <div className='text-2xl font-bold text-yellow-600'>
+          <div className="text-center p-3 bg-yellow-50 rounded-lg">
+            <div className="text-2xl font-bold text-yellow-600">
               {Math.round(metrics.useful_rate * 100)}%
             </div>
-            <div className='text-sm text-gray-600 flex items-center justify-center'>
-              <Star className='w-4 h-4 mr-1' />
+            <div className="text-sm text-gray-600 flex items-center justify-center">
+              <Star className="w-4 h-4 mr-1" />
               有用率
             </div>
           </div>
 
           {/* Avg Response Time */}
-          <div className='text-center p-3 bg-purple-50 rounded-lg'>
-            <div className='text-2xl font-bold text-purple-600'>
+          <div className="text-center p-3 bg-purple-50 rounded-lg">
+            <div className="text-2xl font-bold text-purple-600">
               {formatResponseTime(metrics.avg_response_time_seconds)}
             </div>
-            <div className='text-sm text-gray-600 flex items-center justify-center'>
-              <Clock className='w-4 h-4 mr-1' />
+            <div className="text-sm text-gray-600 flex items-center justify-center">
+              <Clock className="w-4 h-4 mr-1" />
               平均响应
             </div>
           </div>
         </div>
 
         {/* Feedback Details */}
-        <div className='mb-6'>
-          <h4 className='text-md font-semibold text-gray-700 mb-3'>反馈详情</h4>
-          <div className='bg-gray-50 rounded-lg p-3'>
-            <div className='flex items-center justify-between text-sm'>
-              <span className='text-gray-600'>有用反馈</span>
-              <span className='font-semibold text-green-600'>{metrics.useful_feedback}</span>
+        <div className="mb-6">
+          <h4 className="text-md font-semibold text-gray-700 mb-3">反馈详情</h4>
+          <div className="bg-gray-50 rounded-lg p-3">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">有用反馈</span>
+              <span className="font-semibold text-green-600">{metrics.useful_feedback}</span>
             </div>
-            <div className='flex items-center justify-between text-sm mt-1'>
-              <span className='text-gray-600'>无用反馈</span>
-              <span className='font-semibold text-red-600'>
+            <div className="flex items-center justify-between text-sm mt-1">
+              <span className="text-gray-600">无用反馈</span>
+              <span className="font-semibold text-red-600">
                 {metrics.total_feedback - metrics.useful_feedback}
               </span>
             </div>
@@ -183,15 +183,15 @@ const AIMetricsComponent: React.FC<AIMetricsProps> = ({ className = '', days = 7
         {/* Usage by Kind */}
         {sortedKindData.length > 0 && (
           <div>
-            <h4 className='text-md font-semibold text-gray-700 mb-3'>按功能分类</h4>
-            <div className='space-y-2'>
+            <h4 className="text-md font-semibold text-gray-700 mb-3">按功能分类</h4>
+            <div className="space-y-2">
               {sortedKindData.map(([kind, count]) => (
                 <div
                   key={kind}
-                  className='flex items-center justify-between p-2 bg-gray-50 rounded'
+                  className="flex items-center justify-between p-2 bg-gray-50 rounded"
                 >
-                  <span className='text-sm text-gray-600'>{getKindLabel(kind)}</span>
-                  <span className='text-sm font-semibold text-gray-800'>{count}</span>
+                  <span className="text-sm text-gray-600">{getKindLabel(kind)}</span>
+                  <span className="text-sm font-semibold text-gray-800">{count}</span>
                 </div>
               ))}
             </div>

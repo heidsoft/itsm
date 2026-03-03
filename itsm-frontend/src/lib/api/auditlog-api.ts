@@ -28,7 +28,7 @@ export interface ListAuditLogsParams {
   path?: string;
   request_id?: string;
   from?: string; // RFC3339
-  to?: string;   // RFC3339
+  to?: string; // RFC3339
 }
 
 // 响应结构（对应后端 ListAuditLogsResponse）

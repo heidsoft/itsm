@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { Card, List, Avatar, Typography } from 'antd';
@@ -16,7 +16,7 @@ interface ActivityListCardProps {
 
 export const ActivityListCard: React.FC<ActivityListCardProps> = ({
   activities,
-  title = "最近活动",
+  title = '最近活动',
   maxItems = 10,
   className = '',
 }) => {
@@ -34,14 +34,11 @@ export const ActivityListCard: React.FC<ActivityListCardProps> = ({
     >
       <List
         dataSource={displayActivities}
-        renderItem={(item) => (
+        renderItem={item => (
           <List.Item className="hover:bg-gray-50 transition-colors duration-200 rounded-lg px-3 py-2">
             <List.Item.Meta
               avatar={
-                <Avatar
-                  size="small"
-                  className="shadow-sm"
-                >
+                <Avatar size="small" className="shadow-sm">
                   {item.user?.charAt(0) || 'U'}
                 </Avatar>
               }

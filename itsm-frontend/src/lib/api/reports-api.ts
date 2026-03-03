@@ -22,9 +22,7 @@ export class ReportsApi {
   /**
    * 获取报表列表
    */
-  static async getReports(
-    query?: ReportQuery
-  ): Promise<{
+  static async getReports(query?: ReportQuery): Promise<{
     reports: ReportDefinition[];
     total: number;
   }> {
@@ -41,19 +39,14 @@ export class ReportsApi {
   /**
    * 创建报表
    */
-  static async createReport(
-    request: CreateReportRequest
-  ): Promise<ReportDefinition> {
+  static async createReport(request: CreateReportRequest): Promise<ReportDefinition> {
     return httpClient.post('/api/v1/reports', request);
   }
 
   /**
    * 更新报表
    */
-  static async updateReport(
-    id: string,
-    request: UpdateReportRequest
-  ): Promise<ReportDefinition> {
+  static async updateReport(id: string, request: UpdateReportRequest): Promise<ReportDefinition> {
     return httpClient.put(`/api/v1/reports/${id}`, request);
   }
 
@@ -67,10 +60,7 @@ export class ReportsApi {
   /**
    * 复制报表
    */
-  static async cloneReport(
-    id: string,
-    name: string
-  ): Promise<ReportDefinition> {
+  static async cloneReport(id: string, name: string): Promise<ReportDefinition> {
     return httpClient.post(`/api/v1/reports/${id}/clone`, { name });
   }
 
@@ -89,9 +79,7 @@ export class ReportsApi {
   /**
    * 执行报表
    */
-  static async executeReport(
-    request: ExecuteReportRequest
-  ): Promise<ReportExecutionResult> {
+  static async executeReport(request: ExecuteReportRequest): Promise<ReportExecutionResult> {
     return httpClient.post('/api/v1/reports/execute', request);
   }
 
@@ -116,9 +104,7 @@ export class ReportsApi {
   /**
    * 获取执行结果
    */
-  static async getExecutionResult(
-    executionId: string
-  ): Promise<ReportExecutionResult> {
+  static async getExecutionResult(executionId: string): Promise<ReportExecutionResult> {
     return httpClient.get(`/api/v1/reports/executions/${executionId}`);
   }
 
@@ -241,14 +227,8 @@ export class ReportsApi {
   /**
    * 从模板创建报表
    */
-  static async createFromTemplate(
-    templateId: string,
-    name: string
-  ): Promise<ReportDefinition> {
-    return httpClient.post(
-      `/api/v1/reports/templates/${templateId}/create`,
-      { name }
-    );
+  static async createFromTemplate(templateId: string, name: string): Promise<ReportDefinition> {
+    return httpClient.post(`/api/v1/reports/templates/${templateId}/create`, { name });
   }
 
   /**
@@ -382,10 +362,7 @@ export class ReportsApi {
   /**
    * 取消分享
    */
-  static async unshareReport(
-    reportId: string,
-    userId: number
-  ): Promise<void> {
+  static async unshareReport(reportId: string, userId: number): Promise<void> {
     return httpClient.delete(`/api/v1/reports/${reportId}/share/${userId}`);
   }
 
@@ -406,4 +383,3 @@ export class ReportsApi {
 
 export default ReportsApi;
 export const ReportsAPI = ReportsApi;
-

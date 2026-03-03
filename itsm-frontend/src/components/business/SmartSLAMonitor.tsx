@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Progress,
@@ -15,8 +15,7 @@ import {
   Statistic,
   Row,
   Col,
-  message,
-} from "antd";
+} from 'antd';
 import {
   Clock,
   AlertTriangle,
@@ -27,7 +26,7 @@ import {
   Settings,
   Eye,
   Zap,
-} from "lucide-react";
+} from 'lucide-react';
 
 const { Title, Text } = Typography;
 
@@ -48,14 +47,14 @@ interface SLATicket {
   priority: string;
   slaDeadline: string;
   timeRemaining: number;
-  status: "on_time" | "at_risk" | "breached";
+  status: 'on_time' | 'at_risk' | 'breached';
   assignee: string;
   category: string;
 }
 
 interface SLAAlert {
   id: string;
-  type: "warning" | "critical" | "info";
+  type: 'warning' | 'critical' | 'info';
   message: string;
   ticketId: number;
   timeRemaining: number;
@@ -91,58 +90,58 @@ export const SmartSLAMonitor: React.FC = () => {
       const mockAtRisk: SLATicket[] = [
         {
           id: 1,
-          ticketNumber: "T-2024-001",
-          title: "数据库连接超时",
-          priority: "high",
-          slaDeadline: "2024-01-15 18:00:00",
+          ticketNumber: 'T-2024-001',
+          title: '数据库连接超时',
+          priority: 'high',
+          slaDeadline: '2024-01-15 18:00:00',
           timeRemaining: 2.5,
-          status: "at_risk",
-          assignee: "张三",
-          category: "数据库",
+          status: 'at_risk',
+          assignee: '张三',
+          category: '数据库',
         },
         {
           id: 2,
-          ticketNumber: "T-2024-002",
-          title: "网络设备故障",
-          priority: "urgent",
-          slaDeadline: "2024-01-15 16:00:00",
+          ticketNumber: 'T-2024-002',
+          title: '网络设备故障',
+          priority: 'urgent',
+          slaDeadline: '2024-01-15 16:00:00',
           timeRemaining: 1.2,
-          status: "at_risk",
-          assignee: "李四",
-          category: "网络",
+          status: 'at_risk',
+          assignee: '李四',
+          category: '网络',
         },
       ];
 
       const mockBreached: SLATicket[] = [
         {
           id: 3,
-          ticketNumber: "T-2024-003",
-          title: "系统登录异常",
-          priority: "medium",
-          slaDeadline: "2024-01-15 14:00:00",
+          ticketNumber: 'T-2024-003',
+          title: '系统登录异常',
+          priority: 'medium',
+          slaDeadline: '2024-01-15 14:00:00',
           timeRemaining: -2.1,
-          status: "breached",
-          assignee: "王五",
-          category: "系统",
+          status: 'breached',
+          assignee: '王五',
+          category: '系统',
         },
       ];
 
       const mockAlerts: SLAAlert[] = [
         {
-          id: "1",
-          type: "critical",
-          message: "工单T-2024-002即将超时，剩余时间1.2小时",
+          id: '1',
+          type: 'critical',
+          message: '工单T-2024-002即将超时，剩余时间1.2小时',
           ticketId: 2,
           timeRemaining: 1.2,
-          priority: "urgent",
+          priority: 'urgent',
         },
         {
-          id: "2",
-          type: "warning",
-          message: "工单T-2024-001需要关注，剩余时间2.5小时",
+          id: '2',
+          type: 'warning',
+          message: '工单T-2024-001需要关注，剩余时间2.5小时',
           ticketId: 1,
           timeRemaining: 2.5,
-          priority: "high",
+          priority: 'high',
         },
       ];
 
@@ -151,7 +150,7 @@ export const SmartSLAMonitor: React.FC = () => {
       setBreachedTickets(mockBreached);
       setAlerts(mockAlerts);
     } catch (error) {
-      message.error("加载SLA数据失败");
+      console.error('加载SLA数据失败:', error);
     } finally {
       setLoading(false);
     }
@@ -159,39 +158,39 @@ export const SmartSLAMonitor: React.FC = () => {
 
   const getStatusColor = (status: string): string => {
     switch (status) {
-      case "on_time":
-        return "green";
-      case "at_risk":
-        return "orange";
-      case "breached":
-        return "red";
+      case 'on_time':
+        return 'green';
+      case 'at_risk':
+        return 'orange';
+      case 'breached':
+        return 'red';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getPriorityColor = (priority: string): string => {
     switch (priority) {
-      case "urgent":
-        return "red";
-      case "high":
-        return "orange";
-      case "medium":
-        return "blue";
-      case "low":
-        return "green";
+      case 'urgent':
+        return 'red';
+      case 'high':
+        return 'orange';
+      case 'medium':
+        return 'blue';
+      case 'low':
+        return 'green';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getAlertIcon = (type: string) => {
     switch (type) {
-      case "critical":
+      case 'critical':
         return <AlertTriangle className="text-red-500" />;
-      case "warning":
+      case 'warning':
         return <AlertTriangle className="text-orange-500" />;
-      case "info":
+      case 'info':
         return <Bell className="text-blue-500" />;
       default:
         return <Bell />;
@@ -241,17 +240,13 @@ export const SmartSLAMonitor: React.FC = () => {
       >
         <Row gutter={16}>
           <Col span={6}>
-            <Statistic
-              title="总工单数"
-              value={slaMetrics?.totalTickets}
-              prefix={<Eye />}
-            />
+            <Statistic title="总工单数" value={slaMetrics?.totalTickets} prefix={<Eye />} />
           </Col>
           <Col span={6}>
             <Statistic
               title="按时完成"
               value={slaMetrics?.onTime}
-              styles={{ content: { color: "#3f8600" } }}
+              styles={{ content: { color: '#3f8600' } }}
               prefix={<CheckCircle />}
             />
           </Col>
@@ -259,7 +254,7 @@ export const SmartSLAMonitor: React.FC = () => {
             <Statistic
               title="有风险"
               value={slaMetrics?.atRisk}
-              styles={{ content: { color: "#faad14" } }}
+              styles={{ content: { color: '#faad14' } }}
               prefix={<AlertTriangle />}
             />
           </Col>
@@ -267,7 +262,7 @@ export const SmartSLAMonitor: React.FC = () => {
             <Statistic
               title="已超时"
               value={slaMetrics?.breached}
-              styles={{ content: { color: "#cf1322" } }}
+              styles={{ content: { color: '#cf1322' } }}
               prefix={<AlertTriangle />}
             />
           </Col>
@@ -280,14 +275,10 @@ export const SmartSLAMonitor: React.FC = () => {
           </div>
           <Progress
             percent={slaMetrics?.slaCompliance || 0}
-            status={
-              slaMetrics && slaMetrics.slaCompliance < 90
-                ? "exception"
-                : "success"
-            }
+            status={slaMetrics && slaMetrics.slaCompliance < 90 ? 'exception' : 'success'}
             strokeColor={{
-              "0%": "#108ee9",
-              "100%": "#87d068",
+              '0%': '#108ee9',
+              '100%': '#87d068',
             }}
           />
         </div>
@@ -322,7 +313,7 @@ export const SmartSLAMonitor: React.FC = () => {
           }
         >
           <div className="space-y-3">
-            {alerts.map((alert) => (
+            {alerts.map(alert => (
               <Alert
                 key={alert.id}
                 title={
@@ -332,18 +323,16 @@ export const SmartSLAMonitor: React.FC = () => {
                       <Tag color={getPriorityColor(alert.priority)}>
                         {alert.priority.toUpperCase()}
                       </Tag>
-                      <Text type="secondary">
-                        剩余: {formatTimeRemaining(alert.timeRemaining)}
-                      </Text>
+                      <Text type="secondary">剩余: {formatTimeRemaining(alert.timeRemaining)}</Text>
                     </Space>
                   </div>
                 }
                 type={
-                  alert.type === "critical"
-                    ? "error"
-                    : alert.type === "warning"
-                    ? "warning"
-                    : "info"
+                  alert.type === 'critical'
+                    ? 'error'
+                    : alert.type === 'warning'
+                      ? 'warning'
+                      : 'info'
                 }
                 icon={getAlertIcon(alert.type)}
                 action={
@@ -370,11 +359,8 @@ export const SmartSLAMonitor: React.FC = () => {
           }
         >
           <div className="space-y-3">
-            {atRiskTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="p-3 border border-orange-200 rounded bg-orange-50"
-              >
+            {atRiskTickets.map(ticket => (
+              <div key={ticket.id} className="p-3 border border-orange-200 rounded bg-orange-50">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center mb-2">
@@ -426,11 +412,8 @@ export const SmartSLAMonitor: React.FC = () => {
           }
         >
           <div className="space-y-3">
-            {breachedTickets.map((ticket) => (
-              <div
-                key={ticket.id}
-                className="p-3 border border-red-200 rounded bg-red-50"
-              >
+            {breachedTickets.map(ticket => (
+              <div key={ticket.id} className="p-3 border border-red-200 rounded bg-red-50">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <div className="flex items-center mb-2">

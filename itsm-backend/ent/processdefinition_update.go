@@ -11,6 +11,7 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processversionchangelog"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -279,6 +280,21 @@ func (pdu *ProcessDefinitionUpdate) AddBindings(p ...*ProcessBinding) *ProcessDe
 	return pdu.AddBindingIDs(ids...)
 }
 
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (pdu *ProcessDefinitionUpdate) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdate {
+	pdu.mutation.AddVersionChangelogIDs(ids...)
+	return pdu
+}
+
+// AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (pdu *ProcessDefinitionUpdate) AddVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdu.AddVersionChangelogIDs(ids...)
+}
+
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
 func (pdu *ProcessDefinitionUpdate) SetDeployment(p *ProcessDeployment) *ProcessDefinitionUpdate {
 	return pdu.SetDeploymentID(p.ID)
@@ -329,6 +345,27 @@ func (pdu *ProcessDefinitionUpdate) RemoveBindings(p ...*ProcessBinding) *Proces
 		ids[i] = p[i].ID
 	}
 	return pdu.RemoveBindingIDs(ids...)
+}
+
+// ClearVersionChangelogs clears all "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (pdu *ProcessDefinitionUpdate) ClearVersionChangelogs() *ProcessDefinitionUpdate {
+	pdu.mutation.ClearVersionChangelogs()
+	return pdu
+}
+
+// RemoveVersionChangelogIDs removes the "version_changelogs" edge to ProcessVersionChangelog entities by IDs.
+func (pdu *ProcessDefinitionUpdate) RemoveVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdate {
+	pdu.mutation.RemoveVersionChangelogIDs(ids...)
+	return pdu
+}
+
+// RemoveVersionChangelogs removes "version_changelogs" edges to ProcessVersionChangelog entities.
+func (pdu *ProcessDefinitionUpdate) RemoveVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdu.RemoveVersionChangelogIDs(ids...)
 }
 
 // ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
@@ -555,6 +592,51 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if pdu.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.VersionChangelogsTable,
+			Columns: []string{processdefinition.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pdu.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !pdu.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.VersionChangelogsTable,
+			Columns: []string{processdefinition.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pdu.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.VersionChangelogsTable,
+			Columns: []string{processdefinition.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -858,6 +940,21 @@ func (pduo *ProcessDefinitionUpdateOne) AddBindings(p ...*ProcessBinding) *Proce
 	return pduo.AddBindingIDs(ids...)
 }
 
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (pduo *ProcessDefinitionUpdateOne) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	pduo.mutation.AddVersionChangelogIDs(ids...)
+	return pduo
+}
+
+// AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (pduo *ProcessDefinitionUpdateOne) AddVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pduo.AddVersionChangelogIDs(ids...)
+}
+
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
 func (pduo *ProcessDefinitionUpdateOne) SetDeployment(p *ProcessDeployment) *ProcessDefinitionUpdateOne {
 	return pduo.SetDeploymentID(p.ID)
@@ -908,6 +1005,27 @@ func (pduo *ProcessDefinitionUpdateOne) RemoveBindings(p ...*ProcessBinding) *Pr
 		ids[i] = p[i].ID
 	}
 	return pduo.RemoveBindingIDs(ids...)
+}
+
+// ClearVersionChangelogs clears all "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (pduo *ProcessDefinitionUpdateOne) ClearVersionChangelogs() *ProcessDefinitionUpdateOne {
+	pduo.mutation.ClearVersionChangelogs()
+	return pduo
+}
+
+// RemoveVersionChangelogIDs removes the "version_changelogs" edge to ProcessVersionChangelog entities by IDs.
+func (pduo *ProcessDefinitionUpdateOne) RemoveVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	pduo.mutation.RemoveVersionChangelogIDs(ids...)
+	return pduo
+}
+
+// RemoveVersionChangelogs removes "version_changelogs" edges to ProcessVersionChangelog entities.
+func (pduo *ProcessDefinitionUpdateOne) RemoveVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pduo.RemoveVersionChangelogIDs(ids...)
 }
 
 // ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
@@ -1164,6 +1282,51 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if pduo.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.VersionChangelogsTable,
+			Columns: []string{processdefinition.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pduo.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !pduo.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.VersionChangelogsTable,
+			Columns: []string{processdefinition.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := pduo.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.VersionChangelogsTable,
+			Columns: []string{processdefinition.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

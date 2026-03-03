@@ -4,16 +4,15 @@ import React from 'react';
 import { Modal, Typography, List, Tag, Space, Divider } from 'antd';
 import { ExclamationCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { Ticket } from '@/lib/services/ticket-service';
-import { useI18n } from '@/lib/i18n';
 
 const { Text, Paragraph } = Typography;
 
-export type BatchOperationType = 
-  | 'delete' 
-  | 'assign' 
-  | 'updateStatus' 
-  | 'updatePriority' 
-  | 'export' 
+export type BatchOperationType =
+  | 'delete'
+  | 'assign'
+  | 'updateStatus'
+  | 'updatePriority'
+  | 'export'
   | 'archive';
 
 export interface BatchOperationConfirmProps {
@@ -47,18 +46,20 @@ const OPERATION_CONFIG: Record<
     icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
     description: '此操作将永久删除选中的工单，且无法恢复',
     danger: true,
-    getContent: (props) => (
+    getContent: props => (
       <div>
         <Paragraph>
           您即将删除 <Text strong>{props.selectedCount}</Text> 个工单，此操作不可撤销。
         </Paragraph>
         {props.selectedTickets && props.selectedTickets.length > 0 && (
           <div>
-            <Text type="secondary" className="text-sm">待删除的工单：</Text>
+            <Text type="secondary" className="text-sm">
+              待删除的工单：
+            </Text>
             <List
               size="small"
               dataSource={props.selectedTickets.slice(0, 10)}
-              renderItem={(ticket) => (
+              renderItem={ticket => (
                 <List.Item>
                   <Space>
                     <Text strong>#{ticket.id}</Text>
@@ -83,7 +84,7 @@ const OPERATION_CONFIG: Record<
     title: '确认批量分配',
     icon: <CheckCircleOutlined style={{ color: '#1890ff' }} />,
     description: '将选中的工单分配给指定处理人',
-    getContent: (props) => (
+    getContent: props => (
       <div>
         <Paragraph>
           您即将将 <Text strong>{props.selectedCount}</Text> 个工单分配给：
@@ -93,11 +94,13 @@ const OPERATION_CONFIG: Record<
         </Paragraph>
         {props.selectedTickets && props.selectedTickets.length > 0 && (
           <div>
-            <Text type="secondary" className="text-sm">待分配的工单：</Text>
+            <Text type="secondary" className="text-sm">
+              待分配的工单：
+            </Text>
             <List
               size="small"
               dataSource={props.selectedTickets.slice(0, 10)}
-              renderItem={(ticket) => (
+              renderItem={ticket => (
                 <List.Item>
                   <Space>
                     <Text strong>#{ticket.id}</Text>
@@ -122,7 +125,7 @@ const OPERATION_CONFIG: Record<
     title: '确认批量更新状态',
     icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
     description: '批量更新选中工单的状态',
-    getContent: (props) => (
+    getContent: props => (
       <div>
         <Paragraph>
           您即将将 <Text strong>{props.selectedCount}</Text> 个工单的状态更新为：
@@ -132,11 +135,13 @@ const OPERATION_CONFIG: Record<
         </Paragraph>
         {props.selectedTickets && props.selectedTickets.length > 0 && (
           <div>
-            <Text type="secondary" className="text-sm">待更新的工单：</Text>
+            <Text type="secondary" className="text-sm">
+              待更新的工单：
+            </Text>
             <List
               size="small"
               dataSource={props.selectedTickets.slice(0, 10)}
-              renderItem={(ticket) => (
+              renderItem={ticket => (
                 <List.Item>
                   <Space>
                     <Text strong>#{ticket.id}</Text>
@@ -161,7 +166,7 @@ const OPERATION_CONFIG: Record<
     title: '确认批量更新优先级',
     icon: <CheckCircleOutlined style={{ color: '#faad14' }} />,
     description: '批量更新选中工单的优先级',
-    getContent: (props) => (
+    getContent: props => (
       <div>
         <Paragraph>
           您即将将 <Text strong>{props.selectedCount}</Text> 个工单的优先级更新为：
@@ -171,11 +176,13 @@ const OPERATION_CONFIG: Record<
         </Paragraph>
         {props.selectedTickets && props.selectedTickets.length > 0 && (
           <div>
-            <Text type="secondary" className="text-sm">待更新的工单：</Text>
+            <Text type="secondary" className="text-sm">
+              待更新的工单：
+            </Text>
             <List
               size="small"
               dataSource={props.selectedTickets.slice(0, 10)}
-              renderItem={(ticket) => (
+              renderItem={ticket => (
                 <List.Item>
                   <Space>
                     <Text strong>#{ticket.id}</Text>
@@ -200,7 +207,7 @@ const OPERATION_CONFIG: Record<
     title: '确认导出',
     icon: <CheckCircleOutlined style={{ color: '#1890ff' }} />,
     description: '导出选中的工单数据',
-    getContent: (props) => (
+    getContent: props => (
       <div>
         <Paragraph>
           您即将导出 <Text strong>{props.selectedCount}</Text> 个工单的数据。
@@ -215,7 +222,7 @@ const OPERATION_CONFIG: Record<
     title: '确认批量归档',
     icon: <CheckCircleOutlined style={{ color: '#722ed1' }} />,
     description: '将选中的工单归档',
-    getContent: (props) => (
+    getContent: props => (
       <div>
         <Paragraph>
           您即将归档 <Text strong>{props.selectedCount}</Text> 个工单。
@@ -238,7 +245,6 @@ export const BatchOperationConfirm: React.FC<BatchOperationConfirmProps> = ({
   onCancel,
   loading = false,
 }) => {
-  const { t } = useI18n();
   const config = OPERATION_CONFIG[operationType];
 
   if (!config) {
@@ -257,8 +263,8 @@ export const BatchOperationConfirm: React.FC<BatchOperationConfirmProps> = ({
       onOk={onConfirm}
       onCancel={onCancel}
       confirmLoading={loading}
-      okText={t('common.confirm')}
-      cancelText={t('common.cancel')}
+      okText="确认"
+      cancelText="取消"
       okButtonProps={{
         danger: config.danger,
         type: config.danger ? 'primary' : 'default',
@@ -283,4 +289,3 @@ export const BatchOperationConfirm: React.FC<BatchOperationConfirmProps> = ({
     </Modal>
   );
 };
-

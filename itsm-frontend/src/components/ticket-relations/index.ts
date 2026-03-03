@@ -5,4 +5,3 @@
 export { RelationPanel } from './RelationPanel';
 
 export type { RelationPanelProps } from './RelationPanel';
-

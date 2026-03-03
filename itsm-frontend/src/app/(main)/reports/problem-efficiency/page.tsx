@@ -15,12 +15,7 @@ import {
   List,
   Space,
 } from 'antd';
-import {
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  XCircle,
-} from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { ReloadOutlined } from '@ant-design/icons';
 import {
   BarChart,
@@ -35,7 +30,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { problemService, ProblemStatsResponse, Problem, ProblemStatus, ProblemPriority } from '@/lib/services/problem-service';
+import {
+  problemService,
+  ProblemStatsResponse,
+  Problem,
+  ProblemStatus,
+  ProblemPriority,
+} from '@/lib/services/problem-service';
 
 const { Title, Text } = Typography;
 
@@ -197,7 +198,10 @@ const ProblemEfficiencyPage = () => {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800">{`${payload[0].name}`}</p>
-          <p className="text-sm" style={{ color: payload[0].color }}>{`数量: ${payload[0].value}`}</p>
+          <p
+            className="text-sm"
+            style={{ color: payload[0].color }}
+          >{`数量: ${payload[0].value}`}</p>
         </div>
       );
     }
@@ -279,7 +283,10 @@ const ProblemEfficiencyPage = () => {
             <Col xs={24} lg={8}>
               <Card title="解决率">
                 <div className="text-center py-4">
-                  <div className="text-4xl font-bold mb-2" style={{ color: resolutionRate >= 70 ? '#52c41a' : '#faad14' }}>
+                  <div
+                    className="text-4xl font-bold mb-2"
+                    style={{ color: resolutionRate >= 70 ? '#52c41a' : '#faad14' }}
+                  >
                     {resolutionRate.toFixed(1)}%
                   </div>
                   <Progress
@@ -299,11 +306,7 @@ const ProblemEfficiencyPage = () => {
                   <div className="text-4xl font-bold mb-2" style={{ color: '#1890ff' }}>
                     {inProgressRate.toFixed(1)}%
                   </div>
-                  <Progress
-                    percent={inProgressRate}
-                    strokeColor="#1890ff"
-                    showInfo={false}
-                  />
+                  <Progress percent={inProgressRate} strokeColor="#1890ff" showInfo={false} />
                   <Text type="secondary" className="mt-2 block">
                     处理中 {stats?.in_progress || 0} / 总数 {stats?.total || 0}
                   </Text>
@@ -379,7 +382,7 @@ const ProblemEfficiencyPage = () => {
             <Card title="最新问题列表" className="mb-6">
               <List
                 dataSource={problems}
-                renderItem={(problem) => (
+                renderItem={problem => (
                   <List.Item>
                     <div className="w-full">
                       <div className="flex items-center justify-between mb-2">

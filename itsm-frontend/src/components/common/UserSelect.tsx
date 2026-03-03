@@ -97,9 +97,7 @@ export const UserSelect: React.FC<UserSelectProps> = ({
             </Avatar>
             <div className="flex flex-col">
               <span className="text-sm font-medium">{user.name || user.username}</span>
-              {user.email && (
-                <span className="text-xs text-gray-500">{user.email}</span>
-              )}
+              {user.email && <span className="text-xs text-gray-500">{user.email}</span>}
             </div>
           </div>
         </Option>
@@ -107,4 +105,3 @@ export const UserSelect: React.FC<UserSelectProps> = ({
     </Select>
   );
 };
-

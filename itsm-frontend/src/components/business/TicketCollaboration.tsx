@@ -14,12 +14,7 @@ import {
   App,
   Tooltip,
 } from 'antd';
-import {
-  SendOutlined,
-  UserOutlined,
-  EyeOutlined,
-  MessageOutlined,
-} from '@ant-design/icons';
+import { SendOutlined, UserOutlined, EyeOutlined, MessageOutlined } from '@ant-design/icons';
 import { Ticket } from '@/lib/services/ticket-service';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
@@ -85,7 +80,7 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
   const handleInputChange = useCallback(
     (value: string) => {
       setNewMessage(value);
-      
+
       if (!isTyping && value.length > 0) {
         setIsTyping(true);
         onTyping?.(true);
@@ -139,15 +134,15 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
   };
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* 在线协作者 */}
       {onlineUsers.length > 0 && (
-        <Card size='small' title='在线协作者'>
+        <Card size="small" title="在线协作者">
           <Space wrap>
             {onlineUsers.map(user => (
               <Tooltip key={user.id} title={user.name}>
-                <Badge dot status='success' offset={[-2, 2]}>
-                  <Avatar size='small' src={user.avatar} icon={<UserOutlined />}>
+                <Badge dot status="success" offset={[-2, 2]}>
+                  <Avatar size="small" src={user.avatar} icon={<UserOutlined />}>
                     {user.name?.[0]}
                   </Avatar>
                 </Badge>
@@ -160,42 +155,40 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
       {/* 协作消息列表 */}
       <Card
         title={
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <MessageOutlined />
             <span>实时协作</span>
-            {messages.length > 0 && (
-              <Badge count={messages.length} showZero className='ml-2' />
-            )}
+            {messages.length > 0 && <Badge count={messages.length} showZero className="ml-2" />}
           </div>
         }
-        className='flex-1'
+        className="flex-1"
         bodyStyle={{ maxHeight: '500px', overflowY: 'auto' }}
       >
         {messages.length > 0 ? (
           <List
             dataSource={messages}
             renderItem={message => (
-              <List.Item className='!px-0 !py-2 border-b border-gray-100 last:border-0'>
-                <div className='flex items-start gap-3 w-full'>
-                  <Avatar size='small' src={message.user_avatar} icon={<UserOutlined />}>
+              <List.Item className="!px-0 !py-2 border-b border-gray-100 last:border-0">
+                <div className="flex items-start gap-3 w-full">
+                  <Avatar size="small" src={message.user_avatar} icon={<UserOutlined />}>
                     {message.user_name?.[0]}
                   </Avatar>
-                  <div className='flex-1'>
-                    <div className='flex items-center gap-2 mb-1'>
-                      <Text strong className='text-sm'>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Text strong className="text-sm">
                         {message.user_name}
                       </Text>
-                      <Text type='secondary' className='text-xs'>
+                      <Text type="secondary" className="text-xs">
                         {getMessageIcon(message.type)}
                       </Text>
-                      <Text type='secondary' className='text-xs'>
+                      <Text type="secondary" className="text-xs">
                         {formatDistanceToNow(new Date(message.created_at), {
                           addSuffix: true,
                           locale: zhCN,
                         })}
                       </Text>
                     </div>
-                    <div className='text-sm text-gray-700 whitespace-pre-wrap'>
+                    <div className="text-sm text-gray-700 whitespace-pre-wrap">
                       {message.content}
                     </div>
                   </div>
@@ -204,8 +197,8 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
             )}
           />
         ) : (
-          <div className='text-center py-8 text-gray-500'>
-            <MessageOutlined className='text-4xl mb-2 text-gray-300' />
+          <div className="text-center py-8 text-gray-500">
+            <MessageOutlined className="text-4xl mb-2 text-gray-300" />
             <div>暂无协作消息</div>
           </div>
         )}
@@ -214,8 +207,8 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
 
       {/* 消息输入框 */}
       {canCollaborate && (
-        <Card size='small'>
-          <Space orientation='vertical' className='w-full' size='small'>
+        <Card size="small">
+          <Space orientation="vertical" className="w-full" size="small">
             <TextArea
               value={newMessage}
               onChange={e => handleInputChange(e.target.value)}
@@ -226,17 +219,17 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
                 e.preventDefault();
                 handleSendMessage();
               }}
-              placeholder='输入协作消息...（Enter发送，Shift+Enter换行）'
+              placeholder="输入协作消息...（Enter发送，Shift+Enter换行）"
               rows={3}
               maxLength={500}
               showCount
             />
-            <div className='flex items-center justify-between'>
-              <Text type='secondary' className='text-xs'>
+            <div className="flex items-center justify-between">
+              <Text type="secondary" className="text-xs">
                 {isTyping && '正在输入...'}
               </Text>
               <Button
-                type='primary'
+                type="primary"
                 icon={<SendOutlined />}
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim()}
@@ -250,4 +243,3 @@ export const TicketCollaboration: React.FC<TicketCollaborationProps> = ({
     </div>
   );
 };
-

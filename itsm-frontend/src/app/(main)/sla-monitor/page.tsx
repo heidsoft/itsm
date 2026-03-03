@@ -13,12 +13,9 @@ const SLAMonitorPage = () => {
         <Title level={2}>SLA实时监控大屏</Title>
         <p className="text-gray-600">实时监控SLA执行情况和关键指标</p>
       </div>
-      
+
       <Card>
-        <SLAMonitorDashboard 
-          autoRefresh={true} 
-          refreshInterval={30}
-        />
+        <SLAMonitorDashboard autoRefresh={true} refreshInterval={30} />
       </Card>
     </div>
   );

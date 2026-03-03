@@ -51,7 +51,7 @@ export class ErrorMessageHandler {
    */
   static formatNetworkError(error: unknown): ErrorInfo {
     const errorInfo = this.formatApiError(error);
-    
+
     if (errorInfo.message.includes('fetch') || errorInfo.message.includes('network')) {
       return {
         ...errorInfo,
@@ -76,7 +76,7 @@ export class ErrorMessageHandler {
    */
   static formatValidationError(error: unknown): ErrorInfo {
     const errorInfo = this.formatApiError(error);
-    
+
     return {
       ...errorInfo,
       message: errorInfo.message || '数据验证失败，请检查输入',
@@ -120,7 +120,7 @@ export class ErrorMessageHandler {
  */
 export function getFriendlyErrorMessage(error: unknown, context?: string): string {
   const errorInfo = ErrorMessageHandler.formatApiError(error);
-  
+
   // 根据上下文提供更具体的错误消息
   if (context) {
     const contextMessages: Record<string, string> = {
@@ -140,4 +140,3 @@ export function getFriendlyErrorMessage(error: unknown, context?: string): strin
 
   return errorInfo.message;
 }
-

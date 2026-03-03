@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Space,
@@ -17,8 +17,7 @@ import {
   Badge,
   Table,
   Tag,
-  message,
-} from "antd";
+} from 'antd';
 import {
   TrendingUp,
   TrendingDown,
@@ -32,7 +31,7 @@ import {
   Zap,
   Target,
   PieChart,
-} from "lucide-react";
+} from 'lucide-react';
 // 暂时移除图表依赖，使用简单的进度条和统计展示
 
 const { Title, Text } = Typography;
@@ -43,7 +42,7 @@ interface PredictiveMetrics {
   ticketVolume: {
     current: number;
     predicted: number;
-    trend: "up" | "down" | "stable";
+    trend: 'up' | 'down' | 'stable';
     confidence: number;
   };
   resourceDemand: {
@@ -53,7 +52,7 @@ interface PredictiveMetrics {
     recommendation: string;
   };
   slaBreachRisk: {
-    riskLevel: "low" | "medium" | "high";
+    riskLevel: 'low' | 'medium' | 'high';
     probability: number;
     affectedTickets: number;
     mitigation: string;
@@ -84,7 +83,7 @@ export const PredictiveAnalytics: React.FC = () => {
   const [metrics, setMetrics] = useState<PredictiveMetrics | null>(null);
   const [trendData, setTrendData] = useState<TrendData[]>([]);
   const [resourceData, setResourceData] = useState<ResourceData[]>([]);
-  const [timeRange, setTimeRange] = useState<[string, string]>(["7d", "30d"]);
+  const [timeRange, setTimeRange] = useState<[string, string]>(['7d', '30d']);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -105,7 +104,7 @@ export const PredictiveAnalytics: React.FC = () => {
 
       const dateRange: [string, string] = [
         startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
+        endDate.toISOString().split('T')[0],
       ];
 
       // 并行请求数据
@@ -113,12 +112,12 @@ export const PredictiveAnalytics: React.FC = () => {
         TicketPredictionApi.getTrendPrediction({
           time_range: dateRange,
           prediction_period: rangeDays <= 30 ? 'week' : 'month',
-          model_type: 'arima'
+          model_type: 'arima',
         }),
         SLAApi.getSLAMonitoring({
           start_time: dateRange[0],
-          end_time: dateRange[1]
-        })
+          end_time: dateRange[1],
+        }),
       ]);
 
       // 转换预测数据
@@ -134,13 +133,19 @@ export const PredictiveAnalytics: React.FC = () => {
           current: 0,
           predicted: 0,
           shortage: 0,
-          recommendation: "暂无资源建议",
+          recommendation: '暂无资源建议',
         },
         slaBreachRisk: {
-          riskLevel: slaMonitoring.violation_rate > 20 ? 'high' : slaMonitoring.violation_rate > 10 ? 'medium' : 'low',
+          riskLevel:
+            slaMonitoring.violation_rate > 20
+              ? 'high'
+              : slaMonitoring.violation_rate > 10
+                ? 'medium'
+                : 'low',
           probability: slaMonitoring.violation_rate || 0,
           affectedTickets: slaMonitoring.at_risk_tickets || 0,
-          mitigation: slaMonitoring.at_risk_tickets > 0 ? "建议优先处理即将违约的工单" : "当前SLA风险较低",
+          mitigation:
+            slaMonitoring.at_risk_tickets > 0 ? '建议优先处理即将违约的工单' : '当前SLA风险较低',
         },
         seasonalPatterns: {
           peakPeriods: [], // API暂不支持
@@ -153,16 +158,16 @@ export const PredictiveAnalytics: React.FC = () => {
         date: d.date,
         actual: d.actual || 0,
         predicted: d.predicted,
-        confidence: d.confidence || 0.85
+        confidence: d.confidence || 0.85,
       }));
 
       // 暂时清空资源数据，直到有真实API
-      setResourceData([]); 
+      setResourceData([]);
 
       setMetrics(mappedMetrics);
       setTrendData(mappedTrendData);
     } catch (error) {
-      message.error("加载预测数据失败");
+      console.error('加载预测数据失败:', error);
       // 出错时不显示Mock数据，保持空状态或显示错误
       setMetrics(null);
       setTrendData([]);
@@ -173,9 +178,9 @@ export const PredictiveAnalytics: React.FC = () => {
 
   const getTrendIcon = (trend: string) => {
     switch (trend) {
-      case "up":
+      case 'up':
         return <TrendingUp className="text-red-500" />;
-      case "down":
+      case 'down':
         return <TrendingDown className="text-green-500" />;
       default:
         return <Activity className="text-blue-500" />;
@@ -184,22 +189,22 @@ export const PredictiveAnalytics: React.FC = () => {
 
   const getRiskColor = (level: string): string => {
     switch (level) {
-      case "high":
-        return "red";
-      case "medium":
-        return "orange";
-      case "low":
-        return "green";
+      case 'high':
+        return 'red';
+      case 'medium':
+        return 'orange';
+      case 'low':
+        return 'green';
       default:
-        return "default";
+        return 'default';
     }
   };
 
   const getUtilizationColor = (utilization: number): string => {
-    if (utilization >= 90) return "red";
-    if (utilization >= 80) return "orange";
-    if (utilization >= 70) return "blue";
-    return "green";
+    if (utilization >= 90) return 'red';
+    if (utilization >= 80) return 'orange';
+    if (utilization >= 70) return 'blue';
+    return 'green';
   };
 
   // 图表配置已移除，使用占位符UI
@@ -233,7 +238,7 @@ export const PredictiveAnalytics: React.FC = () => {
           <Space>
             <Select
               value={timeRange[0]}
-              onChange={(value) => setTimeRange([value, timeRange[1]])}
+              onChange={value => setTimeRange([value, timeRange[1]])}
               style={{ width: 100 }}
             >
               <Option value="7d">7天</Option>
@@ -251,13 +256,11 @@ export const PredictiveAnalytics: React.FC = () => {
             <Statistic
               title="工单量预测"
               value={metrics?.ticketVolume.predicted}
-              prefix={getTrendIcon(metrics?.ticketVolume.trend || "stable")}
+              prefix={getTrendIcon(metrics?.ticketVolume.trend || 'stable')}
               suffix={
                 <div className="text-xs">
                   <div>置信度: {metrics?.ticketVolume.confidence}%</div>
-                  <div className="text-gray-500">
-                    当前: {metrics?.ticketVolume.current}
-                  </div>
+                  <div className="text-gray-500">当前: {metrics?.ticketVolume.current}</div>
                 </div>
               }
             />
@@ -281,7 +284,7 @@ export const PredictiveAnalytics: React.FC = () => {
               value={`${metrics?.slaBreachRisk.probability}%`}
               prefix={<AlertTriangle />}
               style={{
-                color: getRiskColor(metrics?.slaBreachRisk.riskLevel || "low"),
+                color: getRiskColor(metrics?.slaBreachRisk.riskLevel || 'low'),
               }}
               suffix={
                 <div className="text-xs">
@@ -318,8 +321,8 @@ export const PredictiveAnalytics: React.FC = () => {
       >
         <div className="mb-4">
           <Text type="secondary">
-            基于历史数据和AI算法预测未来工单量趋势，置信度:{" "}
-            {Math.min(...trendData.map((d) => d.confidence)) * 100}%
+            基于历史数据和AI算法预测未来工单量趋势，置信度:{' '}
+            {Math.min(...trendData.map(d => d.confidence)) * 100}%
           </Text>
         </div>
         <div className="h-64 flex items-center justify-center bg-gray-50 rounded border">
@@ -361,10 +364,7 @@ export const PredictiveAnalytics: React.FC = () => {
           <Text strong>详细资源分析</Text>
           <div className="mt-2 space-y-2">
             {resourceData.map((item, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-2 border rounded"
-              >
+              <div key={index} className="flex items-center justify-between p-2 border rounded">
                 <div className="flex-1">
                   <Text strong>{item.role}</Text>
                   <div className="text-sm text-gray-500">
@@ -381,7 +381,7 @@ export const PredictiveAnalytics: React.FC = () => {
                     <Progress
                       percent={item.utilization}
                       size="small"
-                      status={item.utilization >= 90 ? "exception" : "normal"}
+                      status={item.utilization >= 90 ? 'exception' : 'normal'}
                       strokeColor={getUtilizationColor(item.utilization)}
                     />
                   </div>
@@ -466,9 +466,7 @@ export const PredictiveAnalytics: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <Text strong>风险等级: </Text>
-              <Tag
-                color={getRiskColor(metrics?.slaBreachRisk.riskLevel || "low")}
-              >
+              <Tag color={getRiskColor(metrics?.slaBreachRisk.riskLevel || 'low')}>
                 {metrics?.slaBreachRisk.riskLevel?.toUpperCase()}
               </Tag>
             </div>
@@ -484,8 +482,8 @@ export const PredictiveAnalytics: React.FC = () => {
             percent={metrics?.slaBreachRisk.probability || 0}
             status="exception"
             strokeColor={{
-              "0%": "#ff4d4f",
-              "100%": "#ff7875",
+              '0%': '#ff4d4f',
+              '100%': '#ff7875',
             }}
           />
 

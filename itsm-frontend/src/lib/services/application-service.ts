@@ -54,7 +54,10 @@ class ApplicationService {
     return httpClient.post<Microservice>(`${this.baseUrl}/microservices`, data);
   }
 
-  async updateApplication(id: number, data: Partial<CreateApplicationRequest>): Promise<Application> {
+  async updateApplication(
+    id: number,
+    data: Partial<CreateApplicationRequest>
+  ): Promise<Application> {
     return httpClient.put<Application>(`${this.baseUrl}/${id}`, data);
   }
 
@@ -66,7 +69,10 @@ class ApplicationService {
     return httpClient.get<Microservice[]>(`${this.baseUrl}/microservices`);
   }
 
-  async updateMicroservice(id: number, data: Partial<CreateMicroserviceRequest>): Promise<Microservice> {
+  async updateMicroservice(
+    id: number,
+    data: Partial<CreateMicroserviceRequest>
+  ): Promise<Microservice> {
     return httpClient.put<Microservice>(`${this.baseUrl}/microservices/${id}`, data);
   }
 
@@ -76,4 +82,3 @@ class ApplicationService {
 }
 
 export const applicationService = new ApplicationService();
-

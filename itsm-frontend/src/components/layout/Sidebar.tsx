@@ -241,7 +241,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
         label: (
           <div className={styles.menuItemLabel} title={item.description || item.label}>
             <span className="truncate">{item.label}</span>
-            {item.badge && <Badge count={item.badge} size='small' className={styles.menuItemBadge} />}
+            {item.badge && (
+              <Badge count={item.badge} size="small" className={styles.menuItemBadge} />
+            )}
           </div>
         ),
         onClick: () => handleMenuClick({ key: item.key }),
@@ -279,11 +281,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       {/* 主菜单 */}
       <div className={styles.mainMenu} style={{ flex: 1, overflowY: 'auto' }}>
         <Menu
-          mode='inline'
+          mode="inline"
           selectedKeys={[pathname]}
           className={styles.customMenu}
           items={renderMenuItems(MENU_CONFIG.main)}
-          theme='light'
+          theme="light"
         />
       </div>
 
@@ -293,11 +295,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           {!collapsed && <div className={styles.adminMenuHeader}>管理功能</div>}
           <div className={styles.adminMenu}>
             <Menu
-              mode='inline'
+              mode="inline"
               selectedKeys={[pathname]}
               className={styles.customMenu}
               items={renderMenuItems(MENU_CONFIG.admin)}
-              theme='light'
+              theme="light"
             />
           </div>
         </div>
@@ -307,9 +309,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       {!collapsed && (
         <div className={styles.userInfoContainer}>
           <div className={styles.userInfo}>
-            <div className={styles.userAvatar}>
-              {user?.name?.[0] || user?.username?.[0] || 'U'}
-            </div>
+            <div className={styles.userAvatar}>{user?.name?.[0] || user?.username?.[0] || 'U'}</div>
             <div className={styles.userDetails}>
               <div className={styles.userName}>{user?.name || user?.username}</div>
               <div className={styles.userRole}>{user?.role || 'user'}</div>

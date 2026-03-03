@@ -3,7 +3,14 @@
  */
 
 export type TicketPriority = 'low' | 'medium' | 'high' | 'urgent' | 'critical';
-export type TicketStatus = 'new' | 'open' | 'in_progress' | 'pending' | 'resolved' | 'closed' | 'cancelled';
+export type TicketStatus =
+  | 'new'
+  | 'open'
+  | 'in_progress'
+  | 'pending'
+  | 'resolved'
+  | 'closed'
+  | 'cancelled';
 export type TicketSource = 'web' | 'email' | 'phone' | 'chat' | 'api' | 'mobile';
 export type TicketType = 'incident' | 'request' | 'problem' | 'change' | 'task';
 
@@ -69,40 +76,40 @@ export interface Ticket {
   category?: TicketCategory;
   requester: TicketUser;
   assignee?: TicketUser;
-  
+
   // 时间相关
   createdAt: string;
   updatedAt: string;
   dueDate?: string;
   resolvedAt?: string;
   closedAt?: string;
-  
+
   // SLA相关
   sla?: TicketSLA;
   slaStatus?: 'on_track' | 'at_risk' | 'breached';
   responseDeadline?: string;
   resolutionDeadline?: string;
-  
+
   // 解决方案
   resolution?: string;
   resolutionCategory?: string;
-  
+
   // 满意度
   satisfactionRating?: number;
   satisfactionComment?: string;
-  
+
   // 升级相关
   escalationLevel?: number;
   escalationReason?: string;
-  
+
   // 关联数据
   comments?: TicketComment[];
   attachments?: TicketAttachment[];
   relatedTickets?: number[];
-  
+
   // 自定义字段
   customFields?: Record<string, unknown>;
-  
+
   // 元数据
   tenantId: number;
   isMajorIncident: boolean;
@@ -155,7 +162,15 @@ export interface TicketFilters {
 }
 
 export interface TicketSortOptions {
-  field: 'id' | 'ticketNumber' | 'title' | 'priority' | 'status' | 'createdAt' | 'updatedAt' | 'dueDate';
+  field:
+    | 'id'
+    | 'ticketNumber'
+    | 'title'
+    | 'priority'
+    | 'status'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'dueDate';
   order: 'asc' | 'desc';
 }
 
@@ -182,7 +197,15 @@ export interface TicketStats {
 export interface TicketActivity {
   id: number;
   ticketId: number;
-  type: 'created' | 'updated' | 'assigned' | 'status_changed' | 'commented' | 'escalated' | 'resolved' | 'closed';
+  type:
+    | 'created'
+    | 'updated'
+    | 'assigned'
+    | 'status_changed'
+    | 'commented'
+    | 'escalated'
+    | 'resolved'
+    | 'closed';
   description: string;
   actor: TicketUser;
   timestamp: string;

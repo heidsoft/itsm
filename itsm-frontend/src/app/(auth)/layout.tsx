@@ -16,11 +16,10 @@ export default function AuthLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className='auth-layout'>
+    <div className="auth-layout">
       {/* 认证页面不需要额外的布局结构 */}
       {/* 每个认证页面自己控制全屏布局和样式 */}
       {children}
     </div>
   );
 }
-

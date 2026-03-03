@@ -124,7 +124,9 @@ const ReleaseDetail: React.FC = () => {
           >
             返回列表
           </Button>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+          >
             <div>
               <Title level={3} style={{ marginBottom: 8 }}>
                 {release.title}
@@ -137,24 +139,44 @@ const ReleaseDetail: React.FC = () => {
           </div>
         </div>
 
-        <Steps current={currentStep} style={{ marginBottom: 32 }} items={[
-          { title: '草稿', icon: <ClockCircleOutlined /> },
-          { title: '已计划', icon: <ClockCircleOutlined /> },
-          { title: '进行中', icon: <RocketOutlined /> },
-          { title: '已完成', icon: <CheckCircleOutlined /> },
-        ]} />
+        <Steps
+          current={currentStep}
+          style={{ marginBottom: 32 }}
+          items={[
+            { title: '草稿', icon: <ClockCircleOutlined /> },
+            { title: '已计划', icon: <ClockCircleOutlined /> },
+            { title: '进行中', icon: <RocketOutlined /> },
+            { title: '已完成', icon: <CheckCircleOutlined /> },
+          ]}
+        />
 
         <Descriptions bordered column={2}>
           <Descriptions.Item label="发布类型">
             <Tag color={typeColors[release.type]}>{release.type?.toUpperCase()}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="目标环境">
-            <Tag color={release.environment === 'production' ? 'red' : release.environment === 'staging' ? 'orange' : 'default'}>
+            <Tag
+              color={
+                release.environment === 'production'
+                  ? 'red'
+                  : release.environment === 'staging'
+                    ? 'orange'
+                    : 'default'
+              }
+            >
               {release.environment?.toUpperCase()}
             </Tag>
           </Descriptions.Item>
           <Descriptions.Item label="严重程度">
-            <Tag color={release.severity === 'critical' ? 'red' : release.severity === 'high' ? 'orange' : 'default'}>
+            <Tag
+              color={
+                release.severity === 'critical'
+                  ? 'red'
+                  : release.severity === 'high'
+                    ? 'orange'
+                    : 'default'
+              }
+            >
               {release.severity}
             </Tag>
           </Descriptions.Item>
@@ -164,20 +186,26 @@ const ReleaseDetail: React.FC = () => {
           <Descriptions.Item label="需要审批">
             {release.requires_approval ? <Tag color="blue">是</Tag> : <Tag>否</Tag>}
           </Descriptions.Item>
-          <Descriptions.Item label="负责人">
-            {release.owner_name || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="负责人">{release.owner_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="计划发布日期">
-            {release.planned_release_date ? dayjs(release.planned_release_date).format('YYYY-MM-DD HH:mm') : '-'}
+            {release.planned_release_date
+              ? dayjs(release.planned_release_date).format('YYYY-MM-DD HH:mm')
+              : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="实际发布日期">
-            {release.actual_release_date ? dayjs(release.actual_release_date).format('YYYY-MM-DD HH:mm') : '-'}
+            {release.actual_release_date
+              ? dayjs(release.actual_release_date).format('YYYY-MM-DD HH:mm')
+              : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="计划开始时间">
-            {release.planned_start_date ? dayjs(release.planned_start_date).format('YYYY-MM-DD HH:mm') : '-'}
+            {release.planned_start_date
+              ? dayjs(release.planned_start_date).format('YYYY-MM-DD HH:mm')
+              : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="计划结束时间">
-            {release.planned_end_date ? dayjs(release.planned_end_date).format('YYYY-MM-DD HH:mm') : '-'}
+            {release.planned_end_date
+              ? dayjs(release.planned_end_date).format('YYYY-MM-DD HH:mm')
+              : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="创建人">{release.created_by_name}</Descriptions.Item>
           <Descriptions.Item label="创建时间">
@@ -248,10 +276,7 @@ const ReleaseDetail: React.FC = () => {
 
       <Card>
         <Space>
-          <Button
-            type="primary"
-            onClick={() => router.push(`/releases/${release.id}`)}
-          >
+          <Button type="primary" onClick={() => router.push(`/releases/${release.id}`)}>
             编辑
           </Button>
           {release.status === 'draft' && (

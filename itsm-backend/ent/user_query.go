@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
@@ -35,6 +36,7 @@ type UserQuery struct {
 	withTicketNotifications     *TicketNotificationQuery
 	withNotificationPreferences *NotificationPreferenceQuery
 	withRoles                   *RoleQuery
+	withVersionChangelogs       *ProcessVersionChangelogQuery
 	withFKs                     bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -197,6 +199,28 @@ func (uq *UserQuery) QueryRoles() *RoleQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(role.Table, role.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, user.RolesTable, user.RolesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryVersionChangelogs chains the current query on the "version_changelogs" edge.
+func (uq *UserQuery) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
+	query := (&ProcessVersionChangelogClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(processversionchangelog.Table, processversionchangelog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.VersionChangelogsTable, user.VersionChangelogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -402,6 +426,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		withTicketNotifications:     uq.withTicketNotifications.Clone(),
 		withNotificationPreferences: uq.withNotificationPreferences.Clone(),
 		withRoles:                   uq.withRoles.Clone(),
+		withVersionChangelogs:       uq.withVersionChangelogs.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
 		path: uq.path,
@@ -471,6 +496,17 @@ func (uq *UserQuery) WithRoles(opts ...func(*RoleQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withRoles = query
+	return uq
+}
+
+// WithVersionChangelogs tells the query-builder to eager-load the nodes that are connected to
+// the "version_changelogs" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithVersionChangelogs(opts ...func(*ProcessVersionChangelogQuery)) *UserQuery {
+	query := (&ProcessVersionChangelogClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withVersionChangelogs = query
 	return uq
 }
 
@@ -553,13 +589,14 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		nodes       = []*User{}
 		withFKs     = uq.withFKs
 		_spec       = uq.querySpec()
-		loadedTypes = [6]bool{
+		loadedTypes = [7]bool{
 			uq.withDepartmentRef != nil,
 			uq.withTicketComments != nil,
 			uq.withTicketAttachments != nil,
 			uq.withTicketNotifications != nil,
 			uq.withNotificationPreferences != nil,
 			uq.withRoles != nil,
+			uq.withVersionChangelogs != nil,
 		}
 	)
 	if withFKs {
@@ -625,6 +662,15 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadRoles(ctx, query, nodes,
 			func(n *User) { n.Edges.Roles = []*Role{} },
 			func(n *User, e *Role) { n.Edges.Roles = append(n.Edges.Roles, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withVersionChangelogs; query != nil {
+		if err := uq.loadVersionChangelogs(ctx, query, nodes,
+			func(n *User) { n.Edges.VersionChangelogs = []*ProcessVersionChangelog{} },
+			func(n *User, e *ProcessVersionChangelog) {
+				n.Edges.VersionChangelogs = append(n.Edges.VersionChangelogs, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -838,6 +884,36 @@ func (uq *UserQuery) loadRoles(ctx context.Context, query *RoleQuery, nodes []*U
 		for kn := range nodes {
 			assign(kn, n)
 		}
+	}
+	return nil
+}
+func (uq *UserQuery) loadVersionChangelogs(ctx context.Context, query *ProcessVersionChangelogQuery, nodes []*User, init func(*User), assign func(*User, *ProcessVersionChangelog)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(processversionchangelog.FieldCreatedBy)
+	}
+	query.Where(predicate.ProcessVersionChangelog(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.VersionChangelogsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.CreatedBy
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "created_by" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

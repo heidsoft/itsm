@@ -19,7 +19,7 @@ export const colors = {
     900: '#1e3a8a',
     950: '#172554',
   },
-  
+
   // 中性色
   neutral: {
     50: '#f8fafc',
@@ -34,7 +34,7 @@ export const colors = {
     900: '#0f172a',
     950: '#020617',
   },
-  
+
   // 语义色
   semantic: {
     success: {
@@ -86,7 +86,7 @@ export const colors = {
       900: '#0c4a6e',
     },
   },
-  
+
   // 功能色
   functional: {
     background: {
@@ -133,7 +133,7 @@ export const darkColors = {
     900: '#dbeafe',
     950: '#eff6ff',
   },
-  
+
   // 中性色（暗色主题）
   neutral: {
     50: '#020617',
@@ -148,7 +148,7 @@ export const darkColors = {
     900: '#f1f5f9',
     950: '#f8fafc',
   },
-  
+
   // 功能色（暗色主题）
   functional: {
     background: {
@@ -187,14 +187,14 @@ export const colorUsage = {
     usage: ['主要按钮', '链接', '选中状态', '进度条', '品牌标识'],
     avoid: ['大面积背景', '文本颜色', '边框颜色'],
   },
-  
+
   // 中性色使用
   neutral: {
     description: '用于文本、边框、背景等基础元素',
     usage: ['文本颜色', '边框颜色', '背景颜色', '分割线'],
     avoid: ['强调元素', '交互状态'],
   },
-  
+
   // 语义色使用
   semantic: {
     success: {
@@ -227,26 +227,29 @@ export const contrastChecker = {
     const getLuminance = (color: string): number => {
       const rgb = this.hexToRgb(color);
       if (!rgb) return 0;
-      
+
       const { r, g, b } = rgb;
       const [rs, gs, bs] = [r, g, b].map(c => {
         c = c / 255;
         return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
       });
-      
+
       return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
     };
-    
+
     const l1 = getLuminance(color1);
     const l2 = getLuminance(color2);
     const lighter = Math.max(l1, l2);
     const darker = Math.min(l1, l2);
-    
+
     return (lighter + 0.05) / (darker + 0.05);
   },
-  
+
   // 检查对比度是否满足WCAG标准
-  checkWCAGCompliance(color1: string, color2: string): {
+  checkWCAGCompliance(
+    color1: string,
+    color2: string
+  ): {
     AA: boolean;
     AAA: boolean;
     ratio: number;
@@ -254,21 +257,23 @@ export const contrastChecker = {
     const ratio = this.getContrastRatio(color1, color2);
     return {
       AA: ratio >= 4.5, // WCAG AA标准
-      AAA: ratio >= 7,  // WCAG AAA标准
+      AAA: ratio >= 7, // WCAG AAA标准
       ratio,
     };
   },
-  
+
   // 十六进制颜色转RGB
   hexToRgb(hex: string): { r: number; g: number; b: number } | null {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-      r: parseInt(result[1], 16),
-      g: parseInt(result[2], 16),
-      b: parseInt(result[3], 16),
-    } : null;
+    return result
+      ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16),
+        }
+      : null;
   },
-  
+
   // 获取推荐的颜色组合
   getRecommendedCombinations(): Array<{
     background: string;
@@ -284,7 +289,7 @@ export const contrastChecker = {
       { background: colors.semantic.warning[500], text: colors.functional.text.inverse },
       { background: colors.semantic.error[500], text: colors.functional.text.inverse },
     ];
-    
+
     return combinations.map(combo => {
       const ratio = this.getContrastRatio(combo.background, combo.text);
       return {

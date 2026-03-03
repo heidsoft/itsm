@@ -121,15 +121,11 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
   };
 
   if (collapsed) {
-    return (
-      <div className="mb-4">
-        {renderActiveFilters()}
-      </div>
-    );
+    return <div className="mb-4">{renderActiveFilters()}</div>;
   }
 
   return (
-    <Card 
+    <Card
       title={
         <Space>
           <FilterOutlined />
@@ -139,7 +135,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
       className="mb-4"
     >
       {renderActiveFilters()}
-      
+
       <Form
         form={form}
         layout="vertical"
@@ -149,20 +145,12 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* 搜索关键词 */}
           <Form.Item label="搜索" name="search">
-            <Input
-              placeholder="搜索工单编号、标题"
-              prefix={<SearchOutlined />}
-              allowClear
-            />
+            <Input placeholder="搜索工单编号、标题" prefix={<SearchOutlined />} allowClear />
           </Form.Item>
 
           {/* 状态筛选 */}
           <Form.Item label="状态" name="status" data-testid="status-filter">
-            <Select
-              placeholder="选择状态"
-              allowClear
-              mode="multiple"
-            >
+            <Select placeholder="选择状态" allowClear mode="multiple">
               {statusOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
@@ -173,11 +161,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
           {/* 优先级筛选 */}
           <Form.Item label="优先级" name="priority" data-testid="priority-filter">
-            <Select
-              placeholder="选择优先级"
-              allowClear
-              mode="multiple"
-            >
+            <Select placeholder="选择优先级" allowClear mode="multiple">
               {priorityOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   <Tag color={option.color}>{option.label}</Tag>
@@ -188,10 +172,7 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
           {/* 类型筛选 */}
           <Form.Item label="类型" name="type">
-            <Select
-              placeholder="选择类型"
-              allowClear
-            >
+            <Select placeholder="选择类型" allowClear>
               {typeOptions.map(option => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
@@ -207,22 +188,24 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
               allowClear
               showSearch
               filterOption={(input, option) =>
-                String(option?.label ?? '').toLowerCase().includes(String(input).toLowerCase())
+                String(option?.label ?? '')
+                  .toLowerCase()
+                  .includes(String(input).toLowerCase())
               }
             >
               {/* 这里应该从API获取用户列表 */}
-              <Option value={1} label="用户1">用户1</Option>
-              <Option value={2} label="用户2">用户2</Option>
+              <Option value={1} label="用户1">
+                用户1
+              </Option>
+              <Option value={2} label="用户2">
+                用户2
+              </Option>
             </Select>
           </Form.Item>
 
           {/* 创建人筛选 */}
           <Form.Item label="创建人" name="requester_id">
-            <Select
-              placeholder="选择创建人"
-              allowClear
-              showSearch
-            >
+            <Select placeholder="选择创建人" allowClear showSearch>
               <Option value={1}>用户1</Option>
               <Option value={2}>用户2</Option>
             </Select>
@@ -230,19 +213,12 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
           {/* 日期范围 */}
           <Form.Item label="创建时间" name="date_range">
-            <RangePicker
-              style={{ width: '100%' }}
-              placeholder={['开始日期', '结束日期']}
-            />
+            <RangePicker style={{ width: '100%' }} placeholder={['开始日期', '结束日期']} />
           </Form.Item>
 
           {/* 标签筛选 */}
           <Form.Item label="标签" name="tags">
-            <Select
-              mode="tags"
-              placeholder="输入或选择标签"
-              allowClear
-            >
+            <Select mode="tags" placeholder="输入或选择标签" allowClear>
               <Option value="urgent">紧急</Option>
               <Option value="vip">VIP</Option>
               <Option value="bug">Bug</Option>
@@ -252,18 +228,10 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 
         {/* 操作按钮 */}
         <div className="flex justify-end space-x-2 mt-4">
-          <Button
-            icon={<ClearOutlined />}
-            onClick={handleReset}
-          >
+          <Button icon={<ClearOutlined />} onClick={handleReset}>
             重置
           </Button>
-          <Button
-            type="primary"
-            icon={<SearchOutlined />}
-            onClick={onSearch}
-            loading={loading}
-          >
+          <Button type="primary" icon={<SearchOutlined />} onClick={onSearch} loading={loading}>
             搜索
           </Button>
         </div>
@@ -273,4 +241,3 @@ export const TicketsFiltersPanel: React.FC<TicketsFiltersPanelProps> = ({
 };
 
 export default TicketsFiltersPanel;
-

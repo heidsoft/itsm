@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocalStorage, useSessionStorage } from './usePerformance';
@@ -58,9 +58,35 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // 将后端数据转换为前端格式
 const convertBackendData = (backendData: {
-  kpiMetrics?: Array<{ id: string; title: string; value: string | number; unit: string; color: string; trend?: string; change?: number; changeType?: string; description?: string }>;
-  recentActivities?: Array<{ id: string; type: string; title: string; description: string; user: string; timestamp: string; priority?: string; status: string }>;
-  quickActions?: Array<{ id: string; title: string; description: string; path: string; color: string; permission?: string }>;
+  kpiMetrics?: Array<{
+    id: string;
+    title: string;
+    value: string | number;
+    unit: string;
+    color: string;
+    trend?: string;
+    change?: number;
+    changeType?: string;
+    description?: string;
+  }>;
+  recentActivities?: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    user: string;
+    timestamp: string;
+    priority?: string;
+    status: string;
+  }>;
+  quickActions?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    path: string;
+    color: string;
+    permission?: string;
+  }>;
 }): DashboardData => {
   // 从KPI指标构建kpiData
   const kpiMetrics = backendData.kpiMetrics || [];
@@ -77,8 +103,14 @@ const convertBackendData = (backendData: {
   kpiMetrics.forEach(metric => {
     const trend = (metric.trend || 'up') as 'up' | 'down';
     const changeType = (metric.changeType || 'stable') as 'increase' | 'decrease' | 'stable';
-    const changeValue = changeType === 'increase' ? (metric.change || 0) : changeType === 'decrease' ? -(metric.change || 0) : 0;
-    const numValue = typeof metric.value === 'string' ? parseFloat(metric.value) || 0 : (metric.value || 0);
+    const changeValue =
+      changeType === 'increase'
+        ? metric.change || 0
+        : changeType === 'decrease'
+          ? -(metric.change || 0)
+          : 0;
+    const numValue =
+      typeof metric.value === 'string' ? parseFloat(metric.value) || 0 : metric.value || 0;
 
     switch (metric.id) {
       case 'total_tickets':
@@ -169,79 +201,81 @@ export const useDashboardData = () => {
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isInitialLoadRef = useRef(true);
 
-  const loadData = useCallback(async (forceRefresh = false) => {
-    // 取消之前的请求
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+  const loadData = useCallback(
+    async (forceRefresh = false) => {
+      // 取消之前的请求
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
 
-    // 检查缓存（仅在非强制刷新时）
-    if (!forceRefresh && cachedData && !isInitialLoadRef.current) {
-      const now = Date.now();
-      const cacheAge = now - cachedData.timestamp;
+      // 检查缓存（仅在非强制刷新时）
+      if (!forceRefresh && cachedData && !isInitialLoadRef.current) {
+        const now = Date.now();
+        const cacheAge = now - cachedData.timestamp;
 
-      if (cacheAge < CACHE_DURATION) {
-        setData(cachedData.data);
-        setLastUpdated(new Date(cachedData.timestamp));
-        setLoading(false);
+        if (cacheAge < CACHE_DURATION) {
+          setData(cachedData.data);
+          setLastUpdated(new Date(cachedData.timestamp));
+          setLoading(false);
+          setError(null);
+          return;
+        }
+      }
+
+      // 标记非初始加载
+      isInitialLoadRef.current = false;
+
+      try {
+        setLoading(true);
         setError(null);
-        return;
+        setRetryCount(0);
+
+        abortControllerRef.current = new AbortController();
+
+        const dashboardData = await fetchDashboardData();
+
+        // 检查请求是否被取消
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
+
+        const now = Date.now();
+        setData(dashboardData);
+        setLastUpdated(new Date(now));
+
+        // 更新缓存
+        setCachedData({
+          data: dashboardData,
+          timestamp: now,
+        });
+
+        // 更新刷新状态
+        setRefreshState(prev => ({
+          ...prev,
+          lastRefresh: now,
+        }));
+      } catch (err) {
+        if (abortControllerRef.current?.signal.aborted) {
+          return;
+        }
+
+        const errorMessage = err instanceof Error ? err.message : '加载数据失败';
+        setError(errorMessage);
+        setRetryCount(prev => prev + 1);
+
+        // 如果有缓存数据，在错误时仍然显示缓存数据
+        if (cachedData && !data) {
+          console.warn('API调用失败，使用缓存数据:', errorMessage);
+          setData(cachedData.data);
+          setLastUpdated(new Date(cachedData.timestamp));
+        }
+      } finally {
+        setLoading(false);
+        abortControllerRef.current = null;
       }
-    }
-
-    // 标记非初始加载
-    isInitialLoadRef.current = false;
-
-    try {
-      setLoading(true);
-      setError(null);
-      setRetryCount(0);
-
-      abortControllerRef.current = new AbortController();
-
-      const dashboardData = await fetchDashboardData();
-
-      // 检查请求是否被取消
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-
-      const now = Date.now();
-      setData(dashboardData);
-      setLastUpdated(new Date(now));
-
-      // 更新缓存
-      setCachedData({
-        data: dashboardData,
-        timestamp: now,
-      });
-
-      // 更新刷新状态
-      setRefreshState(prev => ({
-        ...prev,
-        lastRefresh: now,
-      }));
-
-    } catch (err) {
-      if (abortControllerRef.current?.signal.aborted) {
-        return;
-      }
-
-      const errorMessage = err instanceof Error ? err.message : '加载数据失败';
-      setError(errorMessage);
-      setRetryCount(prev => prev + 1);
-
-      // 如果有缓存数据，在错误时仍然显示缓存数据
-      if (cachedData && !data) {
-        console.warn('API调用失败，使用缓存数据:', errorMessage);
-        setData(cachedData.data);
-        setLastUpdated(new Date(cachedData.timestamp));
-      }
-    } finally {
-      setLoading(false);
-      abortControllerRef.current = null;
-    }
-  }, [cachedData, setCachedData, setRefreshState, data]);
+    },
+    [cachedData, setCachedData, setRefreshState, data]
+  );
 
   const refreshData = useCallback(() => {
     loadData(true); // 强制刷新，跳过缓存
@@ -275,9 +309,12 @@ export const useDashboardData = () => {
     }
 
     // 设置自动刷新，每5分钟刷新一次
-    autoRefreshIntervalRef.current = setInterval(() => {
-      loadData();
-    }, 5 * 60 * 1000);
+    autoRefreshIntervalRef.current = setInterval(
+      () => {
+        loadData();
+      },
+      5 * 60 * 1000
+    );
 
     return () => {
       if (autoRefreshIntervalRef.current) {
@@ -310,15 +347,17 @@ export const useDashboardData = () => {
     toggleAutoRefresh,
     clearCache,
     // 计算缓存状态
-    cacheStatus: cachedData ? {
-      hasCache: true,
-      cacheAge: Date.now() - cachedData.timestamp,
-      isStale: Date.now() - cachedData.timestamp > CACHE_DURATION,
-    } : {
-      hasCache: false,
-      cacheAge: 0,
-      isStale: false,
-    },
+    cacheStatus: cachedData
+      ? {
+          hasCache: true,
+          cacheAge: Date.now() - cachedData.timestamp,
+          isStale: Date.now() - cachedData.timestamp > CACHE_DURATION,
+        }
+      : {
+          hasCache: false,
+          cacheAge: 0,
+          isStale: false,
+        },
   };
 };
 

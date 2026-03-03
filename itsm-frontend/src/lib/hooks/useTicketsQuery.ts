@@ -2,7 +2,13 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
-import { ticketService, Ticket, TicketStatus, TicketPriority, TicketType } from '@/lib/services/ticket-service';
+import {
+  ticketService,
+  Ticket,
+  TicketStatus,
+  TicketPriority,
+  TicketType,
+} from '@/lib/services/ticket-service';
 
 export interface TicketQueryFilters {
   status?: TicketStatus;
@@ -51,14 +57,14 @@ export const useTicketsQuery = (
     queryKey: ticketKeys.list(filters, pagination),
     queryFn: async () => {
       try {
-      const response = await ticketService.listTickets({
-        page: pagination.current,
-        page_size: pagination.pageSize,
-        ...filters,
-      });
-      const pageSize = response?.size || pagination.pageSize;
-      const total = response?.total || 0;
-      const totalPages = pageSize ? Math.ceil(total / pageSize) : 0;
+        const response = await ticketService.listTickets({
+          page: pagination.current,
+          page_size: pagination.pageSize,
+          ...filters,
+        });
+        const pageSize = response?.size || pagination.pageSize;
+        const total = response?.total || 0;
+        const totalPages = pageSize ? Math.ceil(total / pageSize) : 0;
         // 确保返回的数据结构完整
         return {
           tickets: Array.isArray(response?.tickets) ? response.tickets : [],
@@ -85,7 +91,7 @@ export const useTicketStatsQuery = () => {
     queryKey: ticketKeys.stats(),
     queryFn: async () => {
       try {
-      const response = await ticketService.getTicketStats();
+        const response = await ticketService.getTicketStats();
         // 确保所有字段都有默认值
         return {
           total: response?.total || 0,
@@ -96,12 +102,12 @@ export const useTicketStatsQuery = () => {
       } catch (error) {
         console.error('Failed to fetch ticket stats:', error);
         // 返回默认值
-      return {
+        return {
           total: 0,
           open: 0,
           resolved: 0,
           highPriority: 0,
-      };
+        };
       }
     },
     staleTime: 1 * 60 * 1000, // 1分钟缓存
@@ -132,13 +138,13 @@ export const useCreateTicketMutation = () => {
       const response = await ticketService.createTicket(ticketData);
       return response;
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       message.success('Ticket created successfully');
-      
+
       // 使相关查询失效，触发重新获取
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.stats() });
-      
+
       // 乐观更新统计
       queryClient.setQueryData(ticketKeys.stats(), (old: TicketStats | undefined) => {
         if (!old) return old;
@@ -166,10 +172,10 @@ export const useUpdateTicketMutation = () => {
     },
     onSuccess: (data, variables) => {
       message.success('Ticket updated successfully');
-      
+
       // 更新缓存中的工单详情
       queryClient.setQueryData(ticketKeys.detail(variables.id), data);
-      
+
       // 使列表查询失效
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.stats() });
@@ -190,16 +196,16 @@ export const useDeleteTicketMutation = () => {
       await ticketService.deleteTicket(id);
       return id;
     },
-    onSuccess: (id) => {
+    onSuccess: id => {
       message.success('Ticket deleted successfully');
-      
+
       // 从缓存中移除工单详情
       queryClient.removeQueries({ queryKey: ticketKeys.detail(id) });
-      
+
       // 使列表查询失效
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.stats() });
-      
+
       // 乐观更新统计
       queryClient.setQueryData(ticketKeys.stats(), (old: TicketStats | undefined) => {
         if (!old) return old;
@@ -225,18 +231,18 @@ export const useBatchDeleteTicketsMutation = () => {
       await Promise.all(ids.map(id => ticketService.deleteTicket(id)));
       return ids;
     },
-    onSuccess: (ids) => {
+    onSuccess: ids => {
       message.success(`${ids.length} tickets deleted successfully`);
-      
+
       // 从缓存中移除工单详情
       ids.forEach(id => {
         queryClient.removeQueries({ queryKey: ticketKeys.detail(id) });
       });
-      
+
       // 使列表查询失效
       queryClient.invalidateQueries({ queryKey: ticketKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ticketKeys.stats() });
-      
+
       // 乐观更新统计
       queryClient.setQueryData(ticketKeys.stats(), (old: TicketStats | undefined) => {
         if (!old) return old;

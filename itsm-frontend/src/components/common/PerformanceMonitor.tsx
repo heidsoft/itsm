@@ -12,19 +12,18 @@ import {
   Typography,
   Space,
   Button,
-  message
 } from 'antd';
-import { 
-  Activity, 
-  Cpu, 
-  HardDrive, 
-  Wifi, 
-  Clock, 
+import {
+  Activity,
+  Cpu,
+  HardDrive,
+  Wifi,
+  Clock,
   AlertTriangle,
   CheckCircle,
   TrendingUp,
   TrendingDown,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 
 const { Text } = Typography;
@@ -81,7 +80,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
   refreshInterval = 30000, // 30秒刷新一次
   showAlerts = true,
   compact = false,
-  className = ''
+  className = '',
 }) => {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [alerts, setAlerts] = useState<SystemAlert[]>([]);
@@ -93,7 +92,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     setLoading(true);
     try {
       const { SystemConfigAPI } = await import('@/lib/api/system-config-api');
-      const apiResponse = await SystemConfigAPI.getSystemStatus() as {
+      const apiResponse = (await SystemConfigAPI.getSystemStatus()) as {
         cpu?: { usage?: number; cores?: number; temperature?: number };
         memory?: { used?: number; total?: number; usage?: number };
         disk?: { used?: number; total?: number; usage?: number };
@@ -101,39 +100,39 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         response?: { avgResponseTime?: number; p95ResponseTime?: number; errorRate?: number };
         database?: { connections?: number; maxConnections?: number; queryTime?: number };
       };
-      
+
       // 使用后端返回的数据，如果没有则使用默认值0，严禁使用随机Mock数据
       const metricsData: PerformanceMetrics = {
         cpu: {
           usage: apiResponse.cpu?.usage || 0,
           cores: apiResponse.cpu?.cores || 1,
-          temperature: apiResponse.cpu?.temperature
+          temperature: apiResponse.cpu?.temperature,
         },
         memory: {
           used: apiResponse.memory?.used || 0,
           total: apiResponse.memory?.total || 0,
-          usage: apiResponse.memory?.usage || 0
+          usage: apiResponse.memory?.usage || 0,
         },
         disk: {
           used: apiResponse.disk?.used || 0,
           total: apiResponse.disk?.total || 0,
-          usage: apiResponse.disk?.usage || 0
+          usage: apiResponse.disk?.usage || 0,
         },
         network: {
           inbound: apiResponse.network?.inbound || 0,
           outbound: apiResponse.network?.outbound || 0,
-          latency: apiResponse.network?.latency || 0
+          latency: apiResponse.network?.latency || 0,
         },
         response: {
           avgResponseTime: apiResponse.response?.avgResponseTime || 0,
           p95ResponseTime: apiResponse.response?.p95ResponseTime || 0,
-          errorRate: apiResponse.response?.errorRate || 0
+          errorRate: apiResponse.response?.errorRate || 0,
         },
         database: {
           connections: apiResponse.database?.connections || 0,
           maxConnections: apiResponse.database?.maxConnections || 100,
-          queryTime: apiResponse.database?.queryTime || 0
-        }
+          queryTime: apiResponse.database?.queryTime || 0,
+        },
       };
 
       setMetrics(metricsData);
@@ -141,14 +140,14 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
       // 生成告警
       const newAlerts: SystemAlert[] = [];
-      
+
       if (metricsData.cpu.usage > 80) {
         newAlerts.push({
           id: `cpu-${Date.now()}`,
           type: 'warning',
           message: `CPU使用率过高: ${metricsData.cpu.usage.toFixed(1)}%`,
           timestamp: new Date().toISOString(),
-          resolved: false
+          resolved: false,
         });
       }
 
@@ -158,7 +157,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
           type: 'error',
           message: `内存使用率过高: ${metricsData.memory.usage.toFixed(1)}%`,
           timestamp: new Date().toISOString(),
-          resolved: false
+          resolved: false,
         });
       }
 
@@ -168,13 +167,13 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
           type: 'error',
           message: `错误率过高: ${metricsData.response.errorRate.toFixed(2)}%`,
           timestamp: new Date().toISOString(),
-          resolved: false
+          resolved: false,
         });
       }
 
       setAlerts(prev => [...newAlerts, ...prev.slice(0, 10)]); // 保留最新10条告警
     } catch (error) {
-      message.error('获取性能指标失败');
+      console.error('获取性能指标失败:', error);
       // 出错时不显示错误UI，保持加载状态或空状态
     } finally {
       setLoading(false);
@@ -193,9 +192,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
     const thresholds = {
       cpu: { warning: 70, danger: 85 },
       memory: { warning: 75, danger: 90 },
-      disk: { warning: 80, danger: 95 }
+      disk: { warning: 80, danger: 95 },
     };
-    
+
     const threshold = thresholds[type];
     if (usage >= threshold.danger) return '#ff4d4f';
     if (usage >= threshold.warning) return '#faad14';
@@ -223,8 +222,8 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
   if (compact) {
     return (
-      <Card 
-        size="small" 
+      <Card
+        size="small"
         className={className}
         title={
           <div className="flex items-center justify-between">
@@ -232,9 +231,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               <Activity size={16} />
               <span>系统监控</span>
             </div>
-            <Button 
-              type="text" 
-              size="small" 
+            <Button
+              type="text"
+              size="small"
               icon={<RefreshCw size={14} />}
               loading={loading}
               onClick={fetchMetrics}
@@ -276,9 +275,11 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
               value={metrics.response.avgResponseTime}
               precision={0}
               suffix="ms"
-              styles={{ content: { 
-                color: metrics.response.avgResponseTime > 200 ? '#faad14' : '#52c41a' 
-              }}}
+              styles={{
+                content: {
+                  color: metrics.response.avgResponseTime > 200 ? '#faad14' : '#52c41a',
+                },
+              }}
             />
           </Col>
         </Row>
@@ -291,7 +292,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
       <Row gutter={[16, 16]}>
         {/* 系统资源监控 */}
         <Col xs={24} lg={16}>
-          <Card 
+          <Card
             title={
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
@@ -304,9 +305,9 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                       最后更新: {lastUpdate.toLocaleTimeString()}
                     </Text>
                   )}
-                  <Button 
-                    type="text" 
-                    size="small" 
+                  <Button
+                    type="text"
+                    size="small"
                     icon={<RefreshCw size={14} />}
                     loading={loading}
                     onClick={fetchMetrics}
@@ -327,7 +328,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   <Progress
                     type="circle"
                     percent={metrics.cpu.usage}
-                    format={(percent) => `${percent?.toFixed(1)}%`}
+                    format={percent => `${percent?.toFixed(1)}%`}
                     strokeColor={getStatusColor(metrics.cpu.usage, 'cpu')}
                     size={120}
                   />
@@ -357,7 +358,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   <Progress
                     type="circle"
                     percent={metrics.memory.usage}
-                    format={(percent) => `${percent?.toFixed(1)}%`}
+                    format={percent => `${percent?.toFixed(1)}%`}
                     strokeColor={getStatusColor(metrics.memory.usage, 'memory')}
                     size={120}
                   />
@@ -385,7 +386,7 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
                   <Progress
                     type="circle"
                     percent={metrics.disk.usage}
-                    format={(percent) => `${percent?.toFixed(1)}%`}
+                    format={percent => `${percent?.toFixed(1)}%`}
                     strokeColor={getStatusColor(metrics.disk.usage, 'disk')}
                     size={120}
                   />
@@ -409,12 +410,15 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
         <Col xs={24} lg={8}>
           <Space orientation="vertical" size="middle" className="w-full">
             {/* 网络监控 */}
-            <Card size="small" title={
-              <div className="flex items-center space-x-2">
-                <Wifi size={16} />
-                <span>网络状态</span>
-              </div>
-            }>
+            <Card
+              size="small"
+              title={
+                <div className="flex items-center space-x-2">
+                  <Wifi size={16} />
+                  <span>网络状态</span>
+                </div>
+              }
+            >
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Statistic
@@ -446,12 +450,15 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
             </Card>
 
             {/* 应用性能 */}
-            <Card size="small" title={
-              <div className="flex items-center space-x-2">
-                <Clock size={16} />
-                <span>应用性能</span>
-              </div>
-            }>
+            <Card
+              size="small"
+              title={
+                <div className="flex items-center space-x-2">
+                  <Clock size={16} />
+                  <span>应用性能</span>
+                </div>
+              }
+            >
               <Space orientation="vertical" size="small" className="w-full">
                 <div className="flex justify-between items-center">
                   <span className="text-sm">平均响应时间:</span>
@@ -482,27 +489,34 @@ export const PerformanceMonitor: React.FC<PerformanceMonitorProps> = ({
 
             {/* 系统告警 */}
             {showAlerts && alerts.length > 0 && (
-              <Card size="small" title={
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle size={16} />
-                  <span>系统告警</span>
-                  <Tag color="red">{alerts.filter(a => !a.resolved).length}</Tag>
-                </div>
-              }>
+              <Card
+                size="small"
+                title={
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle size={16} />
+                    <span>系统告警</span>
+                    <Tag color="red">{alerts.filter(a => !a.resolved).length}</Tag>
+                  </div>
+                }
+              >
                 <Timeline>
-                  {alerts.slice(0, 5).map((alert) => (
+                  {alerts.slice(0, 5).map(alert => (
                     <Timeline.Item
                       key={alert.id}
                       dot={
-                        alert.type === 'error' ? 
-                          <AlertTriangle size={12} className="text-red-500" /> :
+                        alert.type === 'error' ? (
+                          <AlertTriangle size={12} className="text-red-500" />
+                        ) : (
                           <CheckCircle size={12} className="text-yellow-500" />
+                        )
                       }
                     >
                       <div className="text-sm">
-                        <div className={`font-medium ${
-                          alert.type === 'error' ? 'text-red-600' : 'text-yellow-600'
-                        }`}>
+                        <div
+                          className={`font-medium ${
+                            alert.type === 'error' ? 'text-red-600' : 'text-yellow-600'
+                          }`}
+                        >
                           {alert.message}
                         </div>
                         <div className="text-gray-500 text-xs">

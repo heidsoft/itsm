@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
 	"itsm-backend/ent/processinstance"
+	"itsm-backend/ent/processversionchangelog"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -213,6 +214,21 @@ func (pdc *ProcessDefinitionCreate) AddBindings(p ...*ProcessBinding) *ProcessDe
 		ids[i] = p[i].ID
 	}
 	return pdc.AddBindingIDs(ids...)
+}
+
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (pdc *ProcessDefinitionCreate) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionCreate {
+	pdc.mutation.AddVersionChangelogIDs(ids...)
+	return pdc
+}
+
+// AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (pdc *ProcessDefinitionCreate) AddVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionCreate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return pdc.AddVersionChangelogIDs(ids...)
 }
 
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
@@ -453,6 +469,22 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := pdc.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   processdefinition.VersionChangelogsTable,
+			Columns: []string{processdefinition.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

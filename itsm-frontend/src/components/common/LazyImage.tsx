@@ -56,8 +56,8 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 
     // 创建Intersection Observer
     observerRef.current = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setIsInView(true);
             // 图片进入视口后，停止观察
@@ -100,10 +100,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 
   // 默认占位符
   const defaultPlaceholder = (
-    <Skeleton.Image
-      active
-      style={{ width: width || '100%', height: height || 'auto' }}
-    />
+    <Skeleton.Image active style={{ width: width || '100%', height: height || 'auto' }} />
   );
 
   // 默认错误回退
@@ -263,8 +260,8 @@ export const LazyBackgroundImage: React.FC<LazyBackgroundImageProps> = ({
     if (!currentContainer) return;
 
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
+      entries => {
+        entries.forEach(entry => {
           if (entry.isIntersecting) {
             setIsInView(true);
             observer.unobserve(currentContainer);
@@ -310,4 +307,3 @@ export const LazyBackgroundImage: React.FC<LazyBackgroundImageProps> = ({
 };
 
 export default LazyImage;
-

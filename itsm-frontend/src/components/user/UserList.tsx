@@ -41,7 +41,7 @@ import dayjs from 'dayjs';
 import { useRouter } from 'next/navigation';
 
 import type { UserRole, UserStatus, UserFilters } from '@/types/user';
-import { UserApi, type User } from '@/lib/api/user-api';  // 从UserApi导入User类型
+import { UserApi, type User } from '@/lib/api/user-api'; // 从UserApi导入User类型
 
 const { Search } = Input;
 const { Option } = Select;
@@ -77,9 +77,10 @@ const UserList: React.FC<UserListProps> = ({
     async (params?: { page?: number; pageSize?: number; filters?: UserFilters }) => {
       try {
         setLoading(true);
-        const response = await UserApi.getUsers({  // 改为 getUsers
+        const response = await UserApi.getUsers({
+          // 改为 getUsers
           page: params?.page,
-          page_size: params?.pageSize,  // 改为 page_size
+          page_size: params?.pageSize, // 改为 page_size
           // filters: params?.filters,  // 移除filters，不在ListUsersParams中
         });
 
@@ -164,8 +165,8 @@ const UserList: React.FC<UserListProps> = ({
       },
       {
         key: 'status',
-        icon: record.active ? <LockOutlined /> : <UnlockOutlined />,  // 改为 active
-        label: record.active ? '禁用用户' : '启用用户',  // 改为 active
+        icon: record.active ? <LockOutlined /> : <UnlockOutlined />, // 改为 active
+        label: record.active ? '禁用用户' : '启用用户', // 改为 active
         onClick: () => handleToggleStatus(record),
       },
       {
@@ -201,8 +202,8 @@ const UserList: React.FC<UserListProps> = ({
 
   const handleToggleStatus = async (user: User) => {
     try {
-      const newStatus = user.active;  // 改为 active
-      await UserApi.changeUserStatus(user.id, !newStatus);  // 传入boolean
+      const newStatus = user.active; // 改为 active
+      await UserApi.changeUserStatus(user.id, !newStatus); // 传入boolean
       message.success(`用户${!newStatus ? '启用' : '禁用'}成功`);
       fetchUsers();
     } catch {
@@ -221,7 +222,7 @@ const UserList: React.FC<UserListProps> = ({
         try {
           // 生成随机密码并重置
           const newPassword = Math.random().toString(36).slice(-8);
-          await UserApi.resetPassword(user.id, newPassword);  // 修正参数
+          await UserApi.resetPassword(user.id, newPassword); // 修正参数
           message.success(`密码重置成功，新密码：${newPassword}（已发送到用户邮箱）`);
         } catch {
           message.error('密码重置失败');
@@ -303,11 +304,11 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'left',
       render: (_, record) => (
         <Space>
-          <Avatar size='small' icon={<UserOutlined />} />  {/* 移除src={record.avatar} */}
+          <Avatar size="small" icon={<UserOutlined />} /> {/* 移除src={record.avatar} */}
           <div>
             <div>
               <Button
-                type='link'
+                type="link"
                 onClick={() => handleViewUser(record)}
                 style={{ padding: 0, height: 'auto' }}
               >
@@ -324,13 +325,13 @@ const UserList: React.FC<UserListProps> = ({
       key: 'contact',
       width: 200,
       render: (_, record) => (
-        <Space orientation='vertical' size='small'>
-          <Space size='small'>
+        <Space orientation="vertical" size="small">
+          <Space size="small">
             <MailOutlined style={{ color: '#999' }} />
             <span>{record.email}</span>
           </Space>
           {record.phone && (
-            <Space size='small'>
+            <Space size="small">
               <PhoneOutlined style={{ color: '#999' }} />
               <span>{record.phone}</span>
             </Space>
@@ -398,7 +399,7 @@ const UserList: React.FC<UserListProps> = ({
       fixed: 'right',
       render: (_, record) => (
         <Dropdown menu={getActionMenu(record)} trigger={['click']}>
-          <Button type='text' icon={<MoreOutlined />} />
+          <Button type="text" icon={<MoreOutlined />} />
         </Dropdown>
       ),
     },
@@ -406,49 +407,49 @@ const UserList: React.FC<UserListProps> = ({
 
   // 筛选器组件
   const renderFilters = () => (
-    <Card size='small' style={{ marginBottom: 16 }}>
+    <Card size="small" style={{ marginBottom: 16 }}>
       <Row gutter={[16, 16]}>
         <Col span={6}>
           <Select
-            placeholder='角色'
+            placeholder="角色"
             allowClear
             style={{ width: '100%' }}
             value={filters.role}
             onChange={value => handleFilterChange('role', value)}
           >
-            <Option value='admin'>管理员</Option>
-            <Option value='manager'>经理</Option>
-            <Option value='agent'>客服</Option>
-            <Option value='technician'>技术员</Option>
-            <Option value='end_user'>普通用户</Option>
+            <Option value="admin">管理员</Option>
+            <Option value="manager">经理</Option>
+            <Option value="agent">客服</Option>
+            <Option value="technician">技术员</Option>
+            <Option value="end_user">普通用户</Option>
           </Select>
         </Col>
         <Col span={6}>
           <Select
-            placeholder='状态'
+            placeholder="状态"
             allowClear
             style={{ width: '100%' }}
             value={filters.status}
             onChange={value => handleFilterChange('status', value)}
           >
-            <Option value='active'>正常</Option>
-            <Option value='inactive'>禁用</Option>
-            <Option value='suspended'>暂停</Option>
-            <Option value='pending'>待激活</Option>
+            <Option value="active">正常</Option>
+            <Option value="inactive">禁用</Option>
+            <Option value="suspended">暂停</Option>
+            <Option value="pending">待激活</Option>
           </Select>
         </Col>
         <Col span={6}>
           <Select
-            placeholder='部门'
+            placeholder="部门"
             allowClear
             style={{ width: '100%' }}
             value={filters.department}
             onChange={value => handleFilterChange('department', value)}
           >
-            <Option value='IT部门'>IT部门</Option>
-            <Option value='人事部'>人事部</Option>
-            <Option value='财务部'>财务部</Option>
-            <Option value='市场部'>市场部</Option>
+            <Option value="IT部门">IT部门</Option>
+            <Option value="人事部">人事部</Option>
+            <Option value="财务部">财务部</Option>
+            <Option value="市场部">市场部</Option>
           </Select>
         </Col>
         <Col span={6}>
@@ -473,11 +474,11 @@ const UserList: React.FC<UserListProps> = ({
     <div>
       {showHeader && (
         <Card>
-          <Row justify='space-between' align='middle' style={{ marginBottom: 16 }}>
+          <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
             <Col>
               <Space>
                 <Search
-                  placeholder='搜索用户...'
+                  placeholder="搜索用户..."
                   allowClear
                   style={{ width: 300 }}
                   value={searchText}
@@ -506,7 +507,7 @@ const UserList: React.FC<UserListProps> = ({
                   导出
                 </Button>
                 <Button
-                  type='primary'
+                  type="primary"
                   icon={<PlusOutlined />}
                   onClick={() => router.push('/users/new')}
                 >
@@ -525,7 +526,7 @@ const UserList: React.FC<UserListProps> = ({
           rowSelection={embedded ? undefined : rowSelection}
           columns={columns}
           dataSource={users}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           pagination={{
             current: pagination.current,

@@ -227,7 +227,7 @@ export const IncidentManagement: React.FC = () => {
       ellipsis: true,
       render: (text: string, record: Incident) => (
         <Button
-          type='link'
+          type="link"
           onClick={() => {
             setSelectedIncident(record);
             setDetailVisible(true);
@@ -300,9 +300,9 @@ export const IncidentManagement: React.FC = () => {
       width: 120,
       render: (_: any, record: Incident) => (
         <Space>
-          <Tooltip title='查看详情'>
+          <Tooltip title="查看详情">
             <Button
-              type='text'
+              type="text"
               icon={<EyeOutlined />}
               onClick={() => {
                 setSelectedIncident(record);
@@ -310,9 +310,9 @@ export const IncidentManagement: React.FC = () => {
               }}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
               onClick={() => {
                 setSelectedIncident(record);
@@ -326,21 +326,21 @@ export const IncidentManagement: React.FC = () => {
   ];
 
   return (
-    <div className='incident-management'>
+    <div className="incident-management">
       {/* 页面标题和操作 */}
-      <div className='mb-6'>
-        <div className='flex justify-between items-center'>
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
           <div>
-            <Title level={2} className='mb-2'>
+            <Title level={2} className="mb-2">
               事件管理
             </Title>
-            <Text type='secondary'>管理和监控IT事件，确保系统稳定运行</Text>
+            <Text type="secondary">管理和监控IT事件，确保系统稳定运行</Text>
           </div>
           <Space>
             <Button icon={<BarChartOutlined />} onClick={() => setMonitoringVisible(true)}>
               监控面板
             </Button>
-            <Button type='primary' icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => setCreateVisible(true)}>
               创建事件
             </Button>
           </Space>
@@ -348,16 +348,16 @@ export const IncidentManagement: React.FC = () => {
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={16} className='mb-6'>
+      <Row gutter={16} className="mb-6">
         <Col span={6}>
           <Card>
-            <Statistic title='总事件数' value={total} prefix={<InfoCircleOutlined />} />
+            <Statistic title="总事件数" value={total} prefix={<InfoCircleOutlined />} />
           </Card>
         </Col>
         <Col span={6}>
           <Card>
             <Statistic
-              title='进行中'
+              title="进行中"
               value={incidents.filter(i => i.status === 'in_progress').length}
               prefix={<ClockCircleOutlined />}
               styles={{ content: { color: '#1890ff' } }}
@@ -367,7 +367,7 @@ export const IncidentManagement: React.FC = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title='已解决'
+              title="已解决"
               value={incidents.filter(i => i.status === 'resolved').length}
               prefix={<CheckCircleOutlined />}
               styles={{ content: { color: '#52c41a' } }}
@@ -377,7 +377,7 @@ export const IncidentManagement: React.FC = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title='严重事件'
+              title="严重事件"
               value={incidents.filter(i => i.severity === 'critical').length}
               prefix={<ExclamationCircleOutlined />}
               styles={{ content: { color: '#f5222d' } }}
@@ -387,49 +387,49 @@ export const IncidentManagement: React.FC = () => {
       </Row>
 
       {/* 筛选器 */}
-      <Card className='mb-6'>
-        <Row gutter={16} align='middle'>
+      <Card className="mb-6">
+        <Row gutter={16} align="middle">
           <Col span={6}>
             <Input
-              placeholder='搜索事件标题或编号'
+              placeholder="搜索事件标题或编号"
               prefix={<SearchOutlined />}
               onChange={e => handleFilterChange('search', e.target.value)}
             />
           </Col>
           <Col span={4}>
             <Select
-              placeholder='状态'
+              placeholder="状态"
               allowClear
               onChange={value => handleFilterChange('status', value)}
             >
-              <Option value='new'>新建</Option>
-              <Option value='in_progress'>进行中</Option>
-              <Option value='resolved'>已解决</Option>
-              <Option value='closed'>已关闭</Option>
+              <Option value="new">新建</Option>
+              <Option value="in_progress">进行中</Option>
+              <Option value="resolved">已解决</Option>
+              <Option value="closed">已关闭</Option>
             </Select>
           </Col>
           <Col span={4}>
             <Select
-              placeholder='优先级'
+              placeholder="优先级"
               allowClear
               onChange={value => handleFilterChange('priority', value)}
             >
-              <Option value='low'>低</Option>
-              <Option value='medium'>中</Option>
-              <Option value='high'>高</Option>
-              <Option value='urgent'>紧急</Option>
+              <Option value="low">低</Option>
+              <Option value="medium">中</Option>
+              <Option value="high">高</Option>
+              <Option value="urgent">紧急</Option>
             </Select>
           </Col>
           <Col span={4}>
             <Select
-              placeholder='严重程度'
+              placeholder="严重程度"
               allowClear
               onChange={value => handleFilterChange('severity', value)}
             >
-              <Option value='low'>低</Option>
-              <Option value='medium'>中</Option>
-              <Option value='high'>高</Option>
-              <Option value='critical'>严重</Option>
+              <Option value="low">低</Option>
+              <Option value="medium">中</Option>
+              <Option value="high">高</Option>
+              <Option value="critical">严重</Option>
             </Select>
           </Col>
           <Col span={4}>
@@ -459,7 +459,7 @@ export const IncidentManagement: React.FC = () => {
           columns={columns}
           dataSource={incidents}
           loading={loading}
-          rowKey='id'
+          rowKey="id"
           pagination={{
             current: currentPage,
             pageSize: pageSize,
@@ -565,20 +565,20 @@ const IncidentDetailDrawer: React.FC<{
         </Space>
       }
     >
-      <Tabs defaultActiveKey='overview'>
-        <TabPane tab='概览' key='overview'>
+      <Tabs defaultActiveKey="overview">
+        <TabPane tab="概览" key="overview">
           <IncidentOverview incident={incident} />
         </TabPane>
-        <TabPane tab='活动记录' key='events'>
+        <TabPane tab="活动记录" key="events">
           <IncidentEvents events={events} loading={loading} />
         </TabPane>
-        <TabPane tab='告警' key='alerts'>
+        <TabPane tab="告警" key="alerts">
           <IncidentAlerts alerts={alerts} loading={loading} />
         </TabPane>
-        <TabPane tab='指标' key='metrics'>
+        <TabPane tab="指标" key="metrics">
           <IncidentMetrics metrics={metrics} loading={loading} />
         </TabPane>
-        <TabPane tab='影响分析' key='impact'>
+        <TabPane tab="影响分析" key="impact">
           <IncidentImpactAnalysis incident={incident} />
         </TabPane>
       </Tabs>
@@ -619,54 +619,54 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
   };
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 基本信息 */}
-      <Card title='基本信息'>
+      <Card title="基本信息">
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>事件标题</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Text>{incident.title}</Text>
               </div>
             </div>
           </Col>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>事件编号</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Text code>{incident.incident_number}</Text>
               </div>
             </div>
           </Col>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>状态</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Tag color={getStatusColor(incident.status)}>{incident.status}</Tag>
               </div>
             </div>
           </Col>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>优先级</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Tag color={getPriorityColor(incident.priority)}>{incident.priority}</Tag>
               </div>
             </div>
           </Col>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>严重程度</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Tag color={getSeverityColor(incident.severity)}>{incident.severity}</Tag>
               </div>
             </div>
           </Col>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>来源</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Tag color={incident.source === 'monitoring' ? 'blue' : 'green'}>
                   {incident.source}
                 </Tag>
@@ -674,9 +674,9 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
             </div>
           </Col>
           <Col span={24}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>描述</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Text>{incident.description || '无描述'}</Text>
               </div>
             </div>
@@ -685,29 +685,29 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
       </Card>
 
       {/* 时间信息 */}
-      <Card title='时间信息'>
+      <Card title="时间信息">
         <Row gutter={[16, 16]}>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>检测时间</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Text>{dayjs(incident.detected_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
               </div>
             </div>
           </Col>
           <Col span={12}>
-            <div className='mb-4'>
+            <div className="mb-4">
               <Text strong>创建时间</Text>
-              <div className='mt-1'>
+              <div className="mt-1">
                 <Text>{dayjs(incident.created_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
               </div>
             </div>
           </Col>
           {incident.resolved_at && (
             <Col span={12}>
-              <div className='mb-4'>
+              <div className="mb-4">
                 <Text strong>解决时间</Text>
-                <div className='mt-1'>
+                <div className="mt-1">
                   <Text>{dayjs(incident.resolved_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
@@ -715,9 +715,9 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
           )}
           {incident.closed_at && (
             <Col span={12}>
-              <div className='mb-4'>
+              <div className="mb-4">
                 <Text strong>关闭时间</Text>
-                <div className='mt-1'>
+                <div className="mt-1">
                   <Text>{dayjs(incident.closed_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
                 </div>
               </div>
@@ -728,21 +728,24 @@ const IncidentOverview: React.FC<{ incident: Incident }> = ({ incident }) => {
 
       {/* 升级信息 */}
       {(incident.escalation_level ?? 0) > 0 && (
-        <Card title='升级信息'>
+        <Card title="升级信息">
           <Row gutter={[16, 16]}>
             <Col span={12}>
-              <div className='mb-4'>
+              <div className="mb-4">
                 <Text strong>升级级别</Text>
-                <div className='mt-1'>
-                  <Badge count={incident.escalation_level ?? 0} style={{ backgroundColor: '#f50' }} />
+                <div className="mt-1">
+                  <Badge
+                    count={incident.escalation_level ?? 0}
+                    style={{ backgroundColor: '#f50' }}
+                  />
                 </div>
               </div>
             </Col>
             {incident.escalated_at && (
               <Col span={12}>
-                <div className='mb-4'>
+                <div className="mb-4">
                   <Text strong>升级时间</Text>
-                  <div className='mt-1'>
+                  <div className="mt-1">
                     <Text>{dayjs(incident.escalated_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
                   </div>
                 </div>
@@ -784,7 +787,7 @@ const IncidentEvents: React.FC<{ events: IncidentEvent[]; loading: boolean }> = 
   return (
     <div>
       {loading ? (
-        <div className='text-center py-8'>
+        <div className="text-center py-8">
           <Text>加载中...</Text>
         </div>
       ) : events.length > 0 ? (
@@ -795,21 +798,21 @@ const IncidentEvents: React.FC<{ events: IncidentEvent[]; loading: boolean }> = 
               dot={getEventIcon(event.event_type)}
               color={getSeverityColor(event.severity)}
             >
-              <div className='mb-2'>
+              <div className="mb-2">
                 <Text strong>{event.event_name}</Text>
-                <Tag color={getSeverityColor(event.severity)} className='ml-2'>
+                <Tag color={getSeverityColor(event.severity)} className="ml-2">
                   {event.severity}
                 </Tag>
               </div>
-              <div className='mb-1'>
+              <div className="mb-1">
                 <Text>{event.description}</Text>
               </div>
-              <div className='text-gray-500 text-sm'>
-                <Text type='secondary'>
+              <div className="text-gray-500 text-sm">
+                <Text type="secondary">
                   {dayjs(event.occurred_at).format('YYYY-MM-DD HH:mm:ss')}
                 </Text>
                 {event.source && (
-                  <Text type='secondary' className='ml-2'>
+                  <Text type="secondary" className="ml-2">
                     来源: {event.source}
                   </Text>
                 )}
@@ -818,7 +821,7 @@ const IncidentEvents: React.FC<{ events: IncidentEvent[]; loading: boolean }> = 
           ))}
         </Timeline>
       ) : (
-        <Empty description='暂无活动记录' />
+        <Empty description="暂无活动记录" />
       )}
     </div>
   );
@@ -860,7 +863,7 @@ const IncidentAlerts: React.FC<{ alerts: IncidentAlert[]; loading: boolean }> = 
   return (
     <div>
       {loading ? (
-        <div className='text-center py-8'>
+        <div className="text-center py-8">
           <Text>加载中...</Text>
         </div>
       ) : alerts.length > 0 ? (
@@ -876,7 +879,7 @@ const IncidentAlerts: React.FC<{ alerts: IncidentAlert[]; loading: boolean }> = 
                   />
                 }
                 title={
-                  <div className='flex items-center justify-between'>
+                  <div className="flex items-center justify-between">
                     <Text strong>{alert.alert_name}</Text>
                     <Space>
                       <Tag color={getSeverityColor(alert.severity)}>{alert.severity}</Tag>
@@ -886,15 +889,15 @@ const IncidentAlerts: React.FC<{ alerts: IncidentAlert[]; loading: boolean }> = 
                 }
                 description={
                   <div>
-                    <div className='mb-2'>
+                    <div className="mb-2">
                       <Text>{alert.message}</Text>
                     </div>
-                    <div className='text-gray-500 text-sm'>
-                      <Text type='secondary'>
+                    <div className="text-gray-500 text-sm">
+                      <Text type="secondary">
                         触发时间: {dayjs(alert.triggered_at).format('YYYY-MM-DD HH:mm:ss')}
                       </Text>
                       {alert.channels && alert.channels.length > 0 && (
-                        <Text type='secondary' className='ml-4'>
+                        <Text type="secondary" className="ml-4">
                           渠道: {alert.channels.join(', ')}
                         </Text>
                       )}
@@ -906,7 +909,7 @@ const IncidentAlerts: React.FC<{ alerts: IncidentAlert[]; loading: boolean }> = 
           )}
         />
       ) : (
-        <Empty description='暂无告警记录' />
+        <Empty description="暂无告警记录" />
       )}
     </div>
   );
@@ -930,29 +933,29 @@ const IncidentMetrics: React.FC<{ metrics: IncidentMetric[]; loading: boolean }>
   return (
     <div>
       {loading ? (
-        <div className='text-center py-8'>
+        <div className="text-center py-8">
           <Text>加载中...</Text>
         </div>
       ) : metrics.length > 0 ? (
         <Row gutter={[16, 16]}>
           {metrics.map(metric => (
             <Col span={8} key={metric.id}>
-              <Card size='small'>
-                <div className='text-center'>
-                  <div className='mb-2'>{getMetricIcon(metric.metric_type)}</div>
-                  <div className='mb-1'>
+              <Card size="small">
+                <div className="text-center">
+                  <div className="mb-2">{getMetricIcon(metric.metric_type)}</div>
+                  <div className="mb-1">
                     <Text strong>{metric.metric_name}</Text>
                   </div>
-                  <div className='text-2xl font-bold mb-1'>
+                  <div className="text-2xl font-bold mb-1">
                     {metric.metric_value}
                     {metric.unit && (
-                      <Text type='secondary' className='text-sm ml-1'>
+                      <Text type="secondary" className="text-sm ml-1">
                         {metric.unit}
                       </Text>
                     )}
                   </div>
-                  <div className='text-gray-500 text-sm'>
-                    <Text type='secondary'>
+                  <div className="text-gray-500 text-sm">
+                    <Text type="secondary">
                       {dayjs(metric.measured_at).format('YYYY-MM-DD HH:mm')}
                     </Text>
                   </div>
@@ -962,7 +965,7 @@ const IncidentMetrics: React.FC<{ metrics: IncidentMetric[]; loading: boolean }>
           ))}
         </Row>
       ) : (
-        <Empty description='暂无指标数据' />
+        <Empty description="暂无指标数据" />
       )}
     </div>
   );
@@ -973,26 +976,26 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
   const impactAnalysis = incident.impact_analysis;
 
   if (!impactAnalysis) {
-    return <Empty description='暂无影响分析数据' />;
+    return <Empty description="暂无影响分析数据" />;
   }
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 时间影响 */}
       {impactAnalysis.time_impact && (
-        <Card title='时间影响'>
+        <Card title="时间影响">
           <Row gutter={[16, 16]}>
             <Col span={12}>
               <Statistic
-                title='创建后时长'
+                title="创建后时长"
                 value={impactAnalysis.time_impact.hours_since_creation}
-                suffix='小时'
+                suffix="小时"
                 precision={1}
               />
             </Col>
             <Col span={12}>
               <Statistic
-                title='是否超时'
+                title="是否超时"
                 value={impactAnalysis.time_impact.is_overdue ? '是' : '否'}
                 style={{
                   color: impactAnalysis.time_impact.is_overdue ? '#f5222d' : '#52c41a',
@@ -1005,27 +1008,27 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
 
       {/* 业务影响 */}
       {impactAnalysis.business_impact && (
-        <Card title='业务影响'>
+        <Card title="业务影响">
           <Row gutter={[16, 16]}>
             <Col span={8}>
               <Statistic
-                title='受影响用户'
+                title="受影响用户"
                 value={impactAnalysis.business_impact.affected_users}
-                suffix='人'
+                suffix="人"
               />
             </Col>
             <Col span={8}>
               <Statistic
-                title='收入影响'
+                title="收入影响"
                 value={impactAnalysis.business_impact.revenue_impact}
-                prefix='¥'
+                prefix="¥"
               />
             </Col>
             <Col span={8}>
               <Statistic
-                title='服务可用性'
+                title="服务可用性"
                 value={impactAnalysis.business_impact.service_availability}
-                suffix='%'
+                suffix="%"
                 precision={1}
               />
             </Col>
@@ -1035,23 +1038,23 @@ const IncidentImpactAnalysis: React.FC<{ incident: Incident }> = ({ incident }) 
 
       {/* 指标影响 */}
       {impactAnalysis.metrics && (
-        <Card title='指标影响'>
+        <Card title="指标影响">
           <Row gutter={[16, 16]}>
             <Col span={6}>
-              <Statistic title='指标总数' value={impactAnalysis.metrics.total_count} />
+              <Statistic title="指标总数" value={impactAnalysis.metrics.total_count} />
             </Col>
             <Col span={6}>
               <Statistic
-                title='平均值'
+                title="平均值"
                 value={impactAnalysis.metrics.average_value}
                 precision={2}
               />
             </Col>
             <Col span={6}>
-              <Statistic title='最大值' value={impactAnalysis.metrics.max_value} precision={2} />
+              <Statistic title="最大值" value={impactAnalysis.metrics.max_value} precision={2} />
             </Col>
             <Col span={6}>
-              <Statistic title='最小值' value={impactAnalysis.metrics.min_value} precision={2} />
+              <Statistic title="最小值" value={impactAnalysis.metrics.min_value} precision={2} />
             </Col>
           </Row>
         </Card>
@@ -1113,45 +1116,45 @@ const IncidentFormModal: React.FC<{
       confirmLoading={loading}
       width={600}
     >
-      <Form form={form} layout='vertical' onFinish={handleSubmit}>
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
-          name='title'
-          label='事件标题'
+          name="title"
+          label="事件标题"
           rules={[{ required: true, message: '请输入事件标题' }]}
         >
-          <Input placeholder='请输入事件标题' />
+          <Input placeholder="请输入事件标题" />
         </Form.Item>
 
-        <Form.Item name='description' label='事件描述'>
-          <TextArea rows={4} placeholder='请输入事件描述' />
+        <Form.Item name="description" label="事件描述">
+          <TextArea rows={4} placeholder="请输入事件描述" />
         </Form.Item>
 
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
-              name='priority'
-              label='优先级'
+              name="priority"
+              label="优先级"
               rules={[{ required: true, message: '请选择优先级' }]}
             >
-              <Select placeholder='请选择优先级'>
-                <Option value='low'>低</Option>
-                <Option value='medium'>中</Option>
-                <Option value='high'>高</Option>
-                <Option value='urgent'>紧急</Option>
+              <Select placeholder="请选择优先级">
+                <Option value="low">低</Option>
+                <Option value="medium">中</Option>
+                <Option value="high">高</Option>
+                <Option value="urgent">紧急</Option>
               </Select>
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item
-              name='severity'
-              label='严重程度'
+              name="severity"
+              label="严重程度"
               rules={[{ required: true, message: '请选择严重程度' }]}
             >
-              <Select placeholder='请选择严重程度'>
-                <Option value='low'>低</Option>
-                <Option value='medium'>中</Option>
-                <Option value='high'>高</Option>
-                <Option value='critical'>严重</Option>
+              <Select placeholder="请选择严重程度">
+                <Option value="low">低</Option>
+                <Option value="medium">中</Option>
+                <Option value="high">高</Option>
+                <Option value="critical">严重</Option>
               </Select>
             </Form.Item>
           </Col>
@@ -1159,19 +1162,19 @@ const IncidentFormModal: React.FC<{
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name='category' label='分类'>
-              <Select placeholder='请选择分类'>
-                <Option value='performance'>性能</Option>
-                <Option value='connectivity'>连接</Option>
-                <Option value='security'>安全</Option>
-                <Option value='storage'>存储</Option>
-                <Option value='network'>网络</Option>
+            <Form.Item name="category" label="分类">
+              <Select placeholder="请选择分类">
+                <Option value="performance">性能</Option>
+                <Option value="connectivity">连接</Option>
+                <Option value="security">安全</Option>
+                <Option value="storage">存储</Option>
+                <Option value="network">网络</Option>
               </Select>
             </Form.Item>
           </Col>
           <Col span={12}>
-            <Form.Item name='subcategory' label='子分类'>
-              <Input placeholder='请输入子分类' />
+            <Form.Item name="subcategory" label="子分类">
+              <Input placeholder="请输入子分类" />
             </Form.Item>
           </Col>
         </Row>
@@ -1211,7 +1214,7 @@ const IncidentMonitoringPanel: React.FC<{
 
   return (
     <Drawer
-      title='事件监控面板'
+      title="事件监控面板"
       width={1000}
       open={visible}
       onClose={onClose}
@@ -1222,17 +1225,17 @@ const IncidentMonitoringPanel: React.FC<{
       }
     >
       {loading ? (
-        <div className='text-center py-8'>
+        <div className="text-center py-8">
           <Text>加载中...</Text>
         </div>
       ) : monitoringData ? (
-        <div className='space-y-6'>
+        <div className="space-y-6">
           {/* 监控概览 */}
           <Row gutter={16}>
             <Col span={6}>
               <Card>
                 <Statistic
-                  title='总事件数'
+                  title="总事件数"
                   value={monitoringData.total_incidents}
                   prefix={<InfoCircleOutlined />}
                 />
@@ -1241,7 +1244,7 @@ const IncidentMonitoringPanel: React.FC<{
             <Col span={6}>
               <Card>
                 <Statistic
-                  title='进行中'
+                  title="进行中"
                   value={monitoringData.open_incidents}
                   prefix={<ClockCircleOutlined />}
                   styles={{ content: { color: '#1890ff' } }}
@@ -1251,7 +1254,7 @@ const IncidentMonitoringPanel: React.FC<{
             <Col span={6}>
               <Card>
                 <Statistic
-                  title='已解决'
+                  title="已解决"
                   value={monitoringData.resolved_incidents}
                   prefix={<CheckCircleOutlined />}
                   styles={{ content: { color: '#52c41a' } }}
@@ -1261,9 +1264,9 @@ const IncidentMonitoringPanel: React.FC<{
             <Col span={6}>
               <Card>
                 <Statistic
-                  title='解决率'
+                  title="解决率"
                   value={monitoringData.resolution_rate}
-                  suffix='%'
+                  suffix="%"
                   precision={1}
                   prefix={<BarChartOutlined />}
                   styles={{ content: { color: '#52c41a' } }}
@@ -1273,32 +1276,32 @@ const IncidentMonitoringPanel: React.FC<{
           </Row>
 
           {/* 趋势图表 */}
-          <Card title='事件趋势'>
-            <div className='h-64 flex items-center justify-center bg-gray-50 rounded'>
-              <Text type='secondary'>图表组件待实现</Text>
+          <Card title="事件趋势">
+            <div className="h-64 flex items-center justify-center bg-gray-50 rounded">
+              <Text type="secondary">图表组件待实现</Text>
             </div>
           </Card>
 
           {/* 严重事件列表 */}
-          <Card title='严重事件'>
+          <Card title="严重事件">
             {monitoringData.critical_incidents > 0 ? (
               <Alert
                 message={`发现 ${monitoringData.critical_incidents} 个严重事件`}
-                type='error'
+                type="error"
                 showIcon
                 action={
-                  <Button size='small' danger>
+                  <Button size="small" danger>
                     查看详情
                   </Button>
                 }
               />
             ) : (
-              <Alert title="暂无严重事件" type='success' showIcon />
+              <Alert title="暂无严重事件" type="success" showIcon />
             )}
           </Card>
         </div>
       ) : (
-        <Empty description='暂无监控数据' />
+        <Empty description="暂无监控数据" />
       )}
     </Drawer>
   );

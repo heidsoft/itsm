@@ -9,6 +9,7 @@ import (
 	"itsm-backend/ent/department"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/predicate"
+	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
@@ -313,6 +314,21 @@ func (uu *UserUpdate) AddRoles(r ...*Role) *UserUpdate {
 	return uu.AddRoleIDs(ids...)
 }
 
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (uu *UserUpdate) AddVersionChangelogIDs(ids ...int) *UserUpdate {
+	uu.mutation.AddVersionChangelogIDs(ids...)
+	return uu
+}
+
+// AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (uu *UserUpdate) AddVersionChangelogs(p ...*ProcessVersionChangelog) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.AddVersionChangelogIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uu *UserUpdate) Mutation() *UserMutation {
 	return uu.mutation
@@ -427,6 +443,27 @@ func (uu *UserUpdate) RemoveRoles(r ...*Role) *UserUpdate {
 		ids[i] = r[i].ID
 	}
 	return uu.RemoveRoleIDs(ids...)
+}
+
+// ClearVersionChangelogs clears all "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (uu *UserUpdate) ClearVersionChangelogs() *UserUpdate {
+	uu.mutation.ClearVersionChangelogs()
+	return uu
+}
+
+// RemoveVersionChangelogIDs removes the "version_changelogs" edge to ProcessVersionChangelog entities by IDs.
+func (uu *UserUpdate) RemoveVersionChangelogIDs(ids ...int) *UserUpdate {
+	uu.mutation.RemoveVersionChangelogIDs(ids...)
+	return uu
+}
+
+// RemoveVersionChangelogs removes "version_changelogs" edges to ProcessVersionChangelog entities.
+func (uu *UserUpdate) RemoveVersionChangelogs(p ...*ProcessVersionChangelog) *UserUpdate {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uu.RemoveVersionChangelogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -808,6 +845,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if uu.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VersionChangelogsTable,
+			Columns: []string{user.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !uu.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VersionChangelogsTable,
+			Columns: []string{user.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VersionChangelogsTable,
+			Columns: []string{user.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, uu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -1107,6 +1189,21 @@ func (uuo *UserUpdateOne) AddRoles(r ...*Role) *UserUpdateOne {
 	return uuo.AddRoleIDs(ids...)
 }
 
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (uuo *UserUpdateOne) AddVersionChangelogIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.AddVersionChangelogIDs(ids...)
+	return uuo
+}
+
+// AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (uuo *UserUpdateOne) AddVersionChangelogs(p ...*ProcessVersionChangelog) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.AddVersionChangelogIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uuo *UserUpdateOne) Mutation() *UserMutation {
 	return uuo.mutation
@@ -1221,6 +1318,27 @@ func (uuo *UserUpdateOne) RemoveRoles(r ...*Role) *UserUpdateOne {
 		ids[i] = r[i].ID
 	}
 	return uuo.RemoveRoleIDs(ids...)
+}
+
+// ClearVersionChangelogs clears all "version_changelogs" edges to the ProcessVersionChangelog entity.
+func (uuo *UserUpdateOne) ClearVersionChangelogs() *UserUpdateOne {
+	uuo.mutation.ClearVersionChangelogs()
+	return uuo
+}
+
+// RemoveVersionChangelogIDs removes the "version_changelogs" edge to ProcessVersionChangelog entities by IDs.
+func (uuo *UserUpdateOne) RemoveVersionChangelogIDs(ids ...int) *UserUpdateOne {
+	uuo.mutation.RemoveVersionChangelogIDs(ids...)
+	return uuo
+}
+
+// RemoveVersionChangelogs removes "version_changelogs" edges to ProcessVersionChangelog entities.
+func (uuo *UserUpdateOne) RemoveVersionChangelogs(p ...*ProcessVersionChangelog) *UserUpdateOne {
+	ids := make([]int, len(p))
+	for i := range p {
+		ids[i] = p[i].ID
+	}
+	return uuo.RemoveVersionChangelogIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -1625,6 +1743,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(role.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VersionChangelogsTable,
+			Columns: []string{user.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !uuo.mutation.VersionChangelogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VersionChangelogsTable,
+			Columns: []string{user.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.VersionChangelogsTable,
+			Columns: []string{user.VersionChangelogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

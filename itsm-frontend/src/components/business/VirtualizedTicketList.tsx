@@ -156,12 +156,12 @@ const TicketRow: React.FC<{
       style={{ height: '100%' }}
     >
       {/* 选择框 */}
-      <div className='w-12 flex justify-center'>
+      <div className="w-12 flex justify-center">
         <Checkbox checked={isSelected} onChange={handleSelect} />
       </div>
 
       {/* 工单信息 */}
-      <div className='flex-1 flex items-center'>
+      <div className="flex-1 flex items-center">
         <div
           style={{
             width: 40,
@@ -176,7 +176,7 @@ const TicketRow: React.FC<{
         >
           <FileText size={20} style={{ color: '#1890ff' }} />
         </div>
-        <div className='flex-1'>
+        <div className="flex-1">
           <div style={{ fontWeight: 'medium', color: '#000', marginBottom: 4 }}>{ticket.title}</div>
           <div style={{ fontSize: 'small', color: '#666' }}>
             #{ticket.id} • {ticket.category}
@@ -185,24 +185,24 @@ const TicketRow: React.FC<{
       </div>
 
       {/* 状态 */}
-      <div className='w-32 flex justify-center'>
+      <div className="w-32 flex justify-center">
         <StatusTag status={ticket.status} />
       </div>
 
       {/* 优先级 */}
-      <div className='w-24 flex justify-center'>
+      <div className="w-24 flex justify-center">
         <PriorityTag priority={ticket.priority} />
       </div>
 
       {/* 类型 */}
-      <div className='w-32 flex justify-center'>
+      <div className="w-32 flex justify-center">
         <TypeTag type={ticket.type || 'incident'} />
       </div>
 
       {/* 分配人 */}
-      <div className='w-32 flex justify-center'>
+      <div className="w-32 flex justify-center">
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Avatar size='small' style={{ backgroundColor: '#1890ff', marginRight: 8 }}>
+          <Avatar size="small" style={{ backgroundColor: '#1890ff', marginRight: 8 }}>
             {ticket.assignee?.name?.[0] || 'U'}
           </Avatar>
           <span style={{ fontSize: 'small' }}>{ticket.assignee?.name || 'Unassigned'}</span>
@@ -210,30 +210,30 @@ const TicketRow: React.FC<{
       </div>
 
       {/* 创建时间 */}
-      <div className='w-32 flex justify-center'>
+      <div className="w-32 flex justify-center">
         <div style={{ fontSize: 'small', color: '#666' }}>
           {new Date(ticket.createdAt).toLocaleDateString('zh-CN')}
         </div>
       </div>
 
       {/* 操作按钮 */}
-      <div className='w-48 flex justify-center'>
-        <Space size='small'>
-          <Tooltip title='View Details'>
+      <div className="w-48 flex justify-center">
+        <Space size="small">
+          <Tooltip title="View Details">
             <Button
-              type='text'
-              size='small'
+              type="text"
+              size="small"
               icon={<Eye size={16} />}
               onClick={() => window.open(`/tickets/${ticket.id}`)}
             />
           </Tooltip>
-          <Tooltip title='Edit'>
-            <Button type='text' size='small' icon={<Edit size={16} />} onClick={handleEdit} />
+          <Tooltip title="Edit">
+            <Button type="text" size="small" icon={<Edit size={16} />} onClick={handleEdit} />
           </Tooltip>
-          <Tooltip title='View Activity Log'>
+          <Tooltip title="View Activity Log">
             <Button
-              type='text'
-              size='small'
+              type="text"
+              size="small"
               icon={<Activity size={16} />}
               onClick={handleViewActivity}
             />
@@ -254,7 +254,7 @@ const TicketRow: React.FC<{
             }}
             trigger={['click']}
           >
-            <Button type='text' size='small' icon={<MoreHorizontal size={16} />} />
+            <Button type="text" size="small" icon={<MoreHorizontal size={16} />} />
           </Dropdown>
         </Space>
       </div>
@@ -271,21 +271,21 @@ const TableHeader: React.FC<{
   indeterminate: boolean;
 }> = React.memo(({ onSelectAll, allSelected, indeterminate }) => {
   return (
-    <div className='flex items-center p-4 bg-gray-50 border-b-2 border-gray-200 font-semibold text-gray-700'>
-      <div className='w-12 flex justify-center'>
+    <div className="flex items-center p-4 bg-gray-50 border-b-2 border-gray-200 font-semibold text-gray-700">
+      <div className="w-12 flex justify-center">
         <Checkbox
           checked={allSelected}
           indeterminate={indeterminate}
           onChange={e => onSelectAll(e.target.checked)}
         />
       </div>
-      <div className='flex-1'>Ticket Information</div>
-      <div className='w-32 text-center'>Status</div>
-      <div className='w-24 text-center'>Priority</div>
-      <div className='w-32 text-center'>Type</div>
-      <div className='w-32 text-center'>Assignee</div>
-      <div className='w-32 text-center'>Created Time</div>
-      <div className='w-48 text-center'>Actions</div>
+      <div className="flex-1">Ticket Information</div>
+      <div className="w-32 text-center">Status</div>
+      <div className="w-24 text-center">Priority</div>
+      <div className="w-32 text-center">Type</div>
+      <div className="w-32 text-center">Assignee</div>
+      <div className="w-32 text-center">Created Time</div>
+      <div className="w-48 text-center">Actions</div>
     </div>
   );
 });
@@ -362,10 +362,10 @@ export const VirtualizedTicketList: React.FC<VirtualizedTicketListProps> = React
 
     if (loading) {
       return (
-        <div className='flex items-center justify-center h-64'>
-          <div className='text-center'>
-            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4'></div>
-            <div className='text-gray-600'>Loading tickets...</div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="text-gray-600">Loading tickets...</div>
           </div>
         </div>
       );
@@ -373,17 +373,17 @@ export const VirtualizedTicketList: React.FC<VirtualizedTicketListProps> = React
 
     if (tickets.length === 0) {
       return (
-        <div className='flex items-center justify-center h-64'>
-          <div className='text-center'>
-            <FileText size={48} className='text-gray-400 mx-auto mb-4' />
-            <div className='text-gray-600'>No tickets found</div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <FileText size={48} className="text-gray-400 mx-auto mb-4" />
+            <div className="text-gray-600">No tickets found</div>
           </div>
         </div>
       );
     }
 
     return (
-      <div className='bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden'>
+      <div className="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
         <TableHeader
           onSelectAll={handleSelectAll}
           allSelected={allSelected}
@@ -393,8 +393,8 @@ export const VirtualizedTicketList: React.FC<VirtualizedTicketListProps> = React
           height={height}
           itemCount={tickets.length}
           itemSize={itemHeight}
-          width='100%'
-          className='virtual-list'
+          width="100%"
+          className="virtual-list"
         >
           {Row}
         </List>

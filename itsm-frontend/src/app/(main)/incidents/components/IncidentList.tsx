@@ -24,7 +24,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   onView,
 }) => {
   const { t } = useI18n();
-  
+
   const statusConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
     open: {
       color: '#fa8c16',
@@ -48,29 +48,28 @@ export const IncidentList: React.FC<IncidentListProps> = ({
     },
   };
 
-  const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> =
-    {
-      low: {
-        color: '#52c41a',
-        text: t('incidents.priorityLow'),
-        backgroundColor: '#f6ffed',
-      },
-      medium: {
-        color: '#1890ff',
-        text: t('incidents.priorityMedium'),
-        backgroundColor: '#e6f7ff',
-      },
-      high: {
-        color: '#fa8c16',
-        text: t('incidents.priorityHigh'),
-        backgroundColor: '#fff7e6',
-      },
-      critical: {
-        color: '#ff4d4f',
-        text: t('incidents.priorityCritical'),
-        backgroundColor: '#fff2f0',
-      },
-    };
+  const priorityConfig: Record<string, { color: string; text: string; backgroundColor: string }> = {
+    low: {
+      color: '#52c41a',
+      text: t('incidents.priorityLow'),
+      backgroundColor: '#f6ffed',
+    },
+    medium: {
+      color: '#1890ff',
+      text: t('incidents.priorityMedium'),
+      backgroundColor: '#e6f7ff',
+    },
+    high: {
+      color: '#fa8c16',
+      text: t('incidents.priorityHigh'),
+      backgroundColor: '#fff7e6',
+    },
+    critical: {
+      color: '#ff4d4f',
+      text: t('incidents.priorityCritical'),
+      backgroundColor: '#fff2f0',
+    },
+  };
 
   const columns = [
     {
@@ -201,28 +200,28 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       key: 'actions',
       width: 150,
       render: (_: unknown, record: Incident) => (
-        <Space size='small'>
+        <Space size="small">
           <Button
-            type='text'
-            size='small'
+            type="text"
+            size="small"
             icon={<Eye size={16} />}
             onClick={() => onView(record)}
-            className='text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2'
+            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-0 rounded-lg transition-all duration-200 p-2"
             title={t('incidents.viewDetails')}
           />
           <Button
-            type='text'
-            size='small'
+            type="text"
+            size="small"
             icon={<Edit size={16} />}
             onClick={() => onEdit(record)}
-            className='text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2'
+            className="text-green-600 hover:text-green-700 hover:bg-green-50 border-0 rounded-lg transition-all duration-200 p-2"
             title={t('incidents.editIncident')}
           />
           <Button
-            type='text'
-            size='small'
+            type="text"
+            size="small"
             icon={<MoreHorizontal size={16} />}
-            className='text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2'
+            className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 border-0 rounded-lg transition-all duration-200 p-2"
             title={t('incidents.moreActions')}
           />
         </Space>
@@ -231,7 +230,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
   ];
 
   return (
-    <div className='bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden'>
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
       <Table
         rowSelection={{
           selectedRowKeys,
@@ -239,7 +238,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
         }}
         columns={columns}
         dataSource={incidents}
-        rowKey='id'
+        rowKey="id"
         loading={loading}
         pagination={false}
         scroll={{ x: 1200 }}

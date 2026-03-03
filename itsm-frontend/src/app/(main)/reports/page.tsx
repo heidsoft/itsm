@@ -31,7 +31,11 @@ import {
   CheckCircle,
   Target,
 } from 'lucide-react';
-import { TicketAnalyticsApi, type AnalyticsConfig, type AnalyticsResponse } from '@/lib/api/ticket-analytics-api';
+import {
+  TicketAnalyticsApi,
+  type AnalyticsConfig,
+  type AnalyticsResponse,
+} from '@/lib/api/ticket-analytics-api';
 import { format, subDays } from 'date-fns';
 
 // 动态导入报告组件 - 减少初始 bundle 大小
@@ -64,7 +68,7 @@ const ReportsPage: React.FC = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsResponse | null>(null);
   const [timeRange, setTimeRange] = useState<[string, string]>([
     format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-    format(new Date(), 'yyyy-MM-dd')
+    format(new Date(), 'yyyy-MM-dd'),
   ]);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -139,7 +143,7 @@ const ReportsPage: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       message.success(`报告导出成功 (${fileFormat.toUpperCase()})`);
     } catch (error) {
       message.error('导出失败');
@@ -185,7 +189,12 @@ const ReportsPage: React.FC = () => {
                     styles={{ content: { color: '#52c41a' } }}
                     suffix={
                       <Text type="secondary">
-                        ({((analyticsData.summary.resolved / analyticsData.summary.total) * 100).toFixed(1)}%)
+                        (
+                        {(
+                          (analyticsData.summary.resolved / analyticsData.summary.total) *
+                          100
+                        ).toFixed(1)}
+                        %)
                       </Text>
                     }
                   />
@@ -209,9 +218,11 @@ const ReportsPage: React.FC = () => {
                     value={analyticsData.summary.sla_compliance}
                     suffix="%"
                     prefix={<Target className="w-4 h-4" />}
-                    styles={{ content: { 
-                      color: analyticsData.summary.sla_compliance >= 95 ? '#52c41a' : '#f5222d' 
-                    }}}
+                    styles={{
+                      content: {
+                        color: analyticsData.summary.sla_compliance >= 95 ? '#52c41a' : '#f5222d',
+                      },
+                    }}
                   />
                 </Card>
               </Col>
@@ -219,34 +230,30 @@ const ReportsPage: React.FC = () => {
           )}
 
           {/* 图表区域 */}
-          <Card title="工单趋势分析" extra={
-            <Space>
-              <Select
-                defaultValue="ticket_trends"
-                style={{ width: 200 }}
-                onChange={(value) => {
-                  fetchAnalyticsData(predefinedReports[value as keyof typeof predefinedReports]);
-                }}
-              >
-                {Object.entries(predefinedReports).map(([key, report]) => (
-                  <Option key={key} value={key}>
-                    {report.name}
-                  </Option>
-                ))}
-              </Select>
-              <Button 
-                icon={<Download size={16} />}
-                onClick={() => handleExport('excel')}
-              >
-                导出
-              </Button>
-            </Space>
-          }>
-            <ReportsCharts 
-              data={analyticsData?.data || []} 
-              loading={loading}
-              chartType="line"
-            />
+          <Card
+            title="工单趋势分析"
+            extra={
+              <Space>
+                <Select
+                  defaultValue="ticket_trends"
+                  style={{ width: 200 }}
+                  onChange={value => {
+                    fetchAnalyticsData(predefinedReports[value as keyof typeof predefinedReports]);
+                  }}
+                >
+                  {Object.entries(predefinedReports).map(([key, report]) => (
+                    <Option key={key} value={key}>
+                      {report.name}
+                    </Option>
+                  ))}
+                </Select>
+                <Button icon={<Download size={16} />} onClick={() => handleExport('excel')}>
+                  导出
+                </Button>
+              </Space>
+            }
+          >
+            <ReportsCharts data={analyticsData?.data || []} loading={loading} chartType="line" />
           </Card>
         </div>
       ),
@@ -276,7 +283,7 @@ const ReportsPage: React.FC = () => {
       children: (
         <div className="space-y-6">
           <Card title="自定义分析报告">
-            <ReportGenerator 
+            <ReportGenerator
               onGenerate={fetchAnalyticsData}
               loading={loading}
               timeRange={timeRange}
@@ -314,21 +321,21 @@ const ReportsPage: React.FC = () => {
               <div>
                 <Title level={4}>选择导出格式</Title>
                 <Space wrap>
-                  <Button 
+                  <Button
                     size="large"
                     onClick={() => handleExport('excel')}
                     icon={<Download size={16} />}
                   >
                     导出 Excel
                   </Button>
-                  <Button 
+                  <Button
                     size="large"
                     onClick={() => handleExport('pdf')}
                     icon={<Download size={16} />}
                   >
                     导出 PDF
                   </Button>
-                  <Button 
+                  <Button
                     size="large"
                     onClick={() => handleExport('csv')}
                     icon={<Download size={16} />}
@@ -362,17 +369,11 @@ const ReportsPage: React.FC = () => {
         <Title level={2} className="mb-2">
           报表中心
         </Title>
-        <Text type="secondary">
-          全面的ITSM数据分析与报告中心，提供多维度数据洞察和决策支持
-        </Text>
+        <Text type="secondary">全面的ITSM数据分析与报告中心，提供多维度数据洞察和决策支持</Text>
       </div>
 
       <Card>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={tabItems}
-        />
+        <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabItems} />
       </Card>
     </div>
   );

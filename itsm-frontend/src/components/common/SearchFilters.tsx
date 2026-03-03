@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Input, Select, Button, Space, Card, Row, Col } from "antd";
-import { Search, Filter, RefreshCw, Download } from "lucide-react";
+import React from 'react';
+import { Input, Select, Button, Space, Card, Row, Col } from 'antd';
+import { Search, Filter, RefreshCw, Download } from 'lucide-react';
 
 const { Option } = Select;
 
@@ -27,7 +27,7 @@ interface SearchFiltersProps {
 }
 
 export const SearchFilters: React.FC<SearchFiltersProps> = ({
-  searchPlaceholder = "搜索...",
+  searchPlaceholder = '搜索...',
   filters = [],
   onSearch,
   onFilterChange,
@@ -35,7 +35,7 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
   onExport,
   showExport = false,
   loading = false,
-  className = "",
+  className = '',
 }) => {
   const handleSearch = (value: string) => {
     onSearch?.(value);
@@ -64,16 +64,16 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
         </Col>
 
         {/* 过滤器 */}
-        {filters.map((filter) => (
+        {filters.map(filter => (
           <Col xs={24} sm={12} md={8} lg={6} key={filter.key}>
             <Select
               placeholder={filter.placeholder || filter.label}
               allowClear={filter.allowClear !== false}
               size="large"
-              style={{ width: "100%" }}
-              onChange={(value) => handleFilterChange(filter.key, value)}
+              style={{ width: '100%' }}
+              onChange={value => handleFilterChange(filter.key, value)}
             >
-              {filter.options.map((option) => (
+              {filter.options.map(option => (
                 <Option key={option.value} value={option.value}>
                   {option.label}
                 </Option>
@@ -85,19 +85,11 @@ export const SearchFilters: React.FC<SearchFiltersProps> = ({
         {/* 操作按钮 */}
         <Col xs={24} sm={24} md={24} lg={24 - filters.length * 6}>
           <Space size="middle" className="w-full justify-end">
-            <Button
-              icon={<RefreshCw size={16} />}
-              onClick={handleReset}
-              loading={loading}
-            >
+            <Button icon={<RefreshCw size={16} />} onClick={handleReset} loading={loading}>
               重置
             </Button>
             {showExport && (
-              <Button
-                icon={<Download size={16} />}
-                onClick={onExport}
-                type="primary"
-              >
+              <Button icon={<Download size={16} />} onClick={onExport} type="primary">
                 导出
               </Button>
             )}

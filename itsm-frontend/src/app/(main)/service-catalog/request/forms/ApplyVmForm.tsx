@@ -41,16 +41,16 @@ export const ApplyVmForm: React.FC<ApplyVmFormProps> = ({ onSubmit }) => {
   }, [selectedRegion]);
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 地域选择 */}
       <div>
-        <label htmlFor='region' className='block text-sm font-medium text-gray-700'>
+        <label htmlFor="region" className="block text-sm font-medium text-gray-700">
           地域
         </label>
         <select
-          id='region'
-          name='region'
-          className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+          id="region"
+          name="region"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           onChange={e => setSelectedRegion(e.target.value)}
           value={selectedRegion}
         >
@@ -64,13 +64,13 @@ export const ApplyVmForm: React.FC<ApplyVmFormProps> = ({ onSubmit }) => {
 
       {/* 可用区选择 */}
       <div>
-        <label htmlFor='zone' className='block text-sm font-medium text-gray-700'>
+        <label htmlFor="zone" className="block text-sm font-medium text-gray-700">
           可用区
         </label>
         <select
-          id='zone'
-          name='zone'
-          className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+          id="zone"
+          name="zone"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           {availableZones.map(zone => (
             <option key={zone} value={zone}>
@@ -82,13 +82,13 @@ export const ApplyVmForm: React.FC<ApplyVmFormProps> = ({ onSubmit }) => {
 
       {/* 实例规格 */}
       <div>
-        <label htmlFor='instance-type' className='block text-sm font-medium text-gray-700'>
+        <label htmlFor="instance-type" className="block text-sm font-medium text-gray-700">
           实例规格
         </label>
         <select
-          id='instance-type'
-          name='instance-type'
-          className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+          id="instance-type"
+          name="instance-type"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           {Object.entries(instanceTypes).map(([id, name]) => (
             <option key={id} value={id}>
@@ -100,13 +100,13 @@ export const ApplyVmForm: React.FC<ApplyVmFormProps> = ({ onSubmit }) => {
 
       {/* 操作系统镜像 */}
       <div>
-        <label htmlFor='image' className='block text-sm font-medium text-gray-700'>
+        <label htmlFor="image" className="block text-sm font-medium text-gray-700">
           操作系统镜像
         </label>
         <select
-          id='image'
-          name='image'
-          className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+          id="image"
+          name="image"
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
         >
           {Object.entries(images).map(([id, name]) => (
             <option key={id} value={id}>
@@ -118,16 +118,16 @@ export const ApplyVmForm: React.FC<ApplyVmFormProps> = ({ onSubmit }) => {
 
       {/* 业务理由 */}
       <div>
-        <label htmlFor='business-reason' className='block text-sm font-medium text-gray-700'>
+        <label htmlFor="business-reason" className="block text-sm font-medium text-gray-700">
           业务理由
         </label>
         <textarea
-          id='business-reason'
-          name='business-reason'
+          id="business-reason"
+          name="business-reason"
           rows={4}
-          className='mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           required
-          placeholder='请详细说明您申请此服务的业务背景和目的...'
+          placeholder="请详细说明您申请此服务的业务背景和目的..."
         ></textarea>
       </div>
     </div>

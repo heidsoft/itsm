@@ -6,7 +6,6 @@
 import React from 'react';
 import { Modal, Form, Tabs, Select, Input, Checkbox, Row, Col } from 'antd';
 import type { FormInstance } from 'antd';
-import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 
@@ -23,7 +22,6 @@ export default function WorkflowSettingsModal({
   onSave,
   form,
 }: WorkflowSettingsModalProps) {
-  const { t } = useI18n();
   return (
     <Modal
       title="流程设置"
@@ -31,8 +29,8 @@ export default function WorkflowSettingsModal({
       onOk={onSave}
       onCancel={onClose}
       width={800}
-      okText={t('common.save')}
-      cancelText={t('common.cancel')}
+      okText="保存"
+      cancelText="取消"
     >
       <Form form={form} layout="vertical">
         <Tabs
@@ -70,12 +68,18 @@ export default function WorkflowSettingsModal({
                 <>
                   <Row gutter={16}>
                     <Col span={12}>
-                      <Form.Item label="响应时间(小时)" name={['sla_config', 'response_time_hours']}>
+                      <Form.Item
+                        label="响应时间(小时)"
+                        name={['sla_config', 'response_time_hours']}
+                      >
                         <Input type="number" />
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item label="解决时间(小时)" name={['sla_config', 'resolution_time_hours']}>
+                      <Form.Item
+                        label="解决时间(小时)"
+                        name={['sla_config', 'resolution_time_hours']}
+                      >
                         <Input type="number" />
                       </Form.Item>
                     </Col>

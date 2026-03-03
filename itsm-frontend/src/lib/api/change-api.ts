@@ -5,14 +5,14 @@
 import { httpClient } from './http-client';
 
 // 变更状态类型
-export type ChangeStatus = 
-  | 'draft' 
-  | 'pending' 
-  | 'approved' 
-  | 'rejected' 
-  | 'in_progress' 
-  | 'completed' 
-  | 'rolled_back' 
+export type ChangeStatus =
+  | 'draft'
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'in_progress'
+  | 'completed'
+  | 'rolled_back'
   | 'cancelled';
 
 // 变更类型
@@ -225,7 +225,10 @@ export class ChangeApi {
   }
 
   // 从模板创建变更
-  static async createFromTemplate(templateId: number, data: Partial<ChangeRequest>): Promise<Change> {
+  static async createFromTemplate(
+    templateId: number,
+    data: Partial<ChangeRequest>
+  ): Promise<Change> {
     return httpClient.post(`/api/v1/changes/templates/${templateId}/create`, data);
   }
 

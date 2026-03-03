@@ -27,9 +27,9 @@ export function ResponsiveLayout({
   };
 
   const containerClasses = {
-    'default': 'max-w-7xl mx-auto',
+    default: 'max-w-7xl mx-auto',
     'full-width': 'w-full',
-    'centered': 'max-w-4xl mx-auto',
+    centered: 'max-w-4xl mx-auto',
   };
 
   return (
@@ -37,9 +37,7 @@ export function ResponsiveLayout({
       {/* Header */}
       {header && (
         <header className="sticky top-0 z-40 bg-white border-b border-gray-200 shadow-sm">
-          <div className={containerClasses[variant]}>
-            {header}
-          </div>
+          <div className={containerClasses[variant]}>{header}</div>
         </header>
       )}
 
@@ -47,21 +45,20 @@ export function ResponsiveLayout({
       <div className="flex-1 flex">
         {/* Sidebar */}
         {sidebar && (
-          <aside className={cn(
-            'hidden lg:block bg-white border-r border-gray-200',
-            sidebarWidths[sidebarWidth],
-            'sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto'
-          )}>
+          <aside
+            className={cn(
+              'hidden lg:block bg-white border-r border-gray-200',
+              sidebarWidths[sidebarWidth],
+              'sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto'
+            )}
+          >
             {sidebar}
           </aside>
         )}
 
         {/* Main Content */}
         <main className="flex-1 flex flex-col">
-          <div className={cn(
-            'flex-1',
-            variant !== 'full-width' && 'px-4 sm:px-6 lg:px-8 py-6'
-          )}>
+          <div className={cn('flex-1', variant !== 'full-width' && 'px-4 sm:px-6 lg:px-8 py-6')}>
             {children}
           </div>
         </main>
@@ -70,9 +67,7 @@ export function ResponsiveLayout({
       {/* Footer */}
       {footer && (
         <footer className="bg-white border-t border-gray-200">
-          <div className={containerClasses[variant]}>
-            {footer}
-          </div>
+          <div className={containerClasses[variant]}>{footer}</div>
         </footer>
       )}
     </div>
@@ -118,10 +113,7 @@ export function PageHeader({
                   </svg>
                 )}
                 {crumb.href ? (
-                  <a
-                    href={crumb.href}
-                    className="hover:text-gray-700 transition-colors"
-                  >
+                  <a href={crumb.href} className="hover:text-gray-700 transition-colors">
                     {crumb.label}
                   </a>
                 ) : (
@@ -136,22 +128,12 @@ export function PageHeader({
       {/* Header Content */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold text-gray-900 truncate">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="mt-1 text-sm text-gray-500 truncate">
-              {subtitle}
-            </p>
-          )}
+          <h1 className="text-2xl font-bold text-gray-900 truncate">{title}</h1>
+          {subtitle && <p className="mt-1 text-sm text-gray-500 truncate">{subtitle}</p>}
         </div>
 
         {/* Actions */}
-        {actions && (
-          <div className="flex-shrink-0">
-            {actions}
-          </div>
-        )}
+        {actions && <div className="flex-shrink-0">{actions}</div>}
       </div>
 
       {/* Additional content */}
@@ -197,49 +179,29 @@ export function Card({
   };
 
   return (
-    <div
-      className={cn('rounded-lg', variants[variant], className)}
-      onClick={onClick}
-    >
+    <div className={cn('rounded-lg', variants[variant], className)} onClick={onClick}>
       {/* Header */}
       {(title || headerActions) && (
-        <div className={cn(
-          'flex items-center justify-between border-b border-gray-200 pb-4 mb-4',
-          sizes[size]
-        )}>
-          <div className="min-w-0 flex-1">
-            {title && (
-              <h3 className="text-lg font-medium text-gray-900 truncate">
-                {title}
-              </h3>
-            )}
-            {subtitle && (
-              <p className="mt-1 text-sm text-gray-500 truncate">
-                {subtitle}
-              </p>
-            )}
-          </div>
-          {headerActions && (
-            <div className="flex-shrink-0 ml-4">
-              {headerActions}
-            </div>
+        <div
+          className={cn(
+            'flex items-center justify-between border-b border-gray-200 pb-4 mb-4',
+            sizes[size]
           )}
+        >
+          <div className="min-w-0 flex-1">
+            {title && <h3 className="text-lg font-medium text-gray-900 truncate">{title}</h3>}
+            {subtitle && <p className="mt-1 text-sm text-gray-500 truncate">{subtitle}</p>}
+          </div>
+          {headerActions && <div className="flex-shrink-0 ml-4">{headerActions}</div>}
         </div>
       )}
 
       {/* Content */}
-      <div className={cn(!title && !headerActions && sizes[size])}>
-        {children}
-      </div>
+      <div className={cn(!title && !headerActions && sizes[size])}>{children}</div>
 
       {/* Footer */}
       {footer && (
-        <div className={cn(
-          'border-t border-gray-200 pt-4 mt-4',
-          sizes[size]
-        )}>
-          {footer}
-        </div>
+        <div className={cn('border-t border-gray-200 pt-4 mt-4', sizes[size])}>{footer}</div>
       )}
     </div>
   );
@@ -277,12 +239,14 @@ export function Grid({
   };
 
   return (
-    <div className={cn(
-      'grid',
-      responsive ? colClasses[cols] : `grid-cols-${cols}`,
-      gapClasses[gap],
-      className
-    )}>
+    <div
+      className={cn(
+        'grid',
+        responsive ? colClasses[cols] : `grid-cols-${cols}`,
+        gapClasses[gap],
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -344,15 +308,17 @@ export function Stack({
   };
 
   return (
-    <div className={cn(
-      'flex',
-      directionClasses[direction],
-      spacingClasses[direction][spacing],
-      alignClasses[align],
-      justifyClasses[justify],
-      wrap && 'flex-wrap',
-      className
-    )}>
+    <div
+      className={cn(
+        'flex',
+        directionClasses[direction],
+        spacingClasses[direction][spacing],
+        alignClasses[align],
+        justifyClasses[justify],
+        wrap && 'flex-wrap',
+        className
+      )}
+    >
       {children}
     </div>
   );
@@ -365,18 +331,9 @@ interface LoadingStateProps {
   className?: string;
 }
 
-export function LoadingState({
-  isLoading,
-  children,
-  skeleton,
-  className,
-}: LoadingStateProps) {
+export function LoadingState({ isLoading, children, skeleton, className }: LoadingStateProps) {
   if (isLoading) {
-    return (
-      <div className={cn('animate-pulse', className)}>
-        {skeleton || <DefaultSkeleton />}
-      </div>
-    );
+    return <div className={cn('animate-pulse', className)}>{skeleton || <DefaultSkeleton />}</div>;
   }
 
   return <>{children}</>;
@@ -400,39 +357,16 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({
-  title,
-  description,
-  icon,
-  action,
-  className,
-}: EmptyStateProps) {
+export function EmptyState({ title, description, icon, action, className }: EmptyStateProps) {
   return (
-    <div className={cn(
-      'text-center py-12',
-      className
-    )}>
-      {icon && (
-        <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
-          {icon}
-        </div>
-      )}
-      
-      <h3 className="mt-2 text-sm font-medium text-gray-900">
-        {title}
-      </h3>
-      
-      {description && (
-        <p className="mt-1 text-sm text-gray-500">
-          {description}
-        </p>
-      )}
-      
-      {action && (
-        <div className="mt-6">
-          {action}
-        </div>
-      )}
+    <div className={cn('text-center py-12', className)}>
+      {icon && <div className="mx-auto h-12 w-12 text-gray-400 mb-4">{icon}</div>}
+
+      <h3 className="mt-2 text-sm font-medium text-gray-900">{title}</h3>
+
+      {description && <p className="mt-1 text-sm text-gray-500">{description}</p>}
+
+      {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }
@@ -442,10 +376,7 @@ interface ErrorBoundaryFallbackProps {
   resetErrorBoundary: () => void;
 }
 
-export function ErrorBoundaryFallback({
-  error,
-  resetErrorBoundary,
-}: ErrorBoundaryFallbackProps) {
+export function ErrorBoundaryFallback({ error, resetErrorBoundary }: ErrorBoundaryFallbackProps) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
@@ -466,26 +397,18 @@ export function ErrorBoundaryFallback({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-gray-900">
-              应用程序遇到错误
-            </h3>
+            <h3 className="text-sm font-medium text-gray-900">应用程序遇到错误</h3>
           </div>
         </div>
-        
+
         <div className="mb-4">
-          <p className="text-sm text-gray-500 mb-2">
-            {error.message}
-          </p>
+          <p className="text-sm text-gray-500 mb-2">{error.message}</p>
           <details className="text-xs text-gray-400">
-            <summary className="cursor-pointer hover:text-gray-600">
-              查看详细信息
-            </summary>
-            <pre className="mt-2 whitespace-pre-wrap break-all">
-              {error.stack}
-            </pre>
+            <summary className="cursor-pointer hover:text-gray-600">查看详细信息</summary>
+            <pre className="mt-2 whitespace-pre-wrap break-all">{error.stack}</pre>
           </details>
         </div>
-        
+
         <button
           onClick={resetErrorBoundary}
           className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"

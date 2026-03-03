@@ -24,7 +24,6 @@ import {
   Alert,
   Divider,
   Switch,
-  Empty,
 } from 'antd';
 import {
   Plus,
@@ -46,6 +45,7 @@ import {
   GitCommit,
   GitPullRequest,
 } from 'lucide-react';
+import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
 
 const { TextArea } = Input;
@@ -520,8 +520,8 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       key: 'name',
       render: (text: string, record: Workflow) => (
         <div>
-          <div className='font-medium'>{text}</div>
-          <div className='text-sm text-gray-500'>{record.description}</div>
+          <div className="font-medium">{text}</div>
+          <div className="text-sm text-gray-500">{record.description}</div>
         </div>
       ),
     },
@@ -529,20 +529,20 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       title: '分类',
       dataIndex: 'category',
       key: 'category',
-      render: (category: string) => <Tag color='blue'>{category}</Tag>,
+      render: (category: string) => <Tag color="blue">{category}</Tag>,
     },
     {
       title: '版本',
       dataIndex: 'version',
       key: 'version',
-      render: (version: string) => <Tag color='cyan'>v{version}</Tag>,
+      render: (version: string) => <Tag color="cyan">v{version}</Tag>,
     },
     {
       title: '步骤数',
       key: 'stepsCount',
       render: (record: Workflow) => (
-        <div className='flex items-center gap-2'>
-          <Workflow size={16} className='text-gray-400' />
+        <div className="flex items-center gap-2">
+          <Workflow size={16} className="text-gray-400" />
           <span>{record.steps.length}</span>
         </div>
       ),
@@ -551,17 +551,17 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       title: '状态',
       key: 'status',
       render: (record: Workflow) => (
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <Switch
             checked={record.isActive}
-            size='small'
+            size="small"
             onChange={checked => {
               setWorkflows(prev =>
                 prev.map(w => (w.id === record.id ? { ...w, isActive: checked } : w))
               );
             }}
           />
-          {record.isDefault && <Tag color='green'>默认</Tag>}
+          {record.isDefault && <Tag color="green">默认</Tag>}
         </div>
       ),
     },
@@ -570,9 +570,9 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       key: 'actions',
       render: (record: Workflow) => (
         <Space>
-          <Tooltip title='查看详情'>
+          <Tooltip title="查看详情">
             <Button
-              size='small'
+              size="small"
               icon={<Eye size={14} />}
               onClick={() => {
                 setEditingWorkflow(record);
@@ -580,20 +580,20 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
               }}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              size='small'
+              size="small"
               icon={<Edit size={14} />}
               onClick={() => handleEditWorkflow(record)}
             />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个工作流吗？'
+            title="确定要删除这个工作流吗？"
             onConfirm={() => handleDeleteWorkflow(record.id)}
-            okText='确定'
-            cancelText='取消'
+            okText="确定"
+            cancelText="取消"
           >
-            <Button size='small' danger icon={<Delete size={14} />} />
+            <Button size="small" danger icon={<Delete size={14} />} />
           </Popconfirm>
         </Space>
       ),
@@ -607,8 +607,8 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       key: 'workflowName',
       render: (text: string, record: WorkflowInstance) => (
         <div>
-          <div className='font-medium'>{text}</div>
-          <div className='text-sm text-gray-500'>工单: {record.ticketId}</div>
+          <div className="font-medium">{text}</div>
+          <div className="text-sm text-gray-500">工单: {record.ticketId}</div>
         </div>
       ),
     },
@@ -616,9 +616,9 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       title: '当前步骤',
       key: 'currentStep',
       render: (record: WorkflowInstance) => (
-        <div className='flex items-center gap-2'>
-          <Badge status='processing' />
-          <span className='text-sm'>{record.currentStep}</span>
+        <div className="flex items-center gap-2">
+          <Badge status="processing" />
+          <span className="text-sm">{record.currentStep}</span>
         </div>
       ),
     },
@@ -627,8 +627,8 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       dataIndex: 'currentAssignee',
       key: 'currentAssignee',
       render: (assignee: string) => (
-        <div className='flex items-center gap-2'>
-          <Users size={14} className='text-gray-400' />
+        <div className="flex items-center gap-2">
+          <Users size={14} className="text-gray-400" />
           <span>{assignee || '未分配'}</span>
         </div>
       ),
@@ -637,10 +637,10 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       title: '进度',
       key: 'progress',
       render: (record: WorkflowInstance) => (
-        <div className='w-32'>
+        <div className="w-32">
           <Progress
             percent={record.progress}
-            size='small'
+            size="small"
             status={record.status === 'error' ? 'exception' : 'normal'}
           />
         </div>
@@ -663,45 +663,46 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       title: '预计完成',
       key: 'estimatedCompletion',
       render: (record: WorkflowInstance) => (
-        <div className='text-sm text-gray-500'>{record.estimatedCompletion}</div>
+        <div className="text-sm text-gray-500">{record.estimatedCompletion}</div>
       ),
     },
   ];
 
   if (loading) {
-    return <LoadingSkeleton type='table' rows={5} columns={6} />;
+    return <LoadingSkeleton type="table" rows={5} columns={6} />;
   }
 
   if (workflows.length === 0) {
     return (
-      <Empty
-        description='暂无工作流'
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      >
-        <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateWorkflow}>
-          创建工作流
-        </Button>
-      </Empty>
+      <LoadingEmptyError
+        state="empty"
+        empty={{
+          title: '暂无工作流',
+          description: '创建第一个工作流来标准化业务流程',
+          actionText: '创建工作流',
+          onAction: handleCreateWorkflow,
+        }}
+      />
     );
   }
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 头部操作区 */}
       <Card>
-        <div className='flex justify-between items-center'>
+        <div className="flex justify-between items-center">
           <div>
-            <Title level={4} className='mb-1'>
+            <Title level={4} className="mb-1">
               工作流引擎
             </Title>
-            <Text type='secondary'>
+            <Text type="secondary">
               {mode === 'design' && '设计和配置业务流程工作流'}
               {mode === 'monitor' && '监控工作流执行状态和进度'}
               {mode === 'manage' && '管理工作流定义和配置'}
             </Text>
           </div>
           {mode === 'manage' && (
-            <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateWorkflow}>
+            <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateWorkflow}>
               创建工作流
             </Button>
           )}
@@ -714,7 +715,7 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
           <Table
             columns={workflowColumns}
             dataSource={workflows}
-            rowKey='id'
+            rowKey="id"
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
@@ -728,14 +729,14 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
       {/* 工作流实例监控 */}
       {mode === 'monitor' && (
         <Card>
-          <div className='mb-4'>
+          <div className="mb-4">
             <Title level={5}>工作流实例监控</Title>
-            <Text type='secondary'>实时监控工作流执行状态和进度</Text>
+            <Text type="secondary">实时监控工作流执行状态和进度</Text>
           </div>
           <Table
             columns={instanceColumns}
             dataSource={instances}
-            rowKey='id'
+            rowKey="id"
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
@@ -751,48 +752,48 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
         open={modalVisible}
         onOk={handleSaveWorkflow}
         onCancel={() => setModalVisible(false)}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
         width={800}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='name'
-                label='工作流名称'
+                name="name"
+                label="工作流名称"
                 rules={[{ required: true, message: '请输入工作流名称' }]}
               >
-                <Input placeholder='请输入工作流名称' />
+                <Input placeholder="请输入工作流名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name='category'
-                label='分类'
+                name="category"
+                label="分类"
                 rules={[{ required: true, message: '请选择分类' }]}
               >
-                <Select placeholder='请选择分类'>
-                  <Option value='工单处理'>工单处理</Option>
-                  <Option value='变更管理'>变更管理</Option>
-                  <Option value='问题管理'>问题管理</Option>
-                  <Option value='发布管理'>发布管理</Option>
-                  <Option value='其他'>其他</Option>
+                <Select placeholder="请选择分类">
+                  <Option value="工单处理">工单处理</Option>
+                  <Option value="变更管理">变更管理</Option>
+                  <Option value="问题管理">问题管理</Option>
+                  <Option value="发布管理">发布管理</Option>
+                  <Option value="其他">其他</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item name='description' label='描述'>
-            <TextArea rows={3} placeholder='请输入工作流描述' />
+          <Form.Item name="description" label="描述">
+            <TextArea rows={3} placeholder="请输入工作流描述" />
           </Form.Item>
 
-          <Form.Item name='triggers' label='触发条件'>
-            <Select mode='tags' placeholder='请输入触发条件'>
-              <Option value='工单创建'>工单创建</Option>
-              <Option value='工单状态变更'>工单状态变更</Option>
-              <Option value='变更申请'>变更申请</Option>
-              <Option value='问题升级'>问题升级</Option>
+          <Form.Item name="triggers" label="触发条件">
+            <Select mode="tags" placeholder="请输入触发条件">
+              <Option value="工单创建">工单创建</Option>
+              <Option value="工单状态变更">工单状态变更</Option>
+              <Option value="变更申请">变更申请</Option>
+              <Option value="问题升级">问题升级</Option>
             </Select>
           </Form.Item>
         </Form>
@@ -800,32 +801,32 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
 
       {/* 工作流详情抽屉 */}
       <Drawer
-        title='工作流详情'
-        placement='right'
+        title="工作流详情"
+        placement="right"
         size="large"
         style={{ width: 800 }}
         open={drawerVisible}
         onClose={() => setDrawerVisible(false)}
       >
         {editingWorkflow && (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             <div>
               <Title level={5}>基本信息</Title>
-              <div className='bg-gray-50 p-4 rounded-lg space-y-2'>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>工作流名称:</span>
-                  <span className='font-medium'>{editingWorkflow.name}</span>
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">工作流名称:</span>
+                  <span className="font-medium">{editingWorkflow.name}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>分类:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">分类:</span>
                   <span>{editingWorkflow.category}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>版本:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">版本:</span>
                   <span>v{editingWorkflow.version}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>状态:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">状态:</span>
                   <Tag color={editingWorkflow.isActive ? 'green' : 'red'}>
                     {editingWorkflow.isActive ? '启用' : '禁用'}
                   </Tag>
@@ -842,9 +843,9 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
                     color={getStepTypeColor(step.type)}
                     dot={getStepTypeIcon(step.type)}
                   >
-                    <div className='mb-2'>
-                      <div className='flex items-center gap-2 mb-1'>
-                        <span className='font-medium'>{step.name}</span>
+                    <div className="mb-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-medium">{step.name}</span>
                         <Tag color={getStepTypeColor(step.type)}>
                           {step.type === 'start' && '开始'}
                           {step.type === 'task' && '任务'}
@@ -852,29 +853,29 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
                           {step.type === 'condition' && '条件'}
                           {step.type === 'end' && '结束'}
                         </Tag>
-                        {step.isRequired && <Tag color='red'>必填</Tag>}
-                        {step.canSkip && <Tag color='orange'>可跳过</Tag>}
+                        {step.isRequired && <Tag color="red">必填</Tag>}
+                        {step.canSkip && <Tag color="orange">可跳过</Tag>}
                       </div>
-                      <div className='text-sm text-gray-600 mb-2'>{step.description}</div>
+                      <div className="text-sm text-gray-600 mb-2">{step.description}</div>
 
                       {step.assignee && (
-                        <div className='text-sm text-gray-500 mb-1'>
+                        <div className="text-sm text-gray-500 mb-1">
                           处理人: {step.assignee} ({step.assigneeType})
                         </div>
                       )}
 
                       {step.estimatedTime && (
-                        <div className='text-sm text-gray-500 mb-1'>
+                        <div className="text-sm text-gray-500 mb-1">
                           预计时间: {step.estimatedTime}分钟
                         </div>
                       )}
 
                       {step.sla && (
-                        <div className='text-sm text-gray-500 mb-1'>SLA: {step.sla}分钟</div>
+                        <div className="text-sm text-gray-500 mb-1">SLA: {step.sla}分钟</div>
                       )}
 
                       {step.nextSteps.length > 0 && (
-                        <div className='text-sm text-gray-500'>
+                        <div className="text-sm text-gray-500">
                           下一步: {step.nextSteps.join(', ')}
                         </div>
                       )}
@@ -886,21 +887,21 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
 
             <div>
               <Title level={5}>其他信息</Title>
-              <div className='bg-gray-50 p-4 rounded-lg space-y-2'>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>触发条件:</span>
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">触发条件:</span>
                   <span>{editingWorkflow.triggers.join(', ') || '无'}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>创建人:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">创建人:</span>
                   <span>{editingWorkflow.createdBy}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>创建时间:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">创建时间:</span>
                   <span>{editingWorkflow.createdAt}</span>
                 </div>
-                <div className='flex justify-between'>
-                  <span className='text-gray-600'>更新时间:</span>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">更新时间:</span>
                   <span>{editingWorkflow.updatedAt}</span>
                 </div>
               </div>

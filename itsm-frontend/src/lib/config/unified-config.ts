@@ -18,7 +18,8 @@ export const ENV_CONFIG = {
 
 // API配置
 export const API_CONFIG = {
-  BASE_URL: ENV_CONFIG.NEXT_PUBLIC_API_URL || 
+  BASE_URL:
+    ENV_CONFIG.NEXT_PUBLIC_API_URL ||
     (typeof window === 'undefined' ? 'http://localhost:8090' : ''),
   VERSION: ENV_CONFIG.NEXT_PUBLIC_API_VERSION,
   TIMEOUT: 30000,
@@ -41,7 +42,7 @@ export const APP_CONFIG = {
   DESCRIPTION: 'IT Service Management System',
   AUTHOR: 'ITSM Team',
   HOMEPAGE: '/',
-  
+
   // 功能开关
   FEATURES: {
     MULTI_TENANT: true,
@@ -57,7 +58,7 @@ export const APP_CONFIG = {
     DARK_MODE: true,
     MOBILE_APP: true,
   },
-  
+
   // 主题配置
   THEME: {
     DEFAULT_MODE: 'light',
@@ -66,7 +67,7 @@ export const APP_CONFIG = {
     WARNING_COLOR: '#faad14',
     ERROR_COLOR: '#ff4d4f',
     INFO_COLOR: '#1890ff',
-    
+
     // 布局配置
     LAYOUT: {
       SIDEBAR_WIDTH: 240,
@@ -74,7 +75,7 @@ export const APP_CONFIG = {
       HEADER_HEIGHT: 64,
       CONTENT_PADDING: 24,
     },
-    
+
     // 断点配置
     BREAKPOINTS: {
       XS: 480,
@@ -85,14 +86,14 @@ export const APP_CONFIG = {
       XXL: 1600,
     },
   },
-  
+
   // 分页配置
   PAGINATION: {
     DEFAULT_PAGE_SIZE: 20,
     PAGE_SIZE_OPTIONS: [10, 20, 50, 100],
     MAX_PAGE_SIZE: 100,
   },
-  
+
   // 表格配置
   TABLE: {
     DEFAULT_PAGE_SIZE: 20,
@@ -102,7 +103,7 @@ export const APP_CONFIG = {
     SCROLL_X: 1200,
     ROW_HEIGHT: 54,
   },
-  
+
   // 表单配置
   FORM: {
     LAYOUT: 'horizontal',
@@ -111,7 +112,7 @@ export const APP_CONFIG = {
     AUTO_COMPLETE: 'off',
     SUBMIT_ON_ENTER: false,
   },
-  
+
   // 文件上传配置
   UPLOAD: {
     MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
@@ -130,7 +131,7 @@ export const APP_CONFIG = {
     MAX_FILE_COUNT: 10,
     CHUNK_SIZE: 1024 * 1024, // 1MB
   },
-  
+
   // 缓存配置
   CACHE: {
     API_CACHE_TTL: 5 * 60 * 1000, // 5分钟
@@ -138,7 +139,7 @@ export const APP_CONFIG = {
     SYSTEM_CACHE_TTL: 60 * 60 * 1000, // 1小时
     MAX_CACHE_SIZE: 100,
   },
-  
+
   // 本地存储配置
   STORAGE: {
     TOKEN_KEY: 'itsm_token',
@@ -157,7 +158,7 @@ export const DEV_CONFIG = {
   ENABLE_DEBUG_LOGS: ENV_CONFIG.NEXT_PUBLIC_ENABLE_DEBUG,
   ENABLE_PERFORMANCE_MONITORING: ENV_CONFIG.NODE_ENV === 'development',
   LOG_LEVEL: ENV_CONFIG.NEXT_PUBLIC_ENABLE_DEBUG ? 'debug' : 'info',
-  
+
   // 调试工具
   DEBUG_TOOLS: {
     REDUX_DEVTOOLS: true,
@@ -165,7 +166,7 @@ export const DEV_CONFIG = {
     STORYBOOK: true,
     VOLUME_METER: false,
   },
-  
+
   // 性能监控
   PERFORMANCE: {
     ENABLE_PROFILING: true,
@@ -181,7 +182,7 @@ export const PROD_CONFIG = {
   ENABLE_ANALYTICS: ENV_CONFIG.NEXT_PUBLIC_ENABLE_ANALYTICS,
   SENTRY_DSN: ENV_CONFIG.NEXT_PUBLIC_SENTRY_DSN,
   LOG_LEVEL: 'error',
-  
+
   // 性能优化
   PERFORMANCE: {
     ENABLE_LAZY_LOADING: true,
@@ -189,7 +190,7 @@ export const PROD_CONFIG = {
     ENABLE_TREE_SHAKING: true,
     ENABLE_MINIFICATION: true,
   },
-  
+
   // 安全配置
   SECURITY: {
     ENABLE_CSP: true,
@@ -202,15 +203,8 @@ export const PROD_CONFIG = {
 // 路由配置
 export const ROUTE_CONFIG = {
   // 公共路由（无需认证）
-  PUBLIC_ROUTES: [
-    '/login',
-    '/register',
-    '/forgot-password',
-    '/reset-password',
-    '/404',
-    '/500',
-  ],
-  
+  PUBLIC_ROUTES: ['/login', '/register', '/forgot-password', '/reset-password', '/404', '/500'],
+
   // 管理员路由
   ADMIN_ROUTES: [
     '/admin/users',
@@ -219,12 +213,12 @@ export const ROUTE_CONFIG = {
     '/admin/logs',
     '/admin/settings',
   ],
-  
+
   // 默认路由
   DEFAULT_ROUTE: '/dashboard',
   LOGIN_ROUTE: '/login',
   HOME_ROUTE: '/',
-  
+
   // 路由守卫配置
   GUARD: {
     REQUIRE_AUTH: true,
@@ -245,7 +239,7 @@ export const PERMISSION_CONFIG = {
     AGENT: 'agent',
     USER: 'user',
   },
-  
+
   // 权限定义
   PERMISSIONS: {
     // 用户管理
@@ -253,7 +247,7 @@ export const PERMISSION_CONFIG = {
     USER_READ: 'user:read',
     USER_UPDATE: 'user:update',
     USER_DELETE: 'user:delete',
-    
+
     // 工单管理
     TICKET_CREATE: 'ticket:create',
     TICKET_READ: 'ticket:read',
@@ -261,43 +255,33 @@ export const PERMISSION_CONFIG = {
     TICKET_DELETE: 'ticket:delete',
     TICKET_ASSIGN: 'ticket:assign',
     TICKET_CLOSE: 'ticket:close',
-    
+
     // 服务管理
     SERVICE_CREATE: 'service:create',
     SERVICE_READ: 'service:read',
     SERVICE_UPDATE: 'service:update',
     SERVICE_DELETE: 'service:delete',
-    
+
     // 租户管理
     TENANT_CREATE: 'tenant:create',
     TENANT_READ: 'tenant:read',
     TENANT_UPDATE: 'tenant:update',
     TENANT_DELETE: 'tenant:delete',
-    
+
     // 系统管理
     SYSTEM_CONFIG: 'system:config',
     SYSTEM_LOGS: 'system:logs',
     SYSTEM_BACKUP: 'system:backup',
     SYSTEM_MONITOR: 'system:monitor',
   },
-  
+
   // 角色权限映射
   ROLE_PERMISSIONS: {
     SUPER_ADMIN: ['*'], // 所有权限
-    TENANT_ADMIN: [
-      'user:*', 'ticket:*', 'service:*', 'system:read'
-    ],
-    MANAGER: [
-      'user:read', 'user:update', 
-      'ticket:*', 'service:*'
-    ],
-    AGENT: [
-      'ticket:read', 'ticket:update', 'ticket:assign', 'ticket:close',
-      'service:read'
-    ],
-    USER: [
-      'ticket:create', 'ticket:read', 'service:read'
-    ],
+    TENANT_ADMIN: ['user:*', 'ticket:*', 'service:*', 'system:read'],
+    MANAGER: ['user:read', 'user:update', 'ticket:*', 'service:*'],
+    AGENT: ['ticket:read', 'ticket:update', 'ticket:assign', 'ticket:close', 'service:read'],
+    USER: ['ticket:create', 'ticket:read', 'service:read'],
   },
 } as const;
 
@@ -306,10 +290,10 @@ export const I18N_CONFIG = {
   DEFAULT_LOCALE: 'zh-CN',
   SUPPORTED_LOCALES: ['zh-CN', 'en-US'],
   FALLBACK_LOCALE: 'zh-CN',
-  
+
   // 资源路径
   RESOURCES_PATH: '/locales',
-  
+
   // 格式化配置
   DATETIME: {
     DATE_FORMAT: 'YYYY-MM-DD',
@@ -317,12 +301,12 @@ export const I18N_CONFIG = {
     DATETIME_FORMAT: 'YYYY-MM-DD HH:mm:ss',
     TIMEZONE: 'Asia/Shanghai',
   },
-  
+
   NUMBER: {
     DECIMAL_PLACES: 2,
     THOUSAND_SEPARATOR: ',',
   },
-  
+
   CURRENCY: {
     CODE: 'CNY',
     SYMBOL: '¥',
@@ -332,7 +316,7 @@ export const I18N_CONFIG = {
 // 日志配置
 export const LOG_CONFIG = {
   LEVEL: ENV_CONFIG.NEXT_PUBLIC_ENABLE_DEBUG ? 'debug' : 'info',
-  
+
   // 日志级别映射
   LEVEL_MAP: {
     DEBUG: 0,
@@ -341,7 +325,7 @@ export const LOG_CONFIG = {
     ERROR: 3,
     FATAL: 4,
   },
-  
+
   // 日志颜色
   COLORS: {
     DEBUG: '#7C7C7C',
@@ -350,7 +334,7 @@ export const LOG_CONFIG = {
     ERROR: '#FF4D4F',
     FATAL: '#722ED1',
   },
-  
+
   // 控制台输出配置
   CONSOLE: {
     ENABLED: true,
@@ -358,7 +342,7 @@ export const LOG_CONFIG = {
     TIMESTAMPS: true,
     STACK_TRACE: true,
   },
-  
+
   // 远程日志配置
   REMOTE: {
     ENABLED: ENV_CONFIG.NODE_ENV === 'production',
@@ -371,33 +355,37 @@ export const LOG_CONFIG = {
 // 配置验证函数
 export const validateConfig = () => {
   const errors: string[] = [];
-  
+
   // 验证必需的环境变量
   if (!ENV_CONFIG.NEXT_PUBLIC_API_URL && typeof window === 'undefined') {
     errors.push('NEXT_PUBLIC_API_URL is required for server-side rendering');
   }
-  
+
   // 验证文件大小限制
   if (APP_CONFIG.UPLOAD.MAX_FILE_SIZE <= 0) {
     errors.push('MAX_FILE_SIZE must be greater than 0');
   }
-  
+
   // 验证分页配置
   if (APP_CONFIG.PAGINATION.DEFAULT_PAGE_SIZE <= 0) {
     errors.push('DEFAULT_PAGE_SIZE must be greater than 0');
   }
-  
+
   // 验证权限配置
   const requiredPermissions = Object.values(PERMISSION_CONFIG.PERMISSIONS);
   const allPermissions = Object.values(PERMISSION_CONFIG.ROLE_PERMISSIONS).flat();
-  
+
   for (const permission of requiredPermissions) {
     const permissionValue = permission as string;
-    if (permissionValue !== '*' && !allPermissions.includes(permission as any) && !allPermissions.includes('*' as any)) {
+    if (
+      permissionValue !== '*' &&
+      !allPermissions.includes(permission as any) &&
+      !allPermissions.includes('*' as any)
+    ) {
       errors.push(`Permission ${permissionValue} is not assigned to any role`);
     }
   }
-  
+
   return {
     isValid: errors.length === 0,
     errors,
@@ -409,7 +397,7 @@ export const getCurrentConfig = () => {
   const isDev = ENV_CONFIG.NODE_ENV === 'development';
   const isProd = ENV_CONFIG.NODE_ENV === 'production';
   const isTest = ENV_CONFIG.NODE_ENV === 'test';
-  
+
   return {
     ENV_CONFIG,
     API_CONFIG,
@@ -429,31 +417,31 @@ export const getCurrentConfig = () => {
 // 配置初始化函数
 export const initConfig = () => {
   const validation = validateConfig();
-  
+
   if (!validation.isValid) {
     console.error('Configuration validation failed:', validation.errors);
-    
+
     if (ENV_CONFIG.NODE_ENV === 'production') {
       throw new Error('Invalid configuration detected');
     }
   }
-  
+
   if (ENV_CONFIG.NEXT_PUBLIC_ENABLE_DEBUG) {
     console.group('🔧 Configuration Debug');
     console.groupEnd();
   }
-  
+
   return getCurrentConfig();
 };
 
 // 导出配置获取器
 export const getConfig = (path?: string) => {
   const config = getCurrentConfig();
-  
+
   if (!path) {
     return config;
   }
-  
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return path.split('.').reduce((obj: any, key: string) => {
     return obj?.[key];

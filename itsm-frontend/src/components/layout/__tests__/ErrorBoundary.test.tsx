@@ -1,6 +1,6 @@
 /**
  * Layout ErrorBoundary Component Tests
- * 
+ *
  * 测试覆盖:
  * - 正常渲染子组件
  * - 捕获子组件错误
@@ -208,7 +208,7 @@ describe('Layout ErrorBoundary', () => {
       );
 
       const reportButton = screen.getByRole('button', { name: /Report Issue/i });
-      
+
       // 点击不应该抛出错误
       expect(() => fireEvent.click(reportButton)).not.toThrow();
     });
@@ -216,7 +216,7 @@ describe('Layout ErrorBoundary', () => {
 
   describe('自定义配置', () => {
     it('使用自定义 fallback 组件', () => {
-      const CustomFallback = () => <div data-testid='custom-fallback'>Custom Error UI</div>;
+      const CustomFallback = () => <div data-testid="custom-fallback">Custom Error UI</div>;
 
       render(
         <ErrorBoundary fallback={<CustomFallback />}>
@@ -274,7 +274,10 @@ describe('Layout ErrorBoundary', () => {
 
     it('开发环境显示堆栈跟踪详情', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'development',
+        writable: true,
+      });
 
       render(
         <ErrorBoundary>
@@ -285,12 +288,18 @@ describe('Layout ErrorBoundary', () => {
       // 开发环境应该显示 Stack Trace 摘要
       expect(screen.getByText(/Stack Trace/i)).toBeInTheDocument();
 
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true,
+      });
     });
 
     it('生产环境不显示堆栈跟踪详情', () => {
       const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'production';
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: 'production',
+        writable: true,
+      });
 
       render(
         <ErrorBoundary>
@@ -301,7 +310,10 @@ describe('Layout ErrorBoundary', () => {
       // 生产环境不应该显示 Stack Trace 摘要
       expect(screen.queryByText(/Stack Trace/i)).not.toBeInTheDocument();
 
-      process.env.NODE_ENV = originalEnv;
+      Object.defineProperty(process.env, 'NODE_ENV', {
+        value: originalEnv,
+        writable: true,
+      });
     });
   });
 
@@ -342,7 +354,10 @@ describe('Layout ErrorBoundary', () => {
       expect(addEventListenerSpy).toHaveBeenCalledWith('error', expect.any(Function));
       expect(addEventListenerSpy).toHaveBeenCalledWith('unhandledrejection', expect.any(Function));
       expect(removeEventListenerSpy).toHaveBeenCalledWith('error', expect.any(Function));
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('unhandledrejection', expect.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'unhandledrejection',
+        expect.any(Function)
+      );
 
       addEventListenerSpy.mockRestore();
       removeEventListenerSpy.mockRestore();
@@ -432,7 +447,10 @@ describe('useErrorHandler Hook', () => {
     });
     window.dispatchEvent(rejectionEvent);
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Hook caught unhandled Promise rejection:', rejectionEvent.reason);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      'Hook caught unhandled Promise rejection:',
+      rejectionEvent.reason
+    );
 
     consoleErrorSpy.mockRestore();
   });
@@ -578,9 +596,12 @@ describe('异步错误处理', () => {
     );
 
     // 等待 Promise rejection
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalled();
-    }, { timeout: 1000 });
+    await waitFor(
+      () => {
+        expect(consoleErrorSpy).toHaveBeenCalled();
+      },
+      { timeout: 1000 }
+    );
 
     consoleErrorSpy.mockRestore();
   });
@@ -643,28 +664,26 @@ describe('性能和边界情况', () => {
   });
 
   it('处理空子组件', () => {
-    const { container } = render(<ErrorBoundary />);
+    const { container } = render(<ErrorBoundary><></></ErrorBoundary>);
 
     // 没有子组件时应该渲染空内容
     expect(container.firstChild).toBeNull();
   });
 
   it('处理 null 子组件', () => {
-    const { container } = render(<ErrorBoundary>{null}</ErrorBoundary>);
+    const { container } = render(<ErrorBoundary>{null as any}</ErrorBoundary>);
 
     expect(container.firstChild).toBeNull();
   });
 
   it('处理 undefined 子组件', () => {
-    const { container } = render(<ErrorBoundary>{undefined}</ErrorBoundary>);
+    const { container } = render(<ErrorBoundary>{undefined as any}</ErrorBoundary>);
 
     expect(container.firstChild).toBeNull();
   });
 
   it('处理大量子组件', () => {
-    const children = Array.from({ length: 100 }, (_, i) => (
-      <div key={i}>Child {i}</div>
-    ));
+    const children = Array.from({ length: 100 }, (_, i) => <div key={i}>Child {i}</div>);
 
     render(<ErrorBoundary>{children}</ErrorBoundary>);
 
@@ -674,8 +693,8 @@ describe('性能和边界情况', () => {
   });
 
   it('错误消息包含特殊字符', () => {
-    class SpecialErrorComponent extends Component {
-      render() {
+    class SpecialErrorComponent extends Component<{}, {}> {
+      render(): React.ReactNode {
         throw new Error('Error with <special> & "characters"');
       }
     }

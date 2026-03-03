@@ -125,7 +125,7 @@ export interface RootCauseAnalysis {
   contributing_factors: string[];
   evidence: string[];
   preventive_actions: string[];
-  status: "draft" | "in-progress" | "completed" | "approved";
+  status: 'draft' | 'in-progress' | 'completed' | 'approved';
   analyst_id?: number;
   analyst_name?: string;
   created_at?: string;
@@ -136,12 +136,12 @@ export interface RootCauseAnalysis {
 export interface ImpactAssessment {
   id?: number;
   incident_id: number;
-  business_impact: "low" | "medium" | "high" | "critical";
-  technical_impact: "low" | "medium" | "high" | "critical";
+  business_impact: 'low' | 'medium' | 'high' | 'critical';
+  technical_impact: 'low' | 'medium' | 'high' | 'critical';
   affected_services: string[];
   affected_users_count: number;
   financial_impact: number;
-  reputation_impact: "low" | "medium" | "high" | "critical";
+  reputation_impact: 'low' | 'medium' | 'high' | 'critical';
   compliance_impact: boolean;
   assessment_notes: string;
   assessor_id?: number;
@@ -158,8 +158,8 @@ export interface IncidentClassification {
   subcategory: string;
   service_type: string;
   failure_type: string;
-  urgency: "low" | "medium" | "high" | "critical";
-  impact: "low" | "medium" | "high" | "critical";
+  urgency: 'low' | 'medium' | 'high' | 'critical';
+  impact: 'low' | 'medium' | 'high' | 'critical';
   classification_confidence: number; // 0-100
   auto_classified: boolean;
   classifier_id?: number;
@@ -304,13 +304,16 @@ export class IncidentAPI {
         ...normalizePaginationParams(params),
         ...normalizeDateRangeParams(params),
       };
-      
+
       // 过滤掉undefined值
       const cleanParams = Object.fromEntries(
         Object.entries(normalizedParams).filter(([_, value]) => value !== undefined)
       );
-      
-      const response = await httpClient.get<ListIncidentsResponse>(API_URLS.INCIDENTS(), cleanParams);
+
+      const response = await httpClient.get<ListIncidentsResponse>(
+        API_URLS.INCIDENTS(),
+        cleanParams
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.listIncidents error:', error);
@@ -337,7 +340,10 @@ export class IncidentAPI {
   }
 
   // 更新事件状态
-  static async updateIncidentStatus(id: number, data: UpdateIncidentStatusRequest): Promise<Incident> {
+  static async updateIncidentStatus(
+    id: number,
+    data: UpdateIncidentStatusRequest
+  ): Promise<Incident> {
     const response = await httpClient.put<Incident>(`/api/v1/incidents/${id}/status`, data);
     return response;
   }
@@ -357,7 +363,9 @@ export class IncidentAPI {
   // 根因分析相关API
   static async getRootCauseAnalysis(incidentId: number): Promise<RootCauseAnalysis> {
     try {
-      const response = await httpClient.get<RootCauseAnalysis>(`/api/incidents/${incidentId}/root-cause`);
+      const response = await httpClient.get<RootCauseAnalysis>(
+        `/api/incidents/${incidentId}/root-cause`
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.getRootCauseAnalysis error:', error);
@@ -365,9 +373,14 @@ export class IncidentAPI {
     }
   }
 
-  static async createRootCauseAnalysis(request: CreateRootCauseAnalysisRequest): Promise<RootCauseAnalysis> {
+  static async createRootCauseAnalysis(
+    request: CreateRootCauseAnalysisRequest
+  ): Promise<RootCauseAnalysis> {
     try {
-      const response = await httpClient.post<RootCauseAnalysis>('/api/incidents/root-cause', request);
+      const response = await httpClient.post<RootCauseAnalysis>(
+        '/api/incidents/root-cause',
+        request
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.createRootCauseAnalysis error:', error);
@@ -375,9 +388,15 @@ export class IncidentAPI {
     }
   }
 
-  static async updateRootCauseAnalysis(id: number, request: Partial<CreateRootCauseAnalysisRequest>): Promise<RootCauseAnalysis> {
+  static async updateRootCauseAnalysis(
+    id: number,
+    request: Partial<CreateRootCauseAnalysisRequest>
+  ): Promise<RootCauseAnalysis> {
     try {
-      const response = await httpClient.put<RootCauseAnalysis>(`/api/incidents/root-cause/${id}`, request);
+      const response = await httpClient.put<RootCauseAnalysis>(
+        `/api/incidents/root-cause/${id}`,
+        request
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.updateRootCauseAnalysis error:', error);
@@ -388,7 +407,9 @@ export class IncidentAPI {
   // 影响评估相关API
   static async getImpactAssessment(incidentId: number): Promise<ImpactAssessment> {
     try {
-      const response = await httpClient.get<ImpactAssessment>(`/api/incidents/${incidentId}/impact-assessment`);
+      const response = await httpClient.get<ImpactAssessment>(
+        `/api/incidents/${incidentId}/impact-assessment`
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.getImpactAssessment error:', error);
@@ -396,9 +417,14 @@ export class IncidentAPI {
     }
   }
 
-  static async createImpactAssessment(request: CreateImpactAssessmentRequest): Promise<ImpactAssessment> {
+  static async createImpactAssessment(
+    request: CreateImpactAssessmentRequest
+  ): Promise<ImpactAssessment> {
     try {
-      const response = await httpClient.post<ImpactAssessment>('/api/incidents/impact-assessment', request);
+      const response = await httpClient.post<ImpactAssessment>(
+        '/api/incidents/impact-assessment',
+        request
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.createImpactAssessment error:', error);
@@ -406,9 +432,15 @@ export class IncidentAPI {
     }
   }
 
-  static async updateImpactAssessment(id: number, request: Partial<CreateImpactAssessmentRequest>): Promise<ImpactAssessment> {
+  static async updateImpactAssessment(
+    id: number,
+    request: Partial<CreateImpactAssessmentRequest>
+  ): Promise<ImpactAssessment> {
     try {
-      const response = await httpClient.put<ImpactAssessment>(`/api/incidents/impact-assessment/${id}`, request);
+      const response = await httpClient.put<ImpactAssessment>(
+        `/api/incidents/impact-assessment/${id}`,
+        request
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.updateImpactAssessment error:', error);
@@ -419,7 +451,9 @@ export class IncidentAPI {
   // 事件分类相关API
   static async getIncidentClassification(incidentId: number): Promise<IncidentClassification> {
     try {
-      const response = await httpClient.get<IncidentClassification>(`/api/incidents/${incidentId}/classification`);
+      const response = await httpClient.get<IncidentClassification>(
+        `/api/incidents/${incidentId}/classification`
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.getIncidentClassification error:', error);
@@ -427,9 +461,14 @@ export class IncidentAPI {
     }
   }
 
-  static async createIncidentClassification(request: CreateIncidentClassificationRequest): Promise<IncidentClassification> {
+  static async createIncidentClassification(
+    request: CreateIncidentClassificationRequest
+  ): Promise<IncidentClassification> {
     try {
-      const response = await httpClient.post<IncidentClassification>('/api/incidents/classification', request);
+      const response = await httpClient.post<IncidentClassification>(
+        '/api/incidents/classification',
+        request
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.createIncidentClassification error:', error);
@@ -437,9 +476,15 @@ export class IncidentAPI {
     }
   }
 
-  static async updateIncidentClassification(id: number, request: Partial<CreateIncidentClassificationRequest>): Promise<IncidentClassification> {
+  static async updateIncidentClassification(
+    id: number,
+    request: Partial<CreateIncidentClassificationRequest>
+  ): Promise<IncidentClassification> {
     try {
-      const response = await httpClient.put<IncidentClassification>(`/api/incidents/classification/${id}`, request);
+      const response = await httpClient.put<IncidentClassification>(
+        `/api/incidents/classification/${id}`,
+        request
+      );
       return response;
     } catch (error) {
       console.error('IncidentAPI.updateIncidentClassification error:', error);
@@ -467,30 +512,40 @@ export class IncidentAPI {
   }
 
   // 获取可关联的配置项列表
-  static async getConfigurationItems(search?: string, type?: string, status?: string): Promise<Array<{
-    id: number;
-    name: string;
-    type: string;
-    status: string;
-    description?: string;
-  }>> {
-    const params: Record<string, string> = {};
-    if (search) params.search = search;
-    if (type) params.type = type;
-    if (status) params.status = status;
-    
-    const response = await httpClient.get<Array<{
+  static async getConfigurationItems(
+    search?: string,
+    type?: string,
+    status?: string
+  ): Promise<
+    Array<{
       id: number;
       name: string;
       type: string;
       status: string;
       description?: string;
-    }>>('/api/v1/incidents/configuration-items', params);
+    }>
+  > {
+    const params: Record<string, string> = {};
+    if (search) params.search = search;
+    if (type) params.type = type;
+    if (status) params.status = status;
+
+    const response = await httpClient.get<
+      Array<{
+        id: number;
+        name: string;
+        type: string;
+        status: string;
+        description?: string;
+      }>
+    >('/api/v1/incidents/configuration-items', params);
     return response;
   }
 
   // 从阿里云告警创建事件
-  static async createIncidentFromAlibabaCloudAlert(data: AlibabaCloudAlertRequest): Promise<Incident> {
+  static async createIncidentFromAlibabaCloudAlert(
+    data: AlibabaCloudAlertRequest
+  ): Promise<Incident> {
     const response = await httpClient.post<Incident>('/api/v1/incidents/alibaba-cloud-alert', data);
     return response;
   }
@@ -502,7 +557,9 @@ export class IncidentAPI {
   }
 
   // 从云产品事件创建事件
-  static async createIncidentFromCloudProductEvent(data: CloudProductEventRequest): Promise<Incident> {
+  static async createIncidentFromCloudProductEvent(
+    data: CloudProductEventRequest
+  ): Promise<Incident> {
     const response = await httpClient.post<Incident>('/api/v1/incidents/cloud-product-event', data);
     return response;
   }
@@ -520,15 +577,15 @@ export class IncidentAPI {
       metrics: {
         cpu_usage: 95.5,
         memory_usage: 78.2,
-        disk_usage: 45.1
+        disk_usage: 45.1,
       },
       alert_data: {
         alert_rule: 'CPU使用率 > 90%',
         threshold: 90,
         current_value: 95.5,
-        duration: '15分钟'
+        duration: '15分钟',
       },
-      detected_at: new Date().toISOString()
+      detected_at: new Date().toISOString(),
     };
 
     return this.createIncidentFromAlibabaCloudAlert(mockAlert);
@@ -540,7 +597,8 @@ export class IncidentAPI {
       event_id: `security_${Date.now()}`,
       event_type: 'SSH暴力破解',
       event_name: '检测到可疑的SSH登录尝试',
-      event_description: '安全系统检测到来自未知IP地址 (47.98.x.x) 对生产环境服务器的多次SSH登录失败尝试',
+      event_description:
+        '安全系统检测到来自未知IP地址 (47.98.x.x) 对生产环境服务器的多次SSH登录失败尝试',
       source_ip: '47.98.x.x',
       target: 'PROD-BASTION-HOST',
       severity: 'high',
@@ -548,9 +606,9 @@ export class IncidentAPI {
         failed_attempts: 15,
         time_window: '10分钟',
         target_port: 22,
-        attack_type: 'brute_force'
+        attack_type: 'brute_force',
       },
-      detected_at: new Date().toISOString()
+      detected_at: new Date().toISOString(),
     };
 
     return this.createIncidentFromSecurityEvent(mockSecurityEvent);
@@ -570,9 +628,9 @@ export class IncidentAPI {
         sync_delay: 45,
         threshold: 30,
         master_status: 'running',
-        slave_status: 'running'
+        slave_status: 'running',
       },
-      detected_at: new Date().toISOString()
+      detected_at: new Date().toISOString(),
     };
 
     return this.createIncidentFromCloudProductEvent(mockCloudEvent);
@@ -589,7 +647,8 @@ export class IncidentAPI {
   static get incidents() {
     return {
       list: (params?: any) => this.listIncidents(params),
-      items: (params?: any) => this.listIncidents(params).then((r: any) => r.incidents || r.items || []),
+      items: (params?: any) =>
+        this.listIncidents(params).then((r: any) => r.incidents || r.items || []),
     };
   }
 

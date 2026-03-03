@@ -65,7 +65,10 @@ const A2UIComponentRenderer: React.FC<{
       };
 
       return (
-        <div style={{ color: typeof textProps?.color === 'string' ? textProps.color : undefined }} className={hint ? classes[hint] : ''}>
+        <div
+          style={{ color: typeof textProps?.color === 'string' ? textProps.color : undefined }}
+          className={hint ? classes[hint] : ''}
+        >
           {String(textValue ?? '')}
         </div>
       );
@@ -84,7 +87,11 @@ const A2UIComponentRenderer: React.FC<{
 
     case 'Card': {
       const child = props as { child: string };
-      return <Card size="small" className="my-2">{renderChild(child.child)}</Card>;
+      return (
+        <Card size="small" className="my-2">
+          {renderChild(child.child)}
+        </Card>
+      );
     }
 
     case 'TextField': {
@@ -103,8 +110,12 @@ const A2UIComponentRenderer: React.FC<{
       };
 
       const path = getPath(fieldProps?.text)?.replace('/ticket/', '') || '';
-      const isEnabled = fieldProps?.enabled ? resolveValue(fieldProps.enabled, model) !== false : true;
-      const errorMsg = fieldProps?.error ? resolveValue(fieldProps.error, model) as string : undefined;
+      const isEnabled = fieldProps?.enabled
+        ? resolveValue(fieldProps.enabled, model) !== false
+        : true;
+      const errorMsg = fieldProps?.error
+        ? (resolveValue(fieldProps.error, model) as string)
+        : undefined;
 
       return (
         <Form.Item
@@ -116,7 +127,7 @@ const A2UIComponentRenderer: React.FC<{
           <Input
             placeholder={fieldProps?.placeholder?.literalString}
             disabled={!isEnabled}
-            onChange={(e) => {
+            onChange={e => {
               const dataPath = getPath(fieldProps?.text);
               if (dataPath) onModelChange(dataPath, e.target.value);
             }}
@@ -140,14 +151,16 @@ const A2UIComponentRenderer: React.FC<{
       };
 
       const path = getPath(fieldProps?.text)?.replace('/ticket/', '') || '';
-      const isEnabled = fieldProps?.enabled ? resolveValue(fieldProps.enabled, model) !== false : true;
+      const isEnabled = fieldProps?.enabled
+        ? resolveValue(fieldProps.enabled, model) !== false
+        : true;
 
       return (
         <Form.Item name={path} label={fieldProps?.label?.literalString}>
           <Input.TextArea
             rows={fieldProps?.rows || 3}
             disabled={!isEnabled}
-            onChange={(e) => {
+            onChange={e => {
               const dataPath = getPath(fieldProps?.text);
               if (dataPath) onModelChange(dataPath, e.target.value);
             }}
@@ -172,19 +185,23 @@ const A2UIComponentRenderer: React.FC<{
 
       const path = getPath(selectProps?.selection)?.replace('/ticket/', '') || '';
       const options = selectProps?.options?.explicitList || [];
-      const isEnabled = selectProps?.enabled ? resolveValue(selectProps.enabled, model) !== false : true;
+      const isEnabled = selectProps?.enabled
+        ? resolveValue(selectProps.enabled, model) !== false
+        : true;
 
       return (
         <Form.Item name={path} label={selectProps?.label?.literalString}>
           <Select
             disabled={!isEnabled}
-            onChange={(value) => {
+            onChange={value => {
               const dataPath = getPath(selectProps?.selection);
               if (dataPath) onModelChange(dataPath, value);
             }}
           >
             {options.map(opt => (
-              <Select.Option key={opt.id} value={opt.id}>{opt.text}</Select.Option>
+              <Select.Option key={opt.id} value={opt.id}>
+                {opt.text}
+              </Select.Option>
             ))}
           </Select>
         </Form.Item>
@@ -208,7 +225,7 @@ const A2UIComponentRenderer: React.FC<{
           const childDef = childComp.component;
           const childType = Object.keys(childDef)[0];
           if (childType === 'Text') {
-            buttonText = resolveValue((childDef as any).Text?.text, model) as string || '提交';
+            buttonText = (resolveValue((childDef as any).Text?.text, model) as string) || '提交';
           }
         }
       }
@@ -263,7 +280,9 @@ export function A2UIFormRenderer() {
 
     const compDef = root.component;
     const compType = Object.keys(compDef)[0];
-    const children = (compDef as Record<string, unknown>)[compType] as { children?: { explicitList?: string[] } };
+    const children = (compDef as Record<string, unknown>)[compType] as {
+      children?: { explicitList?: string[] };
+    };
 
     return children?.children?.explicitList || [];
   };
@@ -350,10 +369,17 @@ export function A2UIFormRenderer() {
             const updates = parsed.dataModelUpdate.contents;
             setModel(prev => {
               const newModel = JSON.parse(JSON.stringify(prev));
-              updates.forEach((u: { key: string; valueString?: string; valueNumber?: number; valueBoolean?: boolean }) => {
-                const value = u.valueString ?? u.valueNumber ?? u.valueBoolean;
-                setValueByPath(newModel, `${parsed.dataModelUpdate.path}/${u.key}`, value);
-              });
+              updates.forEach(
+                (u: {
+                  key: string;
+                  valueString?: string;
+                  valueNumber?: number;
+                  valueBoolean?: boolean;
+                }) => {
+                  const value = u.valueString ?? u.valueNumber ?? u.valueBoolean;
+                  setValueByPath(newModel, `${parsed.dataModelUpdate.path}/${u.key}`, value);
+                }
+              );
               return newModel;
             });
 
@@ -454,14 +480,17 @@ export function A2UIFormRenderer() {
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">工单创建成功</h2>
           <p className="text-gray-500 mb-4">您的工单已成功提交</p>
-          <Button type="primary" onClick={() => {
-            setSubmitted(false);
-            setComponents([]);
-            setModel({
-              ticket: { title: '', type: 'hardware', priority: 'medium', description: '' },
-              ui: { canSubmit: false, status: '', statusColor: 'gray', errors: {} },
-            });
-          }}>
+          <Button
+            type="primary"
+            onClick={() => {
+              setSubmitted(false);
+              setComponents([]);
+              setModel({
+                ticket: { title: '', type: 'hardware', priority: 'medium', description: '' },
+                ui: { canSubmit: false, status: '', statusColor: 'gray', errors: {} },
+              });
+            }}
+          >
             创建新工单
           </Button>
         </div>
@@ -484,7 +513,9 @@ export function A2UIFormRenderer() {
             onChange={e => setUserIntent(e.target.value)}
             onPressEnter={sendToAI}
           />
-          <Button icon={<Send />} onClick={sendToAI} loading={loading}>发送</Button>
+          <Button icon={<Send />} onClick={sendToAI} loading={loading}>
+            发送
+          </Button>
         </Space.Compact>
       </div>
 

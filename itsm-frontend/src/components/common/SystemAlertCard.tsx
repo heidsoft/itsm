@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { Card, Alert, List, Badge, Button } from 'antd';
@@ -15,41 +15,41 @@ interface SystemAlertCardProps {
 
 export const SystemAlertCard: React.FC<SystemAlertCardProps> = ({
   alerts,
-  title = "系统警报",
+  title = '系统警报',
   onDismiss,
   onViewAll,
   className = '',
 }) => {
   const getSeverityColor = (type: string) => {
     switch (type) {
-      case "error":
-        return "error";
-      case "warning":
-        return "warning";
-      case "info":
-        return "info";
-      case "success":
-        return "success";
+      case 'error':
+        return 'error';
+      case 'warning':
+        return 'warning';
+      case 'info':
+        return 'info';
+      case 'success':
+        return 'success';
       default:
-        return "info";
+        return 'info';
     }
   };
 
   const getSeverityText = (severity: string) => {
     switch (severity) {
-      case "high":
-        return "高";
-      case "medium":
-        return "中";
-      case "low":
-        return "低";
+      case 'high':
+        return '高';
+      case 'medium':
+        return '中';
+      case 'low':
+        return '低';
       default:
         return severity;
     }
   };
 
-  const highCount = alerts.filter((alert) => alert.severity === "high").length;
-  const mediumCount = alerts.filter((alert) => alert.severity === "medium").length;
+  const highCount = alerts.filter(alert => alert.severity === 'high').length;
+  const mediumCount = alerts.filter(alert => alert.severity === 'medium').length;
 
   return (
     <Card
@@ -60,12 +60,8 @@ export const SystemAlertCard: React.FC<SystemAlertCardProps> = ({
             <span className="font-semibold text-gray-800">{title}</span>
           </div>
           <div className="flex items-center space-x-2">
-            {highCount > 0 && (
-              <Badge count={highCount} className="bg-red-500" />
-            )}
-            {mediumCount > 0 && (
-              <Badge count={mediumCount} className="bg-orange-500" />
-            )}
+            {highCount > 0 && <Badge count={highCount} className="bg-red-500" />}
+            {mediumCount > 0 && <Badge count={mediumCount} className="bg-orange-500" />}
             {onViewAll && (
               <Button type="link" size="small" onClick={onViewAll}>
                 查看全部
@@ -85,7 +81,7 @@ export const SystemAlertCard: React.FC<SystemAlertCardProps> = ({
         ) : (
           <List
             dataSource={alerts}
-            renderItem={(alert) => (
+            renderItem={alert => (
               <List.Item className="border-0 px-0">
                 <Alert
                   message={

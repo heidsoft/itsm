@@ -6,15 +6,38 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  Tabs, Card, Button, Space, Table, Tag, Modal, Form,
-  Input, Select, DatePicker, message, Timeline, Typography,
-  Progress, Descriptions, Divider, Alert, Empty, Tooltip
+  Tabs,
+  Card,
+  Button,
+  Space,
+  Table,
+  Tag,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  message,
+  Timeline,
+  Typography,
+  Progress,
+  Descriptions,
+  Divider,
+  Alert,
+  Empty,
+  Tooltip,
 } from 'antd';
 import {
-  PlusOutlined, EditOutlined, DeleteOutlined,
-  CheckCircleOutlined, ClockCircleOutlined,
-  FileTextOutlined, SolutionOutlined, ExperimentOutlined,
-  LinkOutlined, BookOutlined
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  FileTextOutlined,
+  SolutionOutlined,
+  ExperimentOutlined,
+  LinkOutlined,
+  BookOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useParams } from 'next/navigation';
@@ -29,7 +52,7 @@ import {
   type CreateStepRequest,
   type CreateRootCauseRequest,
   type CreateSolutionRequest,
-  type CreateKnowledgeArticleRequest
+  type CreateKnowledgeArticleRequest,
 } from '@/lib/api/problem-investigation';
 
 const { Title, Text, Paragraph } = Typography;
@@ -86,10 +109,10 @@ interface ProblemInvestigationTabProps {
 const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   problemId,
   problemTitle = '',
-  problemDescription = ''
+  problemDescription = '',
 }) => {
   const params = useParams();
-  const id = params?.id as string || problemId.toString();
+  const id = (params?.id as string) || problemId.toString();
 
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<ProblemInvestigationSummary | null>(null);
@@ -161,7 +184,9 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   // 更新步骤状态
   const handleUpdateStepStatus = async (stepId: number, status: string) => {
     try {
-      await ProblemInvestigationAPI.updateStep(stepId, { status: status as InvestigationStep['status'] });
+      await ProblemInvestigationAPI.updateStep(stepId, {
+        status: status as InvestigationStep['status'],
+      });
       message.success('更新成功');
       loadSummary();
     } catch (error) {
@@ -255,9 +280,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: (status: string) => (
-        <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>
-      ),
+      render: (status: string) => <Tag color={statusColors[status]}>{statusLabels[status]}</Tag>,
     },
     {
       title: '负责人',
@@ -268,7 +291,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       title: '完成时间',
       dataIndex: 'completion_date',
       key: 'completion_date',
-      render: (date: string) => date ? dayjs(date).format('YYYY-MM-DD') : '-',
+      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
     },
     {
       title: '操作',
@@ -321,9 +344,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
       title: '优先级',
       dataIndex: 'priority',
       key: 'priority',
-      render: (p: string) => (
-        <Tag color={priorityColors[p]}>{p?.toUpperCase()}</Tag>
-      ),
+      render: (p: string) => <Tag color={priorityColors[p]}>{p?.toUpperCase()}</Tag>,
     },
     {
       title: '状态',
@@ -386,9 +407,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               <Divider />
 
               <Title level={5}>调查概要</Title>
-              <Paragraph>
-                {summary.investigation.investigation_summary || '暂无调查概要'}
-              </Paragraph>
+              <Paragraph>{summary.investigation.investigation_summary || '暂无调查概要'}</Paragraph>
 
               <Divider />
 
@@ -416,10 +435,19 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                     message={`分析方法: ${methodLabels[summary.root_cause_analysis.analysis_method] || summary.root_cause_analysis.analysis_method}`}
                     description={
                       <>
-                        <p><strong>原因描述:</strong> {summary.root_cause_analysis.root_cause_description}</p>
-                        <p><strong>置信度:</strong> {confidenceLabels[summary.root_cause_analysis.confidence_level]}</p>
+                        <p>
+                          <strong>原因描述:</strong>{' '}
+                          {summary.root_cause_analysis.root_cause_description}
+                        </p>
+                        <p>
+                          <strong>置信度:</strong>{' '}
+                          {confidenceLabels[summary.root_cause_analysis.confidence_level]}
+                        </p>
                         {summary.root_cause_analysis.contributing_factors && (
-                          <p><strong>促成因素:</strong> {summary.root_cause_analysis.contributing_factors}</p>
+                          <p>
+                            <strong>促成因素:</strong>{' '}
+                            {summary.root_cause_analysis.contributing_factors}
+                          </p>
                         )}
                       </>
                     }
@@ -442,10 +470,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               )}
             </>
           ) : (
-            <Empty
-              description="暂无调查记录"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            >
+            <Empty description="暂无调查记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
               <Button type="primary" onClick={handleCreateInvestigation}>
                 开始调查
               </Button>
@@ -466,11 +491,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
           title="调查步骤"
           extra={
             summary?.investigation && (
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => setStepModalOpen(true)}
-              >
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => setStepModalOpen(true)}>
                 添加步骤
               </Button>
             )
@@ -485,7 +506,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             />
           ) : (
             <Empty
-              description={summary?.investigation ? "暂无调查步骤" : "请先开始调查"}
+              description={summary?.investigation ? '暂无调查步骤' : '请先开始调查'}
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}
@@ -503,7 +524,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         <Card
           title="根本原因分析"
           extra={
-            summary?.investigation && !summary?.root_cause_analysis && (
+            summary?.investigation &&
+            !summary?.root_cause_analysis && (
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
@@ -541,20 +563,16 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               <Divider />
 
               <Title level={5}>促成因素</Title>
-              <Paragraph>
-                {summary.root_cause_analysis.contributing_factors || '无'}
-              </Paragraph>
+              <Paragraph>{summary.root_cause_analysis.contributing_factors || '无'}</Paragraph>
 
               <Divider />
 
               <Title level={5}>证据支持</Title>
-              <Paragraph>
-                {summary.root_cause_analysis.evidence || '无'}
-              </Paragraph>
+              <Paragraph>{summary.root_cause_analysis.evidence || '无'}</Paragraph>
             </>
           ) : (
             <Empty
-              description={summary?.investigation ? "暂无根因分析" : "请先开始调查"}
+              description={summary?.investigation ? '暂无根因分析' : '请先开始调查'}
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}
@@ -592,7 +610,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             />
           ) : (
             <Empty
-              description={summary?.investigation ? "暂无解决方案" : "请先开始调查"}
+              description={summary?.investigation ? '暂无解决方案' : '请先开始调查'}
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
           )}
@@ -610,7 +628,8 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
         <Card
           title="知识库文章"
           extra={
-            (summary?.root_cause_analysis || (summary?.solutions && summary.solutions.length > 0)) && (
+            (summary?.root_cause_analysis ||
+              (summary?.solutions && summary.solutions.length > 0)) && (
               <Button
                 type="primary"
                 icon={<BookOutlined />}
@@ -632,7 +651,9 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                   key: 'tags',
                   render: (tags: string[]) => (
                     <Space wrap>
-                      {tags?.map(t => <Tag key={t}>{t}</Tag>)}
+                      {tags?.map(t => (
+                        <Tag key={t}>{t}</Tag>
+                      ))}
                     </Space>
                   ),
                 },
@@ -659,10 +680,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               pagination={false}
             />
           ) : (
-            <Empty
-              description="暂无知识库文章"
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
+            <Empty description="暂无知识库文章" image={Empty.PRESENTED_IMAGE_SIMPLE} />
           )}
         </Card>
       ),
@@ -899,10 +917,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
             label="文章标题"
             rules={[{ required: true, message: '请输入文章标题' }]}
           >
-            <Input
-              placeholder="请输入文章标题"
-              defaultValue={`[问题] ${problemTitle}`}
-            />
+            <Input placeholder="请输入文章标题" defaultValue={`[问题] ${problemTitle}`} />
           </Form.Item>
           <Form.Item
             name="article_type"
@@ -935,16 +950,17 @@ ${summary?.root_cause_analysis?.root_cause_description || '请描述根本原因
 ${summary?.solutions?.map((s: ProblemSolution) => `- ${s.solution_description}`).join('\n') || '请描述解决方案'}
 
 ## 预防措施
-${summary?.solutions?.filter((s: ProblemSolution) => s.solution_type === 'prevention').map((s: ProblemSolution) => `- ${s.solution_description}`).join('\n') || ''}
+${
+  summary?.solutions
+    ?.filter((s: ProblemSolution) => s.solution_type === 'prevention')
+    .map((s: ProblemSolution) => `- ${s.solution_description}`)
+    .join('\n') || ''
+}
               `.trim()}
             />
           </Form.Item>
           <Form.Item name="tags" label="标签">
-            <Select
-              mode="tags"
-              placeholder="添加标签"
-              style={{ width: '100%' }}
-            >
+            <Select mode="tags" placeholder="添加标签" style={{ width: '100%' }}>
               <Option value="problem">问题</Option>
               <Option value="root-cause">根因</Option>
               <Option value="solution">解决方案</Option>

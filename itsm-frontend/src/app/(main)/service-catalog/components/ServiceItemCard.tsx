@@ -69,7 +69,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
               {catalog.priority || '—'}
             </Tag>
           </div>
-          <Text type='secondary' className="!text-xs mt-1 block">
+          <Text type="secondary" className="!text-xs mt-1 block">
             {catalog.category}
           </Text>
         </div>
@@ -82,7 +82,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
       <div className="flex justify-between items-center mt-4">
         <div className="flex items-center">
           <Clock size={14} className="mr-1 text-gray-500" />
-          <Text type='secondary' className="!text-xs">
+          <Text type="secondary" className="!text-xs">
             {catalog.sla_time || catalog.estimated_time || ''}
           </Text>
         </div>
@@ -93,7 +93,7 @@ export const ServiceItemCard: React.FC<ServiceItemCardProps> = ({ catalog }) => 
 
       <div className="mt-4 pt-4 border-t border-gray-100">
         <Link href={`/service-catalog/request/${catalog.id}`} className="no-underline">
-          <Button type='primary' block icon={<ArrowRight size={16} />}>
+          <Button type="primary" block icon={<ArrowRight size={16} />}>
             {t('serviceCatalog.applyService')}
           </Button>
         </Link>

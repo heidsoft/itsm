@@ -1,17 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Spin,
-  App,
-  Select,
-  DatePicker,
-  Space,
-} from 'antd';
+import { Card, Row, Col, Typography, Spin, App, Select, DatePicker, Space } from 'antd';
 import {
   PieChart,
   Pie,
@@ -104,7 +94,10 @@ const ServiceCatalogUsagePage = () => {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800">{`${payload[0].name}`}</p>
-          <p className="text-sm" style={{ color: payload[0].color }}>{`数量: ${payload[0].value}`}</p>
+          <p
+            className="text-sm"
+            style={{ color: payload[0].color }}
+          >{`数量: ${payload[0].value}`}</p>
         </div>
       );
     }
@@ -198,7 +191,10 @@ const ServiceCatalogUsagePage = () => {
                       label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
                     >
                       {requestsByService.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.color || COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -219,7 +215,10 @@ const ServiceCatalogUsagePage = () => {
                     <Legend />
                     <Bar dataKey="value" name="请求数量" fill="#1890ff">
                       {requestsByStatus.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.color || COLORS[index % COLORS.length]}
+                        />
                       ))}
                     </Bar>
                   </BarChart>

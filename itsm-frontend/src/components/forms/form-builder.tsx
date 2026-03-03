@@ -20,7 +20,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
   resetText = '重置',
   showReset = true,
   layout = 'vertical',
-  className = ''
+  className = '',
 }) => {
   const handleFieldChange = (name: string, value: unknown) => {
     onChange?.(name, value);
@@ -36,7 +36,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
     fields.forEach(field => {
       resetValues[field.name] = field.defaultValue || '';
     });
-    
+
     fields.forEach(field => {
       onChange?.(field.name, resetValues[field.name]);
     });
@@ -157,7 +157,7 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({
             {resetText}
           </button>
         )}
-        
+
         <button
           type="submit"
           disabled={loading}

@@ -27,7 +27,7 @@ export const AdminHeader: React.FC = () => {
       }}
       styles={{ body: { padding: token.paddingLG } }}
     >
-      <Row justify='space-between' align='middle'>
+      <Row justify="space-between" align="middle">
         <Col>
           <Title
             level={1}

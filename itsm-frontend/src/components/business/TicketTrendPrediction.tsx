@@ -122,7 +122,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
         prediction_period: predictionPeriod,
         model_type: modelType,
       });
-      
+
       if (data) {
         setPredictionReport(data);
         onPredictionChange?.(data);
@@ -130,12 +130,21 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
         setPredictionReport(null);
       }
     } catch (error) {
+      console.error('Failed to load prediction:', error);
       antMessage.error('加载预测数据失败');
       setPredictionReport(null);
     } finally {
       setLoading(false);
     }
-  }, [ticketType, category, timeRange, predictionPeriod, modelType, antMessage, onPredictionChange]);
+  }, [
+    ticketType,
+    category,
+    timeRange,
+    predictionPeriod,
+    modelType,
+    antMessage,
+    onPredictionChange,
+  ]);
 
   useEffect(() => {
     loadPrediction();
@@ -166,7 +175,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
   // 渲染预测图表
   const renderPredictionChart = () => {
     if (!predictionReport || predictionReport.data.length === 0) {
-      return <Empty description='暂无预测数据' />;
+      return <Empty description="暂无预测数据" />;
     }
 
     const chartData = predictionReport.data.map(item => ({
@@ -178,52 +187,57 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
     }));
 
     return (
-      <ResponsiveContainer width='100%' height={400}>
+      <ResponsiveContainer width="100%" height={400}>
         <AreaChart data={chartData}>
-          <CartesianGrid strokeDasharray='3 3' />
-          <XAxis dataKey='date' />
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
           <YAxis />
           <Tooltip />
           <Legend />
           {chartData.some(d => d.actual !== undefined) && (
             <Area
-              type='monotone'
-              dataKey='actual'
-              stroke='#1890ff'
-              fill='#1890ff'
+              type="monotone"
+              dataKey="actual"
+              stroke="#1890ff"
+              fill="#1890ff"
               fillOpacity={0.3}
-              name='实际值'
+              name="实际值"
             />
           )}
           <Area
-            type='monotone'
-            dataKey='predicted'
-            stroke='#52c41a'
-            fill='#52c41a'
+            type="monotone"
+            dataKey="predicted"
+            stroke="#52c41a"
+            fill="#52c41a"
             fillOpacity={0.3}
-            name='预测值'
+            name="预测值"
           />
           {chartData.some(d => d.upper && d.lower) && (
             <>
               <Area
-              type='monotone'
-              dataKey='upper'
-              stroke='#ff4d4f'
-              strokeDasharray='5 5'
-              fill='none'
-              name='上限'
-            />
-            <Area
-              type='monotone'
-              dataKey='lower'
-              stroke='#ff4d4f'
-              strokeDasharray='5 5'
-              fill='none'
-              name='下限'
-            />
+                type="monotone"
+                dataKey="upper"
+                stroke="#ff4d4f"
+                strokeDasharray="5 5"
+                fill="none"
+                name="上限"
+              />
+              <Area
+                type="monotone"
+                dataKey="lower"
+                stroke="#ff4d4f"
+                strokeDasharray="5 5"
+                fill="none"
+                name="下限"
+              />
             </>
           )}
-          <ReferenceLine x={chartData[chartData.length - 20]?.date} stroke='#faad14' strokeDasharray='3 3' label='预测起点' />
+          <ReferenceLine
+            x={chartData[chartData.length - 20]?.date}
+            stroke="#faad14"
+            strokeDasharray="3 3"
+            label="预测起点"
+          />
         </AreaChart>
       </ResponsiveContainer>
     );
@@ -236,10 +250,10 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
   }, [antMessage]);
 
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       {/* 工具栏 */}
       <Card>
-        <div className='flex items-center justify-between mb-4'>
+        <div className="flex items-center justify-between mb-4">
           <Title level={5} style={{ margin: 0 }}>
             工单趋势预测
           </Title>
@@ -253,40 +267,32 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           </Space>
         </div>
 
-        <Space className='mb-4' wrap>
+        <Space className="mb-4" wrap>
           <RangePicker
             value={timeRange}
-            onChange={(dates: [Dayjs | null, Dayjs | null] | null) => {
+            onChange={(dates, dateStrings) => {
               if (dates && dates[0] && dates[1]) {
                 setTimeRange([dates[0], dates[1]]);
               }
             }}
           />
-          <Select
-            value={predictionPeriod}
-            onChange={setPredictionPeriod}
-            style={{ width: 120 }}
-          >
-            <Option value='week'>预测一周</Option>
-            <Option value='month'>预测一月</Option>
-            <Option value='quarter'>预测一季</Option>
+          <Select value={predictionPeriod} onChange={setPredictionPeriod} style={{ width: 120 }}>
+            <Option value="week">预测一周</Option>
+            <Option value="month">预测一月</Option>
+            <Option value="quarter">预测一季</Option>
           </Select>
-          <Select
-            value={modelType}
-            onChange={setModelType}
-            style={{ width: 150 }}
-          >
-            <Option value='arima'>ARIMA模型</Option>
-            <Option value='exponential'>指数平滑</Option>
-            <Option value='linear'>线性回归</Option>
+          <Select value={modelType} onChange={setModelType} style={{ width: 150 }}>
+            <Option value="arima">ARIMA模型</Option>
+            <Option value="exponential">指数平滑</Option>
+            <Option value="linear">线性回归</Option>
           </Select>
         </Space>
       </Card>
 
       {loading ? (
-        <div className='text-center py-16'>
-          <Spin size='large' />
-          <div className='mt-4 text-gray-500'>正在生成预测数据...</div>
+        <div className="text-center py-16">
+          <Spin size="large" />
+          <div className="mt-4 text-gray-500">正在生成预测数据...</div>
         </div>
       ) : predictionReport ? (
         <>
@@ -295,10 +301,10 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
             <Col xs={24} sm={12} md={6}>
               <Card>
                 <Statistic
-                  title='预测准确率'
+                  title="预测准确率"
                   value={predictionReport.metrics.accuracy}
                   precision={1}
-                  suffix='%'
+                  suffix="%"
                   styles={{ content: { color: '#3f8600' } }}
                   prefix={<CheckCircleOutlined />}
                 />
@@ -307,9 +313,9 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
             <Col xs={24} sm={12} md={6}>
               <Card>
                 <Statistic
-                  title='下周预测'
+                  title="下周预测"
                   value={predictionReport.metrics.next_week_prediction}
-                  suffix='个工单'
+                  suffix="个工单"
                   styles={{ content: { color: '#1890ff' } }}
                   prefix={<CalendarOutlined />}
                 />
@@ -318,9 +324,9 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
             <Col xs={24} sm={12} md={6}>
               <Card>
                 <Statistic
-                  title='下月预测'
+                  title="下月预测"
                   value={predictionReport.metrics.next_month_prediction}
-                  suffix='个工单'
+                  suffix="个工单"
                   styles={{ content: { color: '#faad14' } }}
                   prefix={<CalendarOutlined />}
                 />
@@ -328,18 +334,24 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
             </Col>
             <Col xs={24} sm={12} md={6}>
               <Card>
-                <div className='flex items-center justify-between'>
+                <div className="flex items-center justify-between">
                   <div>
-                    <Text type='secondary' className='text-sm'>趋势</Text>
-                    <div className='flex items-center gap-2 mt-1'>
+                    <Text type="secondary" className="text-sm">
+                      趋势
+                    </Text>
+                    <div className="flex items-center gap-2 mt-1">
                       {getTrendIcon(predictionReport.metrics.trend)}
                       <Text strong>
-                        {predictionReport.metrics.trend === 'up' ? '上升' : predictionReport.metrics.trend === 'down' ? '下降' : '稳定'}
+                        {predictionReport.metrics.trend === 'up'
+                          ? '上升'
+                          : predictionReport.metrics.trend === 'down'
+                            ? '下降'
+                            : '稳定'}
                       </Text>
                     </div>
                   </div>
                   <Progress
-                    type='circle'
+                    type="circle"
                     percent={predictionReport.metrics.trend_strength * 100}
                     size={60}
                     format={() => `${(predictionReport.metrics.trend_strength * 100).toFixed(0)}%`}
@@ -350,15 +362,15 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           </Row>
 
           {/* 预测图表 */}
-          <Card title='趋势预测图表' loading={loading}>
+          <Card title="趋势预测图表" loading={loading}>
             {renderPredictionChart()}
           </Card>
 
           {/* 预测报告 */}
           <Row gutter={16}>
             <Col xs={24} lg={16}>
-              <Card title='预测报告摘要'>
-                <div className='space-y-4'>
+              <Card title="预测报告摘要">
+                <div className="space-y-4">
                   <div>
                     <Text strong>分析周期：</Text>
                     <Text>{predictionReport.period}</Text>
@@ -370,7 +382,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   <Divider />
                   <div>
                     <Title level={5}>关键发现</Title>
-                    <ul className='list-disc list-inside space-y-2'>
+                    <ul className="list-disc list-inside space-y-2">
                       {predictionReport.key_findings.map((finding, index) => (
                         <li key={index}>
                           <Text>{finding}</Text>
@@ -381,7 +393,7 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
                   <Divider />
                   <div>
                     <Title level={5}>建议措施</Title>
-                    <ul className='list-disc list-inside space-y-2'>
+                    <ul className="list-disc list-inside space-y-2">
                       {predictionReport.recommendations.map((rec, index) => (
                         <li key={index}>
                           <Text>{rec}</Text>
@@ -393,38 +405,62 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
               </Card>
             </Col>
             <Col xs={24} lg={8}>
-              <Card title='预测指标'>
-                <div className='space-y-4'>
+              <Card title="预测指标">
+                <div className="space-y-4">
                   <div>
-                    <Text type='secondary' className='text-sm'>准确率</Text>
+                    <Text type="secondary" className="text-sm">
+                      准确率
+                    </Text>
                     <Progress
                       percent={predictionReport.metrics.accuracy}
-                      status={predictionReport.metrics.accuracy >= 85 ? 'success' : predictionReport.metrics.accuracy >= 70 ? 'active' : 'exception'}
-                      className='mt-2'
+                      status={
+                        predictionReport.metrics.accuracy >= 85
+                          ? 'success'
+                          : predictionReport.metrics.accuracy >= 70
+                            ? 'active'
+                            : 'exception'
+                      }
+                      className="mt-2"
                     />
                   </div>
                   <div>
-                    <Text type='secondary' className='text-sm'>平均绝对百分比误差 (MAPE)</Text>
-                    <Text strong className='text-lg'>{predictionReport.metrics.mape.toFixed(2)}%</Text>
+                    <Text type="secondary" className="text-sm">
+                      平均绝对百分比误差 (MAPE)
+                    </Text>
+                    <Text strong className="text-lg">
+                      {predictionReport.metrics.mape.toFixed(2)}%
+                    </Text>
                   </div>
                   <div>
-                    <Text type='secondary' className='text-sm'>均方根误差 (RMSE)</Text>
-                    <Text strong className='text-lg'>{predictionReport.metrics.rmse.toFixed(2)}</Text>
+                    <Text type="secondary" className="text-sm">
+                      均方根误差 (RMSE)
+                    </Text>
+                    <Text strong className="text-lg">
+                      {predictionReport.metrics.rmse.toFixed(2)}
+                    </Text>
                   </div>
                   <Divider />
                   <div>
-                    <Text type='secondary' className='text-sm'>风险级别</Text>
-                    <div className='mt-2'>
+                    <Text type="secondary" className="text-sm">
+                      风险级别
+                    </Text>
+                    <div className="mt-2">
                       <Tag color={getRiskLevelColor(predictionReport.metrics.risk_level)}>
-                        {predictionReport.metrics.risk_level === 'low' ? '低风险' : predictionReport.metrics.risk_level === 'medium' ? '中风险' : '高风险'}
+                        {predictionReport.metrics.risk_level === 'low'
+                          ? '低风险'
+                          : predictionReport.metrics.risk_level === 'medium'
+                            ? '中风险'
+                            : '高风险'}
                       </Tag>
                     </div>
                   </div>
                   <div>
-                    <Text type='secondary' className='text-sm'>风险因素</Text>
-                    <div className='mt-2 space-y-1'>
+                    <Text type="secondary" className="text-sm">
+                      风险因素
+                    </Text>
+                    <div className="mt-2 space-y-1">
                       {predictionReport.metrics.risk_factors.map((factor, index) => (
-                        <Tag key={index} color='orange'>
+                        <Tag key={index} color="orange">
                           {factor}
                         </Tag>
                       ))}
@@ -438,13 +474,13 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           {/* 风险预警 */}
           {predictionReport.metrics.risk_level !== 'low' && (
             <Alert
-              message='风险预警'
+              message="风险预警"
               description={`根据预测分析，系统检测到${predictionReport.metrics.risk_level === 'high' ? '高风险' : '中等风险'}因素。建议采取相应措施。`}
               type={predictionReport.metrics.risk_level === 'high' ? 'error' : 'warning'}
               showIcon
               icon={<WarningOutlined />}
               action={
-                <Button size='small' type='primary'>
+                <Button size="small" type="primary">
                   查看详情
                 </Button>
               }
@@ -452,20 +488,19 @@ export const TicketTrendPrediction: React.FC<TicketTrendPredictionProps> = ({
           )}
 
           <Card>
-            <div className='flex items-center justify-between'>
-              <Text type='secondary' className='text-sm'>
+            <div className="flex items-center justify-between">
+              <Text type="secondary" className="text-sm">
                 报告生成时间：{predictionReport.generated_at}
               </Text>
-              <Text type='secondary' className='text-sm'>
+              <Text type="secondary" className="text-sm">
                 预测模型：{modelType.toUpperCase()}
               </Text>
             </div>
           </Card>
         </>
       ) : (
-        <Empty description='暂无预测数据' />
+        <Empty description="暂无预测数据" />
       )}
     </div>
   );
 };
-

@@ -185,7 +185,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
               onClick={() => handlePreviewVersion(record)}
             />
           </Tooltip>
-          
+
           {record.version !== currentVersion && (
             <Tooltip title="恢复到此版本">
               <Popconfirm
@@ -193,10 +193,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 description={`确定要恢复到版本 ${record.version} 吗？`}
                 onConfirm={() => handleRestoreVersion(record.version)}
               >
-                <Button
-                  type="text"
-                  icon={<RotateCcw className="w-4 h-4 text-orange-500" />}
-                />
+                <Button type="text" icon={<RotateCcw className="w-4 h-4 text-orange-500" />} />
               </Popconfirm>
             </Tooltip>
           )}
@@ -224,18 +221,14 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
             {compareResult.changes.map((change: any, index: number) => (
               <Card key={index} size="small" className="mb-2">
                 <Space>
-                  <Tag color={
-                    change.type === 'added' ? 'green' :
-                    change.type === 'removed' ? 'red' : 'blue'
-                  }>
-                    {change.type === 'added' ? '新增' :
-                     change.type === 'removed' ? '删除' : '修改'}
-                  </Tag>
-                  <Paragraph 
-                    code 
-                    style={{ margin: 0 }}
-                    ellipsis={{ rows: 3, expandable: true }}
+                  <Tag
+                    color={
+                      change.type === 'added' ? 'green' : change.type === 'removed' ? 'red' : 'blue'
+                    }
                   >
+                    {change.type === 'added' ? '新增' : change.type === 'removed' ? '删除' : '修改'}
+                  </Tag>
+                  <Paragraph code style={{ margin: 0 }} ellipsis={{ rows: 3, expandable: true }}>
                     {change.content}
                   </Paragraph>
                 </Space>
@@ -243,12 +236,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
             ))}
           </div>
         ) : (
-          <Alert
-            message="无差异"
-            description="两个版本之间没有发现差异"
-            type="success"
-            showIcon
-          />
+          <Alert message="无差异" description="两个版本之间没有发现差异" type="success" showIcon />
         )}
 
         {compareResult.diff && (
@@ -308,9 +296,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         <Col span={6}>
           <Card size="small">
             <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">
-                {versions.length}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{versions.length}</div>
               <Text type="secondary">总版本数</Text>
             </div>
           </Card>
@@ -318,9 +304,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         <Col span={6}>
           <Card size="small">
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">
-                {currentVersion}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{currentVersion}</div>
               <Text type="secondary">当前版本</Text>
             </div>
           </Card>
@@ -373,7 +357,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 <Select
                   style={{ width: '100%', marginTop: 8 }}
                   value={selectedVersions?.[0]}
-                  onChange={(value) => setSelectedVersions([value, selectedVersions?.[1] || 0])}
+                  onChange={value => setSelectedVersions([value, selectedVersions?.[1] || 0])}
                   placeholder="选择源版本"
                   options={versions.map(version => ({
                     value: version.version,
@@ -386,7 +370,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
                 <Select
                   style={{ width: '100%', marginTop: 8 }}
                   value={selectedVersions?.[1]}
-                  onChange={(value) => setSelectedVersions([selectedVersions?.[0] || 0, value])}
+                  onChange={value => setSelectedVersions([selectedVersions?.[0] || 0, value])}
                   placeholder="选择目标版本"
                   options={versions.map(version => ({
                     value: version.version,
@@ -446,12 +430,8 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         {previewVersion && (
           <div className="space-y-4">
             <Descriptions column={2} bordered size="small">
-              <Descriptions.Item label="版本号">
-                v{previewVersion.version}
-              </Descriptions.Item>
-              <Descriptions.Item label="创建者">
-                {previewVersion.createdByName}
-              </Descriptions.Item>
+              <Descriptions.Item label="版本号">v{previewVersion.version}</Descriptions.Item>
+              <Descriptions.Item label="创建者">{previewVersion.createdByName}</Descriptions.Item>
               <Descriptions.Item label="创建时间">
                 {format(new Date(previewVersion.createdAt), 'yyyy-MM-dd HH:mm:ss')}
               </Descriptions.Item>
@@ -470,7 +450,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
             <div>
               <Title level={5}>内容预览</Title>
               <Card size="small">
-                <div 
+                <div
                   className="prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewVersion.content) }}
                 />

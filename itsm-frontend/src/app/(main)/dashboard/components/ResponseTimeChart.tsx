@@ -38,14 +38,15 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
   };
 
   const totalTickets = data.reduce((sum, item) => sum + item.count, 0);
-  const avgTime = data.reduce((sum, item) => sum + (item.avgTime || 0) * item.count, 0) / totalTickets;
+  const avgTime =
+    data.reduce((sum, item) => sum + (item.avgTime || 0) * item.count, 0) / totalTickets;
 
   return (
     <DashboardChartCard
-      title='响应时间分布'
-      subtitle='工单首次响应时间统计'
+      title="响应时间分布"
+      subtitle="工单首次响应时间统计"
       icon={<LineChart style={{ width: 20, height: 20 }} />}
-      iconColor='#8b5cf6'
+      iconColor="#8b5cf6"
       extra={
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: 12, color: '#8c8c8c' }}>平均响应</div>

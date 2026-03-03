@@ -23,19 +23,19 @@ export interface User {
   location?: string;
   timezone?: string;
   language?: string;
-  
+
   // 权限相关
   permissions: string[];
   groups: UserGroup[];
-  
+
   // 时间戳
   createdAt: string;
   updatedAt: string;
   lastLoginAt?: string;
-  
+
   // 偏好设置
   preferences: UserPreferences;
-  
+
   // 元数据
   tenantId: number;
   isActive: boolean;
@@ -57,14 +57,14 @@ export interface UserPreferences {
   timezone: string;
   dateFormat: string;
   timeFormat: '12h' | '24h';
-  
+
   // 通知偏好
   notifications: {
     email: boolean;
     sms: boolean;
     inApp: boolean;
     desktop: boolean;
-    
+
     // 通知类型
     ticketAssigned: boolean;
     ticketUpdated: boolean;
@@ -73,7 +73,7 @@ export interface UserPreferences {
     slaBreached: boolean;
     systemMaintenance: boolean;
   };
-  
+
   // 界面偏好
   ui: {
     sidebarCollapsed: boolean;
@@ -82,7 +82,7 @@ export interface UserPreferences {
     showAvatars: boolean;
     compactMode: boolean;
   };
-  
+
   // 工作偏好
   work: {
     autoAssign: boolean;

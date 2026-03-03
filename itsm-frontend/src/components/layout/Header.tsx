@@ -94,9 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
   ]);
 
   const markAsRead = (id: number) => {
-    setNotifications(prev => prev.map(n =>
-      n.id === id ? { ...n, read: true } : n
-    ));
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
   };
 
   const markAllAsRead = () => {
@@ -119,98 +117,21 @@ export const Header: React.FC<HeaderProps> = ({
 
   // 用户显示名称（处理空值）
   const displayName = user?.name || user?.username || '';
-  const userEmail = user?.email || '';
   // 用户首字母
   const userInitial = displayName.charAt(0).toUpperCase() || 'U';
   // 用户角色显示
-  const roleText = user?.role === 'admin'
-    ? t('header.admin')
-    : user?.role === 'super_admin'
-      ? t('header.superAdmin')
-      : t('header.user');
+  const roleText =
+    user?.role === 'admin'
+      ? t('header.admin')
+      : user?.role === 'super_admin'
+        ? t('header.superAdmin')
+        : t('header.user');
 
-  // 根据用户名生成一致的头像颜色
-  const getAvatarColor = (name: string): string => {
-    const colors = [
-      '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b',
-      '#10b981', '#06b6d4', '#f97316', '#6366f1'
-    ];
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
-  };
-
-  const avatarBgColor = getAvatarColor(displayName || 'U');
-
-  // 退出登录处理函数
   const handleLogout = () => {
     logout();
     router.push('/login');
     message.success(t('header.logoutSuccess'));
   };
-
-  // 用户下拉菜单配置
-  const userDropdownItems = [
-    {
-      key: 'user-info',
-      label: (
-        <div className={styles.userDropdownHeader}>
-          <Avatar
-            size={48}
-            style={{ backgroundColor: avatarBgColor, fontSize: '20px' }}
-          >
-            {userInitial}
-          </Avatar>
-          <div className={styles.userDropdownInfo}>
-            <div className={styles.userDropdownName}>{displayName}</div>
-            <div className={styles.userDropdownEmail}>{userEmail}</div>
-            <div className={styles.userDropdownRole}>
-              <span className={styles.roleBadge}>{roleText}</span>
-            </div>
-          </div>
-        </div>
-      ),
-      disabled: true,
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'profile',
-      label: (
-        <div className={styles.menuItemContent}>
-          <User style={iconStyle} />
-          <span>{t('header.profile')}</span>
-        </div>
-      ),
-      onClick: () => router.push('/profile'),
-    },
-    {
-      key: 'settings',
-      label: (
-        <div className={styles.menuItemContent}>
-          <Settings style={iconStyle} />
-          <span>{t('header.settings')}</span>
-        </div>
-      ),
-      onClick: () => router.push('/profile?tab=preferences'),
-    },
-    {
-      type: 'divider' as const,
-    },
-    {
-      key: 'logout',
-      label: (
-        <div className={`${styles.menuItemContent} ${styles.menuItemLogout}`}>
-          <LogOut style={iconStyle} />
-          <span>{t('header.logout')}</span>
-        </div>
-      ),
-      onClick: handleLogout,
-    },
-  ];
 
   const handleSearch = async (value: string) => {
     if (value.trim()) {
@@ -220,6 +141,30 @@ export const Header: React.FC<HeaderProps> = ({
       setSearchModalVisible(true);
     }
   };
+
+  const userMenuItems = [
+    {
+      key: 'profile',
+      label: t('header.profile'),
+      icon: <User style={iconStyle} />,
+      onClick: () => router.push('/profile'),
+    },
+    {
+      key: 'settings',
+      label: t('header.settings'),
+      icon: <Settings style={iconStyle} />,
+      onClick: () => router.push('/profile'),
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      label: t('header.logout'),
+      icon: <LogOut style={iconStyle} />,
+      onClick: handleLogout,
+    },
+  ];
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -335,7 +280,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className={styles.left}>
         {/* 折叠按钮 */}
         <Button
-          type='text'
+          type="text"
           icon={
             collapsed ? (
               <PanelLeftOpen style={headerIconStyle} />
@@ -380,15 +325,15 @@ export const Header: React.FC<HeaderProps> = ({
           value={searchValue}
           onChange={e => setSearchValue(e.target.value)}
           onPressEnter={() => handleSearch(searchValue)}
-          size='small'
+          size="small"
           className={styles.searchInput}
         />
 
         {/* 通知 */}
         <Tooltip title={t('header.notificationCenter')}>
-          <Badge count={unreadCount} size='small' offset={[-2, 2]}>
+          <Badge count={unreadCount} size="small" offset={[-2, 2]}>
             <Button
-              type='text'
+              type="text"
               icon={<Bell style={headerIconStyle} />}
               onClick={() => setNotificationsOpen(true)}
               className={styles.notificationButton}
@@ -400,38 +345,25 @@ export const Header: React.FC<HeaderProps> = ({
         {isClient ? (
           user ? (
             <Dropdown
-              menu={{ items: userDropdownItems }}
-              placement='bottomRight'
+              menu={{ items: userMenuItems }}
+              placement="bottomRight"
               trigger={['click']}
               open={userMenuOpen}
               onOpenChange={setUserMenuOpen}
             >
               <div className={styles.userMenu}>
-                <div className={styles.avatarWrapper}>
-                  <Avatar
-                    size={36}
-                    className={styles.userAvatar}
-                    style={{
-                      background: `linear-gradient(135deg, ${avatarBgColor} 0%, ${avatarBgColor}cc 100%)`,
-                      fontSize: '15px',
-                      fontWeight: 600,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
-                    }}
-                  >
-                    {userInitial}
-                  </Avatar>
-                  <span className={styles.onlineIndicator} />
-                </div>
+                <Avatar size={28} className={styles.userAvatar}>
+                  {userInitial}
+                </Avatar>
                 <div className={styles.userInfo}>
                   <Text className={styles.userName}>{displayName}</Text>
+                  <Text className={styles.userRole}>{roleText}</Text>
                 </div>
-                <ChevronDown
-                  className={`${styles.chevronIcon} ${userMenuOpen ? styles.chevronOpen : ''}`}
-                />
+                <ChevronDown style={{ width: 14, height: 14, color: '#9ca3af' }} />
               </div>
             </Dropdown>
           ) : (
-            <Button type='primary' onClick={() => router.push('/login')}>
+            <Button type="primary" onClick={() => router.push('/login')}>
               {t('header.login')}
             </Button>
           )
@@ -444,11 +376,18 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 通知抽屉 */}
       <Drawer
         title={
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 8,
+            }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Bell style={{ color: '#3b82f6', width: 20, height: 20 }} />
               <span>{t('header.notificationCenter')}</span>
-              {unreadCount > 0 && <Badge count={unreadCount} size='small' />}
+              {unreadCount > 0 && <Badge count={unreadCount} size="small" />}
             </div>
             {unreadCount > 0 && (
               <Button
@@ -463,7 +402,7 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
         }
-        placement='right'
+        placement="right"
         size="large"
         style={{ maxWidth: 'calc(100vw - 64px)' }}
         open={notificationsOpen}
@@ -471,12 +410,20 @@ export const Header: React.FC<HeaderProps> = ({
         className={styles.notificationDrawer}
       >
         {notifications.length === 0 ? (
-          <div className={styles.emptyNotifications} style={{ textAlign: 'center', padding: '48px 0' }}>
+          <div
+            className={styles.emptyNotifications}
+            style={{ textAlign: 'center', padding: '48px 0' }}
+          >
             <Bell style={{ width: 48, height: 48, marginBottom: '16px', opacity: 0.3 }} />
-            <Text style={{ display: 'block', color: '#9ca3af' }}>{t('header.noNotifications')}</Text>
+            <Text style={{ display: 'block', color: '#9ca3af' }}>
+              {t('header.noNotifications')}
+            </Text>
           </div>
         ) : (
-          <div className="notifications-list" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+          <div
+            className="notifications-list"
+            style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}
+          >
             {notifications.map(item => (
               <div
                 key={item.id}
@@ -489,8 +436,10 @@ export const Header: React.FC<HeaderProps> = ({
                   transition: 'background-color 0.2s',
                 }}
                 onClick={() => handleNotificationClick(item)}
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = item.read ? '#f9fafb' : '#eff6ff'}
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                onMouseEnter={e =>
+                  (e.currentTarget.style.backgroundColor = item.read ? '#f9fafb' : '#eff6ff')
+                }
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                   <div
@@ -528,7 +477,10 @@ export const Header: React.FC<HeaderProps> = ({
                       </Text>
                       <Text style={{ fontSize: '12px', color: '#9ca3af' }}>{item.time}</Text>
                     </div>
-                    <Text className={styles.notificationContent} style={{ display: 'block', marginTop: 4, fontSize: '13px' }}>
+                    <Text
+                      className={styles.notificationContent}
+                      style={{ display: 'block', marginTop: 4, fontSize: '13px' }}
+                    >
                       {item.content}
                     </Text>
                   </div>

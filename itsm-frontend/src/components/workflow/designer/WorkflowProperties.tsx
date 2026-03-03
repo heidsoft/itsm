@@ -4,11 +4,30 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Select, Input, Checkbox, Button, Timeline, Badge, Space, Typography } from 'antd';
+import {
+  Card,
+  Row,
+  Col,
+  Select,
+  Input,
+  Checkbox,
+  Button,
+  Timeline,
+  Badge,
+  Space,
+  Typography,
+} from 'antd';
 
 const { Text } = Typography;
 import { Eye, GitBranch } from 'lucide-react';
-import type { WorkflowDefinition, WorkflowVersion, ApprovalConfig, UserInfo, RoleInfo, SLAConfig } from './WorkflowTypes';
+import type {
+  WorkflowDefinition,
+  WorkflowVersion,
+  ApprovalConfig,
+  UserInfo,
+  RoleInfo,
+  SLAConfig,
+} from './WorkflowTypes';
 
 const { Option } = Select;
 
@@ -102,10 +121,7 @@ export default function WorkflowProperties({
   return (
     <div className="h-full">
       {/* 版本历史内容 */}
-      <Card
-        className="rounded-lg shadow-sm border border-gray-200"
-        variant="borderless"
-      >
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-base font-semibold mb-0">版本历史</h3>
           <Button
@@ -199,7 +215,7 @@ export default function WorkflowProperties({
                   className="w-full"
                   loading={loadingUsers}
                 >
-                  {userList.map((user) => (
+                  {userList.map(user => (
                     <Option key={user.id} value={String(user.id)}>
                       {user.name}
                     </Option>
@@ -220,7 +236,7 @@ export default function WorkflowProperties({
                   className="w-full"
                   loading={loadingRoles}
                 >
-                  {roleList.map((role) => (
+                  {roleList.map(role => (
                     <Option key={role.code} value={role.code}>
                       {role.name}
                     </Option>
@@ -247,7 +263,7 @@ export default function WorkflowProperties({
                   type="number"
                   suffix="小时"
                   value={workflow?.sla_config?.response_time_hours}
-                  onChange={(e) => handleResponseTimeChange(e.target.value)}
+                  onChange={e => handleResponseTimeChange(e.target.value)}
                 />
               </div>
 
@@ -260,7 +276,7 @@ export default function WorkflowProperties({
                   type="number"
                   suffix="小时"
                   value={workflow?.sla_config?.resolution_time_hours}
-                  onChange={(e) => handleResolutionTimeChange(e.target.value)}
+                  onChange={e => handleResolutionTimeChange(e.target.value)}
                 />
               </div>
 
@@ -273,7 +289,7 @@ export default function WorkflowProperties({
                   <div className="flex items-center">
                     <Checkbox
                       checked={workflow?.sla_config?.business_hours_only}
-                      onChange={(e) => handleBusinessHoursChange(e.target.checked)}
+                      onChange={e => handleBusinessHoursChange(e.target.checked)}
                     >
                       仅工作时间
                     </Checkbox>
@@ -281,7 +297,7 @@ export default function WorkflowProperties({
                   <div className="flex items-center">
                     <Checkbox
                       checked={workflow?.sla_config?.exclude_weekends}
-                      onChange={(e) => handleExcludeWeekendsChange(e.target.checked)}
+                      onChange={e => handleExcludeWeekendsChange(e.target.checked)}
                     >
                       排除周末
                     </Checkbox>
@@ -289,7 +305,7 @@ export default function WorkflowProperties({
                   <div className="flex items-center">
                     <Checkbox
                       checked={workflow?.sla_config?.exclude_holidays}
-                      onChange={(e) => handleExcludeHolidaysChange(e.target.checked)}
+                      onChange={e => handleExcludeHolidaysChange(e.target.checked)}
                     >
                       排除节假日
                     </Checkbox>

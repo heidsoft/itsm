@@ -30,9 +30,7 @@ export class KnowledgeBaseApi {
   /**
    * 获取文章列表
    */
-  static async getArticles(
-    query?: ArticleQuery
-  ): Promise<{
+  static async getArticles(query?: ArticleQuery): Promise<{
     articles: KnowledgeArticle[];
     total: number;
   }> {
@@ -56,19 +54,14 @@ export class KnowledgeBaseApi {
   /**
    * 创建文章
    */
-  static async createArticle(
-    request: CreateArticleRequest
-  ): Promise<KnowledgeArticle> {
+  static async createArticle(request: CreateArticleRequest): Promise<KnowledgeArticle> {
     return httpClient.post('/api/v1/knowledge-articles', request);
   }
 
   /**
    * 更新文章
    */
-  static async updateArticle(
-    id: string,
-    request: UpdateArticleRequest
-  ): Promise<KnowledgeArticle> {
+  static async updateArticle(id: string, request: UpdateArticleRequest): Promise<KnowledgeArticle> {
     return httpClient.put(`/api/v1/knowledge-articles/${id}`, request);
   }
 
@@ -99,10 +92,7 @@ export class KnowledgeBaseApi {
   /**
    * 复制文章
    */
-  static async cloneArticle(
-    id: string,
-    title: string
-  ): Promise<KnowledgeArticle> {
+  static async cloneArticle(id: string, title: string): Promise<KnowledgeArticle> {
     return httpClient.post(`/api/v1/knowledge-articles/${id}/clone`, {
       title,
     });
@@ -122,22 +112,15 @@ export class KnowledgeBaseApi {
   /**
    * 获取文章版本历史
    */
-  static async getArticleVersions(
-    articleId: string
-  ): Promise<ArticleVersion[]> {
+  static async getArticleVersions(articleId: string): Promise<ArticleVersion[]> {
     return httpClient.get(`/api/v1/knowledge-articles/${articleId}/versions`);
   }
 
   /**
    * 恢复到指定版本
    */
-  static async restoreVersion(
-    articleId: string,
-    version: number
-  ): Promise<KnowledgeArticle> {
-    return httpClient.post(
-      `/api/v1/knowledge-articles/${articleId}/versions/${version}/restore`
-    );
+  static async restoreVersion(articleId: string, version: number): Promise<KnowledgeArticle> {
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/versions/${version}/restore`);
   }
 
   /**
@@ -154,10 +137,10 @@ export class KnowledgeBaseApi {
       content: string;
     }>;
   }> {
-    return httpClient.get(
-      `/api/v1/knowledge-articles/${articleId}/versions/compare`,
-      { from: fromVersion, to: toVersion }
-    );
+    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/versions/compare`, {
+      from: fromVersion,
+      to: toVersion,
+    });
   }
 
   // ==================== 分类和标签 ====================
@@ -226,10 +209,7 @@ export class KnowledgeBaseApi {
     comments: ArticleComment[];
     total: number;
   }> {
-    return httpClient.get(
-      `/api/v1/knowledge-articles/${articleId}/comments`,
-      params
-    );
+    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/comments`, params);
   }
 
   /**
@@ -269,10 +249,7 @@ export class KnowledgeBaseApi {
     articleId: string,
     feedback: Omit<ArticleFeedback, 'id' | 'userId' | 'userName' | 'createdAt'>
   ): Promise<ArticleFeedback> {
-    return httpClient.post(
-      `/api/v1/knowledge-articles/${articleId}/feedback`,
-      feedback
-    );
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/feedback`, feedback);
   }
 
   // ==================== 互动 ====================
@@ -302,9 +279,7 @@ export class KnowledgeBaseApi {
    * 取消收藏
    */
   static async unbookmarkArticle(articleId: string): Promise<void> {
-    return httpClient.delete(
-      `/api/v1/knowledge-articles/${articleId}/bookmark`
-    );
+    return httpClient.delete(`/api/v1/knowledge-articles/${articleId}/bookmark`);
   }
 
   /**
@@ -328,19 +303,14 @@ export class KnowledgeBaseApi {
   /**
    * 搜索文章
    */
-  static async search(
-    request: KnowledgeSearchRequest
-  ): Promise<KnowledgeSearchResult> {
+  static async search(request: KnowledgeSearchRequest): Promise<KnowledgeSearchResult> {
     return httpClient.post('/api/v1/knowledge-articles/search', request);
   }
 
   /**
    * 获取推荐文章
    */
-  static async getRecommendations(
-    articleId?: string,
-    limit = 5
-  ): Promise<ArticleRecommendation[]> {
+  static async getRecommendations(articleId?: string, limit = 5): Promise<ArticleRecommendation[]> {
     return httpClient.get('/api/v1/knowledge-articles/recommendations', {
       articleId,
       limit,
@@ -350,25 +320,21 @@ export class KnowledgeBaseApi {
   /**
    * 获取热门文章
    */
-  static async getPopularArticles(
-    params?: {
-      categoryId?: string;
-      period?: 'day' | 'week' | 'month';
-      limit?: number;
-    }
-  ): Promise<KnowledgeArticle[]> {
+  static async getPopularArticles(params?: {
+    categoryId?: string;
+    period?: 'day' | 'week' | 'month';
+    limit?: number;
+  }): Promise<KnowledgeArticle[]> {
     return httpClient.get('/api/v1/knowledge-articles/popular', params);
   }
 
   /**
    * 获取最新文章
    */
-  static async getRecentArticles(
-    params?: {
-      categoryId?: string;
-      limit?: number;
-    }
-  ): Promise<KnowledgeArticle[]> {
+  static async getRecentArticles(params?: {
+    categoryId?: string;
+    limit?: number;
+  }): Promise<KnowledgeArticle[]> {
     return httpClient.get('/api/v1/knowledge-articles/recent', params);
   }
 
@@ -388,10 +354,7 @@ export class KnowledgeBaseApi {
   /**
    * 自动保存草稿
    */
-  static async autoSaveDraft(
-    articleId: string,
-    content: string
-  ): Promise<void> {
+  static async autoSaveDraft(articleId: string, content: string): Promise<void> {
     return httpClient.post(`/api/v1/knowledge-articles/${articleId}/autosave`, {
       content,
     });
@@ -402,10 +365,7 @@ export class KnowledgeBaseApi {
   /**
    * 提交审核
    */
-  static async submitForReview(
-    articleId: string,
-    reviewerId?: number
-  ): Promise<KnowledgeArticle> {
+  static async submitForReview(articleId: string, reviewerId?: number): Promise<KnowledgeArticle> {
     return httpClient.post(`/api/v1/knowledge-articles/${articleId}/review`, {
       reviewerId,
     });
@@ -418,10 +378,7 @@ export class KnowledgeBaseApi {
     articleId: string,
     request: ReviewArticleRequest
   ): Promise<KnowledgeArticle> {
-    return httpClient.post(
-      `/api/v1/knowledge-articles/${articleId}/review/decision`,
-      request
-    );
+    return httpClient.post(`/api/v1/knowledge-articles/${articleId}/review/decision`, request);
   }
 
   // ==================== 统计和分析 ====================
@@ -443,10 +400,7 @@ export class KnowledgeBaseApi {
       endDate?: string;
     }
   ): Promise<ArticleAnalytics> {
-    return httpClient.get(
-      `/api/v1/knowledge-articles/${articleId}/analytics`,
-      params
-    );
+    return httpClient.get(`/api/v1/knowledge-articles/${articleId}/analytics`, params);
   }
 
   /**
@@ -469,4 +423,3 @@ export class KnowledgeBaseApi {
 
 export default KnowledgeBaseApi;
 export const KnowledgeBaseAPI = KnowledgeBaseApi;
-

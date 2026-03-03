@@ -38,7 +38,7 @@ export function createListPage<T extends DataItem>(config: {
       try {
         const result = await config.fetchApi(pagination);
         setData(result.list);
-        setPagination((p) => ({ ...p, total: result.total }));
+        setPagination(p => ({ ...p, total: result.total }));
       } finally {
         setLoading(false);
       }
@@ -70,7 +70,9 @@ export function createListPage<T extends DataItem>(config: {
         title={`${config.name}管理`}
         extra={
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={loadData}>刷新</Button>
+            <Button icon={<ReloadOutlined />} onClick={loadData}>
+              刷新
+            </Button>
             <Button type="primary" icon={<PlusOutlined />}>
               新建{config.name}
             </Button>
@@ -86,8 +88,7 @@ export function createListPage<T extends DataItem>(config: {
             current: pagination.page,
             pageSize: pagination.pageSize,
             total: pagination.total,
-            onChange: (page, pageSize) =>
-              setPagination((p) => ({ ...p, page, pageSize })),
+            onChange: (page, pageSize) => setPagination(p => ({ ...p, page, pageSize })),
           }}
         />
       </Card>

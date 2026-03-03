@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -24,7 +24,7 @@ export const useResponsive = () => {
   useEffect(() => {
     const updateBreakpoint = () => {
       const width = window.innerWidth;
-      
+
       if (width < BREAKPOINTS.sm) {
         setBreakpoint('xs');
         setIsMobile(true);

@@ -18,7 +18,7 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
   disabled = false,
   onChange,
   onSearch,
-  className = ''
+  className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,7 +61,7 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
 
     let newValue;
     if (multiple) {
-      const currentValues = Array.isArray(value) ? value as (string | number)[] : [];
+      const currentValues = Array.isArray(value) ? (value as (string | number)[]) : [];
       if (currentValues.includes(option.value)) {
         newValue = currentValues.filter(v => v !== option.value);
       } else {
@@ -105,14 +105,19 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
             {option.label}
             <button
               type="button"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 handleOptionClick(option);
               }}
               className="ml-1 hover:text-blue-600"
             >
               <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </span>
@@ -138,22 +143,19 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
     'relative w-full cursor-pointer rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm',
     'focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
     disabled ? 'bg-gray-50 cursor-not-allowed' : 'hover:border-gray-400',
-    className
-  ].filter(Boolean).join(' ');
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <div ref={selectRef} className="relative">
-      <div
-        className={selectClasses}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-      >
+      <div className={selectClasses} onClick={() => !disabled && setIsOpen(!isOpen)}>
         <div className="flex items-center min-h-[20px]">
           {multiple ? (
             <div className="flex-1">
               {renderSelectedTags()}
-              {selectedOptions.length === 0 && (
-                <span className="text-gray-500">{placeholder}</span>
-              )}
+              {selectedOptions.length === 0 && <span className="text-gray-500">{placeholder}</span>}
             </div>
           ) : (
             <span className={selectedOptions.length > 0 ? 'text-gray-900' : 'text-gray-500'}>
@@ -164,20 +166,19 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
 
         <div className="absolute inset-y-0 right-0 flex items-center pr-2">
           {clearable && selectedOptions.length > 0 && (
-            <button
-              type="button"
-              onClick={handleClear}
-              className="mr-1 hover:text-gray-600"
-            >
+            <button type="button" onClick={handleClear} className="mr-1 hover:text-gray-600">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           )}
           <svg
-            className={`h-4 w-4 text-gray-400 transition-transform ${
-              isOpen ? 'rotate-180' : ''
-            }`}
+            className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -220,9 +221,11 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
                       option.disabled
                         ? 'text-gray-400 cursor-not-allowed'
                         : isSelected
-                        ? 'bg-blue-100 text-blue-900'
-                        : 'text-gray-900 hover:bg-gray-100'
-                    ].filter(Boolean).join(' ')}
+                          ? 'bg-blue-100 text-blue-900'
+                          : 'text-gray-900 hover:bg-gray-100',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
                   >
                     <span className="block truncate">{option.label}</span>
                     {isSelected && (
@@ -247,7 +250,7 @@ const Select: React.FC<Omit<FormSelectProps, 'label' | 'error' | 'help'>> = ({
   );
 };
 
-export const FormSelect: React.FC<FormSelectProps> = (props) => {
+export const FormSelect: React.FC<FormSelectProps> = props => {
   const { label, error, help, ...selectProps } = props;
 
   if (label || error || help) {

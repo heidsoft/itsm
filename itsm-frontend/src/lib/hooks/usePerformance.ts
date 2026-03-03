@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useRef, useState } from 'react';
 
@@ -17,14 +17,14 @@ export const usePerformance = (componentName: string) => {
     componentMountTime: 0,
     rerenderCount: 0,
   });
-  
+
   const mountTimeRef = useRef<number>(Date.now());
   const renderCountRef = useRef<number>(0);
   const lastRenderTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
     const mountTime = Date.now() - mountTimeRef.current;
-    
+
     // 记录组件挂载时间
     setMetrics(prev => ({
       ...prev,
@@ -32,7 +32,10 @@ export const usePerformance = (componentName: string) => {
     }));
 
     // 开发环境下输出性能指标
-    if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING === 'true') {
+    if (
+      process.env.NODE_ENV === 'development' &&
+      process.env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING === 'true'
+    ) {
     }
   }, [componentName]);
 
@@ -49,7 +52,8 @@ export const usePerformance = (componentName: string) => {
 
     // 检测内存使用情况（仅在支持的浏览器中）
     if ('memory' in performance) {
-      const memoryInfo = (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory;
+      const memoryInfo = (performance as Performance & { memory?: { usedJSHeapSize: number } })
+        .memory;
       if (memoryInfo) {
         setMetrics(prev => ({
           ...prev,
@@ -63,9 +67,11 @@ export const usePerformance = (componentName: string) => {
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       if (metrics.rerenderCount > 10) {
-        console.warn(`[Performance Warning] ${componentName} has re-rendered ${metrics.rerenderCount} times`);
+        console.warn(
+          `[Performance Warning] ${componentName} has re-rendered ${metrics.rerenderCount} times`
+        );
       }
-      
+
       if (metrics.renderTime > 100) {
         console.warn(`[Performance Warning] ${componentName} render time: ${metrics.renderTime}ms`);
       }
@@ -98,12 +104,15 @@ export const useThrottle = <T>(value: T, limit: number): T => {
   const lastRan = useRef<number>(Date.now());
 
   useEffect(() => {
-    const handler = setTimeout(() => {
-      if (Date.now() - lastRan.current >= limit) {
-        setThrottledValue(value);
-        lastRan.current = Date.now();
-      }
-    }, limit - (Date.now() - lastRan.current));
+    const handler = setTimeout(
+      () => {
+        if (Date.now() - lastRan.current >= limit) {
+          setThrottledValue(value);
+          lastRan.current = Date.now();
+        }
+      },
+      limit - (Date.now() - lastRan.current)
+    );
 
     return () => {
       clearTimeout(handler);
@@ -119,7 +128,7 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
     if (typeof window === 'undefined') {
       return initialValue;
     }
-    
+
     try {
       const item = window.localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
@@ -133,7 +142,7 @@ export const useLocalStorage = <T>(key: string, initialValue: T) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
-      
+
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(key, JSON.stringify(valueToStore));
       }
@@ -162,7 +171,7 @@ export const useSessionStorage = <T>(key: string, initialValue: T) => {
     if (typeof window === 'undefined') {
       return initialValue;
     }
-    
+
     try {
       const item = window.sessionStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
@@ -176,7 +185,7 @@ export const useSessionStorage = <T>(key: string, initialValue: T) => {
     try {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
-      
+
       if (typeof window !== 'undefined') {
         window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
       }

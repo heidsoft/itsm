@@ -4,38 +4,47 @@ import React, { useState, useRef, useEffect, forwardRef } from 'react';
 import { FormDatePickerProps } from './types';
 import { FormField } from './form-field';
 
-const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label' | 'error' | 'help'>>(
-  ({ 
-    value, 
-    showTime = false,
-    showToday = true,
-    disabledDate,
-    disabled = false,
-    placeholder,
-    onChange,
-    onBlur,
-    onFocus,
-    className = '',
-    ...props 
-  }, ref) => {
+const DatePicker = forwardRef<
+  HTMLInputElement,
+  Omit<FormDatePickerProps, 'label' | 'error' | 'help'>
+>(
+  (
+    {
+      value,
+      showTime = false,
+      showToday = true,
+      disabledDate,
+      disabled = false,
+      placeholder,
+      onChange,
+      onBlur,
+      onFocus,
+      className = '',
+      ...props
+    },
+    ref
+  ) => {
     const [isOpen, setIsOpen] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
     // 格式化日期
-    const formatDate = React.useCallback((date: Date): string => {
-      if (showTime) {
-        return date.toLocaleString('zh-CN', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-          hour: '2-digit',
-          minute: '2-digit'
-        });
-      }
-      return date.toLocaleDateString('zh-CN');
-    }, [showTime]);
+    const formatDate = React.useCallback(
+      (date: Date): string => {
+        if (showTime) {
+          return date.toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
+        }
+        return date.toLocaleDateString('zh-CN');
+      },
+      [showTime]
+    );
 
     // 解析输入值
     const parseValue = React.useCallback((val: string | Date | undefined): Date | null => {
@@ -67,11 +76,11 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
     // 处理日期选择
     const handleDateSelect = (date: Date) => {
       if (disabledDate && disabledDate(date)) return;
-      
+
       setSelectedDate(date);
       setInputValue(formatDate(date));
       onChange?.(date);
-      
+
       if (!showTime) {
         setIsOpen(false);
       }
@@ -88,19 +97,19 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
       const now = new Date();
       const year = selectedDate?.getFullYear() || now.getFullYear();
       const month = selectedDate?.getMonth() || now.getMonth();
-      
+
       const firstDay = new Date(year, month, 1);
       const startDate = new Date(firstDay);
       startDate.setDate(startDate.getDate() - firstDay.getDay());
-      
+
       const days = [];
       const current = new Date(startDate);
-      
+
       for (let i = 0; i < 42; i++) {
         days.push(new Date(current));
         current.setDate(current.getDate() + 1);
       }
-      
+
       return { year, month, days };
     };
 
@@ -126,10 +135,20 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
           `}
           {...props}
         />
-        
+
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-          <svg className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <svg
+            className="h-4 w-4 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
         </div>
 
@@ -147,14 +166,19 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
                   className="p-1 hover:bg-gray-100 rounded"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 19l-7-7 7-7"
+                    />
                   </svg>
                 </button>
-                
+
                 <span className="font-medium">
                   {year}年{month + 1}月
                 </span>
-                
+
                 <button
                   type="button"
                   onClick={() => {
@@ -164,7 +188,12 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
                   className="p-1 hover:bg-gray-100 rounded"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
                   </svg>
                 </button>
               </div>
@@ -182,7 +211,8 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
               <div className="grid grid-cols-7 gap-1">
                 {days.map((day, index) => {
                   const isCurrentMonth = day.getMonth() === month;
-                  const isSelected = selectedDate && 
+                  const isSelected =
+                    selectedDate &&
                     day.getFullYear() === selectedDate.getFullYear() &&
                     day.getMonth() === selectedDate.getMonth() &&
                     day.getDate() === selectedDate.getDate();
@@ -238,7 +268,7 @@ const DatePicker = forwardRef<HTMLInputElement, Omit<FormDatePickerProps, 'label
 
 DatePicker.displayName = 'DatePicker';
 
-export const FormDatePicker: React.FC<FormDatePickerProps> = (props) => {
+export const FormDatePicker: React.FC<FormDatePickerProps> = props => {
   const { label, error, help, ...datePickerProps } = props;
 
   return (

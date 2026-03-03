@@ -34,28 +34,19 @@ export class WorkflowEngine {
     this.validateEndNode(workflow.nodes, warnings);
 
     // 验证节点配置
-    workflow.nodes.forEach((node) => {
+    workflow.nodes.forEach(node => {
       this.validateNode(node, errors, warnings);
     });
 
     // 验证连接
     if (workflow.connections) {
-      workflow.connections.forEach((connection) => {
-        this.validateConnection(
-          connection,
-          workflow.nodes!,
-          errors,
-          warnings
-        );
+      workflow.connections.forEach(connection => {
+        this.validateConnection(connection, workflow.nodes!, errors, warnings);
       });
     }
 
     // 验证是否有孤立节点
-    this.validateOrphanedNodes(
-      workflow.nodes,
-      workflow.connections || [],
-      warnings
-    );
+    this.validateOrphanedNodes(workflow.nodes, workflow.connections || [], warnings);
 
     // 验证是否有循环
     this.validateCycles(workflow.nodes, workflow.connections || [], warnings);
@@ -70,11 +61,8 @@ export class WorkflowEngine {
   /**
    * 验证开始节点
    */
-  private static validateStartNode(
-    nodes: WorkflowNode[],
-    errors: ValidationError[]
-  ): void {
-    const startNodes = nodes.filter((n) => n.type === 'start');
+  private static validateStartNode(nodes: WorkflowNode[], errors: ValidationError[]): void {
+    const startNodes = nodes.filter(n => n.type === 'start');
     if (startNodes.length === 0) {
       errors.push({
         type: 'error',
@@ -91,11 +79,8 @@ export class WorkflowEngine {
   /**
    * 验证结束节点
    */
-  private static validateEndNode(
-    nodes: WorkflowNode[],
-    warnings: ValidationError[]
-  ): void {
-    const endNodes = nodes.filter((n) => n.type === 'end');
+  private static validateEndNode(nodes: WorkflowNode[], warnings: ValidationError[]): void {
+    const endNodes = nodes.filter(n => n.type === 'end');
     if (endNodes.length === 0) {
       warnings.push({
         type: 'warning',
@@ -144,10 +129,7 @@ export class WorkflowEngine {
   /**
    * 验证任务节点
    */
-  private static validateTaskNode(
-    node: WorkflowNode,
-    errors: ValidationError[]
-  ): void {
+  private static validateTaskNode(node: WorkflowNode, errors: ValidationError[]): void {
     const config = node.config as any;
     if (!config.assigneeType) {
       errors.push({
@@ -162,10 +144,7 @@ export class WorkflowEngine {
   /**
    * 验证审批节点
    */
-  private static validateApprovalNode(
-    node: WorkflowNode,
-    errors: ValidationError[]
-  ): void {
+  private static validateApprovalNode(node: WorkflowNode, errors: ValidationError[]): void {
     const config = node.config as any;
     if (!config.approvers || config.approvers.length === 0) {
       errors.push({
@@ -180,10 +159,7 @@ export class WorkflowEngine {
   /**
    * 验证条件节点
    */
-  private static validateConditionNode(
-    node: WorkflowNode,
-    errors: ValidationError[]
-  ): void {
+  private static validateConditionNode(node: WorkflowNode, errors: ValidationError[]): void {
     const config = node.config as any;
     if (!config.conditions || config.conditions.length === 0) {
       errors.push({
@@ -198,10 +174,7 @@ export class WorkflowEngine {
   /**
    * 验证脚本节点
    */
-  private static validateScriptNode(
-    node: WorkflowNode,
-    errors: ValidationError[]
-  ): void {
+  private static validateScriptNode(node: WorkflowNode, errors: ValidationError[]): void {
     const config = node.config as any;
     if (!config.script || config.script.trim() === '') {
       errors.push({
@@ -216,10 +189,7 @@ export class WorkflowEngine {
   /**
    * 验证通知节点
    */
-  private static validateNotificationNode(
-    node: WorkflowNode,
-    errors: ValidationError[]
-  ): void {
+  private static validateNotificationNode(node: WorkflowNode, errors: ValidationError[]): void {
     const config = node.config as any;
     if (!config.recipients || config.recipients.length === 0) {
       errors.push({
@@ -240,8 +210,8 @@ export class WorkflowEngine {
     errors: ValidationError[],
     warnings: ValidationError[]
   ): void {
-    const sourceNode = nodes.find((n) => n.id === connection.sourceNodeId);
-    const targetNode = nodes.find((n) => n.id === connection.targetNodeId);
+    const sourceNode = nodes.find(n => n.id === connection.sourceNodeId);
+    const targetNode = nodes.find(n => n.id === connection.targetNodeId);
 
     if (!sourceNode) {
       errors.push({
@@ -286,13 +256,13 @@ export class WorkflowEngine {
     connections: WorkflowConnection[],
     warnings: ValidationError[]
   ): void {
-    nodes.forEach((node) => {
+    nodes.forEach(node => {
       if (node.type === 'start' || node.type === 'end') {
         return;
       }
 
-      const hasInput = connections.some((c) => c.targetNodeId === node.id);
-      const hasOutput = connections.some((c) => c.sourceNodeId === node.id);
+      const hasInput = connections.some(c => c.targetNodeId === node.id);
+      const hasOutput = connections.some(c => c.sourceNodeId === node.id);
 
       if (!hasInput || !hasOutput) {
         warnings.push({
@@ -314,8 +284,8 @@ export class WorkflowEngine {
   ): void {
     // 构建邻接表
     const graph = new Map<string, string[]>();
-    nodes.forEach((node) => graph.set(node.id, []));
-    connections.forEach((conn) => {
+    nodes.forEach(node => graph.set(node.id, []));
+    connections.forEach(conn => {
       const edges = graph.get(conn.sourceNodeId) || [];
       edges.push(conn.targetNodeId);
       graph.set(conn.sourceNodeId, edges);
@@ -365,15 +335,13 @@ export class WorkflowEngine {
     workflow: WorkflowDefinition,
     variables: Record<string, any>
   ): string[] {
-    const connections = workflow.connections.filter(
-      (c) => c.sourceNodeId === currentNodeId
-    );
+    const connections = workflow.connections.filter(c => c.sourceNodeId === currentNodeId);
 
     if (connections.length === 0) {
       return [];
     }
 
-    const currentNode = workflow.nodes.find((n) => n.id === currentNodeId);
+    const currentNode = workflow.nodes.find(n => n.id === currentNodeId);
 
     // 根据节点类型确定下一个节点
     if (currentNode?.type === 'condition') {
@@ -381,7 +349,7 @@ export class WorkflowEngine {
     }
 
     // 默认返回所有连接的目标节点
-    return connections.map((c) => c.targetNodeId);
+    return connections.map(c => c.targetNodeId);
   }
 
   /**
@@ -398,10 +366,7 @@ export class WorkflowEngine {
     for (const condition of conditions) {
       try {
         // 简单的表达式评估（实际应使用安全的表达式引擎）
-        const result = this.evaluateExpression(
-          condition.expression,
-          variables
-        );
+        const result = this.evaluateExpression(condition.expression, variables);
         if (result) {
           return [condition.targetNodeId];
         }
@@ -421,17 +386,11 @@ export class WorkflowEngine {
   /**
    * 评估表达式
    */
-  private static evaluateExpression(
-    expression: string,
-    variables: Record<string, any>
-  ): boolean {
+  private static evaluateExpression(expression: string, variables: Record<string, any>): boolean {
     // 这里应该使用安全的表达式引擎
     // 简化实现，仅供示例
     try {
-      const func = new Function(
-        ...Object.keys(variables),
-        `return ${expression}`
-      );
+      const func = new Function(...Object.keys(variables), `return ${expression}`);
       return func(...Object.values(variables));
     } catch {
       return false;
@@ -440,4 +399,3 @@ export class WorkflowEngine {
 }
 
 export default WorkflowEngine;
-

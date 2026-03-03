@@ -33,7 +33,14 @@ export interface Change {
   description: string;
   justification: string;
   type: 'normal' | 'standard' | 'emergency';
-  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'implementing' | 'completed' | 'cancelled';
+  status:
+    | 'draft'
+    | 'pending'
+    | 'approved'
+    | 'rejected'
+    | 'implementing'
+    | 'completed'
+    | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   impactScope: 'low' | 'medium' | 'high';
   riskLevel: 'low' | 'medium' | 'high';
@@ -75,7 +82,14 @@ export interface CreateChangeRequest {
 }
 
 export interface UpdateChangeRequest extends Partial<CreateChangeRequest> {
-  status?: 'draft' | 'pending' | 'approved' | 'rejected' | 'implementing' | 'completed' | 'cancelled';
+  status?:
+    | 'draft'
+    | 'pending'
+    | 'approved'
+    | 'rejected'
+    | 'implementing'
+    | 'completed'
+    | 'cancelled';
   assigneeId?: number;
   actualStartDate?: string;
   actualEndDate?: string;
@@ -119,7 +133,7 @@ class ChangeService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getToken()}`,
+        Authorization: `Bearer ${this.getToken()}`,
         'X-Tenant-Code': this.getTenantCode(),
       },
     });
@@ -138,7 +152,7 @@ class ChangeService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getToken()}`,
+        Authorization: `Bearer ${this.getToken()}`,
         'X-Tenant-Code': this.getTenantCode(),
       },
     });
@@ -157,7 +171,7 @@ class ChangeService {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getToken()}`,
+        Authorization: `Bearer ${this.getToken()}`,
         'X-Tenant-Code': this.getTenantCode(),
       },
       body: JSON.stringify(data),
@@ -177,7 +191,7 @@ class ChangeService {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getToken()}`,
+        Authorization: `Bearer ${this.getToken()}`,
         'X-Tenant-Code': this.getTenantCode(),
       },
       body: JSON.stringify(data),
@@ -197,7 +211,7 @@ class ChangeService {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getToken()}`,
+        Authorization: `Bearer ${this.getToken()}`,
         'X-Tenant-Code': this.getTenantCode(),
       },
     });
@@ -213,7 +227,7 @@ class ChangeService {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.getToken()}`,
+        Authorization: `Bearer ${this.getToken()}`,
         'X-Tenant-Code': this.getTenantCode(),
       },
     });

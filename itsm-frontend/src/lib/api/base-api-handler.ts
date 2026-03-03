@@ -9,9 +9,9 @@ import { message } from 'antd';
 const ERROR_MESSAGES: Record<string, string> = {
   // 网络错误
   'Network Error': '网络连接失败，请检查您的网络',
-  'timeout': '请求超时，请稍后重试',
+  timeout: '请求超时，请稍后重试',
   'Request timeout': '请求超时，请稍后重试',
-  
+
   // HTTP 状态码错误
   '400': '请求参数错误',
   '401': '未授权，请重新登录',
@@ -48,7 +48,7 @@ export const getFriendlyErrorMessage = (error: unknown): string => {
   if (error instanceof ApiError) {
     return error.message;
   }
-  
+
   if (error instanceof Error) {
     // 检查是否有映射的错误消息
     for (const [key, msg] of Object.entries(ERROR_MESSAGES)) {
@@ -58,7 +58,7 @@ export const getFriendlyErrorMessage = (error: unknown): string => {
     }
     return error.message;
   }
-  
+
   return '操作失败，请稍后重试';
 };
 
@@ -93,22 +93,22 @@ export class ApiHandler {
 
     try {
       const result = await request;
-      
+
       // 显示成功消息
       if (showSuccess && successMessage && !silent) {
         message.success(successMessage);
       }
-      
+
       return result;
     } catch (error) {
       // 获取友好的错误消息
       const friendlyMessage = errorMessage || getFriendlyErrorMessage(error);
-      
+
       // 显示错误消息
       if (showError && !silent) {
         message.error(friendlyMessage);
       }
-      
+
       // 记录错误到控制台（开发环境）
       if (process.env.NODE_ENV === 'development') {
         console.error('API Error:', {
@@ -117,7 +117,7 @@ export class ApiHandler {
           timestamp: new Date().toISOString(),
         });
       }
-      
+
       // 重新抛出错误，让调用者可以进一步处理
       throw error;
     }
@@ -191,20 +191,16 @@ export class ApiHandler {
       backoff?: boolean;
     }
   ): Promise<T> {
-    const {
-      maxRetries = 3,
-      delay = 1000,
-      backoff = true,
-    } = options || {};
+    const { maxRetries = 3, delay = 1000, backoff = true } = options || {};
 
     let lastError: unknown;
-    
+
     for (let i = 0; i < maxRetries; i++) {
       try {
         return await fn();
       } catch (error) {
         lastError = error;
-        
+
         if (i < maxRetries - 1) {
           // 计算延迟时间（如果启用了退避策略）
           const waitTime = backoff ? delay * Math.pow(2, i) : delay;
@@ -212,7 +208,7 @@ export class ApiHandler {
         }
       }
     }
-    
+
     throw lastError;
   }
 }
@@ -231,4 +227,3 @@ export const handleBatchApiRequests = ApiHandler.handleBatchRequests;
  * 便捷函数：重试请求
  */
 export const retryApiRequest = ApiHandler.retryRequest;
-

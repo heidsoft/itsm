@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import React, { useState, ReactNode } from "react";
-import { Form, Input, Button, Select, DatePicker, InputNumber, Space, Modal } from "antd";
-import type { Rule } from "antd/es/form";
-import type { FormInstance } from "antd/es/form";
+import React, { useState, ReactNode } from 'react';
+import { Form, Input, Button, Select, DatePicker, InputNumber, Space, Modal } from 'antd';
+import type { Rule } from 'antd/es/form';
+import type { FormInstance } from 'antd/es/form';
 
 interface FormConfig<T> {
   initialValues?: Partial<T>;
   rules?: Partial<Record<keyof T, Rule[]>>;
-  layout?: "horizontal" | "vertical" | "inline";
+  layout?: 'horizontal' | 'vertical' | 'inline';
   onSubmit?: (values: T) => Promise<void>;
   onSuccess?: () => void;
 }
@@ -16,13 +16,13 @@ interface FormConfig<T> {
 export function createForm<T extends Record<string, unknown>>({
   initialValues,
   rules = {},
-  layout = "vertical",
+  layout = 'vertical',
   onSubmit,
   onSuccess,
 }: FormConfig<T>) {
   return function BaseForm({
     children,
-    submitText = "提交",
+    submitText = '提交',
     showReset = true,
     disabled = false,
   }: {
@@ -42,18 +42,25 @@ export function createForm<T extends Record<string, unknown>>({
         onSuccess?.();
       } catch (error) {
         if (error instanceof Error && (error as { errorFields?: unknown[] }).errorFields) return;
-        console.error("表单提交错误:", error);
+        console.error('表单提交错误:', error);
       } finally {
         setLoading(false);
       }
     };
 
     return (
-      <Form form={form} layout={layout} disabled={loading || disabled} initialValues={initialValues as T}>
+      <Form
+        form={form}
+        layout={layout}
+        disabled={loading || disabled}
+        initialValues={initialValues as T}
+      >
         {children(form)}
         <Form.Item style={{ marginTop: 24 }}>
           <Space>
-            <Button type="primary" onClick={handleSubmit} loading={loading}>{submitText}</Button>
+            <Button type="primary" onClick={handleSubmit} loading={loading}>
+              {submitText}
+            </Button>
             {showReset && <Button onClick={() => form.resetFields()}>重置</Button>}
           </Space>
         </Form.Item>
@@ -70,10 +77,10 @@ interface SearchFormConfig {
 export function createSearchForm(config: SearchFormConfig) {
   return function SearchForm({
     children,
-    layout = "inline",
+    layout = 'inline',
   }: {
     children: (form: FormInstance) => ReactNode;
-    layout?: "horizontal" | "vertical" | "inline";
+    layout?: 'horizontal' | 'vertical' | 'inline';
   }) {
     const [form] = Form.useForm();
     const [loading, setLoading] = useState(false);
@@ -92,8 +99,17 @@ export function createSearchForm(config: SearchFormConfig) {
       <Form form={form} layout={layout} style={{ marginBottom: 16 }}>
         <Space wrap>
           {children(form)}
-          <Button type="primary" onClick={handleSearch} loading={loading}>搜索</Button>
-          <Button onClick={() => { form.resetFields(); config.onReset(); }}>重置</Button>
+          <Button type="primary" onClick={handleSearch} loading={loading}>
+            搜索
+          </Button>
+          <Button
+            onClick={() => {
+              form.resetFields();
+              config.onReset();
+            }}
+          >
+            重置
+          </Button>
         </Space>
       </Form>
     );
@@ -118,7 +134,14 @@ export function TextField(props: FieldProps) {
 }
 
 export function SelectField({
-  name, label, required, placeholder, disabled, options, showSearch, rules,
+  name,
+  label,
+  required,
+  placeholder,
+  disabled,
+  options,
+  showSearch,
+  rules,
 }: FieldProps & { options: { label: string; value: string | number }[]; showSearch?: boolean }) {
   return (
     <Form.Item name={name} label={label} required={required} rules={rules}>
@@ -128,7 +151,7 @@ export function SelectField({
         options={options}
         showSearch={showSearch}
         filterOption={(input, option) =>
-          (option?.label ?? "").toLowerCase().includes(input.toLowerCase())
+          (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
         }
       />
     </Form.Item>

@@ -128,12 +128,8 @@ export default function WorkflowToolbar({
 
         {/* 右侧 - 操作按钮 */}
         <Space>
-          <Button icon={<GitBranch className="w-4 h-4" />}>
-            版本管理
-          </Button>
-          <Button icon={<Settings className="w-4 h-4" />}>
-            流程设置
-          </Button>
+          <Button icon={<GitBranch className="w-4 h-4" />}>版本管理</Button>
+          <Button icon={<Settings className="w-4 h-4" />}>流程设置</Button>
           <Button
             icon={<Save className="w-4 h-4" />}
             loading={saving}

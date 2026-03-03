@@ -15,11 +15,7 @@ const TicketLayout: React.FC<PropsWithChildren> = ({ children }) => {
       ),
     },
     {
-      title: (
-        <Link href="/tickets">
-          工单管理
-        </Link>
-      ),
+      title: <Link href="/tickets">工单管理</Link>,
     },
   ];
 

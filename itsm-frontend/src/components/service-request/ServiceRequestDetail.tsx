@@ -113,7 +113,7 @@ const ServiceRequestDetail: React.FC = () => {
   const renderApprovalTimeline = () => {
     return (
       <Timeline>
-        <Timeline.Item color='green'>
+        <Timeline.Item color="green">
           <p>提交申请</p>
           <small>{dayjs(request?.created_at).format('YYYY-MM-DD HH:mm')}</small>
         </Timeline.Item>
@@ -131,14 +131,14 @@ const ServiceRequestDetail: React.FC = () => {
               )
             }
           >
-            <Space orientation='vertical' size={2}>
+            <Space orientation="vertical" size={2}>
               <Text strong>{`${app.level}. ${app.step.toUpperCase()} 审批`}</Text>
               <div>
                 <Tag color={approvalStatusColors[app.status]}>{app.status}</Tag>
-                {app.approver_name && <Text type='secondary'>by {app.approver_name}</Text>}
+                {app.approver_name && <Text type="secondary">by {app.approver_name}</Text>}
               </div>
               {app.comment && (
-                <Text type='secondary' italic>
+                <Text type="secondary" italic>
                   &quot;{app.comment}&quot;
                 </Text>
               )}
@@ -160,21 +160,21 @@ const ServiceRequestDetail: React.FC = () => {
     a => a.status === ApprovalStatus.PENDING && a.level === request?.current_level
   );
 
-  if (loading) return <Spin size='large' style={{ display: 'block', margin: '50px auto' }} />;
+  if (loading) return <Spin size="large" style={{ display: 'block', margin: '50px auto' }} />;
   if (!request) return <div>未找到请求</div>;
 
   return (
     <div style={{ padding: '24px' }}>
-      <Space orientation='vertical' size='large' style={{ width: '100%' }}>
+      <Space orientation="vertical" size="large" style={{ width: '100%' }}>
         {/* 头部信息 */}
         <Card variant="borderless">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
             <div>
               <Title level={3}>{request.title || '服务请求'}</Title>
-              <Space size='middle'>
+              <Space size="middle">
                 <Tag>{request.catalog?.category}</Tag>
-                <Text type='secondary'>ID: {request.id}</Text>
-                <Text type='secondary'>
+                <Text type="secondary">ID: {request.id}</Text>
+                <Text type="secondary">
                   提交于: {dayjs(request.created_at).format('YYYY-MM-DD HH:mm')}
                 </Text>
               </Space>
@@ -192,19 +192,19 @@ const ServiceRequestDetail: React.FC = () => {
         <div style={{ display: 'flex', gap: '24px' }}>
           {/* 左侧：详情 */}
           <div style={{ flex: 2 }}>
-            <Card title='请求详情' variant="borderless">
+            <Card title="请求详情" variant="borderless">
               <Descriptions column={1} bordered>
-                <Descriptions.Item label='服务名称'>{request.catalog?.name}</Descriptions.Item>
-                <Descriptions.Item label='申请原因'>{request.reason}</Descriptions.Item>
-                <Descriptions.Item label='成本中心'>{request.cost_center || '-'}</Descriptions.Item>
-                <Descriptions.Item label='数据分类'>
+                <Descriptions.Item label="服务名称">{request.catalog?.name}</Descriptions.Item>
+                <Descriptions.Item label="申请原因">{request.reason}</Descriptions.Item>
+                <Descriptions.Item label="成本中心">{request.cost_center || '-'}</Descriptions.Item>
+                <Descriptions.Item label="数据分类">
                   {request.data_classification || 'Public'}
                 </Descriptions.Item>
-                <Descriptions.Item label='需要公网IP'>
+                <Descriptions.Item label="需要公网IP">
                   {request.needs_public_ip ? '是' : '否'}
                 </Descriptions.Item>
                 {request.form_data && (
-                  <Descriptions.Item label='表单数据'>
+                  <Descriptions.Item label="表单数据">
                     <pre style={{ margin: 0, fontSize: '12px' }}>
                       {JSON.stringify(request.form_data, null, 2)}
                     </pre>
@@ -216,7 +216,7 @@ const ServiceRequestDetail: React.FC = () => {
 
           {/* 右侧：审批流 & 操作 */}
           <div style={{ flex: 1 }}>
-            <Card title='审批流程' variant="borderless">
+            <Card title="审批流程" variant="borderless">
               {renderApprovalTimeline()}
 
               {/* 审批操作区 */}
@@ -228,7 +228,7 @@ const ServiceRequestDetail: React.FC = () => {
                     <Title level={5}>审批操作</Title>
                     <Space style={{ width: '100%', justifyContent: 'center' }}>
                       <Button
-                        type='primary'
+                        type="primary"
                         icon={<CheckCircleOutlined />}
                         onClick={() => openActionModal(ApprovalAction.APPROVE)}
                       >
@@ -256,8 +256,8 @@ const ServiceRequestDetail: React.FC = () => {
         onOk={handleSubmitApproval}
         onCancel={() => setActionModalVisible(false)}
         confirmLoading={submitting}
-        okText='提交'
-        cancelText='取消'
+        okText="提交"
+        cancelText="取消"
         okButtonProps={{ danger: currentAction === ApprovalAction.REJECT }}
       >
         <p>确定要{currentAction === ApprovalAction.APPROVE ? '批准' : '拒绝'}此请求吗？</p>

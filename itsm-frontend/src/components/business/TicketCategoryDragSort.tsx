@@ -1,24 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
-import {
-  Tree,
-  Button,
-  message,
-  Modal,
-  Spin,
-  Alert,
-  Space,
-  Typography,
-  Card,
-  Tooltip,
-} from "antd";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "@hello-pangea/dnd";
+import React, { useState, useEffect, useCallback } from 'react';
+import { Tree, Button, message, Modal, Spin, Alert, Space, Typography, Card, Tooltip } from 'antd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import {
   GripVertical,
   Save,
@@ -31,12 +15,12 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   ticketCategoryService,
   type CategoryTreeItem,
   type BatchUpdateCategoriesRequest,
-} from "../../lib/services/ticket-category-service";
+} from '../../lib/services/ticket-category-service';
 
 const { Text } = Typography;
 
@@ -69,7 +53,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
       const data = await ticketCategoryService.getCategoryTree();
       setCategories(data);
       setOriginalCategories(JSON.parse(JSON.stringify(data))); // 深拷贝
-      
+
       // 设置默认展开的节点
       const rootKeys = data.map(item => item.id);
       setExpandedKeys(rootKeys);
@@ -93,7 +77,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
       const currentStr = JSON.stringify(categories);
       setHasChanges(originalStr !== currentStr);
     };
-    
+
     checkChanges();
   }, [categories, originalCategories]);
 
@@ -105,13 +89,13 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
     isLeaf?: boolean;
     disabled?: boolean;
   }
-  
+
   // 定义拖拽源和目标类型
   interface DragSource {
     index: number;
     droppableId: string;
   }
-  
+
   interface DragDestination {
     index: number;
     droppableId: string;
@@ -147,7 +131,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   // 处理树形拖拽结束
   const handleTreeDragEnd = (source: DragSource, destination: DragDestination | null) => {
     if (!destination) return;
-    
+
     // 拖拽逻辑处理
     const newCategories = [...categories];
     // 实现具体的拖拽逻辑
@@ -157,7 +141,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   // 处理列表拖拽结束
   const handleListDragEnd = (source: DragSource, destination: DragDestination | null) => {
     if (!destination) return;
-    
+
     // 拖拽逻辑处理
     const newCategories = [...categories];
     // 实现具体的拖拽逻辑
@@ -197,7 +181,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   // 更新排序
   const updateSortOrders = (items: CategoryTreeItem[], parentLevel: number = 0) => {
     items.forEach((item, index) => {
-      item.sort_order = (parentLevel * 1000) + index;
+      item.sort_order = parentLevel * 1000 + index;
       item.level = parentLevel;
       if (item.children && item.children.length > 0) {
         updateSortOrders(item.children, parentLevel + 1);
@@ -209,17 +193,17 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   const handleSave = async () => {
     try {
       setSaving(true);
-      
+
       // 准备批量更新数据
       const updateData = prepareUpdateData(categories);
-      
+
       // 调用批量更新API
       await ticketCategoryService.batchUpdateCategories(updateData);
-      
+
       message.success('分类排序保存成功');
       setOriginalCategories(JSON.parse(JSON.stringify(categories)));
       setHasChanges(false);
-      
+
       if (onSave) {
         onSave(categories);
       }
@@ -234,11 +218,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   const prepareUpdateData = (items: CategoryTreeItem[]): BatchUpdateCategoriesRequest[] => {
     const updates: BatchUpdateCategoriesRequest[] = [];
 
-    const processItems = (
-      items: CategoryTreeItem[],
-      parentId?: number,
-      level: number = 0
-    ) => {
+    const processItems = (items: CategoryTreeItem[], parentId?: number, level: number = 0) => {
       items.forEach((item, index) => {
         updates.push({
           id: item.id,
@@ -278,7 +258,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
   // 移动节点
   const moveNode = (direction: 'up' | 'down' | 'left' | 'right', itemId: number) => {
     const newCategories = [...categories];
-    
+
     switch (direction) {
       case 'up':
         moveNodeUp(newCategories, itemId);
@@ -293,7 +273,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
         moveNodeRight(newCategories, itemId);
         break;
     }
-    
+
     updateSortOrders(newCategories);
     setCategories(newCategories);
   };
@@ -407,11 +387,9 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Text strong>工单分类排序</Text>
-              {hasChanges && (
-                <Text type="warning">有未保存的更改</Text>
-              )}
+              {hasChanges && <Text type="warning">有未保存的更改</Text>}
             </div>
-            
+
             <Space>
               <Tooltip title="刷新数据">
                 <Button
@@ -422,18 +400,15 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                   刷新
                 </Button>
               </Tooltip>
-              
+
               {hasChanges && (
                 <>
                   <Tooltip title="重置更改">
-                    <Button
-                      icon={<Undo className="w-4 h-4" />}
-                      onClick={handleReset}
-                    >
+                    <Button icon={<Undo className="w-4 h-4" />} onClick={handleReset}>
                       重置
                     </Button>
                   </Tooltip>
-                  
+
                   <Tooltip title="保存更改">
                     <Button
                       type="primary"
@@ -453,18 +428,10 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
 
       <DragDropContext onDragEnd={handleTreeDragEnd as unknown as (result: any) => void}>
         <Droppable droppableId="categories" type="list">
-          {(provided) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className="space-y-2"
-            >
+          {provided => (
+            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
               {categories.map((category, index) => (
-                <Draggable
-                  key={category.id}
-                  draggableId={category.id.toString()}
-                  index={index}
-                >
+                <Draggable key={category.id} draggableId={category.id.toString()} index={index}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
@@ -487,20 +454,22 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                             {category.code}
                           </Text>
                         </div>
-                        
+
                         <div className="flex items-center space-x-2">
-                          <div className={`px-2 py-1 rounded text-xs ${
-                            category.is_active 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                          <div
+                            className={`px-2 py-1 rounded text-xs ${
+                              category.is_active
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
                             {category.is_active ? '启用' : '禁用'}
                           </div>
-                          
+
                           <Text type="secondary" className="text-xs">
                             排序: {category.sort_order}
                           </Text>
-                          
+
                           <Space size="small">
                             <Tooltip title="上移">
                               <Button
@@ -510,7 +479,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                                 disabled={index === 0}
                               />
                             </Tooltip>
-                            
+
                             <Tooltip title="下移">
                               <Button
                                 size="small"
@@ -519,7 +488,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                                 disabled={index === categories.length - 1}
                               />
                             </Tooltip>
-                            
+
                             <Tooltip title="提升层级">
                               <Button
                                 size="small"
@@ -527,7 +496,7 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                                 onClick={() => moveNode('left', category.id)}
                               />
                             </Tooltip>
-                            
+
                             <Tooltip title="降低层级">
                               <Button
                                 size="small"
@@ -539,11 +508,11 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                           </Space>
                         </div>
                       </div>
-                      
+
                       {category.children && category.children.length > 0 && (
                         <div className="mt-3 ml-6">
                           <Droppable droppableId={category.id.toString()} type="list">
-                            {(provided) => (
+                            {provided => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.droppableProps}
@@ -573,16 +542,18 @@ const TicketCategoryDragSort: React.FC<TicketCategoryDragSortProps> = ({
                                               {child.code}
                                             </Text>
                                           </div>
-                                          
+
                                           <div className="flex items-center space-x-2">
-                                            <div className={`px-2 py-1 rounded text-xs ${
-                                              child.is_active 
-                                                ? 'bg-green-100 text-green-800' 
-                                                : 'bg-red-100 text-red-800'
-                                            }`}>
+                                            <div
+                                              className={`px-2 py-1 rounded text-xs ${
+                                                child.is_active
+                                                  ? 'bg-green-100 text-green-800'
+                                                  : 'bg-red-100 text-red-800'
+                                              }`}
+                                            >
                                               {child.is_active ? '启用' : '禁用'}
                                             </div>
-                                            
+
                                             <Text type="secondary" className="text-xs">
                                               排序: {child.sort_order}
                                             </Text>

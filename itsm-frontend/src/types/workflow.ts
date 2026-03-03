@@ -11,18 +11,18 @@ import type { TicketStatus, TicketPriority } from './ticket';
  * 工作流状态
  */
 export enum WorkflowStatus {
-  DRAFT = 'draft',           // 草稿
-  ACTIVE = 'active',         // 激活
-  INACTIVE = 'inactive',     // 停用
-  ARCHIVED = 'archived',     // 归档
+  DRAFT = 'draft', // 草稿
+  ACTIVE = 'active', // 激活
+  INACTIVE = 'inactive', // 停用
+  ARCHIVED = 'archived', // 归档
 }
 
 /**
  * 工作流类型
  */
 export enum WorkflowType {
-  TICKET = 'ticket',         // 工单流程
-  APPROVAL = 'approval',     // 审批流程
+  TICKET = 'ticket', // 工单流程
+  APPROVAL = 'approval', // 审批流程
   ESCALATION = 'escalation', // 升级流程
   AUTOMATION = 'automation', // 自动化流程
 }
@@ -59,17 +59,17 @@ export interface WorkflowDefinition {
  * 节点类型
  */
 export enum NodeType {
-  START = 'start',               // 开始节点
-  END = 'end',                   // 结束节点
-  TASK = 'task',                 // 任务节点
-  APPROVAL = 'approval',         // 审批节点
-  CONDITION = 'condition',       // 条件节点
-  PARALLEL = 'parallel',         // 并行网关
-  EXCLUSIVE = 'exclusive',       // 互斥网关
-  SCRIPT = 'script',             // 脚本节点
+  START = 'start', // 开始节点
+  END = 'end', // 结束节点
+  TASK = 'task', // 任务节点
+  APPROVAL = 'approval', // 审批节点
+  CONDITION = 'condition', // 条件节点
+  PARALLEL = 'parallel', // 并行网关
+  EXCLUSIVE = 'exclusive', // 互斥网关
+  SCRIPT = 'script', // 脚本节点
   NOTIFICATION = 'notification', // 通知节点
-  TIMER = 'timer',               // 定时器节点
-  SUBPROCESS = 'subprocess',     // 子流程节点
+  TIMER = 'timer', // 定时器节点
+  SUBPROCESS = 'subprocess', // 子流程节点
 }
 
 /**
@@ -92,9 +92,9 @@ export interface WorkflowNode {
  * 节点配置（基础）
  */
 export interface BaseNodeConfig {
-  timeout?: number;              // 超时时间（秒）
-  retryOnFailure?: boolean;      // 失败重试
-  maxRetries?: number;           // 最大重试次数
+  timeout?: number; // 超时时间（秒）
+  retryOnFailure?: boolean; // 失败重试
+  maxRetries?: number; // 最大重试次数
   onTimeout?: 'skip' | 'fail' | 'escalate';
 }
 
@@ -103,13 +103,13 @@ export interface BaseNodeConfig {
  */
 export interface TaskNodeConfig extends BaseNodeConfig {
   assigneeType: 'user' | 'role' | 'group' | 'expression';
-  assignees?: number[];          // 指定用户
-  assigneeRole?: string;         // 角色
-  assigneeGroup?: string;        // 组
-  assigneeExpression?: string;   // 动态表达式
-  formFields?: string[];         // 表单字段
-  requiredFields?: string[];     // 必填字段
-  autoComplete?: boolean;        // 自动完成
+  assignees?: number[]; // 指定用户
+  assigneeRole?: string; // 角色
+  assigneeGroup?: string; // 组
+  assigneeExpression?: string; // 动态表达式
+  formFields?: string[]; // 表单字段
+  requiredFields?: string[]; // 必填字段
+  autoComplete?: boolean; // 自动完成
 }
 
 /**
@@ -118,11 +118,11 @@ export interface TaskNodeConfig extends BaseNodeConfig {
 export interface ApprovalNodeConfig extends BaseNodeConfig {
   approvers: number[];
   approvalType: 'any' | 'all' | 'majority'; // 任一/全部/多数同意
-  minimumApprovals?: number;     // 最少审批数
+  minimumApprovals?: number; // 最少审批数
   allowReject: boolean;
   allowDelegate: boolean;
   rejectAction: 'end' | 'return' | 'custom';
-  returnToNode?: string;         // 驳回到的节点
+  returnToNode?: string; // 驳回到的节点
 }
 
 /**
@@ -135,7 +135,7 @@ export interface ConditionNodeConfig extends BaseNodeConfig {
     expression: string;
     targetNodeId: string;
   }[];
-  defaultTargetNodeId?: string;  // 默认目标节点
+  defaultTargetNodeId?: string; // 默认目标节点
 }
 
 /**
@@ -167,9 +167,9 @@ export interface NotificationNodeConfig extends BaseNodeConfig {
  */
 export interface TimerNodeConfig extends BaseNodeConfig {
   timerType: 'duration' | 'date' | 'cron';
-  duration?: number;             // 持续时间（秒）
-  date?: string;                 // 特定日期
-  cronExpression?: string;       // Cron表达式
+  duration?: number; // 持续时间（秒）
+  date?: string; // 特定日期
+  cronExpression?: string; // Cron表达式
 }
 
 /**
@@ -177,9 +177,9 @@ export interface TimerNodeConfig extends BaseNodeConfig {
  */
 export interface SubprocessNodeConfig extends BaseNodeConfig {
   workflowId: string;
-  passVariables?: boolean;       // 传递变量
+  passVariables?: boolean; // 传递变量
   variableMapping?: Record<string, string>;
-  waitForCompletion?: boolean;   // 等待完成
+  waitForCompletion?: boolean; // 等待完成
 }
 
 /**
@@ -216,9 +216,9 @@ export interface NodeStyle {
  * 连接类型
  */
 export enum ConnectionType {
-  SEQUENCE = 'sequence',         // 顺序流
-  CONDITIONAL = 'conditional',   // 条件流
-  DEFAULT = 'default',           // 默认流
+  SEQUENCE = 'sequence', // 顺序流
+  CONDITIONAL = 'conditional', // 条件流
+  DEFAULT = 'default', // 默认流
 }
 
 /**
@@ -230,7 +230,7 @@ export interface WorkflowConnection {
   name?: string;
   sourceNodeId: string;
   targetNodeId: string;
-  condition?: string;            // 条件表达式
+  condition?: string; // 条件表达式
   style?: ConnectionStyle;
 }
 
@@ -281,11 +281,11 @@ export interface WorkflowVariable {
  * 触发器类型
  */
 export enum TriggerType {
-  MANUAL = 'manual',             // 手动触发
+  MANUAL = 'manual', // 手动触发
   STATUS_CHANGE = 'status_change', // 状态变更
   FIELD_CHANGE = 'field_change', // 字段变更
-  TIME_BASED = 'time_based',     // 基于时间
-  WEBHOOK = 'webhook',           // Webhook
+  TIME_BASED = 'time_based', // 基于时间
+  WEBHOOK = 'webhook', // Webhook
 }
 
 /**
@@ -337,7 +337,7 @@ export interface WorkflowSettings {
   notifyOnComplete?: boolean;
   notifyOnError?: boolean;
   timeoutAction?: 'cancel' | 'continue';
-  defaultTimeout?: number;         // 默认超时（秒）
+  defaultTimeout?: number; // 默认超时（秒）
 }
 
 // ==================== 工作流实例 ====================
@@ -367,7 +367,7 @@ export interface WorkflowInstance {
   variables: Record<string, any>;
   startTime: Date;
   endTime?: Date;
-  duration?: number;             // 执行时长（秒）
+  duration?: number; // 执行时长（秒）
   error?: string;
   startedBy: number;
   startedByName: string;
@@ -404,7 +404,10 @@ export interface WorkflowTemplate {
   category: string;
   description?: string;
   thumbnail?: string;
-  definition: Omit<WorkflowDefinition, 'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'updatedAt'>;
+  definition: Omit<
+    WorkflowDefinition,
+    'id' | 'createdBy' | 'createdByName' | 'createdAt' | 'updatedAt'
+  >;
   isPublic: boolean;
   usageCount: number;
   rating?: number;
@@ -445,8 +448,8 @@ export interface WorkflowStats {
   runningInstances: number;
   completedInstances: number;
   failedInstances: number;
-  avgDuration: number;           // 平均时长（秒）
-  successRate: number;           // 成功率（%）
+  avgDuration: number; // 平均时长（秒）
+  successRate: number; // 成功率（%）
   bottlenecks: Array<{
     nodeId: string;
     nodeName: string;
@@ -550,20 +553,20 @@ export default WorkflowDefinition;
  */
 export interface CounterSignConfig {
   approvalType: 'serial' | 'parallel'; // serial: 顺序会签, parallel: 并行会签
-  approvers: string[];                  // 审批人ID列表
-  threshold?: number;                   // 投票阈值（默认等于审批人数）
+  approvers: string[]; // 审批人ID列表
+  threshold?: number; // 投票阈值（默认等于审批人数）
 }
 
 /**
  * 会签状态
  */
 export interface CounterSignStatus {
-  parentTaskId: string;    // 父任务ID
-  total: number;            // 总审批人数
-  completed: number;       // 已完成审批人数
-  approved: number;       // 已通过人数
-  rejected: number;       // 已拒绝人数
-  pending: number;        // 待审批人数
+  parentTaskId: string; // 父任务ID
+  total: number; // 总审批人数
+  completed: number; // 已完成审批人数
+  approved: number; // 已通过人数
+  rejected: number; // 已拒绝人数
+  pending: number; // 待审批人数
   status: 'pending' | 'approved' | 'rejected'; // 会签整体状态
 }
 
@@ -571,8 +574,8 @@ export interface CounterSignStatus {
  * 投票请求
  */
 export interface VoteRequest {
-  approved: boolean;       // 是否通过
-  comment?: string;        // 审批意见
+  approved: boolean; // 是否通过
+  comment?: string; // 审批意见
 }
 
 // ==================== API 响应类型 ====================
@@ -615,4 +618,3 @@ export interface TaskListResponse {
   tasks: NodeInstance[];
   total: number;
 }
-

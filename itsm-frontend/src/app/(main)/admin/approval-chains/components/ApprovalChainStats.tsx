@@ -24,38 +24,38 @@ export function ApprovalChainStatsCards({ stats, loading = false }: ApprovalChai
     {
       title: '总审批链数',
       value: stats.total,
-      icon: <SettingOutlined className='text-blue-500' />,
+      icon: <SettingOutlined className="text-blue-500" />,
       color: '#1890ff',
     },
     {
       title: '活跃审批链',
       value: stats.active,
-      icon: <CheckCircleOutlined className='text-green-500' />,
+      icon: <CheckCircleOutlined className="text-green-500" />,
       color: '#52c41a',
     },
     {
       title: '非活跃审批链',
       value: stats.inactive,
-      icon: <ClockCircleOutlined className='text-orange-500' />,
+      icon: <ClockCircleOutlined className="text-orange-500" />,
       color: '#faad14',
     },
     {
       title: '平均步骤数',
       value: stats.avgStepsPerChain.toFixed(1),
-      icon: <UserOutlined className='text-purple-500' />,
+      icon: <UserOutlined className="text-purple-500" />,
       color: '#722ed1',
     },
   ];
 
   return (
-    <div className='mb-6'>
-      <Title level={4} className='mb-4'>
+    <div className="mb-6">
+      <Title level={4} className="mb-4">
         审批链统计
       </Title>
       <Row gutter={[16, 16]}>
         {statCards.map((card, index) => (
           <Col xs={24} sm={12} lg={6} key={index}>
-            <Card loading={loading} className='h-full'>
+            <Card loading={loading} className="h-full">
               <Statistic
                 title={card.title}
                 value={card.value}

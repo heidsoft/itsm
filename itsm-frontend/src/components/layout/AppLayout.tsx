@@ -54,10 +54,13 @@ export function AppLayout({
       bodyStyle={{ padding: 0 }}
       headerStyle={{ display: 'none' }}
     >
-      <Sidebar collapsed={false} onCollapse={(c) => {
-        setCollapsed(c);
-        if (c) setMobileDrawerVisible(false);
-      }} />
+      <Sidebar
+        collapsed={false}
+        onCollapse={c => {
+          setCollapsed(c);
+          if (c) setMobileDrawerVisible(false);
+        }}
+      />
     </Drawer>
   );
 
@@ -91,7 +94,11 @@ export function AppLayout({
 
       <Layout
         style={{
-          marginLeft: isMobile ? 0 : (collapsed ? LAYOUT_CONFIG.sider.collapsedWidth : LAYOUT_CONFIG.sider.width),
+          marginLeft: isMobile
+            ? 0
+            : collapsed
+              ? LAYOUT_CONFIG.sider.collapsedWidth
+              : LAYOUT_CONFIG.sider.width,
           transition: LAYOUT_CONFIG.transitions.base,
         }}
       >
@@ -120,12 +127,12 @@ export function AppLayout({
             borderRadius: LAYOUT_CONFIG.borderRadius.lg,
             transition: LAYOUT_CONFIG.transitions.base,
           }}
-          className='responsive-content'
+          className="responsive-content"
         >
           {/* 返回按钮 */}
           {showBackButton && (
             <div style={{ marginBottom: LAYOUT_CONFIG.spacing.md }}>
-              <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()} size='small'>
+              <Button icon={<ArrowLeft size={16} />} onClick={() => router.back()} size="small">
                 返回
               </Button>
             </div>

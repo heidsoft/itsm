@@ -22,7 +22,6 @@ import {
   Tooltip,
   Popconfirm,
   Drawer,
-  message,
 } from 'antd';
 import {
   AlertTriangle,
@@ -83,19 +82,19 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const { message } = App.useApp();
   const [filters, setFilters] = useState<{
-      status: string;
-      severity: string;
-      type: string;
-      dateRange: [dayjs.Dayjs, dayjs.Dayjs] | null;
-      search: string;
-    }>({
-      status: '',
-      severity: '',
-      type: '',
-      dateRange: null,
-      search: '',
-    });
-  
+    status: string;
+    severity: string;
+    type: string;
+    dateRange: [dayjs.Dayjs, dayjs.Dayjs] | null;
+    search: string;
+  }>({
+    status: '',
+    severity: '',
+    type: '',
+    dateRange: null,
+    search: '',
+  });
+
   // 告警规则相关
   const [alertRules, setAlertRules] = useState<SLAAlertRule[]>([]);
   const [showRuleModal, setShowRuleModal] = useState(false);
@@ -110,25 +109,31 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       const response = await SLAApi.getSLAViolations({
         page: 1,
         size: 100,
-        is_resolved: filters.status === 'resolved' ? true : filters.status === 'open' ? false : undefined,
+        is_resolved:
+          filters.status === 'resolved' ? true : filters.status === 'open' ? false : undefined,
       });
 
       const processedViolations: SLAViolation[] = response.items.map(violation => ({
         ...violation,
-        expected_time: violation.expected_time ? dayjs(violation.expected_time).format('YYYY-MM-DD HH:mm:ss') : '',
-        actual_time: violation.actual_time ? dayjs(violation.actual_time).format('YYYY-MM-DD HH:mm:ss') : '',
+        expected_time: violation.expected_time
+          ? dayjs(violation.expected_time).format('YYYY-MM-DD HH:mm:ss')
+          : '',
+        actual_time: violation.actual_time
+          ? dayjs(violation.actual_time).format('YYYY-MM-DD HH:mm:ss')
+          : '',
       }));
 
       setViolations(processedViolations);
-      
+
       // 更新统计数据
       const total = processedViolations.length;
       const open = processedViolations.filter(v => v.status === 'open').length;
       const resolved = processedViolations.filter(v => v.status === 'resolved').length;
       const critical = processedViolations.filter(v => v.severity === 'critical').length;
-      
+
       setStats({ total, open, resolved, critical });
     } catch (error) {
+      console.error('加载SLA违规记录失败:', error);
       message.error('加载违规记录失败');
     } finally {
       setLoading(false);
@@ -140,21 +145,23 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
     try {
       const rules = await SLAApi.getSLAAlerts();
       // 这里需要转换API响应格式
-      setAlertRules(rules.map((rule: any) => ({
-        id: rule.id || Math.random(),
-        name: rule.name || '默认规则',
-        sla_definition_id: rule.sla_definition_id || 1,
-        alert_level: rule.alert_level || 'warning',
-        trigger_conditions: rule.trigger_conditions || {
-          time_threshold_percent: 80,
-          violation_types: ['response_time', 'resolution_time'],
-        },
-        notification_channels: rule.notification_channels || ['email'],
-        is_active: rule.is_active !== false,
-        created_at: rule.created_at || new Date().toISOString(),
-      })));
+      setAlertRules(
+        rules.map((rule: any) => ({
+          id: rule.id || Math.random(),
+          name: rule.name || '默认规则',
+          sla_definition_id: rule.sla_definition_id || 1,
+          alert_level: rule.alert_level || 'warning',
+          trigger_conditions: rule.trigger_conditions || {
+            time_threshold_percent: 80,
+            violation_types: ['response_time', 'resolution_time'],
+          },
+          notification_channels: rule.notification_channels || ['email'],
+          is_active: rule.is_active !== false,
+          created_at: rule.created_at || new Date().toISOString(),
+        }))
+      );
     } catch (error) {
-      message.error('加载告警规则失败');
+      console.error('加载告警规则失败:', error);
     }
   };
 
@@ -177,10 +184,11 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
     }
     if (filters.search) {
       const search = filters.search.toLowerCase();
-      filtered = filtered.filter(v => 
-        v.ticket_id.toString().includes(search) ||
-        v.violation_type.toLowerCase().includes(search) ||
-        v.description.toLowerCase().includes(search)
+      filtered = filtered.filter(
+        v =>
+          v.ticket_id.toString().includes(search) ||
+          v.violation_type.toLowerCase().includes(search) ||
+          v.description.toLowerCase().includes(search)
       );
     }
 
@@ -210,9 +218,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
     const isResolved = status === 'resolved';
     try {
       await Promise.all(
-        selectedRowKeys.map(id =>
-          SLAApi.updateSLAViolationStatus(Number(id), isResolved)
-        )
+        selectedRowKeys.map(id => SLAApi.updateSLAViolationStatus(Number(id), isResolved))
       );
       message.success(`成功更新 ${selectedRowKeys.length} 条记录`);
       setSelectedRowKeys([]);
@@ -257,21 +263,30 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
   // 获取违规级别颜色
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case 'critical': return 'red';
-      case 'high': return 'orange';
-      case 'medium': return 'gold';
-      case 'low': return 'blue';
-      default: return 'default';
+      case 'critical':
+        return 'red';
+      case 'high':
+        return 'orange';
+      case 'medium':
+        return 'gold';
+      case 'low':
+        return 'blue';
+      default:
+        return 'default';
     }
   };
 
   // 获取状态颜色
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'red';
-      case 'investigating': return 'orange';
-      case 'resolved': return 'green';
-      default: return 'default';
+      case 'open':
+        return 'red';
+      case 'investigating':
+        return 'orange';
+      case 'resolved':
+        return 'green';
+      default:
+        return 'default';
     }
   };
 
@@ -282,7 +297,9 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       dataIndex: 'ticket_id',
       key: 'ticket_id',
       render: (id: number) => (
-        <Text code className="text-sm">#{String(id).padStart(6, '0')}</Text>
+        <Text code className="text-sm">
+          #{String(id).padStart(6, '0')}
+        </Text>
       ),
     },
     {
@@ -314,9 +331,13 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       key: 'severity',
       render: (severity: string) => (
         <Tag color={getSeverityColor(severity)}>
-          {severity === 'critical' ? '严重' : 
-           severity === 'high' ? '高' : 
-           severity === 'medium' ? '中' : '低'}
+          {severity === 'critical'
+            ? '严重'
+            : severity === 'high'
+              ? '高'
+              : severity === 'medium'
+                ? '中'
+                : '低'}
         </Tag>
       ),
     },
@@ -326,8 +347,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
       key: 'status',
       render: (status: string) => (
         <Tag color={getStatusColor(status)}>
-          {status === 'open' ? '待处理' : 
-           status === 'investigating' ? '处理中' : '已解决'}
+          {status === 'open' ? '待处理' : status === 'investigating' ? '处理中' : '已解决'}
         </Tag>
       ),
     },
@@ -394,7 +414,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             <Popconfirm
               title="确认标记为已解决？"
               onConfirm={() => {
-                SLAApi.updateSLAViolationStatus(record.id, true)  // 改为 true
+                SLAApi.updateSLAViolationStatus(record.id, true) // 改为 true
                   .then(() => {
                     message.success('状态更新成功');
                     loadViolations();
@@ -481,13 +501,13 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               <Search
                 placeholder="搜索工单ID、类型或描述"
                 value={filters.search}
-                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                onChange={e => setFilters(prev => ({ ...prev, search: e.target.value }))}
                 style={{ width: 200 }}
               />
               <Select
                 placeholder="状态"
                 value={filters.status}
-                onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                onChange={value => setFilters(prev => ({ ...prev, status: value }))}
                 style={{ width: 120 }}
                 allowClear
               >
@@ -498,7 +518,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               <Select
                 placeholder="严重程度"
                 value={filters.severity}
-                onChange={(value) => setFilters(prev => ({ ...prev, severity: value }))}
+                onChange={value => setFilters(prev => ({ ...prev, severity: value }))}
                 style={{ width: 120 }}
                 allowClear
               >
@@ -510,7 +530,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               <Select
                 placeholder="违规类型"
                 value={filters.type}
-                onChange={(value) => setFilters(prev => ({ ...prev, type: value }))}
+                onChange={value => setFilters(prev => ({ ...prev, type: value }))}
                 style={{ width: 120 }}
                 allowClear
               >
@@ -519,34 +539,26 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               </Select>
               <RangePicker
                 value={filters.dateRange}
-                onChange={(dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => setFilters(prev => ({
-                  ...prev,
-                  dateRange: dates && dates[0] && dates[1] ? [dates[0], dates[1]] : null
-                }))}
+                onChange={(dates: any) =>
+                  setFilters(prev => ({
+                    ...prev,
+                    dateRange: dates && dates[0] && dates[1] ? [dates[0], dates[1]] : null,
+                  }))
+                }
               />
             </Space>
           </Col>
           <Col xs={24} lg={8}>
             <Space>
-              <Button
-                icon={<RefreshCw size={16} />}
-                onClick={loadViolations}
-                loading={loading}
-              >
+              <Button icon={<RefreshCw size={16} />} onClick={loadViolations} loading={loading}>
                 刷新
               </Button>
-              <Button
-                icon={<Settings size={16} />}
-                onClick={() => setShowRuleDrawer(true)}
-              >
+              <Button icon={<Settings size={16} />} onClick={() => setShowRuleDrawer(true)}>
                 告警设置
               </Button>
               {selectedRowKeys.length > 0 && (
                 <>
-                  <Button
-                    onClick={() => handleBatchUpdate('resolved')}
-                    type="primary"
-                  >
+                  <Button onClick={() => handleBatchUpdate('resolved')} type="primary">
                     批量解决 ({selectedRowKeys.length})
                   </Button>
                 </>
@@ -566,7 +578,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
           rowSelection={{
             selectedRowKeys,
             onChange: setSelectedRowKeys,
-            getCheckboxProps: (record) => ({
+            getCheckboxProps: record => ({
               disabled: record.status === 'resolved',
             }),
           }}
@@ -575,7 +587,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             pageSize: 20,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: total => `共 ${total} 条记录`,
           }}
         />
       </Card>
@@ -593,11 +605,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
         open={showRuleDrawer}
         onClose={() => setShowRuleDrawer(false)}
         extra={
-          <Button
-            type="primary"
-            icon={<Bell size={16} />}
-            onClick={() => setShowRuleModal(true)}
-          >
+          <Button type="primary" icon={<Bell size={16} />} onClick={() => setShowRuleModal(true)}>
             新建规则
           </Button>
         }
@@ -613,11 +621,14 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
                       <Tag color={rule.alert_level === 'critical' ? 'red' : 'orange'}>
                         {rule.alert_level === 'critical' ? '严重' : '警告'}
                       </Tag>
-                      <Badge status={rule.is_active ? 'success' : 'default'} text={rule.is_active ? '启用' : '禁用'} />
+                      <Badge
+                        status={rule.is_active ? 'success' : 'default'}
+                        text={rule.is_active ? '启用' : '禁用'}
+                      />
                     </div>
                     <Text type="secondary" className="text-sm">
-                      触发阈值: {rule.trigger_conditions.time_threshold_percent}% | 
-                      通知方式: {rule.notification_channels.join(', ')}
+                      触发阈值: {rule.trigger_conditions.time_threshold_percent}% | 通知方式:{' '}
+                      {rule.notification_channels.join(', ')}
                     </Text>
                   </div>
                 </Col>
@@ -648,7 +659,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
               </Row>
             </Card>
           ))}
-          
+
           {alertRules.length === 0 && (
             <div className="text-center py-8">
               <BellOff size={48} className="mx-auto mb-4 text-gray-400" />
@@ -670,11 +681,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
         footer={null}
         width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSaveRule}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSaveRule}>
           <Form.Item
             name="name"
             label="规则名称"
@@ -732,12 +739,7 @@ export const SLAViolationMonitor: React.FC<SLAViolationMonitorProps> = ({
             </Select>
           </Form.Item>
 
-          <Form.Item
-            name="is_active"
-            label="启用状态"
-            valuePropName="checked"
-            initialValue={true}
-          >
+          <Form.Item name="is_active" label="启用状态" valuePropName="checked" initialValue={true}>
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
 

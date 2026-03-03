@@ -20,15 +20,8 @@ import {
   Radio,
   Checkbox,
 } from 'antd';
-import {
-  ExclamationCircleOutlined,
-  RocketOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
-import {
-  BatchOperationType,
-  type BatchOperationData,
-} from '@/types/batch-operations';
+import { ExclamationCircleOutlined, RocketOutlined, EyeOutlined } from '@ant-design/icons';
+import { BatchOperationType, type BatchOperationData } from '@/types/batch-operations';
 import {
   useBatchAssignMutation,
   useBatchUpdateStatusMutation,
@@ -230,11 +223,7 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
       case BatchOperationType.ADD_TAGS:
       case BatchOperationType.REMOVE_TAGS:
         return (
-          <Form.Item
-            label="标签"
-            name="tags"
-            rules={[{ required: true, message: '请输入标签' }]}
-          >
+          <Form.Item label="标签" name="tags" rules={[{ required: true, message: '请输入标签' }]}>
             <Select mode="tags" placeholder="输入标签（回车添加）" />
           </Form.Item>
         );
@@ -358,4 +347,3 @@ export const BatchOperationModal: React.FC<BatchOperationModalProps> = ({
 };
 
 export default BatchOperationModal;
-

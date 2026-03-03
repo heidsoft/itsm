@@ -68,12 +68,12 @@ const IncidentDistributionChart: React.FC<{ data: IncidentDistributionData[] }> 
 
     return (
       <DashboardChartCard
-        title='事件分类分布'
-        subtitle='按事件类型统计分析'
+        title="事件分类分布"
+        subtitle="按事件类型统计分析"
         icon={<PieChart style={{ width: 20, height: 20 }} />}
-        iconColor='#10b981'
+        iconColor="#10b981"
         extra={
-          <Tag color='success' className='font-semibold'>
+          <Tag color="success" className="font-semibold">
             {topCategory.category}占比最高
           </Tag>
         }

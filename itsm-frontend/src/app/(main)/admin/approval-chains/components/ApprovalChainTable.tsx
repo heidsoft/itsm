@@ -61,9 +61,9 @@ export function ApprovalChainTable({
         width: 200,
         render: (value: unknown, record: ApprovalChain) => (
           <div>
-            <div className='font-medium text-gray-900'>{value as string}</div>
+            <div className="font-medium text-gray-900">{value as string}</div>
             {record.description && (
-              <div className='text-sm text-gray-500 mt-1'>{record.description}</div>
+              <div className="text-sm text-gray-500 mt-1">{record.description}</div>
             )}
           </div>
         ),
@@ -85,7 +85,7 @@ export function ApprovalChainTable({
         dataIndex: 'steps',
         width: 100,
         render: (value: unknown) => (
-          <span className='font-medium'>{(value as any[])?.length || 0}</span>
+          <span className="font-medium">{(value as any[])?.length || 0}</span>
         ),
       },
       {
@@ -147,24 +147,24 @@ export function ApprovalChainTable({
 
           return (
             <Space>
-              <Tooltip title='查看详情'>
+              <Tooltip title="查看详情">
                 <Button
-                  type='text'
+                  type="text"
                   icon={<EyeOutlined />}
                   onClick={() => onView(record)}
-                  size='small'
+                  size="small"
                 />
               </Tooltip>
-              <Tooltip title='编辑'>
+              <Tooltip title="编辑">
                 <Button
-                  type='text'
+                  type="text"
                   icon={<EditOutlined />}
                   onClick={() => onEdit(record)}
-                  size='small'
+                  size="small"
                 />
               </Tooltip>
               <Dropdown menu={menuProps} trigger={['click']}>
-                <Button type='text' icon={<MoreOutlined />} size='small' />
+                <Button type="text" icon={<MoreOutlined />} size="small" />
               </Dropdown>
             </Space>
           );
@@ -206,9 +206,9 @@ export function ApprovalChainTable({
     <div>
       {/* 批量操作 */}
       {selectedRowKeys.length > 0 && (
-        <div className='mb-4 p-3 bg-blue-50 rounded-lg'>
-          <div className='flex items-center justify-between'>
-            <span className='text-sm text-blue-600'>已选择 {selectedRowKeys.length} 项</span>
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-blue-600">已选择 {selectedRowKeys.length} 项</span>
             <Space>
               {batchActions.map(action => (
                 <Button
@@ -218,7 +218,7 @@ export function ApprovalChainTable({
                   disabled={action.disabled}
                   icon={action.icon}
                   onClick={() => action.onClick(selectedRowKeys)}
-                  size='small'
+                  size="small"
                 >
                   {action.label}
                 </Button>
@@ -246,9 +246,9 @@ export function ApprovalChainTable({
             : false
         }
         rowSelection={rowSelection}
-        rowKey='id'
+        rowKey="id"
         scroll={{ x: 800 }}
-        size='middle'
+        size="middle"
       />
     </div>
   );

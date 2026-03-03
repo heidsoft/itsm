@@ -5,7 +5,7 @@ export enum ProblemStatus {
   OPEN = 'open',
   IN_PROGRESS = 'in_progress',
   RESOLVED = 'resolved',
-  CLOSED = 'closed'
+  CLOSED = 'closed',
 }
 
 // 问题优先级枚举
@@ -13,7 +13,7 @@ export enum ProblemPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // 问题接口定义
@@ -108,12 +108,17 @@ class ProblemService {
   }
 
   // 创建问题
-  async createProblem(data: CreateProblemRequest): Promise<{ message: string; problem_id: number }> {
+  async createProblem(
+    data: CreateProblemRequest
+  ): Promise<{ message: string; problem_id: number }> {
     return httpClient.post<{ message: string; problem_id: number }>(this.baseUrl, data);
   }
 
   // 更新问题
-  async updateProblem(id: number, data: UpdateProblemRequest): Promise<{ message: string; problem_id: number }> {
+  async updateProblem(
+    id: number,
+    data: UpdateProblemRequest
+  ): Promise<{ message: string; problem_id: number }> {
     return httpClient.put<{ message: string; problem_id: number }>(`${this.baseUrl}/${id}`, data);
   }
 
@@ -128,23 +133,32 @@ class ProblemService {
   }
 
   // 添加问题评论
-  async addProblemComment(problemId: number, content: string): Promise<{ message: string; comment_id: number }> {
-    return httpClient.post<{ message: string; comment_id: number }>(`${this.baseUrl}/${problemId}/comments`, { content });
+  async addProblemComment(
+    problemId: number,
+    content: string
+  ): Promise<{ message: string; comment_id: number }> {
+    return httpClient.post<{ message: string; comment_id: number }>(
+      `${this.baseUrl}/${problemId}/comments`,
+      { content }
+    );
   }
 
   // 获取问题评论列表
-  async getProblemComments(problemId: number): Promise<{ comments: Array<{
-    id: number;
-    problem_id: number;
-    user_id: number;
-    content: string;
-    created_at: string;
-    user?: {
+  async getProblemComments(problemId: number): Promise<{
+    comments: Array<{
       id: number;
-      name: string;
-      username: string;
-    };
-  }>; total: number }> {
+      problem_id: number;
+      user_id: number;
+      content: string;
+      created_at: string;
+      user?: {
+        id: number;
+        name: string;
+        username: string;
+      };
+    }>;
+    total: number;
+  }> {
     return httpClient.get(`${this.baseUrl}/${problemId}/comments`);
   }
 

@@ -99,10 +99,7 @@ const LicenseForm: React.FC = () => {
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.push('/licenses')}
-          >
+          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/licenses')}>
             返回列表
           </Button>
         </div>
@@ -152,12 +149,7 @@ const LicenseForm: React.FC = () => {
         </Form.Item>
 
         <Form.Item name="purchase_price" label="采购价格">
-          <InputNumber
-            style={{ width: '100%' }}
-            min={0}
-            precision={2}
-            placeholder="采购价格"
-          />
+          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="采购价格" />
         </Form.Item>
 
         <Form.Item name="expiry_date" label="到期日期">

@@ -26,11 +26,11 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
   const getTrendIcon = () => {
     switch (metric.trend) {
       case 'up':
-        return <ArrowUp className='w-4 h-4 text-green-500' />;
+        return <ArrowUp className="w-4 h-4 text-green-500" />;
       case 'down':
-        return <ArrowDown className='w-4 h-4 text-red-500' />;
+        return <ArrowDown className="w-4 h-4 text-red-500" />;
       default:
-        return <Minus className='w-4 h-4 text-gray-400' />;
+        return <Minus className="w-4 h-4 text-gray-400" />;
     }
   };
 
@@ -69,7 +69,7 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
   return (
     <Col xs={24} sm={12} md={12} lg={8} xl={6} xxl={6}>
       <Card
-        className='h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200'
+        className="h-full transition-all duration-200 hover:border-blue-500 hover:shadow-md group rounded-lg bg-white shadow-sm border border-gray-200"
         variant="borderless"
         styles={{
           body: {
@@ -82,12 +82,12 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
         }}
       >
         {/* 简化设计：去除背景装饰 */}
-        <div className='flex flex-col h-full'>
+        <div className="flex flex-col h-full">
           {/* 顶部区域：图标和趋势 */}
-          <div className='flex items-start justify-between mb-4'>
+          <div className="flex items-start justify-between mb-4">
             {/* 简化图标容器：去除渐变和缩放动画 */}
             <div
-              className='w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200'
+              className="w-12 h-12 rounded-lg flex items-center justify-center transition-colors duration-200"
               style={{
                 backgroundColor: `${metric.color}15`,
               }}
@@ -115,9 +115,9 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
           </div>
 
           {/* 标题 */}
-          <div className='mb-3'>
+          <div className="mb-3">
             <Tooltip title={metric.description || metric.title}>
-              <h3 className='text-base font-semibold text-gray-800 leading-tight line-clamp-2'>
+              <h3 className="text-base font-semibold text-gray-800 leading-tight line-clamp-2">
                 {' '}
                 {/* Changed text size and color */}
                 {metric.title}
@@ -126,27 +126,27 @@ const EnterpriseKPICard: React.FC<{ metric: KPIMetric }> = React.memo(({ metric 
           </div>
 
           {/* 数值显示 */}
-          <div className='flex-1 flex flex-col justify-center mb-3'>
-            <div className='flex items-baseline gap-2'>
+          <div className="flex-1 flex flex-col justify-center mb-3">
+            <div className="flex items-baseline gap-2">
               <span
-                className='text-4xl font-bold leading-none' // Removed tracking-tight
+                className="text-4xl font-bold leading-none" // Removed tracking-tight
                 style={{ color: metric.color }}
               >
                 {typeof metric.value === 'number' ? metric.value.toLocaleString() : metric.value}
               </span>
               {metric.unit && (
-                <span className='text-base font-medium text-gray-500'>{metric.unit}</span>
+                <span className="text-base font-medium text-gray-500">{metric.unit}</span>
               )}
             </div>
           </div>
 
           {/* 简化底部：去除装饰性进度条 */}
           {metric.change !== undefined && (
-            <div className='mt-auto pt-3 border-t border-gray-100'>
-              <span className='text-xs text-gray-500'>
+            <div className="mt-auto pt-3 border-t border-gray-100">
+              <span className="text-xs text-gray-500">
                 相比上期
                 <span
-                  className='ml-2 font-semibold'
+                  className="ml-2 font-semibold"
                   style={{
                     color:
                       metric.changeType === 'increase'
@@ -178,15 +178,18 @@ EnterpriseKPICard.displayName = 'EnterpriseKPICard';
 export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading = false }) => {
   if (loading) {
     return (
-      <div className='mb-6'>
+      <div className="mb-6">
         <Row gutter={[16, 16]}>
           {Array.from({ length: 6 }).map((_, index) => (
             <Col key={index} xs={24} sm={12} md={12} lg={8} xl={6} xxl={4}>
-              <Card className='h-44 rounded-lg shadow-sm border border-gray-200' variant="borderless">
-                <div className='flex items-center justify-center h-full'>
-                  <div className='text-center'>
-                    <Spin size='large' />
-                    <p className='text-xs text-gray-400 mt-3'>加载中...</p>
+              <Card
+                className="h-44 rounded-lg shadow-sm border border-gray-200"
+                variant="borderless"
+              >
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Spin size="large" />
+                    <p className="text-xs text-gray-400 mt-3">加载中...</p>
                   </div>
                 </div>
               </Card>
@@ -199,17 +202,17 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
 
   if (!metrics || metrics.length === 0) {
     return (
-      <div className='mb-6'>
+      <div className="mb-6">
         <Card
-          className='text-center py-12 rounded-lg bg-gray-50 border border-dashed border-gray-300'
+          className="text-center py-12 rounded-lg bg-gray-50 border border-dashed border-gray-300"
           variant="borderless"
         >
-          <div className='text-gray-500'>
-            <div className='w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4'>
-              <DashboardOutlined className='text-3xl text-gray-400' />
+          <div className="text-gray-500">
+            <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <DashboardOutlined className="text-3xl text-gray-400" />
             </div>
-            <p className='text-base font-medium text-gray-700 mb-1'>暂无KPI数据</p>
-            <p className='text-sm text-gray-500'>系统正在收集数据，请稍后查看</p>
+            <p className="text-base font-medium text-gray-700 mb-1">暂无KPI数据</p>
+            <p className="text-sm text-gray-500">系统正在收集数据，请稍后查看</p>
           </div>
         </Card>
       </div>
@@ -217,7 +220,7 @@ export const KPICards: React.FC<KPICardsProps> = React.memo(({ metrics, loading 
   }
 
   return (
-    <div className='mb-6'>
+    <div className="mb-6">
       <Row gutter={[16, 16]}>
         {metrics.map(metric => (
           <EnterpriseKPICard key={metric.id} metric={metric} />

@@ -40,15 +40,15 @@ const getSatisfactionColor = (score: number) => {
 
 export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
   return (
-    <Row gutter={[16, 16]} className='mb-6'>
+    <Row gutter={[16, 16]} className="mb-6">
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title='工单总数'
+            title="工单总数"
             value={metrics?.totalTickets}
             prefix={<FileTextOutlined style={{ color: '#1890ff' }} />}
             suffix={
-              <div className='text-xs text-gray-500'>
+              <div className="text-xs text-gray-500">
                 <div>已解决: {metrics?.resolvedTickets}</div>
                 <div>待处理: {metrics?.pendingTickets}</div>
               </div>
@@ -59,15 +59,15 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title='平均解决时间'
+            title="平均解决时间"
             value={metrics?.avgResolutionTime}
             prefix={<ClockCircleOutlined style={{ color: '#52c41a' }} />}
-            suffix='小时'
+            suffix="小时"
           />
-          <div className='mt-2'>
+          <div className="mt-2">
             <Progress
               percent={Math.min(((metrics?.avgResolutionTime || 0) / 24) * 100, 100)}
-              size='small'
+              size="small"
               status={metrics && metrics.avgResolutionTime <= 12 ? 'success' : 'normal'}
             />
           </div>
@@ -76,18 +76,20 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title='SLA达标率'
+            title="SLA达标率"
             value={metrics?.slaCompliance}
             prefix={<CheckCircleOutlined style={{ color: '#1890ff' }} />}
-            suffix='%'
-            styles={{ content: {
-              color:
-                getSLAStatus(metrics?.slaCompliance || 0).color === 'success'
-                  ? '#52c41a'
-                  : '#1890ff',
-            }}}
+            suffix="%"
+            styles={{
+              content: {
+                color:
+                  getSLAStatus(metrics?.slaCompliance || 0).color === 'success'
+                    ? '#52c41a'
+                    : '#1890ff',
+              },
+            }}
           />
-          <div className='mt-2'>
+          <div className="mt-2">
             <Progress
               percent={metrics?.slaCompliance || 0}
               status={
@@ -96,7 +98,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
                   | 'normal'
                   | 'exception'
               }
-              size='small'
+              size="small"
             />
           </div>
         </Card>
@@ -104,7 +106,7 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
       <Col xs={24} sm={12} lg={6}>
         <Card>
           <Statistic
-            title='满意度评分'
+            title="满意度评分"
             value={metrics?.satisfactionScore}
             precision={1}
             prefix={
@@ -114,13 +116,13 @@ export const ReportMetrics: React.FC<ReportMetricsProps> = ({ metrics }) => {
                 }}
               />
             }
-            suffix='/5.0'
+            suffix="/5.0"
           />
-          <div className='mt-2'>
+          <div className="mt-2">
             <Progress
               percent={((metrics?.satisfactionScore || 0) / 5) * 100}
-              status='success'
-              size='small'
+              status="success"
+              size="small"
               strokeColor={getSatisfactionColor(metrics?.satisfactionScore || 0)}
             />
           </div>

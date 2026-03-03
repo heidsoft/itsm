@@ -133,7 +133,7 @@ const FIELD_TYPES: FieldTypeConfig[] = [
     category: 'basic',
     defaultConfig: {},
   },
-  
+
   // 选择类型
   {
     type: 'select' as FieldType,
@@ -189,7 +189,7 @@ const FIELD_TYPES: FieldTypeConfig[] = [
       ],
     },
   },
-  
+
   // 高级类型
   {
     type: 'user_picker' as FieldType,
@@ -257,7 +257,7 @@ const FIELD_TYPES: FieldTypeConfig[] = [
       validation: { min: 0, max: 100 },
     },
   },
-  
+
   // 特殊类型
   {
     type: 'divider' as FieldType,
@@ -306,14 +306,9 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
   isFirst,
   isLast,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: field.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: field.id,
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -321,7 +316,7 @@ const SortableFieldItem: React.FC<SortableFieldItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const fieldTypeConfig = FIELD_TYPES.find((t) => t.type === field.type);
+  const fieldTypeConfig = FIELD_TYPES.find(t => t.type === field.type);
 
   return (
     <div ref={setNodeRef} style={style} className="mb-2">
@@ -454,18 +449,13 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
   if (!field) {
     return (
       <Card className="h-full">
-        <Empty
-          description="请选择或添加字段进行配置"
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        />
+        <Empty description="请选择或添加字段进行配置" image={Empty.PRESENTED_IMAGE_SIMPLE} />
       </Card>
     );
   }
 
-  const fieldTypeConfig = FIELD_TYPES.find((t) => t.type === field.type);
-  const hasOptions = ['select', 'multi_select', 'radio', 'checkbox'].includes(
-    field.type
-  );
+  const fieldTypeConfig = FIELD_TYPES.find(t => t.type === field.type);
+  const hasOptions = ['select', 'multi_select', 'radio', 'checkbox'].includes(field.type);
 
   return (
     <Card
@@ -520,10 +510,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
             </Form.Item>
 
             <Form.Item label="帮助文本" name="helpText">
-              <TextArea
-                rows={2}
-                placeholder="帮助用户理解如何填写此字段"
-              />
+              <TextArea rows={2} placeholder="帮助用户理解如何填写此字段" />
             </Form.Item>
 
             <Form.Item label="工具提示" name="tooltip">
@@ -575,19 +562,11 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
             />
 
             <Form.Item label="最小长度" name={['validation', 'minLength']}>
-              <InputNumber
-                placeholder="字符最小长度"
-                min={0}
-                style={{ width: '100%' }}
-              />
+              <InputNumber placeholder="字符最小长度" min={0} style={{ width: '100%' }} />
             </Form.Item>
 
             <Form.Item label="最大长度" name={['validation', 'maxLength']}>
-              <InputNumber
-                placeholder="字符最大长度"
-                min={0}
-                style={{ width: '100%' }}
-              />
+              <InputNumber placeholder="字符最大长度" min={0} style={{ width: '100%' }} />
             </Form.Item>
 
             <Form.Item label="最小值" name={['validation', 'minValue']}>
@@ -602,38 +581,23 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
               <Input placeholder="如：^[0-9]{11}$" />
             </Form.Item>
 
-            <Form.Item
-              label="自定义错误消息"
-              name={['validation', 'customMessage']}
-            >
+            <Form.Item label="自定义错误消息" name={['validation', 'customMessage']}>
               <TextArea rows={2} placeholder="验证失败时显示的错误消息" />
             </Form.Item>
 
             <Row gutter={16}>
               <Col span={8}>
-                <Form.Item
-                  label="邮箱格式"
-                  name={['validation', 'email']}
-                  valuePropName="checked"
-                >
+                <Form.Item label="邮箱格式" name={['validation', 'email']} valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="URL格式"
-                  name={['validation', 'url']}
-                  valuePropName="checked"
-                >
+                <Form.Item label="URL格式" name={['validation', 'url']} valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
               <Col span={8}>
-                <Form.Item
-                  label="电话格式"
-                  name={['validation', 'phone']}
-                  valuePropName="checked"
-                >
+                <Form.Item label="电话格式" name={['validation', 'phone']} valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </Col>
@@ -690,11 +654,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                             </Form.Item>
                           </Col>
                           <Col span={4}>
-                            <Form.Item
-                              {...fieldItem}
-                              label="颜色"
-                              name={[fieldItem.name, 'color']}
-                            >
+                            <Form.Item {...fieldItem} label="颜色" name={[fieldItem.name, 'color']}>
                               <Input type="color" />
                             </Form.Item>
                           </Col>
@@ -731,8 +691,8 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                 showSearch
                 optionFilterProp="children"
                 options={allFields
-                  .filter((f) => f.id !== field.id)
-                  .map((f) => ({
+                  .filter(f => f.id !== field.id)
+                  .map(f => ({
                     value: f.name,
                     label: `${f.label} (${f.name})`,
                   }))}
@@ -765,12 +725,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
             {field.type === 'file_upload' && (
               <>
                 <Form.Item label="最大文件大小（MB）" name="maxFileSize">
-                  <InputNumber
-                    min={1}
-                    max={100}
-                    placeholder="10"
-                    style={{ width: '100%' }}
-                  />
+                  <InputNumber min={1} max={100} placeholder="10" style={{ width: '100%' }} />
                 </Form.Item>
 
                 <Form.Item label="允许的文件类型" name="acceptedFileTypes">
@@ -788,11 +743,7 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
                   />
                 </Form.Item>
 
-                <Form.Item
-                  label="允许多个文件"
-                  name="multiple"
-                  valuePropName="checked"
-                >
+                <Form.Item label="允许多个文件" name="multiple" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </>
@@ -802,52 +753,29 @@ const FieldConfigPanel: React.FC<FieldConfigPanelProps> = ({
               field.type
             ) && (
               <>
-                <Form.Item
-                  label="显示搜索框"
-                  name="showSearch"
-                  valuePropName="checked"
-                >
+                <Form.Item label="显示搜索框" name="showSearch" valuePropName="checked">
                   <Switch />
                 </Form.Item>
 
-                <Form.Item
-                  label="允许清空"
-                  name="allowClear"
-                  valuePropName="checked"
-                >
+                <Form.Item label="允许清空" name="allowClear" valuePropName="checked">
                   <Switch />
                 </Form.Item>
               </>
             )}
 
             {field.type === 'multi_select' && (
-              <Form.Item
-                label="多选模式"
-                name="multiple"
-                valuePropName="checked"
-              >
+              <Form.Item label="多选模式" name="multiple" valuePropName="checked">
                 <Switch />
               </Form.Item>
             )}
 
             {field.type === 'rich_text' && (
               <>
-                <Form.Item
-                  label="编辑器高度"
-                  name={['richTextConfig', 'height']}
-                >
-                  <InputNumber
-                    min={200}
-                    max={800}
-                    placeholder="300"
-                    style={{ width: '100%' }}
-                  />
+                <Form.Item label="编辑器高度" name={['richTextConfig', 'height']}>
+                  <InputNumber min={200} max={800} placeholder="300" style={{ width: '100%' }} />
                 </Form.Item>
 
-                <Form.Item
-                  label="工具栏"
-                  name={['richTextConfig', 'toolbar']}
-                >
+                <Form.Item label="工具栏" name={['richTextConfig', 'toolbar']}>
                   <Select
                     mode="multiple"
                     placeholder="选择工具栏按钮"
@@ -912,8 +840,8 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const oldIndex = fields.findIndex((f) => f.id === active.id);
-      const newIndex = fields.findIndex((f) => f.id === over.id);
+      const oldIndex = fields.findIndex(f => f.id === active.id);
+      const newIndex = fields.findIndex(f => f.id === over.id);
 
       const newFields = arrayMove(fields, oldIndex, newIndex).map((f, idx) => ({
         ...f,
@@ -945,9 +873,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
   };
 
   const handleSaveField = (updatedField: TemplateField) => {
-    const newFields = fields.map((f) =>
-      f.id === updatedField.id ? updatedField : f
-    );
+    const newFields = fields.map(f => (f.id === updatedField.id ? updatedField : f));
     handleFieldsChange(newFields);
     setSelectedField(null);
   };
@@ -957,7 +883,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
       title: '确认删除',
       content: '确定要删除这个字段吗？此操作不可撤销。',
       onOk: () => {
-        const newFields = fields.filter((f) => f.id !== id);
+        const newFields = fields.filter(f => f.id !== id);
         handleFieldsChange(newFields);
         if (selectedField?.id === id) {
           setSelectedField(null);
@@ -983,32 +909,22 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
   const handleMoveUp = (index: number) => {
     if (index > 0) {
       const newFields = [...fields];
-      [newFields[index - 1], newFields[index]] = [
-        newFields[index],
-        newFields[index - 1],
-      ];
-      handleFieldsChange(
-        newFields.map((f, idx) => ({ ...f, order: idx }))
-      );
+      [newFields[index - 1], newFields[index]] = [newFields[index], newFields[index - 1]];
+      handleFieldsChange(newFields.map((f, idx) => ({ ...f, order: idx })));
     }
   };
 
   const handleMoveDown = (index: number) => {
     if (index < fields.length - 1) {
       const newFields = [...fields];
-      [newFields[index], newFields[index + 1]] = [
-        newFields[index + 1],
-        newFields[index],
-      ];
-      handleFieldsChange(
-        newFields.map((f, idx) => ({ ...f, order: idx }))
-      );
+      [newFields[index], newFields[index + 1]] = [newFields[index + 1], newFields[index]];
+      handleFieldsChange(newFields.map((f, idx) => ({ ...f, order: idx })));
     }
   };
 
   const filteredFieldTypes = useMemo(() => {
     if (fieldTypeFilter === 'all') return FIELD_TYPES;
-    return FIELD_TYPES.filter((t) => t.category === fieldTypeFilter);
+    return FIELD_TYPES.filter(t => t.category === fieldTypeFilter);
   }, [fieldTypeFilter]);
 
   return (
@@ -1036,7 +952,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
             styles={{ body: { height: 'calc(100% - 57px)', overflowY: 'auto' } }}
           >
             <Space orientation="vertical" style={{ width: '100%' }} size="small">
-              {filteredFieldTypes.map((typeConfig) => (
+              {filteredFieldTypes.map(typeConfig => (
                 <Card
                   key={typeConfig.type}
                   size="small"
@@ -1047,12 +963,8 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                   <div className="flex items-center gap-2">
                     <span className="text-xl">{typeConfig.icon}</span>
                     <div className="flex-1">
-                      <div className="font-medium text-sm">
-                        {typeConfig.label}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {typeConfig.description}
-                      </div>
+                      <div className="font-medium text-sm">{typeConfig.label}</div>
+                      <div className="text-xs text-gray-500">{typeConfig.description}</div>
                     </div>
                     <PlusOutlined className="text-blue-500" />
                   </div>
@@ -1086,7 +998,7 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={fields.map((f) => f.id)}
+                  items={fields.map(f => f.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   {fields.map((field, index) => (
@@ -1124,4 +1036,3 @@ export const FieldDesigner: React.FC<FieldDesignerProps> = ({
 };
 
 export default FieldDesigner;
-

@@ -13,11 +13,9 @@ import { PageContainer } from '@/app/components/PageContainer';
 import { departmentService, Department } from '@/lib/services/department-service';
 
 import { UserApi } from '@/lib/api/user-api';
-import { useI18n } from '@/lib/i18n';
 
 export default function DepartmentsPage() {
   const { message, modal } = App.useApp();
-  const { t } = useI18n();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -52,7 +50,7 @@ export default function DepartmentsPage() {
       setTreeData(data);
     } catch (error) {
       console.error('Failed to fetch departments:', error);
-      message.error(t('common.getFailed'));
+      message.error('获取部门列表失败');
     } finally {
       setFetching(false);
     }
@@ -65,18 +63,18 @@ export default function DepartmentsPage() {
 
   const columns = [
     {
-      title: t('departments.departmentName'),
+      title: '部门名称',
       dataIndex: 'name',
       key: 'name',
     },
     {
-      title: t('departments.departmentCode'),
+      title: '部门代码',
       dataIndex: 'code',
       key: 'code',
-      render: (text: string) => <Tag color='blue'>{text}</Tag>,
+      render: (text: string) => <Tag color="blue">{text}</Tag>,
     },
     {
-      title: t('departments.manager'),
+      title: '负责人',
       dataIndex: 'manager_id',
       key: 'manager',
       render: (text: string) => (
@@ -87,18 +85,18 @@ export default function DepartmentsPage() {
       ),
     },
     {
-      title: t('common.description'),
+      title: '描述',
       dataIndex: 'description',
       key: 'description',
     },
     {
-      title: t('common.action'),
+      title: '操作',
       key: 'action',
       render: (_: any, record: Department) => (
-        <Space size='middle'>
-          <Button type='text' icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+        <Space size="middle">
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -115,15 +113,15 @@ export default function DepartmentsPage() {
 
   const handleDelete = (record: Department) => {
     modal.confirm({
-      title: t('common.confirmDelete'),
-      content: t('departments.deleteConfirm', { name: record.name }),
+      title: '确认删除',
+      content: `确定要删除部门 "${record.name}" 吗？`,
       onOk: async () => {
         try {
           await departmentService.deleteDepartment(record.id);
-          message.success(t('common.deleteSuccess'));
+          message.success('删除成功');
           fetchDepartments();
         } catch (error) {
-          message.error(t('common.deleteFailed'));
+          message.error('删除失败');
         }
       },
     });
@@ -141,13 +139,13 @@ export default function DepartmentsPage() {
 
       await departmentService.createDepartment(values);
 
-      message.success(t('common.saveSuccess'));
+      message.success('保存成功');
       setIsModalVisible(false);
       form.resetFields();
       fetchDepartments();
     } catch (error) {
       console.error('Operation Failed:', error);
-      message.error(t('common.operationFailed'));
+      message.error('操作失败');
     } finally {
       setLoading(false);
     }
@@ -156,69 +154,69 @@ export default function DepartmentsPage() {
   return (
     <PageContainer
       header={{
-        title: t('departments.title'),
-        breadcrumb: { items: [{ title: t('common.back') }, { title: '企业管理' }, { title: t('departments.title') }] },
+        title: '部门管理',
+        breadcrumb: { items: [{ title: '首页' }, { title: '企业管理' }, { title: '部门管理' }] },
       }}
       extra={[
-        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchDepartments} loading={fetching}>
-          {t('common.refresh')}
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchDepartments} loading={fetching}>
+          刷新
         </Button>,
         <Button
-          key='create'
-          type='primary'
+          key="create"
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
             form.resetFields();
             setIsModalVisible(true);
           }}
         >
-          {t('departments.create')}
+          新建部门
         </Button>,
       ]}
     >
       <Table
         columns={columns}
         dataSource={departments}
-        rowKey='id'
+        rowKey="id"
         pagination={false}
         loading={fetching}
         expandable={{ defaultExpandAllRows: true }}
       />
 
       <Modal
-        title={t('departments.createOrEdit')}
+        title="新建/编辑部门"
         open={isModalVisible}
         onOk={handleOk}
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label={t('departments.departmentName')}
-            rules={[{ required: true, message: t('common.inputPlaceholder') + t('departments.departmentName') }]}
+            name="name"
+            label="部门名称"
+            rules={[{ required: true, message: '请输入部门名称' }]}
           >
-            <Input placeholder={t('common.inputPlaceholder') + t('departments.departmentName')} />
+            <Input placeholder="请输入部门名称" />
           </Form.Item>
           <Form.Item
-            name='code'
-            label={t('departments.departmentCode')}
-            rules={[{ required: true, message: t('common.inputPlaceholder') + t('departments.departmentCode') }]}
+            name="code"
+            label="部门代码"
+            rules={[{ required: true, message: '请输入部门代码' }]}
           >
-            <Input placeholder={t('common.inputPlaceholder') + t('departments.departmentCode')} />
+            <Input placeholder="请输入部门代码" />
           </Form.Item>
-          <Form.Item name='parent_id' label={t('departments.parentDepartment')}>
+          <Form.Item name="parent_id" label="上级部门">
             <TreeSelect
               treeData={treeData}
-              placeholder={t('common.selectPlaceholder') + t('departments.parentDepartment')}
+              placeholder="请选择上级部门"
               fieldNames={{ label: 'name', value: 'id', children: 'children' }}
               allowClear
               treeDefaultExpandAll
             />
           </Form.Item>
-          <Form.Item name='manager_id' label={t('departments.manager')}>
+          <Form.Item name="manager_id" label="负责人">
             <Select
-              placeholder={t('common.selectPlaceholder') + t('departments.manager')}
+              placeholder="请选择负责人"
               options={users}
               showSearch
               filterOption={(input, option) =>
@@ -226,7 +224,7 @@ export default function DepartmentsPage() {
               }
             />
           </Form.Item>
-          <Form.Item name='description' label={t('common.description')}>
+          <Form.Item name="description" label="描述">
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -54,7 +54,7 @@ export const ServiceRequestWizard: React.FC<ServiceRequestWizardProps> = ({ serv
       try {
         setLoading(true);
         const response = await ServiceCatalogApi.getServices({ page: 1, pageSize: 100 });
-        const foundCatalog = response.services.find((c) => Number(c.id) === Number(sid));
+        const foundCatalog = response.services.find(c => Number(c.id) === Number(sid));
         if (foundCatalog) setCatalog(foundCatalog);
         else setError('服务目录不存在');
       } catch (err) {
@@ -92,7 +92,9 @@ export const ServiceRequestWizard: React.FC<ServiceRequestWizardProps> = ({ serv
           cost_center: values.costCenter,
           data_classification: values.dataClassification || 'internal',
           needs_public_ip: values.needsPublicIP || false,
-          source_ip_whitelist: values.sourceIPWhitelist ? values.sourceIPWhitelist.split(',').map((s: string) => s.trim()) : [],
+          source_ip_whitelist: values.sourceIPWhitelist
+            ? values.sourceIPWhitelist.split(',').map((s: string) => s.trim())
+            : [],
           expire_at: values.expireAt ? new Date(values.expireAt).toISOString() : undefined,
           compliance_ack: values.complianceAck || false,
         },
@@ -171,9 +173,19 @@ export const ServiceRequestWizard: React.FC<ServiceRequestWizardProps> = ({ serv
 
       {/* 步骤指示器 */}
       <div className="flex items-center gap-4 mb-6">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 0 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>1</div>
-        <div className="flex-1 h-1 bg-gray-200"><div className="h-full bg-blue-600" style={{ width: currentStep >= 1 ? '100%' : '0%' }} /></div>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>2</div>
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 0 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          1
+        </div>
+        <div className="flex-1 h-1 bg-gray-200">
+          <div className="h-full bg-blue-600" style={{ width: currentStep >= 1 ? '100%' : '0%' }} />
+        </div>
+        <div
+          className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          2
+        </div>
       </div>
 
       {/* 表单内容 */}
@@ -213,7 +225,11 @@ export const ServiceRequestWizard: React.FC<ServiceRequestWizardProps> = ({ serv
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name="expireAt" label="到期时间" rules={[{ required: true, message: '请选择到期时间' }]}>
+              <Form.Item
+                name="expireAt"
+                label="到期时间"
+                rules={[{ required: true, message: '请选择到期时间' }]}
+              >
                 <Input type="datetime-local" style={{ width: '100%' }} />
               </Form.Item>
             </Col>
@@ -227,7 +243,7 @@ export const ServiceRequestWizard: React.FC<ServiceRequestWizardProps> = ({ serv
             </Col>
           </Row>
 
-          <Form.Item name="sourceIPWhitelist" label="源IP白名单" >
+          <Form.Item name="sourceIPWhitelist" label="源IP白名单">
             <TextArea placeholder="例如：1.2.3.4/32, 5.6.7.0/24（逗号分隔）" rows={2} />
           </Form.Item>
 

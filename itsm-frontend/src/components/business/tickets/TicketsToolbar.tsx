@@ -119,10 +119,7 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
         {/* 导出按钮 */}
         {canExport && (
           <Tooltip title="导出工单">
-            <Button
-              icon={<DownloadOutlined />}
-              onClick={onExport}
-            >
+            <Button icon={<DownloadOutlined />} onClick={onExport}>
               导出
             </Button>
           </Tooltip>
@@ -131,19 +128,13 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
         {/* 批量操作按钮（仅在有选中项时显示） */}
         {selectedCount > 0 && (
           <Dropdown menu={{ items: batchMenuItems }} placement="bottomRight">
-            <Button icon={<MoreOutlined />}>
-              批量操作
-            </Button>
+            <Button icon={<MoreOutlined />}>批量操作</Button>
           </Dropdown>
         )}
 
         {/* 创建工单按钮 */}
         {canCreate && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={onCreate}
-          >
+          <Button type="primary" icon={<PlusOutlined />} onClick={onCreate}>
             创建工单
           </Button>
         )}
@@ -158,4 +149,3 @@ export const TicketsToolbar: React.FC<TicketsToolbarProps> = ({
 };
 
 export default TicketsToolbar;
-

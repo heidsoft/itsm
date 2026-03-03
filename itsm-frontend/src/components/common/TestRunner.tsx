@@ -95,11 +95,9 @@ export const TestRunner: React.FC = () => {
             <Code size={24} />
             测试运行器
           </h1>
-          <p className="text-gray-600 mt-1">
-            运行前端组件和API接口的自动化测试
-          </p>
+          <p className="text-gray-600 mt-1">运行前端组件和API接口的自动化测试</p>
         </div>
-        
+
         <Button
           type="primary"
           size="large"
@@ -118,12 +116,10 @@ export const TestRunner: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">测试进度</span>
-              <span className="text-sm text-gray-500">
-                {Math.round(state.progress)}%
-              </span>
+              <span className="text-sm text-gray-500">{Math.round(state.progress)}%</span>
             </div>
-            <Progress 
-              percent={state.progress} 
+            <Progress
+              percent={state.progress}
               status={state.isRunning ? 'active' : 'success'}
               strokeColor={{
                 '0%': '#108ee9',
@@ -168,7 +164,7 @@ export const TestRunner: React.FC = () => {
               />
             </Col>
           </Row>
-          
+
           {state.summary.failed > 0 && (
             <Alert
               message="部分测试失败"
@@ -197,18 +193,14 @@ export const TestRunner: React.FC = () => {
                     </Tag>
                   </div>
                   {suite.duration > 0 && (
-                    <span className="text-sm text-gray-500">
-                      {suite.duration}ms
-                    </span>
+                    <span className="text-sm text-gray-500">{suite.duration}ms</span>
                   )}
                 </div>
               }
             >
               <div className="space-y-3">
-                <p className="text-gray-600 text-sm mb-4">
-                  {suite.description}
-                </p>
-                
+                <p className="text-gray-600 text-sm mb-4">{suite.description}</p>
+
                 {suite.tests.map(test => (
                   <div
                     key={test.id}
@@ -219,9 +211,7 @@ export const TestRunner: React.FC = () => {
                       <div className="flex-1">
                         <div className="font-medium text-sm">{test.name}</div>
                         {test.description && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {test.description}
-                          </div>
+                          <div className="text-xs text-gray-500 mt-1">{test.description}</div>
                         )}
                         {test.error && (
                           <div className="text-xs text-red-600 mt-2 p-2 bg-red-50 rounded">
@@ -230,14 +220,10 @@ export const TestRunner: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-xs text-gray-500">
-                      {test.duration > 0 && (
-                        <span>{test.duration}ms</span>
-                      )}
-                      <Tag color={getStatusColor(test.status)}>
-                        {test.status}
-                      </Tag>
+                      {test.duration > 0 && <span>{test.duration}ms</span>}
+                      <Tag color={getStatusColor(test.status)}>{test.status}</Tag>
                     </div>
                   </div>
                 ))}
@@ -264,7 +250,7 @@ export const TestRunner: React.FC = () => {
               <div className="text-sm text-gray-600">函数覆盖率</div>
             </div>
           </div>
-          
+
           <Alert
             message="测试覆盖率建议"
             description="建议保持语句覆盖率在80%以上，分支覆盖率在75%以上，以确保代码质量。"

@@ -32,7 +32,6 @@ import {
 } from '@ant-design/icons';
 import type { AutomationRule } from '@/lib/api/ticket-automation-rule-api';
 import { TicketAutomationRuleApi } from '@/lib/api/ticket-automation-rule-api';
-import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -49,7 +48,6 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
   onSave,
   onCancel,
 }) => {
-  const { t } = useI18n();
   const [form] = Form.useForm();
   const [testModalVisible, setTestModalVisible] = useState(false);
   const [testTicketId, setTestTicketId] = useState<number | null>(null);
@@ -80,7 +78,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
       const values = await form.validateFields();
       onSave(values);
     } catch (error) {
-      message.error('表单验证失败');
+      console.error('Form validation failed:', error);
     }
   };
 
@@ -127,6 +125,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
         ),
       });
     } catch (error) {
+      console.error('Failed to test rule:', error);
       message.error('测试规则失败');
     }
   };
@@ -194,21 +193,14 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item
-              name="is_active"
-              label="启用状态"
-              valuePropName="checked"
-            >
+            <Form.Item name="is_active" label="启用状态" valuePropName="checked">
               <Switch checkedChildren="启用" unCheckedChildren="禁用" />
             </Form.Item>
           </Col>
           {editingRule && (
             <Col span={12}>
               <Space>
-                <Button
-                  icon={<PlayCircleOutlined />}
-                  onClick={() => setTestModalVisible(true)}
-                >
+                <Button icon={<PlayCircleOutlined />} onClick={() => setTestModalVisible(true)}>
                   测试规则
                 </Button>
               </Space>
@@ -285,12 +277,7 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
                     </Row>
                   </Card>
                 ))}
-                <Button
-                  type="dashed"
-                  onClick={() => add()}
-                  block
-                  icon={<PlusOutlined />}
-                >
+                <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
                   添加条件
                 </Button>
               </div>
@@ -440,19 +427,18 @@ export const AutomationRuleForm: React.FC<AutomationRuleFormProps> = ({
           setTestModalVisible(false);
           setTestTicketId(null);
         }}
-        okText={t('common.test') || '测试'}
-        cancelText={t('common.cancel')}
+        okText="测试"
+        cancelText="取消"
       >
         <Form.Item label="工单ID" required>
           <Input
             type="number"
             placeholder="请输入要测试的工单ID"
             value={testTicketId || ''}
-            onChange={(e) => setTestTicketId(parseInt(e.target.value) || null)}
+            onChange={e => setTestTicketId(parseInt(e.target.value) || null)}
           />
         </Form.Item>
       </Modal>
     </>
   );
 };
-

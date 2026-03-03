@@ -15,7 +15,12 @@ interface WorkflowNewModalProps {
   visible: boolean;
   onClose: () => void;
   onSelectTemplate: (workflow: WorkflowDefinition) => void;
-  onCreateCustom: (values: { name: string; description?: string; sla_response?: number; sla_resolution?: number }) => void;
+  onCreateCustom: (values: {
+    name: string;
+    description?: string;
+    sla_response?: number;
+    sla_resolution?: number;
+  }) => void;
 }
 
 export default function WorkflowNewModal({
@@ -26,7 +31,7 @@ export default function WorkflowNewModal({
 }: WorkflowNewModalProps) {
   const [form] = Form.useForm();
 
-  const handleSelectTemplate = (template: typeof WORKFLOW_TEMPLATES[0]) => {
+  const handleSelectTemplate = (template: (typeof WORKFLOW_TEMPLATES)[0]) => {
     const newWorkflow: WorkflowDefinition = {
       id: 'new',
       name: template.name,
@@ -75,14 +80,17 @@ export default function WorkflowNewModal({
         <Input.Search
           placeholder="搜索模板..."
           style={{ width: 300 }}
-          onSearch={(value) => {
+          onSearch={value => {
             // 可以添加搜索功能
           }}
         />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-        {WORKFLOW_TEMPLATES.map((template) => (
+      <div
+        className="grid grid-cols-2 md:grid-cols-3 gap-4"
+        style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+      >
+        {WORKFLOW_TEMPLATES.map(template => (
           <div
             key={template.id}
             className="border rounded-lg p-4 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all"
@@ -102,7 +110,8 @@ export default function WorkflowNewModal({
               <div>
                 <div className="font-medium">{template.name}</div>
                 <div className="text-xs text-gray-500">
-                  {TEMPLATE_CATEGORIES.find((c) => c.key === template.category)?.name || template.category}
+                  {TEMPLATE_CATEGORIES.find(c => c.key === template.category)?.name ||
+                    template.category}
                 </div>
               </div>
             </div>
@@ -113,11 +122,7 @@ export default function WorkflowNewModal({
 
       <div className="mt-6 border-t pt-4">
         <div className="text-sm text-gray-500 mb-3">或者自定义创建</div>
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <div className="flex gap-4">
             <Form.Item
               label="工作流名称"

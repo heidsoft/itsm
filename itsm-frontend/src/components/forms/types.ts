@@ -128,7 +128,20 @@ export interface FormUploadProps extends BaseFormFieldProps {
 // 表单字段配置
 export interface FormFieldConfig {
   name: string;
-  type: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'textarea' | 'select' | 'checkbox' | 'radio' | 'date' | 'upload' | 'custom';
+  type:
+    | 'text'
+    | 'email'
+    | 'password'
+    | 'number'
+    | 'tel'
+    | 'url'
+    | 'textarea'
+    | 'select'
+    | 'checkbox'
+    | 'radio'
+    | 'date'
+    | 'upload'
+    | 'custom';
   label?: string;
   placeholder?: string;
   required?: boolean;
@@ -141,25 +154,25 @@ export interface FormFieldConfig {
   dependencies?: string[];
   visible?: boolean | ((values: Record<string, unknown>) => boolean);
   render?: (props: BaseFormFieldProps) => ReactNode;
-  
+
   // Input specific
   maxLength?: number;
   minLength?: number;
   pattern?: string;
-  
+
   // Textarea specific
   rows?: number;
   autoResize?: boolean;
-  
+
   // Select specific
   options?: SelectOption[];
   multiple?: boolean;
   searchable?: boolean;
   clearable?: boolean;
-  
+
   // Radio specific
   direction?: 'horizontal' | 'vertical';
-  
+
   // Date picker specific
   showTime?: boolean;
   showToday?: boolean;

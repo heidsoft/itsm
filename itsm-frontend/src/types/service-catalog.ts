@@ -27,13 +27,13 @@ export enum ServiceStatus {
  * 服务类型 - 用于动态表单
  */
 export enum ServiceType {
-  VM = 'vm',           // 云服务器
-  RDS = 'rds',         // 数据库
-  OSS = 'oss',         // 对象存储
+  VM = 'vm', // 云服务器
+  RDS = 'rds', // 数据库
+  OSS = 'oss', // 对象存储
   NETWORK = 'network', // 网络
   STORAGE = 'storage', // 存储
   SECURITY = 'security', // 安全服务
-  CUSTOM = 'custom',   // 自定义服务
+  CUSTOM = 'custom', // 自定义服务
 }
 
 /**
@@ -65,18 +65,18 @@ export interface ServiceItem {
   formSchema?: Record<string, unknown>;
   availableRegions?: string[];
   availableSpecs?: string[];
-  
+
   // 图标和图片
   icon?: string;
   banner?: string;
   screenshots?: string[];
-  
+
   // 服务详情
-  provider?: string;              // 服务提供商
-  owner?: number;                 // 负责人ID
+  provider?: string; // 服务提供商
+  owner?: number; // 负责人ID
   ownerName?: string;
-  supportTeam?: string;           // 支持团队
-  
+  supportTeam?: string; // 支持团队
+
   // 定价
   pricing?: {
     type: 'free' | 'fixed' | 'variable';
@@ -84,34 +84,34 @@ export interface ServiceItem {
     currency?: string;
     billingCycle?: 'one_time' | 'monthly' | 'yearly';
   };
-  
+
   // 可用性
   availability?: {
     businessHours?: string;
     supportLevel?: 'basic' | 'standard' | 'premium';
-    responseTime?: number;        // 响应时间（小时）
-    resolutionTime?: number;      // 解决时间（小时）
+    responseTime?: number; // 响应时间（小时）
+    resolutionTime?: number; // 解决时间（小时）
   };
-  
+
   // 关联
-  relatedCIs?: string[];          // 关联的CI
-  requiredServices?: string[];    // 依赖的服务
-  documentation?: string[];       // 文档链接
-  
+  relatedCIs?: string[]; // 关联的CI
+  requiredServices?: string[]; // 依赖的服务
+  documentation?: string[]; // 文档链接
+
   // 表单配置
   requestForm?: ServiceRequestForm;
-  
+
   // 统计
   viewCount?: number;
   requestCount?: number;
   rating?: number;
-  
+
   // 标签和搜索
   tags: string[];
   searchKeywords?: string[];
 
   // 审批流程
-  approvalWorkflow?: string;      // 审批工作流ID
+  approvalWorkflow?: string; // 审批工作流ID
 
   // 元数据
   createdBy: number;
@@ -140,7 +140,16 @@ export interface ServiceFormField {
   id: string;
   name: string;
   label: string;
-  type: 'text' | 'textarea' | 'number' | 'date' | 'select' | 'multiselect' | 'checkbox' | 'radio' | 'file';
+  type:
+    | 'text'
+    | 'textarea'
+    | 'number'
+    | 'date'
+    | 'select'
+    | 'multiselect'
+    | 'checkbox'
+    | 'radio'
+    | 'file';
   required: boolean;
   placeholder?: string;
   defaultValue?: any;
@@ -185,19 +194,19 @@ export interface ServiceRequest {
   requestNumber: string;
   serviceId: string;
   serviceName: string;
-  
+
   status: ServiceRequestStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  
+
   // 请求内容
   formData: Record<string, any>;
   additionalNotes?: string;
   attachments?: string[];
-  
+
   // 关联工单
   ticketId?: number;
   ticketNumber?: string;
-  
+
   // 审批信息
   approvals?: Array<{
     approverId: number;
@@ -206,23 +215,23 @@ export interface ServiceRequest {
     comment?: string;
     decidedAt?: Date;
   }>;
-  
+
   // 履行信息
   fulfillmentNotes?: string;
   estimatedCompletionTime?: Date;
   actualCompletionTime?: Date;
-  
+
   // 评价
   rating?: number;
   feedback?: string;
-  
+
   // 请求人信息
   requestedBy: number;
   requestedByName: string;
   requestedByEmail?: string;
-  requestedFor?: number;          // 为谁请求
+  requestedFor?: number; // 为谁请求
   requestedForName?: string;
-  
+
   // 元数据
   createdAt: Date;
   updatedAt: Date;
@@ -238,7 +247,7 @@ export interface ServiceRequest {
 export interface PortalConfig {
   id: string;
   name: string;
-  
+
   // 品牌
   branding: {
     logo?: string;
@@ -247,7 +256,7 @@ export interface PortalConfig {
     headerText?: string;
     footerText?: string;
   };
-  
+
   // 首页配置
   homepage: {
     banner?: {
@@ -255,7 +264,7 @@ export interface PortalConfig {
       subtitle?: string;
       image?: string;
     };
-    featuredServices?: string[];   // 推荐服务ID
+    featuredServices?: string[]; // 推荐服务ID
     announcement?: string;
     quickLinks?: Array<{
       title: string;
@@ -263,7 +272,7 @@ export interface PortalConfig {
       icon?: string;
     }>;
   };
-  
+
   // 功能配置
   features: {
     enableSearch: boolean;
@@ -273,7 +282,7 @@ export interface PortalConfig {
     showServicePrice: boolean;
     showServiceOwner: boolean;
   };
-  
+
   // 自定义页面
   customPages?: Array<{
     id: string;
@@ -282,7 +291,7 @@ export interface PortalConfig {
     content: string;
     order: number;
   }>;
-  
+
   updatedAt: Date;
 }
 
@@ -305,9 +314,9 @@ export interface ServiceRating {
   requestId?: number;
   userId: number;
   userName: string;
-  rating: number;                 // 1-5
+  rating: number; // 1-5
   comment?: string;
-  helpful?: number;               // 有用计数
+  helpful?: number; // 有用计数
   createdAt: Date;
 }
 
@@ -322,18 +331,18 @@ export interface ServiceCatalogStats {
   totalRequests: number;
   pendingRequests: number;
   completedRequests: number;
-  
+
   servicesByCategory: Record<ServiceCategory, number>;
   requestsByStatus: Record<ServiceRequestStatus, number>;
-  
+
   topServices: Array<{
     service: ServiceItem;
     requestCount: number;
     avgRating: number;
   }>;
-  
+
   recentRequests: ServiceRequest[];
-  
+
   trends: {
     date: string;
     requests: number;
@@ -350,26 +359,26 @@ export interface ServiceAnalytics {
     start: Date;
     end: Date;
   };
-  
+
   metrics: {
     totalRequests: number;
     completedRequests: number;
-    avgCompletionTime: number;    // 小时
-    completionRate: number;        // 完成率（%）
+    avgCompletionTime: number; // 小时
+    completionRate: number; // 完成率（%）
     avgRating: number;
     totalViews: number;
   };
-  
+
   requestTrend: {
     date: string;
     count: number;
   }[];
-  
+
   userSatisfaction: {
     rating: number;
     count: number;
   }[];
-  
+
   peakHours: {
     hour: number;
     count: number;

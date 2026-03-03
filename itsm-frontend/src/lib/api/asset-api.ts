@@ -5,12 +5,7 @@
 import { httpClient } from './http-client';
 
 // 资产状态类型
-export type AssetStatus =
-  | 'available'
-  | 'in-use'
-  | 'maintenance'
-  | 'retired'
-  | 'disposed';
+export type AssetStatus = 'available' | 'in-use' | 'maintenance' | 'retired' | 'disposed';
 
 // 资产类型
 export type AssetType = 'hardware' | 'software' | 'cloud' | 'license';
@@ -225,8 +220,15 @@ export class AssetApi {
   }
 
   // 更新资产状态
-  static async updateAssetStatus(id: number, status: AssetStatus, assignedTo?: number): Promise<Asset> {
-    return httpClient.put<Asset>(`/api/v1/assets/${id}/status`, { status, assigned_to: assignedTo });
+  static async updateAssetStatus(
+    id: number,
+    status: AssetStatus,
+    assignedTo?: number
+  ): Promise<Asset> {
+    return httpClient.put<Asset>(`/api/v1/assets/${id}/status`, {
+      status,
+      assigned_to: assignedTo,
+    });
   }
 
   // 获取资产统计

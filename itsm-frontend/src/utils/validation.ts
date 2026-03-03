@@ -35,12 +35,15 @@ export const validateURL = (url: string): boolean => {
 
 // IP地址验证
 export const validateIP = (ip: string): boolean => {
-  const ipRegex = /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  const ipRegex =
+    /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
   return ipRegex.test(ip);
 };
 
 // 密码强度验证
-export const validatePasswordStrength = (password: string): {
+export const validatePasswordStrength = (
+  password: string
+): {
   isValid: boolean;
   strength: 'weak' | 'medium' | 'strong';
   message: string;
@@ -50,20 +53,20 @@ export const validatePasswordStrength = (password: string): {
   }
 
   let strength = 0;
-  
+
   // 检查长度
   if (password.length >= 8) strength += 1;
   if (password.length >= 12) strength += 1;
-  
+
   // 检查包含小写字母
   if (/[a-z]/.test(password)) strength += 1;
-  
+
   // 检查包含大写字母
   if (/[A-Z]/.test(password)) strength += 1;
-  
+
   // 检查包含数字
   if (/[0-9]/.test(password)) strength += 1;
-  
+
   // 检查包含特殊字符
   if (/[^a-zA-Z0-9]/.test(password)) strength += 1;
 
@@ -78,7 +81,12 @@ export const validatePasswordStrength = (password: string): {
 
 // 必填验证
 export const validateRequired = (value: any, fieldName: string = '此字段'): string | undefined => {
-  if (value === null || value === undefined || value === '' || (Array.isArray(value) && value.length === 0)) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === '' ||
+    (Array.isArray(value) && value.length === 0)
+  ) {
     return `${fieldName}不能为空`;
   }
   return undefined;

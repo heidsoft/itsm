@@ -72,7 +72,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   const router = useRouter();
   const { tickets, loading, fetchTickets, updateTicket, deleteTicket } = useTickets();
   const { message, modal } = App.useApp();
-  
+
   const [searchValue, setSearchValue] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('');
   const [selectedPriority, setSelectedPriority] = useState<string>('');
@@ -86,10 +86,11 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
     // 搜索过滤
     if (searchValue) {
-      filtered = filtered.filter(ticket =>
-        ticket.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-        ticket.description.toLowerCase().includes(searchValue.toLowerCase()) ||
-        ticket.ticketNumber.toLowerCase().includes(searchValue.toLowerCase())
+      filtered = filtered.filter(
+        ticket =>
+          ticket.title.toLowerCase().includes(searchValue.toLowerCase()) ||
+          ticket.description.toLowerCase().includes(searchValue.toLowerCase()) ||
+          ticket.ticketNumber.toLowerCase().includes(searchValue.toLowerCase())
       );
     }
 
@@ -108,8 +109,10 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
       switch (sortBy) {
         case 'priority':
           const priorityOrder = { critical: 4, urgent: 3, high: 2, medium: 1, low: 0 };
-          return (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) - 
-                 (priorityOrder[a.priority as keyof typeof priorityOrder] || 0);
+          return (
+            (priorityOrder[b.priority as keyof typeof priorityOrder] || 0) -
+            (priorityOrder[a.priority as keyof typeof priorityOrder] || 0)
+          );
         case 'title':
           return a.title.localeCompare(b.title);
         case 'created_at':
@@ -124,7 +127,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   // 按状态分组工单
   const ticketsByStatus = useMemo(() => {
     const grouped: Record<string, Ticket[]> = {};
-    
+
     KANBAN_STATUS_CONFIG.forEach(status => {
       grouped[status.key] = [];
     });
@@ -171,38 +174,44 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   ];
 
   // 删除工单
-  const handleDeleteTicket = useCallback(async (ticket: Ticket) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除工单 ${ticket.ticketNumber || '-'} 吗？此操作不可撤销。`,
-      okText: '确认删除',
-      cancelText: '取消',
-      okType: 'danger',
-      onOk: async () => {
-        try {
-          await deleteTicket(ticket.id);
-          message.success('删除成功');
-        } catch (error) {
-          message.error('删除失败');
-        }
-      },
-    });
-  }, [deleteTicket]);
+  const handleDeleteTicket = useCallback(
+    async (ticket: Ticket) => {
+      Modal.confirm({
+        title: '确认删除',
+        content: `确定要删除工单 ${ticket.ticketNumber || '-'} 吗？此操作不可撤销。`,
+        okText: '确认删除',
+        cancelText: '取消',
+        okType: 'danger',
+        onOk: async () => {
+          try {
+            await deleteTicket(ticket.id);
+            message.success('删除成功');
+          } catch (error) {
+            message.error('删除失败');
+          }
+        },
+      });
+    },
+    [deleteTicket]
+  );
 
   // 拖拽状态更新
-  const handleStatusChange = useCallback(async (ticket: Ticket, newStatus: string) => {
-    try {
-      await updateTicket(ticket.id, { status: newStatus });
-      message.success('状态更新成功');
-    } catch (error) {
-      message.error('状态更新失败');
-    }
-  }, [updateTicket]);
+  const handleStatusChange = useCallback(
+    async (ticket: Ticket, newStatus: string) => {
+      try {
+        await updateTicket(ticket.id, { status: newStatus });
+        message.success('状态更新成功');
+      } catch (error) {
+        message.error('状态更新失败');
+      }
+    },
+    [updateTicket]
+  );
 
   // 工单卡片组件
   const TicketCard = ({ ticket }: { ticket: Ticket }) => {
     const priorityConfig = PRIORITY_CONFIG[ticket.priority as keyof typeof PRIORITY_CONFIG];
-    
+
     return (
       <Card
         size="small"
@@ -215,7 +224,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
         actions={[
           <Dropdown key="more" menu={{ items: getTicketMenu(ticket) }} trigger={['click']}>
             <Button type="text" icon={<MoreOutlined />} size="small" />
-          </Dropdown>
+          </Dropdown>,
         ]}
       >
         <div className="space-y-2">
@@ -236,7 +245,9 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
 
           {/* 工单号和类型 */}
           <div className="flex items-center justify-between">
-            <Text code className="text-xs">{ticket.ticketNumber || '-'}</Text>
+            <Text code className="text-xs">
+              {ticket.ticketNumber || '-'}
+            </Text>
             <Tag color="blue">{ticket.type}</Tag>
           </div>
 
@@ -309,7 +320,11 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
                 style={{ width: 120 }}
                 options={Object.entries(PRIORITY_CONFIG).map(([key, config]) => ({
                   value: key,
-                  label: <><Tag color={config.color}>{config.text}</Tag></>,
+                  label: (
+                    <>
+                      <Tag color={config.color}>{config.text}</Tag>
+                    </>
+                  ),
                 }))}
               />
               <Select

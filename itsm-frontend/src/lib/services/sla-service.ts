@@ -1,6 +1,6 @@
 /**
  * SLA管理模块 - 符合ITIL 4.0标准
- * 
+ *
  * 核心功能：
  * 1. SLA定义和配置
  * 2. SLA监控和预警
@@ -22,26 +22,26 @@ export enum SLAStatus {
 
 // SLA类型枚举
 export enum SLAType {
-  RESPONSE_TIME = 'response_time',      // 响应时间SLA
-  RESOLUTION_TIME = 'resolution_time',   // 解决时间SLA
-  AVAILABILITY = 'availability',         // 可用性SLA
-  PERFORMANCE = 'performance',          // 性能SLA
+  RESPONSE_TIME = 'response_time', // 响应时间SLA
+  RESOLUTION_TIME = 'resolution_time', // 解决时间SLA
+  AVAILABILITY = 'availability', // 可用性SLA
+  PERFORMANCE = 'performance', // 性能SLA
 }
 
 // SLA优先级枚举
 export enum SLAPriority {
-  CRITICAL = 'critical',    // 关键业务
-  HIGH = 'high',           // 高优先级
-  MEDIUM = 'medium',       // 中优先级
-  LOW = 'low',             // 低优先级
+  CRITICAL = 'critical', // 关键业务
+  HIGH = 'high', // 高优先级
+  MEDIUM = 'medium', // 中优先级
+  LOW = 'low', // 低优先级
 }
 
 // SLA升级级别枚举
 export enum EscalationLevel {
-  LEVEL_1 = 'level_1',     // 一级升级
-  LEVEL_2 = 'level_2',     // 二级升级
-  LEVEL_3 = 'level_3',     // 三级升级
-  LEVEL_4 = 'level_4',     // 四级升级
+  LEVEL_1 = 'level_1', // 一级升级
+  LEVEL_2 = 'level_2', // 二级升级
+  LEVEL_3 = 'level_3', // 三级升级
+  LEVEL_4 = 'level_4', // 四级升级
   MANAGEMENT = 'management', // 管理层升级
 }
 
@@ -54,7 +54,7 @@ export interface BusinessHours {
   workingDays: number[]; // 1-7 (周一到周日)
   workingHours: {
     start: string; // HH:mm 格式
-    end: string;   // HH:mm 格式
+    end: string; // HH:mm 格式
   };
   isDefault: boolean;
   createdAt: string;
@@ -138,8 +138,8 @@ export interface SLAInstance {
   currentLevel: EscalationLevel;
   escalationHistory: EscalationEvent[];
   businessTimeUsed: number; // 已使用业务时间（分钟）
-  totalTimeUsed: number;    // 已使用总时间（分钟）
-  remainingTime: number;    // 剩余时间（分钟）
+  totalTimeUsed: number; // 已使用总时间（分钟）
+  remainingTime: number; // 剩余时间（分钟）
   isSuspended: boolean;
   suspensionReason?: string;
   createdAt: string;
@@ -257,7 +257,9 @@ export class SLAService {
 
   // SLA定义管理
   async getSLADefinitions(params?: SLAQueryParams): Promise<PaginatedResponse<SLADefinition>> {
-    const response = await fetch(`${this.baseUrl}/definitions?${new URLSearchParams(params as any)}`);
+    const response = await fetch(
+      `${this.baseUrl}/definitions?${new URLSearchParams(params as any)}`
+    );
     if (!response.ok) throw new Error('Failed to fetch SLA definitions');
     return response.json();
   }
@@ -344,7 +346,9 @@ export class SLAService {
     return response.json();
   }
 
-  async createBusinessHours(data: Omit<BusinessHours, 'id' | 'createdAt' | 'updatedAt'>): Promise<BusinessHours> {
+  async createBusinessHours(
+    data: Omit<BusinessHours, 'id' | 'createdAt' | 'updatedAt'>
+  ): Promise<BusinessHours> {
     const response = await fetch(`${this.baseUrl}/business-hours`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -372,7 +376,12 @@ export class SLAService {
   }
 
   // SLA计算工具
-  calculateBusinessTime(startTime: string, endTime: string, businessHours: BusinessHours, holidays: Holiday[]): number {
+  calculateBusinessTime(
+    startTime: string,
+    endTime: string,
+    businessHours: BusinessHours,
+    holidays: Holiday[]
+  ): number {
     // 计算两个时间点之间的业务时间（分钟）
     // 这里需要实现复杂的业务时间计算逻辑
     // 考虑工作日、工作时间、节假日等因素

@@ -19,11 +19,7 @@ import {
   message,
   Typography,
 } from 'antd';
-import {
-  ArrowLeftOutlined,
-  KeyOutlined,
-  UserOutlined,
-} from '@ant-design/icons';
+import { ArrowLeftOutlined, KeyOutlined, UserOutlined } from '@ant-design/icons';
 import { useParams, useRouter } from 'next/navigation';
 import dayjs from 'dayjs';
 
@@ -121,9 +117,8 @@ const LicenseDetail: React.FC = () => {
     );
   }
 
-  const usagePercent = license.total_quantity > 0
-    ? (license.used_quantity / license.total_quantity) * 100
-    : 0;
+  const usagePercent =
+    license.total_quantity > 0 ? (license.used_quantity / license.total_quantity) * 100 : 0;
 
   return (
     <Space direction="vertical" style={{ width: '100%' }} size="large">
@@ -136,7 +131,9 @@ const LicenseDetail: React.FC = () => {
           >
             返回列表
           </Button>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+          >
             <div>
               <Title level={3} style={{ marginBottom: 8 }}>
                 {license.name}
@@ -146,7 +143,10 @@ const LicenseDetail: React.FC = () => {
               )}
             </div>
             <Space>
-              <Tag color={statusColors[license.status]} style={{ padding: '4px 12px', fontSize: 14 }}>
+              <Tag
+                color={statusColors[license.status]}
+                style={{ padding: '4px 12px', fontSize: 14 }}
+              >
                 {statusLabels[license.status]}
               </Tag>
               <Tag>{typeLabels[license.license_type]}</Tag>
@@ -160,14 +160,14 @@ const LicenseDetail: React.FC = () => {
               <Text>使用情况</Text>
               <Progress
                 percent={Math.round(usagePercent)}
-                status={usagePercent >= 100 ? 'exception' : usagePercent >= 80 ? 'normal' : 'success'}
+                status={
+                  usagePercent >= 100 ? 'exception' : usagePercent >= 80 ? 'normal' : 'success'
+                }
                 format={() => `${license.used_quantity} / ${license.total_quantity}`}
               />
             </div>
             <div style={{ textAlign: 'center', minWidth: 100 }}>
-              <div style={{ fontSize: 24, fontWeight: 'bold' }}>
-                {license.available_quantity}
-              </div>
+              <div style={{ fontSize: 24, fontWeight: 'bold' }}>{license.available_quantity}</div>
               <div>可用数量</div>
             </div>
           </div>
@@ -189,13 +189,24 @@ const LicenseDetail: React.FC = () => {
             {license.purchase_price ? `¥${license.purchase_price}` : '-'}
           </Descriptions.Item>
           <Descriptions.Item label="到期日期">
-            <Text style={{ color: license.status === 'expired' ? '#ff4d4f' : license.status === 'expiring-soon' ? '#faad14' : undefined }}>
+            <Text
+              style={{
+                color:
+                  license.status === 'expired'
+                    ? '#ff4d4f'
+                    : license.status === 'expiring-soon'
+                      ? '#faad14'
+                      : undefined,
+              }}
+            >
               {license.expiry_date || '永久'}
             </Text>
           </Descriptions.Item>
           <Descriptions.Item label="续费成本">{license.renewal_cost || '-'}</Descriptions.Item>
           <Descriptions.Item label="支持供应商">{license.support_vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="支持联系方式">{license.support_contact || '-'}</Descriptions.Item>
+          <Descriptions.Item label="支持联系方式">
+            {license.support_contact || '-'}
+          </Descriptions.Item>
           <Descriptions.Item label="创建时间">
             {dayjs(license.created_at).format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>

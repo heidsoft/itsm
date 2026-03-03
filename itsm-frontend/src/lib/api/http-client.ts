@@ -10,14 +10,11 @@ const toCamelCase = (obj: any): any => {
   if (Array.isArray(obj)) {
     return obj.map(v => toCamelCase(v));
   } else if (obj.constructor === Object) {
-    return Object.keys(obj).reduce(
-      (result, key) => {
-        const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
-        result[camelKey] = toCamelCase(obj[key]);
-        return result;
-      },
-      {} as any
-    );
+    return Object.keys(obj).reduce((result, key) => {
+      const camelKey = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
+      result[camelKey] = toCamelCase(obj[key]);
+      return result;
+    }, {} as any);
   }
   return obj;
 };
@@ -30,14 +27,11 @@ const toSnakeCase = (obj: any): any => {
   if (Array.isArray(obj)) {
     return obj.map(v => toSnakeCase(v));
   } else if (obj.constructor === Object) {
-    return Object.keys(obj).reduce(
-      (result, key) => {
-        const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-        result[snakeKey] = toSnakeCase(obj[key]);
-        return result;
-      },
-      {} as any
-    );
+    return Object.keys(obj).reduce((result, key) => {
+      const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+      result[snakeKey] = toSnakeCase(obj[key]);
+      return result;
+    }, {} as any);
   }
   return obj;
 };
@@ -158,8 +152,10 @@ class HttpClient {
     };
 
     // Dynamically get the latest token and tenantId
-    const currentToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : this.token;
-    const currentTenantId = typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
+    const currentToken =
+      typeof window !== 'undefined' ? localStorage.getItem('access_token') : this.token;
+    const currentTenantId =
+      typeof window !== 'undefined' ? localStorage.getItem('current_tenant_id') : this.tenantId;
 
     if (currentToken) {
       headers['Authorization'] = `Bearer ${currentToken}`;
@@ -168,7 +164,8 @@ class HttpClient {
     if (currentTenantId) {
       headers['X-Tenant-ID'] = currentTenantId.toString();
     }
-    const currentTenantCode = typeof window !== 'undefined' ? localStorage.getItem('current_tenant_code') : this.tenantCode;
+    const currentTenantCode =
+      typeof window !== 'undefined' ? localStorage.getItem('current_tenant_code') : this.tenantCode;
     if (currentTenantCode) {
       headers['X-Tenant-Code'] = currentTenantCode;
     }
@@ -178,7 +175,8 @@ class HttpClient {
 
   // Independent token refresh method to avoid circular dependencies
   private async refreshTokenInternal(): Promise<boolean> {
-    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+    const refreshToken =
+      typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
     if (!refreshToken) {
       return false;
     }
@@ -226,16 +224,17 @@ class HttpClient {
         ...config.headers,
       },
       // 自动转换请求 body key 为 snake_case (如果是 JSON 对象)
-      body: config.body && typeof config.body === 'string' && config.body.startsWith('{')
-        ? JSON.stringify(toSnakeCase(JSON.parse(config.body as string)))
-        : config.body,
+      body:
+        config.body && typeof config.body === 'string' && config.body.startsWith('{')
+          ? JSON.stringify(toSnakeCase(JSON.parse(config.body as string)))
+          : config.body,
     };
 
     logger.debug('HTTP Client Request:', {
       url,
       method: config.method,
       headers: sanitizedHeaders,
-      body: config.body
+      body: config.body,
     });
 
     // 在开发模式下，如果后端服务不可用，使用模拟数据
@@ -247,20 +246,20 @@ class HttpClient {
       const controller = new AbortController();
       const timeoutMs = config.timeout ?? this.timeout;
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-      
+
       const response = await fetch(url, {
         ...requestConfig,
         signal: controller.signal,
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       logger.debug('HTTP Client Response:', {
         status: response.status,
         statusText: response.statusText,
-        headers: response.headers ? Object.fromEntries(response.headers.entries()) : {}
+        headers: response.headers ? Object.fromEntries(response.headers.entries()) : {},
       });
-      
+
       // If 401 error, try to refresh token
       if (response.status === 401) {
         const refreshSuccess = await this.refreshTokenInternal();
@@ -279,16 +278,16 @@ class HttpClient {
             const suffix = rid ? ` [RID: ${rid}]` : '';
             throw new Error(`HTTP error! status: ${retryResponse.status}${suffix}`);
           }
-          const retryData = await retryResponse.json() as ApiResponse<T>;
+          const retryData = (await retryResponse.json()) as ApiResponse<T>;
           logger.debug('HTTP Client Retry Response Data:', retryData);
-          
+
           // Check response code - 容忍后端没有返回 code 字段的情况
           if (retryData.code !== undefined && retryData.code !== null && retryData.code !== 0) {
             const rid = retryResponse.headers.get('X-Request-Id') || '';
             const suffix = rid ? ` [RID: ${rid}]` : '';
             throw new Error((retryData.message || 'Request failed') + suffix);
           }
-          
+
           return retryData.data;
         } else {
           // Refresh failed, clear token and redirect to login
@@ -310,17 +309,21 @@ class HttpClient {
         throw new Error(`HTTP error! status: ${response.status}${suffix}`);
       }
 
-      const responseData = await response.json() as ApiResponse<T>;
+      const responseData = (await response.json()) as ApiResponse<T>;
       logger.debug('HTTP Client Raw Response Data:', responseData);
-      
+
       // Check response code - 容忍后端没有返回 code 字段的情况（如 BPMN workflow controller）
       // 允许 code 为 0、undefined、null 或不存在
-      if (responseData.code !== undefined && responseData.code !== null && responseData.code !== 0) {
+      if (
+        responseData.code !== undefined &&
+        responseData.code !== null &&
+        responseData.code !== 0
+      ) {
         const rid = (response.headers && response.headers.get('X-Request-Id')) || '';
         const suffix = rid ? ` [RID: ${rid}]` : '';
         throw new Error((responseData.message || 'Request failed') + suffix);
       }
-      
+
       // 自动转换响应数据 key 为 camelCase
       return toCamelCase(responseData.data);
     } catch (error: unknown) {
@@ -413,7 +416,7 @@ class HttpClient {
       });
       url += `?${searchParams.toString()}`;
     }
-    
+
     return this.requestInternal<T>(url, {
       method: 'GET',
     });
@@ -434,19 +437,19 @@ class HttpClient {
       const headers = this.getHeaders();
       // FormData 上传时，不要设置 Content-Type，让浏览器自动设置（包含 boundary）
       delete headers['Content-Type'];
-      
+
       // 如果支持上传进度，使用 XMLHttpRequest
       if (config?.onUploadProgress) {
         return new Promise<T>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          
-          xhr.upload.addEventListener('progress', (event) => {
+
+          xhr.upload.addEventListener('progress', event => {
             if (event.lengthComputable && config.onUploadProgress) {
               const progress = Math.round((event.loaded * 100) / event.total);
               config.onUploadProgress(progress);
             }
           });
-          
+
           xhr.addEventListener('load', () => {
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
@@ -463,11 +466,11 @@ class HttpClient {
               reject(new Error(`HTTP error! status: ${xhr.status}`));
             }
           });
-          
+
           xhr.addEventListener('error', () => {
             reject(new Error('Network error'));
           });
-          
+
           xhr.open('POST', url);
           Object.entries(headers).forEach(([key, value]) => {
             if (key !== 'Content-Type') {
@@ -477,7 +480,7 @@ class HttpClient {
           xhr.send(data);
         });
       }
-      
+
       // 不支持进度时，使用 fetch
       const response = await fetch(url, {
         method: 'POST',
@@ -487,24 +490,28 @@ class HttpClient {
         },
         body: data,
       });
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       if (config?.responseType === 'blob') {
         return (await response.blob()) as any;
       }
 
       const responseData = (await response.json()) as ApiResponse<T>;
       // 容忍后端没有返回 code 字段的情况
-      if (responseData.code !== undefined && responseData.code !== null && responseData.code !== 0) {
+      if (
+        responseData.code !== undefined &&
+        responseData.code !== null &&
+        responseData.code !== 0
+      ) {
         throw new Error(responseData.message || 'Request failed');
       }
-      
+
       return responseData.data;
     }
-    
+
     return this.requestInternal<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
@@ -535,7 +542,7 @@ class HttpClient {
 
   // 分页查询方法
   async getPaginated<T>(
-    endpoint: string, 
+    endpoint: string,
     params?: {
       page?: number;
       pageSize?: number;
@@ -566,30 +573,24 @@ class HttpClient {
         }
       });
     }
-    
-    const url = queryParams.toString() 
-      ? `${endpoint}?${queryParams.toString()}` 
-      : endpoint;
-      
+
+    const url = queryParams.toString() ? `${endpoint}?${queryParams.toString()}` : endpoint;
+
     return this.get(url);
   }
 
   // 批量操作方法
-  async batchOperation<T>(
-    endpoint: string, 
-    operation: string, 
-    data: any[]
-  ): Promise<T[]> {
+  async batchOperation<T>(endpoint: string, operation: string, data: any[]): Promise<T[]> {
     return this.post<T[]>(endpoint, {
       operation,
-      data
+      data,
     });
   }
 
   // 文件上传方法
   async uploadFile(
-    endpoint: string, 
-    file: File, 
+    endpoint: string,
+    file: File,
     onProgress?: (progress: number) => void
   ): Promise<{
     url: string;
@@ -601,8 +602,8 @@ class HttpClient {
 
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
-      
-      xhr.upload.addEventListener('progress', (event) => {
+
+      xhr.upload.addEventListener('progress', event => {
         if (event.lengthComputable && onProgress) {
           const progress = (event.loaded / event.total) * 100;
           onProgress(progress);
@@ -628,7 +629,7 @@ class HttpClient {
 
       const uploadUrl = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
       xhr.open('POST', uploadUrl);
-      
+
       // 添加认证头
       const token = this.getAuthToken();
       if (token) {

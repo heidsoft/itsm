@@ -135,7 +135,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   const loadRoleList = async () => {
     setLoadingRoles(true);
     try {
-      const response = await RoleAPI.getRoles() as any;
+      const response = (await RoleAPI.getRoles()) as any;
       const roles = (response.roles || response.data || []).map((r: any) => ({
         id: r.id,
         name: r.name || r.code || '未知角色',
@@ -276,7 +276,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
   // 更新工作流
   const updateWorkflow = (updates: Partial<WorkflowDefinition>) => {
-    setWorkflow(prev => prev ? { ...prev, ...updates } : null);
+    setWorkflow(prev => (prev ? { ...prev, ...updates } : null));
   };
 
   // 更新 SLA 配置
@@ -324,14 +324,18 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
 
         message.success('工作流创建成功');
       } else {
-        const response = (await WorkflowAPI.updateProcessDefinition(workflow.id, {
-          name: workflow.name,
-          description: workflow.description,
-          category: workflow.category,
-          bpmn_xml: xml,
-          approval_config: approvalConfig,
-          sla_config: workflow.sla_config,
-        }, workflow.version)) as any;
+        const response = (await WorkflowAPI.updateProcessDefinition(
+          workflow.id,
+          {
+            name: workflow.name,
+            description: workflow.description,
+            category: workflow.category,
+            bpmn_xml: xml,
+            approval_config: approvalConfig,
+            sla_config: workflow.sla_config,
+          },
+          workflow.version
+        )) as any;
 
         updateWorkflow({
           version: response.version || workflow.version,
@@ -385,7 +389,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
           tenant_id: httpClient.getTenantId() || 1,
         };
 
-        const response = await WorkflowAPI.createProcessDefinition(createData) as any;
+        const response = (await WorkflowAPI.createProcessDefinition(createData)) as any;
 
         if (!response) {
           throw new Error('创建工作流失败：服务器返回空响应');
@@ -482,51 +486,67 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
   };
 
   // 提供给子组件的值
-  const contextValue = useMemo(() => ({
-    workflow,
-    setWorkflow,
-    currentXML,
-    setCurrentXML,
-    hasChanges,
-    setHasChanges,
-    activeTab,
-    setActiveTab,
-    saving,
-    setSaving,
-    deploying,
-    setDeploying,
-    approvalConfig,
-    setApprovalConfig,
-    workflowVersions,
-    setWorkflowVersions,
-    userList,
-    setUserList,
-    roleList,
-    setRoleList,
-    loadingUsers,
-    setLoadingUsers,
-    loadingRoles,
-    setLoadingRoles,
-    updateWorkflow,
-    updateSLAConfig,
-    // 弹窗状态
-    showNewWorkflowModal,
-    setShowNewWorkflowModal,
-    showVersionModal,
-    setShowVersionModal,
-    showSettingsModal,
-    setShowSettingsModal,
-    showMetadataModal,
-    setShowMetadataModal,
-    metadataForm,
-    // 操作
-    handleSwitchVersion,
-  }), [
-    workflow, currentXML, hasChanges, activeTab, saving, deploying,
-    approvalConfig, workflowVersions, userList, roleList, loadingUsers, loadingRoles,
-    showNewWorkflowModal, showVersionModal, showSettingsModal, showMetadataModal,
-    metadataForm
-  ]);
+  const contextValue = useMemo(
+    () => ({
+      workflow,
+      setWorkflow,
+      currentXML,
+      setCurrentXML,
+      hasChanges,
+      setHasChanges,
+      activeTab,
+      setActiveTab,
+      saving,
+      setSaving,
+      deploying,
+      setDeploying,
+      approvalConfig,
+      setApprovalConfig,
+      workflowVersions,
+      setWorkflowVersions,
+      userList,
+      setUserList,
+      roleList,
+      setRoleList,
+      loadingUsers,
+      setLoadingUsers,
+      loadingRoles,
+      setLoadingRoles,
+      updateWorkflow,
+      updateSLAConfig,
+      // 弹窗状态
+      showNewWorkflowModal,
+      setShowNewWorkflowModal,
+      showVersionModal,
+      setShowVersionModal,
+      showSettingsModal,
+      setShowSettingsModal,
+      showMetadataModal,
+      setShowMetadataModal,
+      metadataForm,
+      // 操作
+      handleSwitchVersion,
+    }),
+    [
+      workflow,
+      currentXML,
+      hasChanges,
+      activeTab,
+      saving,
+      deploying,
+      approvalConfig,
+      workflowVersions,
+      userList,
+      roleList,
+      loadingUsers,
+      loadingRoles,
+      showNewWorkflowModal,
+      showVersionModal,
+      showSettingsModal,
+      showMetadataModal,
+      metadataForm,
+    ]
+  );
 
   return (
     <Layout className="h-screen">
@@ -553,7 +573,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
                 <WorkflowCanvas
                   currentXML={currentXML}
                   onSave={handleSave}
-                  onChange={(xml) => {
+                  onChange={xml => {
                     setCurrentXML(xml);
                     setHasChanges(true);
                   }}
@@ -608,12 +628,12 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
             router.push('/workflow');
           }
         }}
-        onSelectTemplate={(templateWorkflow) => {
+        onSelectTemplate={templateWorkflow => {
           setWorkflow(templateWorkflow);
           setCurrentXML(templateWorkflow.xml);
           setShowNewWorkflowModal(false);
         }}
-        onCreateCustom={(values) => {
+        onCreateCustom={values => {
           const newWorkflow: WorkflowDefinition = {
             id: 'new',
             name: values.name,
@@ -671,7 +691,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
       <WorkflowMetadataModal
         visible={showMetadataModal}
         onClose={() => setShowMetadataModal(false)}
-        onSave={(values) => {
+        onSave={values => {
           updateWorkflow({
             name: values.name,
             description: values.description,

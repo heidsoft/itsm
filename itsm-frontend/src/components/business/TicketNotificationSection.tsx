@@ -29,11 +29,14 @@ import {
   Clock,
   AlertCircle,
 } from 'lucide-react';
-import { TicketNotificationApi, TicketNotification, SendTicketNotificationRequest } from '@/lib/api/ticket-notification-api';
+import {
+  TicketNotificationApi,
+  TicketNotification,
+  SendTicketNotificationRequest,
+} from '@/lib/api/ticket-notification-api';
 import { UserSelect } from '@/components/common/UserSelect';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { App } from 'antd';
-import { useI18n } from '@/lib/i18n';
 
 const { Text, Title } = Typography;
 const { TextArea } = Input;
@@ -54,7 +57,6 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
   onNotificationSent,
 }) => {
   const { message: antMessage } = App.useApp();
-  const { t } = useI18n();
   const { user } = useAuthStore();
   const [notifications, setNotifications] = useState<TicketNotification[]>([]);
   const [loading, setLoading] = useState(false);
@@ -68,6 +70,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
       const response = await TicketNotificationApi.getTicketNotifications(ticketId);
       setNotifications(response.notifications || []);
     } catch (error) {
+      console.error('Failed to load notifications:', error);
       antMessage.error('加载通知列表失败');
     } finally {
       setLoading(false);
@@ -115,6 +118,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
         onNotificationSent(tempNotification);
       }
     } catch (error: any) {
+      console.error('Failed to send notification:', error);
       antMessage.error(error.message || '通知发送失败');
     }
   };
@@ -126,6 +130,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
       antMessage.success('已标记为已读');
       await loadNotifications();
     } catch (error: any) {
+      console.error('Failed to mark notification as read:', error);
       antMessage.error(error.message || '标记失败');
     }
   };
@@ -206,11 +211,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
           )}
         </Space>
         {canSend && (
-          <Button
-            type="primary"
-            icon={<Send />}
-            onClick={() => setSendModalVisible(true)}
-          >
+          <Button type="primary" icon={<Send />} onClick={() => setSendModalVisible(true)}>
             发送通知
           </Button>
         )}
@@ -223,7 +224,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
         ) : (
           <List
             dataSource={notifications}
-            renderItem={(notification) => (
+            renderItem={notification => (
               <List.Item
                 className={notification.status === 'read' ? 'opacity-70' : ''}
                 actions={[
@@ -256,12 +257,17 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
                       <Tag color={getNotificationTypeColor(notification.type)}>
                         {getNotificationTypeLabel(notification.type)}
                       </Tag>
-                      <Tag color={getChannelColor(notification.channel)} icon={getChannelIcon(notification.channel)}>
-                        {notification.channel === 'email' ? '邮件' : notification.channel === 'sms' ? '短信' : '站内消息'}
+                      <Tag
+                        color={getChannelColor(notification.channel)}
+                        icon={getChannelIcon(notification.channel)}
+                      >
+                        {notification.channel === 'email'
+                          ? '邮件'
+                          : notification.channel === 'sms'
+                            ? '短信'
+                            : '站内消息'}
                       </Tag>
-                      {notification.status !== 'read' && (
-                        <Badge status="processing" text="未读" />
-                      )}
+                      {notification.status !== 'read' && <Badge status="processing" text="未读" />}
                     </Space>
                   }
                   description={
@@ -308,8 +314,8 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
           setSendModalVisible(false);
           form.resetFields();
         }}
-        okText={t('common.submit') || '发送'}
-        cancelText={t('common.cancel')}
+        okText="发送"
+        cancelText="取消"
         width={600}
       >
         <Form
@@ -326,10 +332,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
             name="user_ids"
             rules={[{ required: true, message: '请选择接收人' }]}
           >
-            <UserSelect
-              mode="multiple"
-              placeholder="请选择接收人"
-            />
+            <UserSelect mode="multiple" placeholder="请选择接收人" />
           </Form.Item>
 
           <Form.Item
@@ -380,16 +383,10 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
             name="content"
             rules={[{ required: true, message: '请输入通知内容' }]}
           >
-            <TextArea
-              rows={4}
-              placeholder="请输入通知内容..."
-              showCount
-              maxLength={500}
-            />
+            <TextArea rows={4} placeholder="请输入通知内容..." showCount maxLength={500} />
           </Form.Item>
         </Form>
       </Modal>
     </div>
   );
 };
-

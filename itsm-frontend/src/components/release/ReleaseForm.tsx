@@ -49,7 +49,9 @@ const ReleaseForm: React.FC = () => {
       // 设置表单值
       form.setFieldsValue({
         ...data,
-        planned_release_date: data.planned_release_date ? dayjs(data.planned_release_date) : undefined,
+        planned_release_date: data.planned_release_date
+          ? dayjs(data.planned_release_date)
+          : undefined,
         planned_start_date: data.planned_start_date ? dayjs(data.planned_start_date) : undefined,
         planned_end_date: data.planned_end_date ? dayjs(data.planned_end_date) : undefined,
       });
@@ -116,10 +118,7 @@ const ReleaseForm: React.FC = () => {
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.push('/releases')}
-          >
+          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/releases')}>
             返回列表
           </Button>
         </div>

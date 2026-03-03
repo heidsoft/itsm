@@ -17,10 +17,8 @@ export const PRIORITY_MATRIX_KEYS = {
   activeConfig: () => [...PRIORITY_MATRIX_KEYS.all, 'active-config'] as const,
   matrixData: (configId?: string) =>
     [...PRIORITY_MATRIX_KEYS.all, 'matrix-data', configId] as const,
-  rules: (query?: PriorityRuleQuery) =>
-    [...PRIORITY_MATRIX_KEYS.all, 'rules', query] as const,
-  suggestion: (ticketId: number) =>
-    [...PRIORITY_MATRIX_KEYS.all, 'suggestion', ticketId] as const,
+  rules: (query?: PriorityRuleQuery) => [...PRIORITY_MATRIX_KEYS.all, 'rules', query] as const,
+  suggestion: (ticketId: number) => [...PRIORITY_MATRIX_KEYS.all, 'suggestion', ticketId] as const,
   distribution: (query: PriorityAnalysisQuery) =>
     [...PRIORITY_MATRIX_KEYS.all, 'distribution', query] as const,
 };
@@ -131,4 +129,3 @@ export default {
   useActivateMatrixConfigMutation,
   useCreatePriorityRuleMutation,
 };
-

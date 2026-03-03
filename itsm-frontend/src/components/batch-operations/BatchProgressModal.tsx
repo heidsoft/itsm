@@ -6,19 +6,7 @@
 'use client';
 
 import React from 'react';
-import {
-  Modal,
-  Progress,
-  Space,
-  Button,
-  Alert,
-  Statistic,
-  Row,
-  Col,
-  List,
-  Tag,
-  Spin,
-} from 'antd';
+import { Modal, Progress, Space, Button, Alert, Statistic, Row, Col, List, Tag, Spin } from 'antd';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -41,13 +29,10 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
   operationId,
   onClose,
 }) => {
-  const { data: progress, isLoading } = useBatchOperationProgressQuery(
-    operationId,
-    {
-      enabled: visible,
-      refetchInterval: 2000,
-    }
-  );
+  const { data: progress, isLoading } = useBatchOperationProgressQuery(operationId, {
+    enabled: visible,
+    refetchInterval: 2000,
+  });
 
   const getStatusColor = () => {
     switch (progress?.status) {
@@ -109,18 +94,12 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
           {/* 进度条 */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-base font-semibold">
-                {getStatusText()}
-              </span>
+              <span className="text-base font-semibold">{getStatusText()}</span>
               <span className="text-gray-600">
                 {progress.processedCount} / {progress.totalCount}
               </span>
             </div>
-            <Progress
-              percent={progress.percentage}
-              status={getStatusColor()}
-              strokeWidth={12}
-            />
+            <Progress percent={progress.percentage} status={getStatusColor()} strokeWidth={12} />
           </div>
 
           {/* 统计信息 */}
@@ -165,9 +144,7 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
             <Alert
               message="批量操作完成"
               description={`成功处理 ${progress.successCount} 个工单${
-                progress.failedCount > 0
-                  ? `，失败 ${progress.failedCount} 个`
-                  : ''
+                progress.failedCount > 0 ? `，失败 ${progress.failedCount} 个` : ''
               }`}
               type={progress.failedCount > 0 ? 'warning' : 'success'}
               showIcon
@@ -212,4 +189,3 @@ export const BatchProgressModal: React.FC<BatchProgressModalProps> = ({
 };
 
 export default BatchProgressModal;
-

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { ReactNode } from "react";
-import { theme } from "antd";
-import { cn } from "@/lib/utils";
-import { layout, semanticSpacing } from "@/lib/design-system/spacing";
+import React, { ReactNode } from 'react';
+import { theme } from 'antd';
+import { cn } from '@/lib/utils';
+import { layout, semanticSpacing } from '@/lib/design-system/spacing';
 
 const { token } = theme.useToken();
 
@@ -51,15 +51,15 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   footer,
   showBreadcrumb = false,
   breadcrumb = [],
-  maxWidth = "lg",
-  padding = "md",
+  maxWidth = 'lg',
+  padding = 'md',
   backgroundColor,
   className,
   style,
 }) => {
   return (
     <div
-      className={cn("min-h-screen flex flex-col", className)}
+      className={cn('min-h-screen flex flex-col', className)}
       style={{
         backgroundColor: backgroundColor || token.colorBgLayout,
         ...style,
@@ -120,10 +120,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                       {breadcrumb.map((item, index) => (
                         <li key={index} className="flex items-center">
                           {index > 0 && (
-                            <span
-                              className="mx-2"
-                              style={{ color: token.colorTextTertiary }}
-                            >
+                            <span className="mx-2" style={{ color: token.colorTextTertiary }}>
                               /
                             </span>
                           )}
@@ -136,9 +133,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
                               {item.label}
                             </a>
                           ) : (
-                            <span style={{ color: token.colorTextSecondary }}>
-                              {item.label}
-                            </span>
+                            <span style={{ color: token.colorTextSecondary }}>{item.label}</span>
                           )}
                         </li>
                       ))}
@@ -148,20 +143,14 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 
                 {/* 页面标题 */}
                 {title && (
-                  <h1
-                    className="text-3xl font-bold mb-2"
-                    style={{ color: token.colorText }}
-                  >
+                  <h1 className="text-3xl font-bold mb-2" style={{ color: token.colorText }}>
                     {title}
                   </h1>
                 )}
 
                 {/* 页面描述 */}
                 {description && (
-                  <p
-                    className="text-lg"
-                    style={{ color: token.colorTextSecondary }}
-                  >
+                  <p className="text-lg" style={{ color: token.colorTextSecondary }}>
                     {description}
                   </p>
                 )}
@@ -241,14 +230,14 @@ export const ContentLayout: React.FC<ContentLayoutProps> = ({
   title,
   description,
   actions,
-  maxWidth = "md",
-  padding = "md",
+  maxWidth = 'md',
+  padding = 'md',
   bordered = false,
   className,
 }) => {
   return (
     <div
-      className={cn("w-full", bordered && "border rounded-lg", className)}
+      className={cn('w-full', bordered && 'border rounded-lg', className)}
       style={{
         maxWidth: layout.content.maxWidth,
         padding: semanticSpacing.padding[padding],
@@ -263,18 +252,13 @@ export const ContentLayout: React.FC<ContentLayoutProps> = ({
         <div className="mb-6">
           <div className="flex items-center justify-between mb-2">
             {title && (
-              <h2
-                className="text-2xl font-semibold"
-                style={{ color: token.colorText }}
-              >
+              <h2 className="text-2xl font-semibold" style={{ color: token.colorText }}>
                 {title}
               </h2>
             )}
             {actions && <div className="ml-4">{actions}</div>}
           </div>
-          {description && (
-            <p style={{ color: token.colorTextSecondary }}>{description}</p>
-          )}
+          {description && <p style={{ color: token.colorTextSecondary }}>{description}</p>}
         </div>
       )}
 
@@ -312,12 +296,12 @@ export interface GridLayoutProps {
 export const GridLayout: React.FC<GridLayoutProps> = ({
   children,
   columns = 3,
-  gap = "md",
+  gap = 'md',
   responsive,
   className,
 }) => {
   const getGridClasses = () => {
-    const baseClasses = "grid";
+    const baseClasses = 'grid';
 
     // 基础列数
     const columnClasses = `grid-cols-${columns}`;
@@ -326,8 +310,8 @@ export const GridLayout: React.FC<GridLayoutProps> = ({
     const responsiveClasses = responsive
       ? Object.entries(responsive)
           .map(([breakpoint, cols]) => `${breakpoint}:grid-cols-${cols}`)
-          .join(" ")
-      : "";
+          .join(' ')
+      : '';
 
     return cn(baseClasses, columnClasses, responsiveClasses);
   };
@@ -348,11 +332,11 @@ export const GridLayout: React.FC<GridLayoutProps> = ({
 export interface FlexLayoutProps {
   children: ReactNode;
   /** 布局方向 */
-  direction?: "row" | "column" | "row-reverse" | "column-reverse";
+  direction?: 'row' | 'column' | 'row-reverse' | 'column-reverse';
   /** 对齐方式 */
-  align?: "start" | "end" | "center" | "baseline" | "stretch";
+  align?: 'start' | 'end' | 'center' | 'baseline' | 'stretch';
   /** 分布方式 */
-  justify?: "start" | "end" | "center" | "between" | "around" | "evenly";
+  justify?: 'start' | 'end' | 'center' | 'between' | 'around' | 'evenly';
   /** 是否换行 */
   wrap?: boolean;
   /** 间距 */
@@ -367,27 +351,21 @@ export interface FlexLayoutProps {
  */
 export const FlexLayout: React.FC<FlexLayoutProps> = ({
   children,
-  direction = "row",
-  align = "start",
-  justify = "start",
+  direction = 'row',
+  align = 'start',
+  justify = 'start',
   wrap = false,
-  gap = "md",
+  gap = 'md',
   className,
 }) => {
   const getFlexClasses = () => {
-    const baseClasses = "flex";
+    const baseClasses = 'flex';
     const directionClasses = `flex-${direction}`;
     const alignClasses = `items-${align}`;
     const justifyClasses = `justify-${justify}`;
-    const wrapClasses = wrap ? "flex-wrap" : "flex-nowrap";
+    const wrapClasses = wrap ? 'flex-wrap' : 'flex-nowrap';
 
-    return cn(
-      baseClasses,
-      directionClasses,
-      alignClasses,
-      justifyClasses,
-      wrapClasses
-    );
+    return cn(baseClasses, directionClasses, alignClasses, justifyClasses, wrapClasses);
   };
 
   return (

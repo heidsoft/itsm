@@ -173,11 +173,9 @@ const UserManagement: React.FC = () => {
     setLoading(true);
     try {
       await UserApi.updateUser(userId, { ...{} });
-      setUsers(prev => prev.map(user =>
-        user.id === userId
-          ? { ...user, active: !currentStatus }
-          : user
-      ));
+      setUsers(prev =>
+        prev.map(user => (user.id === userId ? { ...user, active: !currentStatus } : user))
+      );
       message.success('状态更新成功');
       loadUsers();
     } catch (error) {
@@ -224,7 +222,7 @@ const UserManagement: React.FC = () => {
       render: (text: string, record: User) => (
         <Space>
           <Text strong>{text}</Text>
-          {!record.active && <Tag color='red'>已禁用</Tag>}
+          {!record.active && <Tag color="red">已禁用</Tag>}
         </Space>
       ),
     },
@@ -257,8 +255,8 @@ const UserManagement: React.FC = () => {
           checked={active}
           loading={loading}
           onChange={() => handleToggleUserStatus(record.id, active)}
-          checkedChildren='激活'
-          unCheckedChildren='禁用'
+          checkedChildren="激活"
+          unCheckedChildren="禁用"
         />
       ),
     },
@@ -313,7 +311,7 @@ const UserManagement: React.FC = () => {
             ],
           }}
         >
-          <Button type='text' icon={<MoreHorizontal size={16} />} />
+          <Button type="text" icon={<MoreHorizontal size={16} />} />
         </Dropdown>
       ),
     },
@@ -329,14 +327,14 @@ const UserManagement: React.FC = () => {
             用户管理
           </Space>
         </Title>
-        <Text type='secondary'>管理系统用户账户、权限和状态</Text>
+        <Text type="secondary">管理系统用户账户、权限和状态</Text>
 
         {/* 统计卡片 */}
         <Row gutter={16} style={{ marginTop: token.marginLG }}>
           <Col span={8}>
             <Card>
               <Statistic
-                title='总用户数'
+                title="总用户数"
                 value={stats.total}
                 prefix={<Users style={{ color: token.colorPrimary }} />}
               />
@@ -345,7 +343,7 @@ const UserManagement: React.FC = () => {
           <Col span={8}>
             <Card>
               <Statistic
-                title='活跃用户'
+                title="活跃用户"
                 value={stats.active}
                 prefix={<UserCheck style={{ color: '#52c41a' }} />}
               />
@@ -354,7 +352,7 @@ const UserManagement: React.FC = () => {
           <Col span={8}>
             <Card>
               <Statistic
-                title='禁用用户'
+                title="禁用用户"
                 value={stats.inactive}
                 prefix={<UserX style={{ color: '#ff4d4f' }} />}
               />
@@ -365,41 +363,41 @@ const UserManagement: React.FC = () => {
 
       {/* 操作栏 */}
       <Card style={{ marginBottom: token.marginLG }}>
-        <Row gutter={[16, 16]} align='middle'>
-          <Col flex='auto'>
+        <Row gutter={[16, 16]} align="middle">
+          <Col flex="auto">
             <Space wrap>
               <AntSearch
-                placeholder='搜索用户名、姓名、邮箱'
+                placeholder="搜索用户名、姓名、邮箱"
                 style={{ width: 280 }}
                 onSearch={value => setFilters(prev => ({ ...prev, search: value }))}
                 allowClear
               />
               <Select
-                placeholder='状态筛选'
+                placeholder="状态筛选"
                 style={{ width: 120 }}
                 allowClear
                 onChange={value => setFilters(prev => ({ ...prev, status: value || '' }))}
               >
-                <Option value='active'>激活</Option>
-                <Option value='inactive'>禁用</Option>
+                <Option value="active">激活</Option>
+                <Option value="inactive">禁用</Option>
               </Select>
               <Select
-                placeholder='部门筛选'
+                placeholder="部门筛选"
                 style={{ width: 160 }}
                 allowClear
                 onChange={value => setFilters(prev => ({ ...prev, department: value || '' }))}
               >
-                <Option value='IT部门'>IT部门</Option>
-                <Option value='财务部门'>财务部门</Option>
-                <Option value='人事部门'>人事部门</Option>
-                <Option value='市场部门'>市场部门</Option>
+                <Option value="IT部门">IT部门</Option>
+                <Option value="财务部门">财务部门</Option>
+                <Option value="人事部门">人事部门</Option>
+                <Option value="市场部门">市场部门</Option>
               </Select>
             </Space>
           </Col>
           <Col>
             <Space>
               <Button
-                type='primary'
+                type="primary"
                 icon={<Plus size={16} />}
                 onClick={() => setIsCreateModalVisible(true)}
               >
@@ -416,11 +414,8 @@ const UserManagement: React.FC = () => {
       {/* 用户表格 */}
       <Card>
         {users.length === 0 && !loading ? (
-          <Empty
-            description='暂无用户数据'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
-            <Button type='primary' onClick={() => setIsCreateModalVisible(true)}>
+          <Empty description="暂无用户数据" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Button type="primary" onClick={() => setIsCreateModalVisible(true)}>
               创建第一个用户
             </Button>
           </Empty>
@@ -428,7 +423,7 @@ const UserManagement: React.FC = () => {
           <Table
             columns={columns}
             dataSource={users}
-            rowKey='id'
+            rowKey="id"
             loading={loading}
             pagination={{
               current: pagination.current,
@@ -447,7 +442,7 @@ const UserManagement: React.FC = () => {
 
       {/* 创建用户模态框 */}
       <Modal
-        title='新建用户'
+        title="新建用户"
         open={isCreateModalVisible}
         onCancel={() => {
           setIsCreateModalVisible(false);
@@ -456,76 +451,76 @@ const UserManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form form={createForm} layout='vertical' onFinish={handleCreateUser}>
+        <Form form={createForm} layout="vertical" onFinish={handleCreateUser}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='username'
-                label='用户名'
+                name="username"
+                label="用户名"
                 rules={[
                   { required: true, message: '请输入用户名' },
                   { min: 3, message: '用户名至少3个字符' },
                 ]}
               >
-                <Input placeholder='请输入用户名' />
+                <Input placeholder="请输入用户名" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name='name'
-                label='姓名'
+                name="name"
+                label="姓名"
                 rules={[{ required: true, message: '请输入姓名' }]}
               >
-                <Input placeholder='请输入姓名' />
+                <Input placeholder="请输入姓名" />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='email'
-                label='邮箱'
+                name="email"
+                label="邮箱"
                 rules={[
                   { required: true, message: '请输入邮箱' },
                   { type: 'email', message: '请输入有效的邮箱地址' },
                 ]}
               >
-                <Input placeholder='请输入邮箱' />
+                <Input placeholder="请输入邮箱" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='phone' label='电话'>
-                <Input placeholder='请输入电话号码' />
+              <Form.Item name="phone" label="电话">
+                <Input placeholder="请输入电话号码" />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='department' label='部门'>
-                <Select placeholder='请选择部门'>
-                  <Option value='IT部门'>IT部门</Option>
-                  <Option value='财务部门'>财务部门</Option>
-                  <Option value='人事部门'>人事部门</Option>
-                  <Option value='市场部门'>市场部门</Option>
+              <Form.Item name="department" label="部门">
+                <Select placeholder="请选择部门">
+                  <Option value="IT部门">IT部门</Option>
+                  <Option value="财务部门">财务部门</Option>
+                  <Option value="人事部门">人事部门</Option>
+                  <Option value="市场部门">市场部门</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name='password'
-                label='密码'
+                name="password"
+                label="密码"
                 rules={[
                   { required: true, message: '请输入密码' },
                   { min: 6, message: '密码至少6个字符' },
                 ]}
               >
-                <Input.Password placeholder='请输入密码' />
+                <Input.Password placeholder="请输入密码" />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item>
             <Space>
-              <Button type='primary' htmlType='submit' loading={loading}>
+              <Button type="primary" htmlType="submit" loading={loading}>
                 创建用户
               </Button>
               <Button
@@ -543,7 +538,7 @@ const UserManagement: React.FC = () => {
 
       {/* 编辑用户模态框 */}
       <Modal
-        title='编辑用户'
+        title="编辑用户"
         open={isEditModalVisible}
         onCancel={() => {
           setIsEditModalVisible(false);
@@ -553,50 +548,50 @@ const UserManagement: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form form={editForm} layout='vertical' onFinish={handleUpdateUser}>
+        <Form form={editForm} layout="vertical" onFinish={handleUpdateUser}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='username'
-                label='用户名'
+                name="username"
+                label="用户名"
                 rules={[{ min: 3, message: '用户名至少3个字符' }]}
               >
-                <Input placeholder='请输入用户名' />
+                <Input placeholder="请输入用户名" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='name' label='姓名'>
-                <Input placeholder='请输入姓名' />
+              <Form.Item name="name" label="姓名">
+                <Input placeholder="请输入姓名" />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='email'
-                label='邮箱'
+                name="email"
+                label="邮箱"
                 rules={[{ type: 'email', message: '请输入有效的邮箱地址' }]}
               >
-                <Input placeholder='请输入邮箱' />
+                <Input placeholder="请输入邮箱" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='phone' label='电话'>
-                <Input placeholder='请输入电话号码' />
+              <Form.Item name="phone" label="电话">
+                <Input placeholder="请输入电话号码" />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item name='department' label='部门'>
-            <Select placeholder='请选择部门'>
-              <Option value='IT部门'>IT部门</Option>
-              <Option value='财务部门'>财务部门</Option>
-              <Option value='人事部门'>人事部门</Option>
-              <Option value='市场部门'>市场部门</Option>
+          <Form.Item name="department" label="部门">
+            <Select placeholder="请选择部门">
+              <Option value="IT部门">IT部门</Option>
+              <Option value="财务部门">财务部门</Option>
+              <Option value="人事部门">人事部门</Option>
+              <Option value="市场部门">市场部门</Option>
             </Select>
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type='primary' htmlType='submit' loading={loading}>
+              <Button type="primary" htmlType="submit" loading={loading}>
                 保存更改
               </Button>
               <Button
@@ -615,7 +610,7 @@ const UserManagement: React.FC = () => {
 
       {/* 重置密码模态框 */}
       <Modal
-        title='重置密码'
+        title="重置密码"
         open={isPasswordModalVisible}
         onCancel={() => {
           setIsPasswordModalVisible(false);
@@ -624,20 +619,20 @@ const UserManagement: React.FC = () => {
         }}
         footer={null}
       >
-        <Form form={passwordForm} layout='vertical' onFinish={handleResetPassword}>
+        <Form form={passwordForm} layout="vertical" onFinish={handleResetPassword}>
           <Form.Item
-            name='newPassword'
-            label='新密码'
+            name="newPassword"
+            label="新密码"
             rules={[
               { required: true, message: '请输入新密码' },
               { min: 6, message: '密码至少6个字符' },
             ]}
           >
-            <Input.Password placeholder='请输入新密码' />
+            <Input.Password placeholder="请输入新密码" />
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button type='primary' htmlType='submit' loading={loading}>
+              <Button type="primary" htmlType="submit" loading={loading}>
                 重置密码
               </Button>
               <Button

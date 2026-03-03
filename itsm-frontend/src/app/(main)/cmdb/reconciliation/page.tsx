@@ -2,11 +2,27 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Breadcrumb, Button, Card, Input, Modal, Space, Statistic, Table, Tag, message } from 'antd';
+import {
+  Breadcrumb,
+  Button,
+  Card,
+  Input,
+  Modal,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  message,
+} from 'antd';
 import dayjs from 'dayjs';
 
 import { CMDBApi } from '@/lib/api/cmdb-api';
-import type { CloudResource, CloudService, ConfigurationItem, ReconciliationResponse } from '@/types/biz/cmdb';
+import type {
+  CloudResource,
+  CloudService,
+  ConfigurationItem,
+  ReconciliationResponse,
+} from '@/types/biz/cmdb';
 
 const summaryLabels = [
   { key: 'resource_total', label: '资源总数' },
@@ -28,7 +44,7 @@ export default function ReconciliationPage() {
   const [bindResource, setBindResource] = useState<CloudResource | null>(null);
   const [bindCIID, setBindCIID] = useState<string>('');
 
-  const serviceMap = useMemo(() => new Map(services.map((item) => [item.id, item])), [services]);
+  const serviceMap = useMemo(() => new Map(services.map(item => [item.id, item])), [services]);
 
   const loadData = async () => {
     setLoading(true);
@@ -99,7 +115,8 @@ export default function ReconciliationPage() {
       title: '资源类型',
       dataIndex: 'service_id',
       width: 160,
-      render: (serviceID: number) => serviceMap.get(serviceID)?.resource_type_name || `#${serviceID}`,
+      render: (serviceID: number) =>
+        serviceMap.get(serviceID)?.resource_type_name || `#${serviceID}`,
     },
     {
       title: 'Region',
@@ -125,7 +142,10 @@ export default function ReconciliationPage() {
       width: 160,
       render: (_: unknown, record: CloudResource) => (
         <Space>
-          <Button type="link" onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}>
+          <Button
+            type="link"
+            onClick={() => router.push(`/cmdb/cis/create?cloud_resource_ref_id=${record.id}`)}
+          >
             新建CI
           </Button>
           <Button
@@ -187,11 +207,11 @@ export default function ReconciliationPage() {
 
       <Card style={{ marginBottom: 16 }}>
         <Space size="large" wrap>
-          {summaryLabels.map((item) => (
+          {summaryLabels.map(item => (
             <Statistic
               key={item.key}
               title={item.label}
-              value={summary ? (summary as any)[item.key] ?? 0 : 0}
+              value={summary ? ((summary as any)[item.key] ?? 0) : 0}
             />
           ))}
         </Space>
@@ -207,11 +227,21 @@ export default function ReconciliationPage() {
       </Card>
 
       <Card title="孤儿配置项（引用资源不存在）" style={{ marginBottom: 16 }} loading={loading}>
-        <Table rowKey="id" columns={ciColumns as any} dataSource={orphanCIs} pagination={{ pageSize: 8 }} />
+        <Table
+          rowKey="id"
+          columns={ciColumns as any}
+          dataSource={orphanCIs}
+          pagination={{ pageSize: 8 }}
+        />
       </Card>
 
       <Card title="未关联配置项（有云资源ID但未绑定）" loading={loading}>
-        <Table rowKey="id" columns={ciColumns as any} dataSource={unlinkedCIs} pagination={{ pageSize: 8 }} />
+        <Table
+          rowKey="id"
+          columns={ciColumns as any}
+          dataSource={unlinkedCIs}
+          pagination={{ pageSize: 8 }}
+        />
       </Card>
 
       <Modal
@@ -220,12 +250,10 @@ export default function ReconciliationPage() {
         onCancel={() => setBindOpen(false)}
         onOk={handleBindExisting}
       >
-        <div style={{ marginBottom: 12 }}>
-          请输入配置项ID后进行绑定。
-        </div>
+        <div style={{ marginBottom: 12 }}>请输入配置项ID后进行绑定。</div>
         <Input
           value={bindCIID}
-          onChange={(event) => setBindCIID(event.target.value)}
+          onChange={event => setBindCIID(event.target.value)}
           placeholder="配置项ID"
         />
       </Modal>

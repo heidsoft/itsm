@@ -47,7 +47,10 @@ export interface GetRatingStatsParams {
 
 export class TicketRatingApi {
   // 提交工单评分
-  static async submitRating(ticketId: number, data: SubmitTicketRatingRequest): Promise<TicketRating> {
+  static async submitRating(
+    ticketId: number,
+    data: SubmitTicketRatingRequest
+  ): Promise<TicketRating> {
     return httpClient.post<TicketRating>(`/api/v1/tickets/${ticketId}/rating`, data);
   }
 
@@ -61,4 +64,3 @@ export class TicketRatingApi {
     return httpClient.get<RatingStats>('/api/v1/tickets/rating-stats', params);
   }
 }
-

@@ -49,6 +49,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/processvariable"
+	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
@@ -143,6 +144,7 @@ const (
 	TypeProcessInstance         = "ProcessInstance"
 	TypeProcessTask             = "ProcessTask"
 	TypeProcessVariable         = "ProcessVariable"
+	TypeProcessVersionChangelog = "ProcessVersionChangelog"
 	TypeProject                 = "Project"
 	TypePromptTemplate          = "PromptTemplate"
 	TypeProvisioningTask        = "ProvisioningTask"
@@ -44783,37 +44785,40 @@ func (m *ProcessBindingMutation) ResetEdge(name string) error {
 // ProcessDefinitionMutation represents an operation that mutates the ProcessDefinition nodes in the graph.
 type ProcessDefinitionMutation struct {
 	config
-	op                       Op
-	typ                      string
-	id                       *int
-	key                      *string
-	name                     *string
-	description              *string
-	version                  *string
-	category                 *string
-	bpmn_xml                 *[]uint8
-	appendbpmn_xml           []uint8
-	process_variables        *map[string]interface{}
-	is_active                *bool
-	is_latest                *bool
-	deployment_name          *string
-	deployed_at              *time.Time
-	tenant_id                *int
-	addtenant_id             *int
-	created_at               *time.Time
-	updated_at               *time.Time
-	clearedFields            map[string]struct{}
-	process_instances        map[int]struct{}
-	removedprocess_instances map[int]struct{}
-	clearedprocess_instances bool
-	bindings                 map[int]struct{}
-	removedbindings          map[int]struct{}
-	clearedbindings          bool
-	deployment               *int
-	cleareddeployment        bool
-	done                     bool
-	oldValue                 func(context.Context) (*ProcessDefinition, error)
-	predicates               []predicate.ProcessDefinition
+	op                        Op
+	typ                       string
+	id                        *int
+	key                       *string
+	name                      *string
+	description               *string
+	version                   *string
+	category                  *string
+	bpmn_xml                  *[]uint8
+	appendbpmn_xml            []uint8
+	process_variables         *map[string]interface{}
+	is_active                 *bool
+	is_latest                 *bool
+	deployment_name           *string
+	deployed_at               *time.Time
+	tenant_id                 *int
+	addtenant_id              *int
+	created_at                *time.Time
+	updated_at                *time.Time
+	clearedFields             map[string]struct{}
+	process_instances         map[int]struct{}
+	removedprocess_instances  map[int]struct{}
+	clearedprocess_instances  bool
+	bindings                  map[int]struct{}
+	removedbindings           map[int]struct{}
+	clearedbindings           bool
+	version_changelogs        map[int]struct{}
+	removedversion_changelogs map[int]struct{}
+	clearedversion_changelogs bool
+	deployment                *int
+	cleareddeployment         bool
+	done                      bool
+	oldValue                  func(context.Context) (*ProcessDefinition, error)
+	predicates                []predicate.ProcessDefinition
 }
 
 var _ ent.Mutation = (*ProcessDefinitionMutation)(nil)
@@ -45636,6 +45641,60 @@ func (m *ProcessDefinitionMutation) ResetBindings() {
 	m.removedbindings = nil
 }
 
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by ids.
+func (m *ProcessDefinitionMutation) AddVersionChangelogIDs(ids ...int) {
+	if m.version_changelogs == nil {
+		m.version_changelogs = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.version_changelogs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVersionChangelogs clears the "version_changelogs" edge to the ProcessVersionChangelog entity.
+func (m *ProcessDefinitionMutation) ClearVersionChangelogs() {
+	m.clearedversion_changelogs = true
+}
+
+// VersionChangelogsCleared reports if the "version_changelogs" edge to the ProcessVersionChangelog entity was cleared.
+func (m *ProcessDefinitionMutation) VersionChangelogsCleared() bool {
+	return m.clearedversion_changelogs
+}
+
+// RemoveVersionChangelogIDs removes the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (m *ProcessDefinitionMutation) RemoveVersionChangelogIDs(ids ...int) {
+	if m.removedversion_changelogs == nil {
+		m.removedversion_changelogs = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.version_changelogs, ids[i])
+		m.removedversion_changelogs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVersionChangelogs returns the removed IDs of the "version_changelogs" edge to the ProcessVersionChangelog entity.
+func (m *ProcessDefinitionMutation) RemovedVersionChangelogsIDs() (ids []int) {
+	for id := range m.removedversion_changelogs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VersionChangelogsIDs returns the "version_changelogs" edge IDs in the mutation.
+func (m *ProcessDefinitionMutation) VersionChangelogsIDs() (ids []int) {
+	for id := range m.version_changelogs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVersionChangelogs resets all changes to the "version_changelogs" edge.
+func (m *ProcessDefinitionMutation) ResetVersionChangelogs() {
+	m.version_changelogs = nil
+	m.clearedversion_changelogs = false
+	m.removedversion_changelogs = nil
+}
+
 // ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
 func (m *ProcessDefinitionMutation) ClearDeployment() {
 	m.cleareddeployment = true
@@ -46070,12 +46129,15 @@ func (m *ProcessDefinitionMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ProcessDefinitionMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.process_instances != nil {
 		edges = append(edges, processdefinition.EdgeProcessInstances)
 	}
 	if m.bindings != nil {
 		edges = append(edges, processdefinition.EdgeBindings)
+	}
+	if m.version_changelogs != nil {
+		edges = append(edges, processdefinition.EdgeVersionChangelogs)
 	}
 	if m.deployment != nil {
 		edges = append(edges, processdefinition.EdgeDeployment)
@@ -46099,6 +46161,12 @@ func (m *ProcessDefinitionMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case processdefinition.EdgeVersionChangelogs:
+		ids := make([]ent.Value, 0, len(m.version_changelogs))
+		for id := range m.version_changelogs {
+			ids = append(ids, id)
+		}
+		return ids
 	case processdefinition.EdgeDeployment:
 		if id := m.deployment; id != nil {
 			return []ent.Value{*id}
@@ -46109,12 +46177,15 @@ func (m *ProcessDefinitionMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessDefinitionMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedprocess_instances != nil {
 		edges = append(edges, processdefinition.EdgeProcessInstances)
 	}
 	if m.removedbindings != nil {
 		edges = append(edges, processdefinition.EdgeBindings)
+	}
+	if m.removedversion_changelogs != nil {
+		edges = append(edges, processdefinition.EdgeVersionChangelogs)
 	}
 	return edges
 }
@@ -46135,18 +46206,27 @@ func (m *ProcessDefinitionMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case processdefinition.EdgeVersionChangelogs:
+		ids := make([]ent.Value, 0, len(m.removedversion_changelogs))
+		for id := range m.removedversion_changelogs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ProcessDefinitionMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedprocess_instances {
 		edges = append(edges, processdefinition.EdgeProcessInstances)
 	}
 	if m.clearedbindings {
 		edges = append(edges, processdefinition.EdgeBindings)
+	}
+	if m.clearedversion_changelogs {
+		edges = append(edges, processdefinition.EdgeVersionChangelogs)
 	}
 	if m.cleareddeployment {
 		edges = append(edges, processdefinition.EdgeDeployment)
@@ -46162,6 +46242,8 @@ func (m *ProcessDefinitionMutation) EdgeCleared(name string) bool {
 		return m.clearedprocess_instances
 	case processdefinition.EdgeBindings:
 		return m.clearedbindings
+	case processdefinition.EdgeVersionChangelogs:
+		return m.clearedversion_changelogs
 	case processdefinition.EdgeDeployment:
 		return m.cleareddeployment
 	}
@@ -46188,6 +46270,9 @@ func (m *ProcessDefinitionMutation) ResetEdge(name string) error {
 		return nil
 	case processdefinition.EdgeBindings:
 		m.ResetBindings()
+		return nil
+	case processdefinition.EdgeVersionChangelogs:
+		m.ResetVersionChangelogs()
 		return nil
 	case processdefinition.EdgeDeployment:
 		m.ResetDeployment()
@@ -53597,6 +53682,990 @@ func (m *ProcessVariableMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown ProcessVariable edge %s", name)
+}
+
+// ProcessVersionChangelogMutation represents an operation that mutates the ProcessVersionChangelog nodes in the graph.
+type ProcessVersionChangelogMutation struct {
+	config
+	op                        Op
+	typ                       string
+	id                        *int
+	version                   *string
+	change_log                *string
+	change_details            *[]map[string]interface{}
+	appendchange_details      []map[string]interface{}
+	change_type               *string
+	created_by_name           *string
+	tenant_id                 *int
+	addtenant_id              *int
+	created_at                *time.Time
+	clearedFields             map[string]struct{}
+	process_definition        *int
+	clearedprocess_definition bool
+	user                      *int
+	cleareduser               bool
+	done                      bool
+	oldValue                  func(context.Context) (*ProcessVersionChangelog, error)
+	predicates                []predicate.ProcessVersionChangelog
+}
+
+var _ ent.Mutation = (*ProcessVersionChangelogMutation)(nil)
+
+// processversionchangelogOption allows management of the mutation configuration using functional options.
+type processversionchangelogOption func(*ProcessVersionChangelogMutation)
+
+// newProcessVersionChangelogMutation creates new mutation for the ProcessVersionChangelog entity.
+func newProcessVersionChangelogMutation(c config, op Op, opts ...processversionchangelogOption) *ProcessVersionChangelogMutation {
+	m := &ProcessVersionChangelogMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeProcessVersionChangelog,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withProcessVersionChangelogID sets the ID field of the mutation.
+func withProcessVersionChangelogID(id int) processversionchangelogOption {
+	return func(m *ProcessVersionChangelogMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ProcessVersionChangelog
+		)
+		m.oldValue = func(ctx context.Context) (*ProcessVersionChangelog, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ProcessVersionChangelog.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withProcessVersionChangelog sets the old ProcessVersionChangelog of the mutation.
+func withProcessVersionChangelog(node *ProcessVersionChangelog) processversionchangelogOption {
+	return func(m *ProcessVersionChangelogMutation) {
+		m.oldValue = func(context.Context) (*ProcessVersionChangelog, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ProcessVersionChangelogMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ProcessVersionChangelogMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ProcessVersionChangelogMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ProcessVersionChangelogMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ProcessVersionChangelog.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetProcessDefinitionID sets the "process_definition_id" field.
+func (m *ProcessVersionChangelogMutation) SetProcessDefinitionID(i int) {
+	m.process_definition = &i
+}
+
+// ProcessDefinitionID returns the value of the "process_definition_id" field in the mutation.
+func (m *ProcessVersionChangelogMutation) ProcessDefinitionID() (r int, exists bool) {
+	v := m.process_definition
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldProcessDefinitionID returns the old "process_definition_id" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldProcessDefinitionID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldProcessDefinitionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldProcessDefinitionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldProcessDefinitionID: %w", err)
+	}
+	return oldValue.ProcessDefinitionID, nil
+}
+
+// ResetProcessDefinitionID resets all changes to the "process_definition_id" field.
+func (m *ProcessVersionChangelogMutation) ResetProcessDefinitionID() {
+	m.process_definition = nil
+}
+
+// SetVersion sets the "version" field.
+func (m *ProcessVersionChangelogMutation) SetVersion(s string) {
+	m.version = &s
+}
+
+// Version returns the value of the "version" field in the mutation.
+func (m *ProcessVersionChangelogMutation) Version() (r string, exists bool) {
+	v := m.version
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldVersion returns the old "version" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldVersion(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldVersion is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldVersion requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldVersion: %w", err)
+	}
+	return oldValue.Version, nil
+}
+
+// ResetVersion resets all changes to the "version" field.
+func (m *ProcessVersionChangelogMutation) ResetVersion() {
+	m.version = nil
+}
+
+// SetChangeLog sets the "change_log" field.
+func (m *ProcessVersionChangelogMutation) SetChangeLog(s string) {
+	m.change_log = &s
+}
+
+// ChangeLog returns the value of the "change_log" field in the mutation.
+func (m *ProcessVersionChangelogMutation) ChangeLog() (r string, exists bool) {
+	v := m.change_log
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeLog returns the old "change_log" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldChangeLog(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeLog is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeLog requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeLog: %w", err)
+	}
+	return oldValue.ChangeLog, nil
+}
+
+// ResetChangeLog resets all changes to the "change_log" field.
+func (m *ProcessVersionChangelogMutation) ResetChangeLog() {
+	m.change_log = nil
+}
+
+// SetChangeDetails sets the "change_details" field.
+func (m *ProcessVersionChangelogMutation) SetChangeDetails(value []map[string]interface{}) {
+	m.change_details = &value
+	m.appendchange_details = nil
+}
+
+// ChangeDetails returns the value of the "change_details" field in the mutation.
+func (m *ProcessVersionChangelogMutation) ChangeDetails() (r []map[string]interface{}, exists bool) {
+	v := m.change_details
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeDetails returns the old "change_details" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldChangeDetails(ctx context.Context) (v []map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeDetails is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeDetails requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeDetails: %w", err)
+	}
+	return oldValue.ChangeDetails, nil
+}
+
+// AppendChangeDetails adds value to the "change_details" field.
+func (m *ProcessVersionChangelogMutation) AppendChangeDetails(value []map[string]interface{}) {
+	m.appendchange_details = append(m.appendchange_details, value...)
+}
+
+// AppendedChangeDetails returns the list of values that were appended to the "change_details" field in this mutation.
+func (m *ProcessVersionChangelogMutation) AppendedChangeDetails() ([]map[string]interface{}, bool) {
+	if len(m.appendchange_details) == 0 {
+		return nil, false
+	}
+	return m.appendchange_details, true
+}
+
+// ClearChangeDetails clears the value of the "change_details" field.
+func (m *ProcessVersionChangelogMutation) ClearChangeDetails() {
+	m.change_details = nil
+	m.appendchange_details = nil
+	m.clearedFields[processversionchangelog.FieldChangeDetails] = struct{}{}
+}
+
+// ChangeDetailsCleared returns if the "change_details" field was cleared in this mutation.
+func (m *ProcessVersionChangelogMutation) ChangeDetailsCleared() bool {
+	_, ok := m.clearedFields[processversionchangelog.FieldChangeDetails]
+	return ok
+}
+
+// ResetChangeDetails resets all changes to the "change_details" field.
+func (m *ProcessVersionChangelogMutation) ResetChangeDetails() {
+	m.change_details = nil
+	m.appendchange_details = nil
+	delete(m.clearedFields, processversionchangelog.FieldChangeDetails)
+}
+
+// SetChangeType sets the "change_type" field.
+func (m *ProcessVersionChangelogMutation) SetChangeType(s string) {
+	m.change_type = &s
+}
+
+// ChangeType returns the value of the "change_type" field in the mutation.
+func (m *ProcessVersionChangelogMutation) ChangeType() (r string, exists bool) {
+	v := m.change_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldChangeType returns the old "change_type" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldChangeType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldChangeType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldChangeType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldChangeType: %w", err)
+	}
+	return oldValue.ChangeType, nil
+}
+
+// ResetChangeType resets all changes to the "change_type" field.
+func (m *ProcessVersionChangelogMutation) ResetChangeType() {
+	m.change_type = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *ProcessVersionChangelogMutation) SetCreatedBy(i int) {
+	m.user = &i
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *ProcessVersionChangelogMutation) CreatedBy() (r int, exists bool) {
+	v := m.user
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldCreatedBy(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *ProcessVersionChangelogMutation) ClearCreatedBy() {
+	m.user = nil
+	m.clearedFields[processversionchangelog.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *ProcessVersionChangelogMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[processversionchangelog.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *ProcessVersionChangelogMutation) ResetCreatedBy() {
+	m.user = nil
+	delete(m.clearedFields, processversionchangelog.FieldCreatedBy)
+}
+
+// SetCreatedByName sets the "created_by_name" field.
+func (m *ProcessVersionChangelogMutation) SetCreatedByName(s string) {
+	m.created_by_name = &s
+}
+
+// CreatedByName returns the value of the "created_by_name" field in the mutation.
+func (m *ProcessVersionChangelogMutation) CreatedByName() (r string, exists bool) {
+	v := m.created_by_name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedByName returns the old "created_by_name" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldCreatedByName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedByName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedByName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedByName: %w", err)
+	}
+	return oldValue.CreatedByName, nil
+}
+
+// ClearCreatedByName clears the value of the "created_by_name" field.
+func (m *ProcessVersionChangelogMutation) ClearCreatedByName() {
+	m.created_by_name = nil
+	m.clearedFields[processversionchangelog.FieldCreatedByName] = struct{}{}
+}
+
+// CreatedByNameCleared returns if the "created_by_name" field was cleared in this mutation.
+func (m *ProcessVersionChangelogMutation) CreatedByNameCleared() bool {
+	_, ok := m.clearedFields[processversionchangelog.FieldCreatedByName]
+	return ok
+}
+
+// ResetCreatedByName resets all changes to the "created_by_name" field.
+func (m *ProcessVersionChangelogMutation) ResetCreatedByName() {
+	m.created_by_name = nil
+	delete(m.clearedFields, processversionchangelog.FieldCreatedByName)
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *ProcessVersionChangelogMutation) SetTenantID(i int) {
+	m.tenant_id = &i
+	m.addtenant_id = nil
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *ProcessVersionChangelogMutation) TenantID() (r int, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldTenantID(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// AddTenantID adds i to the "tenant_id" field.
+func (m *ProcessVersionChangelogMutation) AddTenantID(i int) {
+	if m.addtenant_id != nil {
+		*m.addtenant_id += i
+	} else {
+		m.addtenant_id = &i
+	}
+}
+
+// AddedTenantID returns the value that was added to the "tenant_id" field in this mutation.
+func (m *ProcessVersionChangelogMutation) AddedTenantID() (r int, exists bool) {
+	v := m.addtenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *ProcessVersionChangelogMutation) ResetTenantID() {
+	m.tenant_id = nil
+	m.addtenant_id = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *ProcessVersionChangelogMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *ProcessVersionChangelogMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the ProcessVersionChangelog entity.
+// If the ProcessVersionChangelog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProcessVersionChangelogMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *ProcessVersionChangelogMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// ClearProcessDefinition clears the "process_definition" edge to the ProcessDefinition entity.
+func (m *ProcessVersionChangelogMutation) ClearProcessDefinition() {
+	m.clearedprocess_definition = true
+	m.clearedFields[processversionchangelog.FieldProcessDefinitionID] = struct{}{}
+}
+
+// ProcessDefinitionCleared reports if the "process_definition" edge to the ProcessDefinition entity was cleared.
+func (m *ProcessVersionChangelogMutation) ProcessDefinitionCleared() bool {
+	return m.clearedprocess_definition
+}
+
+// ProcessDefinitionIDs returns the "process_definition" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProcessDefinitionID instead. It exists only for internal usage by the builders.
+func (m *ProcessVersionChangelogMutation) ProcessDefinitionIDs() (ids []int) {
+	if id := m.process_definition; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetProcessDefinition resets all changes to the "process_definition" edge.
+func (m *ProcessVersionChangelogMutation) ResetProcessDefinition() {
+	m.process_definition = nil
+	m.clearedprocess_definition = false
+}
+
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *ProcessVersionChangelogMutation) SetUserID(id int) {
+	m.user = &id
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *ProcessVersionChangelogMutation) ClearUser() {
+	m.cleareduser = true
+	m.clearedFields[processversionchangelog.FieldCreatedBy] = struct{}{}
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *ProcessVersionChangelogMutation) UserCleared() bool {
+	return m.CreatedByCleared() || m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *ProcessVersionChangelogMutation) UserID() (id int, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *ProcessVersionChangelogMutation) UserIDs() (ids []int) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *ProcessVersionChangelogMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// Where appends a list predicates to the ProcessVersionChangelogMutation builder.
+func (m *ProcessVersionChangelogMutation) Where(ps ...predicate.ProcessVersionChangelog) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ProcessVersionChangelogMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ProcessVersionChangelogMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ProcessVersionChangelog, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ProcessVersionChangelogMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ProcessVersionChangelogMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ProcessVersionChangelog).
+func (m *ProcessVersionChangelogMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ProcessVersionChangelogMutation) Fields() []string {
+	fields := make([]string, 0, 9)
+	if m.process_definition != nil {
+		fields = append(fields, processversionchangelog.FieldProcessDefinitionID)
+	}
+	if m.version != nil {
+		fields = append(fields, processversionchangelog.FieldVersion)
+	}
+	if m.change_log != nil {
+		fields = append(fields, processversionchangelog.FieldChangeLog)
+	}
+	if m.change_details != nil {
+		fields = append(fields, processversionchangelog.FieldChangeDetails)
+	}
+	if m.change_type != nil {
+		fields = append(fields, processversionchangelog.FieldChangeType)
+	}
+	if m.user != nil {
+		fields = append(fields, processversionchangelog.FieldCreatedBy)
+	}
+	if m.created_by_name != nil {
+		fields = append(fields, processversionchangelog.FieldCreatedByName)
+	}
+	if m.tenant_id != nil {
+		fields = append(fields, processversionchangelog.FieldTenantID)
+	}
+	if m.created_at != nil {
+		fields = append(fields, processversionchangelog.FieldCreatedAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ProcessVersionChangelogMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case processversionchangelog.FieldProcessDefinitionID:
+		return m.ProcessDefinitionID()
+	case processversionchangelog.FieldVersion:
+		return m.Version()
+	case processversionchangelog.FieldChangeLog:
+		return m.ChangeLog()
+	case processversionchangelog.FieldChangeDetails:
+		return m.ChangeDetails()
+	case processversionchangelog.FieldChangeType:
+		return m.ChangeType()
+	case processversionchangelog.FieldCreatedBy:
+		return m.CreatedBy()
+	case processversionchangelog.FieldCreatedByName:
+		return m.CreatedByName()
+	case processversionchangelog.FieldTenantID:
+		return m.TenantID()
+	case processversionchangelog.FieldCreatedAt:
+		return m.CreatedAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ProcessVersionChangelogMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case processversionchangelog.FieldProcessDefinitionID:
+		return m.OldProcessDefinitionID(ctx)
+	case processversionchangelog.FieldVersion:
+		return m.OldVersion(ctx)
+	case processversionchangelog.FieldChangeLog:
+		return m.OldChangeLog(ctx)
+	case processversionchangelog.FieldChangeDetails:
+		return m.OldChangeDetails(ctx)
+	case processversionchangelog.FieldChangeType:
+		return m.OldChangeType(ctx)
+	case processversionchangelog.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case processversionchangelog.FieldCreatedByName:
+		return m.OldCreatedByName(ctx)
+	case processversionchangelog.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case processversionchangelog.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown ProcessVersionChangelog field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProcessVersionChangelogMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case processversionchangelog.FieldProcessDefinitionID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetProcessDefinitionID(v)
+		return nil
+	case processversionchangelog.FieldVersion:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetVersion(v)
+		return nil
+	case processversionchangelog.FieldChangeLog:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeLog(v)
+		return nil
+	case processversionchangelog.FieldChangeDetails:
+		v, ok := value.([]map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeDetails(v)
+		return nil
+	case processversionchangelog.FieldChangeType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetChangeType(v)
+		return nil
+	case processversionchangelog.FieldCreatedBy:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case processversionchangelog.FieldCreatedByName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedByName(v)
+		return nil
+	case processversionchangelog.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case processversionchangelog.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessVersionChangelog field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ProcessVersionChangelogMutation) AddedFields() []string {
+	var fields []string
+	if m.addtenant_id != nil {
+		fields = append(fields, processversionchangelog.FieldTenantID)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ProcessVersionChangelogMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case processversionchangelog.FieldTenantID:
+		return m.AddedTenantID()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ProcessVersionChangelogMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case processversionchangelog.FieldTenantID:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTenantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessVersionChangelog numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ProcessVersionChangelogMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(processversionchangelog.FieldChangeDetails) {
+		fields = append(fields, processversionchangelog.FieldChangeDetails)
+	}
+	if m.FieldCleared(processversionchangelog.FieldCreatedBy) {
+		fields = append(fields, processversionchangelog.FieldCreatedBy)
+	}
+	if m.FieldCleared(processversionchangelog.FieldCreatedByName) {
+		fields = append(fields, processversionchangelog.FieldCreatedByName)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ProcessVersionChangelogMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ProcessVersionChangelogMutation) ClearField(name string) error {
+	switch name {
+	case processversionchangelog.FieldChangeDetails:
+		m.ClearChangeDetails()
+		return nil
+	case processversionchangelog.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case processversionchangelog.FieldCreatedByName:
+		m.ClearCreatedByName()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessVersionChangelog nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ProcessVersionChangelogMutation) ResetField(name string) error {
+	switch name {
+	case processversionchangelog.FieldProcessDefinitionID:
+		m.ResetProcessDefinitionID()
+		return nil
+	case processversionchangelog.FieldVersion:
+		m.ResetVersion()
+		return nil
+	case processversionchangelog.FieldChangeLog:
+		m.ResetChangeLog()
+		return nil
+	case processversionchangelog.FieldChangeDetails:
+		m.ResetChangeDetails()
+		return nil
+	case processversionchangelog.FieldChangeType:
+		m.ResetChangeType()
+		return nil
+	case processversionchangelog.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case processversionchangelog.FieldCreatedByName:
+		m.ResetCreatedByName()
+		return nil
+	case processversionchangelog.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case processversionchangelog.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessVersionChangelog field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ProcessVersionChangelogMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.process_definition != nil {
+		edges = append(edges, processversionchangelog.EdgeProcessDefinition)
+	}
+	if m.user != nil {
+		edges = append(edges, processversionchangelog.EdgeUser)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ProcessVersionChangelogMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case processversionchangelog.EdgeProcessDefinition:
+		if id := m.process_definition; id != nil {
+			return []ent.Value{*id}
+		}
+	case processversionchangelog.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ProcessVersionChangelogMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ProcessVersionChangelogMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ProcessVersionChangelogMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedprocess_definition {
+		edges = append(edges, processversionchangelog.EdgeProcessDefinition)
+	}
+	if m.cleareduser {
+		edges = append(edges, processversionchangelog.EdgeUser)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ProcessVersionChangelogMutation) EdgeCleared(name string) bool {
+	switch name {
+	case processversionchangelog.EdgeProcessDefinition:
+		return m.clearedprocess_definition
+	case processversionchangelog.EdgeUser:
+		return m.cleareduser
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ProcessVersionChangelogMutation) ClearEdge(name string) error {
+	switch name {
+	case processversionchangelog.EdgeProcessDefinition:
+		m.ClearProcessDefinition()
+		return nil
+	case processversionchangelog.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessVersionChangelog unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ProcessVersionChangelogMutation) ResetEdge(name string) error {
+	switch name {
+	case processversionchangelog.EdgeProcessDefinition:
+		m.ResetProcessDefinition()
+		return nil
+	case processversionchangelog.EdgeUser:
+		m.ResetUser()
+		return nil
+	}
+	return fmt.Errorf("unknown ProcessVersionChangelog edge %s", name)
 }
 
 // ProjectMutation represents an operation that mutates the Project nodes in the graph.
@@ -91777,6 +92846,9 @@ type UserMutation struct {
 	roles                           map[int]struct{}
 	removedroles                    map[int]struct{}
 	clearedroles                    bool
+	version_changelogs              map[int]struct{}
+	removedversion_changelogs       map[int]struct{}
+	clearedversion_changelogs       bool
 	done                            bool
 	oldValue                        func(context.Context) (*User, error)
 	predicates                      []predicate.User
@@ -92681,6 +93753,60 @@ func (m *UserMutation) ResetRoles() {
 	m.removedroles = nil
 }
 
+// AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by ids.
+func (m *UserMutation) AddVersionChangelogIDs(ids ...int) {
+	if m.version_changelogs == nil {
+		m.version_changelogs = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.version_changelogs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearVersionChangelogs clears the "version_changelogs" edge to the ProcessVersionChangelog entity.
+func (m *UserMutation) ClearVersionChangelogs() {
+	m.clearedversion_changelogs = true
+}
+
+// VersionChangelogsCleared reports if the "version_changelogs" edge to the ProcessVersionChangelog entity was cleared.
+func (m *UserMutation) VersionChangelogsCleared() bool {
+	return m.clearedversion_changelogs
+}
+
+// RemoveVersionChangelogIDs removes the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
+func (m *UserMutation) RemoveVersionChangelogIDs(ids ...int) {
+	if m.removedversion_changelogs == nil {
+		m.removedversion_changelogs = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.version_changelogs, ids[i])
+		m.removedversion_changelogs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedVersionChangelogs returns the removed IDs of the "version_changelogs" edge to the ProcessVersionChangelog entity.
+func (m *UserMutation) RemovedVersionChangelogsIDs() (ids []int) {
+	for id := range m.removedversion_changelogs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// VersionChangelogsIDs returns the "version_changelogs" edge IDs in the mutation.
+func (m *UserMutation) VersionChangelogsIDs() (ids []int) {
+	for id := range m.version_changelogs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetVersionChangelogs resets all changes to the "version_changelogs" edge.
+func (m *UserMutation) ResetVersionChangelogs() {
+	m.version_changelogs = nil
+	m.clearedversion_changelogs = false
+	m.removedversion_changelogs = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -93037,7 +94163,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.department_ref != nil {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -93055,6 +94181,9 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.roles != nil {
 		edges = append(edges, user.EdgeRoles)
+	}
+	if m.version_changelogs != nil {
+		edges = append(edges, user.EdgeVersionChangelogs)
 	}
 	return edges
 }
@@ -93097,13 +94226,19 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeVersionChangelogs:
+		ids := make([]ent.Value, 0, len(m.version_changelogs))
+		for id := range m.version_changelogs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.removedticket_comments != nil {
 		edges = append(edges, user.EdgeTicketComments)
 	}
@@ -93118,6 +94253,9 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedroles != nil {
 		edges = append(edges, user.EdgeRoles)
+	}
+	if m.removedversion_changelogs != nil {
+		edges = append(edges, user.EdgeVersionChangelogs)
 	}
 	return edges
 }
@@ -93156,13 +94294,19 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeVersionChangelogs:
+		ids := make([]ent.Value, 0, len(m.removedversion_changelogs))
+		for id := range m.removedversion_changelogs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 6)
+	edges := make([]string, 0, 7)
 	if m.cleareddepartment_ref {
 		edges = append(edges, user.EdgeDepartmentRef)
 	}
@@ -93180,6 +94324,9 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedroles {
 		edges = append(edges, user.EdgeRoles)
+	}
+	if m.clearedversion_changelogs {
+		edges = append(edges, user.EdgeVersionChangelogs)
 	}
 	return edges
 }
@@ -93200,6 +94347,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearednotification_preferences
 	case user.EdgeRoles:
 		return m.clearedroles
+	case user.EdgeVersionChangelogs:
+		return m.clearedversion_changelogs
 	}
 	return false
 }
@@ -93236,6 +94385,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeRoles:
 		m.ResetRoles()
+		return nil
+	case user.EdgeVersionChangelogs:
+		m.ResetVersionChangelogs()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

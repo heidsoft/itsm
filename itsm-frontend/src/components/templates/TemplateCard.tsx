@@ -34,7 +34,6 @@ import {
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import type { TicketTemplate } from '@/types/template';
-import { useI18n } from '@/lib/i18n';
 
 export interface TemplateCardProps {
   template: TicketTemplate;
@@ -59,7 +58,6 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
   isFavorite = false,
   viewMode = 'grid',
 }) => {
-  const { t } = useI18n();
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isFavorite) {
@@ -139,42 +137,30 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
       {/* 标题和描述 */}
       <div className="flex-1 mb-3">
         <div className="flex items-start justify-between mb-2">
-          <h3 className="text-base font-semibold m-0 flex-1 pr-2 line-clamp-2">
-            {template.name}
-          </h3>
+          <h3 className="text-base font-semibold m-0 flex-1 pr-2 line-clamp-2">{template.name}</h3>
           <Tooltip title={isFavorite ? '取消收藏' : '收藏'}>
             <Button
               type="text"
               size="small"
-              icon={
-                isFavorite ? (
-                  <StarFilled style={{ color: '#faad14' }} />
-                ) : (
-                  <StarOutlined />
-                )
-              }
+              icon={isFavorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
               onClick={handleFavoriteClick}
             />
           </Tooltip>
         </div>
 
-        <p className="text-sm text-gray-600 m-0 line-clamp-2">
-          {template.description}
-        </p>
+        <p className="text-sm text-gray-600 m-0 line-clamp-2">{template.description}</p>
       </div>
 
       {/* 标签 */}
       {template.tags && template.tags.length > 0 && (
         <div className="mb-3">
           <Space size={[0, 8]} wrap>
-            {template.tags.slice(0, 3).map((tag) => (
+            {template.tags.slice(0, 3).map(tag => (
               <Tag key={tag} className="m-0">
                 {tag}
               </Tag>
             ))}
-            {template.tags.length > 3 && (
-              <Tag className="m-0">+{template.tags.length - 3}</Tag>
-            )}
+            {template.tags.length > 3 && <Tag className="m-0">+{template.tags.length - 3}</Tag>}
           </Space>
         </div>
       )}
@@ -190,15 +176,8 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           </Tooltip>
           <Tooltip title="平均评分">
             <Space size={4}>
-              <Rate
-                disabled
-                value={template.rating}
-                count={5}
-                style={{ fontSize: 14 }}
-              />
-              <span className="text-sm text-gray-600">
-                {template.rating.toFixed(1)}
-              </span>
+              <Rate disabled value={template.rating} count={5} style={{ fontSize: 14 }} />
+              <span className="text-sm text-gray-600">{template.rating.toFixed(1)}</span>
             </Space>
           </Tooltip>
         </Space>
@@ -208,7 +187,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             type="text"
             size="small"
             icon={<MoreOutlined />}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           />
         </Dropdown>
       </div>
@@ -221,9 +200,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               草稿
             </Tag>
           )}
-          {!template.isActive && (
-            <Tag color="default">已禁用</Tag>
-          )}
+          {!template.isActive && <Tag color="default">已禁用</Tag>}
           {template.isActive && !template.isDraft && (
             <Tag color="success" icon={<CheckCircleOutlined />}>
               已发布
@@ -274,27 +251,19 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               <Button
                 type="text"
                 size="small"
-                icon={
-                  isFavorite ? (
-                    <StarFilled style={{ color: '#faad14' }} />
-                  ) : (
-                    <StarOutlined />
-                  )
-                }
+                icon={isFavorite ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />}
                 onClick={handleFavoriteClick}
               />
             </Tooltip>
           </div>
 
-          <p className="text-sm text-gray-600 m-0 mb-2 line-clamp-1">
-            {template.description}
-          </p>
+          <p className="text-sm text-gray-600 m-0 mb-2 line-clamp-1">{template.description}</p>
 
           <div className="flex items-center gap-4">
             {/* 标签 */}
             {template.tags && template.tags.length > 0 && (
               <Space size={[0, 4]} wrap>
-                {template.tags.slice(0, 3).map((tag) => (
+                {template.tags.slice(0, 3).map(tag => (
                   <Tag key={tag} className="m-0" style={{ fontSize: 12 }}>
                     {tag}
                   </Tag>
@@ -319,9 +288,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
               <Tooltip title="更新时间">
                 <Space size={4}>
                   <ClockCircleOutlined />
-                  <span>
-                    {new Date(template.updatedAt).toLocaleDateString()}
-                  </span>
+                  <span>{new Date(template.updatedAt).toLocaleDateString()}</span>
                 </Space>
               </Tooltip>
             </Space>
@@ -334,7 +301,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <Button
               type="text"
               icon={<EyeOutlined />}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onView?.(template);
               }}
@@ -344,7 +311,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <Button
               type="text"
               icon={<EditOutlined />}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onEdit?.(template);
               }}
@@ -354,7 +321,7 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
             <Button
               type="text"
               icon={<CopyOutlined />}
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 onDuplicate?.(template);
               }}
@@ -363,18 +330,18 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
           <Popconfirm
             title="确认删除此模板？"
             description="此操作不可撤销"
-            onConfirm={(e) => {
+            onConfirm={e => {
               e?.stopPropagation();
               onDelete?.(template.id);
             }}
-            okText={t('common.confirm')}
-            cancelText={t('common.cancel')}
+            okText="确认"
+            cancelText="取消"
           >
             <Button
               type="text"
               danger
               icon={<DeleteOutlined />}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             />
           </Popconfirm>
         </div>
@@ -386,4 +353,3 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({
 };
 
 export default TemplateCard;
-

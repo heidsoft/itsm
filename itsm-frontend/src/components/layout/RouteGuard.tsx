@@ -255,61 +255,61 @@ const LoginPage: React.FC<{
   };
 
   return (
-    <div className='min-h-screen flex items-center justify-center bg-gray-50'>
-      <div className='max-w-md w-full space-y-8'>
-        <div className='text-center'>
-          <Lock size={48} className='mx-auto text-blue-600' />
-          <h2 className='mt-6 text-3xl font-extrabold text-gray-900'>ITSM 系统登录</h2>
-          <p className='mt-2 text-sm text-gray-600'>请输入您的账号和密码</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <Lock size={48} className="mx-auto text-blue-600" />
+          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">ITSM 系统登录</h2>
+          <p className="mt-2 text-sm text-gray-600">请输入您的账号和密码</p>
         </div>
 
-        <form className='mt-8 space-y-6' onSubmit={handleSubmit}>
-          <div className='space-y-4'>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
             <div>
-              <label htmlFor='username' className='block text-sm font-medium text-gray-700'>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
                 用户名
               </label>
               <input
-                id='username'
-                name='username'
-                type='text'
+                id="username"
+                name="username"
+                type="text"
                 required
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500'
-                placeholder='请输入用户名'
-                defaultValue='admin'
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="请输入用户名"
+                defaultValue="admin"
               />
             </div>
 
             <div>
-              <label htmlFor='password' className='block text-sm font-medium text-gray-700'>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 密码
               </label>
               <input
-                id='password'
-                name='password'
-                type='password'
+                id="password"
+                name="password"
+                type="password"
                 required
-                className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500'
-                placeholder='请输入密码'
-                defaultValue='admin123'
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="请输入密码"
+                defaultValue="admin123"
               />
             </div>
           </div>
 
-          {error && <div className='text-red-600 text-sm text-center'>{error}</div>}
+          {error && <div className="text-red-600 text-sm text-center">{error}</div>}
 
           <div>
             <button
-              type='submit'
+              type="submit"
               disabled={loading}
-              className='group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed'
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? <Spin size='small' className='mr-2' /> : null}
+              {loading ? <Spin size="small" className="mr-2" /> : null}
               {loading ? '登录中...' : '登录'}
             </button>
           </div>
 
-          <div className='text-xs text-gray-500 text-center'>
+          <div className="text-xs text-gray-500 text-center">
             <p>测试账号: admin / admin123</p>
           </div>
         </form>
@@ -332,14 +332,14 @@ const PermissionGuard: React.FC<{
 
   if (!hasPermission) {
     return (
-      <div className='min-h-screen flex items-center justify-center'>
+      <div className="min-h-screen flex items-center justify-center">
         <Result
-          status='403'
-          title='403'
-          subTitle='抱歉，您没有权限访问此页面'
-          icon={<AlertTriangle size={64} className='text-red-500' />}
+          status="403"
+          title="403"
+          subTitle="抱歉，您没有权限访问此页面"
+          icon={<AlertTriangle size={64} className="text-red-500" />}
           extra={
-            <Button type='primary' onClick={() => window.history.back()}>
+            <Button type="primary" onClick={() => window.history.back()}>
               返回上一页
             </Button>
           }
@@ -364,8 +364,8 @@ export const RouteGuard: React.FC<RouteGuardProps> = ({ children, route, fallbac
   if (isLoading) {
     return (
       fallback || (
-        <div className='min-h-screen flex items-center justify-center'>
-          <Spin size='large' />
+        <div className="min-h-screen flex items-center justify-center">
+          <Spin size="large" />
         </div>
       )
     );

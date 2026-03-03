@@ -119,7 +119,9 @@ const AssetList: React.FC = () => {
       width: 130,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '110px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '110px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -131,7 +133,9 @@ const AssetList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '160px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '160px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -141,9 +145,7 @@ const AssetList: React.FC = () => {
       key: 'type',
       width: 100,
       render: (type: string) => (
-        <Tag color={typeColors[type] || 'default'}>
-          {type?.toUpperCase()}
-        </Tag>
+        <Tag color={typeColors[type] || 'default'}>{type?.toUpperCase()}</Tag>
       ),
     },
     {
@@ -153,7 +155,17 @@ const AssetList: React.FC = () => {
       width: 100,
       render: (status: string) => (
         <Tag color={statusColors[status] || 'default'}>
-          {status === 'in-use' ? '使用中' : status === 'available' ? '可用' : status === 'maintenance' ? '维护中' : status === 'retired' ? '已退役' : status === 'disposed' ? '已处置' : status}
+          {status === 'in-use'
+            ? '使用中'
+            : status === 'available'
+              ? '可用'
+              : status === 'maintenance'
+                ? '维护中'
+                : status === 'retired'
+                  ? '已退役'
+                  : status === 'disposed'
+                    ? '已处置'
+                    : status}
         </Tag>
       ),
     },
@@ -164,7 +176,9 @@ const AssetList: React.FC = () => {
       width: 120,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '100px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '100px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -175,7 +189,9 @@ const AssetList: React.FC = () => {
       width: 120,
       render: (name: string) => (
         <Tooltip title={name}>
-          <span className="truncate block" style={{ maxWidth: '100px' }}>{name || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '100px' }}>
+            {name || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -187,7 +203,9 @@ const AssetList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '130px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '130px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -236,11 +254,7 @@ const AssetList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="总资产数"
-              value={stats.total || 0}
-              prefix={<DesktopOutlined />}
-            />
+            <Statistic title="总资产数" value={stats.total || 0} prefix={<DesktopOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -254,11 +268,7 @@ const AssetList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="使用中"
-              value={stats.in_use || 0}
-              valueStyle={{ color: '#1890ff' }}
-            />
+            <Statistic title="使用中" value={stats.in_use || 0} valueStyle={{ color: '#1890ff' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -272,20 +282,13 @@ const AssetList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="已退役"
-              value={stats.retired || 0}
-            />
+            <Statistic title="已退役" value={stats.retired || 0} />
           </Card>
         </Col>
       </Row>
 
       <Card>
-        <Form
-          form={form}
-          layout="inline"
-          style={{ marginBottom: 16 }}
-        >
+        <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
           <Form.Item name="status" label="状态">
             <Select
               placeholder="选择状态"
@@ -318,11 +321,7 @@ const AssetList: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-              >
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
@@ -345,10 +344,7 @@ const AssetList: React.FC = () => {
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无资产数据"
-              >
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无资产数据">
                 <Button type="primary" onClick={() => router.push('/assets/new')}>
                   创建第一个资产
                 </Button>
@@ -362,7 +358,7 @@ const AssetList: React.FC = () => {
             onChange: handlePageChange,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: total => `共 ${total} 条`,
           }}
         />
       </Card>

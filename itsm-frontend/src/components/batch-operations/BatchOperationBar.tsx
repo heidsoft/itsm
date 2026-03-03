@@ -108,9 +108,9 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
 
   return (
     <div
-      className='fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 
+      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 
                  bg-white rounded-lg shadow-2xl border border-gray-200 
-                 px-6 py-4 animate-slide-up'
+                 px-6 py-4 animate-slide-up"
       style={{
         minWidth: '600px',
         animation: 'slideUp 0.3s ease-out',
@@ -131,23 +131,23 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
         `}
       </style>
 
-      <div className='flex items-center justify-between'>
-        <div className='flex items-center gap-4'>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
           <Badge count={selectedCount} showZero={false} overflowCount={9999}>
-            <div className='flex items-center gap-2'>
-              <CheckOutlined className='text-blue-500' style={{ fontSize: 18 }} />
-              <span className='text-base font-semibold'>已选择 {selectedCount} 个工单</span>
+            <div className="flex items-center gap-2">
+              <CheckOutlined className="text-blue-500" style={{ fontSize: 18 }} />
+              <span className="text-base font-semibold">已选择 {selectedCount} 个工单</span>
             </div>
           </Badge>
 
           {isOverLimit && (
-            <span className='text-red-500 text-sm'>（超出最大批量操作数量 {maxBatchSize}）</span>
+            <span className="text-red-500 text-sm">（超出最大批量操作数量 {maxBatchSize}）</span>
           )}
         </div>
 
-        <Space size='middle'>
+        <Space size="middle">
           {/* 批量分配 */}
-          <Tooltip title='批量分配'>
+          <Tooltip title="批量分配">
             <Button
               icon={<UserAddOutlined />}
               onClick={() => handleOpenModal(BatchOperationType.ASSIGN)}
@@ -158,7 +158,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
           </Tooltip>
 
           {/* 批量更新状态 */}
-          <Tooltip title='批量更新状态'>
+          <Tooltip title="批量更新状态">
             <Button
               icon={<EditOutlined />}
               onClick={() => handleOpenModal(BatchOperationType.UPDATE_STATUS)}
@@ -169,7 +169,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
           </Tooltip>
 
           {/* 批量更新优先级 */}
-          <Tooltip title='批量更新优先级'>
+          <Tooltip title="批量更新优先级">
             <Button
               icon={<EditOutlined />}
               onClick={() => handleOpenModal(BatchOperationType.UPDATE_PRIORITY)}
@@ -180,7 +180,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
           </Tooltip>
 
           {/* 批量关闭 */}
-          <Tooltip title='批量关闭'>
+          <Tooltip title="批量关闭">
             <Button
               icon={<CloseCircleOutlined />}
               onClick={() => handleOpenModal(BatchOperationType.CLOSE)}
@@ -191,7 +191,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
           </Tooltip>
 
           {/* 批量导出 */}
-          <Tooltip title='批量导出'>
+          <Tooltip title="批量导出">
             <Button
               icon={<DownloadOutlined />}
               onClick={() => handleOpenModal(BatchOperationType.EXPORT)}
@@ -209,7 +209,7 @@ export const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
           </Dropdown>
 
           {/* 批量删除 */}
-          <Tooltip title='批量删除'>
+          <Tooltip title="批量删除">
             <Button
               danger
               icon={<DeleteOutlined />}

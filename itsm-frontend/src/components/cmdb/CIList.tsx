@@ -149,7 +149,7 @@ const CIList: React.FC = () => {
       ellipsis: true,
       render: (text: string, record: ConfigurationItem) => (
         <Button
-          type='link'
+          type="link"
           onClick={() => router.push(`/cmdb/cis/${record.id}`)}
           style={{ padding: 0, height: 'auto' }}
         >
@@ -198,21 +198,21 @@ const CIList: React.FC = () => {
       key: 'action',
       width: 120,
       render: (_: any, record: ConfigurationItem) => (
-        <Space size='small'>
-          <Tooltip title='编辑'>
+        <Space size="small">
+          <Tooltip title="编辑">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
-              aria-label='编辑'
+              aria-label="编辑"
               onClick={() => router.push(`/cmdb/cis/${record.id}/edit`)}
             />
           </Tooltip>
-          <Tooltip title='删除'>
+          <Tooltip title="删除">
             <Button
-              type='text'
+              type="text"
               danger
               icon={<DeleteOutlined />}
-              aria-label='删除'
+              aria-label="删除"
               onClick={() => handleDelete(record.id)}
             />
           </Tooltip>
@@ -222,34 +222,34 @@ const CIList: React.FC = () => {
   ];
 
   return (
-    <div className='p-6'>
-      <div className='flex justify-between items-center mb-6'>
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className='text-2xl font-bold text-gray-900'>配置管理</h1>
-          <p className='text-gray-500 mt-1'>管理和维护系统中的所有配置项(CI)及其关系</p>
+          <h1 className="text-2xl font-bold text-gray-900">配置管理</h1>
+          <p className="text-gray-500 mt-1">管理和维护系统中的所有配置项(CI)及其关系</p>
         </div>
         <Button
-          type='primary'
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => router.push('/cmdb/cis/create')}
-          size='large'
+          size="large"
         >
           录入资产
         </Button>
       </div>
 
-      <Card className='rounded-lg shadow-sm border border-gray-200' variant="borderless">
-        <Form form={form} layout='inline' className='mb-6 flex-wrap gap-y-4'>
-          <Form.Item name='search' className='mb-0'>
+      <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
+        <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
+          <Form.Item name="search" className="mb-0">
             <Input
-              placeholder='搜索名称/序列号'
+              placeholder="搜索名称/序列号"
               allowClear
-              prefix={<SearchOutlined className='text-gray-400' />}
-              className='w-64'
+              prefix={<SearchOutlined className="text-gray-400" />}
+              className="w-64"
             />
           </Form.Item>
-          <Form.Item name='ci_type_id' className='mb-0'>
-            <Select placeholder='资产类型' style={{ width: 140 }} allowClear>
+          <Form.Item name="ci_type_id" className="mb-0">
+            <Select placeholder="资产类型" style={{ width: 140 }} allowClear>
               {types.map(t => (
                 <Option key={t.id} value={t.id}>
                   {t.name}
@@ -257,8 +257,8 @@ const CIList: React.FC = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name='status' className='mb-0'>
-            <Select placeholder='状态' style={{ width: 110 }} allowClear>
+          <Form.Item name="status" className="mb-0">
+            <Select placeholder="状态" style={{ width: 110 }} allowClear>
               {Object.entries(CIStatusLabels).map(([value, label]) => (
                 <Option key={value} value={value}>
                   {label}
@@ -266,14 +266,14 @@ const CIList: React.FC = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item className='mb-0'>
+          <Form.Item className="mb-0">
             <Space>
               <Button type="primary" onClick={handleSearch}>
                 查询
               </Button>
-              <Button icon={<ReloadOutlined />} onClick={loadData} aria-label='刷新' />
+              <Button icon={<ReloadOutlined />} onClick={loadData} aria-label="刷新" />
               <Select
-                placeholder='云资源管理'
+                placeholder="云资源管理"
                 style={{ width: 140 }}
                 onChange={value => router.push(value)}
                 options={[
@@ -288,16 +288,13 @@ const CIList: React.FC = () => {
         </Form>
 
         <Table
-          rowKey='id'
+          rowKey="id"
           columns={columns as any}
           dataSource={data}
           loading={loading}
           locale={{
             emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无配置项数据"
-              >
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无配置项数据">
                 <Button type="primary" onClick={() => router.push('/cmdb/cis/create')}>
                   创建第一个配置项
                 </Button>
@@ -313,7 +310,7 @@ const CIList: React.FC = () => {
             onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
           }}
           scroll={{ x: 1200 }}
-          getPopupContainer={(node) => node.parentElement || document.body}
+          getPopupContainer={node => node.parentElement || document.body}
         />
       </Card>
     </div>

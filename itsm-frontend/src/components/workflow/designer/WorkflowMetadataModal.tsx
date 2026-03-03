@@ -6,7 +6,6 @@
 import React from 'react';
 import { Modal, Form, Input, Select } from 'antd';
 import type { FormInstance } from 'antd';
-import { useI18n } from '@/lib/i18n';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -24,9 +23,11 @@ export default function WorkflowMetadataModal({
   onSave,
   form,
 }: WorkflowMetadataModalProps) {
-  const { t } = useI18n();
   const handleOk = () => {
-    form.validateFields().then(onSave).catch(() => {});
+    form
+      .validateFields()
+      .then(onSave)
+      .catch(() => {});
   };
 
   return (
@@ -35,8 +36,8 @@ export default function WorkflowMetadataModal({
       open={visible}
       onOk={handleOk}
       onCancel={onClose}
-      okText={t('common.save')}
-      cancelText={t('common.cancel')}
+      okText="保存"
+      cancelText="取消"
     >
       <Form form={form} layout="vertical">
         <Form.Item

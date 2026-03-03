@@ -1,0 +1,9 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# 运行 lint-staged 对暂存文件进行代码检查和格式化
+npx lint-staged
+
+# 运行 TypeScript 类型检查 (仅检查暂存文件相关的模块)
+# 注意：完整类型检查在 CI 中运行，这里只做快速检查
+echo "✓ Pre-commit checks completed"

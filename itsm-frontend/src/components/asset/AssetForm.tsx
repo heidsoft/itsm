@@ -39,9 +39,7 @@ const formRules = {
     { min: 2, message: '资产名称至少2个字符' },
     { max: 200, message: '资产名称不能超过200个字符' },
   ],
-  serialNumber: [
-    { max: 100, message: '序列号不能超过100个字符' },
-  ],
+  serialNumber: [{ max: 100, message: '序列号不能超过100个字符' }],
   purchasePrice: [
     {
       type: 'number' as const,
@@ -150,10 +148,7 @@ const AssetForm: React.FC = () => {
         }}
       >
         <div style={{ marginBottom: 16 }}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.push('/assets')}
-          >
+          <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/assets')}>
             返回列表
           </Button>
         </div>
@@ -282,12 +277,7 @@ const AssetForm: React.FC = () => {
           rules={formRules.purchasePrice}
           help={fieldHelps.purchasePrice}
         >
-          <InputNumber
-            style={{ width: '100%' }}
-            min={0}
-            precision={2}
-            placeholder="采购价格"
-          />
+          <InputNumber style={{ width: '100%' }} min={0} precision={2} placeholder="采购价格" />
         </Form.Item>
 
         <Form.Item

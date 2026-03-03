@@ -59,7 +59,7 @@ export function ThemeProvider({
   // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
-    
+
     if (colorScheme === 'dark') {
       root.classList.add('dark');
     } else {
@@ -69,9 +69,18 @@ export function ThemeProvider({
     // Set CSS custom properties for easy access
     root.style.setProperty('--color-primary', theme.colors.primary[500]);
     root.style.setProperty('--color-primary-foreground', '#ffffff');
-    root.style.setProperty('--color-background', colorScheme === 'dark' ? theme.colors.gray[900] : '#ffffff');
-    root.style.setProperty('--color-foreground', colorScheme === 'dark' ? theme.colors.gray[100] : theme.colors.gray[900]);
-    root.style.setProperty('--color-border', colorScheme === 'dark' ? theme.colors.gray[700] : theme.colors.gray[200]);
+    root.style.setProperty(
+      '--color-background',
+      colorScheme === 'dark' ? theme.colors.gray[900] : '#ffffff'
+    );
+    root.style.setProperty(
+      '--color-foreground',
+      colorScheme === 'dark' ? theme.colors.gray[100] : theme.colors.gray[900]
+    );
+    root.style.setProperty(
+      '--color-border',
+      colorScheme === 'dark' ? theme.colors.gray[700] : theme.colors.gray[200]
+    );
   }, [colorScheme]);
 
   const setMode = (newMode: ThemeMode) => {
@@ -136,20 +145,20 @@ export function Button({
     <button
       className={`focus:outline-none focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       style={styles}
-      onMouseEnter={(e) => {
+      onMouseEnter={e => {
         if (variantStyles.hover) {
           Object.assign(e.currentTarget.style, variantStyles.hover);
         }
       }}
-      onMouseLeave={(e) => {
+      onMouseLeave={e => {
         e.currentTarget.style.backgroundColor = variantStyles.backgroundColor;
       }}
-      onFocus={(e) => {
+      onFocus={e => {
         if (variantStyles.focus) {
           e.currentTarget.style.boxShadow = variantStyles.focus.ring;
         }
       }}
-      onBlur={(e) => {
+      onBlur={e => {
         e.currentTarget.style.boxShadow = 'none';
       }}
       {...props}
@@ -192,13 +201,13 @@ export function Input({
     <input
       className={`focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
       style={styles}
-      onFocus={(e) => {
+      onFocus={e => {
         if (variantStyles.focus) {
           e.currentTarget.style.borderColor = variantStyles.focus.borderColor;
           e.currentTarget.style.boxShadow = variantStyles.focus.ring;
         }
       }}
-      onBlur={(e) => {
+      onBlur={e => {
         e.currentTarget.style.borderColor = variantStyles.border.split(' ')[3]; // Extract border color
         e.currentTarget.style.boxShadow = 'none';
       }}
@@ -214,12 +223,7 @@ interface BadgeProps {
   className?: string;
 }
 
-export function Badge({
-  variant = 'default',
-  size = 'md',
-  children,
-  className = '',
-}: BadgeProps) {
+export function Badge({ variant = 'default', size = 'md', children, className = '' }: BadgeProps) {
   const { theme: currentTheme } = useTheme();
   const badgeConfig = currentTheme.components.badge;
   const variantStyles = badgeConfig.variant[variant];
@@ -251,12 +255,7 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({
-  status,
-  children,
-  size = 'sm',
-  className = '',
-}: StatusBadgeProps) {
+export function StatusBadge({ status, children, size = 'sm', className = '' }: StatusBadgeProps) {
   const { theme: currentTheme } = useTheme();
   const statusColor = currentTheme.colors.status[status];
   const sizeStyles = currentTheme.components.badge.size[size];
@@ -356,7 +355,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
 
   return (
     <div className={`inline-flex rounded-md border border-gray-300 ${className}`}>
-      {modes.map((item) => (
+      {modes.map(item => (
         <button
           key={item.value}
           onClick={() => setMode(item.value)}

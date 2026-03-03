@@ -11,11 +11,7 @@ import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 
-const statusOptions = [
-  CIStatus.ACTIVE,
-  CIStatus.INACTIVE,
-  CIStatus.MAINTENANCE,
-];
+const statusOptions = [CIStatus.ACTIVE, CIStatus.INACTIVE, CIStatus.MAINTENANCE];
 
 type SchemaField = {
   key: string;
@@ -51,24 +47,23 @@ const normalizeSchemaFields = (schema: unknown): SchemaField[] => {
     if (Array.isArray(record.fields)) {
       return normalizeSchemaFields(record.fields);
     }
-    return Object.entries(record)
-      .map(([key, value]): SchemaField => {
-        if (typeof value === 'string') {
-          return { key, label: value };
-        }
-        if (typeof value === 'object' && value !== null) {
-          const entry = value as Record<string, any>;
-          return {
-            key,
-            label: entry.label || key,
-            type: entry.type,
-            required: Boolean(entry.required),
-            options: Array.isArray(entry.options) ? entry.options : undefined,
-            placeholder: entry.placeholder,
-          };
-        }
-        return { key, label: key };
-      });
+    return Object.entries(record).map(([key, value]): SchemaField => {
+      if (typeof value === 'string') {
+        return { key, label: value };
+      }
+      if (typeof value === 'object' && value !== null) {
+        const entry = value as Record<string, any>;
+        return {
+          key,
+          label: entry.label || key,
+          type: entry.type,
+          required: Boolean(entry.required),
+          options: Array.isArray(entry.options) ? entry.options : undefined,
+          placeholder: entry.placeholder,
+        };
+      }
+      return { key, label: key };
+    });
   }
   return [];
 };
@@ -87,7 +82,7 @@ const CreateCIPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
 
   const cloudServiceMap = useMemo(() => {
-    return new Map(cloudServices.map((service) => [service.id, service]));
+    return new Map(cloudServices.map(service => [service.id, service]));
   }, [cloudServices]);
 
   useEffect(() => {
@@ -130,7 +125,7 @@ const CreateCIPage: React.FC = () => {
     const parsed = Number(resourceRefId);
     if (Number.isNaN(parsed)) return;
     form.setFieldsValue({ cloud_resource_ref_id: parsed });
-    const resource = cloudResources.find((item) => item.id === parsed);
+    const resource = cloudResources.find(item => item.id === parsed);
     if (!resource) return;
     const service = cloudServiceMap.get(resource.service_id);
     setSchemaFields(normalizeSchemaFields(service?.attribute_schema));
@@ -149,7 +144,7 @@ const CreateCIPage: React.FC = () => {
       setSchemaFields([]);
       return;
     }
-    const resource = cloudResources.find((item) => item.id === value);
+    const resource = cloudResources.find(item => item.id === value);
     const service = resource ? cloudServiceMap.get(resource.service_id) : undefined;
     setSchemaFields(normalizeSchemaFields(service?.attribute_schema));
     if (!resource) return;
@@ -272,7 +267,7 @@ const CreateCIPage: React.FC = () => {
           <Select
             placeholder="请选择资产类型"
             loading={typesLoading}
-            options={types.map((type) => ({
+            options={types.map(type => ({
               label: type.name,
               value: type.id,
             }))}
@@ -286,7 +281,7 @@ const CreateCIPage: React.FC = () => {
         >
           <Select
             placeholder="请选择资产状态"
-            options={statusOptions.map((status) => ({
+            options={statusOptions.map(status => ({
               label: CIStatusLabels[status],
               value: status,
             }))}
@@ -390,7 +385,7 @@ const CreateCIPage: React.FC = () => {
             showSearch
             optionFilterProp="label"
             onChange={handleCloudResourceChange}
-            options={cloudResources.map((resource) => {
+            options={cloudResources.map(resource => {
               const service = cloudServiceMap.get(resource.service_id);
               const label = `${resource.resource_name || resource.resource_id}（${service?.resource_type_name || '未知类型'}）`;
               return {
@@ -424,21 +419,23 @@ const CreateCIPage: React.FC = () => {
         {schemaFields.length > 0 && (
           <>
             <Divider>云资源动态属性</Divider>
-            <div style={{ marginBottom: 12, color: '#8c8c8c' }}>
-              动态属性仅支持枚举选择。
-            </div>
-            {schemaFields.map((field) => (
+            <div style={{ marginBottom: 12, color: '#8c8c8c' }}>动态属性仅支持枚举选择。</div>
+            {schemaFields.map(field => (
               <Form.Item
                 key={field.key}
                 label={field.label || field.key}
                 name={['cloud_metadata', field.key]}
-                rules={field.required ? [{ required: true, message: `请输入${field.label || field.key}` }] : undefined}
+                rules={
+                  field.required
+                    ? [{ required: true, message: `请输入${field.label || field.key}` }]
+                    : undefined
+                }
               >
                 {field.type === 'select' ? (
                   <Select
                     placeholder={field.placeholder || `请选择${field.label || field.key}`}
                     allowClear
-                    options={(field.options || []).map((option) => ({
+                    options={(field.options || []).map(option => ({
                       label: option,
                       value: option,
                     }))}
@@ -464,7 +461,7 @@ const CreateCIPage: React.FC = () => {
         </Form.Item>
 
         <Form.Item label="扩展属性" name="attributes">
-          <TextArea rows={4} placeholder='请输入扩展属性 JSON（可选）' />
+          <TextArea rows={4} placeholder="请输入扩展属性 JSON（可选）" />
         </Form.Item>
 
         <Space>

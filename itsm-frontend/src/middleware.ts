@@ -25,17 +25,10 @@ const protectedRoutes = [
 ];
 
 // 公开路由（不需要认证）
-const publicRoutes = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-];
+const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 // API路由（需要特殊处理）
-const apiRoutes = [
-  '/api',
-];
+const apiRoutes = ['/api'];
 
 /**
  * 从请求中获取认证 Token
@@ -89,14 +82,10 @@ export function middleware(request: NextRequest) {
   }
 
   // 检查是否为受保护的路由
-  const isProtectedRoute = protectedRoutes.some(route => 
-    pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
   // 检查是否为公开路由
-  const isPublicRoute = publicRoutes.some(route => 
-    pathname.startsWith(route)
-  );
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
   // 如果是受保护的路由但没有token，重定向到登录页
   if (isProtectedRoute && !token) {

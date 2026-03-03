@@ -27,9 +27,6 @@ import {
   Radio,
   Tabs,
   List,
-  Empty,
-  Spin,
-  Result,
 } from 'antd';
 import {
   Plus,
@@ -53,6 +50,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import LoadingEmptyError from '@/components/ui/LoadingEmptyError';
 import {
   ticketTemplateService,
   type CreateTemplateRequest,
@@ -60,7 +58,6 @@ import {
   type TemplateField,
   type TicketTemplate as ServiceTicketTemplate,
 } from '@/lib/services/ticket-template-service';
-import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -99,7 +96,6 @@ interface TemplateFilters {
 }
 
 const TicketTemplatePage: React.FC = () => {
-  const { t } = useI18n();
   const [templates, setTemplates] = useState<TicketTemplate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -206,9 +202,9 @@ const TicketTemplatePage: React.FC = () => {
       await ticketTemplateService.deleteTemplate(id);
 
       setTemplates(templates.filter(t => t.id !== id));
-      message.success(t('tickets.templateDeleted'));
+      message.success('模板删除成功');
     } catch (error) {
-      message.error(t('common.deleteFailed'));
+      message.error('删除失败');
       console.error('删除失败:', error);
     }
   };
@@ -220,9 +216,9 @@ const TicketTemplatePage: React.FC = () => {
       const copiedTemplate = await ticketTemplateService.copyTemplate(template.id, newName);
 
       setTemplates([copiedTemplate, ...templates]);
-      message.success(t('tickets.templateCopied'));
+      message.success('模板复制成功');
     } catch (error) {
-      message.error(t('common.operationFailed'));
+      message.error('复制失败');
       console.error('复制失败:', error);
     }
   };
@@ -249,10 +245,13 @@ const TicketTemplatePage: React.FC = () => {
           fields,
           is_active: values.is_active,
         };
-        const updatedTemplate = await ticketTemplateService.updateTemplate(editingTemplate.id, updatePayload);
+        const updatedTemplate = await ticketTemplateService.updateTemplate(
+          editingTemplate.id,
+          updatePayload
+        );
 
         setTemplates(templates.map(t => (t.id === editingTemplate.id ? updatedTemplate : t)));
-        message.success(t('tickets.templateUpdated'));
+        message.success('模板更新成功');
       } else {
         // 创建新模板
         const createPayload: CreateTemplateRequest = {
@@ -264,7 +263,7 @@ const TicketTemplatePage: React.FC = () => {
         const newTemplate = await ticketTemplateService.createTemplate(createPayload);
 
         setTemplates([newTemplate, ...templates]);
-        message.success(t('tickets.templateCreated'));
+        message.success('模板创建成功');
       }
 
       setModalVisible(false);
@@ -273,7 +272,7 @@ const TicketTemplatePage: React.FC = () => {
       setWorkflowSteps([]);
       form.resetFields();
     } catch (error) {
-      message.error(t('common.operationFailed'));
+      message.error('操作失败');
       console.error('操作失败:', error);
     }
   };
@@ -372,8 +371,8 @@ const TicketTemplatePage: React.FC = () => {
       key: 'name',
       render: (name: string, record: TicketTemplate) => (
         <div>
-          <div className='font-medium text-gray-900'>{name}</div>
-          <div className='text-sm text-gray-500'>{record.description}</div>
+          <div className="font-medium text-gray-900">{name}</div>
+          <div className="text-sm text-gray-500">{record.description}</div>
         </div>
       ),
     },
@@ -428,34 +427,34 @@ const TicketTemplatePage: React.FC = () => {
       key: 'action',
       width: 200,
       render: (record: TicketTemplate) => (
-        <Space size='small'>
-          <Tooltip title='查看详情'>
-            <Button type='text' icon={<Eye className='w-4 h-4' />} size='small' />
+        <Space size="small">
+          <Tooltip title="查看详情">
+            <Button type="text" icon={<Eye className="w-4 h-4" />} size="small" />
           </Tooltip>
-          <Tooltip title='编辑模板'>
+          <Tooltip title="编辑模板">
             <Button
-              type='text'
-              icon={<Edit className='w-4 h-4' />}
-              size='small'
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
+              size="small"
               onClick={() => handleEditTemplate(record)}
             />
           </Tooltip>
-          <Tooltip title='复制模板'>
+          <Tooltip title="复制模板">
             <Button
-              type='text'
-              icon={<Copy className='w-4 h-4' />}
-              size='small'
+              type="text"
+              icon={<Copy className="w-4 h-4" />}
+              size="small"
               onClick={() => handleCopyTemplate(record)}
             />
           </Tooltip>
-          <Tooltip title='删除模板'>
+          <Tooltip title="删除模板">
             <Popconfirm
-              title='确定要删除这个模板吗？'
+              title="确定要删除这个模板吗？"
               onConfirm={() => handleDeleteTemplate(record.id)}
-              okText='确定'
-              cancelText='取消'
+              okText="确定"
+              cancelText="取消"
             >
-              <Button type='text' icon={<Delete className='w-4 h-4' />} size='small' danger />
+              <Button type="text" icon={<Delete className="w-4 h-4" />} size="small" danger />
             </Popconfirm>
           </Tooltip>
         </Space>
@@ -488,16 +487,16 @@ const TicketTemplatePage: React.FC = () => {
   };
 
   return (
-    <div className='p-6 space-y-6'>
+    <div className="p-6 space-y-6">
       {/* 页面标题 */}
-      <div className='flex items-center justify-between'>
+      <div className="flex items-center justify-between">
         <div>
-          <Title level={2} className='mb-2'>
+          <Title level={2} className="mb-2">
             工单模板管理
           </Title>
-          <Text type='secondary'>管理和配置工单模板，提高工单创建效率</Text>
+          <Text type="secondary">管理和配置工单模板，提高工单创建效率</Text>
         </div>
-        <Button type='primary' icon={<Plus className='w-4 h-4' />} onClick={handleCreateTemplate}>
+        <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={handleCreateTemplate}>
           创建模板
         </Button>
       </div>
@@ -505,31 +504,31 @@ const TicketTemplatePage: React.FC = () => {
       {/* 统计卡片 */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='shadow-sm'>
+          <Card className="shadow-sm">
             <Statistic
-              title='总模板数'
+              title="总模板数"
               value={stats.total}
-              prefix={<FileText className='w-5 h-5' />}
+              prefix={<FileText className="w-5 h-5" />}
               styles={{ content: { color: '#3b82f6' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='shadow-sm'>
+          <Card className="shadow-sm">
             <Statistic
-              title='启用模板'
+              title="启用模板"
               value={stats.active}
-              prefix={<CheckCircle className='w-5 h-5' />}
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#10b981' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='shadow-sm'>
+          <Card className="shadow-sm">
             <Statistic
-              title='模板分类'
+              title="模板分类"
               value={stats.categories}
-              prefix={<Settings className='w-5 h-5' />}
+              prefix={<Settings className="w-5 h-5" />}
               styles={{ content: { color: '#f59e0b' } }}
             />
           </Card>
@@ -537,31 +536,31 @@ const TicketTemplatePage: React.FC = () => {
       </Row>
 
       {/* 筛选和操作栏 */}
-      <Card className='shadow-sm'>
-        <Row gutter={[16, 16]} align='middle'>
-          <Col flex='auto'>
-            <Space size='middle'>
+      <Card className="shadow-sm">
+        <Row gutter={[16, 16]} align="middle">
+          <Col flex="auto">
+            <Space size="middle">
               <Input
-                placeholder='搜索模板...'
-                prefix={<Search className='w-4 h-4' />}
+                placeholder="搜索模板..."
+                prefix={<Search className="w-4 h-4" />}
                 style={{ width: 300 }}
                 value={filters.keyword}
                 onChange={e => setFilters({ ...filters, keyword: e.target.value })}
               />
               <Select
-                placeholder='分类筛选'
+                placeholder="分类筛选"
                 style={{ width: 150 }}
                 allowClear
                 value={filters.category}
                 onChange={value => setFilters({ ...filters, category: value })}
               >
-                <Option value='系统问题'>系统问题</Option>
-                <Option value='用户管理'>用户管理</Option>
-                <Option value='硬件问题'>硬件问题</Option>
-                <Option value='网络问题'>网络问题</Option>
+                <Option value="系统问题">系统问题</Option>
+                <Option value="用户管理">用户管理</Option>
+                <Option value="硬件问题">硬件问题</Option>
+                <Option value="网络问题">网络问题</Option>
               </Select>
               <Select
-                placeholder='状态筛选'
+                placeholder="状态筛选"
                 style={{ width: 120 }}
                 allowClear
                 value={filters.is_active}
@@ -574,48 +573,39 @@ const TicketTemplatePage: React.FC = () => {
           </Col>
           <Col>
             <Space>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadTemplates}>
+              <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadTemplates}>
                 刷新
               </Button>
-              <Button icon={<Download className='w-4 h-4' />}>导出</Button>
-              <Button icon={<Upload className='w-4 h-4' />}>导入</Button>
+              <Button icon={<Download className="w-4 h-4" />}>导出</Button>
+              <Button icon={<Upload className="w-4 h-4" />}>导入</Button>
             </Space>
           </Col>
         </Row>
       </Card>
 
       {/* 模板列表 */}
-      {loading ? (
-        <div className='flex flex-col items-center justify-center py-20'>
-          <Spin size='large' />
-          <Text type='secondary' className='mt-4'>正在加载模板数据...</Text>
-        </div>
-      ) : error ? (
-        <Result
-          status='error'
-          title='加载失败'
-          subTitle={error || '无法获取模板数据，请稍后重试'}
-          extra={[
-            <Button type='primary' key='retry' icon={<RefreshCw size={16} />} onClick={loadTemplates}>
-              重试
-            </Button>,
-          ]}
-        />
-      ) : filteredTemplates.length === 0 ? (
-        <Empty
-          description='暂无模板'
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-        >
-          <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateTemplate}>
-            创建模板
-          </Button>
-        </Empty>
-      ) : (
-        <Card className='shadow-sm'>
+      <LoadingEmptyError
+        state={getCurrentState()}
+        loadingText="正在加载模板数据..."
+        empty={{
+          title: '暂无模板',
+          description: '当前没有找到匹配的工单模板',
+          actionText: '创建模板',
+          onAction: handleCreateTemplate,
+          icon: <FileText className="w-10 h-10" />,
+        }}
+        error={{
+          title: '加载失败',
+          description: error || '无法获取模板数据，请稍后重试',
+          actionText: '重试',
+          onAction: loadTemplates,
+        }}
+      >
+        <Card className="shadow-sm">
           <Table
             columns={columns}
             dataSource={filteredTemplates}
-            rowKey='id'
+            rowKey="id"
             pagination={{
               showSizeChanger: true,
               showQuickJumper: true,
@@ -624,7 +614,7 @@ const TicketTemplatePage: React.FC = () => {
             scroll={{ x: 1200 }}
           />
         </Card>
-      )}
+      </LoadingEmptyError>
 
       {/* 创建/编辑模板模态框 */}
       <Modal
@@ -636,10 +626,10 @@ const TicketTemplatePage: React.FC = () => {
         destroyOnHidden
       >
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab='基本信息' key='basic'>
+          <TabPane tab="基本信息" key="basic">
             <Form
               form={form}
-              layout='vertical'
+              layout="vertical"
               onFinish={handleFormSubmit}
               initialValues={{
                 priority: 'medium',
@@ -653,72 +643,72 @@ const TicketTemplatePage: React.FC = () => {
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    name='name'
-                    label='模板名称'
+                    name="name"
+                    label="模板名称"
                     rules={[{ required: true, message: '请输入模板名称' }]}
                   >
-                    <Input placeholder='请输入模板名称' />
+                    <Input placeholder="请输入模板名称" />
                   </Form.Item>
                 </Col>
                 <Col span={12}>
                   <Form.Item
-                    name='category'
-                    label='分类'
+                    name="category"
+                    label="分类"
                     rules={[{ required: true, message: '请选择分类' }]}
                   >
-                    <Select placeholder='选择分类'>
-                      <Option value='系统问题'>系统问题</Option>
-                      <Option value='用户管理'>用户管理</Option>
-                      <Option value='硬件问题'>硬件问题</Option>
-                      <Option value='网络问题'>网络问题</Option>
-                      <Option value='软件问题'>软件问题</Option>
+                    <Select placeholder="选择分类">
+                      <Option value="系统问题">系统问题</Option>
+                      <Option value="用户管理">用户管理</Option>
+                      <Option value="硬件问题">硬件问题</Option>
+                      <Option value="网络问题">网络问题</Option>
+                      <Option value="软件问题">软件问题</Option>
                     </Select>
                   </Form.Item>
                 </Col>
               </Row>
 
               <Form.Item
-                name='description'
-                label='描述'
+                name="description"
+                label="描述"
                 rules={[{ required: true, message: '请输入模板描述' }]}
               >
-                <TextArea rows={3} placeholder='请输入模板描述' />
+                <TextArea rows={3} placeholder="请输入模板描述" />
               </Form.Item>
 
               <Row gutter={16}>
                 <Col span={12}>
                   <Form.Item
-                    name='priority'
-                    label='默认优先级'
+                    name="priority"
+                    label="默认优先级"
                     rules={[{ required: true, message: '请选择优先级' }]}
                   >
-                    <Select placeholder='选择优先级'>
-                      <Option value='low'>低</Option>
-                      <Option value='medium'>中</Option>
-                      <Option value='high'>高</Option>
-                      <Option value='critical'>紧急</Option>
+                    <Select placeholder="选择优先级">
+                      <Option value="low">低</Option>
+                      <Option value="medium">中</Option>
+                      <Option value="high">高</Option>
+                      <Option value="critical">紧急</Option>
                     </Select>
                   </Form.Item>
                 </Col>
                 <Col span={12}>
-                  <Form.Item name='assignee_group' label='默认处理组'>
-                    <Select placeholder='选择处理组' allowClear>
-                      <Option value='一线支持'>一线支持</Option>
-                      <Option value='系统维护组'>系统维护组</Option>
-                      <Option value='用户管理组'>用户管理组</Option>
-                      <Option value='网络维护组'>网络维护组</Option>
+                  <Form.Item name="assignee_group" label="默认处理组">
+                    <Select placeholder="选择处理组" allowClear>
+                      <Option value="一线支持">一线支持</Option>
+                      <Option value="系统维护组">系统维护组</Option>
+                      <Option value="用户管理组">用户管理组</Option>
+                      <Option value="网络维护组">网络维护组</Option>
                     </Select>
                   </Form.Item>
                 </Col>
               </Row>
 
-              <Form.Item name='is_active' label='启用状态' valuePropName='checked'>
+              <Form.Item name="is_active" label="启用状态" valuePropName="checked">
                 <Switch />
               </Form.Item>
 
               <Form.Item>
                 <Space>
-                  <Button type='primary' htmlType='submit'>
+                  <Button type="primary" htmlType="submit">
                     {editingTemplate ? '更新' : '创建'}
                   </Button>
                   <Button onClick={() => setModalVisible(false)}>取消</Button>
@@ -727,17 +717,17 @@ const TicketTemplatePage: React.FC = () => {
             </Form>
           </TabPane>
 
-          <TabPane tab='表单字段' key='fields'>
-            <div className='space-y-4'>
-              <div className='flex items-center justify-between'>
-                <h3 className='text-lg font-medium'>表单字段配置</h3>
-                <Button type='primary' icon={<Plus className='w-4 h-4' />} onClick={addFormField}>
+          <TabPane tab="表单字段" key="fields">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">表单字段配置</h3>
+                <Button type="primary" icon={<Plus className="w-4 h-4" />} onClick={addFormField}>
                   添加字段
                 </Button>
               </div>
 
               {formFields.length === 0 ? (
-                <div className='text-center py-8 text-gray-500'>
+                <div className="text-center py-8 text-gray-500">
                   暂无表单字段，点击「添加字段」开始配置
                 </div>
               ) : (
@@ -748,7 +738,7 @@ const TicketTemplatePage: React.FC = () => {
                     }
                   }}
                 >
-                  <Droppable droppableId='form-fields'>
+                  <Droppable droppableId="form-fields">
                     {provided => (
                       <div {...provided.droppableProps} ref={provided.innerRef}>
                         {formFields.map((field, index) => (
@@ -757,16 +747,16 @@ const TicketTemplatePage: React.FC = () => {
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className='border rounded-lg p-4 mb-3 bg-gray-50'
+                                className="border rounded-lg p-4 mb-3 bg-gray-50"
                               >
-                                <div className='flex items-center space-x-3'>
-                                  <div {...provided.dragHandleProps} className='cursor-move'>
-                                    <GripVertical className='w-4 h-4 text-gray-400' />
+                                <div className="flex items-center space-x-3">
+                                  <div {...provided.dragHandleProps} className="cursor-move">
+                                    <GripVertical className="w-4 h-4 text-gray-400" />
                                   </div>
 
-                                  <div className='flex-1 grid grid-cols-2 gap-3'>
+                                  <div className="flex-1 grid grid-cols-2 gap-3">
                                     <Input
-                                      placeholder='字段名称'
+                                      placeholder="字段名称"
                                       value={field.name}
                                       onChange={e =>
                                         updateFormField(index, {
@@ -775,7 +765,7 @@ const TicketTemplatePage: React.FC = () => {
                                       }
                                     />
                                     <Input
-                                      placeholder='显示标签'
+                                      placeholder="显示标签"
                                       value={field.label}
                                       onChange={e =>
                                         updateFormField(index, {
@@ -784,20 +774,20 @@ const TicketTemplatePage: React.FC = () => {
                                       }
                                     />
                                     <Select
-                                      placeholder='字段类型'
+                                      placeholder="字段类型"
                                       value={field.type}
                                       onChange={value => updateFormField(index, { type: value })}
                                     >
-                                      <Option value='text'>文本</Option>
-                                      <Option value='textarea'>多行文本</Option>
-                                      <Option value='select'>下拉选择</Option>
-                                      <Option value='number'>数字</Option>
-                                      <Option value='date'>日期</Option>
-                                      <Option value='checkbox'>复选框</Option>
-                                      <Option value='radio'>单选框</Option>
+                                      <Option value="text">文本</Option>
+                                      <Option value="textarea">多行文本</Option>
+                                      <Option value="select">下拉选择</Option>
+                                      <Option value="number">数字</Option>
+                                      <Option value="date">日期</Option>
+                                      <Option value="checkbox">复选框</Option>
+                                      <Option value="radio">单选框</Option>
                                     </Select>
                                     <Input
-                                      placeholder='默认值'
+                                      placeholder="默认值"
                                       value={field.default_value || ''}
                                       onChange={e =>
                                         updateFormField(index, {
@@ -807,7 +797,7 @@ const TicketTemplatePage: React.FC = () => {
                                     />
                                   </div>
 
-                                  <div className='flex items-center space-x-2'>
+                                  <div className="flex items-center space-x-2">
                                     <Checkbox
                                       checked={field.required}
                                       onChange={e =>
@@ -819,8 +809,8 @@ const TicketTemplatePage: React.FC = () => {
                                       必填
                                     </Checkbox>
                                     <Button
-                                      type='text'
-                                      icon={<Trash2 className='w-4 h-4' />}
+                                      type="text"
+                                      icon={<Trash2 className="w-4 h-4" />}
                                       danger
                                       onClick={() => removeFormField(index)}
                                     />
@@ -828,9 +818,9 @@ const TicketTemplatePage: React.FC = () => {
                                 </div>
 
                                 {field.type === 'select' && (
-                                  <div className='mt-3'>
+                                  <div className="mt-3">
                                     <Input
-                                      placeholder='选项值，用逗号分隔'
+                                      placeholder="选项值，用逗号分隔"
                                       value={field.options?.join(', ') || ''}
                                       onChange={e =>
                                         updateFormField(index, {
@@ -856,13 +846,13 @@ const TicketTemplatePage: React.FC = () => {
             </div>
           </TabPane>
 
-          <TabPane tab='工作流' key='workflow'>
-            <div className='space-y-4'>
-              <div className='flex items-center justify-between'>
-                <h3 className='text-lg font-medium'>工作流步骤配置</h3>
+          <TabPane tab="工作流" key="workflow">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium">工作流步骤配置</h3>
                 <Button
-                  type='primary'
-                  icon={<Plus className='w-4 h-4' />}
+                  type="primary"
+                  icon={<Plus className="w-4 h-4" />}
                   onClick={addWorkflowStep}
                 >
                   添加步骤
@@ -870,7 +860,7 @@ const TicketTemplatePage: React.FC = () => {
               </div>
 
               {workflowSteps.length === 0 ? (
-                <div className='text-center py-8 text-gray-500'>
+                <div className="text-center py-8 text-gray-500">
                   暂无工作流步骤，点击「添加步骤」开始配置
                 </div>
               ) : (
@@ -881,7 +871,7 @@ const TicketTemplatePage: React.FC = () => {
                     }
                   }}
                 >
-                  <Droppable droppableId='workflow-steps'>
+                  <Droppable droppableId="workflow-steps">
                     {provided => (
                       <div {...provided.droppableProps} ref={provided.innerRef}>
                         {workflowSteps.map((step, index) => (
@@ -890,16 +880,16 @@ const TicketTemplatePage: React.FC = () => {
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                className='border rounded-lg p-4 mb-3 bg-gray-50'
+                                className="border rounded-lg p-4 mb-3 bg-gray-50"
                               >
-                                <div className='flex items-center space-x-3'>
-                                  <div {...provided.dragHandleProps} className='cursor-move'>
-                                    <GripVertical className='w-4 h-4 text-gray-400' />
+                                <div className="flex items-center space-x-3">
+                                  <div {...provided.dragHandleProps} className="cursor-move">
+                                    <GripVertical className="w-4 h-4 text-gray-400" />
                                   </div>
 
-                                  <div className='flex-1 grid grid-cols-2 gap-3'>
+                                  <div className="flex-1 grid grid-cols-2 gap-3">
                                     <Input
-                                      placeholder='步骤名称'
+                                      placeholder="步骤名称"
                                       value={step.name}
                                       onChange={e =>
                                         updateWorkflowStep(index, {
@@ -908,7 +898,7 @@ const TicketTemplatePage: React.FC = () => {
                                       }
                                     />
                                     <Select
-                                      placeholder='步骤类型'
+                                      placeholder="步骤类型"
                                       value={step.type}
                                       onChange={value =>
                                         updateWorkflowStep(index, {
@@ -916,13 +906,13 @@ const TicketTemplatePage: React.FC = () => {
                                         })
                                       }
                                     >
-                                      <Option value='approval'>审批</Option>
-                                      <Option value='assignment'>分配</Option>
-                                      <Option value='notification'>通知</Option>
-                                      <Option value='automation'>自动化</Option>
+                                      <Option value="approval">审批</Option>
+                                      <Option value="assignment">分配</Option>
+                                      <Option value="notification">通知</Option>
+                                      <Option value="automation">自动化</Option>
                                     </Select>
                                     <Input
-                                      placeholder='处理组'
+                                      placeholder="处理组"
                                       value={step.assignee_group || ''}
                                       onChange={e =>
                                         updateWorkflowStep(index, {
@@ -931,7 +921,7 @@ const TicketTemplatePage: React.FC = () => {
                                       }
                                     />
                                     <InputNumber
-                                      placeholder='预计耗时(小时)'
+                                      placeholder="预计耗时(小时)"
                                       value={step.due_time || undefined}
                                       onChange={value =>
                                         updateWorkflowStep(index, {
@@ -942,19 +932,19 @@ const TicketTemplatePage: React.FC = () => {
                                     />
                                   </div>
 
-                                  <div className='flex items-center space-x-2'>
+                                  <div className="flex items-center space-x-2">
                                     <Button
-                                      type='text'
-                                      icon={<Trash2 className='w-4 h-4' />}
+                                      type="text"
+                                      icon={<Trash2 className="w-4 h-4" />}
                                       danger
                                       onClick={() => removeWorkflowStep(index)}
                                     />
                                   </div>
                                 </div>
 
-                                <div className='mt-3'>
+                                <div className="mt-3">
                                   <Input
-                                    placeholder='执行条件（可选）'
+                                    placeholder="执行条件（可选）"
                                     value={step.conditions || ''}
                                     onChange={e =>
                                       updateWorkflowStep(index, {

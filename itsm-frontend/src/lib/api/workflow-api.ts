@@ -48,9 +48,7 @@ export class WorkflowApi {
   /**
    * 获取工作流列表
    */
-  static async getWorkflows(
-    query?: WorkflowQuery
-  ): Promise<{
+  static async getWorkflows(query?: WorkflowQuery): Promise<{
     workflows: WorkflowDefinition[];
     total: number;
   }> {
@@ -59,19 +57,21 @@ export class WorkflowApi {
     if (query?.pageSize) params.page_size = query.pageSize;
 
     // 修正: 确保路径与后端一致，后端可能是 /api/v1/bpmn/process-definitions
-    const res = await httpClient.get<Array<{
-      id: number;
-      key: string;
-      name: string;
-      description?: string;
-      version: number;
-      status: string;
-      created_at: string;
-      updated_at: string;
-    }>>('/api/v1/bpmn/process-definitions', params);
+    const res = await httpClient.get<
+      Array<{
+        id: number;
+        key: string;
+        name: string;
+        description?: string;
+        version: number;
+        status: string;
+        created_at: string;
+        updated_at: string;
+      }>
+    >('/api/v1/bpmn/process-definitions', params);
 
     const list = Array.isArray(res) ? res : [];
-    const workflows: WorkflowDefinition[] = list.map((item) => ({
+    const workflows: WorkflowDefinition[] = list.map(item => ({
       id: String(item.id || ''),
       code: item.key || '',
       name: item.name || '',
@@ -153,7 +153,11 @@ export class WorkflowApi {
     return WorkflowApi.createWorkflow(request as any);
   }
 
-  static async updateProcessDefinition(key: string, request: unknown, version?: string): Promise<WorkflowDefinition> {
+  static async updateProcessDefinition(
+    key: string,
+    request: unknown,
+    version?: string
+  ): Promise<WorkflowDefinition> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return WorkflowApi.updateWorkflow(key, request as any, version);
   }
@@ -187,7 +191,9 @@ export class WorkflowApi {
     }
   }
 
-  static async listWorkflowInstances(params?: unknown): Promise<{ instances: WorkflowInstance[]; total: number }> {
+  static async listWorkflowInstances(
+    params?: unknown
+  ): Promise<{ instances: WorkflowInstance[]; total: number }> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return WorkflowApi.getInstances(params as any);
   }
@@ -212,19 +218,17 @@ export class WorkflowApi {
   /**
    * 创建工作流
    */
-  static async createWorkflow(
-    request: CreateWorkflowRequest
-  ): Promise<WorkflowDefinition> {
+  static async createWorkflow(request: CreateWorkflowRequest): Promise<WorkflowDefinition> {
     // 从 httpClient 获取当前租户ID
     const tenantId = httpClient.getTenantId() || 1;
 
     const payload = {
-        key: request.code || `process_${Date.now()}`,
-        name: request.name,
-        description: request.description,
-        category: request.type, // Map type to category
-        bpmn_xml: (request as any).bpmn_xml,
-        tenant_id: tenantId,
+      key: request.code || `process_${Date.now()}`,
+      name: request.name,
+      description: request.description,
+      category: request.type, // Map type to category
+      bpmn_xml: (request as any).bpmn_xml,
+      tenant_id: tenantId,
     };
     return httpClient.post('/api/v1/bpmn/process-definitions', payload);
   }
@@ -238,9 +242,9 @@ export class WorkflowApi {
     version?: string
   ): Promise<WorkflowDefinition> {
     const payload = {
-        name: request.name,
-        description: request.description,
-        bpmn_xml: (request as any).bpmn_xml,
+      name: request.name,
+      description: request.description,
+      bpmn_xml: (request as any).bpmn_xml,
     };
     // Backend expects key in path. Assuming id passed here is key.
     // Also backend needs version parameter. We default to 1.0.0 or need to fetch it.
@@ -261,17 +265,14 @@ export class WorkflowApi {
    * 删除工作流
    */
   static async deleteWorkflow(id: string): Promise<void> {
-    // Backend requires version. 
+    // Backend requires version.
     await httpClient.delete(`/api/v1/bpmn/process-definitions/${id}?version=1.0.0`);
   }
 
   /**
    * 复制工作流
    */
-  static async cloneWorkflow(
-    id: string,
-    name: string
-  ): Promise<WorkflowDefinition> {
+  static async cloneWorkflow(id: string, name: string): Promise<WorkflowDefinition> {
     // 后端暂不支持，通过获取原工作流并创建新实例来实现
     const original = await WorkflowApi.getWorkflow(id);
     return WorkflowApi.createWorkflow({
@@ -305,15 +306,15 @@ export class WorkflowApi {
    */
   static async deactivateWorkflow(id: string, version?: string): Promise<void> {
     const ver = version || '1.0.0';
-    await httpClient.put(`/api/v1/bpmn/process-definitions/${id}/active?version=${ver}`, { active: false });
+    await httpClient.put(`/api/v1/bpmn/process-definitions/${id}/active?version=${ver}`, {
+      active: false,
+    });
   }
 
   /**
    * 验证工作流
    */
-  static async validateWorkflow(
-    workflow: Partial<WorkflowDefinition>
-  ): Promise<ValidationResult> {
+  static async validateWorkflow(workflow: Partial<WorkflowDefinition>): Promise<ValidationResult> {
     // Mock validation or call backend if supported
     return { isValid: true, errors: [], warnings: [] };
   }
@@ -338,9 +339,7 @@ export class WorkflowApi {
   /**
    * 导入工作流
    */
-  static async importWorkflow(
-    data: WorkflowExport
-  ): Promise<WorkflowDefinition> {
+  static async importWorkflow(data: WorkflowExport): Promise<WorkflowDefinition> {
     // 后端暂不支持导入，使用创建接口
     if (!data.workflow) {
       throw new Error('无效的导入数据');
@@ -359,9 +358,7 @@ export class WorkflowApi {
   /**
    * 获取工作流版本列表
    */
-  static async getWorkflowVersions(
-    workflowId: string
-  ): Promise<WorkflowDefinition[]> {
+  static async getWorkflowVersions(workflowId: string): Promise<WorkflowDefinition[]> {
     interface ProcessDefinitionResponse {
       id?: number;
       key?: string;
@@ -379,20 +376,22 @@ export class WorkflowApi {
       items?: T[];
     }
 
-     // 使用新的版本 API
-     const res = await httpClient.get<Array<{
-      id: number;
-      key: string;
-      name: string;
-      description?: string;
-      version: number;
-      status: string;
-      created_at: string;
-      updated_at: string;
-     }>>(`/api/v1/bpmn/versions?process_key=${workflowId}`);
+    // 使用新的版本 API
+    const res = await httpClient.get<
+      Array<{
+        id: number;
+        key: string;
+        name: string;
+        description?: string;
+        version: number;
+        status: string;
+        created_at: string;
+        updated_at: string;
+      }>
+    >(`/api/v1/bpmn/versions?process_key=${workflowId}`);
 
     const list = Array.isArray(res) ? res : [];
-    return list.map((item) => ({
+    return list.map(item => ({
       id: String(item.id || ''),
       code: item.key || '',
       name: item.name || '',
@@ -419,9 +418,7 @@ export class WorkflowApi {
   /**
    * 发布新版本
    */
-  static async publishVersion(
-    workflowId: string
-  ): Promise<WorkflowDefinition> {
+  static async publishVersion(workflowId: string): Promise<WorkflowDefinition> {
     // 后端暂不支持版本发布，获取最新版本返回
     const versions = await WorkflowApi.getWorkflowVersions(workflowId);
     if (versions.length > 0) {
@@ -433,10 +430,7 @@ export class WorkflowApi {
   /**
    * 激活指定版本
    */
-  static async activateVersion(
-    processKey: string,
-    version: number
-  ): Promise<void> {
+  static async activateVersion(processKey: string, version: number): Promise<void> {
     await httpClient.put(`/api/v1/bpmn/versions/${processKey}/${version}/activate`, {});
   }
 
@@ -456,10 +450,7 @@ export class WorkflowApi {
   /**
    * 删除指定版本
    */
-  static async deleteVersion(
-    processKey: string,
-    version: number
-  ): Promise<void> {
+  static async deleteVersion(processKey: string, version: number): Promise<void> {
     await httpClient.delete(`/api/v1/bpmn/process-definitions/${processKey}?version=${version}`);
   }
 
@@ -523,7 +514,11 @@ export class WorkflowApi {
       connections_added: [],
       connections_removed: [],
       variables_changed: [],
-      is_identical: !(data.added_nodes?.length || data.removed_nodes?.length || data.modified_nodes?.length),
+      is_identical: !(
+        data.added_nodes?.length ||
+        data.removed_nodes?.length ||
+        data.modified_nodes?.length
+      ),
     };
   }
 
@@ -532,13 +527,11 @@ export class WorkflowApi {
   /**
    * 启动工作流实例
    */
-  static async startWorkflow(
-    request: StartWorkflowRequest
-  ): Promise<WorkflowInstance> {
+  static async startWorkflow(request: StartWorkflowRequest): Promise<WorkflowInstance> {
     const payload = {
-        process_definition_key: request.workflowId, // Assuming workflowId is the Key
-        business_key: `BIZ-${Date.now()}`, // Auto generate or from request
-        variables: request.variables
+      process_definition_key: request.workflowId, // Assuming workflowId is the Key
+      business_key: `BIZ-${Date.now()}`, // Auto generate or from request
+      variables: request.variables,
     };
     const item = await httpClient.post<{
       id: string;
@@ -619,8 +612,8 @@ export class WorkflowApi {
       total?: number;
     }>('/api/v1/bpmn/process-instances', query);
     // httpClient.get returns responseData.data directly, which is an array
-    const list = Array.isArray(res) ? res : (res?.data || []);
-    const instances: WorkflowInstance[] = list.map((item) => ({
+    const list = Array.isArray(res) ? res : res?.data || [];
+    const instances: WorkflowInstance[] = list.map(item => ({
       id: item.instance_id || item.id || '',
       workflowId: item.process_definition_key || '',
       workflowName: '',
@@ -633,8 +626,8 @@ export class WorkflowApi {
       startedByName: '',
     }));
     return {
-        instances,
-        total: (res as any)?.pagination?.total || (res as any)?.total || list.length
+      instances,
+      total: (res as any)?.pagination?.total || (res as any)?.total || list.length,
     };
   }
 
@@ -668,10 +661,7 @@ export class WorkflowApi {
   /**
    * 取消工作流实例
    */
-  static async cancelInstance(
-    instanceId: string,
-    reason?: string
-  ): Promise<void> {
+  static async cancelInstance(instanceId: string, reason?: string): Promise<void> {
     await httpClient.put(`/api/v1/bpmn/process-instances/${instanceId}/terminate`, { reason });
   }
 
@@ -679,7 +669,9 @@ export class WorkflowApi {
    * 暂停工作流实例
    */
   static async suspendInstance(instanceId: string): Promise<void> {
-    await httpClient.put(`/api/v1/bpmn/process-instances/${instanceId}/suspend`, { reason: "User requested" });
+    await httpClient.put(`/api/v1/bpmn/process-instances/${instanceId}/suspend`, {
+      reason: 'User requested',
+    });
   }
 
   /**
@@ -702,9 +694,7 @@ export class WorkflowApi {
   /**
    * 获取节点实例列表
    */
-  static async getNodeInstances(
-    instanceId: string
-  ): Promise<NodeInstance[]> {
+  static async getNodeInstances(instanceId: string): Promise<NodeInstance[]> {
     interface TaskResponse {
       id?: string;
       task_id?: string;
@@ -727,23 +717,26 @@ export class WorkflowApi {
       const instance = await WorkflowApi.getInstance(instanceId);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _unused = instance;
-      const tasksRes = await httpClient.get<Array<{
-        id: string;
-        task_id: string;
-        name: string;
-        status: string;
-        assignee?: string;
-        assignee_name?: string;
-        created_time?: string;
-        due_date?: string;
-      }>>(`/api/v1/bpmn/tasks?processInstanceId=${instanceId}`);
+      const tasksRes = await httpClient.get<
+        Array<{
+          id: string;
+          task_id: string;
+          name: string;
+          status: string;
+          assignee?: string;
+          assignee_name?: string;
+          created_time?: string;
+          due_date?: string;
+        }>
+      >(`/api/v1/bpmn/tasks?processInstanceId=${instanceId}`);
       const list = tasksRes || [];
-      return list.map((item) => ({
+      return list.map(item => ({
         id: item.task_id || item.id || '',
         instanceId: instanceId,
         nodeId: item.task_id || '',
         nodeName: item.name || '',
-        status: (item.status as 'pending' | 'running' | 'completed' | 'failed' | 'skipped') || 'pending',
+        status:
+          (item.status as 'pending' | 'running' | 'completed' | 'failed' | 'skipped') || 'pending',
         assignee: item.assignee ? parseInt(item.assignee) : undefined,
         assigneeName: item.assignee_name,
         startTime: item.created_time ? new Date(item.created_time) : undefined,
@@ -757,11 +750,9 @@ export class WorkflowApi {
   /**
    * 完成节点任务
    */
-  static async completeNode(
-    request: CompleteNodeRequest
-  ): Promise<void> {
+  static async completeNode(request: CompleteNodeRequest): Promise<void> {
     await httpClient.put(`/api/v1/bpmn/tasks/${request.nodeId}/complete`, {
-        variables: request.output
+      variables: request.output,
     });
   }
 
@@ -831,10 +822,7 @@ export class WorkflowApi {
   /**
    * 从模板创建工作流
    */
-  static async createFromTemplate(
-    templateId: string,
-    name: string
-  ): Promise<WorkflowDefinition> {
+  static async createFromTemplate(templateId: string, name: string): Promise<WorkflowDefinition> {
     // 后端暂无模板创建接口，使用基础创建
     return WorkflowApi.createWorkflow({
       code: `workflow_${Date.now()}`,
@@ -909,14 +897,14 @@ export class WorkflowApi {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const _unused2 = params;
     return {
-        workflowId,
-        totalInstances: 0,
-        runningInstances: 0,
-        completedInstances: 0,
-        failedInstances: 0,
-        avgDuration: 0,
-        successRate: 0,
-        bottlenecks: []
+      workflowId,
+      totalInstances: 0,
+      runningInstances: 0,
+      completedInstances: 0,
+      failedInstances: 0,
+      avgDuration: 0,
+      successRate: 0,
+      bottlenecks: [],
     };
   }
 
@@ -936,7 +924,8 @@ export class WorkflowApi {
     terminated: number;
   }> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key) query.process_definition_key = params.process_definition_key;
+    if (params?.process_definition_key)
+      query.process_definition_key = params.process_definition_key;
     if (params?.status) query.status = params.status;
     if (params?.start_date) query.start_date = params.start_date;
     if (params?.end_date) query.end_date = params.end_date;
@@ -953,13 +942,15 @@ export class WorkflowApi {
       };
     }>('/api/v1/bpmn/stats/instances', query);
 
-    return res?.data || {
-      total: 0,
-      running: 0,
-      completed: 0,
-      suspended: 0,
-      terminated: 0,
-    };
+    return (
+      res?.data || {
+        total: 0,
+        running: 0,
+        completed: 0,
+        suspended: 0,
+        terminated: 0,
+      }
+    );
   }
 
   /**
@@ -979,7 +970,8 @@ export class WorkflowApi {
     average_completion: number;
   }> {
     const query: Record<string, string> = {};
-    if (params?.process_definition_key) query.process_definition_key = params.process_definition_key;
+    if (params?.process_definition_key)
+      query.process_definition_key = params.process_definition_key;
     if (params?.assignee) query.assignee = params.assignee;
     if (params?.status) query.status = params.status;
     if (params?.start_date) query.start_date = params.start_date;
@@ -997,13 +989,15 @@ export class WorkflowApi {
       };
     }>('/api/v1/bpmn/stats/tasks', query);
 
-    return res?.data || {
-      total_tasks: 0,
-      completed_tasks: 0,
-      pending_tasks: 0,
-      overdue_tasks: 0,
-      average_completion: 0,
-    };
+    return (
+      res?.data || {
+        total_tasks: 0,
+        completed_tasks: 0,
+        pending_tasks: 0,
+        overdue_tasks: 0,
+        average_completion: 0,
+      }
+    );
   }
 
   // ==================== 会签审批 ====================
@@ -1016,11 +1010,13 @@ export class WorkflowApi {
     approvers: string[],
     approvalType: 'serial' | 'parallel' = 'parallel',
     threshold?: number
-  ): Promise<Array<{
-    task_id: string;
-    assignee: string;
-    status: string;
-  }>> {
+  ): Promise<
+    Array<{
+      task_id: string;
+      assignee: string;
+      status: string;
+    }>
+  > {
     const res = await httpClient.post<{
       code: number;
       message: string;
@@ -1064,25 +1060,23 @@ export class WorkflowApi {
       };
     }>(`/api/v1/bpmn/tasks/${taskId}/counter-sign-status`);
 
-    return res?.data || {
-      parent_task_id: taskId,
-      total: 0,
-      completed: 0,
-      approved: 0,
-      rejected: 0,
-      pending: 0,
-      status: 'pending',
-    };
+    return (
+      res?.data || {
+        parent_task_id: taskId,
+        total: 0,
+        completed: 0,
+        approved: 0,
+        rejected: 0,
+        pending: 0,
+        status: 'pending',
+      }
+    );
   }
 
   /**
    * 投票（完成会签任务）
    */
-  static async vote(
-    taskId: string,
-    approved: boolean,
-    comment?: string
-  ): Promise<void> {
+  static async vote(taskId: string, approved: boolean, comment?: string): Promise<void> {
     await httpClient.put<{
       code: number;
       message: string;
@@ -1109,9 +1103,7 @@ export class WorkflowApi {
   /**
    * 获取性能瓶颈分析
    */
-  static async getBottleneckAnalysis(
-    workflowId: string
-  ): Promise<{
+  static async getBottleneckAnalysis(workflowId: string): Promise<{
     bottlenecks: Array<{
       nodeId: string;
       nodeName: string;

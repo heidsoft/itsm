@@ -148,7 +148,9 @@ const AssetDetail: React.FC = () => {
           >
             返回列表
           </Button>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}
+          >
             <div>
               <Title level={3} style={{ marginBottom: 8 }}>
                 {asset.name}
@@ -179,9 +181,7 @@ const AssetDetail: React.FC = () => {
           <Descriptions.Item label="型号">{asset.model || '-'}</Descriptions.Item>
           <Descriptions.Item label="制造商">{asset.manufacturer || '-'}</Descriptions.Item>
           <Descriptions.Item label="供应商">{asset.vendor || '-'}</Descriptions.Item>
-          <Descriptions.Item label="分配给">
-            {asset.assigned_to_name || '-'}
-          </Descriptions.Item>
+          <Descriptions.Item label="分配给">{asset.assigned_to_name || '-'}</Descriptions.Item>
           <Descriptions.Item label="所属部门">{asset.department || '-'}</Descriptions.Item>
           <Descriptions.Item label="位置">{asset.location || '-'}</Descriptions.Item>
           <Descriptions.Item label="采购日期">{asset.purchase_date || '-'}</Descriptions.Item>
@@ -209,7 +209,9 @@ const AssetDetail: React.FC = () => {
         <Card title="规格参数">
           <Descriptions column={1}>
             {Object.entries(asset.specifications).map(([key, value]) => (
-              <Descriptions.Item key={key} label={key}>{value}</Descriptions.Item>
+              <Descriptions.Item key={key} label={key}>
+                {value}
+              </Descriptions.Item>
             ))}
           </Descriptions>
         </Card>

@@ -42,9 +42,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
     initAuth();
   }, [login, logout, setLoading]);
 
-  return (
-    <>
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

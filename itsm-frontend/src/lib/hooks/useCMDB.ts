@@ -5,24 +5,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import { CMDBApi } from '@/lib/api/cmdb-api';
-import type {
-  CIQuery,
-  GraphQuery,
-  ImpactAnalysisRequest,
-} from '@/types/cmdb';
+import type { CIQuery, GraphQuery, ImpactAnalysisRequest } from '@/types/cmdb';
 
 export const CMDB_KEYS = {
   all: ['cmdb'] as const,
   cis: () => [...CMDB_KEYS.all, 'cis'] as const,
   ciList: (query?: CIQuery) => [...CMDB_KEYS.cis(), 'list', query] as const,
   ciDetail: (id: string) => [...CMDB_KEYS.cis(), 'detail', id] as const,
-  ciRelationships: (id: string) =>
-    [...CMDB_KEYS.cis(), 'relationships', id] as const,
+  ciRelationships: (id: string) => [...CMDB_KEYS.cis(), 'relationships', id] as const,
   ciChanges: (id: string) => [...CMDB_KEYS.cis(), 'changes', id] as const,
   ciHealth: (id: string) => [...CMDB_KEYS.cis(), 'health', id] as const,
   graph: (query: GraphQuery) => [...CMDB_KEYS.all, 'graph', query] as const,
-  impactAnalysis: (ciId: string) =>
-    [...CMDB_KEYS.all, 'impact-analysis', ciId] as const,
+  impactAnalysis: (ciId: string) => [...CMDB_KEYS.all, 'impact-analysis', ciId] as const,
   ciTypes: () => [...CMDB_KEYS.all, 'ci-types'] as const,
   stats: () => [...CMDB_KEYS.all, 'stats'] as const,
   discovery: () => [...CMDB_KEYS.all, 'discovery'] as const,
@@ -59,10 +53,7 @@ export function useCIRelationshipsQuery(
   });
 }
 
-export function useRelationshipGraphQuery(
-  query: GraphQuery,
-  enabled = true
-) {
+export function useRelationshipGraphQuery(query: GraphQuery, enabled = true) {
   return useQuery({
     queryKey: CMDB_KEYS.graph(query),
     queryFn: () => CMDBApi.getRelationshipGraph(query),
@@ -71,10 +62,7 @@ export function useRelationshipGraphQuery(
   });
 }
 
-export function useImpactAnalysisQuery(
-  request: ImpactAnalysisRequest,
-  enabled = true
-) {
+export function useImpactAnalysisQuery(request: ImpactAnalysisRequest, enabled = true) {
   return useQuery({
     queryKey: [...CMDB_KEYS.impactAnalysis(request.ciId), request],
     queryFn: () => CMDBApi.analyzeImpact(request),
@@ -118,10 +106,7 @@ export function useCIHealthQuery(ciId: string, enabled = true) {
   });
 }
 
-export function useCMDBStatsQuery(params?: {
-  startDate?: string;
-  endDate?: string;
-}) {
+export function useCMDBStatsQuery(params?: { startDate?: string; endDate?: string }) {
   return useQuery({
     queryKey: [...CMDB_KEYS.stats(), params],
     queryFn: () => CMDBApi.getCMDBStats(params),
@@ -161,13 +146,8 @@ export function useCreateCIMutation() {
 export function useUpdateCIMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      data,
-    }: {
-      id: string;
-      data: Parameters<typeof CMDBApi.updateCI>[1];
-    }) => CMDBApi.updateCI(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof CMDBApi.updateCI>[1] }) =>
+      CMDBApi.updateCI(id, data),
     onSuccess: (_, variables) => {
       message.success('配置项已更新');
       queryClient.invalidateQueries({
@@ -194,7 +174,7 @@ export function useBatchCreateCIsMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: CMDBApi.batchCreateCIs,
-    onSuccess: (result) => {
+    onSuccess: result => {
       message.success(`已批量创建 ${result.length} 个配置项`);
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.cis() });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });
@@ -206,13 +186,17 @@ export function useCreateRelationshipMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: CMDBApi.createRelationship,
-    onSuccess: (result) => {
+    onSuccess: result => {
       message.success('关系已创建');
       queryClient.invalidateQueries({
-        queryKey: CMDB_KEYS.ciRelationships(String((result as any).parent_id ?? (result as any).sourceCI)),
+        queryKey: CMDB_KEYS.ciRelationships(
+          String((result as any).parent_id ?? (result as any).sourceCI)
+        ),
       });
       queryClient.invalidateQueries({
-        queryKey: CMDB_KEYS.ciRelationships(String((result as any).child_id ?? (result as any).targetCI)),
+        queryKey: CMDB_KEYS.ciRelationships(
+          String((result as any).child_id ?? (result as any).targetCI)
+        ),
       });
       queryClient.invalidateQueries({ queryKey: CMDB_KEYS.stats() });
     },

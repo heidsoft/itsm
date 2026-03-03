@@ -1,11 +1,11 @@
 'use client';
 
 import React, { forwardRef } from 'react';
-import { Input } from 'antd';  // 直接从antd导入
+import { Input } from 'antd'; // 直接从antd导入
 import { theme } from 'antd';
 import { cn } from '@/lib/utils';
 
-const { Password: PasswordInput } = Input;  // 使用Ant Design的Password组件
+const { Password: PasswordInput } = Input; // 使用Ant Design的Password组件
 const { token } = theme.useToken();
 
 /**
@@ -138,11 +138,11 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
       const color = error
         ? token.colorError
         : success
-        ? token.colorSuccess
-        : token.colorTextSecondary;
+          ? token.colorSuccess
+          : token.colorTextSecondary;
 
       return (
-        <p className='mt-1 text-sm' style={{ color }}>
+        <p className="mt-1 text-sm" style={{ color }}>
           {text}
         </p>
       );
@@ -175,12 +175,12 @@ export const AuthField = forwardRef<HTMLInputElement, AuthFieldProps>(
       if (type === 'password') {
         return (
           <PasswordInput
-            {...commonProps as any}  // 使用any避免类型错误
+            {...(commonProps as any)} // 使用any避免类型错误
           />
         );
       }
 
-      return <Input {...commonProps as any} type={type} />;  // 使用any避免类型错误
+      return <Input {...(commonProps as any)} type={type} />; // 使用any避免类型错误
     };
 
     return (
@@ -241,9 +241,9 @@ export const AuthFieldGroup: React.FC<AuthFieldGroupProps> = ({
       style={bordered ? { borderColor: token.colorBorder } : undefined}
     >
       {(title || description) && (
-        <div className='mb-4'>
+        <div className="mb-4">
           {title && (
-            <h3 className='text-lg font-semibold mb-1' style={{ color: token.colorText }}>
+            <h3 className="text-lg font-semibold mb-1" style={{ color: token.colorText }}>
               {title}
             </h3>
           )}

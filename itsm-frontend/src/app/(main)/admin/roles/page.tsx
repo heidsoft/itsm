@@ -268,8 +268,8 @@ export default function RoleManagement() {
       key: 'info',
       render: (_: unknown, record: RoleItem) => (
         <div>
-          <div className='font-medium text-gray-900'>{record.name}</div>
-          <div className='text-sm text-gray-500'>{record.description}</div>
+          <div className="font-medium text-gray-900">{record.name}</div>
+          <div className="text-sm text-gray-500">{record.description}</div>
         </div>
       ),
     },
@@ -309,11 +309,11 @@ export default function RoleManagement() {
           permissions: string[];
         }
       ) => (
-        <Space size='small'>
-          <Tooltip title='编辑'>
+        <Space size="small">
+          <Tooltip title="编辑">
             <Button
-              type='text'
-              icon={<Edit className='w-4 h-4' />}
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
               onClick={() => {
                 setSelectedRole(record);
                 // 设置表单值
@@ -337,14 +337,14 @@ export default function RoleManagement() {
             />
           </Tooltip>
           <Popconfirm
-            title='确认删除'
-            description='确定要删除这个角色吗？此操作不可恢复。'
+            title="确认删除"
+            description="确定要删除这个角色吗？此操作不可恢复。"
             onConfirm={() => handleDeleteRole(record.id)}
-            okText='确认'
-            cancelText='取消'
+            okText="确认"
+            cancelText="取消"
           >
-            <Tooltip title='删除'>
-              <Button type='text' danger icon={<Trash2 className='w-4 h-4' />} />
+            <Tooltip title="删除">
+              <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
             </Tooltip>
           </Popconfirm>
         </Space>
@@ -354,15 +354,15 @@ export default function RoleManagement() {
 
   // 权限配置标签页
   const PermissionConfigTab = () => (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       <Alert
-        message='权限说明'
-        description='为角色分配相应的权限，控制用户可以访问的功能模块和操作。'
-        type='info'
+        message="权限说明"
+        description="为角色分配相应的权限，控制用户可以访问的功能模块和操作。"
+        type="info"
         showIcon
       />
 
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {Object.entries(PERMISSION_MODULES).map(([key, module]) => {
           const moduleConfig = PERMISSIONS.find(p => p.module === module);
           if (!moduleConfig) return null;
@@ -370,21 +370,21 @@ export default function RoleManagement() {
           return (
             <Card
               key={key}
-              size='small'
+              size="small"
               title={
-                <div className='flex items-center'>
-                  <Shield className='w-4 h-4 mr-2' />
+                <div className="flex items-center">
+                  <Shield className="w-4 h-4 mr-2" />
                   {moduleConfig.name}
                 </div>
               }
             >
-              <div className='space-y-3'>
-                <div className='flex items-center justify-between'>
-                  <span className='text-sm font-medium'>全选</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">全选</span>
                   <Checkbox onChange={e => handleSelectAllModule(module, e.target.checked)} />
                 </div>
-                <Divider className='my-2' />
-                <div className='grid grid-cols-2 gap-2'>
+                <Divider className="my-2" />
+                <div className="grid grid-cols-2 gap-2">
                   {moduleConfig.permissions.map(action => {
                     const actionLabel =
                       {
@@ -397,14 +397,14 @@ export default function RoleManagement() {
                       }[action] || action;
 
                     return (
-                      <div key={action} className='flex items-center'>
+                      <div key={action} className="flex items-center">
                         <Form.Item
                           name={`${module}_${action}`}
-                          valuePropName='checked'
-                          className='mb-0'
+                          valuePropName="checked"
+                          className="mb-0"
                         >
                           <Checkbox>
-                            <span className='text-sm'>{actionLabel}</span>
+                            <span className="text-sm">{actionLabel}</span>
                           </Checkbox>
                         </Form.Item>
                       </div>
@@ -425,23 +425,23 @@ export default function RoleManagement() {
       key: 'basic',
       label: '基本信息',
       children: (
-        <div className='space-y-4'>
+        <div className="space-y-4">
           <Form.Item
-            label='角色名称'
-            name='name'
+            label="角色名称"
+            name="name"
             rules={[{ required: true, message: '请输入角色名称' }]}
           >
-            <Input placeholder='请输入角色名称' />
+            <Input placeholder="请输入角色名称" />
           </Form.Item>
           <Form.Item
-            label='角色描述'
-            name='description'
+            label="角色描述"
+            name="description"
             rules={[{ required: true, message: '请输入角色描述' }]}
           >
-            <Input.TextArea rows={3} placeholder='请输入角色描述' />
+            <Input.TextArea rows={3} placeholder="请输入角色描述" />
           </Form.Item>
-          <Form.Item label='状态' name='status' valuePropName='checked'>
-            <Switch checkedChildren='启用' unCheckedChildren='禁用' />
+          <Form.Item label="状态" name="status" valuePropName="checked">
+            <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
         </div>
       ),
@@ -455,51 +455,51 @@ export default function RoleManagement() {
 
   return (
     <div style={{ padding: 24 }}>
-      <div className='mb-6'>
-        <Title level={2} className='!mb-2'>
-          <Key className='inline-block w-6 h-6 mr-2' />
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Key className="inline-block w-6 h-6 mr-2" />
           角色权限管理
         </Title>
-        <Text type='secondary'>管理系统角色和权限分配</Text>
+        <Text type="secondary">管理系统角色和权限分配</Text>
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='总角色数'
+              title="总角色数"
               value={stats.totalRoles}
-              prefix={<Key className='w-5 h-5' />}
+              prefix={<Key className="w-5 h-5" />}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='启用角色'
+              title="启用角色"
               value={stats.activeRoles}
-              prefix={<CheckCircle className='w-5 h-5' />}
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='禁用角色'
+              title="禁用角色"
               value={stats.inactiveRoles}
-              prefix={<XCircle className='w-5 h-5' />}
+              prefix={<XCircle className="w-5 h-5" />}
               styles={{ content: { color: '#ff4d4f' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='关联用户'
+              title="关联用户"
               value={stats.totalUsers}
-              prefix={<Users className='w-5 h-5' />}
+              prefix={<Users className="w-5 h-5" />}
               styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
@@ -507,12 +507,12 @@ export default function RoleManagement() {
       </Row>
 
       {/* 搜索和过滤 */}
-      <Card className='mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={12} lg={8}>
             <Input
-              placeholder='搜索角色名称...'
-              prefix={<Search className='w-4 h-4 text-gray-400' />}
+              placeholder="搜索角色名称..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               allowClear
@@ -520,20 +520,20 @@ export default function RoleManagement() {
           </Col>
           <Col xs={24} md={8} lg={6}>
             <Select
-              placeholder='筛选状态'
+              placeholder="筛选状态"
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
             >
-              <Option value='all'>全部状态</Option>
-              <Option value='active'>启用</Option>
-              <Option value='inactive'>禁用</Option>
+              <Option value="all">全部状态</Option>
+              <Option value="active">启用</Option>
+              <Option value="inactive">禁用</Option>
             </Select>
           </Col>
-          <Col xs={24} md={4} lg={10} className='text-right'>
+          <Col xs={24} md={4} lg={10} className="text-right">
             <Button
-              type='primary'
-              icon={<Plus className='w-4 h-4' />}
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
               onClick={() => {
                 setSelectedRole(null);
                 form.resetFields();
@@ -547,11 +547,11 @@ export default function RoleManagement() {
       </Card>
 
       {/* 角色列表 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         <Table
           columns={columns as any}
           dataSource={roles}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           pagination={{
             total: roles.length,
@@ -560,7 +560,7 @@ export default function RoleManagement() {
             showQuickJumper: true,
             showTotal: total => `共 ${total} 条记录`,
           }}
-          className='enterprise-table'
+          className="enterprise-table"
         />
       </Card>
 
@@ -568,7 +568,7 @@ export default function RoleManagement() {
       <Modal
         title={
           <span>
-            <Edit className='w-4 h-4 mr-2' />
+            <Edit className="w-4 h-4 mr-2" />
             {selectedRole ? '编辑角色' : '新建角色'}
           </span>
         }
@@ -581,11 +581,11 @@ export default function RoleManagement() {
         }}
         width={800}
         confirmLoading={loading}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
-        <Form form={form} layout='vertical' className='mt-4'>
-          <Tabs items={tabItems} type='card' />
+        <Form form={form} layout="vertical" className="mt-4">
+          <Tabs items={tabItems} type="card" />
         </Form>
       </Modal>
     </div>

@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, Row, Col, Button, Space, Breadcrumb } from "antd";
+import React from 'react';
+import { Card, Row, Col, Button, Space, Breadcrumb } from 'antd';
 import {
   ArrowLeftOutlined,
   PlusOutlined,
   ReloadOutlined,
   DownloadOutlined,
-} from "@ant-design/icons";
+} from '@ant-design/icons';
 
 // 企业级页面模板接口
 interface EnterprisePageTemplateProps {
@@ -42,7 +42,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
   toolbar,
   showContent = true,
   content,
-  className = "",
+  className = '',
 }) => {
   // 默认的快速操作
   const defaultQuickActions = (
@@ -54,16 +54,10 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
       >
         新建
       </Button>
-      <Button
-        icon={<ReloadOutlined />}
-        className="enterprise-btn enterprise-btn-ghost"
-      >
+      <Button icon={<ReloadOutlined />} className="enterprise-btn enterprise-btn-ghost">
         刷新
       </Button>
-      <Button
-        icon={<DownloadOutlined />}
-        className="enterprise-btn enterprise-btn-ghost"
-      >
+      <Button icon={<DownloadOutlined />} className="enterprise-btn enterprise-btn-ghost">
         导出
       </Button>
     </Space>
@@ -110,7 +104,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
         {/* 面包屑导航 */}
         {(showBackButton || breadcrumb.length > 0) && (
           <div className="flex items-center mb-4">
-             {showBackButton && (
+            {showBackButton && (
               <Button
                 type="text"
                 icon={<ArrowLeftOutlined />}
@@ -148,9 +142,7 @@ export const PageContainer: React.FC<EnterprisePageTemplateProps> = ({
         {showToolbar && <div className="mb-6">{toolbar || defaultToolbar}</div>}
 
         {/* 主要内容 */}
-        {showContent && (
-          <div className="enterprise-fade-in">{content || children}</div>
-        )}
+        {showContent && <div className="enterprise-fade-in">{content || children}</div>}
       </div>
     </div>
   );
@@ -162,7 +154,7 @@ export const EnterpriseCard: React.FC<{
   extra?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
-}> = ({ title, extra, children, className = "" }) => (
+}> = ({ title, extra, children, className = '' }) => (
   <Card title={title} extra={extra} className={`enterprise-card ${className}`}>
     {children}
   </Card>
@@ -176,7 +168,7 @@ export const EnterpriseStatCard: React.FC<{
   suffix?: string;
   valueStyle?: React.CSSProperties;
   className?: string;
-}> = ({ title, value, prefix, suffix, valueStyle, className = "" }) => (
+}> = ({ title, value, prefix, suffix, valueStyle, className = '' }) => (
   <Card className={`enterprise-stat-card ${className}`}>
     <div className="text-center">
       {prefix && <div className="mb-2">{prefix}</div>}
@@ -195,12 +187,8 @@ export const EnterpriseTableContainer: React.FC<{
   extra?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
-}> = ({ title, extra, children, className = "" }) => (
-  <Card
-    title={title}
-    extra={extra}
-    className={`enterprise-card enterprise-table ${className}`}
-  >
+}> = ({ title, extra, children, className = '' }) => (
+  <Card title={title} extra={extra} className={`enterprise-card enterprise-table ${className}`}>
     {children}
   </Card>
 );
@@ -210,11 +198,8 @@ export const EnterpriseFormContainer: React.FC<{
   title?: string;
   children: React.ReactNode;
   className?: string;
-}> = ({ title, children, className = "" }) => (
-  <Card
-    title={title}
-    className={`enterprise-card enterprise-form ${className}`}
-  >
+}> = ({ title, children, className = '' }) => (
+  <Card title={title} className={`enterprise-card enterprise-form ${className}`}>
     {children}
   </Card>
 );

@@ -19,9 +19,9 @@ interface Improvement {
 }
 
 const statusColors: Record<ImprovementStatus, string> = {
-  '进行中': 'blue',
-  '待评估': 'gold',
-  '已完成': 'green',
+  进行中: 'blue',
+  待评估: 'gold',
+  已完成: 'green',
 };
 
 const ImprovementListPage = () => {
@@ -49,7 +49,7 @@ const ImprovementListPage = () => {
         status: mapStatus(ticket.status),
         owner: ticket.assignee?.name || '未分配',
         target: ticket.description || '无目标描述',
-        createdAt: ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-'
+        createdAt: ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '-',
       }));
 
       setImprovements(mappedImprovements);
@@ -63,11 +63,15 @@ const ImprovementListPage = () => {
 
   const mapStatus = (ticketStatus: string): ImprovementStatus => {
     switch (ticketStatus) {
-      case 'open': return '待评估';
-      case 'in_progress': return '进行中';
+      case 'open':
+        return '待评估';
+      case 'in_progress':
+        return '进行中';
       case 'resolved':
-      case 'closed': return '已完成';
-      default: return '待评估';
+      case 'closed':
+        return '已完成';
+      default:
+        return '待评估';
     }
   };
 
@@ -83,7 +87,7 @@ const ImprovementListPage = () => {
       key: 'id',
       width: 120,
       render: (id: string) => (
-        <Button type='link' onClick={() => router.push(`/improvements/${id}`)}>
+        <Button type="link" onClick={() => router.push(`/improvements/${id}`)}>
           {id}
         </Button>
       ),
@@ -99,9 +103,7 @@ const ImprovementListPage = () => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (status: ImprovementStatus) => (
-        <Tag color={statusColors[status]}>{status}</Tag>
-      ),
+      render: (status: ImprovementStatus) => <Tag color={statusColors[status]}>{status}</Tag>,
     },
     {
       title: '负责人',
@@ -124,33 +126,37 @@ const ImprovementListPage = () => {
   ];
 
   return (
-    <div className='p-6 bg-gray-50 min-h-full'>
+    <div className="p-6 bg-gray-50 min-h-full">
       <Card>
-        <div className='mb-6 flex justify-between items-center'>
+        <div className="mb-6 flex justify-between items-center">
           <div>
-            <h2 className='text-2xl font-bold text-gray-800'>持续改进</h2>
-            <p className='text-gray-500 mt-1'>识别、规划和实施IT服务和流程的改进</p>
+            <h2 className="text-2xl font-bold text-gray-800">持续改进</h2>
+            <p className="text-gray-500 mt-1">识别、规划和实施IT服务和流程的改进</p>
           </div>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={loadImprovements} loading={loading}>
               刷新
             </Button>
-            <Button type='primary' icon={<PlusOutlined />} onClick={() => router.push('/improvements/new')}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => router.push('/improvements/new')}
+            >
               新建改进计划
             </Button>
           </Space>
         </div>
 
         {/* 筛选器 */}
-        <div className='mb-4 flex items-center gap-2'>
-          <span className='text-sm font-semibold'>筛选:</span>
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-sm font-semibold">筛选:</span>
           <Space>
             {['全部', '进行中', '待评估', '已完成'].map(f => (
               <Button
                 key={f}
                 type={filter === f ? 'primary' : 'default'}
                 onClick={() => setFilter(f)}
-                size='small'
+                size="small"
               >
                 {f}
               </Button>
@@ -160,8 +166,8 @@ const ImprovementListPage = () => {
 
         {/* 改进计划列表 */}
         {filteredImprovements.length === 0 && !loading ? (
-          <Empty description='暂无改进计划'>
-            <Button type='primary' onClick={() => router.push('/improvements/new')}>
+          <Empty description="暂无改进计划">
+            <Button type="primary" onClick={() => router.push('/improvements/new')}>
               创建第一个改进计划
             </Button>
           </Empty>
@@ -169,12 +175,12 @@ const ImprovementListPage = () => {
           <Table
             columns={columns}
             dataSource={filteredImprovements}
-            rowKey='id'
+            rowKey="id"
             loading={loading}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
-              showTotal: (total) => `共 ${total} 条记录`,
+              showTotal: total => `共 ${total} 条记录`,
             }}
           />
         )}

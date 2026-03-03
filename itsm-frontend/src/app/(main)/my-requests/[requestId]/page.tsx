@@ -173,10 +173,10 @@ export default function MyRequestDetailPage() {
   };
 
   return (
-    <div className='max-w-4xl mx-auto p-6'>
-      <Space orientation='vertical' size={16} style={{ width: '100%' }}>
+    <div className="max-w-4xl mx-auto p-6">
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         <Card>
-          <Space align='center'>
+          <Space align="center">
             <Button icon={<ArrowLeftOutlined />} onClick={() => router.push('/my-requests')}>
               返回
             </Button>
@@ -184,53 +184,53 @@ export default function MyRequestDetailPage() {
               <Title level={2} style={{ marginBottom: 0 }}>
                 请求详情 #{requestId}
               </Title>
-              <Text type='secondary'>最小可用：展示状态与审批记录，并支持 approve/reject</Text>
+              <Text type="secondary">最小可用：展示状态与审批记录，并支持 approve/reject</Text>
             </div>
           </Space>
         </Card>
 
         <Card loading={loading}>
-          <Descriptions bordered column={2} size='middle'>
-            <Descriptions.Item label='状态'>
+          <Descriptions bordered column={2} size="middle">
+            <Descriptions.Item label="状态">
               {statusTag(String(detail?.status || ''))}
             </Descriptions.Item>
-            <Descriptions.Item label='当前级别'>
+            <Descriptions.Item label="当前级别">
               {detail?.current_level ?? '-'} / {detail?.total_levels ?? '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='关联CI'>
+            <Descriptions.Item label="关联CI">
               {detail?.ci_id ? (
-                <Button type='link' onClick={() => router.push(`/cmdb/cis/${detail.ci_id}`)}>
+                <Button type="link" onClick={() => router.push(`/cmdb/cis/${detail.ci_id}`)}>
                   CI #{detail.ci_id}
                 </Button>
               ) : (
                 '-'
               )}
             </Descriptions.Item>
-            <Descriptions.Item label='标题' span={2}>
+            <Descriptions.Item label="标题" span={2}>
               {detail?.title || detail?.catalog?.name || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='原因' span={2}>
+            <Descriptions.Item label="原因" span={2}>
               {detail?.reason || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='数据分级'>
+            <Descriptions.Item label="数据分级">
               {detail?.data_classification || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label='成本中心'>{detail?.cost_center || '-'}</Descriptions.Item>
+            <Descriptions.Item label="成本中心">{detail?.cost_center || '-'}</Descriptions.Item>
           </Descriptions>
 
           <Divider />
 
           <Title level={4}>审批记录</Title>
           {approvals.length === 0 ? (
-            <Text type='secondary'>暂无审批记录</Text>
+            <Text type="secondary">暂无审批记录</Text>
           ) : (
-            <Descriptions bordered column={1} size='small'>
+            <Descriptions bordered column={1} size="small">
               {approvals.map((a: any) => (
                 <Descriptions.Item key={a.id} label={`L${a.level} · ${a.step}`}>
                   <Space wrap>
                     {statusTag(String(a.status))}
-                    <Text type='secondary'>审批人：{a.approver_name || '-'}</Text>
-                    <Text type='secondary'>意见：{a.comment || '-'}</Text>
+                    <Text type="secondary">审批人：{a.approver_name || '-'}</Text>
+                    <Text type="secondary">意见：{a.comment || '-'}</Text>
                   </Space>
                 </Descriptions.Item>
               ))}
@@ -245,15 +245,15 @@ export default function MyRequestDetailPage() {
             detail?.status === 'it_approved') && (
             <>
               <Title level={4}>审批操作</Title>
-              <Space orientation='vertical' style={{ width: '100%' }}>
+              <Space orientation="vertical" style={{ width: '100%' }}>
                 <Input.TextArea
                   value={comment}
                   onChange={e => setComment(e.target.value)}
                   rows={3}
-                  placeholder='审批意见（拒绝时必填）'
+                  placeholder="审批意见（拒绝时必填）"
                 />
                 <Space>
-                  <Button type='primary' onClick={doApprove}>
+                  <Button type="primary" onClick={doApprove}>
                     通过
                   </Button>
                   <Button danger onClick={doReject}>
@@ -270,18 +270,18 @@ export default function MyRequestDetailPage() {
             <>
               <Title level={4}>交付操作</Title>
               <Alert
-                message='审批已全部通过'
-                description='可以启动交付任务，系统将自动创建云资源'
-                type='success'
+                message="审批已全部通过"
+                description="可以启动交付任务，系统将自动创建云资源"
+                type="success"
                 showIcon
                 style={{ marginBottom: 16 }}
               />
               <Button
-                type='primary'
+                type="primary"
                 icon={<PlayCircleOutlined />}
                 onClick={handleStartProvisioning}
                 loading={executing}
-                size='large'
+                size="large"
               >
                 启动交付
               </Button>
@@ -297,24 +297,24 @@ export default function MyRequestDetailPage() {
               <Title level={4}>
                 交付任务
                 <Button
-                  type='link'
+                  type="link"
                   icon={<ReloadOutlined />}
                   onClick={loadProvisioningTasks}
                   loading={loadingTasks}
-                  size='small'
+                  size="small"
                 >
                   刷新
                 </Button>
               </Title>
               {provisioningTasks.length === 0 ? (
-                <Text type='secondary'>暂无交付任务</Text>
+                <Text type="secondary">暂无交付任务</Text>
               ) : (
                 <Table<ProvisioningTask>
-                  rowKey='id'
+                  rowKey="id"
                   loading={loadingTasks}
                   dataSource={provisioningTasks}
                   pagination={false}
-                  size='small'
+                  size="small"
                   columns={[
                     {
                       title: 'ID',
@@ -357,8 +357,8 @@ export default function MyRequestDetailPage() {
                         <Space>
                           {task.status === 'pending' && (
                             <Button
-                              type='link'
-                              size='small'
+                              type="link"
+                              size="small"
                               onClick={() => handleExecuteTask(task.id)}
                               loading={executing}
                             >
@@ -367,8 +367,8 @@ export default function MyRequestDetailPage() {
                           )}
                           {task.status === 'succeeded' && task.result && (
                             <Button
-                              type='link'
-                              size='small'
+                              type="link"
+                              size="small"
                               onClick={() => {
                                 message.info(JSON.stringify(task.result, null, 2));
                               }}
@@ -386,7 +386,7 @@ export default function MyRequestDetailPage() {
                 provisioningTasks.some(t => t.status === 'pending') && (
                   <div style={{ marginTop: 16 }}>
                     <Button
-                      type='primary'
+                      type="primary"
                       icon={<PlayCircleOutlined />}
                       onClick={() => {
                         const pendingTask = provisioningTasks.find(t => t.status === 'pending');

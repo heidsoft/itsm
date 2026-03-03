@@ -85,7 +85,7 @@ export const AIFeedback: React.FC<AIFeedbackProps> = ({
   if (submitted) {
     return (
       <div className={`text-sm text-green-600 flex items-center ${className}`}>
-        <ThumbsUp className='w-4 h-4 mr-1' />
+        <ThumbsUp className="w-4 h-4 mr-1" />
         感谢您的反馈！
       </div>
     );
@@ -102,9 +102,9 @@ export const AIFeedback: React.FC<AIFeedbackProps> = ({
             ? 'text-green-600 bg-green-100'
             : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
         }`}
-        title='这个建议有用'
+        title="这个建议有用"
       >
-        <ThumbsUp className='w-4 h-4' />
+        <ThumbsUp className="w-4 h-4" />
       </button>
 
       <button
@@ -115,14 +115,14 @@ export const AIFeedback: React.FC<AIFeedbackProps> = ({
             ? 'text-red-600 bg-red-100'
             : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
         }`}
-        title='这个建议没用'
+        title="这个建议没用"
       >
-        <ThumbsDown className='w-4 h-4' />
+        <ThumbsDown className="w-4 h-4" />
       </button>
 
       {/* Score selector (only show if feedback is useful) */}
       {feedback === 'useful' && (
-        <div className='flex items-center space-x-1 ml-2'>
+        <div className="flex items-center space-x-1 ml-2">
           {[1, 2, 3, 4, 5].map(starScore => (
             <button
               key={starScore}
@@ -133,7 +133,7 @@ export const AIFeedback: React.FC<AIFeedbackProps> = ({
               }`}
               title={`评分 ${starScore}`}
             >
-              <Star className='w-3 h-3' />
+              <Star className="w-3 h-3" />
             </button>
           ))}
         </div>
@@ -144,35 +144,35 @@ export const AIFeedback: React.FC<AIFeedbackProps> = ({
         <button
           onClick={() => setShowNotes(!showNotes)}
           disabled={submitting}
-          className='p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors'
-          title='添加备注'
+          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+          title="添加备注"
         >
-          <MessageSquare className='w-4 h-4' />
+          <MessageSquare className="w-4 h-4" />
         </button>
       )}
 
       {/* Notes input */}
       {showNotes && (
-        <div className='ml-2'>
+        <div className="ml-2">
           <textarea
             value={notes}
             onChange={handleNotesChange}
-            placeholder='添加备注（可选）'
-            className='w-32 h-16 px-2 py-1 text-xs border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-500'
+            placeholder="添加备注（可选）"
+            className="w-32 h-16 px-2 py-1 text-xs border border-gray-300 rounded resize-none focus:outline-none focus:ring-1 focus:ring-blue-500"
             disabled={submitting}
           />
-          <div className='flex space-x-1 mt-1'>
+          <div className="flex space-x-1 mt-1">
             <button
               onClick={handleDetailedFeedback}
               disabled={submitting}
-              className='px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50'
+              className="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
               {submitting ? '提交中...' : '提交'}
             </button>
             <button
               onClick={() => setShowNotes(false)}
               disabled={submitting}
-              className='px-2 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:bg-gray-50 disabled:opacity-50'
+              className="px-2 py-1 text-xs border border-gray-300 text-gray-600 rounded hover:bg-gray-50 disabled:opacity-50"
             >
               取消
             </button>

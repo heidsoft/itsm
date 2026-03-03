@@ -426,17 +426,17 @@ const AdvancedReporting: React.FC = () => {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case 'ticket':
-        return <FileText className='w-4 h-4' />;
+        return <FileText className="w-4 h-4" />;
       case 'sla':
-        return <CheckCircle className='w-4 h-4' />;
+        return <CheckCircle className="w-4 h-4" />;
       case 'user':
-        return <Users className='w-4 h-4' />;
+        return <Users className="w-4 h-4" />;
       case 'system':
-        return <Settings className='w-4 h-4' />;
+        return <Settings className="w-4 h-4" />;
       case 'custom':
-        return <BarChart3 className='w-4 h-4' />;
+        return <BarChart3 className="w-4 h-4" />;
       default:
-        return <BarChart3 className='w-4 h-4' />;
+        return <BarChart3 className="w-4 h-4" />;
     }
   };
 
@@ -456,13 +456,13 @@ const AdvancedReporting: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className='w-4 h-4' />;
+        return <CheckCircle className="w-4 h-4" />;
       case 'running':
-        return <Clock className='w-4 h-4' />;
+        return <Clock className="w-4 h-4" />;
       case 'failed':
-        return <AlertTriangle className='w-4 h-4' />;
+        return <AlertTriangle className="w-4 h-4" />;
       default:
-        return <Clock className='w-4 h-4' />;
+        return <Clock className="w-4 h-4" />;
     }
   };
 
@@ -471,21 +471,21 @@ const AdvancedReporting: React.FC = () => {
       title: '报表信息',
       key: 'info',
       render: (_, record) => (
-        <div className='space-y-1'>
-          <div className='font-medium'>{record.name}</div>
-          <div className='text-sm text-gray-600'>{record.description}</div>
-          <div className='flex items-center gap-2 text-xs text-gray-500'>
+        <div className="space-y-1">
+          <div className="font-medium">{record.name}</div>
+          <div className="text-sm text-gray-600">{record.description}</div>
+          <div className="flex items-center gap-2 text-xs text-gray-500">
             {getCategoryIcon(record.category)}
             <span>
               {record.category === 'ticket'
                 ? '工单'
                 : record.category === 'sla'
-                ? 'SLA'
-                : record.category === 'user'
-                ? '用户'
-                : record.category === 'system'
-                ? '系统'
-                : '自定义'}
+                  ? 'SLA'
+                  : record.category === 'user'
+                    ? '用户'
+                    : record.category === 'system'
+                      ? '系统'
+                      : '自定义'}
             </span>
             <span>•</span>
             <span>创建者：{record.created_by}</span>
@@ -498,25 +498,25 @@ const AdvancedReporting: React.FC = () => {
       key: 'visualization',
       width: 120,
       render: (_, record) => (
-        <div className='space-y-1'>
-          <Tag color='blue'>
+        <div className="space-y-1">
+          <Tag color="blue">
             {record.visualization === 'table'
               ? '表格'
               : record.visualization === 'chart'
-              ? '图表'
-              : '仪表盘'}
+                ? '图表'
+                : '仪表盘'}
           </Tag>
           {record.chart_type && (
-            <div className='text-xs text-gray-500'>
+            <div className="text-xs text-gray-500">
               {record.chart_type === 'bar'
                 ? '柱状图'
                 : record.chart_type === 'line'
-                ? '折线图'
-                : record.chart_type === 'pie'
-                ? '饼图'
-                : record.chart_type === 'area'
-                ? '面积图'
-                : '散点图'}
+                  ? '折线图'
+                  : record.chart_type === 'pie'
+                    ? '饼图'
+                    : record.chart_type === 'area'
+                      ? '面积图'
+                      : '散点图'}
             </div>
           )}
         </div>
@@ -537,13 +537,13 @@ const AdvancedReporting: React.FC = () => {
       key: 'actions',
       width: 200,
       render: (_, record) => (
-        <Space size='small'>
-          <Button size='small' type='primary' onClick={() => handleExecuteReport(record)}>
+        <Space size="small">
+          <Button size="small" type="primary" onClick={() => handleExecuteReport(record)}>
             执行
           </Button>
           <Button
-            size='small'
-            icon={<Edit className='w-3 h-3' />}
+            size="small"
+            icon={<Edit className="w-3 h-3" />}
             onClick={() => {
               setSelectedReport(record);
               form.setFieldsValue(record);
@@ -553,13 +553,13 @@ const AdvancedReporting: React.FC = () => {
             编辑
           </Button>
           <Popconfirm
-            title='确认删除'
-            description='确定要删除这个报表吗？'
+            title="确认删除"
+            description="确定要删除这个报表吗？"
             onConfirm={() => handleDeleteReport(record.id)}
-            okText='确认'
-            cancelText='取消'
+            okText="确认"
+            cancelText="取消"
           >
-            <Button size='small' danger icon={<Trash2 className='w-3 h-3' />} />
+            <Button size="small" danger icon={<Trash2 className="w-3 h-3" />} />
           </Popconfirm>
         </Space>
       ),
@@ -570,7 +570,7 @@ const AdvancedReporting: React.FC = () => {
     {
       title: '报表名称',
       key: 'report_name',
-      render: (_, record) => <div className='font-medium'>{record.report_name}</div>,
+      render: (_, record) => <div className="font-medium">{record.report_name}</div>,
     },
     {
       title: '状态',
@@ -582,8 +582,8 @@ const AdvancedReporting: React.FC = () => {
           {record.status === 'completed'
             ? '已完成'
             : record.status === 'running'
-            ? '执行中'
-            : '执行失败'}
+              ? '执行中'
+              : '执行失败'}
         </Tag>
       ),
     },
@@ -592,7 +592,7 @@ const AdvancedReporting: React.FC = () => {
       key: 'execution_time',
       width: 150,
       render: (_, record) => (
-        <div className='text-sm'>
+        <div className="text-sm">
           <div>开始：{new Date(record.started_at).toLocaleString()}</div>
           {record.completed_at && <div>完成：{new Date(record.completed_at).toLocaleString()}</div>}
         </div>
@@ -603,12 +603,12 @@ const AdvancedReporting: React.FC = () => {
       key: 'result',
       width: 100,
       render: (_, record) => (
-        <div className='text-sm'>
+        <div className="text-sm">
           {record.status === 'completed' && record.result_count && (
             <div>记录数：{record.result_count}</div>
           )}
           {record.status === 'failed' && record.error_message && (
-            <div className='text-red-500'>错误：{record.error_message}</div>
+            <div className="text-red-500">错误：{record.error_message}</div>
           )}
         </div>
       ),
@@ -618,14 +618,14 @@ const AdvancedReporting: React.FC = () => {
       key: 'actions',
       width: 120,
       render: (_, record) => (
-        <Space size='small'>
+        <Space size="small">
           {record.status === 'completed' && (
-            <Button size='small' icon={<Eye className='w-3 h-3' />}>
+            <Button size="small" icon={<Eye className="w-3 h-3" />}>
               查看结果
             </Button>
           )}
           {record.status === 'running' && (
-            <Button size='small' icon={<RefreshCw className='w-3 h-3' />}>
+            <Button size="small" icon={<RefreshCw className="w-3 h-3" />}>
               刷新状态
             </Button>
           )}
@@ -635,30 +635,30 @@ const AdvancedReporting: React.FC = () => {
   ];
 
   return (
-    <div className='space-y-6'>
-      <div className='flex justify-between items-center'>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
         <div>
           <Title level={2}>
-            <BarChart3 className='inline-block w-6 h-6 mr-2' />
+            <BarChart3 className="inline-block w-6 h-6 mr-2" />
             高级报表分析
           </Title>
-          <Text type='secondary'>创建自定义报表、分析数据和构建实时仪表盘</Text>
+          <Text type="secondary">创建自定义报表、分析数据和构建实时仪表盘</Text>
         </div>
         <Space>
-          <Button icon={<RefreshCw className='w-4 h-4' />} onClick={loadData}>
+          <Button icon={<RefreshCw className="w-4 h-4" />} onClick={loadData}>
             刷新
           </Button>
         </Space>
       </div>
 
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
-        <TabPane tab='报表管理' key='reports'>
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
+        <TabPane tab="报表管理" key="reports">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
               <Title level={4}>报表定义</Title>
               <Button
-                type='primary'
-                icon={<Plus className='w-4 h-4' />}
+                type="primary"
+                icon={<Plus className="w-4 h-4" />}
                 onClick={() => {
                   setSelectedReport(null);
                   form.resetFields();
@@ -672,45 +672,45 @@ const AdvancedReporting: React.FC = () => {
             <Table
               columns={reportColumns}
               dataSource={reports}
-              rowKey='id'
+              rowKey="id"
               loading={loading}
-              size='small'
+              size="small"
             />
           </div>
         </TabPane>
 
-        <TabPane tab='执行历史' key='executions'>
-          <div className='space-y-4'>
+        <TabPane tab="执行历史" key="executions">
+          <div className="space-y-4">
             <Title level={4}>报表执行历史</Title>
-            <Table columns={executionColumns} dataSource={executions} rowKey='id' size='small' />
+            <Table columns={executionColumns} dataSource={executions} rowKey="id" size="small" />
           </div>
         </TabPane>
 
-        <TabPane tab='实时仪表盘' key='dashboard'>
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
+        <TabPane tab="实时仪表盘" key="dashboard">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
               <Title level={4}>实时数据仪表盘</Title>
               <Space>
                 {isEditing ? (
                   <>
                     <Button onClick={() => setIsEditing(false)}>取消编辑</Button>
-                    <Button type='primary' onClick={handleSaveDashboard}>
+                    <Button type="primary" onClick={handleSaveDashboard}>
                       保存配置
                     </Button>
                   </>
                 ) : (
-                  <Button icon={<Edit className='w-4 h-4' />} onClick={() => setIsEditing(true)}>
+                  <Button icon={<Edit className="w-4 h-4" />} onClick={() => setIsEditing(true)}>
                     编辑布局
                   </Button>
                 )}
               </Space>
             </div>
 
-            <div className='grid grid-cols-12 gap-4' style={{ minHeight: '600px' }}>
+            <div className="grid grid-cols-12 gap-4" style={{ minHeight: '600px' }}>
               {dashboardWidgets.map(widget => (
                 <div
                   key={widget.id}
-                  className='col-span-3'
+                  className="col-span-3"
                   style={{
                     gridColumn: `span ${widget.position.w}`,
                     gridRow: `span ${widget.position.h}`,
@@ -718,38 +718,38 @@ const AdvancedReporting: React.FC = () => {
                 >
                   <Card
                     title={widget.title}
-                    size='small'
-                    className='h-full'
+                    size="small"
+                    className="h-full"
                     extra={
                       isEditing && (
                         <Space>
-                          <Button size='small' icon={<Settings className='w-3 h-3' />} />
-                          <Button size='small' icon={<Trash2 className='w-3 h-3' />} />
+                          <Button size="small" icon={<Settings className="w-3 h-3" />} />
+                          <Button size="small" icon={<Trash2 className="w-3 h-3" />} />
                         </Space>
                       )
                     }
                   >
-                    <div className='h-full flex items-center justify-center'>
+                    <div className="h-full flex items-center justify-center">
                       {widget.type === 'chart' && (
-                        <div className='text-center text-gray-500'>
-                          <BarChart3 className='w-12 h-12 mx-auto mb-2' />
+                        <div className="text-center text-gray-500">
+                          <BarChart3 className="w-12 h-12 mx-auto mb-2" />
                           <div>图表组件</div>
-                          <div className='text-xs'>{widget.config.chartType}</div>
+                          <div className="text-xs">{widget.config.chartType}</div>
                         </div>
                       )}
                       {widget.type === 'metric' && (
-                        <div className='text-center'>
+                        <div className="text-center">
                           <Statistic
                             title={widget.title}
                             value={95.6}
-                            suffix='%'
+                            suffix="%"
                             styles={{ content: { color: '#52c41a' } }}
                           />
                         </div>
                       )}
                       {widget.type === 'table' && (
-                        <div className='text-center text-gray-500'>
-                          <Table className='w-full' size='small' />
+                        <div className="text-center text-gray-500">
+                          <Table className="w-full" size="small" />
                         </div>
                       )}
                     </div>
@@ -772,75 +772,75 @@ const AdvancedReporting: React.FC = () => {
           form.resetFields();
         }}
         width={800}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label='报表名称'
-                name='name'
+                label="报表名称"
+                name="name"
                 rules={[{ required: true, message: '请输入报表名称' }]}
               >
-                <Input placeholder='请输入报表名称' />
+                <Input placeholder="请输入报表名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label='报表分类'
-                name='category'
+                label="报表分类"
+                name="category"
                 rules={[{ required: true, message: '请选择报表分类' }]}
               >
-                <Select placeholder='请选择报表分类'>
-                  <Option value='ticket'>工单</Option>
-                  <Option value='sla'>SLA</Option>
-                  <Option value='user'>用户</Option>
-                  <Option value='system'>系统</Option>
-                  <Option value='custom'>自定义</Option>
+                <Select placeholder="请选择报表分类">
+                  <Option value="ticket">工单</Option>
+                  <Option value="sla">SLA</Option>
+                  <Option value="user">用户</Option>
+                  <Option value="system">系统</Option>
+                  <Option value="custom">自定义</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
-          <Form.Item label='描述' name='description'>
-            <TextArea rows={2} placeholder='请输入报表描述' />
+          <Form.Item label="描述" name="description">
+            <TextArea rows={2} placeholder="请输入报表描述" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label='数据源'
-                name='data_source'
+                label="数据源"
+                name="data_source"
                 rules={[{ required: true, message: '请输入数据源' }]}
               >
-                <Input placeholder='请输入数据源' />
+                <Input placeholder="请输入数据源" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label='可视化类型'
-                name='visualization'
+                label="可视化类型"
+                name="visualization"
                 rules={[{ required: true, message: '请选择可视化类型' }]}
               >
-                <Select placeholder='请选择可视化类型'>
-                  <Option value='table'>表格</Option>
-                  <Option value='chart'>图表</Option>
-                  <Option value='dashboard'>仪表盘</Option>
+                <Select placeholder="请选择可视化类型">
+                  <Option value="table">表格</Option>
+                  <Option value="chart">图表</Option>
+                  <Option value="dashboard">仪表盘</Option>
                 </Select>
               </Form.Item>
             </Col>
           </Row>
 
           <Form.Item
-            label='SQL查询'
-            name='query'
+            label="SQL查询"
+            name="query"
             rules={[{ required: true, message: '请输入SQL查询' }]}
           >
-            <TextArea rows={4} placeholder='请输入SQL查询语句' />
+            <TextArea rows={4} placeholder="请输入SQL查询语句" />
           </Form.Item>
 
-          <Form.Item label='启用状态' name='is_active' valuePropName='checked'>
+          <Form.Item label="启用状态" name="is_active" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>
@@ -853,44 +853,44 @@ const AdvancedReporting: React.FC = () => {
         onCancel={() => setShowExecutionModal(false)}
         width={1200}
         footer={[
-          <Button key='close' onClick={() => setShowExecutionModal(false)}>
+          <Button key="close" onClick={() => setShowExecutionModal(false)}>
             关闭
           </Button>,
           <Dropdown
-            key='export'
+            key="export"
             menu={{
               items: [
                 {
                   key: 'excel',
-                  icon: <Download className='w-4 h-4 mr-2' />,
+                  icon: <Download className="w-4 h-4 mr-2" />,
                   label: '导出Excel',
                   onClick: () => handleExportReport('excel'),
                 },
                 {
                   key: 'csv',
-                  icon: <Download className='w-4 h-4 mr-2' />,
+                  icon: <Download className="w-4 h-4 mr-2" />,
                   label: '导出CSV',
                   onClick: () => handleExportReport('csv'),
                 },
                 {
                   key: 'pdf',
-                  icon: <Download className='w-4 h-4 mr-2' />,
+                  icon: <Download className="w-4 h-4 mr-2" />,
                   label: '导出PDF',
                   onClick: () => handleExportReport('pdf'),
                 },
               ],
             }}
           >
-            <Button type='primary' icon={<Download className='w-4 h-4' />}>
+            <Button type="primary" icon={<Download className="w-4 h-4" />}>
               导出数据
             </Button>
           </Dropdown>,
         ]}
       >
         {reportData && (
-          <div className='space-y-4'>
+          <div className="space-y-4">
             {/* 数据摘要 */}
-            <Card title='数据摘要' size='small'>
+            <Card title="数据摘要" size="small">
               <Row gutter={[16, 16]}>
                 {Object.entries(reportData.summary).map(([key, value]) => (
                   <Col span={6} key={key}>
@@ -904,7 +904,7 @@ const AdvancedReporting: React.FC = () => {
             </Card>
 
             {/* 数据表格 */}
-            <Card title='详细数据' size='small'>
+            <Card title="详细数据" size="small">
               <Table
                 columns={reportData.columns.map(col => ({
                   title: col,
@@ -924,7 +924,7 @@ const AdvancedReporting: React.FC = () => {
                   showQuickJumper: true,
                   showTotal: total => `共 ${total} 条记录`,
                 }}
-                size='small'
+                size="small"
                 scroll={{ x: true }}
               />
             </Card>

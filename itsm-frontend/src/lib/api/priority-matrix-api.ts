@@ -30,10 +30,7 @@ export class PriorityMatrixApi {
   static async calculatePriority(
     request: PriorityCalculationRequest
   ): Promise<PriorityCalculationResult> {
-    return httpClient.post<PriorityCalculationResult>(
-      '/api/v1/priority/calculate',
-      request
-    );
+    return httpClient.post<PriorityCalculationResult>('/api/v1/priority/calculate', request);
   }
 
   /**
@@ -42,33 +39,25 @@ export class PriorityMatrixApi {
   static async batchCalculatePriority(
     requests: PriorityCalculationRequest[]
   ): Promise<PriorityCalculationResult[]> {
-    return httpClient.post<PriorityCalculationResult[]>(
-      '/api/v1/priority/batch-calculate',
-      { requests }
-    );
+    return httpClient.post<PriorityCalculationResult[]>('/api/v1/priority/batch-calculate', {
+      requests,
+    });
   }
 
   /**
    * 获取优先级建议
    */
-  static async getPrioritySuggestion(
-    ticketId: number
-  ): Promise<PrioritySuggestion> {
-    return httpClient.get<PrioritySuggestion>(
-      `/api/v1/tickets/${ticketId}/priority-suggestion`
-    );
+  static async getPrioritySuggestion(ticketId: number): Promise<PrioritySuggestion> {
+    return httpClient.get<PrioritySuggestion>(`/api/v1/tickets/${ticketId}/priority-suggestion`);
   }
 
   /**
    * 批量获取优先级建议
    */
-  static async getBatchPrioritySuggestions(
-    ticketIds: number[]
-  ): Promise<BatchPrioritySuggestions> {
-    return httpClient.post<BatchPrioritySuggestions>(
-      '/api/v1/priority/batch-suggestions',
-      { ticketIds }
-    );
+  static async getBatchPrioritySuggestions(ticketIds: number[]): Promise<BatchPrioritySuggestions> {
+    return httpClient.post<BatchPrioritySuggestions>('/api/v1/priority/batch-suggestions', {
+      ticketIds,
+    });
   }
 
   // ==================== 矩阵配置管理 ====================
@@ -77,30 +66,21 @@ export class PriorityMatrixApi {
    * 获取矩阵配置列表
    */
   static async getMatrixConfigs(): Promise<PriorityMatrixConfig[]> {
-    return httpClient.get<PriorityMatrixConfig[]>(
-      '/api/v1/priority/matrix-configs'
-    );
+    return httpClient.get<PriorityMatrixConfig[]>('/api/v1/priority/matrix-configs');
   }
 
   /**
    * 获取活动的矩阵配置
    */
   static async getActiveMatrixConfig(): Promise<PriorityMatrixConfig> {
-    return httpClient.get<PriorityMatrixConfig>(
-      '/api/v1/priority/matrix-configs/active'
-    );
+    return httpClient.get<PriorityMatrixConfig>('/api/v1/priority/matrix-configs/active');
   }
 
   /**
    * 获取矩阵数据
    */
-  static async getMatrixData(
-    configId?: string
-  ): Promise<PriorityMatrixData> {
-    return httpClient.get<PriorityMatrixData>(
-      '/api/v1/priority/matrix-data',
-      { configId }
-    );
+  static async getMatrixData(configId?: string): Promise<PriorityMatrixData> {
+    return httpClient.get<PriorityMatrixData>('/api/v1/priority/matrix-data', { configId });
   }
 
   /**
@@ -109,10 +89,7 @@ export class PriorityMatrixApi {
   static async createMatrixConfig(
     request: CreateMatrixConfigRequest
   ): Promise<PriorityMatrixConfig> {
-    return httpClient.post<PriorityMatrixConfig>(
-      '/api/v1/priority/matrix-configs',
-      request
-    );
+    return httpClient.post<PriorityMatrixConfig>('/api/v1/priority/matrix-configs', request);
   }
 
   /**
@@ -139,9 +116,7 @@ export class PriorityMatrixApi {
    * 激活矩阵配置
    */
   static async activateMatrixConfig(configId: string): Promise<void> {
-    return httpClient.post(
-      `/api/v1/priority/matrix-configs/${configId}/activate`
-    );
+    return httpClient.post(`/api/v1/priority/matrix-configs/${configId}/activate`);
   }
 
   // ==================== 规则管理 ====================
@@ -149,9 +124,7 @@ export class PriorityMatrixApi {
   /**
    * 获取优先级规则列表
    */
-  static async getPriorityRules(
-    query?: PriorityRuleQuery
-  ): Promise<{
+  static async getPriorityRules(query?: PriorityRuleQuery): Promise<{
     rules: PriorityRule[];
     total: number;
   }> {
@@ -181,10 +154,7 @@ export class PriorityMatrixApi {
     ruleId: string,
     rule: Partial<PriorityRule>
   ): Promise<PriorityRule> {
-    return httpClient.put<PriorityRule>(
-      `/api/v1/priority/rules/${ruleId}`,
-      rule
-    );
+    return httpClient.put<PriorityRule>(`/api/v1/priority/rules/${ruleId}`, rule);
   }
 
   /**
@@ -197,10 +167,7 @@ export class PriorityMatrixApi {
   /**
    * 启用/禁用规则
    */
-  static async togglePriorityRule(
-    ruleId: string,
-    enabled: boolean
-  ): Promise<void> {
+  static async togglePriorityRule(ruleId: string, enabled: boolean): Promise<void> {
     return httpClient.post(`/api/v1/priority/rules/${ruleId}/toggle`, {
       enabled,
     });
@@ -257,10 +224,7 @@ export class PriorityMatrixApi {
   static async getPriorityAccuracy(
     query: PriorityAnalysisQuery
   ): Promise<PriorityAccuracyAnalysis> {
-    return httpClient.get<PriorityAccuracyAnalysis>(
-      '/api/v1/priority/analysis/accuracy',
-      query
-    );
+    return httpClient.get<PriorityAccuracyAnalysis>('/api/v1/priority/analysis/accuracy', query);
   }
 
   /**
@@ -283,4 +247,3 @@ export class PriorityMatrixApi {
 
 export default PriorityMatrixApi;
 export const PriorityMatrixAPI = PriorityMatrixApi;
-

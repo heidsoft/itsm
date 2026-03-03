@@ -20,8 +20,6 @@ import {
   Switch,
   InputNumber,
   Table,
-  Empty,
-  Spin,
 } from 'antd';
 import {
   Plus,
@@ -34,8 +32,12 @@ import {
   Settings,
   Copy,
 } from 'lucide-react';
-import { TicketCategoryApi, TicketCategory as TicketCategoryType } from '@/lib/api/ticket-category-api';
+import { LoadingEmptyError } from '@/components/ui/LoadingEmptyError';
 import { LoadingSkeleton } from '@/components/ui/LoadingSkeleton';
+import {
+  TicketCategoryApi,
+  TicketCategory as TicketCategoryType,
+} from '@/lib/api/ticket-category-api';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -89,6 +91,7 @@ const TicketCategoryManagementPage = () => {
       const list = data.items || data || [];
       setCategories(list);
     } catch (error) {
+      console.error('Failed to load categories:', error);
       message.error('加载分类失败');
       setCategories([]);
     } finally {
@@ -136,6 +139,7 @@ const TicketCategoryManagementPage = () => {
       setCategories(prev => prev.filter(c => c.id !== id));
       message.success('分类删除成功');
     } catch (error) {
+      console.error('Failed to delete category:', error);
       message.error('删除失败');
     }
   };
@@ -178,7 +182,7 @@ const TicketCategoryManagementPage = () => {
       setModalVisible(false);
       form.resetFields();
     } catch (error) {
-      message.error('保存分类失败');
+      console.error('保存分类失败:', error);
     }
   };
 
@@ -199,11 +203,11 @@ const TicketCategoryManagementPage = () => {
       dataIndex: 'name',
       key: 'name',
       render: (text: string, record: TicketCategory) => (
-        <div className='flex items-center gap-2'>
-          <span className='text-lg'>{record.icon}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{record.icon}</span>
           <div>
-            <div className='font-medium'>{text}</div>
-            <div className='text-sm text-gray-500'>{record.path}</div>
+            <div className="font-medium">{text}</div>
+            <div className="text-sm text-gray-500">{record.path}</div>
           </div>
         </div>
       ),
@@ -213,7 +217,7 @@ const TicketCategoryManagementPage = () => {
       dataIndex: 'description',
       key: 'description',
       render: (text: string) => (
-        <div className='max-w-xs truncate' title={text}>
+        <div className="max-w-xs truncate" title={text}>
           {text}
         </div>
       ),
@@ -231,8 +235,8 @@ const TicketCategoryManagementPage = () => {
       dataIndex: 'sort_order',
       key: 'sort_order',
       render: (order: number) => (
-        <div className='flex items-center gap-1'>
-          <GripVertical size={14} className='text-gray-400' />
+        <div className="flex items-center gap-1">
+          <GripVertical size={14} className="text-gray-400" />
           <span>{order}</span>
         </div>
       ),
@@ -241,23 +245,23 @@ const TicketCategoryManagementPage = () => {
       title: '工单数量',
       dataIndex: 'ticket_count',
       key: 'ticket_count',
-      render: (count: number) => <Tag color='orange'>{count}</Tag>,
+      render: (count: number) => <Tag color="orange">{count}</Tag>,
     },
     {
       title: '状态',
       key: 'status',
       render: (record: TicketCategory) => (
-        <div className='flex items-center gap-2'>
+        <div className="flex items-center gap-2">
           <Switch
             checked={record.is_active}
-            size='small'
+            size="small"
             onChange={checked => {
               setCategories(prev =>
                 prev.map(c => (c.id === record.id ? { ...c, is_active: checked } : c))
               );
             }}
           />
-          {record.is_default && <Tag color='green'>默认</Tag>}
+          {record.is_default && <Tag color="green">默认</Tag>}
         </div>
       ),
     },
@@ -266,30 +270,30 @@ const TicketCategoryManagementPage = () => {
       key: 'actions',
       render: (record: TicketCategory) => (
         <Space>
-          <Tooltip title='查看详情'>
-            <Button size='small' icon={<Eye size={14} />} />
+          <Tooltip title="查看详情">
+            <Button size="small" icon={<Eye size={14} />} />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              size='small'
+              size="small"
               icon={<Edit size={14} />}
               onClick={() => handleEditCategory(record)}
             />
           </Tooltip>
-          <Tooltip title='复制'>
+          <Tooltip title="复制">
             <Button
-              size='small'
+              size="small"
               icon={<Copy size={14} />}
               onClick={() => handleCopyCategory(record)}
             />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个分类吗？'
+            title="确定要删除这个分类吗？"
             onConfirm={() => handleDeleteCategory(record.id)}
-            okText='确定'
-            cancelText='取消'
+            okText="确定"
+            cancelText="取消"
           >
-            <Button size='small' danger icon={<Delete size={14} />} />
+            <Button size="small" danger icon={<Delete size={14} />} />
           </Popconfirm>
         </Space>
       ),
@@ -299,16 +303,16 @@ const TicketCategoryManagementPage = () => {
   const treeData = categories.map(category => ({
     key: category.id,
     title: (
-      <div className='flex items-center justify-between w-full'>
-        <div className='flex items-center gap-2'>
-          <span className='text-lg'>{category.icon}</span>
-          <span className='font-medium'>{category.name}</span>
-          <Tag color='orange'>{category.ticket_count}</Tag>
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{category.icon}</span>
+          <span className="font-medium">{category.name}</span>
+          <Tag color="orange">{category.ticket_count}</Tag>
         </div>
-        <div className='flex items-center gap-1'>
+        <div className="flex items-center gap-1">
           <Switch
             checked={category.is_active}
-            size='small'
+            size="small"
             onChange={checked => {
               setCategories(prev =>
                 prev.map(c => (c.id === category.id ? { ...c, is_active: checked } : c))
@@ -316,7 +320,7 @@ const TicketCategoryManagementPage = () => {
             }}
           />
           <Button
-            size='small'
+            size="small"
             icon={<Edit size={12} />}
             onClick={e => {
               e.stopPropagation();
@@ -330,16 +334,16 @@ const TicketCategoryManagementPage = () => {
       category.children?.map(child => ({
         key: child.id,
         title: (
-          <div className='flex items-center justify-between w-full'>
-            <div className='flex items-center gap-2'>
-              <span className='text-lg'>{child.icon}</span>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{child.icon}</span>
               <span>{child.name}</span>
-              <Tag color='orange'>{child.ticket_count}</Tag>
+              <Tag color="orange">{child.ticket_count}</Tag>
             </div>
-            <div className='flex items-center gap-1'>
+            <div className="flex items-center gap-1">
               <Switch
                 checked={child.is_active}
-                size='small'
+                size="small"
                 onChange={checked => {
                   setCategories(prev =>
                     prev.map(c => (c.id === child.id ? { ...c, is_active: checked } : c))
@@ -347,7 +351,7 @@ const TicketCategoryManagementPage = () => {
                 }}
               />
               <Button
-                size='small'
+                size="small"
                 icon={<Edit size={12} />}
                 onClick={e => {
                   e.stopPropagation();
@@ -361,32 +365,33 @@ const TicketCategoryManagementPage = () => {
   }));
 
   if (loading) {
-    return <LoadingSkeleton type='table' rows={8} columns={7} />;
+    return <LoadingSkeleton type="table" rows={8} columns={7} />;
   }
 
   if (categories.length === 0) {
     return (
-      <Empty
-        description='暂无工单分类'
-        image={Empty.PRESENTED_IMAGE_SIMPLE}
-      >
-        <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateCategory}>
-          创建分类
-        </Button>
-      </Empty>
+      <LoadingEmptyError
+        state="empty"
+        empty={{
+          title: '暂无工单分类',
+          description: '创建第一个工单分类来组织工单管理',
+          actionText: '创建分类',
+          onAction: handleCreateCategory,
+        }}
+      />
     );
   }
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 头部操作区 */}
       <Card>
-        <div className='flex justify-between items-center'>
+        <div className="flex justify-between items-center">
           <div>
-            <Title level={4} className='mb-1'>
+            <Title level={4} className="mb-1">
               工单分类管理
             </Title>
-            <Text type='secondary'>管理和配置工单分类体系，支持树形结构和权限控制</Text>
+            <Text type="secondary">管理和配置工单分类体系，支持树形结构和权限控制</Text>
           </div>
           <Space>
             <Button.Group>
@@ -405,7 +410,7 @@ const TicketCategoryManagementPage = () => {
                 树形视图
               </Button>
             </Button.Group>
-            <Button type='primary' icon={<Plus size={16} />} onClick={handleCreateCategory}>
+            <Button type="primary" icon={<Plus size={16} />} onClick={handleCreateCategory}>
               创建分类
             </Button>
           </Space>
@@ -418,7 +423,7 @@ const TicketCategoryManagementPage = () => {
           <Table
             columns={columns}
             dataSource={categories}
-            rowKey='id'
+            rowKey="id"
             pagination={{
               pageSize: 20,
               showSizeChanger: true,
@@ -432,7 +437,7 @@ const TicketCategoryManagementPage = () => {
             defaultExpandAll
             showLine
             showIcon={false}
-            className='category-tree'
+            className="category-tree"
           />
         )}
       </Card>
@@ -443,24 +448,24 @@ const TicketCategoryManagementPage = () => {
         open={modalVisible}
         onOk={handleSaveCategory}
         onCancel={() => setModalVisible(false)}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
         width={600}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='name'
-                label='分类名称'
+                name="name"
+                label="分类名称"
                 rules={[{ required: true, message: '请输入分类名称' }]}
               >
-                <Input placeholder='请输入分类名称' />
+                <Input placeholder="请输入分类名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='parent_id' label='父级分类'>
-                <Select placeholder='请选择父级分类' allowClear>
+              <Form.Item name="parent_id" label="父级分类">
+                <Select placeholder="请选择父级分类" allowClear>
                   {categories
                     .filter(c => !c.parent_id)
                     .map(category => (
@@ -473,34 +478,34 @@ const TicketCategoryManagementPage = () => {
             </Col>
           </Row>
 
-          <Form.Item name='description' label='分类描述'>
-            <TextArea rows={3} placeholder='请输入分类描述' />
+          <Form.Item name="description" label="分类描述">
+            <TextArea rows={3} placeholder="请输入分类描述" />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='color' label='主题色彩' initialValue='#1890ff'>
-                <Input type='color' />
+              <Form.Item name="color" label="主题色彩" initialValue="#1890ff">
+                <Input type="color" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='icon' label='分类图标'>
-                <Input placeholder='输入emoji或图标名称' />
+              <Form.Item name="icon" label="分类图标">
+                <Input placeholder="输入emoji或图标名称" />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name='sort_order' label='排序顺序' initialValue={1}>
-                <InputNumber min={1} placeholder='数字越小越靠前' />
+              <Form.Item name="sort_order" label="排序顺序" initialValue={1}>
+                <InputNumber min={1} placeholder="数字越小越靠前" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name='is_active'
-                label='启用状态'
-                valuePropName='checked'
+                name="is_active"
+                label="启用状态"
+                valuePropName="checked"
                 initialValue={true}
               >
                 <Switch />

@@ -5,13 +5,29 @@ import { FormCheckboxProps } from './types';
 import { FormField } from './form-field';
 
 const Checkbox = forwardRef<HTMLInputElement, Omit<FormCheckboxProps, 'label' | 'error' | 'help'>>(
-  ({ checked, value, indeterminate, disabled, onChange, onBlur, onFocus, children, className = '', ...props }, ref) => {
+  (
+    {
+      checked,
+      value,
+      indeterminate,
+      disabled,
+      onChange,
+      onBlur,
+      onFocus,
+      children,
+      className = '',
+      ...props
+    },
+    ref
+  ) => {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       onChange?.(e.target.checked);
     };
 
     return (
-      <label className={`inline-flex items-center cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}>
+      <label
+        className={`inline-flex items-center cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      >
         <div className="relative">
           <input
             ref={ref}
@@ -28,9 +44,10 @@ const Checkbox = forwardRef<HTMLInputElement, Omit<FormCheckboxProps, 'label' | 
           <div
             className={`
               w-4 h-4 border-2 rounded transition-colors duration-200
-              ${checked 
-                ? 'bg-blue-600 border-blue-600' 
-                : 'bg-white border-gray-300 hover:border-gray-400'
+              ${
+                checked
+                  ? 'bg-blue-600 border-blue-600'
+                  : 'bg-white border-gray-300 hover:border-gray-400'
               }
               ${disabled ? 'opacity-50' : ''}
               ${indeterminate ? 'bg-blue-600 border-blue-600' : ''}
@@ -47,7 +64,11 @@ const Checkbox = forwardRef<HTMLInputElement, Omit<FormCheckboxProps, 'label' | 
             )}
             {indeterminate && (
               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z" clipRule="evenodd" />
+                <path
+                  fillRule="evenodd"
+                  d="M4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1z"
+                  clipRule="evenodd"
+                />
               </svg>
             )}
           </div>
@@ -64,7 +85,7 @@ const Checkbox = forwardRef<HTMLInputElement, Omit<FormCheckboxProps, 'label' | 
 
 Checkbox.displayName = 'Checkbox';
 
-export const FormCheckbox: React.FC<FormCheckboxProps> = (props) => {
+export const FormCheckbox: React.FC<FormCheckboxProps> = props => {
   const { label, error, help, ...checkboxProps } = props;
 
   if (!label) {

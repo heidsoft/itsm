@@ -9,6 +9,7 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/processdefinition"
+	"itsm-backend/ent/processversionchangelog"
 
 	// "itsm-backend/ent/processdeployment" // 暂时不使用，因为ProcessDeployment没有ProcessDefinitionID字段
 	"go.uber.org/zap"
@@ -376,13 +377,45 @@ func (s *BPMNVersionService) getCurrentVersion(ctx context.Context, processKey s
 
 // recordVersionChangeLog 记录版本变更日志
 func (s *BPMNVersionService) recordVersionChangeLog(ctx context.Context, processDefID string, changeLog, createdBy string, tenantID int) error {
-	// 记录版本变更到审计日志
-	s.logger.Infow("Version change logged",
+	// 解析 processDefID 为 int
+	processDefIDInt, err := strconv.Atoi(processDefID)
+	if err != nil {
+		s.logger.Warnw("Failed to parse processDefID", "process_def_id", processDefID, "error", err)
+		return fmt.Errorf("解析流程定义 ID 失败：%w", err)
+	}
+
+	// 解析 createdBy 为 int (用户 ID)
+	createdByInt, err := strconv.Atoi(createdBy)
+	if err != nil {
+		// 如果解析失败，使用 0 表示系统创建
+		createdByInt = 0
+		s.logger.Warnw("Failed to parse createdBy, using 0", "created_by", createdBy, "error", err)
+	}
+
+	// 创建版本变更日志记录
+	_, err = s.client.ProcessVersionChangelog.Create().
+		SetProcessDefinitionID(processDefIDInt).
+		SetVersion(changeLog). // 使用 changeLog 作为 version 字段的临时值
+		SetChangeLog(changeLog).
+		SetChangeType("update").
+		SetCreatedBy(createdByInt).
+		SetTenantID(tenantID).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to create version changelog",
+			"process_def_id", processDefID,
+			"change_log", changeLog,
+			"created_by", createdBy,
+			"tenant_id", tenantID,
+			"error", err)
+		return fmt.Errorf("创建版本变更日志失败：%w", err)
+	}
+
+	s.logger.Infow("Version change logged successfully",
 		"process_def_id", processDefID,
 		"change_log", changeLog,
 		"created_by", createdBy,
 		"tenant_id", tenantID)
-	// TODO: 创建专门的版本变更日志表（未来版本）
 	return nil
 }
 

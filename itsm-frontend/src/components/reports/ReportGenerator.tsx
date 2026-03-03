@@ -16,7 +16,7 @@ import {
   InputNumber,
   DatePicker,
   Input,
-  App
+  App,
 } from 'antd';
 import {
   BarChart3,
@@ -27,7 +27,11 @@ import {
   PlayCircle,
   Settings,
 } from 'lucide-react';
-import { TicketAnalyticsApi, type AnalyticsConfig, type AnalyticsResponse } from '@/lib/api/ticket-analytics-api';
+import {
+  TicketAnalyticsApi,
+  type AnalyticsConfig,
+  type AnalyticsResponse,
+} from '@/lib/api/ticket-analytics-api';
 import ReportsCharts from './ReportsCharts';
 
 const { Title, Text } = Typography;
@@ -153,11 +157,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               name="dimensions"
               rules={[{ required: true, message: '请选择至少一个维度' }]}
             >
-              <Select
-                mode="multiple"
-                placeholder="选择分析维度"
-                style={{ width: '100%' }}
-              >
+              <Select mode="multiple" placeholder="选择分析维度" style={{ width: '100%' }}>
                 {dimensionOptions.map(option => (
                   <Option key={option.value} value={option.value}>
                     <Space>
@@ -177,11 +177,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
               name="metrics"
               rules={[{ required: true, message: '请选择至少一个指标' }]}
             >
-              <Select
-                mode="multiple"
-                placeholder="选择分析指标"
-                style={{ width: '100%' }}
-              >
+              <Select mode="multiple" placeholder="选择分析指标" style={{ width: '100%' }}>
                 {metricOptions.map(option => (
                   <Option key={option.value} value={option.value}>
                     <div>
@@ -218,10 +214,7 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
 
           {/* 分组字段 */}
           <Col xs={24} md={8}>
-            <Form.Item
-              label="分组字段（可选）"
-              name="group_by"
-            >
+            <Form.Item label="分组字段（可选）" name="group_by">
               <Select placeholder="选择分组字段" allowClear style={{ width: '100%' }}>
                 {dimensionOptions.map(option => (
                   <Option key={option.value} value={option.value}>
@@ -237,18 +230,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
             <Form.Item label="分页设置">
               <Space.Compact style={{ width: '100%' }}>
                 <Form.Item name="page" noStyle>
-                  <InputNumber
-                    placeholder="页码"
-                    min={1}
-                    style={{ width: '50%' }}
-                  />
+                  <InputNumber placeholder="页码" min={1} style={{ width: '50%' }} />
                 </Form.Item>
                 <Form.Item name="page_size" noStyle>
-                  <InputNumber
-                    placeholder="每页数量"
-                    min={1}
-                    style={{ width: '50%' }}
-                  />
+                  <InputNumber placeholder="每页数量" min={1} style={{ width: '50%' }} />
                 </Form.Item>
               </Space.Compact>
             </Form.Item>
@@ -266,15 +251,10 @@ const ReportGenerator: React.FC<ReportGeneratorProps> = ({
                 >
                   预览
                 </Button>
-                <Button
-                  icon={<Settings size={16} />}
-                  onClick={handleApplyConfig}
-                >
+                <Button icon={<Settings size={16} />} onClick={handleApplyConfig}>
                   应用配置
                 </Button>
-                <Button onClick={handleReset}>
-                  重置
-                </Button>
+                <Button onClick={handleReset}>重置</Button>
               </Space>
             </Form.Item>
           </Col>

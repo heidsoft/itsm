@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Row,
@@ -20,7 +20,7 @@ import {
   Rate,
   message,
   Spin,
-} from "antd";
+} from 'antd';
 import {
   TrendingUp,
   Clock,
@@ -29,21 +29,19 @@ import {
   FileText,
   RefreshCw,
   Download,
-} from "lucide-react";
-import { dashboardService, DashboardOverviewResponse } from "@/lib/services/analytics-service";
-import { ticketService } from "@/lib/services/ticket-service";
-import { useI18n } from "@/lib/i18n";
+} from 'lucide-react';
+import { dashboardService, DashboardOverviewResponse } from '@/lib/services/analytics-service';
+import { ticketService } from '@/lib/services/ticket-service';
 
 const { Option } = Select;
 const { Text, Title } = Typography;
 const { TabPane } = Tabs;
 
 const TicketDashboardPage = () => {
-  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
-  const [timeRange, setTimeRange] = useState("7d");
-  const [selectedTeam, setSelectedTeam] = useState("all");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [timeRange, setTimeRange] = useState('7d');
+  const [selectedTeam, setSelectedTeam] = useState('all');
+  const [activeTab, setActiveTab] = useState('overview');
   const [slaThreshold, setSlaThreshold] = useState(95);
   const [dashboardData, setDashboardData] = useState<DashboardOverviewResponse | null>(null);
   const [ticketStats, setTicketStats] = useState<any>(null);
@@ -62,15 +60,15 @@ const TicketDashboardPage = () => {
       setDashboardData(dashboardRes);
       setTicketStats(statsRes);
     } catch (error) {
-      console.error("Failed to load dashboard data:", error);
-      message.error(t('common.getFailed'));
+      console.error('Failed to load dashboard data:', error);
+      message.error('加载仪表盘数据失败');
     } finally {
       setLoading(false);
     }
   };
 
   const handleExport = () => {
-    message.info("导出功能开发中");
+    message.info('导出功能开发中');
   };
 
   // 获取概览数据
@@ -104,13 +102,15 @@ const TicketDashboardPage = () => {
 
   // 获取SLA数据
   const getSLAData = () => {
-    return dashboardData?.sla_data || {
-      compliance_rate: 0,
-      response_time_compliance: 0,
-      resolution_time_compliance: 0,
-      at_risk_tickets: 0,
-      breached_tickets: 0,
-    };
+    return (
+      dashboardData?.sla_data || {
+        compliance_rate: 0,
+        response_time_compliance: 0,
+        resolution_time_compliance: 0,
+        at_risk_tickets: 0,
+        breached_tickets: 0,
+      }
+    );
   };
 
   const renderOverviewCards = () => {
@@ -124,7 +124,7 @@ const TicketDashboardPage = () => {
             <Statistic
               title="总工单数"
               value={overview.totalTickets}
-              prefix={<FileText size={16} style={{ color: "#3b82f6" }} />}
+              prefix={<FileText size={16} style={{ color: '#3b82f6' }} />}
             />
           </Card>
         </Col>
@@ -133,7 +133,7 @@ const TicketDashboardPage = () => {
             <Statistic
               title="待处理工单"
               value={overview.openTickets}
-              styles={{ content: { color: "#faad14" } }}
+              styles={{ content: { color: '#faad14' } }}
               prefix={<Clock size={16} />}
             />
           </Card>
@@ -143,7 +143,7 @@ const TicketDashboardPage = () => {
             <Statistic
               title="已解决工单"
               value={overview.resolvedTickets}
-              styles={{ content: { color: "#52c41a" } }}
+              styles={{ content: { color: '#52c41a' } }}
               prefix={<CheckCircle size={16} />}
             />
           </Card>
@@ -154,15 +154,17 @@ const TicketDashboardPage = () => {
               title="SLA合规率"
               value={slaData.compliance_rate}
               suffix="%"
-              prefix={<TrendingUp size={16} style={{ color: "#3b82f6" }} />}
-              styles={{ content: {
-                color: slaData.compliance_rate >= 95 ? "#52c41a" : "#faad14",
-              }}}
+              prefix={<TrendingUp size={16} style={{ color: '#3b82f6' }} />}
+              styles={{
+                content: {
+                  color: slaData.compliance_rate >= 95 ? '#52c41a' : '#faad14',
+                },
+              }}
             />
             <Progress
               percent={slaData.compliance_rate}
               showInfo={false}
-              strokeColor={slaData.compliance_rate >= 95 ? "#52c41a" : "#faad14"}
+              strokeColor={slaData.compliance_rate >= 95 ? '#52c41a' : '#faad14'}
               className="mt-2"
             />
           </Card>
@@ -239,7 +241,7 @@ const TicketDashboardPage = () => {
               <Alert
                 message="SLA合规状态"
                 description={`当前合规率: ${slaData.compliance_rate?.toFixed(1) || 0}%`}
-                type={slaData.compliance_rate >= 95 ? "success" : "warning"}
+                type={slaData.compliance_rate >= 95 ? 'success' : 'warning'}
                 showIcon
                 icon={<CheckCircle size={16} />}
               />
@@ -255,11 +257,7 @@ const TicketDashboardPage = () => {
       <div className="mb-4">
         <Space>
           <Text>筛选团队:</Text>
-          <Select
-            value={selectedTeam}
-            onChange={setSelectedTeam}
-            style={{ width: 120 }}
-          >
+          <Select value={selectedTeam} onChange={setSelectedTeam} style={{ width: 120 }}>
             <Option value="all">全部</Option>
             <Option value="support">技术支持</Option>
             <Option value="engineering">工程团队</Option>
@@ -275,8 +273,8 @@ const TicketDashboardPage = () => {
         dataSource={[]}
         columns={[
           {
-            title: "团队成员",
-            key: "member",
+            title: '团队成员',
+            key: 'member',
             render: () => (
               <div className="flex items-center">
                 <Avatar size="small" className="mr-2">
@@ -289,29 +287,29 @@ const TicketDashboardPage = () => {
             ),
           },
           {
-            title: "已分配工单",
-            key: "assigned",
+            title: '已分配工单',
+            key: 'assigned',
             render: () => <Badge count={0} showZero />,
           },
           {
-            title: "已解决工单",
-            key: "resolved",
+            title: '已解决工单',
+            key: 'resolved',
             render: () => <Badge count={0} showZero />,
           },
           {
-            title: "平均解决时间",
-            key: "avgTime",
+            title: '平均解决时间',
+            key: 'avgTime',
             render: () => <Text>-</Text>,
           },
           {
-            title: "SLA合规率",
-            key: "sla",
+            title: 'SLA合规率',
+            key: 'sla',
             render: () => <Text>-</Text>,
           },
         ]}
         pagination={false}
         size="small"
-        locale={{ emptyText: "暂无团队数据" }}
+        locale={{ emptyText: '暂无团队数据' }}
       />
     </Card>
   );
@@ -323,17 +321,17 @@ const TicketDashboardPage = () => {
       <Card title="最近活动" className="mb-6">
         {activities.length > 0 ? (
           <Timeline>
-            {activities.map((activity) => (
+            {activities.map(activity => (
               <Timeline.Item
                 key={activity.id}
                 color={
-                  activity.type?.includes("resolved")
-                    ? "green"
-                    : activity.type?.includes("assigned")
-                    ? "blue"
-                    : activity.type?.includes("alert")
-                    ? "red"
-                    : "gray"
+                  activity.type?.includes('resolved')
+                    ? 'green'
+                    : activity.type?.includes('assigned')
+                      ? 'blue'
+                      : activity.type?.includes('alert')
+                        ? 'red'
+                        : 'gray'
                 }
               >
                 <div className="flex justify-between items-start">
@@ -349,8 +347,8 @@ const TicketDashboardPage = () => {
                     <div className="text-sm text-gray-500">{activity.user}</div>
                     <div className="text-xs text-gray-400">
                       {activity.timestamp
-                        ? new Date(activity.timestamp).toLocaleString("zh-CN")
-                        : "-"}
+                        ? new Date(activity.timestamp).toLocaleString('zh-CN')
+                        : '-'}
                     </div>
                   </div>
                 </div>
@@ -372,11 +370,7 @@ const TicketDashboardPage = () => {
         <div className="mb-4">
           <Space>
             <Text>时间范围:</Text>
-            <Select
-              value={timeRange}
-              onChange={setTimeRange}
-              style={{ width: 120 }}
-            >
+            <Select value={timeRange} onChange={setTimeRange} style={{ width: 120 }}>
               <Option value="7d">最近7天</Option>
               <Option value="30d">最近30天</Option>
               <Option value="90d">最近90天</Option>
@@ -390,9 +384,7 @@ const TicketDashboardPage = () => {
               {trendData.length > 0 ? (
                 <div className="h-32 flex items-center justify-center">
                   {/* 趋势图表占位 - 实际项目中应使用图表组件 */}
-                  <Text type="secondary">
-                    共 {trendData.length} 个数据点
-                  </Text>
+                  <Text type="secondary">共 {trendData.length} 个数据点</Text>
                 </div>
               ) : (
                 <div className="h-32 flex items-center justify-center text-gray-400">
@@ -405,9 +397,7 @@ const TicketDashboardPage = () => {
             <Card title="解决率趋势" size="small">
               {trendData.length > 0 ? (
                 <div className="h-32 flex items-center justify-center">
-                  <Text type="secondary">
-                    共 {trendData.length} 个数据点
-                  </Text>
+                  <Text type="secondary">共 {trendData.length} 个数据点</Text>
                 </div>
               ) : (
                 <div className="h-32 flex items-center justify-center text-gray-400">
@@ -434,14 +424,10 @@ const TicketDashboardPage = () => {
             <Card title="客户满意度" size="small">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {satisfactionData.average_rating?.toFixed(1) || "N/A"}
+                  {satisfactionData.average_rating?.toFixed(1) || 'N/A'}
                 </div>
                 <Text type="secondary">平均评分</Text>
-                <Rate
-                  disabled
-                  value={satisfactionData.average_rating || 0}
-                  className="mt-2"
-                />
+                <Rate disabled value={satisfactionData.average_rating || 0} className="mt-2" />
                 <div className="text-sm text-gray-500 mt-2">
                   共 {satisfactionData.total_ratings || 0} 条评价
                 </div>
@@ -453,11 +439,7 @@ const TicketDashboardPage = () => {
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600 mb-2">-</div>
                 <Text type="secondary">整体效率</Text>
-                <Progress
-                  percent={0}
-                  strokeColor="#52c41a"
-                  showInfo={false}
-                />
+                <Progress percent={0} strokeColor="#52c41a" showInfo={false} />
               </div>
             </Card>
           </Col>
@@ -484,9 +466,7 @@ const TicketDashboardPage = () => {
       <div className="mb-6 flex justify-between items-center">
         <div>
           <Title level={2}>工单仪表盘</Title>
-          <p className="text-gray-600 mt-1">
-            实时监控工单处理状态、SLA合规率和团队表现
-          </p>
+          <p className="text-gray-600 mt-1">实时监控工单处理状态、SLA合规率和团队表现</p>
         </div>
         <Space>
           <Select value={timeRange} onChange={setTimeRange} style={{ width: 120 }}>

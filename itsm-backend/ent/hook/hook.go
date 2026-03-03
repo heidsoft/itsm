@@ -512,6 +512,18 @@ func (f ProcessVariableFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessVariableMutation", m)
 }
 
+// The ProcessVersionChangelogFunc type is an adapter to allow the use of ordinary
+// function as ProcessVersionChangelog mutator.
+type ProcessVersionChangelogFunc func(context.Context, *ent.ProcessVersionChangelogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ProcessVersionChangelogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ProcessVersionChangelogMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ProcessVersionChangelogMutation", m)
+}
+
 // The ProjectFunc type is an adapter to allow the use of ordinary
 // function as Project mutator.
 type ProjectFunc func(context.Context, *ent.ProjectMutation) (ent.Value, error)

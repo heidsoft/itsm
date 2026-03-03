@@ -48,6 +48,8 @@ const (
 	EdgeProcessInstances = "process_instances"
 	// EdgeBindings holds the string denoting the bindings edge name in mutations.
 	EdgeBindings = "bindings"
+	// EdgeVersionChangelogs holds the string denoting the version_changelogs edge name in mutations.
+	EdgeVersionChangelogs = "version_changelogs"
 	// EdgeDeployment holds the string denoting the deployment edge name in mutations.
 	EdgeDeployment = "deployment"
 	// Table holds the table name of the processdefinition in the database.
@@ -64,6 +66,13 @@ const (
 	// BindingsInverseTable is the table name for the ProcessBinding entity.
 	// It exists in this package in order to avoid circular dependency with the "processbinding" package.
 	BindingsInverseTable = "process_bindings"
+	// VersionChangelogsTable is the table that holds the version_changelogs relation/edge.
+	VersionChangelogsTable = "process_version_changelogs"
+	// VersionChangelogsInverseTable is the table name for the ProcessVersionChangelog entity.
+	// It exists in this package in order to avoid circular dependency with the "processversionchangelog" package.
+	VersionChangelogsInverseTable = "process_version_changelogs"
+	// VersionChangelogsColumn is the table column denoting the version_changelogs relation/edge.
+	VersionChangelogsColumn = "process_definition_id"
 	// DeploymentTable is the table that holds the deployment relation/edge.
 	DeploymentTable = "process_definitions"
 	// DeploymentInverseTable is the table name for the ProcessDeployment entity.
@@ -237,6 +246,20 @@ func ByBindings(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	}
 }
 
+// ByVersionChangelogsCount orders the results by version_changelogs count.
+func ByVersionChangelogsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVersionChangelogsStep(), opts...)
+	}
+}
+
+// ByVersionChangelogs orders the results by version_changelogs terms.
+func ByVersionChangelogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVersionChangelogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
 // ByDeploymentField orders the results by deployment field.
 func ByDeploymentField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -255,6 +278,13 @@ func newBindingsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BindingsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, BindingsTable, BindingsPrimaryKey...),
+	)
+}
+func newVersionChangelogsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VersionChangelogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VersionChangelogsTable, VersionChangelogsColumn),
 	)
 }
 func newDeploymentStep() *sqlgraph.Step {

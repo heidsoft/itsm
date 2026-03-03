@@ -163,17 +163,17 @@ const STATUS_CONFIG = {
   active: {
     label: '已启用',
     color: 'success',
-    icon: <CheckCircle className='w-3 h-3' />,
+    icon: <CheckCircle className="w-3 h-3" />,
   },
   inactive: {
     label: '已停用',
     color: 'default',
-    icon: <Clock className='w-3 h-3' />,
+    icon: <Clock className="w-3 h-3" />,
   },
   draft: {
     label: '草稿',
     color: 'processing',
-    icon: <Edit className='w-3 h-3' />,
+    icon: <Edit className="w-3 h-3" />,
   },
 };
 
@@ -339,18 +339,18 @@ const SLADefinitionManagement = () => {
       key: 'name',
       render: (_: unknown, record: SLADefinition) => (
         <div>
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <Text strong>{record.name}</Text>
             <Tag color={PRIORITY_CONFIG[record.priority]?.color}>
               {PRIORITY_CONFIG[record.priority]?.label}
             </Tag>
           </div>
-          <Text type='secondary' className='text-sm'>
+          <Text type="secondary" className="text-sm">
             {record.description}
           </Text>
-          <div className='flex items-center gap-4 mt-1'>
-            <span className='text-xs text-gray-500'>ID: {record.id}</span>
-            <span className='text-xs text-gray-500'>类型: {record.serviceType}</span>
+          <div className="flex items-center gap-4 mt-1">
+            <span className="text-xs text-gray-500">ID: {record.id}</span>
+            <span className="text-xs text-gray-500">类型: {record.serviceType}</span>
           </div>
         </div>
       ),
@@ -359,22 +359,22 @@ const SLADefinitionManagement = () => {
       title: '服务指标',
       key: 'metrics',
       render: (_: unknown, record: SLADefinition) => (
-        <div className='space-y-1'>
-          <div className='flex items-center gap-2'>
-            <Timer className='w-3 h-3 text-blue-500' />
-            <span className='text-xs'>响应: {record.responseTime}</span>
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <Timer className="w-3 h-3 text-blue-500" />
+            <span className="text-xs">响应: {record.responseTime}</span>
           </div>
-          <div className='flex items-center gap-2'>
-            <Target className='w-3 h-3 text-green-500' />
-            <span className='text-xs'>解决: {record.resolutionTime}</span>
+          <div className="flex items-center gap-2">
+            <Target className="w-3 h-3 text-green-500" />
+            <span className="text-xs">解决: {record.resolutionTime}</span>
           </div>
-          <div className='flex items-center gap-2'>
-            <TrendingUp className='w-3 h-3 text-purple-500' />
-            <span className='text-xs'>可用性: {record.availability}</span>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-3 h-3 text-purple-500" />
+            <span className="text-xs">可用性: {record.availability}</span>
           </div>
-          <div className='flex items-center gap-2'>
-            <Clock className='w-3 h-3 text-orange-500' />
-            <span className='text-xs'>{record.businessHours}</span>
+          <div className="flex items-center gap-2">
+            <Clock className="w-3 h-3 text-orange-500" />
+            <span className="text-xs">{record.businessHours}</span>
           </div>
         </div>
       ),
@@ -384,12 +384,12 @@ const SLADefinitionManagement = () => {
       dataIndex: 'applicableServices',
       key: 'applicableServices',
       render: (services: string[]) => (
-        <div className='space-y-1'>
+        <div className="space-y-1">
           {services.slice(0, 2).map(service => (
             <Tag key={service}>{service}</Tag>
           ))}
           {services.length > 2 && (
-            <Text type='secondary' className='text-xs'>
+            <Text type="secondary" className="text-xs">
               +{services.length - 2} 更多
             </Text>
           )}
@@ -415,9 +415,9 @@ const SLADefinitionManagement = () => {
       key: 'updateInfo',
       align: 'center' as const,
       render: (_: unknown, record: SLADefinition) => (
-        <div className='text-center'>
-          <div className='text-sm'>{record.updatedAt}</div>
-          <div className='text-xs text-gray-500'>由 {record.createdBy}</div>
+        <div className="text-center">
+          <div className="text-sm">{record.updatedAt}</div>
+          <div className="text-xs text-gray-500">由 {record.createdBy}</div>
         </div>
       ),
     },
@@ -427,17 +427,17 @@ const SLADefinitionManagement = () => {
       align: 'center' as const,
       render: (_: unknown, record: SLADefinition) => (
         <Space>
-          <Tooltip title='查看详情'>
+          <Tooltip title="查看详情">
             <Button
-              type='text'
-              icon={<Eye className='w-4 h-4' />}
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              type='text'
-              icon={<Edit className='w-4 h-4' />}
+              type="text"
+              icon={<Edit className="w-4 h-4" />}
               onClick={() => {
                 setSelectedSLA(record);
                 form.setFieldsValue(record);
@@ -447,26 +447,26 @@ const SLADefinitionManagement = () => {
           </Tooltip>
           <Tooltip title={record.status === 'active' ? '停用' : '启用'}>
             <Button
-              type='text'
+              type="text"
               icon={
                 record.status === 'active' ? (
-                  <Clock className='w-4 h-4' />
+                  <Clock className="w-4 h-4" />
                 ) : (
-                  <CheckCircle className='w-4 h-4' />
+                  <CheckCircle className="w-4 h-4" />
                 )
               }
               onClick={() => handleStatusToggle(record.id)}
             />
           </Tooltip>
           <Popconfirm
-            title='确定要删除这个SLA定义吗？'
-            description='删除后无法恢复，相关的服务将失去SLA保障。'
+            title="确定要删除这个SLA定义吗？"
+            description="删除后无法恢复，相关的服务将失去SLA保障。"
             onConfirm={() => handleDelete(record.id)}
-            okText='确定删除'
-            cancelText='取消'
-            okType='danger'
+            okText="确定删除"
+            cancelText="取消"
+            okType="danger"
           >
-            <Button type='text' danger icon={<Trash2 className='w-4 h-4' />} />
+            <Button type="text" danger icon={<Trash2 className="w-4 h-4" />} />
           </Popconfirm>
         </Space>
       ),
@@ -474,55 +474,55 @@ const SLADefinitionManagement = () => {
   ];
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div className='mb-6'>
-        <Title level={2} className='!mb-2'>
-          <Target className='inline-block w-6 h-6 mr-2' />
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Target className="inline-block w-6 h-6 mr-2" />
           SLA定义管理
         </Title>
-        <Text type='secondary'>定义和管理服务级别协议，确保服务质量标准</Text>
+        <Text type="secondary">定义和管理服务级别协议，确保服务质量标准</Text>
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='SLA定义总数'
+              title="SLA定义总数"
               value={stats.total}
-              prefix={<Target className='w-5 h-5' />}
+              prefix={<Target className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='已启用'
+              title="已启用"
               value={stats.active}
-              prefix={<CheckCircle className='w-5 h-5' />}
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='草稿状态'
+              title="草稿状态"
               value={stats.draft}
-              prefix={<Edit className='w-5 h-5' />}
+              prefix={<Edit className="w-5 h-5" />}
               styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='平均可用性'
+              title="平均可用性"
               value={stats.avgAvailability}
-              suffix='%'
-              prefix={<TrendingUp className='w-5 h-5' />}
+              suffix="%"
+              prefix={<TrendingUp className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
@@ -530,12 +530,12 @@ const SLADefinitionManagement = () => {
       </Row>
 
       {/* 搜索和过滤 */}
-      <Card className='mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Input
-              placeholder='搜索SLA定义名称或描述...'
-              prefix={<Search className='w-4 h-4 text-gray-400' />}
+              placeholder="搜索SLA定义名称或描述..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               allowClear
@@ -543,12 +543,12 @@ const SLADefinitionManagement = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder='优先级'
+              placeholder="优先级"
               value={priorityFilter}
               onChange={setPriorityFilter}
               style={{ width: '100%' }}
             >
-              <Option value='all'>全部优先级</Option>
+              <Option value="all">全部优先级</Option>
               {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
                 <Option key={key} value={key}>
                   {config.label}
@@ -558,12 +558,12 @@ const SLADefinitionManagement = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder='状态'
+              placeholder="状态"
               value={statusFilter}
               onChange={setStatusFilter}
               style={{ width: '100%' }}
             >
-              <Option value='all'>全部状态</Option>
+              <Option value="all">全部状态</Option>
               {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                 <Option key={key} value={key}>
                   {config.label}
@@ -573,12 +573,12 @@ const SLADefinitionManagement = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder='服务类型'
+              placeholder="服务类型"
               value={serviceTypeFilter}
               onChange={setServiceTypeFilter}
               style={{ width: '100%' }}
             >
-              <Option value='all'>全部类型</Option>
+              <Option value="all">全部类型</Option>
               {serviceTypes.map(type => (
                 <Option key={type} value={type}>
                   {type}
@@ -586,10 +586,10 @@ const SLADefinitionManagement = () => {
               ))}
             </Select>
           </Col>
-          <Col xs={24} md={4} className='text-right'>
+          <Col xs={24} md={4} className="text-right">
             <Button
-              type='primary'
-              icon={<Plus className='w-4 h-4' />}
+              type="primary"
+              icon={<Plus className="w-4 h-4" />}
               onClick={() => {
                 setSelectedSLA(null);
                 form.resetFields();
@@ -603,19 +603,19 @@ const SLADefinitionManagement = () => {
       </Card>
 
       {/* SLA定义列表 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         {filteredSLAs.length === 0 && !loading ? (
           <Alert
-            message='暂无SLA定义'
-            description='点击右上角按钮创建第一个SLA定义'
-            type='info'
+            message="暂无SLA定义"
+            description="点击右上角按钮创建第一个SLA定义"
+            type="info"
             showIcon
           />
         ) : (
           <Table
             columns={columns}
             dataSource={filteredSLAs}
-            rowKey='id'
+            rowKey="id"
             loading={loading}
             pagination={{
               total: filteredSLAs.length,
@@ -624,7 +624,7 @@ const SLADefinitionManagement = () => {
               showQuickJumper: true,
               showTotal: total => `共 ${total} 条记录`,
             }}
-            className='enterprise-table'
+            className="enterprise-table"
           />
         )}
       </Card>
@@ -633,7 +633,7 @@ const SLADefinitionManagement = () => {
       <Modal
         title={
           <span>
-            <Target className='w-4 h-4 mr-2' />
+            <Target className="w-4 h-4 mr-2" />
             {selectedSLA ? '编辑SLA定义' : '新建SLA定义'}
           </span>
         }
@@ -646,27 +646,27 @@ const SLADefinitionManagement = () => {
         }}
         width={800}
         confirmLoading={loading}
-        okText='保存'
-        cancelText='取消'
+        okText="保存"
+        cancelText="取消"
       >
-        <Form form={form} layout='vertical' className='mt-4'>
+        <Form form={form} layout="vertical" className="mt-4">
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label='SLA名称'
-                name='name'
+                label="SLA名称"
+                name="name"
                 rules={[{ required: true, message: '请输入SLA名称' }]}
               >
-                <Input placeholder='请输入SLA名称' />
+                <Input placeholder="请输入SLA名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                label='服务类型'
-                name='serviceType'
+                label="服务类型"
+                name="serviceType"
                 rules={[{ required: true, message: '请选择服务类型' }]}
               >
-                <Select showSearch placeholder='选择或输入服务类型' mode='tags'>
+                <Select showSearch placeholder="选择或输入服务类型" mode="tags">
                   {serviceTypes.map(type => (
                     <Option key={type} value={type}>
                       {type}
@@ -677,19 +677,19 @@ const SLADefinitionManagement = () => {
             </Col>
           </Row>
           <Form.Item
-            label='描述'
-            name='description'
+            label="描述"
+            name="description"
             rules={[{ required: true, message: '请输入SLA描述' }]}
           >
-            <Input.TextArea rows={3} placeholder='请输入SLA描述' />
+            <Input.TextArea rows={3} placeholder="请输入SLA描述" />
           </Form.Item>
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label='优先级'
-                name='priority'
+                label="优先级"
+                name="priority"
                 rules={[{ required: true, message: '请选择优先级' }]}
-                initialValue='P3'
+                initialValue="P3"
               >
                 <Select>
                   {Object.entries(PRIORITY_CONFIG).map(([key, config]) => (
@@ -702,48 +702,48 @@ const SLADefinitionManagement = () => {
             </Col>
             <Col span={8}>
               <Form.Item
-                label='响应时间'
-                name='responseTime'
+                label="响应时间"
+                name="responseTime"
                 rules={[{ required: true, message: '请输入响应时间' }]}
               >
-                <Input placeholder='如: 30分钟' />
+                <Input placeholder="如: 30分钟" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label='解决时间'
-                name='resolutionTime'
+                label="解决时间"
+                name="resolutionTime"
                 rules={[{ required: true, message: '请输入解决时间' }]}
               >
-                <Input placeholder='如: 4小时' />
+                <Input placeholder="如: 4小时" />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col span={8}>
               <Form.Item
-                label='可用性'
-                name='availability'
+                label="可用性"
+                name="availability"
                 rules={[{ required: true, message: '请输入可用性' }]}
               >
-                <Input placeholder='如: 99.9%' />
+                <Input placeholder="如: 99.9%" />
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
-                label='业务时间'
-                name='businessHours'
+                label="业务时间"
+                name="businessHours"
                 rules={[{ required: true, message: '请输入业务时间' }]}
               >
                 <Select>
-                  <Option value='7x24'>7x24小时</Option>
-                  <Option value='工作时间'>工作时间</Option>
-                  <Option value='5x8'>5x8小时</Option>
+                  <Option value="7x24">7x24小时</Option>
+                  <Option value="工作时间">工作时间</Option>
+                  <Option value="5x8">5x8小时</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item label='状态' name='status' initialValue='draft'>
+              <Form.Item label="状态" name="status" initialValue="draft">
                 <Select>
                   {Object.entries(STATUS_CONFIG).map(([key, config]) => (
                     <Option key={key} value={key}>
@@ -760,8 +760,8 @@ const SLADefinitionManagement = () => {
       {/* 详情模态框 */}
       <Modal
         title={
-          <div className='flex items-center gap-2'>
-            <Eye className='w-5 h-5' />
+          <div className="flex items-center gap-2">
+            <Eye className="w-5 h-5" />
             <span>SLA定义详情</span>
           </div>
         }
@@ -769,43 +769,43 @@ const SLADefinitionManagement = () => {
         onCancel={() => setShowDetailModal(false)}
         width={800}
         footer={[
-          <Button key='close' onClick={() => setShowDetailModal(false)}>
+          <Button key="close" onClick={() => setShowDetailModal(false)}>
             关闭
           </Button>,
         ]}
       >
         {selectedSLA && (
-          <div className='space-y-6'>
+          <div className="space-y-6">
             <div>
               <Title level={4}>{selectedSLA.name}</Title>
-              <Text type='secondary'>{selectedSLA.description}</Text>
+              <Text type="secondary">{selectedSLA.description}</Text>
             </div>
 
             <Row gutter={16}>
               <Col span={8}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='响应时间'
+                    title="响应时间"
                     value={selectedSLA.responseTime}
-                    prefix={<Timer className='w-4 h-4' />}
+                    prefix={<Timer className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
               <Col span={8}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='解决时间'
+                    title="解决时间"
                     value={selectedSLA.resolutionTime}
-                    prefix={<Target className='w-4 h-4' />}
+                    prefix={<Target className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
               <Col span={8}>
-                <Card size='small'>
+                <Card size="small">
                   <Statistic
-                    title='可用性'
+                    title="可用性"
                     value={selectedSLA.availability}
-                    prefix={<TrendingUp className='w-4 h-4' />}
+                    prefix={<TrendingUp className="w-4 h-4" />}
                   />
                 </Card>
               </Col>
@@ -814,12 +814,12 @@ const SLADefinitionManagement = () => {
             <div>
               <Title level={5}>升级规则</Title>
               <List
-                size='small'
+                size="small"
                 dataSource={selectedSLA.escalationRules}
                 renderItem={(rule, index) => (
                   <List.Item>
-                    <Badge count={index + 1} color='blue' />
-                    <span className='ml-2'>{rule}</span>
+                    <Badge count={index + 1} color="blue" />
+                    <span className="ml-2">{rule}</span>
                   </List.Item>
                 )}
               />
@@ -827,9 +827,9 @@ const SLADefinitionManagement = () => {
 
             <div>
               <Title level={5}>适用服务</Title>
-              <div className='flex flex-wrap gap-2'>
+              <div className="flex flex-wrap gap-2">
                 {selectedSLA.applicableServices.map(service => (
-                  <Tag key={service} color='blue'>
+                  <Tag key={service} color="blue">
                     {service}
                   </Tag>
                 ))}

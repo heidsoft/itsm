@@ -31,7 +31,7 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
 }) => {
   // 构建标题内容
   const titleContent = (
-    <Space size='small' align='start'>
+    <Space size="small" align="start">
       {icon && (
         <div
           className="w-8 h-8 rounded-md flex items-center justify-center"
@@ -46,7 +46,7 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
       <div>
         <div className="font-semibold text-base">{title}</div>
         {subtitle && (
-          <Text type='secondary' className="text-xs">
+          <Text type="secondary" className="text-xs">
             {subtitle}
           </Text>
         )}
@@ -58,10 +58,7 @@ export const DashboardChartCard: React.FC<DashboardChartCardProps> = ({
   const extraContent = (
     <Space>
       {trend && (
-        <Text
-          type={trend.isPositive ? 'success' : 'danger'}
-          className="text-sm font-semibold"
-        >
+        <Text type={trend.isPositive ? 'success' : 'danger'} className="text-sm font-semibold">
           {trend.isPositive ? '+' : ''}
           {trend.value.toFixed(1)}%
         </Text>

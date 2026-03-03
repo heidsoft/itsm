@@ -192,23 +192,23 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const basicInfoPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label='关键字搜索' name='keyword'>
-          <Input placeholder='标题、描述、工单号...' prefix={<SearchOutlined />} />
+        <Form.Item label="关键字搜索" name="keyword">
+          <Input placeholder="标题、描述、工单号..." prefix={<SearchOutlined />} />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label='工单号' name='ticket_number'>
-          <Input placeholder='精确工单号' />
+        <Form.Item label="工单号" name="ticket_number">
+          <Input placeholder="精确工单号" />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label='工单标题' name='title'>
-          <Input placeholder='工单标题' />
+        <Form.Item label="工单标题" name="title">
+          <Input placeholder="工单标题" />
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label='工单描述' name='description'>
-          <TextArea rows={1} placeholder='工单描述' />
+        <Form.Item label="工单描述" name="description">
+          <TextArea rows={1} placeholder="工单描述" />
         </Form.Item>
       </Col>
     </Row>
@@ -217,8 +217,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const statusPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label='状态' name='status'>
-          <Select mode='multiple' placeholder='选择状态' allowClear>
+        <Form.Item label="状态" name="status">
+          <Select mode="multiple" placeholder="选择状态" allowClear>
             {TICKET_STATUS_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 <Tag color={option.color}>{option.label}</Tag>
@@ -228,8 +228,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label='优先级' name='priority'>
-          <Select mode='multiple' placeholder='选择优先级' allowClear>
+        <Form.Item label="优先级" name="priority">
+          <Select mode="multiple" placeholder="选择优先级" allowClear>
             {TICKET_PRIORITY_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 <Tag color={option.color}>{option.label}</Tag>
@@ -239,8 +239,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label='工单类型' name='type'>
-          <Select mode='multiple' placeholder='选择类型' allowClear>
+        <Form.Item label="工单类型" name="type">
+          <Select mode="multiple" placeholder="选择类型" allowClear>
             {TICKET_TYPE_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 {option.label}
@@ -250,8 +250,8 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={6}>
-        <Form.Item label='来源' name='source'>
-          <Select mode='multiple' placeholder='选择来源' allowClear>
+        <Form.Item label="来源" name="source">
+          <Select mode="multiple" placeholder="选择来源" allowClear>
             {TICKET_SOURCE_OPTIONS.map(option => (
               <Option key={option.value} value={option.value}>
                 {option.label}
@@ -266,11 +266,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const timePanel = (
     <Row gutter={[16, 0]}>
       <Col span={12}>
-        <Form.Item label='创建时间' name='created_range'>
+        <Form.Item label="创建时间" name="created_range">
           <RangePicker
             style={{ width: '100%' }}
             ranges={quickDateRanges}
-            format='YYYY-MM-DD'
+            format="YYYY-MM-DD"
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
@@ -285,11 +285,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label='更新时间' name='updated_range'>
+        <Form.Item label="更新时间" name="updated_range">
           <RangePicker
             style={{ width: '100%' }}
             ranges={quickDateRanges}
-            format='YYYY-MM-DD'
+            format="YYYY-MM-DD"
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
@@ -304,11 +304,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label='截止时间' name='due_range'>
+        <Form.Item label="截止时间" name="due_range">
           <RangePicker
             style={{ width: '100%' }}
             ranges={quickDateRanges}
-            format='YYYY-MM-DD'
+            format="YYYY-MM-DD"
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
@@ -323,11 +323,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         </Form.Item>
       </Col>
       <Col span={12}>
-        <Form.Item label='解决时间' name='resolved_range'>
+        <Form.Item label="解决时间" name="resolved_range">
           <RangePicker
             style={{ width: '100%' }}
             ranges={quickDateRanges}
-            format='YYYY-MM-DD'
+            format="YYYY-MM-DD"
             onChange={dates => {
               if (dates && dates[0] && dates[1]) {
                 form.setFieldsValue({
@@ -347,11 +347,11 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   const slaPanel = (
     <Row gutter={[16, 0]}>
       <Col span={6}>
-        <Form.Item label='SLA状态' name='sla_status'>
-          <Select placeholder='选择SLA状态' allowClear>
-            <Option value='breach'>已超时</Option>
-            <Option value='warning'>即将超时</Option>
-            <Option value='normal'>正常</Option>
+        <Form.Item label="SLA状态" name="sla_status">
+          <Select placeholder="选择SLA状态" allowClear>
+            <Option value="breach">已超时</Option>
+            <Option value="warning">即将超时</Option>
+            <Option value="normal">正常</Option>
           </Select>
         </Form.Item>
       </Col>
@@ -415,30 +415,30 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
   return (
     <Card
       title={
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center'>
-            <FilterOutlined className='mr-2' />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <FilterOutlined className="mr-2" />
             <span>高级搜索</span>
           </div>
           <Space>
-            <Button size='small' icon={<SaveOutlined />} onClick={saveSearch}>
+            <Button size="small" icon={<SaveOutlined />} onClick={saveSearch}>
               保存搜索
             </Button>
           </Space>
         </div>
       }
-      size='small'
+      size="small"
     >
       {/* 预设模板 */}
-      <div className='mb-4'>
-        <Text strong className='mb-2 block'>
+      <div className="mb-4">
+        <Text strong className="mb-2 block">
           快速搜索模板：
         </Text>
         <Space wrap>
           {SEARCH_TEMPLATES.map(template => (
-            <Popover key={template.name} content={template.description} placement='bottom'>
+            <Popover key={template.name} content={template.description} placement="bottom">
               <Button
-                size='small'
+                size="small"
                 type={activeTemplate === template.name ? 'primary' : 'default'}
                 onClick={() => applyTemplate(template)}
               >
@@ -451,7 +451,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 
       <Divider />
 
-      <Form form={form} layout='vertical' initialValues={initialValues} onFinish={handleSearch}>
+      <Form form={form} layout="vertical" initialValues={initialValues} onFinish={handleSearch}>
         <Collapse
           defaultActiveKey={['basic']}
           ghost
@@ -464,9 +464,9 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         />
 
         {/* 操作按钮 */}
-        <div className='flex justify-between items-center mt-6'>
+        <div className="flex justify-between items-center mt-6">
           <Space>
-            <Button type='primary' icon={<SearchOutlined />} htmlType='submit' loading={loading}>
+            <Button type="primary" icon={<SearchOutlined />} htmlType="submit" loading={loading}>
               搜索
             </Button>
             <Button icon={<ReloadOutlined />} onClick={handleReset}>
@@ -476,7 +476,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
 
           {savedSearches.length > 0 && (
             <Select
-              placeholder='已保存的搜索'
+              placeholder="已保存的搜索"
               style={{ width: 200 }}
               onChange={value => {
                 const search = savedSearches.find(s => s.id === value);

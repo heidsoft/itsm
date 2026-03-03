@@ -28,7 +28,16 @@ interface ReportsChartsProps {
   height?: number;
 }
 
-const COLORS = ['#1890ff', '#52c41a', '#faad14', '#f5222d', '#722ed1', '#13c2c2', '#eb2f96', '#fa541c'];
+const COLORS = [
+  '#1890ff',
+  '#52c41a',
+  '#faad14',
+  '#f5222d',
+  '#722ed1',
+  '#13c2c2',
+  '#eb2f96',
+  '#fa541c',
+];
 
 const ReportsCharts: React.FC<ReportsChartsProps> = ({
   data,
@@ -48,19 +57,21 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
       title: '数值',
       dataIndex: 'value',
       key: 'value',
-      render: (value: number) => <span className="text-blue-600 font-semibold">{value.toLocaleString()}</span>,
+      render: (value: number) => (
+        <span className="text-blue-600 font-semibold">{value.toLocaleString()}</span>
+      ),
     },
     {
       title: '数量',
       dataIndex: 'count',
       key: 'count',
-      render: (count?: number) => count ? count.toLocaleString() : '-',
+      render: (count?: number) => (count ? count.toLocaleString() : '-'),
     },
     {
       title: '平均时间',
       dataIndex: 'avg_time',
       key: 'avg_time',
-      render: (avgTime?: number) => avgTime ? `${avgTime.toFixed(2)}小时` : '-',
+      render: (avgTime?: number) => (avgTime ? `${avgTime.toFixed(2)}小时` : '-'),
     },
   ];
 
@@ -89,11 +100,11 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
     const y = entry.cy + radius * Math.sin(-entry.midAngle * RADIAN);
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > entry.cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > entry.cx ? 'start' : 'end'}
         dominantBaseline="central"
         className="text-xs font-medium"
       >
@@ -131,19 +142,19 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#1890ff" 
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke="#1890ff"
                 strokeWidth={2}
                 dot={{ fill: '#1890ff', r: 4 }}
                 activeDot={{ r: 6 }}
               />
               {data.some(item => item.avg_time) && (
-                <Line 
-                  type="monotone" 
-                  dataKey="avg_time" 
-                  stroke="#52c41a" 
+                <Line
+                  type="monotone"
+                  dataKey="avg_time"
+                  stroke="#52c41a"
                   strokeWidth={2}
                   name="平均时间(小时)"
                 />
@@ -161,11 +172,11 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="value" 
-                stroke="#1890ff" 
-                fill="#1890ff" 
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="#1890ff"
+                fill="#1890ff"
                 fillOpacity={0.6}
               />
             </AreaChart>
@@ -203,7 +214,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
             dataSource={data}
             pagination={false}
             size="middle"
-            rowKey={(record) => record.name}
+            rowKey={record => record.name}
           />
         );
 
@@ -222,7 +233,12 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
                 ))}
               </Bar>
               {data.some(item => item.avg_time) && (
-                <Bar dataKey="avg_time" fill="#52c41a" name="平均时间(小时)" radius={[4, 4, 0, 0]} />
+                <Bar
+                  dataKey="avg_time"
+                  fill="#52c41a"
+                  name="平均时间(小时)"
+                  radius={[4, 4, 0, 0]}
+                />
               )}
             </BarChart>
           </ResponsiveContainer>
@@ -230,11 +246,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
     }
   };
 
-  return (
-    <div className="reports-charts">
-      {renderChart()}
-    </div>
-  );
+  return <div className="reports-charts">{renderChart()}</div>;
 };
 
 export default ReportsCharts;

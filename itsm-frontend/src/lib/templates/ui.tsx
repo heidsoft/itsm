@@ -80,12 +80,7 @@ export function StandardTable<T extends { id: number | string }>({
   emptyMessage = '暂无数据',
 }: StandardTableProps<T>) {
   return (
-    <Card
-      title={title}
-      extra={
-        <Space>{headerActions}</Space>
-      }
-    >
+    <Card title={title} extra={<Space>{headerActions}</Space>}>
       <Table<T>
         columns={columns}
         dataSource={dataSource}
@@ -93,7 +88,7 @@ export function StandardTable<T extends { id: number | string }>({
         rowKey={rowKey}
         pagination={pagination}
         onChange={onChange}
-        onRow={(record) => ({
+        onRow={record => ({
           onClick: () => onRowClick?.(record),
           style: onRowClick ? { cursor: 'pointer' } : undefined,
         })}
@@ -140,18 +135,14 @@ export function createActionColumn({
       }
 
       const visibleActions = maxVisible > 0 ? actions.slice(0, maxVisible) : actions;
-      const moreActions = maxVisible > 0 && actions.length > maxVisible ? actions.slice(maxVisible) : [];
+      const moreActions =
+        maxVisible > 0 && actions.length > maxVisible ? actions.slice(maxVisible) : [];
 
       return (
         <Space size="small">
-          {visibleActions.map((action) =>
+          {visibleActions.map(action =>
             action.key === 'delete' ? (
-              <Popconfirm
-                key={action.key}
-                title="确定要删除吗？"
-                okText="确定"
-                cancelText="取消"
-              >
+              <Popconfirm key={action.key} title="确定要删除吗？" okText="确定" cancelText="取消">
                 <Button type="link" danger size="small" icon={action.icon}>
                   {action.label}
                 </Button>
@@ -170,7 +161,7 @@ export function createActionColumn({
           )}
           {moreActions.length > 0 && (
             <Dropdown
-              menu={{ items: moreActions.map((a) => ({ ...a, danger: undefined })) }}
+              menu={{ items: moreActions.map(a => ({ ...a, danger: undefined })) }}
               trigger={['click']}
             >
               <Button type="link" size="small" icon={<MoreOutlined />} />
@@ -192,11 +183,7 @@ interface StatusTagProps {
 export function StatusTag({ status, mapping }: StatusTagProps) {
   const config = mapping[status] || { color: 'default', label: status };
 
-  return (
-    <Tag color={config.color}>
-      {config.label}
-    </Tag>
-  );
+  return <Tag color={config.color}>{config.label}</Tag>;
 }
 
 // ============ 确认对话框组件 ============
@@ -291,13 +278,7 @@ export function DetailDrawer({
   children,
 }: DetailDrawerProps) {
   return (
-    <Drawer
-      title={title}
-      width={width}
-      open={open}
-      onClose={onClose}
-      footer={null}
-    >
+    <Drawer title={title} width={width} open={open} onClose={onClose} footer={null}>
       {children}
     </Drawer>
   );
@@ -315,11 +296,7 @@ interface DetailDescriptionsProps {
   column?: number | { xs: number; sm: number; md: number; lg: number; xl: number };
 }
 
-export function DetailDescriptions({
-  title,
-  items,
-  column = 2,
-}: DetailDescriptionsProps) {
+export function DetailDescriptions({ title, items, column = 2 }: DetailDescriptionsProps) {
   return (
     <Descriptions title={title} column={column} bordered size="small">
       {items.map((item, index) => (
@@ -339,16 +316,9 @@ interface EmptyStateProps {
   image?: React.ReactNode;
 }
 
-export function EmptyState({
-  description = '暂无数据',
-  action,
-  image,
-}: EmptyStateProps) {
+export function EmptyState({ description = '暂无数据', action, image }: EmptyStateProps) {
   return (
-    <Empty
-      description={description}
-      image={image}
-    >
+    <Empty description={description} image={image}>
       {action}
     </Empty>
   );
@@ -377,11 +347,7 @@ interface ErrorStateProps {
   onRetry?: () => void;
 }
 
-export function ErrorState({
-  message = '出错了',
-  description,
-  onRetry,
-}: ErrorStateProps) {
+export function ErrorState({ message = '出错了', description, onRetry }: ErrorStateProps) {
   return (
     <Alert
       type="error"
@@ -425,14 +391,7 @@ export function RatingDisplay({
   disabled = true,
   onChange,
 }: RatingDisplayProps) {
-  return (
-    <Rate
-      value={value}
-      allowHalf={allowHalf}
-      disabled={disabled}
-      onChange={onChange}
-    />
-  );
+  return <Rate value={value} allowHalf={allowHalf} disabled={disabled} onChange={onChange} />;
 }
 
 // ============ 进度条组件 ============
@@ -471,11 +430,7 @@ interface AvatarGroupProps {
   size?: number;
 }
 
-export function AvatarGroup({
-  users,
-  maxCount = 5,
-  size = 32,
-}: AvatarGroupProps) {
+export function AvatarGroup({ users, maxCount = 5, size = 32 }: AvatarGroupProps) {
   const visibleUsers = users.slice(0, maxCount);
   const remainingCount = users.length - maxCount;
 
@@ -501,15 +456,10 @@ interface TagListProps {
   onClose?: (tag: string) => void;
 }
 
-export function TagList({
-  tags,
-  colorMap = {},
-  closable = false,
-  onClose,
-}: TagListProps) {
+export function TagList({ tags, colorMap = {}, closable = false, onClose }: TagListProps) {
   return (
     <Space wrap>
-      {tags.map((tag) => (
+      {tags.map(tag => (
         <Tag
           key={tag}
           color={colorMap[tag] || 'default'}
@@ -609,16 +559,13 @@ export function CardList({
         loading={loading}
         grid={grid}
         dataSource={items}
-        renderItem={(item) => (
+        renderItem={item => (
           <List.Item
             onClick={() => onItemClick?.(item)}
             style={{ cursor: onItemClick ? 'pointer' : 'default' }}
             actions={item.actions}
           >
-            <List.Item.Meta
-              title={item.title}
-              description={item.description}
-            />
+            <List.Item.Meta title={item.title} description={item.description} />
             {item.extra && <div style={{ marginLeft: 16 }}>{item.extra}</div>}
           </List.Item>
         )}

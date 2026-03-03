@@ -48,6 +48,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/processvariable"
+	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
@@ -191,6 +192,7 @@ func checkColumn(table, column string) error {
 			processinstance.Table:         processinstance.ValidColumn,
 			processtask.Table:             processtask.ValidColumn,
 			processvariable.Table:         processvariable.ValidColumn,
+			processversionchangelog.Table: processversionchangelog.ValidColumn,
 			project.Table:                 project.ValidColumn,
 			prompttemplate.Table:          prompttemplate.ValidColumn,
 			provisioningtask.Table:        provisioningtask.ValidColumn,

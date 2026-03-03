@@ -23,17 +23,17 @@ interface AuthState {
   currentTenant: Tenant | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  
+
   // 认证操作
   login: (user: User, token: string, tenant?: Tenant) => void;
   logout: () => void;
   updateUser: (user: Partial<User>) => void;
   setLoading: (loading: boolean) => void;
-  
+
   // 租户操作
   setCurrentTenant: (tenant: Tenant) => void;
   clearTenant: () => void;
-  
+
   // 权限检查
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
@@ -63,13 +63,13 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           currentTenant: tenant || null,
         });
-        
+
         // 同步到 localStorage 和 httpClient
         if (typeof window !== 'undefined') {
           localStorage.setItem('access_token', token);
         }
         httpClient.setToken(token);
-        
+
         if (tenant) {
           httpClient.setTenantId(tenant.id);
           httpClient.setTenantCode(tenant.code);
@@ -85,10 +85,10 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           currentTenant: null,
         });
-        
+
         // 清除所有认证信息（使用统一的清理函数，包含历史键名）
         clearAuthStorage();
-        
+
         httpClient.clearToken();
         httpClient.setTenantId(null);
         httpClient.setTenantCode(null);
@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthState>()(
         set({ currentTenant: tenant });
         httpClient.setTenantId(tenant.id);
         httpClient.setTenantCode(tenant.code);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.setItem('current_tenant_id', tenant.id.toString());
           localStorage.setItem('current_tenant_code', tenant.code);
@@ -126,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
         set({ currentTenant: null });
         httpClient.setTenantId(null);
         httpClient.setTenantCode(null);
-        
+
         if (typeof window !== 'undefined') {
           localStorage.removeItem('current_tenant_id');
           localStorage.removeItem('current_tenant_code');
@@ -153,7 +153,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({
+      partialize: state => ({
         user: state.user,
         token: state.token,
         currentTenant: state.currentTenant,
@@ -180,24 +180,24 @@ interface TenantState {
   setError: (error: string | null) => void;
 }
 
-export const useTenantStore = create<TenantState>((set) => ({
+export const useTenantStore = create<TenantState>(set => ({
   tenants: [],
   loading: false,
   error: null,
-  setTenants: (tenants) => set({ tenants }),
-  addTenant: (tenant) => set((state) => ({ tenants: [...state.tenants, tenant] })),
+  setTenants: tenants => set({ tenants }),
+  addTenant: tenant => set(state => ({ tenants: [...state.tenants, tenant] })),
   updateTenant: (id, updatedTenant) =>
-    set((state) => ({
-      tenants: state.tenants.map((tenant) =>
+    set(state => ({
+      tenants: state.tenants.map(tenant =>
         tenant.id === id ? { ...tenant, ...updatedTenant } : tenant
       ),
     })),
-  removeTenant: (id) =>
-    set((state) => ({
-      tenants: state.tenants.filter((tenant) => tenant.id !== id),
+  removeTenant: id =>
+    set(state => ({
+      tenants: state.tenants.filter(tenant => tenant.id !== id),
     })),
-  setLoading: (loading) => set({ loading }),
-  setError: (error) => set({ error }),
+  setLoading: loading => set({ loading }),
+  setError: error => set({ error }),
 }));
 
 // ===================================
@@ -212,27 +212,27 @@ export const PERMISSIONS = {
   TICKET_DELETE: 'ticket:delete',
   TICKET_ASSIGN: 'ticket:assign',
   TICKET_CLOSE: 'ticket:close',
-  
+
   // 用户权限
   USER_VIEW: 'user:view',
   USER_CREATE: 'user:create',
   USER_UPDATE: 'user:update',
   USER_DELETE: 'user:delete',
-  
+
   // 事件权限
   INCIDENT_VIEW: 'incident:view',
   INCIDENT_CREATE: 'incident:create',
   INCIDENT_UPDATE: 'incident:update',
   INCIDENT_DELETE: 'incident:delete',
-  
+
   // 系统权限
   SYSTEM_CONFIG: 'system:config',
   SYSTEM_LOGS: 'system:logs',
-  
+
   // 报告权限
   REPORT_VIEW: 'report:view',
   REPORT_EXPORT: 'report:export',
-  
+
   // 审计权限
   AUDIT_VIEW: 'audit:view',
   AUDIT_EXPORT: 'audit:export',
@@ -254,35 +254,35 @@ export const ROLES = {
 // ===================================
 
 export const usePermissions = () => {
-  const hasPermission = useAuthStore((state) => state.hasPermission);
-  const hasRole = useAuthStore((state) => state.hasRole);
-  const isAdmin = useAuthStore((state) => state.isAdmin);
-  
+  const hasPermission = useAuthStore(state => state.hasPermission);
+  const hasRole = useAuthStore(state => state.hasRole);
+  const isAdmin = useAuthStore(state => state.isAdmin);
+
   return {
     // 基础权限检查
     hasPermission,
     hasRole,
     isAdmin,
-    
+
     // 工单权限
     canViewTickets: () => hasPermission(PERMISSIONS.TICKET_VIEW) || isAdmin(),
     canCreateTickets: () => hasPermission(PERMISSIONS.TICKET_CREATE) || isAdmin(),
     canUpdateTickets: () => hasPermission(PERMISSIONS.TICKET_UPDATE) || isAdmin(),
     canDeleteTickets: () => hasPermission(PERMISSIONS.TICKET_DELETE) || isAdmin(),
     canAssignTickets: () => hasPermission(PERMISSIONS.TICKET_ASSIGN) || isAdmin(),
-    
+
     // 用户权限
     canViewUsers: () => hasPermission(PERMISSIONS.USER_VIEW) || isAdmin(),
     canManageUsers: () => hasPermission(PERMISSIONS.USER_CREATE) || isAdmin(),
-    
+
     // 事件权限
     canViewIncidents: () => hasPermission(PERMISSIONS.INCIDENT_VIEW) || isAdmin(),
     canManageIncidents: () => hasPermission(PERMISSIONS.INCIDENT_CREATE) || isAdmin(),
-    
+
     // 报告权限
     canViewReports: () => hasPermission(PERMISSIONS.REPORT_VIEW) || isAdmin(),
     canExportReports: () => hasPermission(PERMISSIONS.REPORT_EXPORT) || isAdmin(),
-    
+
     // 角色检查
     isSuperAdmin: () => hasRole(ROLES.SUPER_ADMIN),
     isManager: () => hasRole(ROLES.MANAGER),
@@ -311,4 +311,3 @@ export const useAuthStoreHydration = () => {
 
 // 为了向后兼容，导出类型
 export type { AuthState, TenantState };
-

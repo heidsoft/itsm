@@ -54,10 +54,10 @@ export function ApprovalChainFilters({
   );
 
   const handleDateRangeChange = useCallback(
-    (dates: any, dateStrings: any) => {
+    (dates: any, dateStrings: [string, string]) => {
       const newFilters = {
         ...localFilters,
-        dateRange: dates && dateStrings
+        dateRange: dates
           ? {
               field: 'created' as const,
               start: dateStrings[0],
@@ -78,14 +78,14 @@ export function ApprovalChainFilters({
   }, [onFilterChange]);
 
   return (
-    <Card className='mb-6'>
-      <Row gutter={[16, 16]} align='middle'>
+    <Card className="mb-6">
+      <Row gutter={[16, 16]} align="middle">
         <Col xs={24} sm={12} md={8} lg={6}>
-          <div className='mb-2'>
-            <span className='text-sm font-medium text-gray-700'>搜索名称</span>
+          <div className="mb-2">
+            <span className="text-sm font-medium text-gray-700">搜索名称</span>
           </div>
           <Search
-            placeholder='搜索审批链名称...'
+            placeholder="搜索审批链名称..."
             value={localFilters.name || ''}
             onChange={e => handleSearch(e.target.value)}
             onSearch={handleSearch}
@@ -94,25 +94,25 @@ export function ApprovalChainFilters({
         </Col>
 
         <Col xs={24} sm={12} md={8} lg={6}>
-          <div className='mb-2'>
-            <span className='text-sm font-medium text-gray-700'>状态</span>
+          <div className="mb-2">
+            <span className="text-sm font-medium text-gray-700">状态</span>
           </div>
           <Select
-            mode='multiple'
-            placeholder='选择状态'
+            mode="multiple"
+            placeholder="选择状态"
             value={localFilters.status}
             onChange={handleStatusChange}
             style={{ width: '100%' }}
             allowClear
           >
-            <Option value='active'>活跃</Option>
-            <Option value='inactive'>非活跃</Option>
+            <Option value="active">活跃</Option>
+            <Option value="inactive">非活跃</Option>
           </Select>
         </Col>
 
         <Col xs={24} sm={12} md={8} lg={6}>
-          <div className='mb-2'>
-            <span className='text-sm font-medium text-gray-700'>创建时间</span>
+          <div className="mb-2">
+            <span className="text-sm font-medium text-gray-700">创建时间</span>
           </div>
           <RangePicker
             placeholder={['开始日期', '结束日期']}
@@ -127,8 +127,8 @@ export function ApprovalChainFilters({
         </Col>
 
         <Col xs={24} sm={12} md={8} lg={6}>
-          <div className='mb-2'>
-            <span className='text-sm font-medium text-gray-700'>操作</span>
+          <div className="mb-2">
+            <span className="text-sm font-medium text-gray-700">操作</span>
           </div>
           <Space>
             <Button icon={<ReloadOutlined />} onClick={onRefresh} loading={loading}>

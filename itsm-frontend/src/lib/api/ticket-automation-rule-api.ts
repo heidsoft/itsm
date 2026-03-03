@@ -112,7 +112,10 @@ export class TicketAutomationRuleApi {
   /**
    * 更新自动化规则
    */
-  static async updateRule(ruleId: number, data: UpdateAutomationRuleRequest): Promise<AutomationRule> {
+  static async updateRule(
+    ruleId: number,
+    data: UpdateAutomationRuleRequest
+  ): Promise<AutomationRule> {
     return httpClient.put<AutomationRule>(`/api/v1/tickets/automation-rules/${ruleId}`, data);
   }
 
@@ -127,9 +130,11 @@ export class TicketAutomationRuleApi {
    * 测试自动化规则
    */
   static async testRule(data: TestAutomationRuleRequest): Promise<TestAutomationRuleResponse> {
-    return httpClient.post<TestAutomationRuleResponse>(`/api/v1/tickets/automation-rules/${data.rule_id}/test`, {
-      ticket_id: data.ticket_id,
-    });
+    return httpClient.post<TestAutomationRuleResponse>(
+      `/api/v1/tickets/automation-rules/${data.rule_id}/test`,
+      {
+        ticket_id: data.ticket_id,
+      }
+    );
   }
 }
-

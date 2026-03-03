@@ -5,7 +5,15 @@ import { useRouter } from 'next/navigation';
 import { Mail, ArrowLeft, CheckCircle, Shield } from 'lucide-react';
 import { useI18n } from '@/lib/i18n/useI18n';
 import {
-  Typography, Form, Input, Button, Card, ConfigProvider, message, Divider, Alert
+  Typography,
+  Form,
+  Input,
+  Button,
+  Card,
+  ConfigProvider,
+  message,
+  Divider,
+  Alert,
 } from 'antd';
 import { antdTheme } from '@/lib/antd-theme';
 import { AuthService } from '@/lib/services/auth-service';
@@ -64,7 +72,10 @@ export default function ForgotPasswordPage() {
       <ConfigProvider theme={antdTheme}>
         <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-gray-50 to-blue-50">
           <div className="w-full max-w-[420px]">
-            <Card className="rounded-xl shadow-xl border-none" styles={{ body: { padding: '40px' } }}>
+            <Card
+              className="rounded-xl shadow-xl border-none"
+              styles={{ body: { padding: '40px' } }}
+            >
               <div className="text-center">
                 <div className="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
                   <CheckCircle size={32} className="text-green-600" />
@@ -75,7 +86,8 @@ export default function ForgotPasswordPage() {
                 </Title>
 
                 <Text className="!text-gray-500 !text-sm block !mb-6">
-                  我们已将密码重置链接发送至<br />
+                  我们已将密码重置链接发送至
+                  <br />
                   <span className="text-blue-600 font-medium">{email}</span>
                 </Text>
 
@@ -90,11 +102,22 @@ export default function ForgotPasswordPage() {
                   </ul>
                 </div>
 
-                <Button type='link' className="mb-4" onClick={() => setSubmitted(false)} icon={<ArrowLeft size={14} />}>
+                <Button
+                  type="link"
+                  className="mb-4"
+                  onClick={() => setSubmitted(false)}
+                  icon={<ArrowLeft size={14} />}
+                >
                   {t('auth.forgotPassword.backToLogin')}
                 </Button>
 
-                <Button type='primary' size='large' className="w-full h-10 rounded-md text-sm" loading={loading} onClick={handleResend}>
+                <Button
+                  type="primary"
+                  size="large"
+                  className="w-full h-10 rounded-md text-sm"
+                  loading={loading}
+                  onClick={handleResend}
+                >
                   重新发送
                 </Button>
 
@@ -123,34 +146,44 @@ export default function ForgotPasswordPage() {
               <Title level={2} className="!mb-2 !text-gray-900 !text-2xl">
                 {t('auth.forgotPassword.title')}
               </Title>
-              <Text className="!text-gray-500 !text-sm">
-                {t('auth.forgotPassword.subtitle')}
-              </Text>
+              <Text className="!text-gray-500 !text-sm">{t('auth.forgotPassword.subtitle')}</Text>
             </div>
 
             {error && (
-              <Alert message={t('auth.forgotPassword.sendFailed')} description={error} type="error" className="mb-4" showIcon />
+              <Alert
+                message={t('auth.forgotPassword.sendFailed')}
+                description={error}
+                type="error"
+                className="mb-4"
+                showIcon
+              />
             )}
 
-            <Form form={form} layout='vertical' size='middle' onFinish={handleSubmit}>
+            <Form form={form} layout="vertical" size="middle" onFinish={handleSubmit}>
               <Form.Item
-                name='email'
+                name="email"
                 label={t('auth.forgotPassword.emailLabel')}
                 rules={[
                   { required: true, message: t('auth.forgotPassword.emailRequired') },
-                  { type: 'email', message: t('auth.forgotPassword.emailInvalid') }
+                  { type: 'email', message: t('auth.forgotPassword.emailInvalid') },
                 ]}
               >
                 <Input
                   prefix={<Mail size={14} className="text-gray-400" />}
                   placeholder={t('auth.forgotPassword.emailPlaceholder')}
-                  size='large'
+                  size="large"
                   disabled={loading}
                 />
               </Form.Item>
 
               <Form.Item>
-                <Button type='primary' htmlType='submit' size='large' className="w-full h-10 rounded-md text-sm font-semibold" loading={loading}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  size="large"
+                  className="w-full h-10 rounded-md text-sm font-semibold"
+                  loading={loading}
+                >
                   {loading ? t('auth.forgotPassword.sending') : t('auth.forgotPassword.sendButton')}
                 </Button>
               </Form.Item>
@@ -169,7 +202,12 @@ export default function ForgotPasswordPage() {
               <Text className="text-gray-400 text-xs">{t('auth.login.or')}</Text>
             </Divider>
 
-            <Button size='middle' className="w-full h-10 rounded-md text-sm" disabled={loading} icon={<Shield size={14} />}>
+            <Button
+              size="middle"
+              className="w-full h-10 rounded-md text-sm"
+              disabled={loading}
+              icon={<Shield size={14} />}
+            >
               SSO 企业登录
             </Button>
           </Card>

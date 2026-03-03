@@ -121,7 +121,9 @@ const ReleaseList: React.FC = () => {
       width: 140,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '120px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '120px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -133,7 +135,9 @@ const ReleaseList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '180px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '180px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -143,9 +147,7 @@ const ReleaseList: React.FC = () => {
       key: 'type',
       width: 100,
       render: (type: string) => (
-        <Tag color={typeColors[type] || 'default'}>
-          {type?.toUpperCase()}
-        </Tag>
+        <Tag color={typeColors[type] || 'default'}>{type?.toUpperCase()}</Tag>
       ),
     },
     {
@@ -175,7 +177,7 @@ const ReleaseList: React.FC = () => {
       dataIndex: 'planned_release_date',
       key: 'planned_release_date',
       width: 150,
-      render: (date: string) => date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-',
+      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: '创建人',
@@ -184,7 +186,9 @@ const ReleaseList: React.FC = () => {
       width: 120,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '100px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '100px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -227,11 +231,7 @@ const ReleaseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="总发布数"
-              value={stats.total || 0}
-              prefix={<RocketOutlined />}
-            />
+            <Statistic title="总发布数" value={stats.total || 0} prefix={<RocketOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -254,29 +254,18 @@ const ReleaseList: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="已取消"
-              value={stats.cancelled || 0}
-            />
+            <Statistic title="已取消" value={stats.cancelled || 0} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="失败"
-              value={stats.failed || 0}
-              valueStyle={{ color: '#ff4d4f' }}
-            />
+            <Statistic title="失败" value={stats.failed || 0} valueStyle={{ color: '#ff4d4f' }} />
           </Card>
         </Col>
       </Row>
 
       <Card>
-        <Form
-          form={form}
-          layout="inline"
-          style={{ marginBottom: 16 }}
-        >
+        <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
           <Form.Item name="status" label="状态">
             <Select
               placeholder="选择状态"
@@ -307,11 +296,7 @@ const ReleaseList: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-              >
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
@@ -334,10 +319,7 @@ const ReleaseList: React.FC = () => {
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无发布数据"
-              >
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无发布数据">
                 <Button type="primary" onClick={() => router.push('/releases/new')}>
                   创建第一个发布
                 </Button>
@@ -351,7 +333,7 @@ const ReleaseList: React.FC = () => {
             onChange: handlePageChange,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: total => `共 ${total} 条`,
           }}
         />
       </Card>

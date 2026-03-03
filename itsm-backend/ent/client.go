@@ -53,6 +53,7 @@ import (
 	"itsm-backend/ent/processinstance"
 	"itsm-backend/ent/processtask"
 	"itsm-backend/ent/processvariable"
+	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/project"
 	"itsm-backend/ent/prompttemplate"
 	"itsm-backend/ent/provisioningtask"
@@ -184,6 +185,8 @@ type Client struct {
 	ProcessTask *ProcessTaskClient
 	// ProcessVariable is the client for interacting with the ProcessVariable builders.
 	ProcessVariable *ProcessVariableClient
+	// ProcessVersionChangelog is the client for interacting with the ProcessVersionChangelog builders.
+	ProcessVersionChangelog *ProcessVersionChangelogClient
 	// Project is the client for interacting with the Project builders.
 	Project *ProjectClient
 	// PromptTemplate is the client for interacting with the PromptTemplate builders.
@@ -307,6 +310,7 @@ func (c *Client) init() {
 	c.ProcessInstance = NewProcessInstanceClient(c.config)
 	c.ProcessTask = NewProcessTaskClient(c.config)
 	c.ProcessVariable = NewProcessVariableClient(c.config)
+	c.ProcessVersionChangelog = NewProcessVersionChangelogClient(c.config)
 	c.Project = NewProjectClient(c.config)
 	c.PromptTemplate = NewPromptTemplateClient(c.config)
 	c.ProvisioningTask = NewProvisioningTaskClient(c.config)
@@ -476,6 +480,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ProcessInstance:         NewProcessInstanceClient(cfg),
 		ProcessTask:             NewProcessTaskClient(cfg),
 		ProcessVariable:         NewProcessVariableClient(cfg),
+		ProcessVersionChangelog: NewProcessVersionChangelogClient(cfg),
 		Project:                 NewProjectClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		ProvisioningTask:        NewProvisioningTaskClient(cfg),
@@ -572,6 +577,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ProcessInstance:         NewProcessInstanceClient(cfg),
 		ProcessTask:             NewProcessTaskClient(cfg),
 		ProcessVariable:         NewProcessVariableClient(cfg),
+		ProcessVersionChangelog: NewProcessVersionChangelogClient(cfg),
 		Project:                 NewProjectClient(cfg),
 		PromptTemplate:          NewPromptTemplateClient(cfg),
 		ProvisioningTask:        NewProvisioningTaskClient(cfg),
@@ -646,9 +652,9 @@ func (c *Client) Use(hooks ...Hook) {
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
 		c.Problem, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
-		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
 		c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig, c.Tag, c.Team,
 		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
@@ -674,9 +680,9 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
 		c.Problem, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
-		c.Project, c.PromptTemplate, c.ProvisioningTask, c.RelationshipType, c.Release,
-		c.Role, c.RootCauseAnalysis, c.SLAAlertHistory, c.SLAAlertRule,
-		c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
+		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
+		c.RelationshipType, c.Release, c.Role, c.RootCauseAnalysis, c.SLAAlertHistory,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
 		c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig, c.Tag, c.Team,
 		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
@@ -775,6 +781,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.ProcessTask.mutate(ctx, m)
 	case *ProcessVariableMutation:
 		return c.ProcessVariable.mutate(ctx, m)
+	case *ProcessVersionChangelogMutation:
+		return c.ProcessVersionChangelog.mutate(ctx, m)
 	case *ProjectMutation:
 		return c.Project.mutate(ctx, m)
 	case *PromptTemplateMutation:
@@ -6658,6 +6666,22 @@ func (c *ProcessDefinitionClient) QueryBindings(pd *ProcessDefinition) *ProcessB
 	return query
 }
 
+// QueryVersionChangelogs queries the version_changelogs edge of a ProcessDefinition.
+func (c *ProcessDefinitionClient) QueryVersionChangelogs(pd *ProcessDefinition) *ProcessVersionChangelogQuery {
+	query := (&ProcessVersionChangelogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pd.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, id),
+			sqlgraph.To(processversionchangelog.Table, processversionchangelog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.VersionChangelogsTable, processdefinition.VersionChangelogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(pd.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryDeployment queries the deployment edge of a ProcessDefinition.
 func (c *ProcessDefinitionClient) QueryDeployment(pd *ProcessDefinition) *ProcessDeploymentQuery {
 	query := (&ProcessDeploymentClient{config: c.config}).Query()
@@ -7489,6 +7513,171 @@ func (c *ProcessVariableClient) mutate(ctx context.Context, m *ProcessVariableMu
 		return (&ProcessVariableDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown ProcessVariable mutation op: %q", m.Op())
+	}
+}
+
+// ProcessVersionChangelogClient is a client for the ProcessVersionChangelog schema.
+type ProcessVersionChangelogClient struct {
+	config
+}
+
+// NewProcessVersionChangelogClient returns a client for the ProcessVersionChangelog from the given config.
+func NewProcessVersionChangelogClient(c config) *ProcessVersionChangelogClient {
+	return &ProcessVersionChangelogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `processversionchangelog.Hooks(f(g(h())))`.
+func (c *ProcessVersionChangelogClient) Use(hooks ...Hook) {
+	c.hooks.ProcessVersionChangelog = append(c.hooks.ProcessVersionChangelog, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `processversionchangelog.Intercept(f(g(h())))`.
+func (c *ProcessVersionChangelogClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ProcessVersionChangelog = append(c.inters.ProcessVersionChangelog, interceptors...)
+}
+
+// Create returns a builder for creating a ProcessVersionChangelog entity.
+func (c *ProcessVersionChangelogClient) Create() *ProcessVersionChangelogCreate {
+	mutation := newProcessVersionChangelogMutation(c.config, OpCreate)
+	return &ProcessVersionChangelogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ProcessVersionChangelog entities.
+func (c *ProcessVersionChangelogClient) CreateBulk(builders ...*ProcessVersionChangelogCreate) *ProcessVersionChangelogCreateBulk {
+	return &ProcessVersionChangelogCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ProcessVersionChangelogClient) MapCreateBulk(slice any, setFunc func(*ProcessVersionChangelogCreate, int)) *ProcessVersionChangelogCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ProcessVersionChangelogCreateBulk{err: fmt.Errorf("calling to ProcessVersionChangelogClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ProcessVersionChangelogCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ProcessVersionChangelogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ProcessVersionChangelog.
+func (c *ProcessVersionChangelogClient) Update() *ProcessVersionChangelogUpdate {
+	mutation := newProcessVersionChangelogMutation(c.config, OpUpdate)
+	return &ProcessVersionChangelogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ProcessVersionChangelogClient) UpdateOne(pvc *ProcessVersionChangelog) *ProcessVersionChangelogUpdateOne {
+	mutation := newProcessVersionChangelogMutation(c.config, OpUpdateOne, withProcessVersionChangelog(pvc))
+	return &ProcessVersionChangelogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ProcessVersionChangelogClient) UpdateOneID(id int) *ProcessVersionChangelogUpdateOne {
+	mutation := newProcessVersionChangelogMutation(c.config, OpUpdateOne, withProcessVersionChangelogID(id))
+	return &ProcessVersionChangelogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ProcessVersionChangelog.
+func (c *ProcessVersionChangelogClient) Delete() *ProcessVersionChangelogDelete {
+	mutation := newProcessVersionChangelogMutation(c.config, OpDelete)
+	return &ProcessVersionChangelogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ProcessVersionChangelogClient) DeleteOne(pvc *ProcessVersionChangelog) *ProcessVersionChangelogDeleteOne {
+	return c.DeleteOneID(pvc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ProcessVersionChangelogClient) DeleteOneID(id int) *ProcessVersionChangelogDeleteOne {
+	builder := c.Delete().Where(processversionchangelog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ProcessVersionChangelogDeleteOne{builder}
+}
+
+// Query returns a query builder for ProcessVersionChangelog.
+func (c *ProcessVersionChangelogClient) Query() *ProcessVersionChangelogQuery {
+	return &ProcessVersionChangelogQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeProcessVersionChangelog},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ProcessVersionChangelog entity by its id.
+func (c *ProcessVersionChangelogClient) Get(ctx context.Context, id int) (*ProcessVersionChangelog, error) {
+	return c.Query().Where(processversionchangelog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ProcessVersionChangelogClient) GetX(ctx context.Context, id int) *ProcessVersionChangelog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProcessDefinition queries the process_definition edge of a ProcessVersionChangelog.
+func (c *ProcessVersionChangelogClient) QueryProcessDefinition(pvc *ProcessVersionChangelog) *ProcessDefinitionQuery {
+	query := (&ProcessDefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pvc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processversionchangelog.Table, processversionchangelog.FieldID, id),
+			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processversionchangelog.ProcessDefinitionTable, processversionchangelog.ProcessDefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(pvc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUser queries the user edge of a ProcessVersionChangelog.
+func (c *ProcessVersionChangelogClient) QueryUser(pvc *ProcessVersionChangelog) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := pvc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(processversionchangelog.Table, processversionchangelog.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, processversionchangelog.UserTable, processversionchangelog.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(pvc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ProcessVersionChangelogClient) Hooks() []Hook {
+	return c.hooks.ProcessVersionChangelog
+}
+
+// Interceptors returns the client interceptors.
+func (c *ProcessVersionChangelogClient) Interceptors() []Interceptor {
+	return c.inters.ProcessVersionChangelog
+}
+
+func (c *ProcessVersionChangelogClient) mutate(ctx context.Context, m *ProcessVersionChangelogMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ProcessVersionChangelogCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ProcessVersionChangelogUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ProcessVersionChangelogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ProcessVersionChangelogDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ProcessVersionChangelog mutation op: %q", m.Op())
 	}
 }
 
@@ -12582,6 +12771,22 @@ func (c *UserClient) QueryRoles(u *User) *RoleQuery {
 	return query
 }
 
+// QueryVersionChangelogs queries the version_changelogs edge of a User.
+func (c *UserClient) QueryVersionChangelogs(u *User) *ProcessVersionChangelogQuery {
+	query := (&ProcessVersionChangelogClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(processversionchangelog.Table, processversionchangelog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.VersionChangelogsTable, user.VersionChangelogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -13263,13 +13468,14 @@ type (
 		Microservice, Notification, NotificationPreference, PasswordResetToken,
 		Permission, Problem, ProcessBinding, ProcessDefinition, ProcessDeployment,
 		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RootCauseAnalysis, SLAAlertHistory,
+		SLAAlertRule, SLADefinition, SLAMetric, SLAViolation, ServiceCatalog,
+		ServiceRequest, ServiceRequestApproval, SystemConfig, Tag, Team, Tenant,
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
+		WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
@@ -13281,13 +13487,13 @@ type (
 		Microservice, Notification, NotificationPreference, PasswordResetToken,
 		Permission, Problem, ProcessBinding, ProcessDefinition, ProcessDeployment,
 		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		Project, PromptTemplate, ProvisioningTask, RelationshipType, Release, Role,
-		RootCauseAnalysis, SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric,
-		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
-		SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
-		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
-		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
-		User, Workflow, WorkflowInstance, WorkflowTask,
+		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
+		RelationshipType, Release, Role, RootCauseAnalysis, SLAAlertHistory,
+		SLAAlertRule, SLADefinition, SLAMetric, SLAViolation, ServiceCatalog,
+		ServiceRequest, ServiceRequestApproval, SystemConfig, Tag, Team, Tenant,
+		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
+		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
+		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
 		WorkflowVersion []ent.Interceptor
 	}
 )

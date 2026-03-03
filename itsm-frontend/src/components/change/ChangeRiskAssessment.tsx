@@ -85,15 +85,15 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
   useEffect(() => {
     const riskLevel = form.getFieldValue('risk_level') as ChangeRisk;
     const factorsCount = riskFactors.length;
-    
+
     let score = 0;
     if (riskLevel === 'low') score = 10;
     else if (riskLevel === 'medium') score = 30;
     else if (riskLevel === 'high') score = 60;
-    
+
     // 风险因子增加分数
     score += factorsCount * 5;
-    
+
     setRiskScore(Math.min(score, 100));
   }, [riskFactors]);
 
@@ -114,7 +114,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
         risk_score: riskScore,
         risk_factors: riskFactors,
       };
-      
+
       onSave?.(assessmentData);
     } catch (error) {
       message.error('表单验证失败');
@@ -163,11 +163,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
       }
       className="change-risk-assessment"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        disabled={readOnly}
-      >
+      <Form form={form} layout="vertical" disabled={readOnly}>
         <Row gutter={[24, 16]}>
           {/* 风险等级选择 */}
           <Col xs={24} lg={8}>
@@ -176,10 +172,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
               name="risk_level"
               rules={[{ required: true, message: '请选择风险等级' }]}
             >
-              <Select
-                placeholder="选择风险等级"
-                onChange={() => setRiskFactors([])}
-              >
+              <Select placeholder="选择风险等级" onChange={() => setRiskFactors([])}>
                 {Object.entries(riskLevels).map(([key, config]) => (
                   <Option key={key} value={config.value as ChangeRisk}>
                     <Space>
@@ -195,15 +188,16 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
             {/* 风险分数显示 */}
             <Card size="small" className="mt-4">
               <div className="text-center">
-                <Title level={4} style={{ 
-                  color: getRiskColor(riskScore),
-                  margin: '0 0 8px 0'
-                }}>
+                <Title
+                  level={4}
+                  style={{
+                    color: getRiskColor(riskScore),
+                    margin: '0 0 8px 0',
+                  }}
+                >
                   {riskScore}分
                 </Title>
-                <Text type="secondary">
-                  综合风险评级：{getRiskStatus(riskScore)}
-                </Text>
+                <Text type="secondary">综合风险评级：{getRiskStatus(riskScore)}</Text>
                 <Progress
                   percent={riskScore}
                   strokeColor={getRiskColor(riskScore)}
@@ -275,10 +269,7 @@ const ChangeRiskAssessment: React.FC<ChangeRiskAssessmentProps> = ({
               name="risk_owner"
               rules={[{ required: true, message: '请指定风险责任人' }]}
             >
-              <Input
-                placeholder="输入风险责任人姓名"
-                prefix={<Users className="w-4 h-4" />}
-              />
+              <Input placeholder="输入风险责任人姓名" prefix={<Users className="w-4 h-4" />} />
             </Form.Item>
           </Col>
 

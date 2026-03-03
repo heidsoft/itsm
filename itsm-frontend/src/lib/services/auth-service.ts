@@ -80,7 +80,7 @@ export class AuthService {
   // 直接使用fetch进行HTTP请求，避免循环依赖
   private static async makeRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    
+
     const response = await fetch(url, {
       headers: {
         'Content-Type': 'application/json',
@@ -89,18 +89,17 @@ export class AuthService {
       ...options,
     });
 
-
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const responseData = await response.json() as { code: number; message: string; data: T };
-    
+    const responseData = (await response.json()) as { code: number; message: string; data: T };
+
     // 检查响应码
     if (responseData.code !== 0) {
       throw new Error(responseData.message || '请求失败');
     }
-    
+
     return responseData.data;
   }
 
@@ -151,7 +150,6 @@ export class AuthService {
   // 修改login方法
   static async login(username: string, password: string, tenantCode?: string): Promise<boolean> {
     try {
-      
       const data = await this.makeRequest<{
         access_token: string;
         refresh_token: string;
@@ -164,11 +162,10 @@ export class AuthService {
           tenant_code: tenantCode,
         }),
       });
-      
-      
+
       // 存储tokens
       this.setTokens(data.access_token, data.refresh_token);
-      
+
       // 使用store管理登录状态
       const { login } = useAuthStore.getState();
       const u = data.user as any;
@@ -186,20 +183,20 @@ export class AuthService {
           updatedAt: u?.updated_at,
         },
         data.access_token,
-        { 
-          id: 1, 
-          name: "默认租户", 
-          code: "default",
+        {
+          id: 1,
+          name: '默认租户',
+          code: 'default',
           type: 'standard',
           status: 'active',
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         } as Tenant
       );
-      
+
       // 验证状态是否正确设置
       const { isAuthenticated } = useAuthStore.getState();
-      
+
       return true;
     } catch (error) {
       console.error('Login failed:', error);
@@ -218,7 +215,6 @@ export class AuthService {
     role?: string;
   }): Promise<boolean> {
     try {
-
       await this.makeRequest<{ id: number; username: string; email: string; message: string }>(
         '/api/v1/auth/register',
         {
@@ -245,7 +241,6 @@ export class AuthService {
   // 发送密码重置邮件
   static async forgotPassword(email: string, tenantCode?: string): Promise<boolean> {
     try {
-
       await this.makeRequest<{ message: string }>('/api/v1/auth/forgot-password', {
         method: 'POST',
         body: JSON.stringify({
@@ -269,7 +264,6 @@ export class AuthService {
     passwordConfirm: string;
   }): Promise<boolean> {
     try {
-
       await this.makeRequest<{ message: string }>('/api/v1/auth/reset-password', {
         method: 'POST',
         body: JSON.stringify({
@@ -290,7 +284,6 @@ export class AuthService {
   // 验证重置令牌
   static async validateResetToken(token: string, email: string): Promise<boolean> {
     try {
-
       const result = await this.makeRequest<{ valid: boolean; email: string }>(
         '/api/v1/auth/validate-reset-token',
         {

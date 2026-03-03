@@ -9,12 +9,12 @@ import { useState, useEffect } from 'react';
 
 // 断点定义
 const breakpoints = {
-  xs: 0,      // < 576px (mobile)
-  sm: 576,    // >= 576px (large mobile)
-  md: 768,    // >= 768px (tablet)
-  lg: 992,    // >= 992px (desktop)
-  xl: 1200,   // >= 1200px (large desktop)
-  xxl: 1600,  // >= 1600px (xlarge desktop)
+  xs: 0, // < 576px (mobile)
+  sm: 576, // >= 576px (large mobile)
+  md: 768, // >= 768px (tablet)
+  lg: 992, // >= 992px (desktop)
+  xl: 1200, // >= 1200px (large desktop)
+  xxl: 1600, // >= 1600px (xlarge desktop)
 };
 
 export type Breakpoint = keyof typeof breakpoints;
@@ -135,11 +135,11 @@ export const useResponsive = (): ResponsiveInfo => {
  */
 export const useBreakpoint = (breakpoint: Breakpoint): boolean => {
   const { currentBreakpoint } = useResponsive();
-  
+
   const breakpointOrder: Breakpoint[] = ['xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
   const currentIndex = breakpointOrder.indexOf(currentBreakpoint);
   const targetIndex = breakpointOrder.indexOf(breakpoint);
-  
+
   return currentIndex >= targetIndex;
 };
 
@@ -154,7 +154,7 @@ export const useMediaQuery = (query: string): boolean => {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(query);
-    
+
     const handleChange = (e: MediaQueryListEvent) => {
       setMatches(e.matches);
     };
@@ -222,4 +222,3 @@ export const useIsTouchDevice = (): boolean => {
 
   return isTouchDevice;
 };
-

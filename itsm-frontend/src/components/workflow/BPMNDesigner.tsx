@@ -79,13 +79,13 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
 
     // 监听变化
     modeler.on('commandStack.changed', () => {
-      modeler.saveXML({ format: true }).then((result) => {
+      modeler.saveXML({ format: true }).then(result => {
         if (result.xml) {
           setCurrentXML(result.xml);
           onChange?.(result.xml);
 
           // 更新历史记录
-          setHistory((prev) => {
+          setHistory(prev => {
             const newHistory = prev.slice(0, historyIndex + 1);
             newHistory.push(result.xml!);
             return newHistory.slice(-20); // 最多保留20步
@@ -161,32 +161,42 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       const content = e.target?.result as string;
-      modelerRef.current?.importXML(content).then(() => {
-        message.success('导入成功');
-      }).catch((err: Error) => {
-        message.error('导入失败: ' + err.message);
-      });
+      modelerRef.current
+        ?.importXML(content)
+        .then(() => {
+          message.success('导入成功');
+        })
+        .catch((err: Error) => {
+          message.error('导入失败: ' + err.message);
+        });
     };
     reader.readAsText(file);
   }, []);
 
   // 缩放
-  const handleZoom = useCallback((delta: number) => {
-    if (!modelerRef.current) return;
-    const canvas = modelerRef.current.get('canvas') as { zoom: (level: number) => void } | undefined;
-    if (canvas) {
-      const newZoom = Math.min(Math.max(zoom + delta, 0.2), 4);
-      canvas.zoom(newZoom);
-      setZoom(newZoom);
-    }
-  }, [zoom]);
+  const handleZoom = useCallback(
+    (delta: number) => {
+      if (!modelerRef.current) return;
+      const canvas = modelerRef.current.get('canvas') as
+        | { zoom: (level: number) => void }
+        | undefined;
+      if (canvas) {
+        const newZoom = Math.min(Math.max(zoom + delta, 0.2), 4);
+        canvas.zoom(newZoom);
+        setZoom(newZoom);
+      }
+    },
+    [zoom]
+  );
 
   // 重置缩放
   const handleZoomReset = useCallback(() => {
     if (!modelerRef.current) return;
-    const canvas = modelerRef.current.get('canvas') as { zoom: (level: string) => void } | undefined;
+    const canvas = modelerRef.current.get('canvas') as
+      | { zoom: (level: string) => void }
+      | undefined;
     if (canvas) {
       canvas.zoom('fit-viewport');
       setZoom(1);
@@ -213,7 +223,9 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   const handleDelete = useCallback(() => {
     if (!modelerRef.current) return;
     const selectionObj = modelerRef.current.get('selection') as { get: () => string[] } | undefined;
-    const modelingObj = modelerRef.current.get('modeling') as { removeElements: (elements: string[]) => void } | undefined;
+    const modelingObj = modelerRef.current.get('modeling') as
+      | { removeElements: (elements: string[]) => void }
+      | undefined;
     const selection = selectionObj?.get?.() || [];
     if (selection.length > 0 && modelingObj) {
       modelingObj.removeElements(selection);
@@ -223,21 +235,28 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
   return (
     <div style={{ display: 'flex', height, border: '1px solid #d9d9d9', borderRadius: '6px' }}>
       {/* 工具栏 */}
-      <div style={{
-        width: 48,
-        borderRight: '1px solid #d9d9d9',
-        background: '#f5f5f5',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '8px 0',
-        gap: 4,
-      }}>
+      <div
+        style={{
+          width: 48,
+          borderRight: '1px solid #d9d9d9',
+          background: '#f5f5f5',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '8px 0',
+          gap: 4,
+        }}
+      >
         <Tooltip title="保存" placement="right">
           <Button type="text" icon={<Save size={18} />} onClick={handleSave} disabled={readOnly} />
         </Tooltip>
         <Tooltip title="部署" placement="right">
-          <Button type="text" icon={<PlayCircle size={18} />} onClick={handleDeploy} disabled={readOnly} />
+          <Button
+            type="text"
+            icon={<PlayCircle size={18} />}
+            onClick={handleDeploy}
+            disabled={readOnly}
+          />
         </Tooltip>
         <Tooltip title="撤销" placement="right">
           <Button
@@ -263,7 +282,12 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
           <Button type="text" icon={<FileJson size={18} />} onClick={handleExportXML} />
         </Tooltip>
         <label>
-          <input type="file" accept=".bpmn,.xml" style={{ display: 'none' }} onChange={handleImportXML} />
+          <input
+            type="file"
+            accept=".bpmn,.xml"
+            style={{ display: 'none' }}
+            onChange={handleImportXML}
+          />
           <Tooltip title="导入BPMN" placement="right">
             <Button type="text" icon={<Upload size={18} />} />
           </Tooltip>
@@ -274,28 +298,45 @@ const BPMNDesigner: React.FC<BPMNDesignerProps> = ({
       <div ref={containerRef} style={{ flex: 1, position: 'relative' }} />
 
       {/* 缩放控制 */}
-      <div style={{
-        position: 'absolute',
-        bottom: 16,
-        right: 16,
-        display: 'flex',
-        gap: 4,
-        background: 'white',
-        padding: 4,
-        borderRadius: 6,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-      }}>
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 16,
+          right: 16,
+          display: 'flex',
+          gap: 4,
+          background: 'white',
+          padding: 4,
+          borderRadius: 6,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+        }}
+      >
         <Tooltip title="缩小">
-          <Button type="text" size="small" icon={<ZoomOut size={16} />} onClick={() => handleZoom(-0.1)} />
+          <Button
+            type="text"
+            size="small"
+            icon={<ZoomOut size={16} />}
+            onClick={() => handleZoom(-0.1)}
+          />
         </Tooltip>
         <span style={{ minWidth: 50, textAlign: 'center', lineHeight: '28px' }}>
           {Math.round(zoom * 100)}%
         </span>
         <Tooltip title="放大">
-          <Button type="text" size="small" icon={<ZoomIn size={16} />} onClick={() => handleZoom(0.1)} />
+          <Button
+            type="text"
+            size="small"
+            icon={<ZoomIn size={16} />}
+            onClick={() => handleZoom(0.1)}
+          />
         </Tooltip>
         <Tooltip title="适应屏幕">
-          <Button type="text" size="small" icon={<Maximize size={16} />} onClick={handleZoomReset} />
+          <Button
+            type="text"
+            size="small"
+            icon={<Maximize size={16} />}
+            onClick={handleZoomReset}
+          />
         </Tooltip>
       </div>
     </div>

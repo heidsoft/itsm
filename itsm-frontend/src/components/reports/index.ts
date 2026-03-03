@@ -2,7 +2,7 @@
  * 报表系统组件导出
  */
 
-export type { } from '@/types/reports';
+export type {} from '@/types/reports';
 
 // 报表引擎
 export { ReportEngine } from '@/lib/reports/report-engine';
@@ -21,4 +21,3 @@ export { ReportEngine } from '@/lib/reports/report-engine';
 // export { TemplateGallery } from './TemplateGallery';
 // export { DataPreview } from './DataPreview';
 // export { ReportStats } from './ReportStats';
-

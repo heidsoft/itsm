@@ -76,5 +76,7 @@ func (User) Edges() []ent.Edge {
 			Comment("通知偏好"),
 		edge.To("roles", Role.Type).
 			Comment("用户角色"),
+		edge.To("version_changelogs", ProcessVersionChangelog.Type).
+			Comment("版本变更日志"),
 	}
 }

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { WorkflowAPI } from "@/lib/api/workflow-api";
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { WorkflowAPI } from '@/lib/api/workflow-api';
 import {
   Card,
   Table,
@@ -21,7 +21,7 @@ import {
   Badge,
   Statistic,
   App,
-} from "antd";
+} from 'antd';
 import {
   Plus,
   Trash2,
@@ -37,7 +37,7 @@ import {
   Clock,
   User,
   Diff,
-} from "lucide-react";
+} from 'lucide-react';
 // AppLayout is handled by parent layout
 
 const { Text } = Typography;
@@ -49,7 +49,7 @@ interface WorkflowVersion {
   version: string;
   bpmn_xml: string;
   process_variables: Record<string, unknown>;
-  status: "draft" | "active" | "archived";
+  status: 'draft' | 'active' | 'archived';
   created_by: string;
   created_at: string;
   change_log: string;
@@ -78,8 +78,7 @@ const WorkflowVersionsPage = () => {
   const [versions, setVersions] = useState<WorkflowVersion[]>([]);
   const [loading, setLoading] = useState(false);
   const [compareModalVisible, setCompareModalVisible] = useState(false);
-  const [selectedVersion, setSelectedVersion] =
-    useState<WorkflowVersion | null>(null);
+  const [selectedVersion, setSelectedVersion] = useState<WorkflowVersion | null>(null);
   const [comparison, setComparison] = useState<VersionComparison | null>(null);
   const [workflowId, setWorkflowId] = useState<number>(1);
   const [processKey, setProcessKey] = useState<string>('');
@@ -110,14 +109,14 @@ const WorkflowVersionsPage = () => {
           id: v.id || 0,
           workflow_id: v.process_definition_key || workflowId,
           version: v.version?.toString() || '1.0.0',
-        bpmn_xml: v.bpmn_xml || '',
-        process_variables: v.process_variables || {},
-        status: (v.is_active ? 'active' : 'archived') as 'draft' | 'active' | 'archived',
-        created_by: v.created_by || 'System',
-        created_at: v.created_at || new Date().toISOString(),
-        change_log: v.change_log || '',
-        is_current: v.is_active || false,
-        metadata: v.metadata || {},
+          bpmn_xml: v.bpmn_xml || '',
+          process_variables: v.process_variables || {},
+          status: (v.is_active ? 'active' : 'archived') as 'draft' | 'active' | 'archived',
+          created_by: v.created_by || 'System',
+          created_at: v.created_at || new Date().toISOString(),
+          change_log: v.change_log || '',
+          is_current: v.is_active || false,
+          metadata: v.metadata || {},
         };
       });
       setVersions(adaptedVersions);
@@ -150,7 +149,7 @@ const WorkflowVersionsPage = () => {
       loadVersions();
     } catch (error) {
       console.error('部署版本失败:', error);
-      message.error("部署失败");
+      message.error('部署失败');
     }
   };
 
@@ -166,14 +165,11 @@ const WorkflowVersionsPage = () => {
       loadVersions();
     } catch (error) {
       console.error('回滚版本失败:', error);
-      message.error("回滚失败");
+      message.error('回滚失败');
     }
   };
 
-  const handleCompareVersions = async (
-    version1: WorkflowVersion,
-    version2: WorkflowVersion
-  ) => {
+  const handleCompareVersions = async (version1: WorkflowVersion, version2: WorkflowVersion) => {
     try {
       // 调用真实 API 进行版本比较
       const compareResult = await WorkflowAPI.compareVersions(
@@ -229,50 +225,46 @@ const WorkflowVersionsPage = () => {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      draft: "orange",
-      active: "green",
-      archived: "gray",
+      draft: 'orange',
+      active: 'green',
+      archived: 'gray',
     };
-    return colors[status as keyof typeof colors] || "default";
+    return colors[status as keyof typeof colors] || 'default';
   };
 
   const getStatusText = (status: string) => {
     const texts = {
-      draft: "草稿",
-      active: "激活",
-      archived: "归档",
+      draft: '草稿',
+      active: '激活',
+      archived: '归档',
     };
     return texts[status as keyof typeof texts] || status;
   };
 
   const columns = [
     {
-      title: "版本号",
-      dataIndex: "version",
-      key: "version",
+      title: '版本号',
+      dataIndex: 'version',
+      key: 'version',
       width: 120,
       render: (version: string, record: WorkflowVersion) => (
         <div className="flex items-center space-x-2">
           <span className="font-mono text-sm">{version}</span>
-          {record.is_current && (
-            <Badge count="当前" style={{ backgroundColor: "#52c41a" }} />
-          )}
+          {record.is_current && <Badge count="当前" style={{ backgroundColor: '#52c41a' }} />}
         </div>
       ),
     },
     {
-      title: "状态",
-      dataIndex: "status",
-      key: "status",
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
       width: 100,
-      render: (status: string) => (
-        <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>
-      ),
+      render: (status: string) => <Tag color={getStatusColor(status)}>{getStatusText(status)}</Tag>,
     },
     {
-      title: "变更日志",
-      dataIndex: "change_log",
-      key: "change_log",
+      title: '变更日志',
+      dataIndex: 'change_log',
+      key: 'change_log',
       render: (changeLog: string) => (
         <div className="max-w-xs truncate">
           <Tooltip title={changeLog}>
@@ -282,9 +274,9 @@ const WorkflowVersionsPage = () => {
       ),
     },
     {
-      title: "创建人",
-      dataIndex: "created_by",
-      key: "created_by",
+      title: '创建人',
+      dataIndex: 'created_by',
+      key: 'created_by',
       width: 120,
       render: (createdBy: string) => (
         <div className="flex items-center">
@@ -294,17 +286,17 @@ const WorkflowVersionsPage = () => {
       ),
     },
     {
-      title: "创建时间",
-      dataIndex: "created_at",
-      key: "created_at",
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
       width: 150,
       render: (date: string) => (
-        <div className="text-sm">{new Date(date).toLocaleString("zh-CN")}</div>
+        <div className="text-sm">{new Date(date).toLocaleString('zh-CN')}</div>
       ),
     },
     {
-      title: "统计",
-      key: "stats",
+      title: '统计',
+      key: 'stats',
       width: 120,
       render: (record: WorkflowVersion) => (
         <div className="text-sm">
@@ -314,8 +306,8 @@ const WorkflowVersionsPage = () => {
       ),
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       width: 200,
       render: (record: WorkflowVersion) => (
         <Space>
@@ -326,7 +318,7 @@ const WorkflowVersionsPage = () => {
               onClick={() => setSelectedVersion(record)}
             />
           </Tooltip>
-          {record.status === "draft" && (
+          {record.status === 'draft' && (
             <Tooltip title="部署">
               <Button
                 type="text"
@@ -335,7 +327,7 @@ const WorkflowVersionsPage = () => {
               />
             </Tooltip>
           )}
-          {!record.is_current && record.status === "active" && (
+          {!record.is_current && record.status === 'active' && (
             <Tooltip title="回滚">
               <Button
                 type="text"
@@ -351,7 +343,7 @@ const WorkflowVersionsPage = () => {
               onClick={() => handleCompareVersions(record, versions[0])}
             />
           </Tooltip>
-          {record.status === "draft" && (
+          {record.status === 'draft' && (
             <Tooltip title="删除">
               <Button
                 type="text"
@@ -381,7 +373,7 @@ const WorkflowVersionsPage = () => {
               placeholder="选择工作流"
               value={workflowId}
               onChange={setWorkflowId}
-              style={{ width: "100%" }}
+              style={{ width: '100%' }}
             >
               <Option value={1}>工单审批流程</Option>
               <Option value={2}>事件处理流程</Option>
@@ -413,7 +405,7 @@ const WorkflowVersionsPage = () => {
               title="总版本数"
               value={versions.length}
               prefix={<GitBranch className="w-5 h-5" />}
-              styles={{ content: { color: "#1890ff" } }}
+              styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
@@ -421,9 +413,9 @@ const WorkflowVersionsPage = () => {
           <Card className="enterprise-card">
             <Statistic
               title="激活版本"
-              value={versions.filter((v) => v.status === "active").length}
+              value={versions.filter(v => v.status === 'active').length}
               prefix={<CheckCircle className="w-5 h-5" />}
-              styles={{ content: { color: "#52c41a" } }}
+              styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
@@ -431,9 +423,9 @@ const WorkflowVersionsPage = () => {
           <Card className="enterprise-card">
             <Statistic
               title="草稿版本"
-              value={versions.filter((v) => v.status === "draft").length}
+              value={versions.filter(v => v.status === 'draft').length}
               prefix={<Clock className="w-5 h-5" />}
-              styles={{ content: { color: "#faad14" } }}
+              styles={{ content: { color: '#faad14' } }}
             />
           </Card>
         </Col>
@@ -441,9 +433,9 @@ const WorkflowVersionsPage = () => {
           <Card className="enterprise-card">
             <Statistic
               title="归档版本"
-              value={versions.filter((v) => v.status === "archived").length}
+              value={versions.filter(v => v.status === 'archived').length}
               prefix={<AlertCircle className="w-5 h-5" />}
-              styles={{ content: { color: "#666" } }}
+              styles={{ content: { color: '#666' } }}
             />
           </Card>
         </Col>
@@ -473,22 +465,18 @@ const WorkflowVersionsPage = () => {
         {selectedVersion && (
           <div className="space-y-6">
             <Descriptions column={2}>
-              <Descriptions.Item label="版本号">
-                {selectedVersion.version}
-              </Descriptions.Item>
+              <Descriptions.Item label="版本号">{selectedVersion.version}</Descriptions.Item>
               <Descriptions.Item label="状态">
                 <Tag color={getStatusColor(selectedVersion.status)}>
                   {getStatusText(selectedVersion.status)}
                 </Tag>
               </Descriptions.Item>
-              <Descriptions.Item label="创建人">
-                {selectedVersion.created_by}
-              </Descriptions.Item>
+              <Descriptions.Item label="创建人">{selectedVersion.created_by}</Descriptions.Item>
               <Descriptions.Item label="创建时间">
-                {new Date(selectedVersion.created_at).toLocaleString("zh-CN")}
+                {new Date(selectedVersion.created_at).toLocaleString('zh-CN')}
               </Descriptions.Item>
               <Descriptions.Item label="当前版本">
-                {selectedVersion.is_current ? "是" : "否"}
+                {selectedVersion.is_current ? '是' : '否'}
               </Descriptions.Item>
             </Descriptions>
 
@@ -523,10 +511,7 @@ const WorkflowVersionsPage = () => {
           <div className="space-y-6">
             <Row gutter={16}>
               <Col span={12}>
-                <Card
-                  title={`版本 ${comparison.version1.version}`}
-                  size="small"
-                >
+                <Card title={`版本 ${comparison.version1.version}`} size="small">
                   <Descriptions column={1} size="small">
                     <Descriptions.Item label="状态">
                       <Tag color={getStatusColor(comparison.version1.status)}>
@@ -537,18 +522,13 @@ const WorkflowVersionsPage = () => {
                       {comparison.version1.created_by}
                     </Descriptions.Item>
                     <Descriptions.Item label="创建时间">
-                      {new Date(
-                        comparison.version1.created_at
-                      ).toLocaleDateString("zh-CN")}
+                      {new Date(comparison.version1.created_at).toLocaleDateString('zh-CN')}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
               </Col>
               <Col span={12}>
-                <Card
-                  title={`版本 ${comparison.version2.version}`}
-                  size="small"
-                >
+                <Card title={`版本 ${comparison.version2.version}`} size="small">
                   <Descriptions column={1} size="small">
                     <Descriptions.Item label="状态">
                       <Tag color={getStatusColor(comparison.version2.status)}>
@@ -559,9 +539,7 @@ const WorkflowVersionsPage = () => {
                       {comparison.version2.created_by}
                     </Descriptions.Item>
                     <Descriptions.Item label="创建时间">
-                      {new Date(
-                        comparison.version2.created_at
-                      ).toLocaleDateString("zh-CN")}
+                      {new Date(comparison.version2.created_at).toLocaleDateString('zh-CN')}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
@@ -575,13 +553,11 @@ const WorkflowVersionsPage = () => {
                 <Card title="新增元素" size="small">
                   {comparison.comparison.elements_added.length > 0 ? (
                     <ul className="list-disc list-inside">
-                      {comparison.comparison.elements_added.map(
-                        (element, index) => (
-                          <li key={index} className="text-green-600">
-                            {element}
-                          </li>
-                        )
-                      )}
+                      {comparison.comparison.elements_added.map((element, index) => (
+                        <li key={index} className="text-green-600">
+                          {element}
+                        </li>
+                      ))}
                     </ul>
                   ) : (
                     <Text type="secondary">无新增元素</Text>
@@ -592,13 +568,11 @@ const WorkflowVersionsPage = () => {
                 <Card title="删除元素" size="small">
                   {comparison.comparison.elements_removed.length > 0 ? (
                     <ul className="list-disc list-inside">
-                      {comparison.comparison.elements_removed.map(
-                        (element, index) => (
-                          <li key={index} className="text-red-600">
-                            {element}
-                          </li>
-                        )
-                      )}
+                      {comparison.comparison.elements_removed.map((element, index) => (
+                        <li key={index} className="text-red-600">
+                          {element}
+                        </li>
+                      ))}
                     </ul>
                   ) : (
                     <Text type="secondary">无删除元素</Text>
@@ -612,13 +586,11 @@ const WorkflowVersionsPage = () => {
                 <Card title="修改元素" size="small">
                   {comparison.comparison.elements_modified.length > 0 ? (
                     <ul className="list-disc list-inside">
-                      {comparison.comparison.elements_modified.map(
-                        (element, index) => (
-                          <li key={index} className="text-orange-600">
-                            {element}
-                          </li>
-                        )
-                      )}
+                      {comparison.comparison.elements_modified.map((element, index) => (
+                        <li key={index} className="text-orange-600">
+                          {element}
+                        </li>
+                      ))}
                     </ul>
                   ) : (
                     <Text type="secondary">无修改元素</Text>
@@ -629,13 +601,11 @@ const WorkflowVersionsPage = () => {
                 <Card title="变量变更" size="small">
                   {comparison.comparison.variables_changed.length > 0 ? (
                     <ul className="list-disc list-inside">
-                      {comparison.comparison.variables_changed.map(
-                        (variable, index) => (
-                          <li key={index} className="text-blue-600">
-                            {variable}
-                          </li>
-                        )
-                      )}
+                      {comparison.comparison.variables_changed.map((variable, index) => (
+                        <li key={index} className="text-blue-600">
+                          {variable}
+                        </li>
+                      ))}
                     </ul>
                   ) : (
                     <Text type="secondary">无变量变更</Text>
@@ -645,12 +615,8 @@ const WorkflowVersionsPage = () => {
             </Row>
 
             <Alert
-              message={
-                comparison.comparison.is_identical
-                  ? "两个版本完全相同"
-                  : "两个版本存在差异"
-              }
-              type={comparison.comparison.is_identical ? "info" : "warning"}
+              message={comparison.comparison.is_identical ? '两个版本完全相同' : '两个版本存在差异'}
+              type={comparison.comparison.is_identical ? 'info' : 'warning'}
               showIcon
             />
           </div>

@@ -48,18 +48,18 @@ type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
 // 图标映射
 const iconMap: Record<string, React.ReactNode> = {
-  Container: <Container className='w-5 h-5' />,
-  Database: <Database className='w-5 h-5' />,
-  Download: <Download className='w-5 h-5' />,
-  Desktop: <Monitor className='w-5 h-5' />,
-  User: <User className='w-5 h-5' />,
-  Code: <Code className='w-5 h-5' />,
-  Global: <Globe className='w-5 h-5' />,
-  Safety: <Shield className='w-5 h-5' />,
-  Appstore: <Boxes className='w-5 h-5' />,
-  Project: <Folder className='w-5 h-5' />,
-  Key: <Key className='w-5 h-5' />,
-  FileText: <FileText className='w-5 h-5' />,
+  Container: <Container className="w-5 h-5" />,
+  Database: <Database className="w-5 h-5" />,
+  Download: <Download className="w-5 h-5" />,
+  Desktop: <Monitor className="w-5 h-5" />,
+  User: <User className="w-5 h-5" />,
+  Code: <Code className="w-5 h-5" />,
+  Global: <Globe className="w-5 h-5" />,
+  Safety: <Shield className="w-5 h-5" />,
+  Appstore: <Boxes className="w-5 h-5" />,
+  Project: <Folder className="w-5 h-5" />,
+  Key: <Key className="w-5 h-5" />,
+  FileText: <FileText className="w-5 h-5" />,
 };
 
 export default function CreateTicketPage() {
@@ -101,8 +101,7 @@ export default function CreateTicketPage() {
           .map(field => {
             const value = values[field.name];
             if (value) {
-              const optionLabel =
-                field.options?.find(opt => opt.value === value)?.label || value;
+              const optionLabel = field.options?.find(opt => opt.value === value)?.label || value;
               return `${field.label}: ${optionLabel}`;
             }
             return null;
@@ -148,7 +147,7 @@ export default function CreateTicketPage() {
     return (
       <Card
         key={type.id}
-        size='small'
+        size="small"
         hoverable
         onClick={() => setSelectedType(type)}
         style={{
@@ -156,9 +155,9 @@ export default function CreateTicketPage() {
           backgroundColor: isSelected ? `${type.color}10` : '#fff',
           cursor: 'pointer',
         }}
-        className='transition-all'
+        className="transition-all"
       >
-        <div className='flex items-center gap-3'>
+        <div className="flex items-center gap-3">
           <div
             style={{
               color: type.color,
@@ -167,34 +166,34 @@ export default function CreateTicketPage() {
               justifyContent: 'center',
             }}
           >
-            {iconMap[type.icon] || <FileText className='w-5 h-5' />}
+            {iconMap[type.icon] || <FileText className="w-5 h-5" />}
           </div>
           <div style={{ flex: 1 }}>
-            <div className='font-medium'>{type.name}</div>
-            <Text type='secondary' className='text-xs'>
+            <div className="font-medium">{type.name}</div>
+            <Text type="secondary" className="text-xs">
               {type.description}
             </Text>
           </div>
-          {isSelected && <ChevronRight className='w-4 h-4' style={{ color: type.color }} />}
+          {isSelected && <ChevronRight className="w-4 h-4" style={{ color: type.color }} />}
         </div>
       </Card>
     );
   };
 
   return (
-    <div className='max-w-6xl mx-auto p-6'>
-      <Space orientation='vertical' size={16} style={{ width: '100%' }}>
+    <div className="max-w-6xl mx-auto p-6">
+      <Space orientation="vertical" size={16} style={{ width: '100%' }}>
         {/* 页面头部 */}
         <Card>
-          <Space align='center' style={{ width: '100%' }}>
-            <Button icon={<ArrowLeft className='w-4 h-4' />} onClick={() => router.back()}>
+          <Space align="center" style={{ width: '100%' }}>
+            <Button icon={<ArrowLeft className="w-4 h-4" />} onClick={() => router.back()}>
               返回
             </Button>
             <div style={{ flex: 1 }}>
               <Title level={4} style={{ marginBottom: 4 }}>
                 新建工单
               </Title>
-              <Text type='secondary'>选择工单类型，填写详细信息后提交</Text>
+              <Text type="secondary">选择工单类型，填写详细信息后提交</Text>
             </div>
           </Space>
         </Card>
@@ -206,7 +205,7 @@ export default function CreateTicketPage() {
               title={
                 <Space>
                   <span>选择工单类型</span>
-                  <Tag color='blue'>{filteredTypes.length} 种</Tag>
+                  <Tag color="blue">{filteredTypes.length} 种</Tag>
                 </Space>
               }
               bodyStyle={{ padding: '12px' }}
@@ -234,7 +233,7 @@ export default function CreateTicketPage() {
                   overflowY: 'auto',
                 }}
               >
-                <Space direction='vertical' style={{ width: '100%' }} size={8}>
+                <Space direction="vertical" style={{ width: '100%' }} size={8}>
                   {filteredTypes.map(type => renderTypeCard(type))}
                 </Space>
               </div>
@@ -243,7 +242,7 @@ export default function CreateTicketPage() {
 
           {/* 右侧：表单 */}
           <Col xs={24} md={14}>
-            <Form form={form} layout='vertical'>
+            <Form form={form} layout="vertical">
               {/* 已选类型提示 */}
               {selectedType && (
                 <Card
@@ -253,31 +252,49 @@ export default function CreateTicketPage() {
                     background: `${selectedType.color}08`,
                   }}
                 >
-                  <Space direction='vertical' style={{ width: '100%' }}>
+                  <Space direction="vertical" style={{ width: '100%' }}>
                     <Space>
                       <div style={{ color: selectedType.color }}>
-                        {iconMap[selectedType.icon] || <FileText className='w-5 h-5' />}
+                        {iconMap[selectedType.icon] || <FileText className="w-5 h-5" />}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div className='font-medium'>{selectedType.name}</div>
-                        <Text type='secondary'>{selectedType.description}</Text>
+                        <div className="font-medium">{selectedType.name}</div>
+                        <Text type="secondary">{selectedType.description}</Text>
                       </div>
-                      <Button
-                        type='link'
-                        size='small'
-                        onClick={() => setSelectedType(null)}
-                      >
+                      <Button type="link" size="small" onClick={() => setSelectedType(null)}>
                         更换
                       </Button>
                     </Space>
                     {/* 关联的工作流信息 */}
                     {selectedType.workflowTemplateId && (
-                      <div style={{ marginTop: 8, padding: '8px 12px', background: '#fff', borderRadius: 4, border: `1px solid ${selectedType.color}30` }}>
+                      <div
+                        style={{
+                          marginTop: 8,
+                          padding: '8px 12px',
+                          background: '#fff',
+                          borderRadius: 4,
+                          border: `1px solid ${selectedType.color}30`,
+                        }}
+                      >
                         <Space>
-                          <Tag color={selectedType.priority === 'urgent' ? 'red' : selectedType.priority === 'high' ? 'orange' : 'blue'}>
-                            {selectedType.priority === 'urgent' ? '紧急' : selectedType.priority === 'high' ? '高' : selectedType.priority === 'medium' ? '中' : '低'}
+                          <Tag
+                            color={
+                              selectedType.priority === 'urgent'
+                                ? 'red'
+                                : selectedType.priority === 'high'
+                                  ? 'orange'
+                                  : 'blue'
+                            }
+                          >
+                            {selectedType.priority === 'urgent'
+                              ? '紧急'
+                              : selectedType.priority === 'high'
+                                ? '高'
+                                : selectedType.priority === 'medium'
+                                  ? '中'
+                                  : '低'}
                           </Tag>
-                          <Text type='secondary'>审批流程: </Text>
+                          <Text type="secondary">审批流程: </Text>
                           <Text strong>{selectedType.workflowTemplateId}</Text>
                         </Space>
                       </div>
@@ -289,10 +306,7 @@ export default function CreateTicketPage() {
               {/* 智能显示表单：已选类型有字段→自定义表单 | 已选类型无字段或未选择→基础表单 */}
               {selectedType?.fields && selectedType.fields.length > 0 ? (
                 /* 有自定义字段：只显示自定义表单（已包含所有必要信息） */
-                <Card
-                  title={`${selectedType.name} - 详细信息`}
-                  style={{ marginBottom: 16 }}
-                >
+                <Card title={`${selectedType.name} - 详细信息`} style={{ marginBottom: 16 }}>
                   <Row gutter={[16, 0]}>
                     {selectedType.fields.map(field => (
                       <Col span={24} key={field.name}>
@@ -313,9 +327,9 @@ export default function CreateTicketPage() {
                               options={field.options}
                             />
                           ) : field.type === 'number' ? (
-                            <Input type='number' placeholder={field.placeholder} />
+                            <Input type="number" placeholder={field.placeholder} />
                           ) : field.type === 'date' ? (
-                            <Input type='date' />
+                            <Input type="date" />
                           ) : (
                             <Input placeholder={field.placeholder} />
                           )}
@@ -326,35 +340,32 @@ export default function CreateTicketPage() {
                 </Card>
               ) : (
                 /* 无自定义字段：显示基础表单 */
-                <Card title='工单信息' style={{ marginBottom: 16 }}>
+                <Card title="工单信息" style={{ marginBottom: 16 }}>
                   <Form.Item
-                    name='title'
-                    label='标题'
+                    name="title"
+                    label="标题"
                     rules={[{ required: true, message: '请输入标题', min: 2 }]}
                   >
-                    <Input placeholder='例如：VPN 无法连接' />
+                    <Input placeholder="例如：VPN 无法连接" />
                   </Form.Item>
 
                   <Form.Item
-                    name='description'
-                    label='详细描述'
+                    name="description"
+                    label="详细描述"
                     rules={[
                       { required: true, message: '请输入描述（至少10个字符）' },
                       { min: 10, message: '描述至少需要10个字符' },
                     ]}
                   >
-                    <TextArea
-                      rows={6}
-                      placeholder='请详细描述问题/需求与影响范围...'
-                    />
+                    <TextArea rows={6} placeholder="请详细描述问题/需求与影响范围..." />
                   </Form.Item>
 
                   <Row gutter={16}>
                     <Col span={12}>
                       <Form.Item
-                        name='priority'
-                        label='优先级'
-                        initialValue='medium'
+                        name="priority"
+                        label="优先级"
+                        initialValue="medium"
                         rules={[{ required: true }]}
                       >
                         <Select<Priority>
@@ -368,11 +379,7 @@ export default function CreateTicketPage() {
                       </Form.Item>
                     </Col>
                     <Col span={12}>
-                      <Form.Item
-                        name='category'
-                        label='分类'
-                        initialValue='技术支持'
-                      >
+                      <Form.Item name="category" label="分类" initialValue="技术支持">
                         <Select
                           options={[
                             { label: '技术支持', value: '技术支持' },
@@ -387,7 +394,7 @@ export default function CreateTicketPage() {
               )}
 
               <Space>
-                <Button type='primary' onClick={handleSubmit} loading={loading}>
+                <Button type="primary" onClick={handleSubmit} loading={loading}>
                   创建工单
                 </Button>
                 <Button onClick={() => router.push('/tickets')}>{t('common.cancel')}</Button>

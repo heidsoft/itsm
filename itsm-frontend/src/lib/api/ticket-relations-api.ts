@@ -31,13 +31,8 @@ export class TicketRelationsApi {
   /**
    * 创建工单关联
    */
-  static async createRelation(
-    request: CreateRelationRequest
-  ): Promise<TicketRelation> {
-    return httpClient.post<TicketRelation>(
-      '/api/v1/tickets/relations',
-      request
-    );
+  static async createRelation(request: CreateRelationRequest): Promise<TicketRelation> {
+    return httpClient.post<TicketRelation>('/api/v1/tickets/relations', request);
   }
 
   /**
@@ -46,10 +41,7 @@ export class TicketRelationsApi {
   static async batchCreateRelations(
     request: BatchCreateRelationsRequest
   ): Promise<BatchRelationResult> {
-    return httpClient.post<BatchRelationResult>(
-      '/api/v1/tickets/relations/batch',
-      request
-    );
+    return httpClient.post<BatchRelationResult>('/api/v1/tickets/relations/batch', request);
   }
 
   /**
@@ -73,9 +65,7 @@ export class TicketRelationsApi {
    * 获取单个关联详情
    */
   static async getRelation(relationId: string): Promise<TicketRelationWithDetails> {
-    return httpClient.get<TicketRelationWithDetails>(
-      `/api/v1/tickets/relations/${relationId}`
-    );
+    return httpClient.get<TicketRelationWithDetails>(`/api/v1/tickets/relations/${relationId}`);
   }
 
   /**
@@ -85,19 +75,13 @@ export class TicketRelationsApi {
     relationId: string,
     request: UpdateRelationRequest
   ): Promise<TicketRelation> {
-    return httpClient.put<TicketRelation>(
-      `/api/v1/tickets/relations/${relationId}`,
-      request
-    );
+    return httpClient.put<TicketRelation>(`/api/v1/tickets/relations/${relationId}`, request);
   }
 
   /**
    * 删除关联
    */
-  static async deleteRelation(
-    relationId: string,
-    reason?: string
-  ): Promise<void> {
+  static async deleteRelation(relationId: string, reason?: string): Promise<void> {
     return httpClient.delete(`/api/v1/tickets/relations/${relationId}`, {
       reason,
     });
@@ -122,14 +106,10 @@ export class TicketRelationsApi {
   /**
    * 设置父工单
    */
-  static async setParent(
-    childTicketId: number,
-    parentTicketId: number
-  ): Promise<TicketRelation> {
-    return httpClient.post<TicketRelation>(
-      `/api/v1/tickets/${childTicketId}/parent`,
-      { parentTicketId }
-    );
+  static async setParent(childTicketId: number, parentTicketId: number): Promise<TicketRelation> {
+    return httpClient.post<TicketRelation>(`/api/v1/tickets/${childTicketId}/parent`, {
+      parentTicketId,
+    });
   }
 
   /**
@@ -143,18 +123,14 @@ export class TicketRelationsApi {
    * 获取子工单列表
    */
   static async getChildren(parentTicketId: number): Promise<TicketRelation[]> {
-    return httpClient.get<TicketRelation[]>(
-      `/api/v1/tickets/${parentTicketId}/children`
-    );
+    return httpClient.get<TicketRelation[]>(`/api/v1/tickets/${parentTicketId}/children`);
   }
 
   /**
    * 获取工单层级结构
    */
   static async getHierarchy(ticketId: number): Promise<TicketHierarchy> {
-    return httpClient.get<TicketHierarchy>(
-      `/api/v1/tickets/${ticketId}/hierarchy`
-    );
+    return httpClient.get<TicketHierarchy>(`/api/v1/tickets/${ticketId}/hierarchy`);
   }
 
   // ==================== 依赖关系 ====================
@@ -167,46 +143,33 @@ export class TicketRelationsApi {
     dependsOnTicketId: number;
     dependencyType: 'hard' | 'soft';
   }): Promise<TicketDependency> {
-    return httpClient.post<TicketDependency>(
-      `/api/v1/tickets/${data.ticketId}/dependencies`,
-      { dependsOnTicketId: data.dependsOnTicketId, dependencyType: data.dependencyType }
-    );
+    return httpClient.post<TicketDependency>(`/api/v1/tickets/${data.ticketId}/dependencies`, {
+      dependsOnTicketId: data.dependsOnTicketId,
+      dependencyType: data.dependencyType,
+    });
   }
 
   /**
    * 移除依赖
    */
-  static async removeDependency(
-    ticketId: number,
-    dependencyId: string
-  ): Promise<void> {
-    return httpClient.delete(
-      `/api/v1/tickets/${ticketId}/dependencies/${dependencyId}`
-    );
+  static async removeDependency(ticketId: number, dependencyId: string): Promise<void> {
+    return httpClient.delete(`/api/v1/tickets/${ticketId}/dependencies/${dependencyId}`);
   }
 
   /**
    * 获取依赖列表
    */
-  static async getDependencies(
-    ticketId: number
-  ): Promise<TicketDependency[]> {
-    return httpClient.get<TicketDependency[]>(
-      `/api/v1/tickets/${ticketId}/dependencies`
-    );
+  static async getDependencies(ticketId: number): Promise<TicketDependency[]> {
+    return httpClient.get<TicketDependency[]>(`/api/v1/tickets/${ticketId}/dependencies`);
   }
 
   /**
    * 获取依赖图
    */
-  static async getDependencyGraph(
-    ticketId: number,
-    maxDepth?: number
-  ): Promise<DependencyGraph> {
-    return httpClient.get<DependencyGraph>(
-      `/api/v1/tickets/${ticketId}/dependency-graph`,
-      { maxDepth }
-    );
+  static async getDependencyGraph(ticketId: number, maxDepth?: number): Promise<DependencyGraph> {
+    return httpClient.get<DependencyGraph>(`/api/v1/tickets/${ticketId}/dependency-graph`, {
+      maxDepth,
+    });
   }
 
   /**
@@ -225,13 +188,8 @@ export class TicketRelationsApi {
   /**
    * 验证关联
    */
-  static async validateRelation(
-    request: CreateRelationRequest
-  ): Promise<RelationValidation> {
-    return httpClient.post<RelationValidation>(
-      '/api/v1/tickets/relations/validate',
-      request
-    );
+  static async validateRelation(request: CreateRelationRequest): Promise<RelationValidation> {
+    return httpClient.post<RelationValidation>('/api/v1/tickets/relations/validate', request);
   }
 
   /**
@@ -244,22 +202,14 @@ export class TicketRelationsApi {
     hasCircular: boolean;
     path?: number[];
   }> {
-    return httpClient.post(
-      '/api/v1/tickets/relations/detect-circular',
-      data
-    );
+    return httpClient.post('/api/v1/tickets/relations/detect-circular', data);
   }
 
   /**
    * 获取关联冲突
    */
-  static async getConflicts(
-    request: CreateRelationRequest
-  ): Promise<RelationConflict[]> {
-    return httpClient.post<RelationConflict[]>(
-      '/api/v1/tickets/relations/conflicts',
-      request
-    );
+  static async getConflicts(request: CreateRelationRequest): Promise<RelationConflict[]> {
+    return httpClient.post<RelationConflict[]>('/api/v1/tickets/relations/conflicts', request);
   }
 
   // ==================== 搜索和查询 ====================
@@ -275,10 +225,7 @@ export class TicketRelationsApi {
     page?: number;
     pageSize?: number;
   }): Promise<RelationSearchResult> {
-    return httpClient.get<RelationSearchResult>(
-      '/api/v1/tickets/relations/search',
-      params
-    );
+    return httpClient.get<RelationSearchResult>('/api/v1/tickets/relations/search', params);
   }
 
   /**
@@ -290,17 +237,16 @@ export class TicketRelationsApi {
       maxResults?: number;
       minSimilarity?: number;
     }
-  ): Promise<Array<{
-    ticketId: number;
-    ticketNumber: string;
-    title: string;
-    similarity: number;
-    reason: string;
-  }>> {
-    return httpClient.get(
-      `/api/v1/tickets/${ticketId}/related`,
-      params
-    );
+  ): Promise<
+    Array<{
+      ticketId: number;
+      ticketNumber: string;
+      title: string;
+      similarity: number;
+      reason: string;
+    }>
+  > {
+    return httpClient.get(`/api/v1/tickets/${ticketId}/related`, params);
   }
 
   /**
@@ -309,16 +255,15 @@ export class TicketRelationsApi {
   static async findDuplicates(
     ticketId: number,
     threshold?: number
-  ): Promise<Array<{
-    ticketId: number;
-    ticketNumber: string;
-    title: string;
-    similarity: number;
-  }>> {
-    return httpClient.get(
-      `/api/v1/tickets/${ticketId}/duplicates`,
-      { threshold }
-    );
+  ): Promise<
+    Array<{
+      ticketId: number;
+      ticketNumber: string;
+      title: string;
+      similarity: number;
+    }>
+  > {
+    return httpClient.get(`/api/v1/tickets/${ticketId}/duplicates`, { threshold });
   }
 
   // ==================== 统计和分析 ====================
@@ -326,12 +271,8 @@ export class TicketRelationsApi {
   /**
    * 获取关联统计
    */
-  static async getRelationStats(
-    ticketId: number
-  ): Promise<TicketRelationStats> {
-    return httpClient.get<TicketRelationStats>(
-      `/api/v1/tickets/${ticketId}/relations/stats`
-    );
+  static async getRelationStats(ticketId: number): Promise<TicketRelationStats> {
+    return httpClient.get<TicketRelationStats>(`/api/v1/tickets/${ticketId}/relations/stats`);
   }
 
   /**
@@ -356,9 +297,7 @@ export class TicketRelationsApi {
     estimatedDuration: number;
     bottlenecks: number[];
   }> {
-    return httpClient.get(
-      `/api/v1/tickets/${ticketId}/critical-path`
-    );
+    return httpClient.get(`/api/v1/tickets/${ticketId}/critical-path`);
   }
 
   // ==================== 关系图谱 ====================
@@ -374,19 +313,13 @@ export class TicketRelationsApi {
       direction?: string;
     }
   ): Promise<RelationGraphData> {
-    return httpClient.get<RelationGraphData>(
-      `/api/v1/tickets/${ticketId}/graph`,
-      params
-    );
+    return httpClient.get<RelationGraphData>(`/api/v1/tickets/${ticketId}/graph`, params);
   }
 
   /**
    * 导出关系图谱
    */
-  static async exportGraph(
-    ticketId: number,
-    format: 'png' | 'svg' | 'json'
-  ): Promise<Blob> {
+  static async exportGraph(ticketId: number, format: 'png' | 'svg' | 'json'): Promise<Blob> {
     const response = await httpClient.request({
       method: 'GET',
       url: `/api/v1/tickets/${ticketId}/graph/export`,
@@ -414,17 +347,15 @@ export class TicketRelationsApi {
   /**
    * 基于AI的关联推荐
    */
-  static async getAIRecommendations(
-    ticketId: number
-  ): Promise<Array<{
-    targetTicketId: number;
-    relationType: string;
-    confidence: number;
-    reason: string;
-  }>> {
-    return httpClient.get(
-      `/api/v1/tickets/${ticketId}/ai-recommendations`
-    );
+  static async getAIRecommendations(ticketId: number): Promise<
+    Array<{
+      targetTicketId: number;
+      relationType: string;
+      confidence: number;
+      reason: string;
+    }>
+  > {
+    return httpClient.get(`/api/v1/tickets/${ticketId}/ai-recommendations`);
   }
 
   // ==================== 历史和审计 ====================
@@ -442,10 +373,7 @@ export class TicketRelationsApi {
     history: RelationHistory[];
     total: number;
   }> {
-    return httpClient.get(
-      `/api/v1/tickets/${ticketId}/relations/history`,
-      params
-    );
+    return httpClient.get(`/api/v1/tickets/${ticketId}/relations/history`, params);
   }
 
   /**
@@ -470,12 +398,8 @@ export class TicketRelationsApi {
   /**
    * 获取关联权限
    */
-  static async getRelationPermissions(
-    ticketId: number
-  ): Promise<RelationPermissions> {
-    return httpClient.get<RelationPermissions>(
-      `/api/v1/tickets/${ticketId}/relations/permissions`
-    );
+  static async getRelationPermissions(ticketId: number): Promise<RelationPermissions> {
+    return httpClient.get<RelationPermissions>(`/api/v1/tickets/${ticketId}/relations/permissions`);
   }
 
   /**
@@ -486,10 +410,7 @@ export class TicketRelationsApi {
     targetTicketId: number;
     relationType: string;
   }): Promise<{ canCreate: boolean; reason?: string }> {
-    return httpClient.post(
-      '/api/v1/tickets/relations/can-create',
-      data
-    );
+    return httpClient.post('/api/v1/tickets/relations/can-create', data);
   }
 
   // ==================== 批量操作 ====================
@@ -501,10 +422,7 @@ export class TicketRelationsApi {
     relationIds: string[];
     description: string;
   }): Promise<BatchRelationResult> {
-    return httpClient.put(
-      '/api/v1/tickets/relations/batch/descriptions',
-      data
-    );
+    return httpClient.put('/api/v1/tickets/relations/batch/descriptions', data);
   }
 
   /**
@@ -514,10 +432,7 @@ export class TicketRelationsApi {
     relationIds: string[];
     newRelationType: string;
   }): Promise<BatchRelationResult> {
-    return httpClient.put(
-      '/api/v1/tickets/relations/batch/convert',
-      data
-    );
+    return httpClient.put('/api/v1/tickets/relations/batch/convert', data);
   }
 
   /**
@@ -528,10 +443,7 @@ export class TicketRelationsApi {
     targetTicketId: number;
     relationTypes?: string[];
   }): Promise<BatchRelationResult> {
-    return httpClient.post(
-      '/api/v1/tickets/relations/copy',
-      data
-    );
+    return httpClient.post('/api/v1/tickets/relations/copy', data);
   }
 }
 
@@ -540,4 +452,3 @@ export default TicketRelationsApi;
 
 // 导出别名
 export const TicketRelationsAPI = TicketRelationsApi;
-

@@ -49,7 +49,7 @@ class NotificationWSService {
           resolve();
         };
 
-        this.ws.onmessage = (event) => {
+        this.ws.onmessage = event => {
           try {
             const message: NotificationWSMessage = JSON.parse(event.data);
             this.handleMessage(message);
@@ -58,12 +58,12 @@ class NotificationWSService {
           }
         };
 
-        this.ws.onerror = (error) => {
+        this.ws.onerror = error => {
           logger.error('[NotificationWS] Error:', error);
           reject(error);
         };
 
-        this.ws.onclose = (event) => {
+        this.ws.onclose = event => {
           logger.info('[NotificationWS] Disconnected:', event.code, event.reason);
           this.stopHeartbeat();
           this.notifyConnectionStatus(false);
@@ -128,7 +128,9 @@ class NotificationWSService {
   private handleReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      logger.info(`[NotificationWS] Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
+      logger.info(
+        `[NotificationWS] Reconnecting... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+      );
       setTimeout(() => {
         if (this.userId && this.token) {
           this.connect(this.userId, this.token).catch(() => {});

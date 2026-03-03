@@ -26,7 +26,12 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import {
+  ReloadOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ClockCircleOutlined,
+} from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -82,9 +87,8 @@ const SLAPerformanceReport = () => {
 
   const totalMet = slaData.reduce((sum, d) => sum + d.met, 0);
   const totalBreached = slaData.reduce((sum, d) => sum + d.breached, 0);
-  const avgCompliance = slaData.length > 0
-    ? slaData.reduce((sum, d) => sum + d.compliance, 0) / slaData.length
-    : 0;
+  const avgCompliance =
+    slaData.length > 0 ? slaData.reduce((sum, d) => sum + d.compliance, 0) / slaData.length : 0;
 
   const pieData = [
     { name: '达标', value: totalMet, color: COLORS.met },
@@ -148,9 +152,16 @@ const SLAPerformanceReport = () => {
                   title="平均合规率"
                   value={avgCompliance}
                   suffix="%"
-                  styles={{ content: {
-                    color: avgCompliance >= 95 ? '#52c41a' : avgCompliance >= 85 ? '#faad14' : '#ff4d4f'
-                  }}}
+                  styles={{
+                    content: {
+                      color:
+                        avgCompliance >= 95
+                          ? '#52c41a'
+                          : avgCompliance >= 85
+                            ? '#faad14'
+                            : '#ff4d4f',
+                    },
+                  }}
                   prefix={<CheckCircleOutlined />}
                 />
               </Card>
@@ -202,7 +213,7 @@ const SLAPerformanceReport = () => {
                   </div>
                   <Text type="secondary">SLA总体达标率</Text>
                   <Progress
-                    percent={((totalMet / (totalMet + totalBreached)) * 100)}
+                    percent={(totalMet / (totalMet + totalBreached)) * 100}
                     strokeColor={COLORS.met}
                     showInfo={false}
                     className="mt-4"
@@ -220,28 +231,34 @@ const SLAPerformanceReport = () => {
                   <Card size="small" className="h-full">
                     <div className="flex items-center justify-between mb-4">
                       <Text strong>{sla.name}</Text>
-                      <Text
-                        type={getComplianceStatus(sla.compliance) as any}
-                        strong
-                      >
+                      <Text type={getComplianceStatus(sla.compliance) as any} strong>
                         {sla.compliance}%
                       </Text>
                     </div>
                     <Progress
                       percent={sla.compliance}
                       strokeColor={
-                        sla.compliance >= 95 ? COLORS.met :
-                        sla.compliance >= 85 ? COLORS.warning : COLORS.breached
+                        sla.compliance >= 95
+                          ? COLORS.met
+                          : sla.compliance >= 85
+                            ? COLORS.warning
+                            : COLORS.breached
                       }
                       showInfo={false}
                     />
                     <div className="flex justify-between mt-2 text-sm text-gray-500">
                       <span>
-                        <CheckCircleOutlined className="inline mr-1" style={{ color: COLORS.met }} />
+                        <CheckCircleOutlined
+                          className="inline mr-1"
+                          style={{ color: COLORS.met }}
+                        />
                         {sla.met}%
                       </span>
                       <span>
-                        <CloseCircleOutlined className="inline mr-1" style={{ color: COLORS.breached }} />
+                        <CloseCircleOutlined
+                          className="inline mr-1"
+                          style={{ color: COLORS.breached }}
+                        />
                         {sla.breached}%
                       </span>
                     </div>

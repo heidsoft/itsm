@@ -12,7 +12,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   children,
   layout = 'vertical',
   labelWidth = '120px',
-  className = ''
+  className = '',
 }) => {
   const fieldId = `field-${name}`;
   const hasError = Boolean(error);
@@ -35,14 +35,17 @@ export const FormField: React.FC<FormFieldProps> = ({
     <div className="flex-1">
       <div className="relative">
         {React.isValidElement(children)
-          ? React.cloneElement(children as React.ReactElement<{ id?: string; name?: string; className?: string }>, {
-              id: fieldId,
-              name,
-              className: `${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`
-            })
+          ? React.cloneElement(
+              children as React.ReactElement<{ id?: string; name?: string; className?: string }>,
+              {
+                id: fieldId,
+                name,
+                className: `${hasError ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : ''}`,
+              }
+            )
           : children}
       </div>
-      
+
       {/* 错误信息 */}
       {hasError && (
         <div className="mt-1">
@@ -53,11 +56,9 @@ export const FormField: React.FC<FormFieldProps> = ({
           ))}
         </div>
       )}
-      
+
       {/* 帮助信息 */}
-      {help && !hasError && (
-        <p className="mt-1 text-sm text-gray-500">{help}</p>
-      )}
+      {help && !hasError && <p className="mt-1 text-sm text-gray-500">{help}</p>}
     </div>
   );
 

@@ -51,6 +51,8 @@ const (
 	EdgeNotificationPreferences = "notification_preferences"
 	// EdgeRoles holds the string denoting the roles edge name in mutations.
 	EdgeRoles = "roles"
+	// EdgeVersionChangelogs holds the string denoting the version_changelogs edge name in mutations.
+	EdgeVersionChangelogs = "version_changelogs"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -93,6 +95,13 @@ const (
 	// RolesInverseTable is the table name for the Role entity.
 	// It exists in this package in order to avoid circular dependency with the "role" package.
 	RolesInverseTable = "roles"
+	// VersionChangelogsTable is the table that holds the version_changelogs relation/edge.
+	VersionChangelogsTable = "process_version_changelogs"
+	// VersionChangelogsInverseTable is the table name for the ProcessVersionChangelog entity.
+	// It exists in this package in order to avoid circular dependency with the "processversionchangelog" package.
+	VersionChangelogsInverseTable = "process_version_changelogs"
+	// VersionChangelogsColumn is the table column denoting the version_changelogs relation/edge.
+	VersionChangelogsColumn = "created_by"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -335,6 +344,20 @@ func ByRoles(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRolesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByVersionChangelogsCount orders the results by version_changelogs count.
+func ByVersionChangelogsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newVersionChangelogsStep(), opts...)
+	}
+}
+
+// ByVersionChangelogs orders the results by version_changelogs terms.
+func ByVersionChangelogs(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newVersionChangelogsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -375,5 +398,12 @@ func newRolesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RolesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2M, false, RolesTable, RolesPrimaryKey...),
+	)
+}
+func newVersionChangelogsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(VersionChangelogsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, VersionChangelogsTable, VersionChangelogsColumn),
 	)
 }

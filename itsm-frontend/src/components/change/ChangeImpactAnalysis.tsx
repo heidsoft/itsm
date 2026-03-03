@@ -79,14 +79,62 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
 
   // 预定义的系统列表
   const mockData: SystemItem[] = [
-    { key: 'web-server-01', title: 'Web服务器01', description: '主Web服务器', category: '服务器', criticality: 'high' },
-    { key: 'db-primary', title: '主数据库', description: 'MySQL主库', category: '数据库', criticality: 'high' },
-    { key: 'db-replica', title: '数据库从库', description: 'MySQL从库', category: '数据库', criticality: 'medium' },
-    { key: 'cache-redis', title: 'Redis缓存', description: 'Redis缓存服务器', category: '缓存', criticality: 'medium' },
-    { key: 'api-gateway', title: 'API网关', description: '微服务网关', category: '网络', criticality: 'high' },
-    { key: 'file-storage', title: '文件存储', description: '对象存储服务', category: '存储', criticality: 'medium' },
-    { key: 'monitoring', title: '监控系统', description: 'Zabbix监控系统', category: '监控', criticality: 'low' },
-    { key: 'backup-server', title: '备份服务器', description: '数据备份服务', category: '备份', criticality: 'medium' },
+    {
+      key: 'web-server-01',
+      title: 'Web服务器01',
+      description: '主Web服务器',
+      category: '服务器',
+      criticality: 'high',
+    },
+    {
+      key: 'db-primary',
+      title: '主数据库',
+      description: 'MySQL主库',
+      category: '数据库',
+      criticality: 'high',
+    },
+    {
+      key: 'db-replica',
+      title: '数据库从库',
+      description: 'MySQL从库',
+      category: '数据库',
+      criticality: 'medium',
+    },
+    {
+      key: 'cache-redis',
+      title: 'Redis缓存',
+      description: 'Redis缓存服务器',
+      category: '缓存',
+      criticality: 'medium',
+    },
+    {
+      key: 'api-gateway',
+      title: 'API网关',
+      description: '微服务网关',
+      category: '网络',
+      criticality: 'high',
+    },
+    {
+      key: 'file-storage',
+      title: '文件存储',
+      description: '对象存储服务',
+      category: '存储',
+      criticality: 'medium',
+    },
+    {
+      key: 'monitoring',
+      title: '监控系统',
+      description: 'Zabbix监控系统',
+      category: '监控',
+      criticality: 'low',
+    },
+    {
+      key: 'backup-server',
+      title: '备份服务器',
+      description: '数据备份服务',
+      category: '备份',
+      criticality: 'medium',
+    },
   ];
 
   // 影响程度选项
@@ -101,7 +149,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
   // 计算影响分数
   const calculateImpactScore = (values: any) => {
     let score = 0;
-    
+
     // 业务影响分数
     const businessImpact = values.business_impact;
     if (businessImpact) {
@@ -109,23 +157,23 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       else if (businessImpact.includes('中等')) score += 15;
       else if (businessImpact.includes('轻微')) score += 10;
     }
-    
+
     // 受影响系统数量
     score += targetKeys.length * 5;
-    
+
     // 受影响用户数
     const affectedUsers = values.affected_users || 0;
     if (affectedUsers > 10000) score += 15;
     else if (affectedUsers > 1000) score += 10;
     else if (affectedUsers > 100) score += 5;
-    
+
     // 预计停机时间
     const downtime = values.estimated_downtime || 0;
     if (downtime > 60) score += 20;
     else if (downtime > 10) score += 15;
     else if (downtime > 1) score += 10;
     else if (downtime > 0) score += 5;
-    
+
     return Math.min(score, 100);
   };
 
@@ -152,7 +200,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
         affected_systems: targetKeys,
         impact_score: impactScore,
       };
-      
+
       onSave?.(analysisData);
     } catch (error) {
       message.error('表单验证失败');
@@ -167,10 +215,16 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
           {getSystemIcon(item.category)}
           <div>
             <div className="font-medium">{item.title}</div>
-            <Text type="secondary" className="text-xs">{item.description}</Text>
+            <Text type="secondary" className="text-xs">
+              {item.description}
+            </Text>
           </div>
         </div>
-        <Tag color={item.criticality === 'high' ? 'red' : item.criticality === 'medium' ? 'orange' : 'blue'}>
+        <Tag
+          color={
+            item.criticality === 'high' ? 'red' : item.criticality === 'medium' ? 'orange' : 'blue'
+          }
+        >
           {item.criticality === 'high' ? '关键' : item.criticality === 'medium' ? '重要' : '一般'}
         </Tag>
       </div>
@@ -229,21 +283,19 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
       }
       className="change-impact-analysis"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        disabled={readOnly}
-        onValuesChange={onValuesChange}
-      >
+      <Form form={form} layout="vertical" disabled={readOnly} onValuesChange={onValuesChange}>
         {/* 影响分数显示 */}
         <Card size="small" className="mb-4">
           <Row gutter={16} align="middle">
             <Col span={6}>
               <div className="text-center">
-                <Title level={3} style={{ 
-                  color: getImpactColor(impactScore),
-                  margin: '0 0 8px 0'
-                }}>
+                <Title
+                  level={3}
+                  style={{
+                    color: getImpactColor(impactScore),
+                    margin: '0 0 8px 0',
+                  }}
+                >
                   {impactScore}分
                 </Title>
                 <Text type="secondary">综合影响评分</Text>
@@ -336,7 +388,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
                 dataSource={mockData}
                 titles={['可用系统', '受影响系统']}
                 targetKeys={targetKeys}
-                onChange={(keys) => setTargetKeys(keys as string[])}
+                onChange={keys => setTargetKeys(keys as string[])}
                 render={renderSystemItem}
                 listStyle={{
                   width: 300,
@@ -390,15 +442,8 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
             </Form.Item>
 
             {/* 服务依赖 */}
-            <Form.Item
-              label="服务依赖"
-              name="service_dependencies"
-            >
-              <Select
-                mode="tags"
-                placeholder="选择或输入依赖的服务"
-                style={{ width: '100%' }}
-              >
+            <Form.Item label="服务依赖" name="service_dependencies">
+              <Select mode="tags" placeholder="选择或输入依赖的服务" style={{ width: '100%' }}>
                 <Option value="认证服务">认证服务</Option>
                 <Option value="支付服务">支付服务</Option>
                 <Option value="通知服务">通知服务</Option>

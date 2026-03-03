@@ -182,7 +182,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         ...values,
         rollback_steps: rollbackSteps,
       };
-      
+
       onSave?.(rollbackData);
     } catch (error) {
       message.error('表单验证失败');
@@ -206,7 +206,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       render: (text: string, record: RollbackStep, index: number) => (
         <Input
           value={text}
-          onChange={(e) => updateRollbackStep(index, 'title', e.target.value)}
+          onChange={e => updateRollbackStep(index, 'title', e.target.value)}
           placeholder="输入步骤标题"
           disabled={readOnly}
         />
@@ -220,7 +220,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       render: (type: string, record: RollbackStep, index: number) => (
         <Select
           value={type}
-          onChange={(value) => updateRollbackStep(index, 'type', value)}
+          onChange={value => updateRollbackStep(index, 'type', value)}
           style={{ width: '100%' }}
           disabled={readOnly}
         >
@@ -244,7 +244,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
         <Input
           type="number"
           value={time}
-          onChange={(e) => updateRollbackStep(index, 'estimated_time', parseInt(e.target.value) || 0)}
+          onChange={e => updateRollbackStep(index, 'estimated_time', parseInt(e.target.value) || 0)}
           disabled={readOnly}
           min={1}
         />
@@ -258,7 +258,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       render: (person: string, record: RollbackStep, index: number) => (
         <Input
           value={person}
-          onChange={(e) => updateRollbackStep(index, 'responsible_person', e.target.value)}
+          onChange={e => updateRollbackStep(index, 'responsible_person', e.target.value)}
           placeholder="负责人"
           disabled={readOnly}
         />
@@ -270,12 +270,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       width: 80,
       render: (_: any, record: RollbackStep, index: number) =>
         !readOnly ? (
-          <Button
-            type="text"
-            danger
-            size="small"
-            onClick={() => deleteRollbackStep(index)}
-          >
+          <Button type="text" danger size="small" onClick={() => deleteRollbackStep(index)}>
             删除
           </Button>
         ) : null,
@@ -299,11 +294,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
       }
       className="change-rollback-plan"
     >
-      <Form
-        form={form}
-        layout="vertical"
-        disabled={readOnly}
-      >
+      <Form form={form} layout="vertical" disabled={readOnly}>
         {/* 回滚策略选择 */}
         <Row gutter={[24, 16]}>
           <Col xs={24}>
@@ -317,12 +308,30 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
                   <Option key={key} value={key}>
                     <div className="p-2">
                       <div className="font-medium">{strategy.label}</div>
-                      <Text type="secondary" className="text-xs">{strategy.description}</Text>
+                      <Text type="secondary" className="text-xs">
+                        {strategy.description}
+                      </Text>
                       <div className="mt-1">
-                        <Tag color={strategy.risk === 'high' ? 'red' : strategy.risk === 'medium' ? 'orange' : 'green'}>
+                        <Tag
+                          color={
+                            strategy.risk === 'high'
+                              ? 'red'
+                              : strategy.risk === 'medium'
+                                ? 'orange'
+                                : 'green'
+                          }
+                        >
                           风险: {strategy.risk}
                         </Tag>
-                        <Tag color={strategy.time === 'high' ? 'red' : strategy.time === 'medium' ? 'orange' : 'green'}>
+                        <Tag
+                          color={
+                            strategy.time === 'high'
+                              ? 'red'
+                              : strategy.time === 'medium'
+                                ? 'orange'
+                                : 'green'
+                          }
+                        >
                           时间: {strategy.time}
                         </Tag>
                       </div>
@@ -340,11 +349,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               name="rollback_triggers"
               rules={[{ required: true, message: '请选择触发条件' }]}
             >
-              <Select
-                mode="multiple"
-                placeholder="选择触发回滚的条件"
-                style={{ width: '100%' }}
-              >
+              <Select mode="multiple" placeholder="选择触发回滚的条件" style={{ width: '100%' }}>
                 {rollbackTriggers.map(trigger => (
                   <Option key={trigger} value={trigger}>
                     <Space>
@@ -364,11 +369,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               name="rollback_team"
               rules={[{ required: true, message: '请指定回滚团队成员' }]}
             >
-              <Select
-                mode="tags"
-                placeholder="指定回滚团队成员"
-                style={{ width: '100%' }}
-              >
+              <Select mode="tags" placeholder="指定回滚团队成员" style={{ width: '100%' }}>
                 <Option value="系统管理员">系统管理员</Option>
                 <Option value="数据库管理员">数据库管理员</Option>
                 <Option value="网络工程师">网络工程师</Option>
@@ -386,9 +387,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               回滚步骤明细
             </Title>
             <Space>
-              <Text type="secondary">
-                总预计时间: {getTotalRollbackTime()} 分钟
-              </Text>
+              <Text type="secondary">总预计时间: {getTotalRollbackTime()} 分钟</Text>
               {!readOnly && (
                 <Button type="dashed" icon={<FileText />} onClick={addRollbackStep}>
                   添加步骤
@@ -422,12 +421,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               name="rollback_test_plan"
               rules={[{ required: true, message: '请制定测试计划' }]}
             >
-              <TextArea
-                rows={4}
-                placeholder="描述回滚前的测试方案..."
-                maxLength={1000}
-                showCount
-              />
+              <TextArea rows={4} placeholder="描述回滚前的测试方案..." maxLength={1000} showCount />
             </Form.Item>
           </Col>
 

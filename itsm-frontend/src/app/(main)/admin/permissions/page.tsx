@@ -213,25 +213,25 @@ const mockPermissionConfig = {
       id: '核心功能',
       name: '核心功能',
       description: '系统核心业务功能',
-      icon: <Activity className='w-4 h-4' />,
+      icon: <Activity className="w-4 h-4" />,
     },
     {
       id: '服务管理',
       name: '服务管理',
       description: 'IT服务相关功能',
-      icon: <Globe className='w-4 h-4' />,
+      icon: <Globe className="w-4 h-4" />,
     },
     {
       id: '分析工具',
       name: '分析工具',
       description: '数据分析和报告',
-      icon: <BarChart3 className='w-4 h-4' />,
+      icon: <BarChart3 className="w-4 h-4" />,
     },
     {
       id: '系统管理',
       name: '系统管理',
       description: '系统配置和管理',
-      icon: <Settings className='w-4 h-4' />,
+      icon: <Settings className="w-4 h-4" />,
     },
   ],
 };
@@ -359,16 +359,16 @@ const PermissionConfiguration = () => {
   const generateTreeData = () => {
     return permissionConfig.categories.map(category => ({
       title: (
-        <div className='flex items-center justify-between'>
-          <span className='flex items-center gap-2'>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-2">
             {category.icon}
             <Text strong>{category.name}</Text>
           </span>
-          <div className='flex gap-2'>
-            <Button size='small' type='link' onClick={() => handleBatchToggle(category.id, true)}>
+          <div className="flex gap-2">
+            <Button size="small" type="link" onClick={() => handleBatchToggle(category.id, true)}>
               全部启用
             </Button>
-            <Button size='small' type='link' onClick={() => handleBatchToggle(category.id, false)}>
+            <Button size="small" type="link" onClick={() => handleBatchToggle(category.id, false)}>
               全部禁用
             </Button>
           </div>
@@ -378,12 +378,12 @@ const PermissionConfiguration = () => {
       children:
         modulesByCategory[category.id]?.map((module: any) => ({
           title: (
-            <div className='flex items-center justify-between w-full'>
-              <div className='flex items-center gap-2'>
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2">
                 <span>{module.icon}</span>
                 <span>{module.name}</span>
                 <Switch
-                  size='small'
+                  size="small"
                   checked={module.isEnabled}
                   onChange={() => handleToggleModule(module.id)}
                 />
@@ -393,10 +393,10 @@ const PermissionConfiguration = () => {
           key: module.id,
           children: module.actions.map((action: any) => ({
             title: (
-              <div className='flex items-center justify-between w-full'>
+              <div className="flex items-center justify-between w-full">
                 <Tag color={action.color}>{action.name}</Tag>
                 <Switch
-                  size='small'
+                  size="small"
                   checked={action.isEnabled}
                   onChange={() => handleToggleAction(module.id, action.id)}
                 />
@@ -410,7 +410,7 @@ const PermissionConfiguration = () => {
 
   // 渲染权限卡片视图
   const renderCardView = () => (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {permissionConfig.categories.map(category => {
         const categoryModules = modulesByCategory[category.id] || [];
         if (categoryModules.length === 0) return null;
@@ -419,23 +419,23 @@ const PermissionConfiguration = () => {
           <Card
             key={category.id}
             title={
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-2'>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
                   {category.icon}
                   <span>{category.name}</span>
-                  <Badge count={categoryModules.length} color='blue' />
+                  <Badge count={categoryModules.length} color="blue" />
                 </div>
                 <Space>
                   <Button
-                    size='small'
-                    type='link'
+                    size="small"
+                    type="link"
                     onClick={() => handleBatchToggle(category.id, true)}
                   >
                     全部启用
                   </Button>
                   <Button
-                    size='small'
-                    type='link'
+                    size="small"
+                    type="link"
                     onClick={() => handleBatchToggle(category.id, false)}
                   >
                     全部禁用
@@ -443,44 +443,44 @@ const PermissionConfiguration = () => {
                 </Space>
               </div>
             }
-            className='enterprise-card'
+            className="enterprise-card"
           >
             <Row gutter={[16, 16]}>
               {categoryModules.map((module: any) => (
                 <Col xs={24} md={12} lg={8} key={module.id}>
                   <Card
-                    size='small'
-                    className='h-full'
+                    size="small"
+                    className="h-full"
                     title={
-                      <div className='flex items-center justify-between'>
-                        <div className='flex items-center gap-2'>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
                           <span>{module.icon}</span>
-                          <span className='text-sm'>{module.name}</span>
+                          <span className="text-sm">{module.name}</span>
                         </div>
                         <Switch
-                          size='small'
+                          size="small"
                           checked={module.isEnabled}
                           onChange={() => handleToggleModule(module.id)}
                         />
                       </div>
                     }
                   >
-                    <Text type='secondary' className='text-xs mb-3 block'>
+                    <Text type="secondary" className="text-xs mb-3 block">
                       {module.description}
                     </Text>
-                    <div className='space-y-2'>
+                    <div className="space-y-2">
                       {module.actions.map((action: any) => (
-                        <div key={action.id} className='flex items-center justify-between'>
+                        <div key={action.id} className="flex items-center justify-between">
                           <Tooltip title={action.description}>
                             <Tag
                               color={action.isEnabled ? action.color : 'default'}
-                              className='text-xs cursor-help'
+                              className="text-xs cursor-help"
                             >
                               {action.name}
                             </Tag>
                           </Tooltip>
                           <Switch
-                            size='small'
+                            size="small"
                             checked={action.isEnabled}
                             onChange={() => handleToggleAction(module.id, action.id)}
                             disabled={!module.isEnabled}
@@ -499,58 +499,58 @@ const PermissionConfiguration = () => {
   );
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {/* 页面标题 */}
-      <div className='mb-6'>
-        <Title level={2} className='!mb-2'>
-          <Key className='inline-block w-6 h-6 mr-2' />
+      <div className="mb-6">
+        <Title level={2} className="!mb-2">
+          <Key className="inline-block w-6 h-6 mr-2" />
           权限配置管理
         </Title>
-        <Text type='secondary'>配置系统功能模块和操作权限，定义访问控制策略</Text>
+        <Text type="secondary">配置系统功能模块和操作权限，定义访问控制策略</Text>
       </div>
 
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='功能模块'
+              title="功能模块"
               value={stats.enabledModules}
               suffix={`/ ${stats.totalModules}`}
-              prefix={<Layers className='w-5 h-5' />}
+              prefix={<Layers className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='操作权限'
+              title="操作权限"
               value={stats.enabledActions}
               suffix={`/ ${stats.totalActions}`}
-              prefix={<Activity className='w-5 h-5' />}
+              prefix={<Activity className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='启用模块'
+              title="启用模块"
               value={((stats.enabledModules / stats.totalModules) * 100).toFixed(1)}
-              suffix='%'
-              prefix={<CheckCircle className='w-5 h-5' />}
+              suffix="%"
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
-              title='权限覆盖率'
+              title="权限覆盖率"
               value={((stats.enabledActions / stats.totalActions) * 100).toFixed(1)}
-              suffix='%'
-              prefix={<Shield className='w-5 h-5' />}
+              suffix="%"
+              prefix={<Shield className="w-5 h-5" />}
               styles={{ content: { color: '#fa8c16' } }}
             />
           </Card>
@@ -560,22 +560,22 @@ const PermissionConfiguration = () => {
       {/* 配置变更提醒 */}
       {hasChanges && (
         <Alert
-          message='配置已修改'
-          description='您有未保存的权限配置更改，请及时保存。'
-          type='warning'
+          message="配置已修改"
+          description="您有未保存的权限配置更改，请及时保存。"
+          type="warning"
           showIcon
           closable
-          className='mb-6'
+          className="mb-6"
         />
       )}
 
       {/* 搜索和操作栏 */}
-      <Card className='mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={8}>
             <Input
-              placeholder='搜索模块或权限...'
-              prefix={<Search className='w-4 h-4 text-gray-400' />}
+              placeholder="搜索模块或权限..."
+              prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               allowClear
@@ -583,12 +583,12 @@ const PermissionConfiguration = () => {
           </Col>
           <Col xs={24} md={6}>
             <Select
-              placeholder='筛选分类'
+              placeholder="筛选分类"
               value={categoryFilter}
               onChange={setCategoryFilter}
               style={{ width: '100%' }}
             >
-              <Option value='all'>全部分类</Option>
+              <Option value="all">全部分类</Option>
               {permissionConfig.categories.map(category => (
                 <Option key={category.id} value={category.id}>
                   {category.name}
@@ -598,23 +598,23 @@ const PermissionConfiguration = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
-              placeholder='视图模式'
+              placeholder="视图模式"
               value={viewMode}
               onChange={setViewMode}
               style={{ width: '100%' }}
             >
-              <Option value='card'>卡片视图</Option>
-              <Option value='tree'>树形视图</Option>
+              <Option value="card">卡片视图</Option>
+              <Option value="tree">树形视图</Option>
             </Select>
           </Col>
-          <Col xs={24} md={6} className='text-right'>
+          <Col xs={24} md={6} className="text-right">
             <Space>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={handleReset}>
+              <Button icon={<RefreshCw className="w-4 h-4" />} onClick={handleReset}>
                 重置
               </Button>
               <Button
-                type='primary'
-                icon={<Save className='w-4 h-4' />}
+                type="primary"
+                icon={<Save className="w-4 h-4" />}
                 loading={saving}
                 onClick={handleSave}
                 disabled={!hasChanges}
@@ -627,7 +627,7 @@ const PermissionConfiguration = () => {
       </Card>
 
       {/* 权限配置内容 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         {viewMode === 'card' ? (
           renderCardView()
         ) : (
@@ -635,7 +635,7 @@ const PermissionConfiguration = () => {
             treeData={generateTreeData()}
             defaultExpandAll
             showLine
-            className='enterprise-tree'
+            className="enterprise-tree"
           />
         )}
       </Card>

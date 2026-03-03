@@ -1,0 +1,65 @@
+ITSM 代码质量检查总结 - 2026-03-01
+=====================================
+
+检查时间：2026-03-01 12:00 (Asia/Shanghai)
+检查范围：itsm-backend (Go) + itsm-frontend (TypeScript/Next.js)
+
+📊 质量评分：4.3/5 (⭐⭐⭐⭐☆)
+
+✅ 自动修复完成:
+- 后端：11 个 Go 文件格式问题 (gofmt -w)
+- 前端：452 个 TS/TSX 文件格式问题 (prettier --write)
+
+🔴 需人工修复:
+- TypeScript 类型错误：27 处
+  * DatePicker 类型不匹配：4 处
+  * SLA 组件类型问题：4 处
+  * 测试文件类型错误：6 处
+  * 工具函数类型问题：2 处
+  * E2E 测试重复属性：2 处
+  * 其他类型问题：9 处
+
+⚠️ 大文件需重构 (>1000 行):
+后端:
+- service/ticket_service.go (1,821 行)
+- service/bpmn_process_engine.go (1,549 行)
+- service/bpmn_xml_parser.go (1,344 行)
+- service/dashboard_service.go (1,233 行)
+- service/incident_service.go (1,222 行)
+
+前端:
+- src/components/business/IncidentManagement.tsx (1,313 行)
+- src/lib/api/workflow-api.ts (1,134 行)
+- src/app/(main)/workflow/page.tsx (1,125 行)
+- src/components/templates/FieldDesigner.tsx (1,038 行)
+- src/components/business/TicketApprovalWorkflowDesigner.tsx (1,024 行)
+
+📝 TODO 待办 (4 处):
+- itsm-backend/service/bpmn_version_service.go:385
+- itsm-frontend/src/app/(main)/workflow/instances/page.tsx:579
+- itsm-frontend/src/components/business/TicketSubtasks.tsx:476
+- itsm-frontend/src/components/knowledge/KnowledgeCollaboration.tsx:127
+
+📈 趋势对比 (vs 2026-02-28):
+- 代码行数 (后端): 506,017 (+1.2%)
+- 代码行数 (前端): 150,561 (+0.3%)
+- TODO 数量：4 (-50%) ✅
+- 格式问题：0 (-100%) ✅
+- 质量评分：4.3/5 (+2.4%) ✅
+
+🎯 修复优先级:
+P0 (本周):
+- 修复 27 处 TypeScript 类型错误
+- 将 4 处 TODO 转为 GitHub Issue
+
+P1 (本月):
+- 拆分 ticket_service.go
+- 拆分 IncidentManagement.tsx
+- 重构超长函数
+
+P2 (下季度):
+- 拆分 BPMN 引擎模块
+- 完善单元测试覆盖 (>70%)
+- 集成质量检查到 CI/CD
+
+📄 详细报告：CODE-QUALITY-REPORT-20260301.md

@@ -7,12 +7,29 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Card, Button, Space, Select, Tooltip, Tag, Badge, Alert,
-  Drawer, Descriptions, List, Typography, Empty, Spin, message
+  Card,
+  Button,
+  Space,
+  Select,
+  Tooltip,
+  Tag,
+  Badge,
+  Alert,
+  Drawer,
+  Descriptions,
+  List,
+  Typography,
+  Empty,
+  Spin,
+  message,
 } from 'antd';
 import {
-  ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined,
-  ReloadOutlined, NodeIndexOutlined, WarningOutlined
+  ZoomInOutlined,
+  ZoomOutOutlined,
+  FullscreenOutlined,
+  ReloadOutlined,
+  NodeIndexOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import type { Node, Edge } from 'reactflow';
 import ReactFlow, {
@@ -25,11 +42,17 @@ import ReactFlow, {
   Position,
   useReactFlow,
   ReactFlowProvider,
-  NodeProps
+  NodeProps,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-import { CIRelationshipAPI, type TopologyGraph, type TopologyNode, type TopologyEdge, type ImpactAnalysisResponse } from '@/lib/api/cmdb-relationship';
+import {
+  CIRelationshipAPI,
+  type TopologyGraph,
+  type TopologyNode,
+  type TopologyEdge,
+  type ImpactAnalysisResponse,
+} from '@/lib/api/cmdb-relationship';
 
 const { Text, Title } = Typography;
 
@@ -53,38 +76,44 @@ const CINode: React.FC<NodeProps<any>> = ({ data }) => {
   const criticalityColor = criticalityColors[data.criticality] || '#8c8c8c';
 
   return (
-    <div style={{
-      padding: '12px 16px',
-      background: '#fff',
-      borderRadius: 8,
-      border: `2px solid ${statusColor}`,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      minWidth: 140,
-      position: 'relative',
-    }}>
+    <div
+      style={{
+        padding: '12px 16px',
+        background: '#fff',
+        borderRadius: 8,
+        border: `2px solid ${statusColor}`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        minWidth: 140,
+        position: 'relative',
+      }}
+    >
       <Handle type="target" position={Position.Top} style={{ background: statusColor }} />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Badge color={statusColor} />
         <div>
-          <Text strong style={{ fontSize: 13 }}>{data.name}</Text>
+          <Text strong style={{ fontSize: 13 }}>
+            {data.name}
+          </Text>
           <div style={{ fontSize: 11, color: '#888' }}>{data.type}</div>
         </div>
       </div>
 
       <Tooltip title={`重要性: ${data.criticality}`}>
-        <div style={{
-          position: 'absolute',
-          top: -8,
-          right: -8,
-          width: 20,
-          height: 20,
-          borderRadius: '50%',
-          background: criticalityColor,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
+        <div
+          style={{
+            position: 'absolute',
+            top: -8,
+            right: -8,
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            background: criticalityColor,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           <span style={{ color: '#fff', fontSize: 10 }}>!</span>
         </div>
       </Tooltip>
@@ -152,7 +181,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       setNodes(flowNodes);
 
       // 转换边
-      const flowEdges: Edge[] = data.edges.map((edge) => ({
+      const flowEdges: Edge[] = data.edges.map(edge => ({
         id: `e${edge.source}-${edge.target}`,
         source: String(edge.source),
         target: String(edge.target),
@@ -249,9 +278,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
           <Space>
             <NodeIndexOutlined />
             <span>服务拓扑图</span>
-            {graph && (
-              <Tag color="blue">{graph.total_nodes} 个节点</Tag>
-            )}
+            {graph && <Tag color="blue">{graph.total_nodes} 个节点</Tag>}
           </Space>
         }
         extra={
@@ -274,7 +301,9 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
       >
         <div style={{ height, border: '1px solid #f0f0f0', borderRadius: 8, overflow: 'hidden' }}>
           {loading ? (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}>
+            <div
+              style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height }}
+            >
               <Spin size="large" tip="加载拓扑图..." />
             </div>
           ) : (
@@ -290,7 +319,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               <Background color="#f0f0f0" gap={20} />
               <Controls />
               <MiniMap
-                nodeColor={(node) => {
+                nodeColor={node => {
                   const statusColors: Record<string, string> = {
                     operational: '#52c41a',
                     warning: '#faad14',
@@ -344,7 +373,13 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
           <div>
             {/* 风险摘要 */}
             <Alert
-              type={riskLevelColors[impactAnalysis.risk_level] as 'error' | 'warning' | 'info' | 'success'}
+              type={
+                riskLevelColors[impactAnalysis.risk_level] as
+                  | 'error'
+                  | 'warning'
+                  | 'info'
+                  | 'success'
+              }
               message="影响摘要"
               description={impactAnalysis.summary}
               showIcon
@@ -356,7 +391,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               {impactAnalysis.upstream_impact.length > 0 ? (
                 <List
                   dataSource={impactAnalysis.upstream_impact}
-                  renderItem={(item) => (
+                  renderItem={item => (
                     <List.Item>
                       <Descriptions column={1} size="small">
                         <Descriptions.Item label="CI名称">{item.ci_name}</Descriptions.Item>
@@ -380,7 +415,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
               {impactAnalysis.downstream_impact.length > 0 ? (
                 <List
                   dataSource={impactAnalysis.downstream_impact}
-                  renderItem={(item) => (
+                  renderItem={item => (
                     <List.Item>
                       <Descriptions column={1} size="small">
                         <Descriptions.Item label="CI名称">{item.ci_name}</Descriptions.Item>
@@ -408,7 +443,9 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                   description={
                     <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
                       {impactAnalysis.critical_dependencies.map((dep, idx) => (
-                        <li key={idx}>{dep.ci_name} ({dep.relationship})</li>
+                        <li key={idx}>
+                          {dep.ci_name} ({dep.relationship})
+                        </li>
                       ))}
                     </ul>
                   }
@@ -422,7 +459,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                 <List
                   size="small"
                   dataSource={impactAnalysis.affected_tickets}
-                  renderItem={(ticket) => (
+                  renderItem={ticket => (
                     <List.Item>
                       <List.Item.Meta
                         title={`#${ticket.id} ${ticket.title}`}
@@ -440,7 +477,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
                 <List
                   size="small"
                   dataSource={impactAnalysis.affected_incidents}
-                  renderItem={(incident) => (
+                  renderItem={incident => (
                     <List.Item>
                       <List.Item.Meta
                         title={`#${incident.id} ${incident.title}`}
@@ -460,7 +497,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
   );
 };
 
-const TopologyGraphView: React.FC<TopologyGraphViewProps> = (props) => {
+const TopologyGraphView: React.FC<TopologyGraphViewProps> = props => {
   return (
     <ReactFlowProvider>
       <TopologyGraphViewInner {...props} />
