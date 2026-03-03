@@ -1,50 +1,32 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 可以关闭的功能
-  poweredByHeader: false,        // 关闭 X-Powered-By 头
-  reactStrictMode: true,         // 开启/关闭严格模式
-  
-  // Docker部署配置
+  reactStrictMode: true,
   output: 'standalone',
   
-  // 修复后的开发指示器配置
-  devIndicators: {
-    position: 'bottom-right',     // 新的位置配置选项
-  },
-  
-  // 实验性功能开关
-  experimental: {
-    // 优化包导入 - 减少打包体积
-    optimizePackageImports: ['antd', '@ant-design/icons', 'lucide-react'],
-  },
-  
-  // 图片优化配置
-  images: {
-    unoptimized: false,         // 关闭图片优化
-  },
-  
-  // 开发模式配置
+  // 忽略错误
   eslint: {
-    ignoreDuringBuilds: true,  // 构建时忽略 ESLint 检查
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
   },
   
-  typescript: {
-    ignoreBuildErrors: true,   // 构建时开启 TypeScript 检查
-  },
-
-  // 配置反向代理，解决跨域问题
-  async rewrites() {
-    return [
-      {
-        source: '/api/v1/:path*',
-        destination: 'http://127.0.0.1:8090/api/v1/:path*',
-      },
-      {
-        source: '/api/:path*',
-        destination: 'http://127.0.0.1:8090/api/:path*',
-      },
-    ];
+  // webpack 优化
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+          },
+        },
+      };
+    }
+    return config;
   },
 };
 
