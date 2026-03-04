@@ -20,16 +20,13 @@ export const TICKET_RELATION_KEYS = {
   list: (ticketId: number, filters?: unknown) =>
     [...TICKET_RELATION_KEYS.lists(), ticketId, filters] as const,
   details: () => [...TICKET_RELATION_KEYS.all, 'detail'] as const,
-  detail: (relationId: string) =>
-    [...TICKET_RELATION_KEYS.details(), relationId] as const,
-  hierarchy: (ticketId: number) =>
-    [...TICKET_RELATION_KEYS.all, 'hierarchy', ticketId] as const,
+  detail: (relationId: string) => [...TICKET_RELATION_KEYS.details(), relationId] as const,
+  hierarchy: (ticketId: number) => [...TICKET_RELATION_KEYS.all, 'hierarchy', ticketId] as const,
   dependencies: (ticketId: number) =>
     [...TICKET_RELATION_KEYS.all, 'dependencies', ticketId] as const,
   dependencyGraph: (ticketId: number) =>
     [...TICKET_RELATION_KEYS.all, 'dependency-graph', ticketId] as const,
-  stats: (ticketId: number) =>
-    [...TICKET_RELATION_KEYS.all, 'stats', ticketId] as const,
+  stats: (ticketId: number) => [...TICKET_RELATION_KEYS.all, 'stats', ticketId] as const,
   graph: (ticketId: number, params?: unknown) =>
     [...TICKET_RELATION_KEYS.all, 'graph', ticketId, params] as const,
   suggestions: (ticketId: number) =>
@@ -186,8 +183,7 @@ export function useCreateRelationMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: CreateRelationRequest) =>
-      TicketRelationsApi.createRelation(request),
+    mutationFn: (request: CreateRelationRequest) => TicketRelationsApi.createRelation(request),
     onSuccess: (_, variables) => {
       message.success('关联创建成功');
       queryClient.invalidateQueries({
@@ -233,13 +229,8 @@ export function useUpdateRelationMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      relationId,
-      request,
-    }: {
-      relationId: string;
-      request: UpdateRelationRequest;
-    }) => TicketRelationsApi.updateRelation(relationId, request),
+    mutationFn: ({ relationId, request }: { relationId: string; request: UpdateRelationRequest }) =>
+      TicketRelationsApi.updateRelation(relationId, request),
     onSuccess: (_, variables) => {
       message.success('关联更新成功');
       queryClient.invalidateQueries({
@@ -310,8 +301,7 @@ export function useRemoveParentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (childTicketId: number) =>
-      TicketRelationsApi.removeParent(childTicketId),
+    mutationFn: (childTicketId: number) => TicketRelationsApi.removeParent(childTicketId),
     onSuccess: (_, childTicketId) => {
       message.success('父工单已移除');
       queryClient.invalidateQueries({
@@ -360,13 +350,8 @@ export function useRemoveDependencyMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      ticketId,
-      dependencyId,
-    }: {
-      ticketId: number;
-      dependencyId: string;
-    }) => TicketRelationsApi.removeDependency(ticketId, dependencyId),
+    mutationFn: ({ ticketId, dependencyId }: { ticketId: number; dependencyId: string }) =>
+      TicketRelationsApi.removeDependency(ticketId, dependencyId),
     onSuccess: (_, variables) => {
       message.success('依赖已移除');
       queryClient.invalidateQueries({
@@ -406,4 +391,3 @@ export default {
   useAddDependencyMutation,
   useRemoveDependencyMutation,
 };
-

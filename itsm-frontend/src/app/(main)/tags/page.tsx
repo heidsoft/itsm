@@ -1,11 +1,17 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Table, Button, Tag, Space, Modal, Form, Input, ColorPicker, message } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined, TagOutlined, SyncOutlined } from "@ant-design/icons";
-import { PageContainer } from "@/app/components/PageContainer";
-import { tagService, Tag as ITag } from "@/lib/services/tag-service";
-import { useI18n } from "@/lib/i18n";
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Tag, Space, Modal, Form, Input, ColorPicker, message } from 'antd';
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  TagOutlined,
+  SyncOutlined,
+} from '@ant-design/icons';
+import { PageContainer } from '@/app/components/PageContainer';
+import { tagService, Tag as ITag } from '@/lib/services/tag-service';
+import { useI18n } from '@/lib/i18n';
 
 export default function TagsPage() {
   const { t } = useI18n();
@@ -21,7 +27,7 @@ export default function TagsPage() {
       const data = await tagService.listTags();
       setTags(data);
     } catch (error) {
-      console.error("Failed to fetch tags:", error);
+      console.error('Failed to fetch tags:', error);
       message.error(t('common.getFailed'));
     } finally {
       setFetching(false);
@@ -34,9 +40,9 @@ export default function TagsPage() {
 
   const columns = [
     {
-      title: "标签名称",
-      dataIndex: "name",
-      key: "name",
+      title: '标签名称',
+      dataIndex: 'name',
+      key: 'name',
       render: (text: string, record: ITag) => (
         <Tag color={record.color}>
           <Space>
@@ -46,11 +52,11 @@ export default function TagsPage() {
         </Tag>
       ),
     },
-    { title: "标签代码", dataIndex: "code", key: "code" },
+    { title: '标签代码', dataIndex: 'code', key: 'code' },
     {
-      title: "颜色",
-      dataIndex: "color",
-      key: "color",
+      title: '颜色',
+      dataIndex: 'color',
+      key: 'color',
       render: (color: string) => (
         <div className="flex items-center">
           <div className="w-4 h-4 rounded mr-2" style={{ backgroundColor: color }} />
@@ -63,14 +69,19 @@ export default function TagsPage() {
     //   dataIndex: "usageCount", // Not supported by backend yet
     //   key: "usageCount",
     // },
-    { title: "描述", dataIndex: "description", key: "description" },
+    { title: '描述', dataIndex: 'description', key: 'description' },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (_: unknown, record: ITag) => (
         <Space size="middle">
           <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
-          <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)} />
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          />
         </Space>
       ),
     },
@@ -83,7 +94,7 @@ export default function TagsPage() {
 
   const handleDelete = (record: ITag) => {
     Modal.confirm({
-      title: "确认删除",
+      title: '确认删除',
       content: `确定要删除标签 "${record.name}" 吗？`,
       onOk: async () => {
         try {
@@ -104,7 +115,7 @@ export default function TagsPage() {
       if (typeof values.color === 'object' && values.color?.toHexString) {
         values.color = values.color.toHexString();
       }
-      
+
       setLoading(true);
       await tagService.createTag(values);
 
@@ -113,7 +124,7 @@ export default function TagsPage() {
       form.resetFields();
       fetchTags();
     } catch (error) {
-      console.error("Operation Failed:", error);
+      console.error('Operation Failed:', error);
       message.error(t('common.operationFailed'));
     } finally {
       setLoading(false);
@@ -123,29 +134,24 @@ export default function TagsPage() {
   return (
     <PageContainer
       header={{
-        title: "全局标签管理",
-        breadcrumb: { items: [{ title: "首页" }, { title: "标签管理" }] },
+        title: '全局标签管理',
+        breadcrumb: { items: [{ title: '首页' }, { title: '标签管理' }] },
       }}
       extra={[
-        <Button
-          key="refresh"
-          icon={<SyncOutlined />}
-          onClick={fetchTags}
-          loading={fetching}
-        >
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchTags} loading={fetching}>
           刷新
         </Button>,
-        <Button key="create" type="primary" icon={<PlusOutlined />} onClick={() => setIsModalVisible(true)}>
+        <Button
+          key="create"
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setIsModalVisible(true)}
+        >
           新建标签
-        </Button>
+        </Button>,
       ]}
     >
-      <Table 
-        columns={columns} 
-        dataSource={tags} 
-        rowKey="id"
-        loading={fetching}
-      />
+      <Table columns={columns} dataSource={tags} rowKey="id" loading={fetching} />
 
       <Modal
         title="新建/编辑标签"
@@ -154,18 +160,18 @@ export default function TagsPage() {
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
       >
-        <Form form={form} layout="vertical" initialValues={{ color: "#1890ff" }}>
+        <Form form={form} layout="vertical" initialValues={{ color: '#1890ff' }}>
           <Form.Item
             name="name"
             label="标签名称"
-            rules={[{ required: true, message: "请输入标签名称" }]}
+            rules={[{ required: true, message: '请输入标签名称' }]}
           >
             <Input placeholder="请输入标签名称" />
           </Form.Item>
           <Form.Item
             name="code"
             label="标签代码"
-            rules={[{ required: true, message: "请输入标签代码" }]}
+            rules={[{ required: true, message: '请输入标签代码' }]}
           >
             <Input placeholder="请输入标签代码" />
           </Form.Item>

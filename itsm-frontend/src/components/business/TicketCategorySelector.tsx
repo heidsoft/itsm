@@ -1,30 +1,12 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  Select,
-  Tree,
-  Modal,
-  Button,
-  Input,
-  Space,
-  Typography,
-  Spin,
-  Empty,
-  message,
-} from "antd";
-import {
-  Folder,
-  FolderOpen,
-  FileText,
-  Search,
-  Eye,
-  EyeOff,
-} from "lucide-react";
+import React, { useState, useEffect, useMemo } from 'react';
+import { Select, Tree, Modal, Button, Input, Space, Typography, Spin, Empty, message } from 'antd';
+import { Folder, FolderOpen, FileText, Search, Eye, EyeOff } from 'lucide-react';
 import {
   ticketCategoryService,
   type CategoryTreeItem,
-} from "../../lib/services/ticket-category-service";
+} from '../../lib/services/ticket-category-service';
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -52,7 +34,7 @@ interface TicketCategorySelectorProps {
 const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
   value,
   onChange,
-  placeholder = "选择工单分类",
+  placeholder = '选择工单分类',
   allowClear = true,
   disabled = false,
   showSearch = true,
@@ -68,7 +50,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
 
@@ -79,7 +61,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
       setError(null);
       const data = await ticketCategoryService.getCategoryTree();
       setCategories(data);
-      
+
       // 设置默认展开的节点
       const rootKeys = data.map(item => item.id);
       setExpandedKeys(rootKeys);
@@ -116,11 +98,11 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <div className={`px-2 py-1 rounded text-xs ${
-                item.is_active 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-red-100 text-red-800'
-              }`}>
+              <div
+                className={`px-2 py-1 rounded text-xs ${
+                  item.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}
+              >
                 {item.is_active ? '启用' : '禁用'}
               </div>
             </div>
@@ -139,18 +121,20 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
     if (!searchTerm) return treeData;
 
     const filterTree = (items: unknown[]): unknown[] => {
-      return items.filter(item => {
-        const matchesSearch = item.title.props.children[0].props.children[1].props.children
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-        
-        const hasMatchingChildren = item.children && filterTree(item.children).length > 0;
-        
-        return matchesSearch || hasMatchingChildren;
-      }).map(item => ({
-        ...item,
-        children: item.children ? filterTree(item.children) : [],
-      }));
+      return items
+        .filter(item => {
+          const matchesSearch = item.title.props.children[0].props.children[1].props.children
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase());
+
+          const hasMatchingChildren = item.children && filterTree(item.children).length > 0;
+
+          return matchesSearch || hasMatchingChildren;
+        })
+        .map(item => ({
+          ...item,
+          children: item.children ? filterTree(item.children) : [],
+        }));
     };
 
     return filterTree(treeData);
@@ -176,7 +160,11 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
 
   // 获取分类路径
   const getCategoryPath = (id: number): string => {
-    const findPath = (items: CategoryTreeItem[], targetId: number, path: string[] = []): string[] | null => {
+    const findPath = (
+      items: CategoryTreeItem[],
+      targetId: number,
+      path: string[] = []
+    ): string[] | null => {
       for (const item of items) {
         const currentPath = [...path, item.name];
         if (item.id === targetId) {
@@ -207,7 +195,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
     }
 
     const selectedId = selectedKeys[0] as number;
-    
+
     if (multiple) {
       const newValues = [...multipleValue];
       if (!newValues.includes(selectedId)) {
@@ -217,7 +205,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
     } else {
       onChange?.(selectedId);
     }
-    
+
     setModalVisible(false);
     setSelectedKeys([]);
   };
@@ -247,19 +235,14 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
             选择分类
           </Button>
         </div>
-        
+
         {/* 已选择的分类 */}
         {multipleValue.length > 0 && (
           <div className="space-y-2">
             {multipleValue.map(id => (
               <div key={id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                 <span className="text-sm">{getCategoryPath(id)}</span>
-                <Button
-                  type="text"
-                  size="small"
-                  danger
-                  onClick={() => handleRemoveMultiple(id)}
-                >
+                <Button type="text" size="small" danger onClick={() => handleRemoveMultiple(id)}>
                   移除
                 </Button>
               </div>
@@ -283,17 +266,15 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
               placeholder="搜索分类名称"
               prefix={<Search className="w-4 h-4 text-gray-400" />}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
             />
-            
+
             {loading ? (
               <div className="text-center py-8">
                 <Spin size="large" />
               </div>
             ) : error ? (
-              <div className="text-center py-8 text-red-500">
-                {error}
-              </div>
+              <div className="text-center py-8 text-red-500">{error}</div>
             ) : filteredTreeData.length === 0 ? (
               <Empty description="暂无分类数据" />
             ) : (
@@ -330,16 +311,11 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
         filterOption={(input, option) =>
           (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
         }
-        popupRender={(menu) => (
+        popupRender={menu => (
           <div>
             {menu}
             <div className="p-2 border-t">
-              <Button
-                type="text"
-                size="small"
-                block
-                onClick={() => setModalVisible(true)}
-              >
+              <Button type="text" size="small" block onClick={() => setModalVisible(true)}>
                 <Folder className="w-4 h-4 mr-2" />
                 浏览分类树
               </Button>
@@ -370,17 +346,15 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
             placeholder="搜索分类名称"
             prefix={<Search className="w-4 h-4 text-gray-400" />}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
           />
-          
+
           {loading ? (
             <div className="text-center py-8">
               <Spin size="large" />
             </div>
           ) : error ? (
-            <div className="text-center py-8 text-red-500">
-              {error}
-            </div>
+            <div className="text-center py-8 text-red-500">{error}</div>
           ) : filteredTreeData.length === 0 ? (
             <Empty description="暂无分类数据" />
           ) : (

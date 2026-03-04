@@ -93,7 +93,10 @@ export class SLAApi {
   }
 
   // 更新SLA定义
-  static async updateSLADefinition(id: number, data: Partial<SLADefinition>): Promise<SLADefinition> {
+  static async updateSLADefinition(
+    id: number,
+    data: Partial<SLADefinition>
+  ): Promise<SLADefinition> {
     return httpClient.put(`/api/v1/sla/definitions/${id}`, data);
   }
 
@@ -132,13 +135,18 @@ export class SLAApi {
       if (params.is_resolved !== undefined) queryParams.is_resolved = String(params.is_resolved);
       if (params.severity) queryParams.severity = params.severity;
       if (params.violation_type) queryParams.violation_type = params.violation_type;
-      if (params.sla_definition_id) queryParams.sla_definition_id = String(params.sla_definition_id);
+      if (params.sla_definition_id)
+        queryParams.sla_definition_id = String(params.sla_definition_id);
     }
     return httpClient.get('/api/v1/sla/violations', queryParams);
   }
 
   // 更新SLA违规状态
-  static async updateSLAViolationStatus(id: number, isResolved: boolean, notes?: string): Promise<void> {
+  static async updateSLAViolationStatus(
+    id: number,
+    isResolved: boolean,
+    notes?: string
+  ): Promise<void> {
     return httpClient.put(`/api/v1/sla/violations/${id}`, { is_resolved: isResolved, notes });
   }
 
@@ -193,8 +201,8 @@ export class SLAApi {
       time_remaining: number;
       sla_definition: string;
       created_at: string;
-  }>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }> {
     const requestBody: unknown = {};
     if (params?.start_time) requestBody.start_time = params.start_time;
@@ -204,16 +212,17 @@ export class SLAApi {
     const response = await httpClient.post('/api/v1/sla/monitoring', requestBody);
 
     // 转换后端响应格式到前端格式
-    const violationRate = response.total_tickets > 0
-      ? (response.violated_tickets / response.total_tickets) * 100
-      : 0;
+    const violationRate =
+      response.total_tickets > 0 ? (response.violated_tickets / response.total_tickets) * 100 : 0;
     const compliantTickets = response.total_tickets - response.violated_tickets;
 
     // 使用后端返回的风险工单数，如果没有则估算
     const atRiskTickets = response.at_risk_tickets ?? Math.floor(response.total_tickets * 0.15);
 
     return {
-      compliance_rate: response.compliance_rate ?? (response.total_tickets > 0 ? (compliantTickets / response.total_tickets) * 100 : 0),
+      compliance_rate:
+        response.compliance_rate ??
+        (response.total_tickets > 0 ? (compliantTickets / response.total_tickets) * 100 : 0),
       violation_rate: violationRate,
       total_tickets: response.total_tickets,
       compliant_tickets: compliantTickets,
@@ -251,21 +260,26 @@ export class SLAApi {
   }
 
   // 获取SLA预警
-  static async getSLAAlerts(): Promise<Array<{
-    ticket_id: number;
-    ticket_title: string;
-    priority: string;
-    sla_definition: string;
-    time_remaining: number;
-    alert_level: 'warning' | 'critical' | 'severe';
-    created_at: string;
-  }>> {
+  static async getSLAAlerts(): Promise<
+    Array<{
+      ticket_id: number;
+      ticket_title: string;
+      priority: string;
+      sla_definition: string;
+      time_remaining: number;
+      alert_level: 'warning' | 'critical' | 'severe';
+      created_at: string;
+    }>
+  > {
     // 修正: 确保路径与后端一致
     // 注意：后端目前似乎没有直接的 /api/v1/sla/alerts 端点，可能需要从 monitoring 或 alert-history 获取
     // 这里暂时假设后端会增加此端点，或者我们使用 alert-history 替代
     // 根据 PRD，告警历史是 /api/v1/sla/alert-history
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const history = await httpClient.get<{items: unknown[]}>('/api/v1/sla/alert-history', { page: 1, size: 10 });
+    const history = await httpClient.get<{ items: unknown[] }>('/api/v1/sla/alert-history', {
+      page: 1,
+      size: 10,
+    });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return history.items.map((item: unknown) => ({
       ticket_id: item.ticket_id,
@@ -274,7 +288,7 @@ export class SLAApi {
       sla_definition: item.sla_definition_name || 'SLA',
       time_remaining: 0, // 历史记录可能没有剩余时间
       alert_level: item.alert_level,
-      created_at: item.created_at
+      created_at: item.created_at,
     }));
   }
 
@@ -307,13 +321,16 @@ export class SLAApi {
   }
 
   // 更新SLA预警规则
-  static async updateAlertRule(id: number, data: Partial<{
-    name: string;
-    alert_level: 'warning' | 'critical' | 'severe';
-    threshold_percentage: number;
-    notification_channels: string[];
-    is_active: boolean;
-  }>): Promise<any> {
+  static async updateAlertRule(
+    id: number,
+    data: Partial<{
+      name: string;
+      alert_level: 'warning' | 'critical' | 'severe';
+      threshold_percentage: number;
+      notification_channels: string[];
+      is_active: boolean;
+    }>
+  ): Promise<any> {
     // 修正: 确保路径与后端一致，去掉 v2
     return httpClient.put(`/api/v1/sla/alert-rules/${id}`, data);
   }

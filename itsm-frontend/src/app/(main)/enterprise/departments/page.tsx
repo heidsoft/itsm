@@ -73,7 +73,7 @@ export default function DepartmentsPage() {
       title: t('departments.departmentCode'),
       dataIndex: 'code',
       key: 'code',
-      render: (text: string) => <Tag color='blue'>{text}</Tag>,
+      render: (text: string) => <Tag color="blue">{text}</Tag>,
     },
     {
       title: t('departments.manager'),
@@ -95,10 +95,10 @@ export default function DepartmentsPage() {
       title: t('common.action'),
       key: 'action',
       render: (_: unknown, record: Department) => (
-        <Space size='middle'>
-          <Button type='text' icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+        <Space size="middle">
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -157,15 +157,21 @@ export default function DepartmentsPage() {
     <PageContainer
       header={{
         title: t('departments.title'),
-        breadcrumb: { items: [{ title: t('common.back') }, { title: '企业管理' }, { title: t('departments.title') }] },
+        breadcrumb: {
+          items: [
+            { title: t('common.back') },
+            { title: '企业管理' },
+            { title: t('departments.title') },
+          ],
+        },
       }}
       extra={[
-        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchDepartments} loading={fetching}>
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchDepartments} loading={fetching}>
           {t('common.refresh')}
         </Button>,
         <Button
-          key='create'
-          type='primary'
+          key="create"
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
             form.resetFields();
@@ -179,7 +185,7 @@ export default function DepartmentsPage() {
       <Table
         columns={columns}
         dataSource={departments}
-        rowKey='id'
+        rowKey="id"
         pagination={false}
         loading={fetching}
         expandable={{ defaultExpandAllRows: true }}
@@ -192,22 +198,32 @@ export default function DepartmentsPage() {
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
+            name="name"
             label={t('departments.departmentName')}
-            rules={[{ required: true, message: t('common.inputPlaceholder') + t('departments.departmentName') }]}
+            rules={[
+              {
+                required: true,
+                message: t('common.inputPlaceholder') + t('departments.departmentName'),
+              },
+            ]}
           >
             <Input placeholder={t('common.inputPlaceholder') + t('departments.departmentName')} />
           </Form.Item>
           <Form.Item
-            name='code'
+            name="code"
             label={t('departments.departmentCode')}
-            rules={[{ required: true, message: t('common.inputPlaceholder') + t('departments.departmentCode') }]}
+            rules={[
+              {
+                required: true,
+                message: t('common.inputPlaceholder') + t('departments.departmentCode'),
+              },
+            ]}
           >
             <Input placeholder={t('common.inputPlaceholder') + t('departments.departmentCode')} />
           </Form.Item>
-          <Form.Item name='parent_id' label={t('departments.parentDepartment')}>
+          <Form.Item name="parent_id" label={t('departments.parentDepartment')}>
             <TreeSelect
               treeData={treeData}
               placeholder={t('common.selectPlaceholder') + t('departments.parentDepartment')}
@@ -216,7 +232,7 @@ export default function DepartmentsPage() {
               treeDefaultExpandAll
             />
           </Form.Item>
-          <Form.Item name='manager_id' label={t('departments.manager')}>
+          <Form.Item name="manager_id" label={t('departments.manager')}>
             <Select
               placeholder={t('common.selectPlaceholder') + t('departments.manager')}
               options={users}
@@ -226,7 +242,7 @@ export default function DepartmentsPage() {
               }
             />
           </Form.Item>
-          <Form.Item name='description' label={t('common.description')}>
+          <Form.Item name="description" label={t('common.description')}>
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

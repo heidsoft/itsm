@@ -109,46 +109,49 @@ const WorkflowManagementPage = () => {
   });
 
   // 分页加载工作流列表
-  const loadWorkflows = useCallback(async (page: number = 1, pageSize: number = 10) => {
-    setLoading(true);
-    try {
-      const response = await WorkflowAPI.getWorkflows({
-        page,
-        pageSize,
-      });
-      // 适配后端返回格式
-      const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: unknown) => ({
-        id: w.key || w.id || 0, // 使用 key 作为 id，因为后端 API 需要 key
-        name: w.name || w.code || 'Unknown',
-        description: w.description || '',
-        category: w.category || 'general',
-        version: w.version || '1.0.0',
-        status: (w.status === 'active' || w.deployed) ? 'active' : 'draft',
-        bpmn_xml: w.bpmn_xml || w.xml || '',
-        created_at: w.createdAt || w.created_at || new Date().toISOString(),
-        updated_at: w.updatedAt || w.updated_at || new Date().toISOString(),
-        instances_count: w.instances_count || 0,
-        running_instances: w.running_instances || 0,
-        created_by: w.createdBy || w.created_by || 'System',
-      }));
-      setWorkflows(adaptedWorkflows);
-      // 更新分页信息
-      setPagination(prev => ({
-        ...prev,
-        current: page,
-        pageSize,
-        total: response.total || 0,
-      }));
-    } catch (error) {
-      console.error('Failed to load workflows:', error);
-      // 显示实际错误信息以便调试
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      message.error(t('workflow.loadFailed') + ': ' + errorMessage);
-      setWorkflows([]); // 确保清空列表
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
+  const loadWorkflows = useCallback(
+    async (page: number = 1, pageSize: number = 10) => {
+      setLoading(true);
+      try {
+        const response = await WorkflowAPI.getWorkflows({
+          page,
+          pageSize,
+        });
+        // 适配后端返回格式
+        const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: unknown) => ({
+          id: w.key || w.id || 0, // 使用 key 作为 id，因为后端 API 需要 key
+          name: w.name || w.code || 'Unknown',
+          description: w.description || '',
+          category: w.category || 'general',
+          version: w.version || '1.0.0',
+          status: w.status === 'active' || w.deployed ? 'active' : 'draft',
+          bpmn_xml: w.bpmn_xml || w.xml || '',
+          created_at: w.createdAt || w.created_at || new Date().toISOString(),
+          updated_at: w.updatedAt || w.updated_at || new Date().toISOString(),
+          instances_count: w.instances_count || 0,
+          running_instances: w.running_instances || 0,
+          created_by: w.createdBy || w.created_by || 'System',
+        }));
+        setWorkflows(adaptedWorkflows);
+        // 更新分页信息
+        setPagination(prev => ({
+          ...prev,
+          current: page,
+          pageSize,
+          total: response.total || 0,
+        }));
+      } catch (error) {
+        console.error('Failed to load workflows:', error);
+        // 显示实际错误信息以便调试
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        message.error(t('workflow.loadFailed') + ': ' + errorMessage);
+        setWorkflows([]); // 确保清空列表
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t]
+  );
 
   // 分页/排序/筛选变化处理
   const handleTableChange = (newPagination: unknown) => {
@@ -259,7 +262,10 @@ const WorkflowManagementPage = () => {
 
   const handleCopyWorkflow = async (workflow: Workflow) => {
     try {
-      const result = await WorkflowAPI.cloneWorkflow(String(workflow.id), `${workflow.name} - ${t('workflow.copySuffix')}`);
+      const result = await WorkflowAPI.cloneWorkflow(
+        String(workflow.id),
+        `${workflow.name} - ${t('workflow.copySuffix')}`
+      );
       const newWorkflow: Workflow = {
         ...workflow,
         id: Number(result.id) || Date.now(),
@@ -524,8 +530,8 @@ const WorkflowManagementPage = () => {
       key: 'name',
       render: (name: string, record: Workflow) => (
         <div>
-          <div className='font-medium text-gray-900'>{name}</div>
-          <div className='text-sm text-gray-500'>{record.description}</div>
+          <div className="font-medium text-gray-900">{name}</div>
+          <div className="text-sm text-gray-500">{record.description}</div>
         </div>
       ),
     },
@@ -534,14 +540,14 @@ const WorkflowManagementPage = () => {
       dataIndex: 'category',
       key: 'category',
       width: 120,
-      render: (category: string) => <Tag color='blue'>{category}</Tag>,
+      render: (category: string) => <Tag color="blue">{category}</Tag>,
     },
     {
       title: t('workflow.version'),
       dataIndex: 'version',
       key: 'version',
       width: 100,
-      render: (version: string) => <span className='font-mono text-sm'>{version}</span>,
+      render: (version: string) => <span className="font-mono text-sm">{version}</span>,
     },
     {
       title: t('workflow.status'),
@@ -565,9 +571,13 @@ const WorkflowManagementPage = () => {
       key: 'instances',
       width: 150,
       render: (record: Workflow) => (
-        <div className='text-sm'>
-          <div>{t('workflow.total')}: {record.instances_count}</div>
-          <div>{t('workflow.running')}: {record.running_instances}</div>
+        <div className="text-sm">
+          <div>
+            {t('workflow.total')}: {record.instances_count}
+          </div>
+          <div>
+            {t('workflow.running')}: {record.running_instances}
+          </div>
         </div>
       ),
     },
@@ -577,7 +587,7 @@ const WorkflowManagementPage = () => {
       key: 'created_at',
       width: 150,
       render: (date: string) => (
-        <div className='text-sm'>{new Date(date).toLocaleDateString()}</div>
+        <div className="text-sm">{new Date(date).toLocaleDateString()}</div>
       ),
     },
     {
@@ -590,9 +600,9 @@ const WorkflowManagementPage = () => {
           {record.status !== 'active' && (
             <Tooltip title={record.status === 'draft' ? '部署' : '重新部署'}>
               <Button
-                type='primary'
-                size='small'
-                icon={<PlayCircle className='w-3 h-3' />}
+                type="primary"
+                size="small"
+                icon={<PlayCircle className="w-3 h-3" />}
                 onClick={() => handleDeployWorkflow(record.id)}
               >
                 部署
@@ -601,15 +611,15 @@ const WorkflowManagementPage = () => {
           )}
           <Tooltip title={t('workflow.designWorkflow')}>
             <Button
-              type='text'
-              icon={<GitBranch className='w-4 h-4' />}
+              type="text"
+              icon={<GitBranch className="w-4 h-4" />}
               onClick={() => handleDesignWorkflow(record)}
             />
           </Tooltip>
           <Tooltip title={t('workflow.viewDetails')}>
             <Button
-              type='text'
-              icon={<Eye className='w-4 h-4' />}
+              type="text"
+              icon={<Eye className="w-4 h-4" />}
               onClick={() => router.push(`/workflow/designer?id=${record.id}&key=${record.id}`)}
             />
           </Tooltip>
@@ -619,20 +629,20 @@ const WorkflowManagementPage = () => {
                 {
                   key: 'edit',
                   label: t('workflow.edit'),
-                  icon: <Edit className='w-4 h-4' />,
+                  icon: <Edit className="w-4 h-4" />,
                   onClick: () => handleEditWorkflow(record),
                 },
                 {
                   key: 'deploy',
                   label: record.status === 'draft' ? t('workflow.deploy') : t('workflow.redeploy'),
-                  icon: <PlayCircle className='w-4 h-4' />,
+                  icon: <PlayCircle className="w-4 h-4" />,
                   onClick: () => handleDeployWorkflow(record.id),
                   disabled: record.status === 'active',
                 },
                 {
                   key: 'activate',
                   label: t('workflow.activate'),
-                  icon: <CheckCircle className='w-4 h-4' />,
+                  icon: <CheckCircle className="w-4 h-4" />,
                   onClick: () => handleActivateWorkflow(record.id),
                   style: {
                     display: record.status === 'inactive' ? 'block' : 'none',
@@ -641,7 +651,7 @@ const WorkflowManagementPage = () => {
                 {
                   key: 'stop',
                   label: t('workflow.deactivate'),
-                  icon: <PauseCircle className='w-4 h-4' />,
+                  icon: <PauseCircle className="w-4 h-4" />,
                   onClick: () => handleStopWorkflow(record.id),
                   style: {
                     display: record.status === 'active' ? 'block' : 'none',
@@ -653,33 +663,33 @@ const WorkflowManagementPage = () => {
                 {
                   key: 'copy',
                   label: t('workflow.copy'),
-                  icon: <Copy className='w-4 h-4' />,
+                  icon: <Copy className="w-4 h-4" />,
                   onClick: () => handleCopyWorkflow(record),
                 },
                 {
                   key: 'export',
                   label: t('workflow.export'),
-                  icon: <Download className='w-4 h-4' />,
+                  icon: <Download className="w-4 h-4" />,
                   onClick: () => handleExportWorkflow(record),
                 },
                 {
                   key: 'instances',
                   label: t('workflow.viewInstances'),
-                  icon: <BarChart3 className='w-4 h-4' />,
+                  icon: <BarChart3 className="w-4 h-4" />,
                   onClick: () =>
                     window.open(`/workflow/instances?workflowId=${record.id}`, '_blank'),
                 },
                 {
                   key: 'versions',
                   label: t('workflow.versionManagement'),
-                  icon: <GitBranch className='w-4 h-4' />,
+                  icon: <GitBranch className="w-4 h-4" />,
                   onClick: () =>
                     window.open(`/workflow/versions?workflowId=${record.id}`, '_blank'),
                 },
                 {
                   key: 'viewBPMN',
                   label: t('workflow.viewBPMN'),
-                  icon: <Code className='w-4 h-4' />,
+                  icon: <Code className="w-4 h-4" />,
                   onClick: () => handleViewBPMN(record),
                   disabled: !record.bpmn_xml,
                 },
@@ -689,7 +699,7 @@ const WorkflowManagementPage = () => {
                 {
                   key: 'delete',
                   label: t('workflow.delete'),
-                  icon: <Trash2 className='w-4 h-4' />,
+                  icon: <Trash2 className="w-4 h-4" />,
                   danger: true,
                   onClick: () => handleDeleteWorkflow(record.id),
                   disabled: record.status === 'active' && record.running_instances > 0,
@@ -697,7 +707,7 @@ const WorkflowManagementPage = () => {
               ].filter(item => item.style?.display !== 'none'), // 过滤隐藏项目
             }}
           >
-            <Button type='text' icon={<MoreHorizontal className='w-4 h-4' />} />
+            <Button type="text" icon={<MoreHorizontal className="w-4 h-4" />} />
           </Dropdown>
         </Space>
       ),
@@ -715,43 +725,43 @@ const WorkflowManagementPage = () => {
   return (
     <>
       {/* 统计卡片 */}
-      <Row gutter={[16, 16]} className='mb-6'>
+      <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
               title={t('workflow.totalWorkflows')}
               value={stats.total}
-              prefix={<FileText className='w-5 h-5' />}
+              prefix={<FileText className="w-5 h-5" />}
               styles={{ content: { color: '#1890ff' } }}
             />
-            <div className='mt-2 text-xs text-gray-500'>
+            <div className="mt-2 text-xs text-gray-500">
               {t('workflow.active')} {stats.active} | {t('workflow.draft')} {stats.draft} |{' '}
               {t('workflow.inactive')} {stats.inactive}
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
               title={t('workflow.runningInstances')}
               value={stats.running}
-              prefix={<Clock className='w-5 h-5' />}
+              prefix={<Clock className="w-5 h-5" />}
               styles={{ content: { color: '#faad14' } }}
             />
-            <div className='mt-2 text-xs text-gray-500'>
+            <div className="mt-2 text-xs text-gray-500">
               {t('workflow.todayNewInstances', { count: stats.todayInstances })}
             </div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
               title={t('workflow.completedInstances')}
               value={stats.completed}
-              prefix={<CheckCircle className='w-5 h-5' />}
+              prefix={<CheckCircle className="w-5 h-5" />}
               styles={{ content: { color: '#52c41a' } }}
             />
-            <div className='mt-2 text-xs text-gray-500'>
+            <div className="mt-2 text-xs text-gray-500">
               {t('workflow.completionRate')}{' '}
               {stats.total > 0
                 ? Math.round((stats.completed / (stats.completed + stats.running)) * 100)
@@ -761,28 +771,30 @@ const WorkflowManagementPage = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card className='enterprise-card'>
+          <Card className="enterprise-card">
             <Statistic
               title={t('workflow.avgExecutionTime')}
               value={stats.avgExecutionTime}
               suffix={t('workflow.minutes')}
-              prefix={<BarChart3 className='w-5 h-5' />}
+              prefix={<BarChart3 className="w-5 h-5" />}
               styles={{ content: { color: '#722ed1' } }}
             />
-            <div className='mt-2 text-xs text-gray-500'>
-              {stats.avgExecutionTime < 60 ? t('workflow.goodEfficiency') : t('workflow.optimizableSpace')}
+            <div className="mt-2 text-xs text-gray-500">
+              {stats.avgExecutionTime < 60
+                ? t('workflow.goodEfficiency')
+                : t('workflow.optimizableSpace')}
             </div>
           </Card>
         </Col>
       </Row>
 
       {/* 工具栏 */}
-      <Card className='enterprise-card mb-6'>
-        <Row gutter={[16, 16]} align='middle'>
+      <Card className="enterprise-card mb-6">
+        <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Input
               placeholder={t('workflow.searchPlaceholder')}
-              prefix={<Search className='w-4 h-4' />}
+              prefix={<Search className="w-4 h-4" />}
               value={filters.keyword}
               onChange={e => setFilters(prev => ({ ...prev, keyword: e.target.value }))}
               allowClear
@@ -796,10 +808,10 @@ const WorkflowManagementPage = () => {
               allowClear
               style={{ width: '100%' }}
             >
-              <Option value='draft'>{t('workflow.draft')}</Option>
-              <Option value='active'>{t('workflow.activated')}</Option>
-              <Option value='inactive'>{t('workflow.deactivated')}</Option>
-              <Option value='archived'>{t('workflow.archived')}</Option>
+              <Option value="draft">{t('workflow.draft')}</Option>
+              <Option value="active">{t('workflow.activated')}</Option>
+              <Option value="inactive">{t('workflow.deactivated')}</Option>
+              <Option value="archived">{t('workflow.archived')}</Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={4}>
@@ -811,8 +823,12 @@ const WorkflowManagementPage = () => {
               style={{ width: '100%' }}
             >
               <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
-              <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
-              <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
+              <Option value={t('workflow.incidentHandling')}>
+                {t('workflow.incidentHandling')}
+              </Option>
+              <Option value={t('workflow.changeManagement')}>
+                {t('workflow.changeManagement')}
+              </Option>
             </Select>
           </Col>
           <Col xs={24} sm={12} md={8}>
@@ -823,19 +839,19 @@ const WorkflowManagementPage = () => {
                     {
                       key: 'ticket_approval',
                       label: t('workflow.ticketApprovalProcess'),
-                      icon: <GitBranch className='w-4 h-4' />,
+                      icon: <GitBranch className="w-4 h-4" />,
                       onClick: () => router.push('/workflow/designer'),
                     },
                     {
                       key: 'general',
                       label: t('workflow.generalWorkflow'),
-                      icon: <GitBranch className='w-4 h-4' />,
+                      icon: <GitBranch className="w-4 h-4" />,
                       onClick: handleCreateWorkflow,
                     },
                     {
                       key: 'bpmn',
                       label: t('workflow.bpmnWorkflow'),
-                      icon: <Code className='w-4 h-4' />,
+                      icon: <Code className="w-4 h-4" />,
                       onClick: () => {
                         setEditingWorkflow(null);
                         setDesignerVisible(true);
@@ -845,22 +861,25 @@ const WorkflowManagementPage = () => {
                 }}
                 trigger={['click']}
               >
-                <Button type='primary' icon={<Plus className='w-4 h-4' />}>
-                  {t('workflow.newWorkflow')} <MoreHorizontal className='w-3 h-3 ml-1' />
+                <Button type="primary" icon={<Plus className="w-4 h-4" />}>
+                  {t('workflow.newWorkflow')} <MoreHorizontal className="w-3 h-3 ml-1" />
                 </Button>
               </Dropdown>
               {/* 发起流程快捷入口 - 跳转到实例管理页面 */}
               <Button
-                type='default'
-                icon={<PlayCircle className='w-4 h-4' />}
+                type="default"
+                icon={<PlayCircle className="w-4 h-4" />}
                 onClick={() => router.push('/workflow/instances')}
               >
                 发起流程
               </Button>
-              <Button icon={<Upload className='w-4 h-4' />} onClick={handleImportWorkflow}>
+              <Button icon={<Upload className="w-4 h-4" />} onClick={handleImportWorkflow}>
                 {t('workflow.import')}
               </Button>
-              <Button icon={<RefreshCw className='w-4 h-4' />} onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}>
+              <Button
+                icon={<RefreshCw className="w-4 h-4" />}
+                onClick={() => loadWorkflows(pagination.current, pagination.pageSize)}
+              >
                 {t('workflow.refresh')}
               </Button>
             </Space>
@@ -870,29 +889,29 @@ const WorkflowManagementPage = () => {
 
       {/* 批量操作工具栏 */}
       {selectedRowKeys.length > 0 && (
-        <Card className='enterprise-card mb-4'>
+        <Card className="enterprise-card mb-4">
           <Alert
             message={
               <Space>
                 <span>{t('workflow.selectedWorkflows', { count: selectedRowKeys.length })}</span>
-                <Button size='small' onClick={() => setSelectedRowKeys([])}>
+                <Button size="small" onClick={() => setSelectedRowKeys([])}>
                   {t('workflow.cancelSelection')}
                 </Button>
               </Space>
             }
-            type='info'
+            type="info"
             action={
               <Space>
-                <Button size='small' type='primary' onClick={handleBatchActivate}>
+                <Button size="small" type="primary" onClick={handleBatchActivate}>
                   {t('workflow.batchActivate')}
                 </Button>
-                <Button size='small' onClick={handleBatchStop}>
+                <Button size="small" onClick={handleBatchStop}>
                   {t('workflow.batchDeactivate')}
                 </Button>
-                <Button size='small' onClick={handleBatchExport}>
+                <Button size="small" onClick={handleBatchExport}>
                   {t('workflow.batchExport')}
                 </Button>
-                <Button size='small' danger onClick={handleBatchDelete}>
+                <Button size="small" danger onClick={handleBatchDelete}>
                   {t('workflow.batchDelete')}
                 </Button>
               </Space>
@@ -902,11 +921,11 @@ const WorkflowManagementPage = () => {
       )}
 
       {/* 工作流表格 */}
-      <Card className='enterprise-card'>
+      <Card className="enterprise-card">
         <Table
           columns={columns}
           dataSource={filteredWorkflows}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           rowSelection={{
             selectedRowKeys,
@@ -945,7 +964,8 @@ const WorkflowManagementPage = () => {
             total: pagination.total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => t('workflow.showTotal', { start: range[0], end: range[1], total }),
+            showTotal: (total, range) =>
+              t('workflow.showTotal', { start: range[0], end: range[1], total }),
             onChange: handleTableChange,
           }}
           scroll={{ x: 1200 }}
@@ -962,9 +982,9 @@ const WorkflowManagementPage = () => {
         destroyOnHidden
       >
         <Form
-          layout='vertical'
+          layout="vertical"
           initialValues={editingWorkflow || {}}
-          onFinish={async (values) => {
+          onFinish={async values => {
             try {
               if (editingWorkflow) {
                 await WorkflowAPI.updateWorkflow(String(editingWorkflow.id), {
@@ -976,7 +996,9 @@ const WorkflowManagementPage = () => {
                   code: values.code || `workflow_${Date.now()}`,
                 } as any);
               }
-              message.success(editingWorkflow ? t('workflow.updateSuccess') : t('workflow.createWorkflowSuccess'));
+              message.success(
+                editingWorkflow ? t('workflow.updateSuccess') : t('workflow.createWorkflowSuccess')
+              );
               setModalVisible(false);
               loadWorkflows();
             } catch (error) {
@@ -985,37 +1007,43 @@ const WorkflowManagementPage = () => {
           }}
         >
           <Form.Item
-            name='name'
+            name="name"
             label={t('workflow.workflowName')}
             rules={[{ required: true, message: t('workflow.workflowNameRequired') }]}
           >
             <Input placeholder={t('workflow.workflowNamePlaceholder')} />
           </Form.Item>
 
-          <Form.Item name='description' label={t('workflow.workflowDescription')}>
+          <Form.Item name="description" label={t('workflow.workflowDescription')}>
             <Input.TextArea rows={3} placeholder={t('workflow.workflowDescriptionPlaceholder')} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name='category'
+                name="category"
                 label={t('workflow.category')}
                 rules={[{ required: true, message: t('workflow.categoryRequired') }]}
               >
                 <Select placeholder={t('workflow.categoryPlaceholder')}>
-                  <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
-                  <Option value={t('workflow.incidentHandling')}>{t('workflow.incidentHandling')}</Option>
-                  <Option value={t('workflow.changeManagement')}>{t('workflow.changeManagement')}</Option>
+                  <Option value={t('workflow.approvalProcess')}>
+                    {t('workflow.approvalProcess')}
+                  </Option>
+                  <Option value={t('workflow.incidentHandling')}>
+                    {t('workflow.incidentHandling')}
+                  </Option>
+                  <Option value={t('workflow.changeManagement')}>
+                    {t('workflow.changeManagement')}
+                  </Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name='status' label={t('workflow.status')}>
+              <Form.Item name="status" label={t('workflow.status')}>
                 <Select placeholder={t('workflow.statusPlaceholder')}>
-                  <Option value='draft'>{t('workflow.draft')}</Option>
-                  <Option value='active'>{t('workflow.activated')}</Option>
-                  <Option value='inactive'>{t('workflow.deactivated')}</Option>
+                  <Option value="draft">{t('workflow.draft')}</Option>
+                  <Option value="active">{t('workflow.activated')}</Option>
+                  <Option value="inactive">{t('workflow.deactivated')}</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -1023,7 +1051,7 @@ const WorkflowManagementPage = () => {
 
           <Form.Item>
             <Space>
-              <Button type='primary' htmlType='submit'>
+              <Button type="primary" htmlType="submit">
                 {editingWorkflow ? t('workflow.update') : t('workflow.create')}
               </Button>
               <Button onClick={() => setModalVisible(false)}>{t('workflow.cancel')}</Button>
@@ -1038,7 +1066,7 @@ const WorkflowManagementPage = () => {
         open={designerVisible}
         onCancel={() => setDesignerVisible(false)}
         footer={null}
-        width='95%'
+        width="95%"
         style={{ top: 10 }}
         destroyOnHidden
       >

@@ -354,8 +354,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
       antMessage.success('视图已保存（模拟）');
       setSaveViewModalVisible(false);
       form.resetFields();
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   const viewMenuItems: MenuProps['items'] = [

@@ -467,7 +467,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         }}
         rowSelection={rowSelection}
         onChange={handleTableChange}
-        onRow={(record) => ({
+        onRow={record => ({
           tabIndex: 0,
           onKeyDown: (e: React.KeyboardEvent) => {
             if (e.key === 'Enter') {

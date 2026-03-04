@@ -148,17 +148,17 @@ const ChangeList: React.FC = () => {
       key: 'action',
       width: 120,
       render: (_: unknown, record: Change) => (
-        <Space size='small'>
-          <Tooltip title='查看详情'>
+        <Space size="small">
+          <Tooltip title="查看详情">
             <Button
-              type='text'
+              type="text"
               icon={<EyeOutlined />}
               onClick={() => router.push(`/changes/${record.id}`)}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
               onClick={() => router.push(`/changes/${record.id}/edit`)}
             />
@@ -176,7 +176,7 @@ const ChangeList: React.FC = () => {
           <p className="text-gray-500 mt-1">管理IT基础架构和服务的变更请求，最小化变更风险</p>
         </div>
         <Button
-          type='primary'
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => router.push('/changes/new')}
           size="large"
@@ -186,17 +186,17 @@ const ChangeList: React.FC = () => {
       </div>
 
       <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-        <Form form={form} layout='inline' className="mb-6 flex-wrap gap-y-4">
-          <Form.Item name='search' className="mb-0">
-            <Input 
-              placeholder='搜索标题' 
-              allowClear 
-              prefix={<SearchOutlined className="text-gray-400" />} 
+        <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
+          <Form.Item name="search" className="mb-0">
+            <Input
+              placeholder="搜索标题"
+              allowClear
+              prefix={<SearchOutlined className="text-gray-400" />}
               className="w-64"
             />
           </Form.Item>
-          <Form.Item name='status' className="mb-0">
-            <Select placeholder='状态' className="w-32" allowClear>
+          <Form.Item name="status" className="mb-0">
+            <Select placeholder="状态" className="w-32" allowClear>
               {Object.entries(ChangeStatusLabels).map(([value, label]) => (
                 <Option key={value} value={value}>
                   {label}
@@ -204,8 +204,8 @@ const ChangeList: React.FC = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name='type' className="mb-0">
-            <Select placeholder='类型' className="w-32" allowClear>
+          <Form.Item name="type" className="mb-0">
+            <Select placeholder="类型" className="w-32" allowClear>
               {Object.entries(ChangeTypeLabels).map(([value, label]) => (
                 <Option key={value} value={value}>
                   {label}
@@ -224,17 +224,14 @@ const ChangeList: React.FC = () => {
         </Form>
 
         {data.length === 0 && !loading ? (
-          <Empty
-            description='暂无变更记录'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
-            <Button type='primary' onClick={() => router.push('/changes/new')}>
+          <Empty description="暂无变更记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Button type="primary" onClick={() => router.push('/changes/new')}>
               创建第一个变更
             </Button>
           </Empty>
         ) : (
           <Table
-            rowKey='id'
+            rowKey="id"
             columns={columns as any}
             dataSource={data}
             loading={loading}
@@ -243,11 +240,11 @@ const ChangeList: React.FC = () => {
               pageSize: query.page_size,
               total: total,
               showSizeChanger: true,
-              showTotal: (total) => `共 ${total} 条记录`,
+              showTotal: total => `共 ${total} 条记录`,
               onChange: (page, page_size) => setQuery(prev => ({ ...prev, page, page_size })),
             }}
             scroll={{ x: 1000 }}
-            getPopupContainer={(node) => node.parentElement || document.body}
+            getPopupContainer={node => node.parentElement || document.body}
           />
         )}
       </Card>

@@ -120,7 +120,9 @@ const LicenseList: React.FC = () => {
       ellipsis: true,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '180px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '180px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -131,7 +133,17 @@ const LicenseList: React.FC = () => {
       width: 120,
       render: (type: string) => (
         <Tag color={typeColors[type] || 'default'}>
-          {type === 'perpetual' ? '永久' : type === 'subscription' ? '订阅' : type === 'per-user' ? '按用户' : type === 'per-seat' ? '按席位' : type === 'site' ? '站点' : type}
+          {type === 'perpetual'
+            ? '永久'
+            : type === 'subscription'
+              ? '订阅'
+              : type === 'per-user'
+                ? '按用户'
+                : type === 'per-seat'
+                  ? '按席位'
+                  : type === 'site'
+                    ? '站点'
+                    : type}
         </Tag>
       ),
     },
@@ -142,7 +154,15 @@ const LicenseList: React.FC = () => {
       width: 100,
       render: (status: string) => (
         <Tag color={statusColors[status] || 'default'}>
-          {status === 'active' ? '有效' : status === 'expired' ? '已过期' : status === 'expiring-soon' ? '即将过期' : status === 'depleted' ? '已耗尽' : status}
+          {status === 'active'
+            ? '有效'
+            : status === 'expired'
+              ? '已过期'
+              : status === 'expiring-soon'
+                ? '即将过期'
+                : status === 'depleted'
+                  ? '已耗尽'
+                  : status}
         </Tag>
       ),
     },
@@ -151,9 +171,8 @@ const LicenseList: React.FC = () => {
       key: 'usage',
       width: 150,
       render: (_: unknown, record: unknown) => {
-        const percent = record.total_quantity > 0
-          ? (record.used_quantity / record.total_quantity) * 100
-          : 0;
+        const percent =
+          record.total_quantity > 0 ? (record.used_quantity / record.total_quantity) * 100 : 0;
         return (
           <Progress
             percent={Math.round(percent)}
@@ -171,7 +190,9 @@ const LicenseList: React.FC = () => {
       width: 150,
       render: (text: string) => (
         <Tooltip title={text}>
-          <span className="truncate block" style={{ maxWidth: '130px' }}>{text || '-'}</span>
+          <span className="truncate block" style={{ maxWidth: '130px' }}>
+            {text || '-'}
+          </span>
         </Tooltip>
       ),
     },
@@ -229,20 +250,12 @@ const LicenseList: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="总许可证"
-              value={stats.total || 0}
-              prefix={<KeyOutlined />}
-            />
+            <Statistic title="总许可证" value={stats.total || 0} prefix={<KeyOutlined />} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
           <Card>
-            <Statistic
-              title="有效"
-              value={stats.active || 0}
-              valueStyle={{ color: '#52c41a' }}
-            />
+            <Statistic title="有效" value={stats.active || 0} valueStyle={{ color: '#52c41a' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={8} lg={6} xl={4}>
@@ -276,11 +289,7 @@ const LicenseList: React.FC = () => {
       </Row>
 
       <Card>
-        <Form
-          form={form}
-          layout="inline"
-          style={{ marginBottom: 16 }}
-        >
+        <Form form={form} layout="inline" style={{ marginBottom: 16 }}>
           <Form.Item name="status" label="状态">
             <Select
               placeholder="选择状态"
@@ -310,11 +319,7 @@ const LicenseList: React.FC = () => {
           </Form.Item>
           <Form.Item>
             <Space>
-              <Button
-                type="primary"
-                icon={<SearchOutlined />}
-                onClick={handleSearch}
-              >
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
@@ -337,10 +342,7 @@ const LicenseList: React.FC = () => {
           scroll={{ x: 'max-content' }}
           locale={{
             emptyText: (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="暂无许可证数据"
-              >
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无许可证数据">
                 <Button type="primary" onClick={() => router.push('/licenses/new')}>
                   创建第一个许可证
                 </Button>
@@ -354,7 +356,7 @@ const LicenseList: React.FC = () => {
             onChange: handlePageChange,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条`,
+            showTotal: total => `共 ${total} 条`,
           }}
         />
       </Card>

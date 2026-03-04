@@ -222,17 +222,17 @@ const TicketAnalytics: React.FC = () => {
 
   if (!analyticsData) {
     return (
-      <div className='p-6 flex justify-center items-center min-h-[400px]'>
-        <Spin size='large' />
+      <div className="p-6 flex justify-center items-center min-h-[400px]">
+        <Spin size="large" />
       </div>
     );
   }
 
   return (
-    <div className='p-6'>
+    <div className="p-6">
       {/* 页面标题和工具栏 */}
-      <div className='mb-6'>
-        <div className='flex items-center justify-between mb-4'>
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
           <Title level={2}>工单分析</Title>
           <Space>
             <RangePicker
@@ -242,7 +242,7 @@ const TicketAnalytics: React.FC = () => {
                   setDateRange([dates[0], dates[1]]);
                 }
               }}
-              format='YYYY-MM-DD'
+              format="YYYY-MM-DD"
               allowClear={false}
             />
             <Button icon={<ReloadOutlined />} onClick={fetchData} loading={loading}>
@@ -262,13 +262,13 @@ const TicketAnalytics: React.FC = () => {
       <Spin spinning={loading}>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
           {/* 概览标签页 */}
-          <TabPane tab='概览' key='overview'>
+          <TabPane tab="概览" key="overview">
             {/* 关键指标卡片 */}
-            <Row gutter={[16, 16]} className='mb-6'>
+            <Row gutter={[16, 16]} className="mb-6">
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='总工单数'
+                    title="总工单数"
                     value={analyticsData.total_tickets}
                     prefix={<RiseOutlined style={{ color: '#1890ff' }} />}
                     styles={{ content: { color: '#1890ff' } }}
@@ -278,7 +278,7 @@ const TicketAnalytics: React.FC = () => {
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='待处理工单'
+                    title="待处理工单"
                     value={analyticsData.open_tickets}
                     prefix={<RiseOutlined style={{ color: '#fa8c16' }} />}
                     styles={{ content: { color: '#fa8c16' } }}
@@ -288,7 +288,7 @@ const TicketAnalytics: React.FC = () => {
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='已解决工单'
+                    title="已解决工单"
                     value={analyticsData.resolved_tickets}
                     prefix={<RiseOutlined style={{ color: '#52c41a' }} />}
                     styles={{ content: { color: '#52c41a' } }}
@@ -298,7 +298,7 @@ const TicketAnalytics: React.FC = () => {
               <Col xs={24} sm={12} md={6}>
                 <Card>
                   <Statistic
-                    title='超时工单'
+                    title="超时工单"
                     value={analyticsData.overdue_tickets}
                     prefix={<FallOutlined style={{ color: '#ff4d4f' }} />}
                     styles={{ content: { color: '#ff4d4f' } }}
@@ -308,35 +308,35 @@ const TicketAnalytics: React.FC = () => {
             </Row>
 
             {/* 趋势图表 */}
-            <Row gutter={[16, 16]} className='mb-6'>
+            <Row gutter={[16, 16]} className="mb-6">
               <Col span={24}>
-                <Card title='工单趋势（最近30天）'>
-                  <ResponsiveContainer width='100%' height={300}>
+                <Card title="工单趋势（最近30天）">
+                  <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={analyticsData.daily_trend}>
-                      <CartesianGrid strokeDasharray='3 3' />
-                      <XAxis dataKey='date' />
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
                       <YAxis />
                       <RechartsTooltip />
                       <Legend />
                       <Line
-                        type='monotone'
-                        dataKey='created'
-                        stroke='#1890ff'
-                        name='新建工单'
+                        type="monotone"
+                        dataKey="created"
+                        stroke="#1890ff"
+                        name="新建工单"
                         strokeWidth={2}
                       />
                       <Line
-                        type='monotone'
-                        dataKey='resolved'
-                        stroke='#52c41a'
-                        name='已解决工单'
+                        type="monotone"
+                        dataKey="resolved"
+                        stroke="#52c41a"
+                        name="已解决工单"
                         strokeWidth={2}
                       />
                       <Line
-                        type='monotone'
-                        dataKey='open'
-                        stroke='#fa8c16'
-                        name='待处理工单'
+                        type="monotone"
+                        dataKey="open"
+                        stroke="#fa8c16"
+                        name="待处理工单"
                         strokeWidth={2}
                       />
                     </LineChart>
@@ -348,15 +348,15 @@ const TicketAnalytics: React.FC = () => {
             {/* 分布图表 */}
             <Row gutter={[16, 16]}>
               <Col xs={24} md={8}>
-                <Card title='状态分布'>
-                  <ResponsiveContainer width='100%' height={250}>
+                <Card title="状态分布">
+                  <ResponsiveContainer width="100%" height={250}>
                     <PieChart>
                       <Pie
                         data={analyticsData.status_distribution}
-                        cx='50%'
-                        cy='50%'
+                        cx="50%"
+                        cy="50%"
                         outerRadius={80}
-                        dataKey='value'
+                        dataKey="value"
                         label={({ name, percent }) =>
                           `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
                         }
@@ -371,14 +371,14 @@ const TicketAnalytics: React.FC = () => {
                 </Card>
               </Col>
               <Col xs={24} md={8}>
-                <Card title='优先级分布'>
-                  <ResponsiveContainer width='100%' height={250}>
+                <Card title="优先级分布">
+                  <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={analyticsData.priority_distribution}>
-                      <CartesianGrid strokeDasharray='3 3' />
-                      <XAxis dataKey='name' />
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
                       <YAxis />
                       <RechartsTooltip />
-                      <Bar dataKey='value' fill='#1890ff'>
+                      <Bar dataKey="value" fill="#1890ff">
                         {analyticsData.priority_distribution?.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
@@ -388,23 +388,23 @@ const TicketAnalytics: React.FC = () => {
                 </Card>
               </Col>
               <Col xs={24} md={8}>
-                <Card title='处理时间统计'>
-                  <div className='space-y-4'>
-                    <div className='flex justify-between items-center'>
+                <Card title="处理时间统计">
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
                       <Text>平均处理时间:</Text>
-                      <Tag color='blue'>
+                      <Tag color="blue">
                         {analyticsData.processing_time_stats?.avg_processing_time?.toFixed(1) || 0}
                         小时
                       </Tag>
                     </div>
-                    <div className='flex justify-between items-center'>
+                    <div className="flex justify-between items-center">
                       <Text>平均解决时间:</Text>
-                      <Tag color='orange'>
+                      <Tag color="orange">
                         {analyticsData.processing_time_stats?.avg_resolution_time?.toFixed(1) || 0}
                         小时
                       </Tag>
                     </div>
-                    <div className='flex justify-between items-center'>
+                    <div className="flex justify-between items-center">
                       <Text>SLA达成率:</Text>
                       <Tag
                         color={
@@ -423,41 +423,41 @@ const TicketAnalytics: React.FC = () => {
           </TabPane>
 
           {/* 团队表现标签页 */}
-          <TabPane tab='团队表现' key='team'>
-            <Card title='团队处理效率统计'>
+          <TabPane tab="团队表现" key="team">
+            <Card title="团队处理效率统计">
               <Table
                 columns={teamColumns}
                 dataSource={analyticsData.team_performance}
-                rowKey='assignee_name'
+                rowKey="assignee_name"
                 pagination={false}
-                size='middle'
+                size="middle"
               />
             </Card>
           </TabPane>
 
           {/* 类别分析标签页 */}
-          <TabPane tab='类别分析' key='category'>
+          <TabPane tab="类别分析" key="category">
             <Row gutter={[16, 16]}>
               <Col span={16}>
-                <Card title='热门工单类别'>
+                <Card title="热门工单类别">
                   <Table
                     columns={categoryColumns}
                     dataSource={analyticsData.hot_categories}
-                    rowKey='category'
+                    rowKey="category"
                     pagination={false}
-                    size='middle'
+                    size="middle"
                   />
                 </Card>
               </Col>
               <Col span={8}>
-                <Card title='类型分布'>
-                  <ResponsiveContainer width='100%' height={300}>
+                <Card title="类型分布">
+                  <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={analyticsData.type_distribution}>
-                      <CartesianGrid strokeDasharray='3 3' />
-                      <XAxis dataKey='name' />
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
                       <YAxis />
                       <RechartsTooltip />
-                      <Bar dataKey='count' fill='#1890ff' />
+                      <Bar dataKey="count" fill="#1890ff" />
                     </BarChart>
                   </ResponsiveContainer>
                 </Card>

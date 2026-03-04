@@ -19,6 +19,8 @@ import (
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/user"
 
+	"itsm-backend/pkg/config"
+
 	"go.uber.org/zap"
 )
 

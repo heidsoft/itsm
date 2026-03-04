@@ -664,7 +664,11 @@ describe('性能和边界情况', () => {
   });
 
   it('处理空子组件', () => {
-    const { container } = render(<ErrorBoundary><></></ErrorBoundary>);
+    const { container } = render(
+      <ErrorBoundary>
+        <></>
+      </ErrorBoundary>
+    );
 
     // 没有子组件时应该渲染空内容
     expect(container.firstChild).toBeNull();

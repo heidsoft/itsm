@@ -160,24 +160,24 @@ const ProblemList: React.FC = () => {
       key: 'action',
       width: 150,
       render: (_: unknown, record: Problem) => (
-        <Space size='small'>
-          <Tooltip title='查看详情'>
+        <Space size="small">
+          <Tooltip title="查看详情">
             <Button
-              type='text'
+              type="text"
               icon={<EyeOutlined />}
               onClick={() => router.push(`/problems/${record.id}`)}
             />
           </Tooltip>
-          <Tooltip title='编辑'>
+          <Tooltip title="编辑">
             <Button
-              type='text'
+              type="text"
               icon={<EditOutlined />}
               onClick={() => router.push(`/problems/${record.id}/edit`)}
             />
           </Tooltip>
-          <Tooltip title='删除'>
+          <Tooltip title="删除">
             <Button
-              type='text'
+              type="text"
               danger
               icon={<DeleteOutlined />}
               onClick={() => handleDelete(record.id)}
@@ -196,7 +196,7 @@ const ProblemList: React.FC = () => {
           <p className="text-gray-500 mt-1">识别、分析和消除事件发生的根本原因</p>
         </div>
         <Button
-          type='primary'
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => router.push('/problems/new')}
           size="large"
@@ -206,17 +206,17 @@ const ProblemList: React.FC = () => {
       </div>
 
       <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
-        <Form form={form} layout='inline' className="mb-6 flex-wrap gap-y-4">
-          <Form.Item name='keyword' className="mb-0">
-            <Input 
-              placeholder='搜索标题或内容' 
-              allowClear 
-              prefix={<SearchOutlined className="text-gray-400" />} 
+        <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">
+          <Form.Item name="keyword" className="mb-0">
+            <Input
+              placeholder="搜索标题或内容"
+              allowClear
+              prefix={<SearchOutlined className="text-gray-400" />}
               className="w-64"
             />
           </Form.Item>
-          <Form.Item name='status' className="mb-0">
-            <Select placeholder='状态' className="w-32" allowClear>
+          <Form.Item name="status" className="mb-0">
+            <Select placeholder="状态" className="w-32" allowClear>
               {Object.entries(ProblemStatusLabels).map(([value, label]) => (
                 <Option key={value} value={value}>
                   {label}
@@ -224,8 +224,8 @@ const ProblemList: React.FC = () => {
               ))}
             </Select>
           </Form.Item>
-          <Form.Item name='priority' className="mb-0">
-            <Select placeholder='优先级' className="w-32" allowClear>
+          <Form.Item name="priority" className="mb-0">
+            <Select placeholder="优先级" className="w-32" allowClear>
               {Object.entries(ProblemPriorityLabels).map(([value, label]) => (
                 <Option key={value} value={value}>
                   {label}
@@ -244,17 +244,14 @@ const ProblemList: React.FC = () => {
         </Form>
 
         {data.length === 0 && !loading ? (
-          <Empty
-            description='暂无问题记录'
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
-            <Button type='primary' onClick={() => router.push('/problems/new')}>
+          <Empty description="暂无问题记录" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Button type="primary" onClick={() => router.push('/problems/new')}>
               创建第一个问题
             </Button>
           </Empty>
         ) : (
           <Table
-            rowKey='id'
+            rowKey="id"
             columns={columns as any}
             dataSource={data}
             loading={loading}
@@ -267,7 +264,7 @@ const ProblemList: React.FC = () => {
               showTotal: t => `共 ${t} 条记录`,
             }}
             scroll={{ x: 1000 }}
-            getPopupContainer={(node) => node.parentElement || document.body}
+            getPopupContainer={node => node.parentElement || document.body}
           />
         )}
       </Card>

@@ -86,7 +86,12 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
   }, [ticketId]);
 
   // 上传文件
-  const handleUpload: UploadProps['customRequest'] = async ({ file, onSuccess, onError, onProgress }) => {
+  const handleUpload: UploadProps['customRequest'] = async ({
+    file,
+    onSuccess,
+    onError,
+    onProgress,
+  }) => {
     const uploadFile = file as File;
     setUploading(true);
 
@@ -94,11 +99,11 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       const attachment = await TicketAttachmentApi.uploadAttachment(
         ticketId,
         uploadFile,
-        (progress) => {
+        progress => {
           if (onProgress) {
             onProgress({ percent: progress });
           }
-          setUploadProgress((prev) => ({
+          setUploadProgress(prev => ({
             ...prev,
             [uploadFile.name]: progress,
           }));
@@ -187,7 +192,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
     onChange: ({ fileList: newFileList }) => {
       setFileList(newFileList);
     },
-    beforeUpload: (file) => {
+    beforeUpload: file => {
       // 检查文件大小（10MB）
       const maxSize = 10 * 1024 * 1024;
       if (file.size > maxSize) {
@@ -223,7 +228,9 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
             <div className="mt-4 space-y-2">
               {Object.entries(uploadProgress).map(([fileName, progress]) => (
                 <div key={fileName}>
-                  <Text type="secondary" className="text-xs">{fileName}</Text>
+                  <Text type="secondary" className="text-xs">
+                    {fileName}
+                  </Text>
                   <Progress percent={progress} size="small" />
                 </div>
               ))}
@@ -239,7 +246,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
         ) : (
           <List
             dataSource={attachments}
-            renderItem={(attachment) => (
+            renderItem={attachment => (
               <List.Item
                 actions={[
                   <Tooltip title="预览" key="preview">
@@ -322,4 +329,3 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
     </div>
   );
 };
-

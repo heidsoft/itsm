@@ -44,32 +44,32 @@ const getUserFriendlyMessage = (error: unknown): string => {
     if (error.message.includes('Network Error')) {
       return '网络连接失败，请检查网络设置';
     }
-    
+
     // 超时错误
     if (error.message.includes('timeout')) {
       return '请求超时，请稍后重试';
     }
-    
+
     // 权限错误
     if (error.message.includes('401') || error.message.includes('Unauthorized')) {
       return '登录已过期，请重新登录';
     }
-    
+
     // 权限不足
     if (error.message.includes('403') || error.message.includes('Forbidden')) {
       return '权限不足，无法执行此操作';
     }
-    
+
     // 资源不存在
     if (error.message.includes('404') || error.message.includes('Not Found')) {
       return '请求的资源不存在';
     }
-    
+
     // 服务器错误
     if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
       return '服务器内部错误，请联系管理员';
     }
-    
+
     return error.message;
   }
 
@@ -96,74 +96,76 @@ const reportError = (error: AppError, config: ErrorHandlerConfig) => {
 export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
   const mergedConfig = { ...defaultConfig, ...config };
 
-  const handleError = useCallback((
-    error: unknown,
-    context?: string,
-    customMessage?: string
-  ) => {
-    const appError: AppError = {
-      code: error?.code,
-      message: customMessage || getUserFriendlyMessage(error),
-      details: error,
-      context,
-    };
+  const handleError = useCallback(
+    (error: unknown, context?: string, customMessage?: string) => {
+      const appError: AppError = {
+        code: error?.code,
+        message: customMessage || getUserFriendlyMessage(error),
+        details: error,
+        context,
+      };
 
-    // 控制台日志
-    if (mergedConfig.logToConsole) {
-      console.error(`Error in ${context || 'unknown context'}:`, error);
-    }
+      // 控制台日志
+      if (mergedConfig.logToConsole) {
+        console.error(`Error in ${context || 'unknown context'}:`, error);
+      }
 
-    // 显示用户消息
-    if (mergedConfig.showMessage) {
-      message.error(appError.message);
-    }
+      // 显示用户消息
+      if (mergedConfig.showMessage) {
+        message.error(appError.message);
+      }
 
-    // 错误上报
-    reportError(appError, mergedConfig);
+      // 错误上报
+      reportError(appError, mergedConfig);
 
-    return appError;
-  }, [mergedConfig]);
+      return appError;
+    },
+    [mergedConfig]
+  );
 
   // 处理异步操作错误
-  const handleAsyncError = useCallback(async <T>(
-    asyncFn: () => Promise<T>,
-    context?: string,
-    customMessage?: string
-  ): Promise<T | null> => {
-    try {
-      return await asyncFn();
-    } catch (error) {
-      handleError(error, context, customMessage);
-      return null;
-    }
-  }, [handleError]);
+  const handleAsyncError = useCallback(
+    async <T>(
+      asyncFn: () => Promise<T>,
+      context?: string,
+      customMessage?: string
+    ): Promise<T | null> => {
+      try {
+        return await asyncFn();
+      } catch (error) {
+        handleError(error, context, customMessage);
+        return null;
+      }
+    },
+    [handleError]
+  );
 
   // 处理表单验证错误
-  const handleValidationError = useCallback((
-    errors: unknown[],
-    context?: string
-  ) => {
-    const errorMessages = errors.map(err => err.message || err).join('; ');
-    handleError(new Error(errorMessages), context, '表单验证失败');
-  }, [handleError]);
+  const handleValidationError = useCallback(
+    (errors: unknown[], context?: string) => {
+      const errorMessages = errors.map(err => err.message || err).join('; ');
+      handleError(new Error(errorMessages), context, '表单验证失败');
+    },
+    [handleError]
+  );
 
   // 处理网络错误
-  const handleNetworkError = useCallback((
-    error: unknown,
-    context?: string
-  ) => {
-    let message = '网络连接失败';
-    
-    if (error?.code === 'NETWORK_ERROR') {
-      message = '网络连接失败，请检查网络设置';
-    } else if (error?.code === 'TIMEOUT') {
-      message = '请求超时，请稍后重试';
-    } else if (error?.code === 'SERVER_ERROR') {
-      message = '服务器错误，请稍后重试';
-    }
+  const handleNetworkError = useCallback(
+    (error: unknown, context?: string) => {
+      let message = '网络连接失败';
 
-    handleError(error, context, message);
-  }, [handleError]);
+      if (error?.code === 'NETWORK_ERROR') {
+        message = '网络连接失败，请检查网络设置';
+      } else if (error?.code === 'TIMEOUT') {
+        message = '请求超时，请稍后重试';
+      } else if (error?.code === 'SERVER_ERROR') {
+        message = '服务器错误，请稍后重试';
+      }
+
+      handleError(error, context, message);
+    },
+    [handleError]
+  );
 
   return {
     handleError,
@@ -174,11 +176,7 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
 };
 
 // 全局错误处理函数（用于非Hook环境）
-export const handleGlobalError = (
-  error: unknown,
-  context?: string,
-  customMessage?: string
-) => {
+export const handleGlobalError = (error: unknown, context?: string, customMessage?: string) => {
   const appError: AppError = {
     code: error?.code,
     message: customMessage || getUserFriendlyMessage(error),

@@ -40,7 +40,7 @@ export default function TeamsPage() {
     try {
       const response = await UserApi.getUsers({ page: 1, page_size: 100 });
       setUsers(
-        response.users.map((user) => ({
+        response.users.map(user => ({
           label: user.name || user.username,
           value: user.id,
         }))
@@ -73,7 +73,7 @@ export default function TeamsPage() {
       title: t('enterprise.teams.teamName'),
       dataIndex: 'name',
       key: 'name',
-      render: (text: string) => <span className='font-medium'>{text}</span>,
+      render: (text: string) => <span className="font-medium">{text}</span>,
     },
     {
       title: t('enterprise.teams.teamCode'),
@@ -114,10 +114,10 @@ export default function TeamsPage() {
       title: t('common.action'),
       key: 'action',
       render: (_: unknown, record: Team) => (
-        <Space size='middle'>
-          <Button type='text' icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+        <Space size="middle">
+          <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type='text'
+            type="text"
             danger
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
@@ -171,15 +171,21 @@ export default function TeamsPage() {
     <PageContainer
       header={{
         title: t('enterprise.teams.title'),
-        breadcrumb: { items: [{ title: t('common.back') }, { title: '企业管理' }, { title: t('enterprise.teams.title') }] },
+        breadcrumb: {
+          items: [
+            { title: t('common.back') },
+            { title: '企业管理' },
+            { title: t('enterprise.teams.title') },
+          ],
+        },
       }}
       extra={[
-        <Button key='refresh' icon={<SyncOutlined />} onClick={fetchTeams} loading={fetching}>
+        <Button key="refresh" icon={<SyncOutlined />} onClick={fetchTeams} loading={fetching}>
           {t('common.refresh')}
         </Button>,
         <Button
-          key='create'
-          type='primary'
+          key="create"
+          type="primary"
           icon={<PlusOutlined />}
           onClick={() => {
             form.resetFields();
@@ -190,7 +196,7 @@ export default function TeamsPage() {
         </Button>,
       ]}
     >
-      <Table columns={columns} dataSource={teams} rowKey='id' loading={fetching} />
+      <Table columns={columns} dataSource={teams} rowKey="id" loading={fetching} />
 
       <Modal
         title={t('enterprise.teams.createOrEdit')}
@@ -199,22 +205,32 @@ export default function TeamsPage() {
         onCancel={() => setIsModalVisible(false)}
         confirmLoading={loading}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
+            name="name"
             label={t('enterprise.teams.teamName')}
-            rules={[{ required: true, message: t('common.inputPlaceholder') + t('enterprise.teams.teamName') }]}
+            rules={[
+              {
+                required: true,
+                message: t('common.inputPlaceholder') + t('enterprise.teams.teamName'),
+              },
+            ]}
           >
             <Input placeholder={t('common.inputPlaceholder') + t('enterprise.teams.teamName')} />
           </Form.Item>
           <Form.Item
-            name='code'
+            name="code"
             label={t('enterprise.teams.teamCode')}
-            rules={[{ required: true, message: t('common.inputPlaceholder') + t('enterprise.teams.teamCode') }]}
+            rules={[
+              {
+                required: true,
+                message: t('common.inputPlaceholder') + t('enterprise.teams.teamCode'),
+              },
+            ]}
           >
             <Input placeholder={t('common.inputPlaceholder') + t('enterprise.teams.teamCode')} />
           </Form.Item>
-          <Form.Item name='manager_id' label={t('enterprise.teams.manager')}>
+          <Form.Item name="manager_id" label={t('enterprise.teams.manager')}>
             <Select
               placeholder={t('common.selectPlaceholder') + t('enterprise.teams.manager')}
               options={users}
@@ -224,9 +240,9 @@ export default function TeamsPage() {
               }
             />
           </Form.Item>
-          <Form.Item name='members' label={t('enterprise.teams.members')}>
+          <Form.Item name="members" label={t('enterprise.teams.members')}>
             <Select
-              mode='multiple'
+              mode="multiple"
               placeholder={t('common.selectPlaceholder') + t('enterprise.teams.members')}
               options={users}
               showSearch
@@ -235,7 +251,7 @@ export default function TeamsPage() {
               }
             />
           </Form.Item>
-          <Form.Item name='description' label={t('common.description')}>
+          <Form.Item name="description" label={t('common.description')}>
             <Input.TextArea rows={4} />
           </Form.Item>
         </Form>

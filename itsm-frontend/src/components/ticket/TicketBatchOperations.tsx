@@ -77,162 +77,172 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
   });
 
   // 批量操作菜单
-  const batchOperations: BatchOperation[] = useMemo(() => [
-    {
-      key: 'assign',
-      label: '批量分配',
-      icon: <UserOutlined />,
-      description: '将选中的工单分配给指定处理人',
-    },
-    {
-      key: 'update_status',
-      label: '批量更新状态',
-      icon: <FlagOutlined />,
-      description: '批量更新工单状态',
-    },
-    {
-      key: 'add_tags',
-      label: '批量添加标签',
-      icon: <TagOutlined />,
-      description: '为选中的工单添加标签',
-    },
-    {
-      key: 'set_priority',
-      label: '批量设置优先级',
-      icon: <FlagOutlined />,
-      description: '批量设置工单优先级',
-    },
-    {
-      key: 'notify',
-      label: '批量通知',
-      icon: <BellOutlined />,
-      description: '向工单相关人员发送通知',
-    },
-    {
-      key: 'export',
-      label: '批量导出',
-      icon: <ExportOutlined />,
-      description: '导出选中的工单数据',
-    },
-    {
-      key: 'divider1',
-      label: '-',
-      icon: null,
-    },
-    {
-      key: 'delete',
-      label: '批量删除',
-      icon: <DeleteOutlined />,
-      danger: true,
-      description: '删除选中的工单（不可恢复）',
-    },
-  ], []);
+  const batchOperations: BatchOperation[] = useMemo(
+    () => [
+      {
+        key: 'assign',
+        label: '批量分配',
+        icon: <UserOutlined />,
+        description: '将选中的工单分配给指定处理人',
+      },
+      {
+        key: 'update_status',
+        label: '批量更新状态',
+        icon: <FlagOutlined />,
+        description: '批量更新工单状态',
+      },
+      {
+        key: 'add_tags',
+        label: '批量添加标签',
+        icon: <TagOutlined />,
+        description: '为选中的工单添加标签',
+      },
+      {
+        key: 'set_priority',
+        label: '批量设置优先级',
+        icon: <FlagOutlined />,
+        description: '批量设置工单优先级',
+      },
+      {
+        key: 'notify',
+        label: '批量通知',
+        icon: <BellOutlined />,
+        description: '向工单相关人员发送通知',
+      },
+      {
+        key: 'export',
+        label: '批量导出',
+        icon: <ExportOutlined />,
+        description: '导出选中的工单数据',
+      },
+      {
+        key: 'divider1',
+        label: '-',
+        icon: null,
+      },
+      {
+        key: 'delete',
+        label: '批量删除',
+        icon: <DeleteOutlined />,
+        danger: true,
+        description: '删除选中的工单（不可恢复）',
+      },
+    ],
+    []
+  );
 
   // 执行批量操作
-  const executeBatchOperation = useCallback(async (operation: string, values: unknown) => {
-    setLoading(true);
-    setOperationProgress({
-      visible: true,
-      current: 0,
-      total: selectedTickets.length,
-      status: '准备执行...',
-    });
+  const executeBatchOperation = useCallback(
+    async (operation: string, values: unknown) => {
+      setLoading(true);
+      setOperationProgress({
+        visible: true,
+        current: 0,
+        total: selectedTickets.length,
+        status: '准备执行...',
+      });
 
-    try {
-      let successCount = 0;
-      let failCount = 0;
-      const errors: string[] = [];
+      try {
+        let successCount = 0;
+        let failCount = 0;
+        const errors: string[] = [];
 
-      for (let i = 0; i < selectedTickets.length; i++) {
-        const ticket = selectedTickets[i];
-        
-        setOperationProgress(prev => ({
-          ...prev,
-          current: i + 1,
-          status: `处理工单 ${ticket.ticketNumber}...`,
-        }));
+        for (let i = 0; i < selectedTickets.length; i++) {
+          const ticket = selectedTickets[i];
 
-        try {
-          switch (operation) {
-            case 'assign':
-              await TicketAPI.assignTicket(ticket.id, {
-                assignee_id: values.assignee_id,
-                comment: values.comment,
-              });
-              break;
-            case 'update_status':
-              await TicketAPI.updateTicket(ticket.id, {
-                status: values.status,
-              });
-              break;
-            case 'add_tags':
-              await TicketAPI.addTicketTags(ticket.id, values.tags);
-              break;
-            case 'set_priority':
-              await TicketAPI.updateTicket(ticket.id, {
-                priority: values.priority,
-              });
-              break;
-            case 'delete':
-              await TicketAPI.deleteTicket(ticket.id);
-              break;
-            default:
-              throw new Error(`不支持的操作: ${operation}`);
+          setOperationProgress(prev => ({
+            ...prev,
+            current: i + 1,
+            status: `处理工单 ${ticket.ticketNumber}...`,
+          }));
+
+          try {
+            switch (operation) {
+              case 'assign':
+                await TicketAPI.assignTicket(ticket.id, {
+                  assignee_id: values.assignee_id,
+                  comment: values.comment,
+                });
+                break;
+              case 'update_status':
+                await TicketAPI.updateTicket(ticket.id, {
+                  status: values.status,
+                });
+                break;
+              case 'add_tags':
+                await TicketAPI.addTicketTags(ticket.id, values.tags);
+                break;
+              case 'set_priority':
+                await TicketAPI.updateTicket(ticket.id, {
+                  priority: values.priority,
+                });
+                break;
+              case 'delete':
+                await TicketAPI.deleteTicket(ticket.id);
+                break;
+              default:
+                throw new Error(`不支持的操作: ${operation}`);
+            }
+            successCount++;
+          } catch (error) {
+            failCount++;
+            errors.push(
+              `${ticket.ticketNumber}: ${error instanceof Error ? error.message : '操作失败'}`
+            );
           }
-          successCount++;
-        } catch (error) {
-          failCount++;
-          errors.push(`${ticket.ticketNumber}: ${error instanceof Error ? error.message : '操作失败'}`);
+
+          // 模拟处理延迟，避免请求过于频繁
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
 
-        // 模拟处理延迟，避免请求过于频繁
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
+        setOperationProgress(prev => ({
+          ...prev,
+          status: '操作完成',
+        }));
 
-      setOperationProgress(prev => ({
-        ...prev,
-        status: '操作完成',
-      }));
+        // 显示操作结果
+        if (failCount === 0) {
+          message.success(`批量操作成功！共处理 ${successCount} 个工单`);
+        } else {
+          message.warning(`操作完成！成功 ${successCount} 个，失败 ${failCount} 个`);
+        }
 
-      // 显示操作结果
-      if (failCount === 0) {
-        message.success(`批量操作成功！共处理 ${successCount} 个工单`);
-      } else {
-        message.warning(`操作完成！成功 ${successCount} 个，失败 ${failCount} 个`);
-      }
-
-      setTimeout(() => {
+        setTimeout(() => {
+          setOperationProgress({ visible: false, current: 0, total: 0, status: '' });
+          setOperationModal({ visible: false, type: '', title: '' });
+          form.resetFields();
+          onOperationComplete?.();
+        }, 1500);
+      } catch (error) {
+        message.error('批量操作执行失败');
         setOperationProgress({ visible: false, current: 0, total: 0, status: '' });
-        setOperationModal({ visible: false, type: '', title: '' });
-        form.resetFields();
-        onOperationComplete?.();
-      }, 1500);
-
-    } catch (error) {
-      message.error('批量操作执行失败');
-      setOperationProgress({ visible: false, current: 0, total: 0, status: '' });
-    } finally {
-      setLoading(false);
-    }
-  }, [selectedTickets, form, onOperationComplete]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [selectedTickets, form, onOperationComplete]
+  );
 
   // 处理操作菜单点击
-  const handleMenuClick: MenuProps['onClick'] = useCallback((info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
-    const { key } = info;
-    const operation = batchOperations.find(op => op.key === key);
-    if (!operation || key === 'divider1') return;
+  const handleMenuClick: MenuProps['onClick'] = useCallback(
+    (info: Parameters<NonNullable<MenuProps['onClick']>>[0]) => {
+      const { key } = info;
+      const operation = batchOperations.find(op => op.key === key);
+      if (!operation || key === 'divider1') return;
 
-    if (key === 'export') {
-      handleBatchExport();
-      return;
-    }
+      if (key === 'export') {
+        handleBatchExport();
+        return;
+      }
 
-    setOperationModal({
-      visible: true,
-      type: key,
-      title: operation.label,
-    });
-  }, [batchOperations]);
+      setOperationModal({
+        visible: true,
+        type: key,
+        title: operation.label,
+      });
+    },
+    [batchOperations]
+  );
 
   // 批量导出
   const handleBatchExport = useCallback(async () => {
@@ -242,7 +252,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         format: 'excel',
         filters: { ticket_ids: ticketIds },
       });
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -251,7 +261,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
+
       message.success(`成功导出 ${selectedTickets.length} 个工单`);
     } catch (error) {
       message.error('导出失败');
@@ -302,16 +312,8 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
 
       case 'add_tags':
         return (
-          <Form.Item
-            label="标签"
-            name="tags"
-            rules={[{ required: true, message: '请输入标签' }]}
-          >
-            <Select
-              mode="tags"
-              placeholder="输入标签，按回车添加"
-              style={{ width: '100%' }}
-            >
+          <Form.Item label="标签" name="tags" rules={[{ required: true, message: '请输入标签' }]}>
+            <Select mode="tags" placeholder="输入标签，按回车添加" style={{ width: '100%' }}>
               <Option value="urgent">紧急</Option>
               <Option value="sla">SLA监控</Option>
               <Option value="escalation">已升级</Option>
@@ -392,11 +394,8 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
               清空选择
             </Button>
           </div>
-          
-          <Dropdown
-            menu={{ items: menuItems, onClick: handleMenuClick }}
-            placement="bottomRight"
-          >
+
+          <Dropdown menu={{ items: menuItems, onClick: handleMenuClick }} placement="bottomRight">
             <Button type="primary" icon={<MoreOutlined />} loading={loading}>
               批量操作
             </Button>
@@ -413,7 +412,10 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           form.resetFields();
         }}
         footer={[
-          <Button key="cancel" onClick={() => setOperationModal({ visible: false, type: '', title: '' })}>
+          <Button
+            key="cancel"
+            onClick={() => setOperationModal({ visible: false, type: '', title: '' })}
+          >
             取消
           </Button>,
           <Button
@@ -431,7 +433,7 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
         <Form
           form={form}
           layout="vertical"
-          onFinish={(values) => executeBatchOperation(operationModal.type, values)}
+          onFinish={values => executeBatchOperation(operationModal.type, values)}
         >
           {renderOperationForm()}
         </Form>

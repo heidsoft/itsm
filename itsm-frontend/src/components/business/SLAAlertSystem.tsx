@@ -268,7 +268,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       render: (channels: string[]) => (
         <Space>
           {channels.map(channel => (
-            <Tag key={channel} color='blue'>
+            <Tag key={channel} color="blue">
               {channel === 'email' ? '邮件' : channel === 'sms' ? '短信' : '站内'}
             </Tag>
           ))}
@@ -300,18 +300,18 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       render: (_: unknown, record: AlertRule) => (
         <Space>
           <Button
-            type='link'
-            size='small'
+            type="link"
+            size="small"
             icon={<EditOutlined />}
             onClick={() => handleOpenRuleModal(record)}
           >
             编辑
           </Button>
           <Popconfirm
-            title='确定要删除这个预警规则吗？'
+            title="确定要删除这个预警规则吗？"
             onConfirm={() => handleDeleteRule(record.id)}
           >
-            <Button type='link' size='small' danger icon={<DeleteOutlined />}>
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>
               删除
             </Button>
           </Popconfirm>
@@ -355,7 +355,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       key: 'threshold',
       render: (_: unknown, record: AlertHistory) => (
         <div>
-          <Text type='secondary'>阈值: {record.threshold_percentage}%</Text>
+          <Text type="secondary">阈值: {record.threshold_percentage}%</Text>
           <br />
           <Text
             style={{
@@ -392,37 +392,37 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       title: '状态',
       key: 'status',
       render: (_: unknown, record: AlertHistory) =>
-        record.resolved_at ? <Tag color='green'>已解决</Tag> : <Tag color='orange'>进行中</Tag>,
+        record.resolved_at ? <Tag color="green">已解决</Tag> : <Tag color="orange">进行中</Tag>,
     },
   ];
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* 预警规则配置 */}
       <Card
         title={
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center gap-2'>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <SettingOutlined />
               <span>预警规则配置</span>
             </div>
-            <Button type='primary' icon={<PlusOutlined />} onClick={() => handleOpenRuleModal()}>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => handleOpenRuleModal()}>
               创建预警规则
             </Button>
           </div>
         }
       >
         <Alert
-          message='三级预警机制'
-          description='系统支持三级预警：70%（提醒）、85%（警告）、95%（严重）。当SLA达成率低于阈值时，将自动触发预警并发送通知。'
-          type='info'
+          message="三级预警机制"
+          description="系统支持三级预警：70%（提醒）、85%（警告）、95%（严重）。当SLA达成率低于阈值时，将自动触发预警并发送通知。"
+          type="info"
           showIcon
-          className='mb-4'
+          className="mb-4"
         />
         <Table
           columns={ruleColumns}
           dataSource={alertRules}
-          rowKey='id'
+          rowKey="id"
           loading={loading}
           pagination={false}
         />
@@ -431,17 +431,17 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
       {/* 预警历史 */}
       <Card
         title={
-          <div className='flex items-center gap-2'>
+          <div className="flex items-center gap-2">
             <BellOutlined />
             <span>预警历史记录</span>
-            <Badge count={alertHistory.length} showZero className='ml-2' />
+            <Badge count={alertHistory.length} showZero className="ml-2" />
           </div>
         }
       >
         <Table
           columns={historyColumns}
           dataSource={alertHistory}
-          rowKey='id'
+          rowKey="id"
           pagination={{
             pageSize: 10,
             showSizeChanger: true,
@@ -462,47 +462,47 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
         }}
         width={700}
       >
-        <Form form={form} layout='vertical'>
+        <Form form={form} layout="vertical">
           <Form.Item
-            name='name'
-            label='规则名称'
+            name="name"
+            label="规则名称"
             rules={[{ required: true, message: '请输入规则名称' }]}
           >
-            <Input placeholder='例如：P1工单-严重预警' />
+            <Input placeholder="例如：P1工单-严重预警" />
           </Form.Item>
           <Form.Item
-            name='alert_level'
-            label='预警级别'
+            name="alert_level"
+            label="预警级别"
             rules={[{ required: true, message: '请选择预警级别' }]}
           >
-            <Select placeholder='请选择预警级别'>
-              <Option value='warning'>警告</Option>
-              <Option value='critical'>严重</Option>
-              <Option value='severe'>严重（最高）</Option>
+            <Select placeholder="请选择预警级别">
+              <Option value="warning">警告</Option>
+              <Option value="critical">严重</Option>
+              <Option value="severe">严重（最高）</Option>
             </Select>
           </Form.Item>
           <Form.Item
-            name='threshold_percentage'
-            label='阈值百分比'
+            name="threshold_percentage"
+            label="阈值百分比"
             rules={[
               { required: true, message: '请输入阈值百分比' },
               { type: 'number', min: 0, max: 100, message: '阈值必须在0-100之间' },
             ]}
           >
-            <Input type='number' placeholder='例如：70, 85, 95' addonAfter='%' />
+            <Input type="number" placeholder="例如：70, 85, 95" addonAfter="%" />
           </Form.Item>
           <Form.Item
-            name='notification_channels'
-            label='通知渠道'
+            name="notification_channels"
+            label="通知渠道"
             rules={[{ required: true, message: '请至少选择一个通知渠道' }]}
           >
-            <Select mode='multiple' placeholder='请选择通知渠道'>
-              <Option value='email'>邮件</Option>
-              <Option value='sms'>短信</Option>
-              <Option value='in_app'>站内消息</Option>
+            <Select mode="multiple" placeholder="请选择通知渠道">
+              <Option value="email">邮件</Option>
+              <Option value="sms">短信</Option>
+              <Option value="in_app">站内消息</Option>
             </Select>
           </Form.Item>
-          <Form.Item name='escalation_enabled' label='启用升级机制' valuePropName='checked'>
+          <Form.Item name="escalation_enabled" label="启用升级机制" valuePropName="checked">
             <Switch />
           </Form.Item>
           <Form.Item
@@ -514,9 +514,9 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
             {({ getFieldValue }) =>
               getFieldValue('escalation_enabled') ? (
                 <Form.Item
-                  name='escalation_levels'
-                  label='升级级别配置'
-                  tooltip='配置多级升级，当达到更高阈值时自动升级并通知更多人员'
+                  name="escalation_levels"
+                  label="升级级别配置"
+                  tooltip="配置多级升级，当达到更高阈值时自动升级并通知更多人员"
                 >
                   <TextArea
                     rows={4}
@@ -526,7 +526,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
               ) : null
             }
           </Form.Item>
-          <Form.Item name='is_active' label='启用状态' valuePropName='checked'>
+          <Form.Item name="is_active" label="启用状态" valuePropName="checked">
             <Switch />
           </Form.Item>
         </Form>

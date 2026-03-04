@@ -58,16 +58,56 @@ const { RangePicker } = DatePicker;
 
 // 通知事件类型配置
 const EVENT_TYPES = [
-  { type: 'ticket_created', nameKey: 'notifications.ticketCreated', descKey: 'notifications.ticketCreatedDesc' },
-  { type: 'ticket_assigned', nameKey: 'notifications.ticketAssigned', descKey: 'notifications.ticketAssignedDesc' },
-  { type: 'ticket_updated', nameKey: 'notifications.ticketUpdated', descKey: 'notifications.ticketUpdatedDesc' },
-  { type: 'ticket_commented', nameKey: 'notifications.ticketCommented', descKey: 'notifications.ticketCommentedDesc' },
-  { type: 'sla_warning', nameKey: 'notifications.slaWarning', descKey: 'notifications.slaWarningDesc' },
-  { type: 'sla_violated', nameKey: 'notifications.slaViolated', descKey: 'notifications.slaViolatedDesc' },
-  { type: 'ticket_resolved', nameKey: 'notifications.ticketResolved', descKey: 'notifications.ticketResolvedDesc' },
-  { type: 'ticket_closed', nameKey: 'notifications.ticketClosed', descKey: 'notifications.ticketClosedDesc' },
-  { type: 'approval_required', nameKey: 'notifications.approvalRequired', descKey: 'notifications.approvalRequiredDesc' },
-  { type: 'approval_completed', nameKey: 'notifications.approvalCompleted', descKey: 'notifications.approvalCompletedDesc' },
+  {
+    type: 'ticket_created',
+    nameKey: 'notifications.ticketCreated',
+    descKey: 'notifications.ticketCreatedDesc',
+  },
+  {
+    type: 'ticket_assigned',
+    nameKey: 'notifications.ticketAssigned',
+    descKey: 'notifications.ticketAssignedDesc',
+  },
+  {
+    type: 'ticket_updated',
+    nameKey: 'notifications.ticketUpdated',
+    descKey: 'notifications.ticketUpdatedDesc',
+  },
+  {
+    type: 'ticket_commented',
+    nameKey: 'notifications.ticketCommented',
+    descKey: 'notifications.ticketCommentedDesc',
+  },
+  {
+    type: 'sla_warning',
+    nameKey: 'notifications.slaWarning',
+    descKey: 'notifications.slaWarningDesc',
+  },
+  {
+    type: 'sla_violated',
+    nameKey: 'notifications.slaViolated',
+    descKey: 'notifications.slaViolatedDesc',
+  },
+  {
+    type: 'ticket_resolved',
+    nameKey: 'notifications.ticketResolved',
+    descKey: 'notifications.ticketResolvedDesc',
+  },
+  {
+    type: 'ticket_closed',
+    nameKey: 'notifications.ticketClosed',
+    descKey: 'notifications.ticketClosedDesc',
+  },
+  {
+    type: 'approval_required',
+    nameKey: 'notifications.approvalRequired',
+    descKey: 'notifications.approvalRequiredDesc',
+  },
+  {
+    type: 'approval_completed',
+    nameKey: 'notifications.approvalCompleted',
+    descKey: 'notifications.approvalCompletedDesc',
+  },
 ];
 
 // 通知渠道配置
@@ -148,24 +188,25 @@ export default function NotificationsPage() {
   useEffect(() => {
     if (user?.id && token) {
       // 连接 WebSocket
-      notificationWS.connect(user.id, token)
+      notificationWS
+        .connect(user.id, token)
         .then(() => {
           setWsConnected(true);
         })
-        .catch((error) => {
+        .catch(error => {
           console.error('WebSocket connection failed:', error);
           setWsConnected(false);
         });
 
       // 监听新通知
-      const unsubscribe = notificationWS.onNotification((notification) => {
+      const unsubscribe = notificationWS.onNotification(notification => {
         setNotifications(prev => [notification, ...prev]);
         setUnreadNotifications(prev => [notification, ...prev]);
         message.info(notification.content);
       });
 
       // 监听连接状态变化
-      const unsubConnection = notificationWS.onConnectionChange((connected) => {
+      const unsubConnection = notificationWS.onConnectionChange(connected => {
         setWsConnected(connected);
       });
 
@@ -184,16 +225,19 @@ export default function NotificationsPage() {
   }, [loadNotifications, loadPreferences]);
 
   // 标记已读
-  const handleMarkRead = useCallback(async (notificationId: number) => {
-    try {
-      await TicketNotificationApi.markNotificationRead(notificationId);
-      message.success(t('notifications.markSuccess'));
-      loadNotifications();
-    } catch (error) {
-      message.error(t('notifications.loadFailed'));
-      console.error('Failed to mark notification as read:', error);
-    }
-  }, [t, loadNotifications]);
+  const handleMarkRead = useCallback(
+    async (notificationId: number) => {
+      try {
+        await TicketNotificationApi.markNotificationRead(notificationId);
+        message.success(t('notifications.markSuccess'));
+        loadNotifications();
+      } catch (error) {
+        message.error(t('notifications.loadFailed'));
+        console.error('Failed to mark notification as read:', error);
+      }
+    },
+    [t, loadNotifications]
+  );
 
   // 标记全部已读
   const handleMarkAllRead = useCallback(async () => {
@@ -244,15 +288,18 @@ export default function NotificationsPage() {
   }, [t, loadPreferences]);
 
   // 删除单个通知
-  const handleDeleteNotification = useCallback(async (notificationId: number) => {
-    try {
-      // 这里需要添加删除 API
-      message.success(t('notifications.delete'));
-      loadNotifications();
-    } catch (error) {
-      message.error(t('notifications.loadFailed'));
-    }
-  }, [t, loadNotifications]);
+  const handleDeleteNotification = useCallback(
+    async (notificationId: number) => {
+      try {
+        // 这里需要添加删除 API
+        message.success(t('notifications.delete'));
+        loadNotifications();
+      } catch (error) {
+        message.error(t('notifications.loadFailed'));
+      }
+    },
+    [t, loadNotifications]
+  );
 
   // 清空所有通知
   const handleClearAll = useCallback(async () => {
@@ -266,35 +313,47 @@ export default function NotificationsPage() {
   }, [t, loadNotifications]);
 
   // 筛选通知列表
-  const filterNotifications = useCallback((list: TicketNotification[]) => {
-    return list.filter(item => {
-      // 搜索筛选
-      if (searchText && !item.content.toLowerCase().includes(searchText.toLowerCase())) {
-        return false;
-      }
-      // 渠道筛选
-      if (channelFilter && item.channel !== channelFilter) {
-        return false;
-      }
-      // 类型筛选
-      if (typeFilter && item.type !== typeFilter) {
-        return false;
-      }
-      // 日期范围筛选
-      if (dateRange && item.created_at) {
-        const date = dayjs(item.created_at);
-        if (!date.isAfter(dateRange[0]) || !date.isBefore(dateRange[1])) {
+  const filterNotifications = useCallback(
+    (list: TicketNotification[]) => {
+      return list.filter(item => {
+        // 搜索筛选
+        if (searchText && !item.content.toLowerCase().includes(searchText.toLowerCase())) {
           return false;
         }
-      }
-      return true;
-    });
-  }, [searchText, channelFilter, typeFilter, dateRange]);
+        // 渠道筛选
+        if (channelFilter && item.channel !== channelFilter) {
+          return false;
+        }
+        // 类型筛选
+        if (typeFilter && item.type !== typeFilter) {
+          return false;
+        }
+        // 日期范围筛选
+        if (dateRange && item.created_at) {
+          const date = dayjs(item.created_at);
+          if (!date.isAfter(dateRange[0]) || !date.isBefore(dateRange[1])) {
+            return false;
+          }
+        }
+        return true;
+      });
+    },
+    [searchText, channelFilter, typeFilter, dateRange]
+  );
 
   // 获取筛选后的通知
-  const filteredNotifications = useMemo(() => filterNotifications(notifications), [notifications, filterNotifications]);
-  const filteredUnreadNotifications = useMemo(() => filterNotifications(unreadNotifications), [unreadNotifications, filterNotifications]);
-  const filteredReadNotifications = useMemo(() => filterNotifications(readNotifications), [readNotifications, filterNotifications]);
+  const filteredNotifications = useMemo(
+    () => filterNotifications(notifications),
+    [notifications, filterNotifications]
+  );
+  const filteredUnreadNotifications = useMemo(
+    () => filterNotifications(unreadNotifications),
+    [unreadNotifications, filterNotifications]
+  );
+  const filteredReadNotifications = useMemo(
+    () => filterNotifications(readNotifications),
+    [readNotifications, filterNotifications]
+  );
 
   // 获取偏好值
   const getPreferenceValue = (eventType: string, field: 'email' | 'in_app' | 'sms'): boolean => {
@@ -390,12 +449,16 @@ export default function NotificationsPage() {
                     <Text strong={notification.status !== 'read'}>
                       {getNotificationTypeLabel(notification.type)}
                     </Text>
-                    {notification.status !== 'read' && (
-                      <Badge status="processing" />
-                    )}
-                    <Tag color={getChannelColor(notification.channel)} icon={getChannelIcon(notification.channel)}>
-                      {notification.channel === 'email' ? t('notifications.email') :
-                       notification.channel === 'sms' ? t('notifications.sms') : t('notifications.inApp')}
+                    {notification.status !== 'read' && <Badge status="processing" />}
+                    <Tag
+                      color={getChannelColor(notification.channel)}
+                      icon={getChannelIcon(notification.channel)}
+                    >
+                      {notification.channel === 'email'
+                        ? t('notifications.email')
+                        : notification.channel === 'sms'
+                          ? t('notifications.sms')
+                          : t('notifications.inApp')}
                     </Tag>
                   </div>
                   <Text type="secondary" className="text-xs">
@@ -494,7 +557,9 @@ export default function NotificationsPage() {
       <div className="mb-6 flex items-center justify-between">
         <Title level={2}>{t('notifications.title')}</Title>
         <Space>
-          <Tooltip title={wsConnected ? t('notifications.wsConnected') : t('notifications.wsDisconnected')}>
+          <Tooltip
+            title={wsConnected ? t('notifications.wsConnected') : t('notifications.wsDisconnected')}
+          >
             {wsConnected ? (
               <Wifi className="w-5 h-5 text-green-500" />
             ) : (
@@ -529,9 +594,7 @@ export default function NotificationsPage() {
               </Text>
               <Space>
                 {filteredUnreadNotifications.length > 0 && (
-                  <Button onClick={handleMarkAllRead}>
-                    {t('notifications.markAllRead')}
-                  </Button>
+                  <Button onClick={handleMarkAllRead}>{t('notifications.markAllRead')}</Button>
                 )}
                 {filteredNotifications.length > 0 && (
                   <Popconfirm
@@ -546,9 +609,7 @@ export default function NotificationsPage() {
                 )}
               </Space>
             </div>
-            <Spin spinning={loading}>
-              {renderNotificationList(filteredNotifications)}
-            </Spin>
+            <Spin spinning={loading}>{renderNotificationList(filteredNotifications)}</Spin>
           </Card>
         </TabPane>
 
@@ -566,9 +627,7 @@ export default function NotificationsPage() {
         >
           <Card>
             {renderFilterBar()}
-            <Spin spinning={loading}>
-              {renderNotificationList(filteredUnreadNotifications)}
-            </Spin>
+            <Spin spinning={loading}>{renderNotificationList(filteredUnreadNotifications)}</Spin>
           </Card>
         </TabPane>
 
@@ -583,9 +642,7 @@ export default function NotificationsPage() {
         >
           <Card>
             {renderFilterBar()}
-            <Spin spinning={loading}>
-              {renderNotificationList(filteredReadNotifications)}
-            </Spin>
+            <Spin spinning={loading}>{renderNotificationList(filteredReadNotifications)}</Spin>
           </Card>
         </TabPane>
 
@@ -601,19 +658,12 @@ export default function NotificationsPage() {
           <Card>
             <div className="flex justify-between items-center mb-4">
               <Title level={4}>{t('notifications.preferences')}</Title>
-              <Button
-                icon={<RotateCcw className="w-4 h-4" />}
-                onClick={handleResetPreferences}
-              >
+              <Button icon={<RotateCcw className="w-4 h-4" />} onClick={handleResetPreferences}>
                 {t('notifications.resetDefault')}
               </Button>
             </div>
             <Spin spinning={preferencesLoading}>
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={handleSavePreferences}
-              >
+              <Form form={form} layout="vertical" onFinish={handleSavePreferences}>
                 <Row gutter={[16, 16]}>
                   <Col xs={24} md={8}>
                     <Text strong>{t('notifications.eventTypes')}</Text>
@@ -648,17 +698,26 @@ export default function NotificationsPage() {
                     </Col>
                     <Col xs={24} md={5}>
                       <Form.Item name={`${event.type}_email`} valuePropName="checked" noStyle>
-                        <Switch checkedChildren={t('workflow.statusEnabled')} unCheckedChildren={t('workflow.statusDisabled')} />
+                        <Switch
+                          checkedChildren={t('workflow.statusEnabled')}
+                          unCheckedChildren={t('workflow.statusDisabled')}
+                        />
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={5}>
                       <Form.Item name={`${event.type}_in_app`} valuePropName="checked" noStyle>
-                        <Switch checkedChildren={t('workflow.statusEnabled')} unCheckedChildren={t('workflow.statusDisabled')} />
+                        <Switch
+                          checkedChildren={t('workflow.statusEnabled')}
+                          unCheckedChildren={t('workflow.statusDisabled')}
+                        />
                       </Form.Item>
                     </Col>
                     <Col xs={24} md={6}>
                       <Form.Item name={`${event.type}_sms`} valuePropName="checked" noStyle>
-                        <Switch checkedChildren={t('workflow.statusEnabled')} unCheckedChildren={t('workflow.statusDisabled')} />
+                        <Switch
+                          checkedChildren={t('workflow.statusEnabled')}
+                          unCheckedChildren={t('workflow.statusDisabled')}
+                        />
                       </Form.Item>
                     </Col>
                   </Row>

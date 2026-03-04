@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   Button,
@@ -23,7 +23,7 @@ import {
   Timeline,
   App,
   message,
-} from "antd";
+} from 'antd';
 import {
   ArrowLeft,
   Save,
@@ -39,9 +39,9 @@ import {
   Settings,
   FileText,
   Zap,
-} from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import BPMNDesigner from "@/components/workflow/BPMNDesigner";
+} from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import BPMNDesigner from '@/components/workflow/BPMNDesigner';
 import { useI18n } from '@/lib/i18n';
 
 const { Title, Text } = Typography;
@@ -50,33 +50,33 @@ const { Option } = Select;
 // 获取节点类型颜色
 const getNodeTypeColor = (type: string) => {
   switch (type) {
-    case "start":
-      return "green";
-    case "approval":
-      return "blue";
-    case "condition":
-      return "gold";
-    case "action":
-      return "purple";
-    case "end":
-      return "red";
+    case 'start':
+      return 'green';
+    case 'approval':
+      return 'blue';
+    case 'condition':
+      return 'gold';
+    case 'action':
+      return 'purple';
+    case 'end':
+      return 'red';
     default:
-      return "default";
+      return 'default';
   }
 };
 
 // 获取节点类型名称（将在组件内使用国际化）
 const getNodeTypeName = (type: string, t: (key: string) => string) => {
   switch (type) {
-    case "start":
+    case 'start':
       return t('workflow.nodeTypeStart');
-    case "approval":
+    case 'approval':
       return t('workflow.nodeTypeApproval');
-    case "condition":
+    case 'condition':
       return t('workflow.nodeTypeCondition');
-    case "action":
+    case 'action':
       return t('workflow.nodeTypeAction');
-    case "end":
+    case 'end':
       return t('workflow.nodeTypeEnd');
     default:
       return t('workflow.nodeTypeUnknown');
@@ -99,44 +99,46 @@ interface TicketApprovalWorkflow {
 
 // 默认工单审批流程 BPMN XML
 const getDefaultBPMNXML = () => {
-  return '<?xml version="1.0" encoding="UTF-8"?>' +
-'<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" ' +
-'  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" ' +
-'  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" ' +
-'  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" ' +
-'  id="ticket_approval" targetNamespace="http://bpmn.io/schema/bpmn">' +
-'  <bpmn:process id="TicketApproval" name="工单审批流程" isExecutable="true">' +
-'    <bpmn:startEvent id="StartEvent_1" name="工单提交">' +
-'      <bpmn:outgoing>Flow_1</bpmn:outgoing>' +
-'    </bpmn:startEvent>' +
-'    <bpmn:userTask id="Task_approval" name="审批">' +
-'      <bpmn:incoming>Flow_1</bpmn:incoming>' +
-'      <bpmn:outgoing>Flow_2</bpmn:outgoing>' +
-'    </bpmn:userTask>' +
-'    <bpmn:exclusiveGateway id="Gateway_1" name="是否通过">' +
-'      <bpmn:incoming>Flow_2</bpmn:incoming>' +
-'      <bpmn:outgoing>Flow_approved</bpmn:outgoing>' +
-'      <bpmn:outgoing>Flow_rejected</bpmn:outgoing>' +
-'    </bpmn:exclusiveGateway>' +
-'    <bpmn:endEvent id="EndEvent_approved" name="已完成">' +
-'      <bpmn:incoming>Flow_approved</bpmn:incoming>' +
-'    </bpmn:endEvent>' +
-'    <bpmn:endEvent id="EndEvent_rejected" name="已拒绝">' +
-'      <bpmn:incoming>Flow_rejected</bpmn:incoming>' +
-'    </bpmn:endEvent>' +
-'    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_approval"/>' +
-'    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_approval" targetRef="Gateway_1"/>' +
-'    <bpmn:sequenceFlow id="Flow_approved" sourceRef="Gateway_1" targetRef="EndEvent_approved">' +
-'      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true}</bpmn:conditionExpression>' +
-'    </bpmn:sequenceFlow>' +
-'    <bpmn:sequenceFlow id="Flow_rejected" sourceRef="Gateway_1" targetRef="EndEvent_rejected">' +
-'      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == false}</bpmn:conditionExpression>' +
-'    </bpmn:sequenceFlow>' +
-'  </bpmn:process>' +
-'  <bpmndi:BPMNDiagram id="BPMNDiagram_1">' +
-'    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="TicketApproval"/>' +
-'  </bpmndi:BPMNDiagram>' +
-'</bpmn:definitions>';
+  return (
+    '<?xml version="1.0" encoding="UTF-8"?>' +
+    '<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" ' +
+    '  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" ' +
+    '  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" ' +
+    '  xmlns:di="http://www.omg.org/spec/DD/20100524/DI" ' +
+    '  id="ticket_approval" targetNamespace="http://bpmn.io/schema/bpmn">' +
+    '  <bpmn:process id="TicketApproval" name="工单审批流程" isExecutable="true">' +
+    '    <bpmn:startEvent id="StartEvent_1" name="工单提交">' +
+    '      <bpmn:outgoing>Flow_1</bpmn:outgoing>' +
+    '    </bpmn:startEvent>' +
+    '    <bpmn:userTask id="Task_approval" name="审批">' +
+    '      <bpmn:incoming>Flow_1</bpmn:incoming>' +
+    '      <bpmn:outgoing>Flow_2</bpmn:outgoing>' +
+    '    </bpmn:userTask>' +
+    '    <bpmn:exclusiveGateway id="Gateway_1" name="是否通过">' +
+    '      <bpmn:incoming>Flow_2</bpmn:incoming>' +
+    '      <bpmn:outgoing>Flow_approved</bpmn:outgoing>' +
+    '      <bpmn:outgoing>Flow_rejected</bpmn:outgoing>' +
+    '    </bpmn:exclusiveGateway>' +
+    '    <bpmn:endEvent id="EndEvent_approved" name="已完成">' +
+    '      <bpmn:incoming>Flow_approved</bpmn:incoming>' +
+    '    </bpmn:endEvent>' +
+    '    <bpmn:endEvent id="EndEvent_rejected" name="已拒绝">' +
+    '      <bpmn:incoming>Flow_rejected</bpmn:incoming>' +
+    '    </bpmn:endEvent>' +
+    '    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_approval"/>' +
+    '    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_approval" targetRef="Gateway_1"/>' +
+    '    <bpmn:sequenceFlow id="Flow_approved" sourceRef="Gateway_1" targetRef="EndEvent_approved">' +
+    '      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true}</bpmn:conditionExpression>' +
+    '    </bpmn:sequenceFlow>' +
+    '    <bpmn:sequenceFlow id="Flow_rejected" sourceRef="Gateway_1" targetRef="EndEvent_rejected">' +
+    '      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == false}</bpmn:conditionExpression>' +
+    '    </bpmn:sequenceFlow>' +
+    '  </bpmn:process>' +
+    '  <bpmndi:BPMNDiagram id="BPMNDiagram_1">' +
+    '    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="TicketApproval"/>' +
+    '  </bpmndi:BPMNDiagram>' +
+    '</bpmn:definitions>'
+  );
 };
 
 const TicketApprovalWorkflowPage = () => {
@@ -164,7 +166,7 @@ const TicketApprovalWorkflowPage = () => {
   const loadWorkflow = async (id: string) => {
     try {
       const { WorkflowAPI } = await import('@/lib/api/workflow-api');
-      const response = await WorkflowAPI.getProcessDefinition(id) as any;
+      const response = (await WorkflowAPI.getProcessDefinition(id)) as any;
 
       if (response?.bpmn_xml) {
         let xmlContent = response.bpmn_xml;
@@ -202,13 +204,17 @@ const TicketApprovalWorkflowPage = () => {
   const handleBPMNChange = useCallback((xml: string) => {
     setCurrentXML(xml);
     setHasChanges(true);
-    setWorkflow(prev => prev ? {
-      ...prev,
-      metadata: {
-        ...prev.metadata,
-        lastModified: new Date().toISOString(),
-      }
-    } : null);
+    setWorkflow(prev =>
+      prev
+        ? {
+            ...prev,
+            metadata: {
+              ...prev.metadata,
+              lastModified: new Date().toISOString(),
+            },
+          }
+        : null
+    );
   }, []);
 
   // 保存工作流
@@ -218,7 +224,6 @@ const TicketApprovalWorkflowPage = () => {
   };
 
   const handleSaveWorkflow = (workflowData: unknown) => {
-
     // 显示保存模态框
     setSaveModalVisible(true);
     setWorkflow(workflowData);
@@ -228,7 +233,7 @@ const TicketApprovalWorkflowPage = () => {
       name: workflowData.name || t('workflow.ticketApprovalProcess'),
       description: workflowData.description || t('workflow.ticketApprovalDescription'),
       category: t('workflow.approvalProcess'),
-      version: workflowData.metadata?.version || "1.0.0",
+      version: workflowData.metadata?.version || '1.0.0',
     });
   };
 
@@ -261,7 +266,7 @@ const TicketApprovalWorkflowPage = () => {
 
       // 保存成功后返回工作流列表
       setTimeout(() => {
-        router.push("/workflow");
+        router.push('/workflow');
       }, 1000);
     } catch (error) {
       console.error('保存工作流失败:', error);
@@ -277,9 +282,9 @@ const TicketApprovalWorkflowPage = () => {
       content: t('workflow.leaveConfirmation'),
       okText: t('workflow.confirmLeave'),
       cancelText: t('workflow.continueEdit'),
-      okType: "danger",
+      okType: 'danger',
       onOk: () => {
-        router.push("/workflow");
+        router.push('/workflow');
       },
     });
   };
@@ -325,9 +330,9 @@ const TicketApprovalWorkflowPage = () => {
         <div className="space-y-6">
           <Alert
             message={t('workflow.workflowOverview')}
-            description={t('workflow.workflowOverviewDescription', { 
+            description={t('workflow.workflowOverviewDescription', {
               total: workflow.nodes?.length || 0,
-              approval: workflow.nodes?.filter((n: unknown) => n.type === "approval").length || 0
+              approval: workflow.nodes?.filter((n: unknown) => n.type === 'approval').length || 0,
             })}
             type="info"
             showIcon
@@ -335,12 +340,7 @@ const TicketApprovalWorkflowPage = () => {
 
           <div>
             <Title level={5}>{t('workflow.processSteps')}</Title>
-            <Steps
-              direction="vertical"
-              size="small"
-              current={0}
-              items={previewSteps}
-            />
+            <Steps direction="vertical" size="small" current={0} items={previewSteps} />
           </div>
 
           <div>
@@ -364,10 +364,12 @@ const TicketApprovalWorkflowPage = () => {
                           {node.description}
                         </Text>
                       )}
-                      {node.type === "approval" && node.config?.approvers && (
+                      {node.type === 'approval' && node.config?.approvers && (
                         <div className="mt-1">
                           <Tag color="blue" className="text-xs">
-                            {t('workflow.approversCount', { count: node.config.approvers.value?.length || 0 })}
+                            {t('workflow.approversCount', {
+                              count: node.config.approvers.value?.length || 0,
+                            })}
                           </Tag>
                           <Tag color="orange" className="text-xs">
                             {t('workflow.timeoutHours', { hours: node.config.timeout || 24 })}
@@ -394,10 +396,7 @@ const TicketApprovalWorkflowPage = () => {
         <div className="px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Button
-                icon={<ArrowLeft className="w-4 h-4" />}
-                onClick={handleCancel}
-              >
+              <Button icon={<ArrowLeft className="w-4 h-4" />} onClick={handleCancel}>
                 {t('workflow.backToWorkflowList')}
               </Button>
               <Divider type="vertical" />
@@ -406,9 +405,7 @@ const TicketApprovalWorkflowPage = () => {
                   <GitBranch className="inline-block w-6 h-6 mr-2" />
                   {t('workflow.ticketApprovalDesigner')}
                 </Title>
-                <Text type="secondary">
-                  {t('workflow.ticketApprovalDesignerDescription')}
-                </Text>
+                <Text type="secondary">{t('workflow.ticketApprovalDesignerDescription')}</Text>
               </div>
             </div>
 
@@ -420,10 +417,7 @@ const TicketApprovalWorkflowPage = () => {
               >
                 {t('workflow.preview')}
               </Button>
-              <Button
-                icon={<Download className="w-4 h-4" />}
-                disabled={!workflow}
-              >
+              <Button icon={<Download className="w-4 h-4" />} disabled={!workflow}>
                 {t('workflow.export')}
               </Button>
               <Button
@@ -489,8 +483,7 @@ const TicketApprovalWorkflowPage = () => {
                   <Statistic
                     title={t('workflow.conditionNodes')}
                     value={
-                      workflow.nodes?.filter((n: unknown) => n.type === "condition")
-                        .length || 0
+                      workflow.nodes?.filter((n: unknown) => n.type === 'condition').length || 0
                     }
                     prefix={<Settings className="w-4 h-4" />}
                   />
@@ -498,10 +491,7 @@ const TicketApprovalWorkflowPage = () => {
                 <Col span={6}>
                   <Statistic
                     title={t('workflow.actionNodes')}
-                    value={
-                      workflow.nodes?.filter((n: unknown) => n.type === "action")
-                        .length || 0
-                    }
+                    value={workflow.nodes?.filter((n: unknown) => n.type === 'action').length || 0}
                     prefix={<Zap className="w-4 h-4" />}
                   />
                 </Col>
@@ -527,10 +517,18 @@ const TicketApprovalWorkflowPage = () => {
                   rules={[{ required: true, message: t('workflow.processCategoryRequired') }]}
                 >
                   <Select placeholder={t('workflow.processCategoryPlaceholder')}>
-                    <Option value={t('workflow.approvalProcess')}>{t('workflow.approvalProcess')}</Option>
-                    <Option value={t('workflow.ticketProcess')}>{t('workflow.ticketProcess')}</Option>
-                    <Option value={t('workflow.incidentProcess')}>{t('workflow.incidentProcess')}</Option>
-                    <Option value={t('workflow.changeProcess')}>{t('workflow.changeProcess')}</Option>
+                    <Option value={t('workflow.approvalProcess')}>
+                      {t('workflow.approvalProcess')}
+                    </Option>
+                    <Option value={t('workflow.ticketProcess')}>
+                      {t('workflow.ticketProcess')}
+                    </Option>
+                    <Option value={t('workflow.incidentProcess')}>
+                      {t('workflow.incidentProcess')}
+                    </Option>
+                    <Option value={t('workflow.changeProcess')}>
+                      {t('workflow.changeProcess')}
+                    </Option>
                   </Select>
                 </Form.Item>
               </Col>
