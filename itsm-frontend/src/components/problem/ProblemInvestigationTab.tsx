@@ -53,6 +53,7 @@ import {
   type CreateRootCauseRequest,
   type CreateSolutionRequest,
   type CreateKnowledgeArticleRequest,
+  type SolutionType,
 } from '@/lib/api/problem-investigation';
 
 const { Title, Text, Paragraph } = Typography;
@@ -161,13 +162,18 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 创建调查步骤
-  const handleCreateStep = async (values: unknown) => {
+  const handleCreateStep = async (values: {
+    step_title: string;
+    step_description?: string;
+    assigned_to?: number;
+    notes?: string;
+  }) => {
     try {
       const data: CreateStepRequest = {
         investigation_id: summary?.investigation?.id!,
         step_number: (summary?.steps?.length || 0) + 1,
         step_title: values.step_title,
-        step_description: values.step_description,
+        step_description: values.step_description || '',
         assigned_to: values.assigned_to,
         notes: values.notes,
       };
@@ -195,14 +201,20 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 创建根本原因分析
-  const handleCreateRootCause = async (values: unknown) => {
+  const handleCreateRootCause = async (values: {
+    analysis_method: string;
+    root_cause_description: string;
+    contributing_factors?: string;
+    evidence?: string;
+    confidence_level: 'low' | 'medium' | 'high';
+  }) => {
     try {
       const data: CreateRootCauseRequest = {
         problem_id: Number(id) || problemId,
         analysis_method: values.analysis_method,
         root_cause_description: values.root_cause_description,
-        contributing_factors: values.contributing_factors,
-        evidence: values.evidence,
+        contributing_factors: values.contributing_factors || undefined,
+        evidence: values.evidence || undefined,
         confidence_level: values.confidence_level,
       };
       await ProblemInvestigationAPI.createRootCause(data);
@@ -216,13 +228,20 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 创建解决方案
-  const handleCreateSolution = async (values: unknown) => {
+  const handleCreateSolution = async (values: {
+    solution_type: SolutionType;
+    solution_description: string;
+    priority?: string;
+    estimated_effort_hours?: number;
+    estimated_cost?: number;
+    risk_assessment?: string;
+  }) => {
     try {
       const data: CreateSolutionRequest = {
         problem_id: Number(id) || problemId,
         solution_type: values.solution_type,
         solution_description: values.solution_description,
-        priority: values.priority,
+        priority: values.priority || 'medium',
         estimated_effort_hours: values.estimated_effort_hours,
         estimated_cost: values.estimated_cost,
         risk_assessment: values.risk_assessment,
@@ -238,13 +257,18 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
   };
 
   // 沉淀到知识库
-  const handleCreateKnowledgeArticle = async (values: unknown) => {
+  const handleCreateKnowledgeArticle = async (values: {
+    article_title: string;
+    article_content: string;
+    article_type?: string;
+    tags?: string[];
+  }) => {
     try {
       const data: CreateKnowledgeArticleRequest = {
         problem_id: Number(id) || problemId,
         article_title: values.article_title,
         article_content: values.article_content,
-        article_type: values.article_type,
+        article_type: values.article_type || '',
         tags: values.tags,
       };
       await ProblemInvestigationAPI.createKnowledgeArticle(data);

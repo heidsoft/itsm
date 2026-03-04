@@ -27,7 +27,7 @@ import {
   CheckCircleOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import type { Ticket } from '@/lib/api/api-config';
+import type { Ticket, TicketStatus, TicketPriority } from '@/lib/api/types';
 import { TicketAPI } from '@/lib/api/ticket-api';
 
 const { Option } = Select;
@@ -131,9 +131,17 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
     []
   );
 
+  // 定义操作参数类型
+  type BatchOperationParams =
+    | { assignee_id: number; comment?: string }
+    | { status: string }
+    | { tags: string[] }
+    | { priority: string }
+    | {};
+
   // 执行批量操作
   const executeBatchOperation = useCallback(
-    async (operation: string, values: unknown) => {
+    async (operation: string, values: BatchOperationParams) => {
       setLoading(true);
       setOperationProgress({
         visible: true,
@@ -159,22 +167,26 @@ const TicketBatchOperations: React.FC<TicketBatchOperationsProps> = ({
           try {
             switch (operation) {
               case 'assign':
+                const assignParams = values as { assignee_id: number; comment?: string };
                 await TicketAPI.assignTicket(ticket.id, {
-                  assignee_id: values.assignee_id,
-                  comment: values.comment,
+                  assignee_id: assignParams.assignee_id,
+                  comment: assignParams.comment,
                 });
                 break;
               case 'update_status':
+                const statusParams = values as { status: string };
                 await TicketAPI.updateTicket(ticket.id, {
-                  status: values.status,
+                  status: statusParams.status as TicketStatus,
                 });
                 break;
               case 'add_tags':
-                await TicketAPI.addTicketTags(ticket.id, values.tags);
+                const tagParams = values as { tags: string[] };
+                await TicketAPI.addTicketTags(ticket.id, tagParams.tags);
                 break;
               case 'set_priority':
+                const priorityParams = values as { priority: string };
                 await TicketAPI.updateTicket(ticket.id, {
-                  priority: values.priority,
+                  priority: priorityParams.priority as TicketPriority,
                 });
                 break;
               case 'delete':

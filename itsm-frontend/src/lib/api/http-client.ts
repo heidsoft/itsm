@@ -9,12 +9,13 @@ const toCamelCase = (obj: unknown): unknown => {
   }
   if (Array.isArray(obj)) {
     return obj.map(v => toCamelCase(v));
-  } else if (obj.constructor === Object) {
-    return Object.keys(obj).reduce((result, key) => {
+  } else if (obj && typeof obj === 'object' && obj.constructor === Object) {
+    const typedObj = obj as Record<string, unknown>;
+    return Object.keys(typedObj).reduce((result, key) => {
       const camelKey = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
-      result[camelKey] = toCamelCase(obj[key]);
+      result[camelKey] = toCamelCase(typedObj[key]);
       return result;
-    }, {} as any);
+    }, {} as Record<string, unknown>);
   }
   return obj;
 };
@@ -26,12 +27,13 @@ const toSnakeCase = (obj: unknown): unknown => {
   }
   if (Array.isArray(obj)) {
     return obj.map(v => toSnakeCase(v));
-  } else if (obj.constructor === Object) {
-    return Object.keys(obj).reduce((result, key) => {
+  } else if (obj && typeof obj === 'object' && obj.constructor === Object) {
+    const typedObj = obj as Record<string, unknown>;
+    return Object.keys(typedObj).reduce((result, key) => {
       const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-      result[snakeKey] = toSnakeCase(obj[key]);
+      result[snakeKey] = toSnakeCase(typedObj[key]);
       return result;
-    }, {} as any);
+    }, {} as Record<string, unknown>);
   }
   return obj;
 };
@@ -325,7 +327,7 @@ class HttpClient {
       }
 
       // 自动转换响应数据 key 为 camelCase
-      return toCamelCase(responseData.data);
+      return toCamelCase(responseData.data) as T;
     } catch (error: unknown) {
       logger.error('Request failed:', error);
       if (error instanceof Error) {

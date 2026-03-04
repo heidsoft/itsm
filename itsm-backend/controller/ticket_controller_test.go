@@ -200,7 +200,6 @@ func TestTicketController_CreateTicket(t *testing.T) {
 			ticketService := service.NewTicketService(client, zaptest.NewLogger(t).Sugar())
 			controller := NewTicketController(ticketService, nil, zaptest.NewLogger(t).Sugar())
 			controller.CreateTicket(c)
-			w = w
 
 			// 验证响应
 			var response common.Response

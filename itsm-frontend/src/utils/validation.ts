@@ -163,20 +163,24 @@ export const createValidator = (rules: {
     }
 
     // 如果值为空且非必填，跳过其他验证
-    if (!value && !rules.required) return undefined;
+    if (value === null || value === undefined || value === '') {
+      if (!rules.required) return undefined;
+      // 即使 required，validateRequired 已处理，所以这里也 return
+      return undefined;
+    }
 
-    // 邮箱验证
-    if (rules.email && !validateEmail(value)) {
+    // 邮箱验证 - 仅当值为 string 时
+    if (rules.email && typeof value === 'string' && !validateEmail(value)) {
       return `${fieldName}格式不正确`;
     }
 
-    // 手机号验证
-    if (rules.phone && !validatePhone(value)) {
+    // 手机号验证 - 仅当值为 string 时
+    if (rules.phone && typeof value === 'string' && !validatePhone(value)) {
       return `${fieldName}格式不正确`;
     }
 
-    // URL验证
-    if (rules.url && !validateURL(value)) {
+    // URL验证 - 仅当值为 string 时
+    if (rules.url && typeof value === 'string' && !validateURL(value)) {
       return `${fieldName}格式不正确`;
     }
 

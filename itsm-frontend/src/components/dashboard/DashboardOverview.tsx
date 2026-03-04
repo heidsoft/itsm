@@ -38,7 +38,8 @@ dayjs.extend(relativeTime);
 
 import type { TicketStats, UserStats, SystemStats } from '@/types/dashboard';
 import type { Ticket } from '@/types/ticket';
-import type { User } from '@/lib/api/types'; // 改用lib/api/types中的User
+import type { User } from '@/types/user';
+import { useI18n } from '@/lib/i18n';
 
 interface DashboardOverviewProps {
   timeRange?: '24h' | '7d' | '30d';
@@ -49,6 +50,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   timeRange = '24h',
   refreshInterval = 30000, // 30秒
 }) => {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [ticketStats, setTicketStats] = useState<TicketStats | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
@@ -141,47 +143,113 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       setUserStats(mappedUserStats);
       setSystemStats(mappedSystemStats);
 
-      // 转换最近工单
-      setRecentTickets(
-        recentTicketsData.tickets.map((t: unknown) => ({
+      // 转换最近工单 - 使用 any 临时绕过类型检查，后续可完善
+      const mappedTickets = (recentTicketsData.tickets as any[]).map((t) => {
+        const requester = t.requester ? {
+          id: t.requester.id,
+          fullName: t.requester.name,
+          username: t.requester.username,
+          email: t.requester.email,
+          role: t.requester.role || 'user',
+        } : undefined;
+        const assignee = t.assignee ? {
+          id: t.assignee.id,
+          fullName: t.assignee.name,
+          username: t.assignee.username,
+          email: t.assignee.email,
+          role: t.assignee.role || 'agent',
+        } : undefined;
+        
+        return {
           ...t,
-          requester: t.requester
-            ? {
-                id: t.requester.id,
-                fullName: t.requester.name,
-                username: t.requester.username,
-                email: t.requester.email,
-                role: t.requester.role || 'user',
-              }
-            : undefined,
-          assignee: t.assignee
-            ? {
-                id: t.assignee.id,
-                fullName: t.assignee.name,
-                username: t.assignee.username,
-                email: t.assignee.email,
-                role: t.assignee.role || 'agent',
-              }
-            : undefined,
-        }))
-      );
+          requester,
+          assignee,
+          description: t.description || '',
+          status: t.status as Ticket['status'],
+          priority: t.priority as Ticket['priority'],
+          source: t.source || 'web',
+          type: t.type || 'request',
+          category: undefined,
+          updatedAt: t.updatedAt || t.createdAt,
+          resolvedAt: undefined,
+          closedAt: undefined,
+          sla: undefined,
+          slaStatus: undefined,
+          responseDeadline: undefined,
+          resolutionDeadline: undefined,
+          resolution: undefined,
+          resolutionCategory: undefined,
+          satisfactionRating: undefined,
+          satisfactionComment: undefined,
+          escalationLevel: undefined,
+          escalationReason: undefined,
+          comments: undefined,
+          attachments: undefined,
+          relatedTickets: undefined,
+          customFields: undefined,
+          tenantId: t.tenantId || 1,
+          isMajorIncident: t.isMajorIncident || false,
+          tags: undefined,
+        } as Ticket;
+      });
 
-      // 转换活跃用户
-      setActiveUsers(
-        activeUsersData.users.map((u: unknown) => ({
-          id: u.id,
-          username: u.username,
-          email: u.email,
-          name: u.name || u.username,
-          phone: u.phone,
-          department: u.department,
-          role: u.role || 'user',
+      setRecentTickets(mappedTickets);
+
+      // 转换活跃用户 - 使用 any 临时绕过类型检查
+      const mappedUsers = (activeUsersData.users as any[]).map((u) => {
+        return {
+          ...u,
+          fullName: u.name || u.username,
+          role: u.role || 'end_user',
           status: u.active ? 'active' : 'inactive',
-          tenant_id: u.tenant_id || 1,
-          created_at: u.created_at || new Date().toISOString(),
-          updated_at: u.updated_at || new Date().toISOString(),
-        }))
-      );
+          tenantId: u.tenant_id || 1,
+          createdAt: u.created_at || new Date().toISOString(),
+          updatedAt: u.updated_at || new Date().toISOString(),
+          permissions: [],
+          groups: [],
+          preferences: {
+            theme: 'light',
+            language: 'zh-CN',
+            timezone: 'Asia/Shanghai',
+            dateFormat: 'YYYY-MM-DD',
+            timeFormat: '24h',
+            notifications: {
+              email: true,
+              sms: false,
+              inApp: true,
+              desktop: false,
+              ticketAssigned: true,
+              ticketUpdated: true,
+              ticketEscalated: true,
+              ticketResolved: true,
+              slaBreached: true,
+              systemMaintenance: true,
+            },
+            ui: {
+              sidebarCollapsed: false,
+              tablePageSize: 20,
+              defaultView: 'table',
+              showAvatars: true,
+              compactMode: false,
+            },
+            work: {
+              autoAssign: false,
+              defaultPriority: 'medium',
+              workingHours: {
+                start: '09:00',
+                end: '17:00',
+                timezone: 'Asia/Shanghai',
+              },
+              workingDays: [1, 2, 3, 4, 5],
+            },
+          },
+          isActive: u.active ?? true,
+          emailVerified: false,
+          phoneVerified: false,
+        } as User;
+      });
+
+      setActiveUsers(mappedUsers);
     } catch (error) {
       message.error('获取统计数据失败');
     } finally {
@@ -464,12 +532,12 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                   <List.Item>
                     <List.Item.Meta
                       avatar={<Avatar icon={<UserIcon />} />}
-                      title={user.name}
+                      title={user.fullName}
                       description={
                         <Space>
                           <Tag>{user.role}</Tag>
                           <span style={{ color: '#999', fontSize: '12px' }}>
-                            {dayjs(user.updated_at).fromNow()}
+                            {dayjs(user.updatedAt).fromNow()}
                           </span>
                         </Space>
                       }

@@ -55,13 +55,15 @@ type ListTicketsRequest struct {
 	PageSize       int        `json:"page_size" form:"page_size"`
 	Status         string     `json:"status" form:"status"`
 	Priority       string     `json:"priority" form:"priority"`
-	Category       string     `json:"category" form:"category"`
-	AssigneeID     int        `json:"assignee_id" form:"assignee_id"`
-	RequesterID    int        `json:"requester_id" form:"requester_id"`
+	Type           string     `json:"type" form:"type"`                 // 工单类型筛选
+	Category       string     `json:"category" form:"category"`         // 分类名称
+	CategoryID     *int       `json:"category_id" form:"category_id"`   // 分类ID（优先）
+	AssigneeID     *int       `json:"assignee_id" form:"assignee_id"`   // 处理人ID（可选）
+	RequesterID    *int       `json:"requester_id" form:"requester_id"` // 创建人ID（可选）
 	ParentTicketID *int       `json:"parent_ticket_id" form:"parent_ticket_id"`
 	Keyword        string     `json:"keyword" form:"keyword"`
-	DateFrom       *time.Time `json:"date_from" form:"date_from"`
-	DateTo         *time.Time `json:"date_to" form:"date_to"`
+	DateFrom       *time.Time `json:"date_from" form:"date_from"` // 创建时间起始
+	DateTo         *time.Time `json:"date_to" form:"date_to"`     // 创建时间截止
 	IsOverdue      bool       `json:"is_overdue" form:"is_overdue"`
 	SortBy         string     `json:"sort_by" form:"sort_by"`
 	SortOrder      string     `json:"sort_order" form:"sort_order"`

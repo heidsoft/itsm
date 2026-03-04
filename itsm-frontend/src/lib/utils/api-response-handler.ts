@@ -185,8 +185,9 @@ export function safeGet<T>(obj: unknown, path: string, defaultValue: T): T {
     if (current === null || current === undefined || typeof current !== 'object') {
       return defaultValue;
     }
-    current = current[key];
+    // 使用类型守卫和类型断言安全地访问属性
+    current = (current as Record<string, unknown>)[key];
   }
 
-  return current !== undefined && current !== null ? current : defaultValue;
+  return current !== undefined && current !== null ? (current as T) : defaultValue;
 }

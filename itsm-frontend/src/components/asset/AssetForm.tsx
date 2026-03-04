@@ -22,6 +22,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 
 import { AssetApi, Asset, AssetRequest } from '@/lib/api/asset-api';
+import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -97,14 +98,33 @@ const AssetForm: React.FC = () => {
     }
   };
 
-  const onFinish = async (values: unknown) => {
+  const onFinish = async (values: {
+    asset_number: string;
+    name: string;
+    description?: string;
+    type: string;
+    category?: string;
+    subcategory?: string;
+    ci_id?: number;
+    serial_number?: string;
+    model?: string;
+    manufacturer?: string;
+    vendor?: string;
+    purchase_date?: Dayjs;
+    purchase_price?: number;
+    warranty_expiry?: Dayjs;
+    support_expiry?: Dayjs;
+    location?: string;
+    department?: string;
+    tags?: string[];
+  }) => {
     setLoading(true);
     try {
       const data: AssetRequest = {
         asset_number: values.asset_number,
         name: values.name,
         description: values.description,
-        type: values.type,
+        type: values.type as Asset['type'],
         category: values.category,
         subcategory: values.subcategory,
         ci_id: values.ci_id,
@@ -112,10 +132,10 @@ const AssetForm: React.FC = () => {
         model: values.model,
         manufacturer: values.manufacturer,
         vendor: values.vendor,
-        purchase_date: values.purchase_date,
+        purchase_date: values.purchase_date?.toISOString(),
         purchase_price: values.purchase_price,
-        warranty_expiry: values.warranty_expiry,
-        support_expiry: values.support_expiry,
+        warranty_expiry: values.warranty_expiry?.toISOString(),
+        support_expiry: values.support_expiry?.toISOString(),
         location: values.location,
         department: values.department,
         tags: values.tags,

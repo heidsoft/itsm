@@ -33,8 +33,26 @@ const { Sider } = Layout;
 // 图标样式，统一大小
 const iconStyle = { width: 16, height: 16 };
 
-// 菜单配置
-const getMenuConfig = (t: unknown) => ({
+// 菜单项接口定义
+interface MenuItem {
+  key: string;
+  icon: React.ReactNode;
+  label: string | React.ReactNode;
+  path?: string;
+  permission?: string;
+  description?: string;
+  badge?: string;
+  children?: MenuItem[];
+}
+
+// 菜单配置接口
+interface MenuConfig {
+  main: MenuItem[];
+  admin: MenuItem[];
+}
+
+// 获取菜单配置
+const getMenuConfig = (t: (key: string, params?: Record<string, string | number>) => string): MenuConfig => ({
   main: [
     {
       key: '/dashboard',
@@ -214,7 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
   // 渲染菜单项，支持徽章和描述
-  const renderMenuItems = (items: unknown[]) => {
+  const renderMenuItems = (items: MenuItem[]) => {
     return items.map(item => {
       // 如果有子菜单
       if (item.children) {
@@ -222,11 +240,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           key: item.key,
           icon: item.icon,
           label: (
-            <div className={styles.menuItemLabel} title={item.description || item.label}>
+            <div className={styles.menuItemLabel} title={typeof item.description === 'string' ? item.description : typeof item.label === 'string' ? item.label : undefined}>
               <span className="truncate">{item.label}</span>
             </div>
           ),
-          children: item.children.map((child: unknown) => ({
+          children: item.children.map((child: MenuItem) => ({
             key: child.key,
             icon: child.icon,
             label: child.label,
@@ -239,7 +257,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
         key: item.key,
         icon: item.icon,
         label: (
-          <div className={styles.menuItemLabel} title={item.description || item.label}>
+          <div className={styles.menuItemLabel} title={typeof item.description === 'string' ? item.description : typeof item.label === 'string' ? item.label : undefined}>
             <span className="truncate">{item.label}</span>
             {item.badge && (
               <Badge count={item.badge} size="small" className={styles.menuItemBadge} />

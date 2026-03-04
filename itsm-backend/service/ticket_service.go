@@ -15,17 +15,16 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
-	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketcomment"
 	"itsm-backend/ent/user"
 
-	"itsm-backend/pkg/config"
+	"itsm-backend/config"
 
 	"go.uber.org/zap"
 )
 
 type TicketService struct {
-	config *config.Config
+	config                *config.Config
 	client                *ent.Client
 	logger                *zap.SugaredLogger
 	notificationService   *TicketNotificationService
@@ -94,160 +93,104 @@ func (s *TicketService) SetSLAService(slaService *TicketSLAService) {
 func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Creating ticket", "tenant_id", tenantID, "title", req.Title)
 
-	// V0：最小校验（对齐测试与产品规则）
+	// 基础校验
 	if strings.TrimSpace(req.Description) == "" {
 		return nil, fmt.Errorf("描述不能为空")
 	}
 	switch strings.ToLower(strings.TrimSpace(req.Priority)) {
 	case "", "low", "medium", "high", "urgent":
-		// ok（空值交给 schema 默认 medium）
+		// ok
 	default:
 		return nil, fmt.Errorf("无效的优先级")
 	}
 
-	// 验证 requester_id 是否有效
-	if req.RequesterID <= 0 {
-		return nil, fmt.Errorf("创建人工单无效")
-	}
-	requesterExists, err := s.client.User.Query().
-		Where(user.ID(req.RequesterID), user.TenantID(tenantID)).
-		Exist(ctx)
+	// 使用 CoreService 创建基础工单
+	coreService := NewTicketCoreService(s.client, s.logger)
+	ticket, err := coreService.CreateTicketBasic(ctx, req, tenantID)
 	if err != nil {
-		s.logger.Errorw("Failed to verify requester", "error", err)
-		return nil, fmt.Errorf("验证创建人失败")
-	}
-	if !requesterExists {
-		return nil, fmt.Errorf("创建的用户不存在或不属于当前租户")
+		return nil, err
 	}
 
-	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
-	if req.AssigneeID > 0 {
-		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)
-		if err != nil {
-			s.logger.Errorw("Failed to verify assignee", "error", err)
-			return nil, fmt.Errorf("验证分配人失败")
-		}
-		if !exists {
-			return nil, fmt.Errorf("分配的用户不存在或不属于当前租户")
-		}
-	}
-
-	// 计算SLA截止时间
+	// 计算SLA (如果存在)
 	ticketType := req.Type
 	if ticketType == "" {
-		ticketType = "ticket" // 默认类型
+		ticketType = "ticket"
 	}
 	slaResult, err := s.slaService.CalculateSLADeadlineFromRequest(ctx, tenantID, ticketType, req.Priority)
 	if err != nil {
-		s.logger.Warnw("Failed to calculate SLA deadline", "error", err)
-		// SLA计算失败不阻止工单创建，使用默认值（响应8小时，解决24小时）
-		defaultRespDeadline := time.Now().Add(8 * time.Hour)
-		defaultResDeadline := time.Now().Add(24 * time.Hour)
-		slaResult = &SLADeadlineResult{
-			SLADefinitionID:    0,
-			ResponseDeadline:   &defaultRespDeadline,
-			ResolutionDeadline: &defaultResDeadline,
-		}
-	}
-
-	// 生成工单编号
-	ticketNumber, err := s.generateTicketNumber(ctx, tenantID)
-	if err != nil {
-		s.logger.Errorw("Failed to generate ticket number", "error", err)
-		return nil, fmt.Errorf("failed to generate ticket number: %w", err)
-	}
-
-	// 处理 SLA 截止时间指针
-	var respDeadline, resDeadline time.Time
-	if slaResult.ResponseDeadline != nil {
-		respDeadline = *slaResult.ResponseDeadline
+		s.logger.Warnw("Failed to calculate SLA", "error", err)
 	} else {
-		respDeadline = time.Now().Add(8 * time.Hour)
-	}
-	if slaResult.ResolutionDeadline != nil {
-		resDeadline = *slaResult.ResolutionDeadline
-	} else {
-		resDeadline = time.Now().Add(24 * time.Hour)
-	}
-
-	createBuilder := s.client.Ticket.Create().
-		SetTitle(req.Title).
-		SetDescription(req.Description).
-		SetPriority(req.Priority).
-		SetType(ticketType).
-		// 工单默认状态：open（与 schema 默认一致）
-		SetStatus("open").
-		SetTicketNumber(ticketNumber).
-		SetTenantID(tenantID).
-		SetRequesterID(req.RequesterID).
-		SetSLAResponseDeadline(respDeadline).
-		SetSLAResolutionDeadline(resDeadline)
-
-	// 只在指定了有效的分配人ID时设置（避免SQLite FK约束问题）
-	if req.AssigneeID > 0 {
-		createBuilder = createBuilder.SetAssigneeID(req.AssigneeID)
-	}
-	// 只在有有效的SLA定义ID时设置（避免FK约束问题）
-	if slaResult.SLADefinitionID > 0 {
-		createBuilder = createBuilder.SetSLADefinitionID(slaResult.SLADefinitionID)
-	}
-
-	// 如果指定了父工单ID，设置父工单关系
-	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
-		createBuilder = createBuilder.SetParentTicketID(*req.ParentTicketID)
-	}
-
-	// 如果指定了分类ID，设置分类
-	if req.CategoryID != nil && *req.CategoryID > 0 {
-		createBuilder = createBuilder.SetCategoryID(*req.CategoryID)
-	} else if req.Category != "" {
-		// 尝试根据名称查找分类
-		cat, err := s.client.TicketCategory.Query().
-			Where(ticketcategory.NameEQ(req.Category), ticketcategory.TenantID(tenantID)).
-			First(ctx)
-		if err == nil {
-			createBuilder = createBuilder.SetCategoryID(cat.ID)
-	} else if ent.IsNotFound(err) {
-		// 查找默认分类
-		defaultCat, err := s.client.TicketCategory.Query().
-			Where(ticketcategory.IsActive(true), ticketcategory.TenantID(tenantID)).
-			First(ctx)
-		if err == nil {
-			createBuilder = createBuilder.SetCategoryID(defaultCat.ID)
-		} else {
-			s.logger.Warnw("Default category not found", "error", err)
+		// 更新SLA字段
+		upd := s.client.Ticket.UpdateOne(ticket)
+		if slaResult.SLADefinitionID > 0 {
+			upd.SetSLADefinitionID(slaResult.SLADefinitionID)
 		}
-	}
-	}
-
-	// 如果指定了模板ID，设置模板
-	if req.TemplateID != nil && *req.TemplateID > 0 {
-		createBuilder = createBuilder.SetTemplateID(*req.TemplateID)
-	}
-
-	ticket, err := createBuilder.Save(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to create ticket", "error", err)
-		return nil, fmt.Errorf("failed to create ticket: %w", err)
-	}
-
-	// 如果指定了标签ID，添加标签关联
-	if len(req.TagIDs) > 0 {
-		_, err = ticket.Update().
-			AddTagIDs(req.TagIDs...).
-			Save(ctx)
+		if slaResult.ResponseDeadline != nil {
+			upd.SetSLAResponseDeadline(*slaResult.ResponseDeadline)
+		}
+		if slaResult.ResolutionDeadline != nil {
+			upd.SetSLAResolutionDeadline(*slaResult.ResolutionDeadline)
+		}
+		ticket, err = upd.Save(ctx)
 		if err != nil {
-			s.logger.Warnw("Failed to add tags to ticket", "error", err, "ticket_id", ticket.ID)
-			// 不返回错误，因为工单已创建成功
+			s.logger.Warnw("Failed to update SLA", "error", err)
 		}
 	}
 
-	if err != nil {
-		s.logger.Errorw("Failed to create ticket", "error", err)
-		return nil, fmt.Errorf("failed to create ticket: %w", err)
+	// 触发审批（仅紧急和关键）
+	if s.approvalService != nil && (req.Priority == "urgent" || req.Priority == "critical") {
+		approvalReq := &ApprovalTriggerRequest{
+			TicketID:     ticket.ID,
+			TicketNumber: ticket.TicketNumber,
+			TicketTitle:  ticket.Title,
+			TicketType:   ticketType,
+			Priority:     req.Priority,
+			RequesterID:  req.RequesterID,
+			TenantID:     tenantID,
+		}
+		go func() {
+			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if _, err := s.approvalService.TriggerApproval(ctx2, approvalReq); err != nil {
+				s.logger.Warnw("Approval trigger failed", "error", err)
+			}
+		}()
 	}
 
-	// 记录审计日志
+	// 通知（如果分配了处理人）
+	if s.notificationService != nil && ticket.AssigneeID > 0 {
+		go func() {
+			ctx2, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+			if err := s.notificationService.NotifyTicketCreated(ctx2, ticket); err != nil {
+				s.logger.Warnw("Notification failed", "error", err)
+			}
+		}()
+	}
+
+	// 自动化规则
+	if s.automationRuleService != nil {
+		go func() {
+			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.automationRuleService.ExecuteRulesForTicket(ctx2, ticket.ID, tenantID); err != nil {
+				s.logger.Warnw("Automation rules failed", "error", err)
+			}
+		}()
+	}
+
+	// 工作流触发
+	if s.processTriggerService != nil {
+		go func() {
+			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+			defer cancel()
+			if err := s.triggerWorkflowForTicket(ctx2, ticket.ID, tenantID); err != nil {
+				s.logger.Warnw("Workflow trigger failed", "error", err)
+			}
+		}()
+	}
+
+	// 审计日志
 	s.logAuditEvent(ctx, "ticket_created", ticket.ID, tenantID, map[string]interface{}{
 		"title":    req.Title,
 		"priority": req.Priority,
@@ -255,67 +198,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		"type":     ticketType,
 	})
 
-	// 触发审批流程（仅针对需要审批的工单类型）
-	if s.approvalService != nil {
-		ticketType := req.Type
-		if ticketType == "" {
-			ticketType = "ticket"
-		}
-		// 只有紧急和高优先级工单需要审批
-		if req.Priority == "urgent" || req.Priority == "critical" {
-			approvalReq := &ApprovalTriggerRequest{
-				TicketID:     ticket.ID,
-				TicketNumber: ticket.TicketNumber,
-				TicketTitle:  ticket.Title,
-				TicketType:   ticketType,
-				Priority:     req.Priority,
-				RequesterID:  req.RequesterID,
-				TenantID:     tenantID,
-			}
-			records, err := s.approvalService.TriggerApproval(ctx, approvalReq)
-			if err != nil {
-				s.logger.Warnw("Failed to trigger approval", "error", err, "ticket_id", ticket.ID)
-			} else if len(records) > 0 {
-				s.logger.Infow("Approval workflow triggered", "ticket_id", ticket.ID, "records", len(records))
-			}
-		}
-	}
-
-	// 发送通知给处理人
-	if s.notificationService != nil && ticket.AssigneeID > 0 {
-		if err := s.notificationService.NotifyTicketCreated(ctx, ticket); err != nil {
-			s.logger.Warnw("Failed to send ticket created notification", "error", err)
-		}
-	}
-
-	// 执行自动化规则（异步执行，不阻塞工单创建）
-	if s.automationRuleService != nil {
-		go func() {
-			// 使用新的context避免超时影响
-			ruleCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			if err := s.automationRuleService.ExecuteRulesForTicket(ruleCtx, ticket.ID, tenantID); err != nil {
-				s.logger.Warnw("Failed to execute automation rules", "error", err, "ticket_id", ticket.ID)
-			}
-		}()
-	}
-
-	// 触发BPMN工作流（异步执行，不阻塞工单创建）
-	if s.processTriggerService != nil {
-		go func() {
-			// 使用新的context避免超时影响
-			workflowCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-			defer cancel()
-			if err := s.triggerWorkflowForTicket(workflowCtx, ticket.ID, tenantID); err != nil {
-				s.logger.Warnw("Failed to trigger workflow for ticket", "error", err, "ticket_id", ticket.ID)
-			}
-		}()
-	}
-
+	s.logger.Infow("Ticket created (orchestrated)", "ticket_id", ticket.ID)
 	return ticket, nil
 }
-
-// triggerWorkflowForTicket 为工单触发工作流
 func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID int, tenantID int) error {
 	// 获取工单信息
 	ticket, err := s.client.Ticket.Get(ctx, ticketID)
@@ -493,74 +378,16 @@ func (s *TicketService) SyncTicketStatusWithWorkflow(ctx context.Context, ticket
 func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto.UpdateTicketRequest, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Updating ticket", "ticket_id", ticketID, "tenant_id", tenantID)
 
-	// 检查工单是否存在且属于当前租户
-	existingTicket, err := s.client.Ticket.Query().
-		Where(ticket.ID(ticketID), ticket.TenantID(tenantID)).
-		Only(ctx)
+	// 使用核心服务进行基础更新
+	coreService := NewTicketCoreService(s.client, s.logger)
+	ticket, err := coreService.UpdateTicketBasic(ctx, ticketID, req, tenantID)
 	if err != nil {
-		return nil, fmt.Errorf("ticket not found: %w", err)
+		return nil, err
 	}
 
-	// 检查权限
-	if !s.canUpdateTicket(existingTicket, req.UserID) {
-		return nil, fmt.Errorf("insufficient permissions")
-	}
-
-	updateQuery := s.client.Ticket.UpdateOne(existingTicket)
-
-	if req.Title != "" {
-		updateQuery.SetTitle(req.Title)
-	}
-	if req.Description != "" {
-		updateQuery.SetDescription(req.Description)
-	}
-	if req.Priority != "" {
-		updateQuery.SetPriority(req.Priority)
-	}
-	if req.Status != "" {
-		updateQuery.SetStatus(req.Status)
-	}
-	// 验证 requester_id 是否有效
-	if req.RequesterID <= 0 {
-		return nil, fmt.Errorf("创建人工单无效")
-	}
-	requesterExists, err := s.client.User.Query().
-		Where(user.ID(req.RequesterID), user.TenantID(tenantID)).
-		Exist(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to verify requester", "error", err)
-		return nil, fmt.Errorf("验证创建人失败")
-	}
-	if !requesterExists {
-		return nil, fmt.Errorf("创建的用户不存在或不属于当前租户")
-	}
-
-	// 验证 assignee_id 是否有效（如果是正数，必须是有效的用户ID）
-	if req.AssigneeID > 0 {
-		exists, err := s.client.User.Query().Where(user.ID(req.AssigneeID), user.TenantID(tenantID)).Exist(ctx)
-		if err != nil {
-			s.logger.Errorw("Failed to verify assignee", "error", err)
-			return nil, fmt.Errorf("验证分配人失败")
-		}
-		if !exists {
-			return nil, fmt.Errorf("分配的用户不存在或不属于当前租户")
-		}
-		updateQuery.SetAssigneeID(req.AssigneeID)
-	} else if req.AssigneeID == 0 {
-		// 允许将 assignee 设为 0（表示取消分配）
-		updateQuery.SetAssigneeID(0)
-	}
-
-	ticket, err := updateQuery.Save(ctx)
-	if err != nil {
-		s.logger.Errorw("Failed to update ticket", "error", err)
-		return nil, fmt.Errorf("failed to update ticket: %w", err)
-	}
-
-	// 执行自动化规则（异步执行，不阻塞工单更新）
+	// 执行自动化规则（异步）
 	if s.automationRuleService != nil {
 		go func() {
-			// 使用新的context避免超时影响
 			ruleCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			if err := s.automationRuleService.ExecuteRulesForTicket(ruleCtx, ticket.ID, tenantID); err != nil {
@@ -574,10 +401,9 @@ func (s *TicketService) UpdateTicket(ctx context.Context, ticketID int, req *dto
 		"updated_fields": req,
 	})
 
+	s.logger.Infow("Ticket updated", "ticket_id", ticket.ID)
 	return ticket, nil
 }
-
-// UpdateTicketStatus 更新工单状态
 func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, status string, tenantID int, operatorID int) (*ent.Ticket, error) {
 	s.logger.Infow("Updating ticket status", "ticket_id", ticketID, "status", status, "tenant_id", tenantID, "operator_id", operatorID)
 
@@ -636,7 +462,7 @@ func (s *TicketService) UpdateTicketStatus(ctx context.Context, ticketID int, st
 func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsRequest, tenantID int) (*dto.ListTicketsResponse, error) {
 	s.logger.Infow("Listing tickets", "tenant_id", tenantID, "filters", req)
 
-	// 设置默认分页参数
+	// 默认分页
 	if req.Page <= 0 {
 		req.Page = 1
 	}
@@ -644,40 +470,39 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		req.PageSize = 20
 	}
 
-	query := s.client.Ticket.Query().
-		Where(ticket.TenantID(tenantID))
+	query := s.client.Ticket.Query().Where(ticket.TenantID(tenantID))
 
-	// 应用筛选条件
+	// 筛选
 	if req.Status != "" {
-		query.Where(ticket.StatusEQ(req.Status))
+		query = query.Where(ticket.StatusEQ(req.Status))
 	}
 	if req.Priority != "" {
-		query.Where(ticket.PriorityEQ(req.Priority))
+		query = query.Where(ticket.PriorityEQ(req.Priority))
 	}
-	if req.AssigneeID != 0 {
-		query.Where(ticket.AssigneeID(req.AssigneeID))
+	if req.AssigneeID != nil {
+		query = query.Where(ticket.AssigneeID(*req.AssigneeID))
 	}
-	if req.RequesterID != 0 {
-		query.Where(ticket.RequesterID(req.RequesterID))
+	if req.RequesterID != nil {
+		query = query.Where(ticket.RequesterID(*req.RequesterID))
 	}
 	if req.ParentTicketID != nil && *req.ParentTicketID > 0 {
-		query.Where(ticket.ParentTicketID(*req.ParentTicketID))
+		query = query.Where(ticket.ParentTicketID(*req.ParentTicketID))
 	}
 
-	// 关键词搜索
+	// 关键词
 	if req.Keyword != "" {
-		query.Where(ticket.Or(
+		query = query.Where(ticket.Or(
 			ticket.TitleContains(req.Keyword),
 			ticket.DescriptionContains(req.Keyword),
 		))
 	}
 
-	// 日期范围筛选
+	// 日期
 	if req.DateFrom != nil {
-		query.Where(ticket.CreatedAtGTE(*req.DateFrom))
+		query = query.Where(ticket.CreatedAtGTE(*req.DateFrom))
 	}
 	if req.DateTo != nil {
-		query.Where(ticket.CreatedAtLTE(*req.DateTo))
+		query = query.Where(ticket.CreatedAtLTE(*req.DateTo))
 	}
 
 	// 排序
@@ -694,31 +519,27 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 			sortField = ticket.FieldUpdatedAt
 		}
 	}
-
 	if req.SortOrder == "asc" {
-		query.Order(ent.Asc(sortField))
+		query = query.Order(ent.Asc(sortField))
 	} else {
-		query.Order(ent.Desc(sortField))
+		query = query.Order(ent.Desc(sortField))
 	}
 
-	// 获取总数
+	// 总数
 	total, err := query.Count(ctx)
 	if err != nil {
-		s.logger.Errorw("Failed to count tickets", "error", err)
-		return nil, fmt.Errorf("failed to count tickets: %w", err)
+		s.logger.Errorw("count failed", "error", err)
+		return nil, fmt.Errorf("count failed: %w", err)
 	}
 
 	// 分页查询
-	tickets, err := query.
-		Offset((req.Page - 1) * req.PageSize).
-		Limit(req.PageSize).
-		All(ctx)
+	tickets, err := query.Offset((req.Page - 1) * req.PageSize).Limit(req.PageSize).All(ctx)
 	if err != nil {
-		s.logger.Errorw("Failed to list tickets", "error", err)
-		return nil, fmt.Errorf("failed to list tickets: %w", err)
+		s.logger.Errorw("list failed", "error", err)
+		return nil, fmt.Errorf("list failed: %w", err)
 	}
 
-	// 收集所有需要的用户ID
+	// 加载关联用户
 	userIDMap := make(map[int]bool)
 	for _, t := range tickets {
 		if t.RequesterID > 0 {
@@ -729,25 +550,20 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		}
 	}
 
-	// 批量查询用户
 	userMap := make(map[int]*ent.User)
 	if len(userIDMap) > 0 {
-		userIDs := make([]int, 0, len(userIDMap))
+		ids := make([]int, 0, len(userIDMap))
 		for id := range userIDMap {
-			userIDs = append(userIDs, id)
+			ids = append(ids, id)
 		}
-		users, err := s.client.User.Query().Where(user.IDIn(userIDs...)).All(ctx)
-		if err != nil {
-			s.logger.Warnw("Failed to query users", "error", err)
-		} else {
-			for _, u := range users {
-				userMap[u.ID] = u
-			}
+		users, _ := s.client.User.Query().Where(user.IDIn(ids...)).All(ctx)
+		for _, u := range users {
+			userMap[u.ID] = u
 		}
 	}
 
-	// 转换为 DTO 响应格式，确保 ticket_number 字段正确返回
-	ticketResponses := make([]*dto.TicketResponse, len(tickets))
+	// 转换响应
+	resps := make([]*dto.TicketResponse, len(tickets))
 	for i, t := range tickets {
 		var requester, assignee *ent.User
 		if t.RequesterID > 0 {
@@ -756,18 +572,16 @@ func (s *TicketService) ListTickets(ctx context.Context, req *dto.ListTicketsReq
 		if t.AssigneeID > 0 {
 			assignee = userMap[t.AssigneeID]
 		}
-		ticketResponses[i] = dto.ToTicketResponseWithUsers(t, requester, assignee)
+		resps[i] = dto.ToTicketResponseWithUsers(t, requester, assignee)
 	}
 
 	return &dto.ListTicketsResponse{
-		Tickets:  ticketResponses,
+		Tickets:  resps,
 		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,
 	}, nil
 }
-
-// GetTicket 获取工单详情
 func (s *TicketService) GetTicket(ctx context.Context, ticketID int, tenantID int) (*ent.Ticket, error) {
 	s.logger.Infow("Getting ticket", "ticket_id", ticketID, "tenant_id", tenantID)
 

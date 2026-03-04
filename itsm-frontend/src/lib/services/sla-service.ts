@@ -298,8 +298,14 @@ export class SLAService {
   }
 
   // SLA实例管理
-  async getSLAInstances(params?: unknown): Promise<PaginatedResponse<SLAInstance>> {
-    const response = await fetch(`${this.baseUrl}/instances?${new URLSearchParams(params)}`);
+  async getSLAInstances(params?: {
+    page?: number;
+    pageSize?: number;
+    status?: string;
+    sla_definition_id?: number;
+    assigned_to?: number;
+  }): Promise<PaginatedResponse<SLAInstance>> {
+    const response = await fetch(`${this.baseUrl}/instances?${new URLSearchParams(params as any)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA instances');
     return response.json();
   }
@@ -327,14 +333,23 @@ export class SLAService {
   }
 
   // SLA统计和报告
-  async getSLAStats(params?: unknown): Promise<SLAStats> {
-    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params)}`);
+  async getSLAStats(params?: {
+    date_range?: string;
+    sla_definition_id?: number;
+    assigned_to?: number;
+  }): Promise<SLAStats> {
+    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params as any)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA stats');
     return response.json();
   }
 
-  async getSLAReport(params: unknown): Promise<SLAReport> {
-    const response = await fetch(`${this.baseUrl}/reports?${new URLSearchParams(params)}`);
+  async getSLAReport(params: {
+    start_date: string;
+    end_date: string;
+    sla_definition_id?: number;
+    format?: 'pdf' | 'excel' | 'csv';
+  }): Promise<SLAReport> {
+    const response = await fetch(`${this.baseUrl}/reports?${new URLSearchParams(params as any)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA report');
     return response.json();
   }

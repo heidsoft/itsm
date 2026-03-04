@@ -290,15 +290,24 @@ export class SmartAssignmentService {
   }
 
   // 分配历史
-  async getAssignmentHistory(params?: unknown): Promise<PaginatedResponse<AssignmentHistory>> {
-    const response = await fetch(`${this.baseUrl}/history?${new URLSearchParams(params)}`);
+  async getAssignmentHistory(params?: {
+    page?: number;
+    pageSize?: number;
+    assignee?: number;
+    ticket_id?: number;
+  }): Promise<PaginatedResponse<AssignmentHistory>> {
+    const response = await fetch(`${this.baseUrl}/history?${new URLSearchParams(params as any)}`);
     if (!response.ok) throw new Error('Failed to get assignment history');
     return response.json();
   }
 
   // 分配统计
-  async getAssignmentStats(params?: unknown): Promise<AssignmentStats> {
-    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params)}`);
+  async getAssignmentStats(params?: {
+    date_range?: string;
+    assignee?: number;
+    team?: string;
+  }): Promise<AssignmentStats> {
+    const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params as any)}`);
     if (!response.ok) throw new Error('Failed to get assignment stats');
     return response.json();
   }

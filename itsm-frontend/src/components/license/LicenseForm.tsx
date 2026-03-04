@@ -20,7 +20,8 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 
-import { AssetApi, License, LicenseRequest } from '@/lib/api/asset-api';
+import { AssetApi, License, LicenseRequest, type LicenseType } from '@/lib/api/asset-api';
+import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -52,7 +53,22 @@ const LicenseForm: React.FC = () => {
     }
   };
 
-  const onFinish = async (values: unknown) => {
+  const onFinish = async (values: {
+    name: string;
+    description?: string;
+    vendor?: string;
+    license_type?: LicenseType;
+    total_quantity?: number;
+    asset_id?: number;
+    purchase_date?: Dayjs;
+    purchase_price?: number;
+    expiry_date?: Dayjs;
+    support_vendor?: string;
+    support_contact?: string;
+    renewal_cost?: number;
+    notes?: string;
+    tags?: string[];
+  }) => {
     setLoading(true);
     try {
       const data: LicenseRequest = {
@@ -62,12 +78,12 @@ const LicenseForm: React.FC = () => {
         license_type: values.license_type,
         total_quantity: values.total_quantity,
         asset_id: values.asset_id,
-        purchase_date: values.purchase_date,
+        purchase_date: values.purchase_date?.toISOString(),
         purchase_price: values.purchase_price,
-        expiry_date: values.expiry_date,
+        expiry_date: values.expiry_date?.toISOString(),
         support_vendor: values.support_vendor,
         support_contact: values.support_contact,
-        renewal_cost: values.renewal_cost,
+        renewal_cost: values.renewal_cost ? String(values.renewal_cost) : undefined,
         notes: values.notes,
         tags: values.tags,
       };

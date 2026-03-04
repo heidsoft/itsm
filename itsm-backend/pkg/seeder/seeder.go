@@ -20,9 +20,9 @@ import (
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
 
-	"itsm-backend/database"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
+	"itsm-backend/database"
 )
 
 // SeedConfig 种子数据配置结构
@@ -30,17 +30,17 @@ type SeedConfig struct {
 	Departments       []DepartmentSeed       `json:"departments"`
 	Teams             []TeamSeed             `json:"teams"`
 	Roles             []RoleSeed             `json:"roles"`
-	SLADefinitions   []SLADefinitionSeed    `json:"sla_definitions"`
-	ServiceCatalog   []ServiceCatalogSeed   `json:"service_catalog"`
+	SLADefinitions    []SLADefinitionSeed    `json:"sla_definitions"`
+	ServiceCatalog    []ServiceCatalogSeed   `json:"service_catalog"`
 	ApprovalWorkflows []ApprovalWorkflowSeed `json:"approval_workflows"`
-	ProcessBindings  []ProcessBindingSeed   `json:"process_bindings"`
-	TicketViews      []TicketViewSeed       `json:"ticket_views"`
+	ProcessBindings   []ProcessBindingSeed   `json:"process_bindings"`
+	TicketViews       []TicketViewSeed       `json:"ticket_views"`
 }
 
 type DepartmentSeed struct {
 	Name       string `json:"name"`
-	Code      string `json:"code"`
-	Desc      string `json:"description"`
+	Code       string `json:"code"`
+	Desc       string `json:"description"`
 	ParentCode string `json:"parent_code"`
 }
 
@@ -82,9 +82,9 @@ type ApprovalWorkflowSeed struct {
 }
 
 type ProcessBindingSeed struct {
-	BusinessType           string `json:"business_type"`
-	ProcessDefinitionKey   string `json:"process_definition_key"`
-	IsDefault              bool   `json:"is_default"`
+	BusinessType         string `json:"business_type"`
+	ProcessDefinitionKey string `json:"process_definition_key"`
+	IsDefault            bool   `json:"is_default"`
 }
 
 type TicketViewSeed struct {
@@ -270,7 +270,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedDepartments(ctx)
 	s.seedTeams(ctx)
 	s.seedRoles(ctx)
-	s.seedPermissions(ctx)       // 新增：初始化权限
+	s.seedPermissions(ctx) // 新增：初始化权限
 	s.backfillAdminRole(ctx)
 	s.seedAdmin(ctx)
 	s.seedUser1(ctx)
@@ -615,11 +615,11 @@ func (s *Seeder) seedSLAAlertRules(ctx context.Context) {
 
 	// 简化版告警规则
 	alertRules := []struct {
-		Name               string
-		SLAKey             string
-		AlertLevel         string
-		Threshold          int
-		NotificationChans  []string
+		Name              string
+		SLAKey            string
+		AlertLevel        string
+		Threshold         int
+		NotificationChans []string
 	}{
 		{"SLA-P0-响应告警", "SLA-P0-紧急", "warning", 50, []string{"email"}},
 		{"SLA-P0-解决告警", "SLA-P0-紧急", "critical", 80, []string{"email", "sms"}},

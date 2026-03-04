@@ -4,11 +4,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { message } from 'antd';
 import {
   ticketService,
-  Ticket,
-  TicketStatus,
-  TicketPriority,
-  TicketType,
+  type Ticket,
+  type TicketStatus,
+  type TicketPriority,
+  type TicketType,
 } from '@/lib/services/ticket-service';
+import type { CreateTicketRequest, UpdateTicketRequest } from '@/lib/services/ticket-service';
 
 export interface TicketQueryFilters {
   status?: TicketStatus;
@@ -134,7 +135,7 @@ export const useCreateTicketMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (ticketData: unknown) => {
+    mutationFn: async (ticketData: CreateTicketRequest) => {
       const response = await ticketService.createTicket(ticketData);
       return response;
     },
@@ -155,7 +156,7 @@ export const useCreateTicketMutation = () => {
       });
     },
     onError: (error: unknown) => {
-      const errorMessage = error?.message || 'Failed to create ticket';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create ticket';
       message.error(errorMessage);
     },
   });
@@ -166,7 +167,7 @@ export const useUpdateTicketMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: unknown }) => {
+    mutationFn: async ({ id, data }: { id: number; data: UpdateTicketRequest }) => {
       const response = await ticketService.updateTicket(id, data);
       return response;
     },
@@ -181,7 +182,7 @@ export const useUpdateTicketMutation = () => {
       queryClient.invalidateQueries({ queryKey: ticketKeys.stats() });
     },
     onError: (error: unknown) => {
-      const errorMessage = error?.message || 'Failed to update ticket';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update ticket';
       message.error(errorMessage);
     },
   });
@@ -216,7 +217,7 @@ export const useDeleteTicketMutation = () => {
       });
     },
     onError: (error: unknown) => {
-      const errorMessage = error?.message || 'Failed to delete ticket';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete ticket';
       message.error(errorMessage);
     },
   });
@@ -253,7 +254,7 @@ export const useBatchDeleteTicketsMutation = () => {
       });
     },
     onError: (error: unknown) => {
-      const errorMessage = error?.message || 'Failed to delete tickets';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete tickets';
       message.error(errorMessage);
     },
   });

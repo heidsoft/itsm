@@ -72,12 +72,33 @@ export interface WorkflowTask {
   taskVariables?: Record<string, any>;
 }
 
+// 查询参数接口
+export interface WorkflowDefinitionQueryParams {
+  page?: number;
+  pageSize?: number;
+  key?: string;
+  category?: string;
+}
+
+export interface WorkflowInstanceQueryParams {
+  page?: number;
+  pageSize?: number;
+  processDefinitionKey?: string;
+  status?: string;
+}
+
+export interface UserTaskQueryParams {
+  page?: number;
+  assignee?: string;
+  status?: string;
+}
+
 // 工作流服务类
 export class WorkflowEngineService {
   private readonly baseUrl = '/api/v1/bpmn';
 
   // 工作流定义管理
-  async getWorkflowDefinitions(params?: unknown): Promise<PaginatedResponse<WorkflowDefinition>> {
+  async getWorkflowDefinitions(params?: WorkflowDefinitionQueryParams): Promise<PaginatedResponse<WorkflowDefinition>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.pageSize) query.append('page_size', params.pageSize.toString());
@@ -143,7 +164,7 @@ export class WorkflowEngineService {
   }
 
   // 工作流实例管理
-  async getWorkflowInstances(params?: unknown): Promise<PaginatedResponse<WorkflowInstance>> {
+  async getWorkflowInstances(params?: WorkflowInstanceQueryParams): Promise<PaginatedResponse<WorkflowInstance>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.pageSize) query.append('page_size', params.pageSize.toString());
@@ -183,7 +204,7 @@ export class WorkflowEngineService {
   }
 
   // 任务管理
-  async getUserTasks(params?: unknown): Promise<PaginatedResponse<WorkflowTask>> {
+  async getUserTasks(params?: UserTaskQueryParams): Promise<PaginatedResponse<WorkflowTask>> {
     const query = new URLSearchParams();
     if (params?.page) query.append('page', params.page.toString());
     if (params?.assignee) query.append('assignee', params.assignee);

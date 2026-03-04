@@ -254,7 +254,7 @@ export class ReportEngine {
     const result: Array<{ time: string; [key: string]: unknown }> = [];
 
     for (const [timeKey, groupData] of Object.entries(timeGroups)) {
-      const row: unknown = { time: timeKey };
+      const row: Record<string, unknown> = { time: timeKey };
 
       for (const metric of metrics) {
         const key = metric.alias || metric.name;
@@ -394,7 +394,8 @@ export class ReportEngine {
 
     for (const key of keys) {
       if (value === null || value === undefined) return undefined;
-      value = value[key];
+      // 使用类型守卫和断言安全访问属性
+      value = (value as Record<string, unknown>)[key];
     }
 
     return value;
@@ -408,9 +409,14 @@ export class ReportEngine {
     columns: string[]
   ): {
     columns: string[];
-    rows: unknown[][];
+    rows: string[][];
   } {
-    const rows = data.map(row => columns.map(col => this.getNestedValue(row, col)));
+    const rows = data.map(row => 
+      columns.map(col => {
+        const value = this.getNestedValue(row, col);
+        return value !== null && value !== undefined ? String(value) : '';
+      })
+    );
 
     return { columns, rows };
   }

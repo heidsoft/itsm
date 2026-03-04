@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"testing"
+	"time"
 
 	"itsm-backend/dto"
 	"itsm-backend/ent/enttest"
@@ -437,10 +438,14 @@ func TestAuthService_RefreshToken_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("租户被禁用后 refresh token 应该失效", func(t *testing.T) {
-		// 重新激活用户
+		// 重新激活用户，确保用户为激活状态
 		_, err := client.User.UpdateOneID(testUser.ID).
 			SetActive(true).
 			Save(ctx)
+		require.NoError(t, err)
+
+		// 先登录获取 refresh token（租户激活状态下）
+		loginResp2, err := authService.Login(ctx, loginReq)
 		require.NoError(t, err)
 
 		// 禁用租户
@@ -449,11 +454,7 @@ func TestAuthService_RefreshToken_EdgeCases(t *testing.T) {
 			Save(ctx)
 		require.NoError(t, err)
 
-		// 重新登录获取新的 refresh token
-		loginResp2, err := authService.Login(ctx, loginReq)
-		require.NoError(t, err)
-
-		// 尝试使用新的 refresh token
+		// 尝试使用 refresh token
 		request := &dto.RefreshTokenRequest{
 			RefreshToken: loginResp2.RefreshToken,
 		}
@@ -462,6 +463,7 @@ func TestAuthService_RefreshToken_EdgeCases(t *testing.T) {
 		// 注意：当前 RefreshToken 实现不检查租户状态，只检查用户状态
 		// 这是一个潜在的改进点，但测试应该反映当前行为
 		// 如果未来实现了租户状态检查，这个测试应该期望失败
+		// 当前预期：仍然成功
 		if response != nil {
 			assert.NoError(t, err)
 			assert.NotEmpty(t, response.AccessToken)
@@ -622,6 +624,11 @@ func TestAuthService_RefreshToken_MultipleRefreshes(t *testing.T) {
 		assert.NotNil(t, response)
 		assert.NotEmpty(t, response.AccessToken)
 		accessTokens = append(accessTokens, response.AccessToken)
+
+		// 休眠1秒以确保生成的 token 具有不同的签发时间（iat）
+		if i < 4 {
+			time.Sleep(time.Second)
+		}
 	}
 
 	// 验证每次刷新都生成了不同的 access token

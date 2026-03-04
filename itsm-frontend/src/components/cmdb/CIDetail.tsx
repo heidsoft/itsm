@@ -51,8 +51,8 @@ interface ImpactAnalysisData {
   upstream_impact: ImpactAnalysisItem[];
   downstream_impact: ImpactAnalysisItem[];
   critical_dependencies: ImpactAnalysisItem[];
-  affected_tickets: unknown[];
-  affected_incidents: unknown[];
+  affected_tickets: AffectedTicket[];
+  affected_incidents: AffectedIncident[];
   risk_level: string;
   summary: string;
 }
@@ -67,12 +67,43 @@ interface ImpactAnalysisItem {
   direction: string;
 }
 
+interface AffectedTicket {
+  id: number;
+  ticketNumber: string;
+  title: string;
+  status: string;
+  priority: string;
+  [key: string]: unknown;
+}
+
+interface AffectedIncident {
+  id: number;
+  title: string;
+  status: string;
+  severity: string;
+  [key: string]: unknown;
+}
+
 // 变更历史数据类型
 interface ChangeHistoryData {
-  logs: unknown[];
+  logs: ChangeLog[];
   total: number;
   page: number;
   page_size: number;
+}
+
+interface ChangeLog {
+  id: number;
+  action: 'create' | 'update' | 'delete' | 'relationship_added' | 'relationship_removed';
+  resource?: string;
+  path?: string;
+  Method?: string;
+  StatusCode?: number | string;
+  created_at?: string;
+  updated_by?: string;
+  updated_at?: string;
+  description?: string;
+  [key: string]: unknown;
 }
 
 const statusColors: Record<string, string> = {
@@ -422,7 +453,7 @@ const CIDetail: React.FC = () => {
                             <List
                               size="small"
                               dataSource={impactAnalysis.affected_tickets}
-                              renderItem={(item: unknown) => (
+                              renderItem={(item: AffectedTicket) => (
                                 <List.Item>
                                   <Space>
                                     <Tag>{item.status}</Tag>
@@ -445,7 +476,7 @@ const CIDetail: React.FC = () => {
                             <List
                               size="small"
                               dataSource={impactAnalysis.affected_incidents}
-                              renderItem={(item: unknown) => (
+                              renderItem={(item: AffectedIncident) => (
                                 <List.Item>
                                   <Space>
                                     <Tag
@@ -499,7 +530,7 @@ const CIDetail: React.FC = () => {
 
               {changeHistory && changeHistory.logs && changeHistory.logs.length > 0 ? (
                 <Timeline
-                  items={changeHistory.logs.map((log: unknown) => ({
+                  items={changeHistory.logs.map((log: ChangeLog) => ({
                     color:
                       log.action === 'create' ? 'green' : log.action === 'update' ? 'blue' : 'gray',
                     children: (
@@ -527,7 +558,7 @@ const CIDetail: React.FC = () => {
                         </div>
                         <div>
                           <Text type="secondary">
-                            {dayjs(log.created_at).format('YYYY-MM-DD HH:mm:ss')}
+                            {dayjs(log.created_at || log.updated_at).format('YYYY-MM-DD HH:mm:ss')}
                           </Text>
                         </div>
                       </div>

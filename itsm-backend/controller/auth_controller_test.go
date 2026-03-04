@@ -764,7 +764,7 @@ func TestAuthController_RefreshTokenWithExpiredToken(t *testing.T) {
 
 	loginData, ok := loginResponse.Data.(map[string]interface{})
 	require.True(t, ok)
-	refreshToken := loginData["refresh_token"].(string)
+	_ = loginData["refresh_token"].(string) // 提取但不使用（仅为演示）
 
 	// 使用过期的 token 格式（模拟过期 token）
 	expiredToken := "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJleHAiOjB9.expired"
@@ -1014,7 +1014,7 @@ func TestAuthController_RefreshTokenResponseFormat(t *testing.T) {
 
 	// 验证响应格式
 	assert.Equal(t, common.SuccessCode, response.Code)
-	assert.Equal(t, "success", response.Status)
+	assert.Equal(t, "success", response.Message)
 	assert.NotEmpty(t, response.Message)
 	assert.NotNil(t, response.Data)
 

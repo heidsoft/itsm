@@ -44,9 +44,9 @@ export function useBatchAssignMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`批量分配失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量分配失败：${errorMessage}`);
     },
   });
 }
@@ -69,9 +69,9 @@ export function useBatchUpdateStatusMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`批量更新失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量更新失败：${errorMessage}`);
     },
   });
 }

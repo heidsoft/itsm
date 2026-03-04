@@ -23,6 +23,7 @@ import dayjs from 'dayjs';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 
 import { ReleaseApi, Release, ReleaseRequest } from '@/lib/api/release-api';
+import type { Dayjs } from 'dayjs';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -62,7 +63,28 @@ const ReleaseForm: React.FC = () => {
     }
   };
 
-  const onFinish = async (values: unknown) => {
+  const onFinish = async (values: {
+    release_number: string;
+    title: string;
+    description?: string;
+    type?: Release['type'];
+    environment?: Release['environment'];
+    severity?: Release['severity'];
+    change_id?: number;
+    owner_id?: number;
+    planned_release_date?: Dayjs;
+    planned_start_date?: Dayjs;
+    planned_end_date?: Dayjs;
+    release_notes?: string;
+    rollback_procedure?: string;
+    validation_criteria?: string;
+    affected_systems?: string[];
+    affected_components?: string[];
+    deployment_steps?: string[];
+    tags?: string[];
+    is_emergency?: boolean;
+    requires_approval?: boolean;
+  }) => {
     setLoading(true);
     try {
       const data: ReleaseRequest = {

@@ -39,38 +39,39 @@ const getUserFriendlyMessage = (error: unknown): string => {
     return error;
   }
 
-  if (error?.message) {
+  if (error instanceof Error) {
+    const message = error.message;
     // 网络错误
-    if (error.message.includes('Network Error')) {
+    if (message.includes('Network Error')) {
       return '网络连接失败，请检查网络设置';
     }
 
     // 超时错误
-    if (error.message.includes('timeout')) {
+    if (message.includes('timeout')) {
       return '请求超时，请稍后重试';
     }
 
     // 权限错误
-    if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+    if (message.includes('401') || message.includes('Unauthorized')) {
       return '登录已过期，请重新登录';
     }
 
     // 权限不足
-    if (error.message.includes('403') || error.message.includes('Forbidden')) {
+    if (message.includes('403') || message.includes('Forbidden')) {
       return '权限不足，无法执行此操作';
     }
 
     // 资源不存在
-    if (error.message.includes('404') || error.message.includes('Not Found')) {
+    if (message.includes('404') || message.includes('Not Found')) {
       return '请求的资源不存在';
     }
 
     // 服务器错误
-    if (error.message.includes('500') || error.message.includes('Internal Server Error')) {
+    if (message.includes('500') || message.includes('Internal Server Error')) {
       return '服务器内部错误，请联系管理员';
     }
 
-    return error.message;
+    return message;
   }
 
   return '未知错误';
@@ -99,7 +100,7 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
   const handleError = useCallback(
     (error: unknown, context?: string, customMessage?: string) => {
       const appError: AppError = {
-        code: error?.code,
+        code: error instanceof Error ? (error as any).code : undefined,
         message: customMessage || getUserFriendlyMessage(error),
         details: error,
         context,
@@ -143,7 +144,9 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
   // 处理表单验证错误
   const handleValidationError = useCallback(
     (errors: unknown[], context?: string) => {
-      const errorMessages = errors.map(err => err.message || err).join('; ');
+      const errorMessages = errors.map(err => 
+        err instanceof Error ? err.message : String(err)
+      ).join('; ');
       handleError(new Error(errorMessages), context, '表单验证失败');
     },
     [handleError]
@@ -154,12 +157,15 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
     (error: unknown, context?: string) => {
       let message = '网络连接失败';
 
-      if (error?.code === 'NETWORK_ERROR') {
-        message = '网络连接失败，请检查网络设置';
-      } else if (error?.code === 'TIMEOUT') {
-        message = '请求超时，请稍后重试';
-      } else if (error?.code === 'SERVER_ERROR') {
-        message = '服务器错误，请稍后重试';
+      if (error instanceof Error) {
+        const err = error as any;
+        if (err.code === 'NETWORK_ERROR') {
+          message = '网络连接失败，请检查网络设置';
+        } else if (err.code === 'TIMEOUT') {
+          message = '请求超时，请稍后重试';
+        } else if (err.code === 'SERVER_ERROR') {
+          message = '服务器错误，请稍后重试';
+        }
       }
 
       handleError(error, context, message);
@@ -178,7 +184,7 @@ export const useErrorHandler = (config: Partial<ErrorHandlerConfig> = {}) => {
 // 全局错误处理函数（用于非Hook环境）
 export const handleGlobalError = (error: unknown, context?: string, customMessage?: string) => {
   const appError: AppError = {
-    code: error?.code,
+    code: error instanceof Error ? (error as any).code : undefined,
     message: customMessage || getUserFriendlyMessage(error),
     details: error,
     context,
