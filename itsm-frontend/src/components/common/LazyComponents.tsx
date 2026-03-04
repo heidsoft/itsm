@@ -72,13 +72,13 @@ export const LazyVirtualizedTicketList = lazy(() =>
 );
 
 export const LazyTicketModal = lazy(() =>
-  import('@/components/business/TicketModal').then(module => ({
+  import('@/components/business/ticket-modal/TicketModal').then(module => ({
     default: module.TicketModal,
   }))
 );
 
 export const LazyTicketTemplateModal = lazy(() =>
-  import('@/components/business/TicketModal').then(module => ({
+  import('@/components/business/ticket-modal/TicketModal').then(module => ({
     default: module.TicketTemplateModal,
   }))
 );
