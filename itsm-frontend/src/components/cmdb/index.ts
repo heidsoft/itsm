@@ -7,7 +7,7 @@ export type {} from '@/types/cmdb';
 
 // UI组件将在后续完善
 // export { CIList } from './CIList';
-// export { CIDetail } from './CIDetail';
+export { CIDetail } from './ci-detail/CIDetail';
 // export { CIForm } from './CIForm';
 // export { RelationshipGraph } from './RelationshipGraph';
 // export { ImpactAnalysis } from './ImpactAnalysis';
