@@ -152,7 +152,7 @@ export interface ServiceFormField {
     | 'file';
   required: boolean;
   placeholder?: string;
-  defaultValue?: any;
+  defaultValue?: unknown;
   options?: Array<{
     label: string;
     value: string;
@@ -166,7 +166,7 @@ export interface ServiceFormField {
   helpText?: string;
   dependsOn?: {
     field: string;
-    value: any;
+    value: unknown;
   };
 }
 

@@ -36,11 +36,7 @@ import {
   Filter,
   Download,
 } from 'lucide-react';
-import {
-  TicketAnalyticsApi,
-  type AnalyticsConfig,
-  type AnalyticsResponse,
-} from '@/lib/api/ticket-analytics-api';
+import { TicketAnalyticsApi, type AnalyticsConfig, type AnalyticsResponse } from '@/lib/api/ticket-analytics-api';
 import ReportsCharts from './ReportsCharts';
 import { format, subDays } from 'date-fns';
 
@@ -87,7 +83,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
   });
   const [customTimeRange, setCustomTimeRange] = useState<[string, string]>([
     format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-    format(new Date(), 'yyyy-MM-dd'),
+    format(new Date(), 'yyyy-MM-dd')
   ]);
 
   // 预定义时间范围
@@ -97,14 +93,14 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
     '90days': '最近90天',
     '6months': '最近6个月',
     '1year': '最近1年',
-    custom: '自定义',
+    'custom': '自定义',
   };
 
   // 加载KPI数据
   const loadKPIData = async () => {
     try {
       setLoading(true);
-
+      
       // 模拟KPI数据
       const mockKPI: KPIData[] = [
         {
@@ -185,7 +181,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
   const renderKPI = (kpi: KPIData) => {
     const formatValue = (value: number | string, format?: string) => {
       if (typeof value === 'string') return value;
-
+      
       switch (format) {
         case 'percentage':
           return `${value.toFixed(1)}%`;
@@ -222,7 +218,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       <Card className="kpi-card">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
-            <div style={{ color: kpi.color }}>{kpi.icon}</div>
+            <div style={{ color: kpi.color }}>
+              {kpi.icon}
+            </div>
             <Text type="secondary">{kpi.title}</Text>
           </div>
           <div className="flex items-center space-x-1">
@@ -230,8 +228,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
             <Text className={`text-sm ${getTrendColor()}`}>
               {kpi.trendValue && kpi.trendValue !== 0 && (
                 <span>
-                  {kpi.trendValue > 0 ? '+' : ''}
-                  {kpi.trendValue}%
+                  {kpi.trendValue > 0 ? '+' : ''}{kpi.trendValue}%
                 </span>
               )}
             </Text>
@@ -251,18 +248,12 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       dataIndex: 'rank',
       key: 'rank',
       width: 60,
-      render: (_: any, __: any, index: number) => (
-        <div
-          className={`text-center font-bold ${
-            index === 0
-              ? 'text-yellow-500'
-              : index === 1
-                ? 'text-gray-400'
-                : index === 2
-                  ? 'text-orange-600'
-                  : 'text-gray-600'
-          }`}
-        >
+      render: (_: unknown, __: unknown, index: number) => (
+        <div className={`text-center font-bold ${
+          index === 0 ? 'text-yellow-500' :
+          index === 1 ? 'text-gray-400' :
+          index === 2 ? 'text-orange-600' : 'text-gray-600'
+        }`}>
           #{index + 1}
         </div>
       ),
@@ -282,7 +273,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       title: '处理工单',
       dataIndex: 'tickets',
       key: 'tickets',
-      render: (tickets: number) => <Text strong>{tickets}</Text>,
+      render: (tickets: number) => (
+        <Text strong>{tickets}</Text>
+      ),
     },
     {
       title: '效率评分',
@@ -293,7 +286,10 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
           <Progress
             percent={efficiency}
             size="small"
-            strokeColor={efficiency >= 90 ? '#52c41a' : efficiency >= 80 ? '#faad14' : '#ff4d4f'}
+            strokeColor={
+              efficiency >= 90 ? '#52c41a' :
+              efficiency >= 80 ? '#faad14' : '#ff4d4f'
+            }
             showInfo={false}
             style={{ width: 60 }}
           />
@@ -315,42 +311,28 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       </Row>
 
       {/* 控制面板 */}
-      <Card
-        title="数据分析控制台"
-        extra={
-          <Button icon={<Download />} onClick={() => message.info('导出功能开发中')}>
-            导出报告
-          </Button>
-        }
-      >
+      <Card title="数据分析控制台" extra={
+        <Button icon={<Download />} onClick={() => message.info('导出功能开发中')}>
+          导出报告
+        </Button>
+      }>
         <Form layout="inline">
           <Form.Item label="时间范围">
             <Select
               style={{ width: 150 }}
               value="30days"
-              onChange={value => {
+              onChange={(value) => {
                 if (value !== 'custom') {
-                  const days =
-                    value === '7days'
-                      ? 7
-                      : value === '30days'
-                        ? 30
-                        : value === '90days'
-                          ? 90
-                          : value === '6months'
-                            ? 180
-                            : 365;
+                  const days = value === '7days' ? 7 : value === '30days' ? 30 : value === '90days' ? 90 : value === '6months' ? 180 : 365;
                   setCustomTimeRange([
                     format(subDays(new Date(), days), 'yyyy-MM-dd'),
-                    format(new Date(), 'yyyy-MM-dd'),
+                    format(new Date(), 'yyyy-MM-dd')
                   ]);
                 }
               }}
             >
               {Object.entries(timeRanges).map(([key, label]) => (
-                <Option key={key} value={key}>
-                  {label}
-                </Option>
+                <Option key={key} value={key}>{label}</Option>
               ))}
             </Select>
           </Form.Item>
@@ -359,12 +341,10 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
             <Select
               style={{ width: 200 }}
               value={analyticsConfig.dimensions?.[0]}
-              onChange={value =>
-                setAnalyticsConfig(prev => ({
-                  ...prev,
-                  dimensions: [value],
-                }))
-              }
+              onChange={(value) => setAnalyticsConfig(prev => ({
+                ...prev,
+                dimensions: [value]
+              }))}
             >
               <Option value="created_date">创建日期</Option>
               <Option value="status">工单状态</Option>
@@ -378,12 +358,10 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
             <Select
               style={{ width: 200 }}
               value={analyticsConfig.metrics?.[0]}
-              onChange={value =>
-                setAnalyticsConfig(prev => ({
-                  ...prev,
-                  metrics: [value],
-                }))
-              }
+              onChange={(value) => setAnalyticsConfig(prev => ({
+                ...prev,
+                metrics: [value]
+              }))}
             >
               <Option value="count">工单数量</Option>
               <Option value="avg_response_time">平均响应时间</Option>
@@ -404,7 +382,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
       <Row gutter={[16, 16]}>
         {/* 趋势图表 */}
         <Col xs={24} lg={16}>
-          <Card
+          <Card 
             title={
               <Space>
                 <TrendingUp className="w-5 h-5 text-blue-600" />
@@ -430,9 +408,9 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
                       <div key={index} className="flex justify-between items-center">
                         <Text className="w-12">{trend.period}</Text>
                         <div className="flex items-center space-x-2">
-                          <Progress
-                            percent={(trend.value / 100) * 100}
-                            size="small"
+                          <Progress 
+                            percent={(trend.value / 100) * 100} 
+                            size="small" 
                             style={{ width: 80 }}
                             showInfo={false}
                           />

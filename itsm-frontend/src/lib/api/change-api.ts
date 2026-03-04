@@ -233,7 +233,7 @@ export class ChangeApi {
   }
 
   // 批量操作变更
-  static async batchUpdateChanges(ids: number[], action: string, data?: any): Promise<void> {
+  static async batchUpdateChanges(ids: number[], action: string, data?: unknown): Promise<void> {
     return httpClient.post('/api/v1/changes/batch', { ids, action, data });
   }
 

@@ -176,7 +176,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
       title: '操作',
       key: 'actions',
       width: 200,
-      render: (_: any, record: ArticleVersion) => (
+      render: (_: unknown, record: ArticleVersion) => (
         <Space>
           <Tooltip title="预览版本">
             <Button
@@ -218,7 +218,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         {compareResult.changes && compareResult.changes.length > 0 ? (
           <div>
             <Title level={5}>变更详情</Title>
-            {compareResult.changes.map((change: any, index: number) => (
+            {compareResult.changes.map((change: unknown, index: number) => (
               <Card key={index} size="small" className="mb-2">
                 <Space>
                   <Tag

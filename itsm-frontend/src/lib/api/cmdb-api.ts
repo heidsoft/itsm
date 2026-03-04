@@ -72,7 +72,9 @@ export class CMDBApi {
   /**
    * 创建配置项 (新端点)
    */
-  static async createConfigurationItem(data: CreateCIRequest): Promise<ConfigurationItem> {
+  static async createConfigurationItem(
+    data: CreateCIRequest
+  ): Promise<ConfigurationItem> {
     return httpClient.post('/api/v1/configuration-items', data);
   }
 
@@ -86,9 +88,12 @@ export class CMDBApi {
   /**
    * 获取CI拓扑关系 (新端点)
    */
-  static async getCITopology(id: number, depth = 3): Promise<CITopology> {
+  static async getCITopology(
+    id: number,
+    depth = 3
+  ): Promise<CITopology> {
     return httpClient.get(`/api/v1/configuration-items/${id}/topology`, {
-      depth,
+      depth
     });
   }
 
@@ -126,7 +131,9 @@ export class CMDBApi {
   /**
    * 获取CI列表 (DDD架构)
    */
-  static async getCIs(query?: any): Promise<{
+  static async getCIs(
+    query?: unknown
+  ): Promise<{
     cis: ConfigurationItem[];
     total: number;
   }> {
@@ -143,7 +150,9 @@ export class CMDBApi {
   /**
    * 创建CI (DDD架构)
    */
-  static async createCI(request: CreateCIRequest): Promise<ConfigurationItem> {
+  static async createCI(
+    request: CreateCIRequest
+  ): Promise<ConfigurationItem> {
     return httpClient.post('/api/v1/cmdb/cis', request);
   }
 
@@ -182,7 +191,7 @@ export class CMDBApi {
     const result = await this.getCIs(query);
     return {
       items: result.cis,
-      total: result.total,
+      total: result.total
     };
   }
 
@@ -196,14 +205,14 @@ export class CMDBApi {
   /**
    * 获取关系图谱
    */
-  static async getRelationshipGraph(query: any): Promise<any> {
+  static async getRelationshipGraph(query: unknown): Promise<any> {
     return httpClient.get('/api/v1/cmdb/graph', query);
   }
 
   /**
    * 影响分析
    */
-  static async analyzeImpact(request: any): Promise<any> {
+  static async analyzeImpact(request: unknown): Promise<any> {
     return httpClient.post('/api/v1/cmdb/impact', request);
   }
 
@@ -232,10 +241,7 @@ export class CMDBApi {
    * 获取发现历史
    */
   static async getDiscoveryHistory(ruleId?: string): Promise<any[]> {
-    return httpClient.get(
-      '/api/v1/cmdb/discovery/history',
-      ruleId ? { rule_id: ruleId } : undefined
-    );
+    return httpClient.get('/api/v1/cmdb/discovery/history', ruleId ? { rule_id: ruleId } : undefined);
   }
 
   /**
@@ -287,14 +293,16 @@ export class CMDBApi {
       parent_id: request.source_ci_id,
       child_id: request.target_ci_id,
       type: request.type,
-      description: request.description,
+      description: request.description
     });
   }
 
   /**
    * 批量创建CI
    */
-  static async batchCreateCIs(requests: CreateCIRequest[]): Promise<ConfigurationItem[]> {
+  static async batchCreateCIs(
+    requests: CreateCIRequest[]
+  ): Promise<ConfigurationItem[]> {
     // 简单实现：逐个创建
     const results: ConfigurationItem[] = [];
     for (const request of requests) {
@@ -320,7 +328,7 @@ export class CMDBApi {
   /**
    * 获取云资源列表
    */
-  static async getCloudResources(params?: any): Promise<any> {
+  static async getCloudResources(params?: unknown): Promise<any> {
     return httpClient.get('/api/v1/cmdb/cloud-resources', params);
   }
 
@@ -334,7 +342,7 @@ export class CMDBApi {
   /**
    * 创建云账号
    */
-  static async createCloudAccount(data: any): Promise<any> {
+  static async createCloudAccount(data: unknown): Promise<any> {
     return httpClient.post('/api/v1/cmdb/cloud-accounts', data);
   }
 
@@ -348,21 +356,21 @@ export class CMDBApi {
   /**
    * 创建云服务
    */
-  static async createCloudService(data: any): Promise<any> {
+  static async createCloudService(data: unknown): Promise<any> {
     return httpClient.post('/api/v1/cmdb/cloud-services', data);
   }
 
   /**
    * 获取对账结果
    */
-  static async getReconciliationResults(params?: any): Promise<any> {
+  static async getReconciliationResults(params?: unknown): Promise<any> {
     return httpClient.get('/api/v1/cmdb/reconciliation', params);
   }
 
   /**
    * 运行对账
    */
-  static async runReconciliation(params?: any): Promise<any> {
+  static async runReconciliation(params?: unknown): Promise<any> {
     return httpClient.post('/api/v1/cmdb/reconciliation/run', params);
   }
 
@@ -377,8 +385,8 @@ export class CMDBApi {
   /** @deprecated 使用 getCIs */
   static get cis() {
     return {
-      list: (params?: any) => this.getCIs(params),
-      items: (params?: any) => this.getCIs(params).then((r: any) => r.cis || r.items || []),
+      list: (params?: unknown) => this.getCIs(params),
+      items: (params?: unknown) => this.getCIs(params).then((r: unknown) => r.cis || r.items || []),
     };
   }
 }

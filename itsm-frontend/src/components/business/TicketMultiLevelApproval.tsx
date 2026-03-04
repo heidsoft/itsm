@@ -63,7 +63,7 @@ interface ApprovalNode {
   conditions?: Array<{
     field: string;
     operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains';
-    value: any;
+    value: unknown;
   }>;
   allowReject: boolean;
   allowDelegate: boolean;
@@ -337,7 +337,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
     {
       title: '审批级别',
       key: 'levels',
-      render: (_: any, record: ApprovalWorkflow) => (
+      render: (_: unknown, record: ApprovalWorkflow) => (
         <Badge count={record.nodes.length} showZero>
           <Tag color="blue">{record.nodes.length} 级</Tag>
         </Badge>
@@ -354,7 +354,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
     {
       title: '操作',
       key: 'actions',
-      render: (_: any, record: ApprovalWorkflow) => (
+      render: (_: unknown, record: ApprovalWorkflow) => (
         <Space>
           <Button
             type="link"
@@ -426,7 +426,7 @@ export const TicketMultiLevelApproval: React.FC<TicketMultiLevelApprovalProps> =
     {
       title: '审批级别',
       key: 'level',
-      render: (_: any, record: ApprovalRecord) => (
+      render: (_: unknown, record: ApprovalRecord) => (
         <Text>
           {record.currentLevel} / {record.totalLevels}
         </Text>

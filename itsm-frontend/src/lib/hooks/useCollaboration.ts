@@ -175,7 +175,7 @@ export function useCreateCommentMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`发布评论失败：${error.message || '未知错误'}`);
     },
   });
@@ -199,7 +199,7 @@ export function useUpdateCommentMutation() {
         queryKey: COLLABORATION_KEYS.comments(),
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`更新评论失败：${error.message || '未知错误'}`);
     },
   });
@@ -219,7 +219,7 @@ export function useDeleteCommentMutation() {
         queryKey: COLLABORATION_KEYS.comments(),
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`删除评论失败：${error.message || '未知错误'}`);
     },
   });
@@ -310,7 +310,7 @@ export function useAddWatcherMutation() {
         queryKey: COLLABORATION_KEYS.watchers(variables.ticketId),
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`添加观察者失败：${error.message || '未知错误'}`);
     },
   });
@@ -331,7 +331,7 @@ export function useRemoveWatcherMutation() {
         queryKey: COLLABORATION_KEYS.watchers(variables.ticketId),
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`移除观察者失败：${error.message || '未知错误'}`);
     },
   });
@@ -351,7 +351,7 @@ export function useWatchTicketMutation() {
         queryKey: COLLABORATION_KEYS.watchers(ticketId),
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`观察失败：${error.message || '未知错误'}`);
     },
   });
@@ -371,7 +371,7 @@ export function useUnwatchTicketMutation() {
         queryKey: COLLABORATION_KEYS.watchers(ticketId),
       });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`取消观察失败：${error.message || '未知错误'}`);
     },
   });

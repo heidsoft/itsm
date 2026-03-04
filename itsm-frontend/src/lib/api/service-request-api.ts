@@ -225,7 +225,7 @@ class ServiceRequestAPI {
   // ==================== 兼容别名 ====================
 
   /** @deprecated 使用 getUserServiceRequests */
-  async getServiceRequests(params?: any): Promise<ServiceRequestListResponse> {
+  async getServiceRequests(params?: unknown): Promise<ServiceRequestListResponse> {
     return this.getUserServiceRequests(params);
   }
 

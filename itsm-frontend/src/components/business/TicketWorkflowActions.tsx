@@ -49,7 +49,7 @@ const { Option } = Select;
 interface TicketWorkflowActionsProps {
   ticket: Ticket;
   workflowState: TicketWorkflowState;
-  onAction: (action: TicketWorkflowAction, data: any) => Promise<void>;
+  onAction: (action: TicketWorkflowAction, data: unknown) => Promise<void>;
   onRefresh: () => void;
 }
 
@@ -108,7 +108,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
       message.success('操作成功');
       setModalVisible(false);
       onRefresh();
-    } catch (error: any) {
+    } catch (error: unknown) {
       message.error(error.message || '操作失败');
     } finally {
       setLoading(false);
@@ -127,7 +127,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
           await onAction(action, { ticketId: ticket.id });
           message.success('操作成功');
           onRefresh();
-        } catch (error: any) {
+        } catch (error: unknown) {
           message.error(error.message || '操作失败');
         }
       },

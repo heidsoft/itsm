@@ -73,7 +73,7 @@ interface WorkflowCondition {
   id: string;
   field: string;
   operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
-  value: any;
+  value: unknown;
   logic: 'and' | 'or';
 }
 
@@ -81,7 +81,7 @@ interface WorkflowAction {
   id: string;
   type: 'update_field' | 'send_notification' | 'create_task' | 'webhook';
   target: string;
-  value: any;
+  value: unknown;
   description: string;
 }
 

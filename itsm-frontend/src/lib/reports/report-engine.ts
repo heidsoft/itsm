@@ -19,17 +19,17 @@ export class ReportEngine {
    * 应用过滤器
    */
   static applyFilters(
-    data: any[],
+    data: unknown[],
     filters: ReportFilter[],
     filterValues: Record<string, any>
-  ): any[] {
+  ): unknown[] {
     let filteredData = [...data];
 
     for (const filter of filters) {
       const value = filterValues[filter.field];
       if (value === undefined || value === null) continue;
 
-      filteredData = filteredData.filter(row => {
+      filteredData = filteredData.filter((row) => {
         const fieldValue = this.getNestedValue(row, filter.field);
         return this.matchesFilter(fieldValue, filter.operator, value);
       });
@@ -42,56 +42,54 @@ export class ReportEngine {
    * 匹配过滤条件
    */
   private static matchesFilter(
-    fieldValue: any,
+    fieldValue: unknown,
     operator: FilterOperator,
-    filterValue: any
+    filterValue: unknown
   ): boolean {
     switch (operator) {
       case 'equals':
         return fieldValue === filterValue;
-
+      
       case 'not_equals':
         return fieldValue !== filterValue;
-
+      
       case 'contains':
         return String(fieldValue).toLowerCase().includes(String(filterValue).toLowerCase());
-
+      
       case 'not_contains':
         return !String(fieldValue).toLowerCase().includes(String(filterValue).toLowerCase());
-
+      
       case 'starts_with':
         return String(fieldValue).toLowerCase().startsWith(String(filterValue).toLowerCase());
-
+      
       case 'ends_with':
         return String(fieldValue).toLowerCase().endsWith(String(filterValue).toLowerCase());
-
+      
       case 'greater_than':
         return Number(fieldValue) > Number(filterValue);
-
+      
       case 'less_than':
         return Number(fieldValue) < Number(filterValue);
-
+      
       case 'between':
         if (Array.isArray(filterValue) && filterValue.length === 2) {
-          return (
-            Number(fieldValue) >= Number(filterValue[0]) &&
-            Number(fieldValue) <= Number(filterValue[1])
-          );
+          return Number(fieldValue) >= Number(filterValue[0]) && 
+                 Number(fieldValue) <= Number(filterValue[1]);
         }
         return false;
-
+      
       case 'in':
         return Array.isArray(filterValue) && filterValue.includes(fieldValue);
-
+      
       case 'not_in':
         return Array.isArray(filterValue) && !filterValue.includes(fieldValue);
-
+      
       case 'is_null':
         return fieldValue === null || fieldValue === undefined;
-
+      
       case 'is_not_null':
         return fieldValue !== null && fieldValue !== undefined;
-
+      
       default:
         return true;
     }
@@ -102,16 +100,16 @@ export class ReportEngine {
   /**
    * 应用排序
    */
-  static applySorting(data: any[], sorting: ReportSorting[]): any[] {
+  static applySorting(data: unknown[], sorting: ReportSorting[]): unknown[] {
     if (!sorting || sorting.length === 0) return data;
 
     return [...data].sort((a, b) => {
       for (const sort of sorting) {
         const aValue = this.getNestedValue(a, sort.field);
         const bValue = this.getNestedValue(b, sort.field);
-
+        
         const comparison = this.compareValues(aValue, bValue);
-
+        
         if (comparison !== 0) {
           return sort.order === 'asc' ? comparison : -comparison;
         }
@@ -123,15 +121,15 @@ export class ReportEngine {
   /**
    * 比较值
    */
-  private static compareValues(a: any, b: any): number {
+  private static compareValues(a: unknown, b: unknown): number {
     if (a === b) return 0;
     if (a === null || a === undefined) return 1;
     if (b === null || b === undefined) return -1;
-
+    
     if (typeof a === 'string' && typeof b === 'string') {
       return a.localeCompare(b);
     }
-
+    
     return a < b ? -1 : 1;
   }
 
@@ -140,20 +138,23 @@ export class ReportEngine {
   /**
    * 应用分组
    */
-  static applyGrouping(data: any[], grouping: ReportGrouping[]): Record<string, any[]> {
+  static applyGrouping(
+    data: unknown[],
+    grouping: ReportGrouping[]
+  ): Record<string, any[]> {
     if (!grouping || grouping.length === 0) {
       return { all: data };
     }
 
     const groups: Record<string, any[]> = {};
-
+    
     for (const row of data) {
       const groupKey = this.generateGroupKey(row, grouping);
-
+      
       if (!groups[groupKey]) {
         groups[groupKey] = [];
       }
-
+      
       groups[groupKey].push(row);
     }
 
@@ -163,9 +164,9 @@ export class ReportEngine {
   /**
    * 生成分组键
    */
-  private static generateGroupKey(row: any, grouping: ReportGrouping[]): string {
+  private static generateGroupKey(row: unknown, grouping: ReportGrouping[]): string {
     return grouping
-      .map(g => {
+      .map((g) => {
         const value = this.getNestedValue(row, g.field);
         return value !== null && value !== undefined ? String(value) : 'null';
       })
@@ -177,7 +178,10 @@ export class ReportEngine {
   /**
    * 应用聚合
    */
-  static applyAggregation(data: any[], metrics: AggregationMetric[]): Record<string, any> {
+  static applyAggregation(
+    data: unknown[],
+    metrics: AggregationMetric[]
+  ): Record<string, any> {
     const result: Record<string, any> = {};
 
     for (const metric of metrics) {
@@ -191,33 +195,36 @@ export class ReportEngine {
   /**
    * 计算指标
    */
-  private static calculateMetric(data: any[], metric: AggregationMetric): number {
+  private static calculateMetric(
+    data: unknown[],
+    metric: AggregationMetric
+  ): number {
     const values = data
-      .map(row => this.getNestedValue(row, metric.field))
-      .filter(v => v !== null && v !== undefined);
+      .map((row) => this.getNestedValue(row, metric.field))
+      .filter((v) => v !== null && v !== undefined);
 
     switch (metric.function) {
       case 'count':
         return values.length;
-
+      
       case 'sum':
         return values.reduce((sum, v) => sum + Number(v), 0);
-
+      
       case 'avg':
         if (values.length === 0) return 0;
         return values.reduce((sum, v) => sum + Number(v), 0) / values.length;
-
+      
       case 'min':
         if (values.length === 0) return 0;
         return Math.min(...values.map(Number));
-
+      
       case 'max':
         if (values.length === 0) return 0;
         return Math.max(...values.map(Number));
-
+      
       case 'distinct':
         return new Set(values).size;
-
+      
       default:
         return 0;
     }
@@ -229,38 +236,38 @@ export class ReportEngine {
    * 按时间聚合
    */
   static aggregateByTime(
-    data: any[],
+    data: unknown[],
     timeField: string,
     granularity: 'hour' | 'day' | 'week' | 'month',
     metrics: AggregationMetric[]
-  ): Array<{ time: string; [key: string]: any }> {
+  ): Array<{ time: string; [key: string]: unknown }> {
     // 按时间分组
     const timeGroups: Record<string, any[]> = {};
-
+    
     for (const row of data) {
       const timeValue = this.getNestedValue(row, timeField);
       if (!timeValue) continue;
-
+      
       const timeKey = this.formatTimeKey(new Date(timeValue), granularity);
-
+      
       if (!timeGroups[timeKey]) {
         timeGroups[timeKey] = [];
       }
-
+      
       timeGroups[timeKey].push(row);
     }
 
     // 计算每个时间段的指标
-    const result: Array<{ time: string; [key: string]: any }> = [];
-
+    const result: Array<{ time: string; [key: string]: unknown }> = [];
+    
     for (const [timeKey, groupData] of Object.entries(timeGroups)) {
-      const row: any = { time: timeKey };
-
+      const row: unknown = { time: timeKey };
+      
       for (const metric of metrics) {
         const key = metric.alias || metric.name;
         row[key] = this.calculateMetric(groupData, metric);
       }
-
+      
       result.push(row);
     }
 
@@ -271,7 +278,10 @@ export class ReportEngine {
   /**
    * 格式化时间键
    */
-  private static formatTimeKey(date: Date, granularity: 'hour' | 'day' | 'week' | 'month'): string {
+  private static formatTimeKey(
+    date: Date,
+    granularity: 'hour' | 'day' | 'week' | 'month'
+  ): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -280,10 +290,10 @@ export class ReportEngine {
     switch (granularity) {
       case 'hour':
         return `${year}-${month}-${day} ${hour}:00`;
-
+      
       case 'day':
         return `${year}-${month}-${day}`;
-
+      
       case 'week':
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay());
@@ -291,10 +301,10 @@ export class ReportEngine {
         const weekMonth = String(weekStart.getMonth() + 1).padStart(2, '0');
         const weekDay = String(weekStart.getDate()).padStart(2, '0');
         return `${weekYear}-${weekMonth}-${weekDay}`;
-
+      
       case 'month':
         return `${year}-${month}`;
-
+      
       default:
         return date.toISOString();
     }
@@ -306,39 +316,39 @@ export class ReportEngine {
    * 创建透视表
    */
   static createPivotTable(
-    data: any[],
+    data: unknown[],
     rows: string[],
     columns: string[],
     values: Array<{ field: string; aggregation: string }>
   ): {
     rowHeaders: string[][];
     columnHeaders: string[][];
-    data: any[][];
+    data: unknown[][];
   } {
     // 获取所有唯一的行和列值
     const rowValues = this.getUniqueValueCombinations(data, rows);
     const columnValues = this.getUniqueValueCombinations(data, columns);
 
     // 创建数据矩阵
-    const matrix: any[][] = [];
-
+    const matrix: unknown[][] = [];
+    
     for (const rowValue of rowValues) {
-      const row: any[] = [];
-
+      const row: unknown[] = [];
+      
       for (const columnValue of columnValues) {
         // 过滤匹配当前行列的数据
-        const filteredData = data.filter(item => {
-          const rowMatch = rows.every(
-            (field, i) => this.getNestedValue(item, field) === rowValue[i]
+        const filteredData = data.filter((item) => {
+          const rowMatch = rows.every((field, i) => 
+            this.getNestedValue(item, field) === rowValue[i]
           );
-          const colMatch = columns.every(
-            (field, i) => this.getNestedValue(item, field) === columnValue[i]
+          const colMatch = columns.every((field, i) => 
+            this.getNestedValue(item, field) === columnValue[i]
           );
           return rowMatch && colMatch;
         });
 
         // 计算聚合值
-        const cell: any = {};
+        const cell: unknown = {};
         for (const value of values) {
           const metric: AggregationMetric = {
             name: value.field,
@@ -347,10 +357,10 @@ export class ReportEngine {
           };
           cell[value.field] = this.calculateMetric(filteredData, metric);
         }
-
+        
         row.push(cell);
       }
-
+      
       matrix.push(row);
     }
 
@@ -364,16 +374,19 @@ export class ReportEngine {
   /**
    * 获取唯一值组合
    */
-  private static getUniqueValueCombinations(data: any[], fields: string[]): any[][] {
+  private static getUniqueValueCombinations(
+    data: unknown[],
+    fields: string[]
+  ): unknown[][] {
     const combinations = new Set<string>();
-
+    
     for (const row of data) {
-      const values = fields.map(field => this.getNestedValue(row, field));
+      const values = fields.map((field) => this.getNestedValue(row, field));
       combinations.add(JSON.stringify(values));
     }
-
+    
     return Array.from(combinations)
-      .map(str => JSON.parse(str))
+      .map((str) => JSON.parse(str))
       .sort((a, b) => {
         for (let i = 0; i < a.length; i++) {
           const comparison = this.compareValues(a[i], b[i]);
@@ -388,15 +401,15 @@ export class ReportEngine {
   /**
    * 获取嵌套值
    */
-  private static getNestedValue(obj: any, path: string): any {
+  private static getNestedValue(obj: unknown, path: string): unknown {
     const keys = path.split('.');
     let value = obj;
-
+    
     for (const key of keys) {
       if (value === null || value === undefined) return undefined;
       value = value[key];
     }
-
+    
     return value;
   }
 
@@ -404,16 +417,19 @@ export class ReportEngine {
    * 格式化数据为表格
    */
   static formatAsTable(
-    data: any[],
+    data: unknown[],
     columns: string[]
   ): {
     columns: string[];
-    rows: any[][];
+    rows: unknown[][];
   } {
-    const rows = data.map(row => columns.map(col => this.getNestedValue(row, col)));
+    const rows = data.map((row) =>
+      columns.map((col) => this.getNestedValue(row, col))
+    );
 
     return { columns, rows };
   }
 }
 
 export default ReportEngine;
+

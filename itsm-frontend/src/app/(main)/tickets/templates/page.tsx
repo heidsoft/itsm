@@ -91,7 +91,7 @@ interface CustomField {
   label: string;
   placeholder?: string;
   required: boolean;
-  defaultValue?: any;
+  defaultValue?: unknown;
   options?: string[];
   validation?: string;
   helpText?: string;

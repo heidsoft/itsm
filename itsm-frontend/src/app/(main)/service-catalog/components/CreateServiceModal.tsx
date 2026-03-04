@@ -11,7 +11,7 @@ interface CreateServiceModalProps {
   visible: boolean;
   onCancel: () => void;
   onConfirm: () => void;
-  form: any;
+  form: unknown;
 }
 
 export const CreateServiceModal: React.FC<CreateServiceModalProps> = ({

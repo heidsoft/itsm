@@ -84,7 +84,7 @@ export const mockData = {
 
 // Mock API响应
 export const mockApiResponse = {
-  success: (data: any) => ({
+  success: (data: unknown) => ({
     code: 0,
     message: 'success',
     data,
@@ -98,7 +98,7 @@ export const mockApiResponse = {
     timestamp: new Date().toISOString(),
   }),
 
-  paginated: (data: any[], page: number = 1, pageSize: number = 10) => ({
+  paginated: (data: unknown[], page: number = 1, pageSize: number = 10) => ({
     code: 0,
     message: 'success',
     data: {

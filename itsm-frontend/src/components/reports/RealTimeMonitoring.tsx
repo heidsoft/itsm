@@ -64,7 +64,7 @@ interface RecentActivity {
   description: string;
   user?: string;
   timestamp: Date;
-  details?: any;
+  details?: unknown;
 }
 
 const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({

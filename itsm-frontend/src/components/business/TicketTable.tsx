@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useState } from 'react';
-import { Button, Space, Badge, Table } from 'antd';
+import { Button, Space, Badge, Table, Empty } from 'antd';
 import { AlertTriangle } from 'lucide-react';
 import {
   Ticket,
@@ -12,7 +12,6 @@ import {
 import { VirtualizedTicketList } from './VirtualizedTicketList';
 import { LazyWrapper, LoadingSpinner } from '../common/LazyComponents';
 import { TicketListSkeleton } from './TicketListSkeleton';
-import { LoadingEmptyError } from '../ui/LoadingEmptyError';
 
 interface TicketTableProps {
   tickets: Ticket[];
@@ -104,20 +103,20 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
       }
 
       return (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Badge count={selectedRowKeys.length} showZero className="bg-blue-500" />
-            <span className="text-sm font-medium text-gray-700">
-              已选择 <span className="text-blue-600 font-bold">{selectedRowKeys.length}</span>{' '}
+        <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200 shadow-sm'>
+          <div className='flex items-center gap-3'>
+            <Badge count={selectedRowKeys.length} showZero className='bg-blue-500' />
+            <span className='text-sm font-medium text-gray-700'>
+              已选择 <span className='text-blue-600 font-bold'>{selectedRowKeys.length}</span>{' '}
               个工单
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className='flex flex-wrap items-center gap-3'>
             <Button
               danger
-              size="large"
+              size='large'
               onClick={handleBatchDelete}
-              className="rounded-lg hover:shadow-md transition-all duration-200"
+              className='rounded-lg hover:shadow-md transition-all duration-200'
               icon={<AlertTriangle size={16} />}
             >
               批量删除 ({selectedRowKeys.length})
@@ -162,8 +161,8 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
         key: 'title',
         render: (text: string, record: Ticket) => (
           <div>
-            <div className="font-medium">{text}</div>
-            <div className="text-sm text-gray-500">
+            <div className='font-medium'>{text}</div>
+            <div className='text-sm text-gray-500'>
               #{record.id} • {record.category || '未分类'}
             </div>
           </div>
@@ -202,12 +201,12 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
       {
         title: '操作',
         key: 'actions',
-        render: (_: any, record: Ticket) => (
-          <Space size="small">
-            <Button type="text" size="small" onClick={() => onEditTicket(record)}>
+        render: (_: unknown, record: Ticket) => (
+          <Space size='small'>
+            <Button type='text' size='small' onClick={() => onEditTicket(record)}>
               编辑
             </Button>
-            <Button type="text" size="small" onClick={() => onViewActivity(record)}>
+            <Button type='text' size='small' onClick={() => onViewActivity(record)}>
               查看
             </Button>
           </Space>
@@ -218,7 +217,7 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
     // 加载状态
     if (loading) {
       return (
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {renderActionBar()}
           <TicketListSkeleton rows={pagination.pageSize} />
         </div>
@@ -228,22 +227,18 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
     // 空状态
     if (!tickets || tickets.length === 0) {
       return (
-        <div className="space-y-4">
+        <div className='space-y-4'>
           {renderActionBar()}
-          <LoadingEmptyError
-            state="empty"
-            empty={{
-              title: '暂无工单',
-              description: '当前没有工单数据，请使用页面顶部的"创建工单"按钮创建第一个工单',
-              // 移除 actionText 和 onAction，引导用户使用页面顶部的创建按钮
-            }}
+          <Empty
+            description='暂无工单'
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
           />
         </div>
       );
     }
 
     return (
-      <div className="space-y-4">
+      <div className='space-y-4'>
         {renderActionBar()}
 
         {/* 虚拟滚动列表 */}
@@ -264,7 +259,7 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
           <Table
             columns={tableColumns}
             dataSource={tickets}
-            rowKey="id"
+            rowKey='id'
             pagination={pagination}
             loading={loading}
             onRow={record => ({
@@ -279,13 +274,13 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
 
         {/* 分页信息 */}
         {!virtualScrollEnabled && pagination.total > 0 && (
-          <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-            <div className="text-sm text-gray-600">
+          <div className='flex justify-between items-center p-4 bg-gray-50 rounded-lg'>
+            <div className='text-sm text-gray-600'>
               显示第 {(pagination.current - 1) * pagination.pageSize + 1} 到{' '}
               {Math.min(pagination.current * pagination.pageSize, pagination.total)} 条，共{' '}
               {pagination.total} 条记录
             </div>
-            <div className="text-sm text-gray-600">
+            <div className='text-sm text-gray-600'>
               第 {pagination.current} 页，共 {Math.ceil(pagination.total / pagination.pageSize)} 页
             </div>
           </div>

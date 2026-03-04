@@ -2,45 +2,45 @@ declare module '@ant-design/charts' {
   import { FC } from 'react';
 
   export interface LineConfig {
-    data?: any[];
+    data?: unknown[];
     xField?: string;
     yField?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface BarConfig {
-    data?: any[];
+    data?: unknown[];
     xField?: string;
     yField?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface PieConfig {
-    data?: any[];
+    data?: unknown[];
     angleField?: string;
     colorField?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface AreaConfig {
-    data?: any[];
+    data?: unknown[];
     xField?: string;
     yField?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface ColumnConfig {
-    data?: any[];
+    data?: unknown[];
     xField?: string;
     yField?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export interface DualAxesConfig {
-    data?: any[] | any[][];
+    data?: unknown[] | any[][];
     xField?: string;
     yField?: string | string[];
-    [key: string]: any;
+    [key: string]: unknown;
   }
 
   export const Line: FC<LineConfig>;

@@ -43,7 +43,11 @@ import {
   MoreOutlined,
 } from '@ant-design/icons';
 import { TemplateCard } from './TemplateCard';
-import type { TicketTemplate, TemplateListQuery, TemplateVisibility } from '@/types/template';
+import type {
+  TicketTemplate,
+  TemplateListQuery,
+  TemplateVisibility,
+} from '@/types/template';
 import {
   useTemplatesQuery,
   useDeleteTemplateMutation,
@@ -95,30 +99,30 @@ export const TemplateList: React.FC<TemplateListProps> = ({
 
   // Handlers
   const handleSearch = (value: string) => {
-    setQuery(prev => ({ ...prev, search: value, page: 1 }));
+    setQuery((prev) => ({ ...prev, search: value, page: 1 }));
   };
 
   const handleCategoryChange = (value: string) => {
-    setQuery(prev => ({ ...prev, categoryId: value, page: 1 }));
+    setQuery((prev) => ({ ...prev, categoryId: value, page: 1 }));
   };
 
   const handleVisibilityChange = (value: TemplateVisibility) => {
-    setQuery(prev => ({ ...prev, visibility: value, page: 1 }));
+    setQuery((prev) => ({ ...prev, visibility: value, page: 1 }));
   };
 
   const handleStatusChange = (values: string[]) => {
-    const filters: any = {};
-
+    const filters: unknown = {};
+    
     if (values.includes('active')) filters.isActive = true;
     if (values.includes('draft')) filters.isDraft = true;
     if (values.includes('archived')) filters.isArchived = true;
-
-    setQuery(prev => ({ ...prev, ...filters, page: 1 }));
+    
+    setQuery((prev) => ({ ...prev, ...filters, page: 1 }));
   };
 
   const handleSortChange = (value: string) => {
     const [sortBy, sortOrder] = value.split('-');
-    setQuery(prev => ({
+    setQuery((prev) => ({
       ...prev,
       sortBy: sortBy as any,
       sortOrder: sortOrder as any,
@@ -127,22 +131,22 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   };
 
   const handlePageChange = (page: number, pageSize: number) => {
-    setQuery(prev => ({ ...prev, page, pageSize }));
+    setQuery((prev) => ({ ...prev, page, pageSize }));
   };
 
   const handleSelectAll = () => {
     if (selectedIds.length === templates.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(templates.map(t => t.id));
+      setSelectedIds(templates.map((t) => t.id));
     }
   };
 
   const handleSelectTemplate = (id: string, checked: boolean) => {
     if (checked) {
-      setSelectedIds(prev => [...prev, id]);
+      setSelectedIds((prev) => [...prev, id]);
     } else {
-      setSelectedIds(prev => prev.filter(sid => sid !== id));
+      setSelectedIds((prev) => prev.filter((sid) => sid !== id));
     }
   };
 
@@ -195,7 +199,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   const handleFavorite = async (templateId: string) => {
     try {
       await favoriteMutation.mutateAsync(templateId);
-      setFavoriteIds(prev => new Set(prev).add(templateId));
+      setFavoriteIds((prev) => new Set(prev).add(templateId));
     } catch (error) {
       console.error('收藏失败:', error);
     }
@@ -204,7 +208,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   const handleUnfavorite = async (templateId: string) => {
     try {
       await unfavoriteMutation.mutateAsync(templateId);
-      setFavoriteIds(prev => {
+      setFavoriteIds((prev) => {
         const newSet = new Set(prev);
         newSet.delete(templateId);
         return newSet;
@@ -313,7 +317,9 @@ export const TemplateList: React.FC<TemplateListProps> = ({
                 style={{ width: 150 }}
                 onChange={handleSortChange}
               >
-                <Option value="usageCount-desc">使用次数 ↓</Option>
+                <Option value="usageCount-desc">
+                  使用次数 ↓
+                </Option>
                 <Option value="rating-desc">评分 ↓</Option>
                 <Option value="createdAt-desc">创建时间 ↓</Option>
                 <Option value="updatedAt-desc">更新时间 ↓</Option>
@@ -327,18 +333,25 @@ export const TemplateList: React.FC<TemplateListProps> = ({
               {selectedIds.length > 0 && (
                 <>
                   <Badge count={selectedIds.length} showZero>
-                    <Button icon={<CheckOutlined />} onClick={handleSelectAll}>
-                      {selectedIds.length === templates.length ? '取消全选' : '全选'}
+                    <Button
+                      icon={<CheckOutlined />}
+                      onClick={handleSelectAll}
+                    >
+                      {selectedIds.length === templates.length
+                        ? '取消全选'
+                        : '全选'}
                     </Button>
                   </Badge>
 
                   <Dropdown menu={{ items: batchMenuItems }} trigger={['click']}>
-                    <Button icon={<MoreOutlined />}>批量操作</Button>
+                    <Button icon={<MoreOutlined />}>
+                      批量操作
+                    </Button>
                   </Dropdown>
                 </>
               )}
 
-              <Radio.Group value={viewMode} onChange={e => setViewMode(e.target.value)}>
+              <Radio.Group value={viewMode} onChange={(e) => setViewMode(e.target.value)}>
                 <Radio.Button value="grid">
                   <AppstoreOutlined />
                 </Radio.Button>
@@ -352,7 +365,11 @@ export const TemplateList: React.FC<TemplateListProps> = ({
               </Button>
 
               {showActions && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={onCreateClick}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={onCreateClick}
+                >
                   创建模板
                 </Button>
               )}
@@ -365,9 +382,16 @@ export const TemplateList: React.FC<TemplateListProps> = ({
       <Spin spinning={isLoading}>
         {templates.length === 0 ? (
           <Card>
-            <Empty description="暂无模板" image={Empty.PRESENTED_IMAGE_SIMPLE}>
+            <Empty
+              description="暂无模板"
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            >
               {showActions && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={onCreateClick}>
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={onCreateClick}
+                >
                   创建第一个模板
                 </Button>
               )}
@@ -375,13 +399,18 @@ export const TemplateList: React.FC<TemplateListProps> = ({
           </Card>
         ) : viewMode === 'grid' ? (
           <Row gutter={[16, 16]}>
-            {templates.map(template => (
+            {templates.map((template) => (
               <Col key={template.id} xs={24} sm={12} lg={8} xl={6}>
                 {selectedIds.length > 0 && (
-                  <div className="absolute top-2 left-2 z-10" onClick={e => e.stopPropagation()}>
+                  <div
+                    className="absolute top-2 left-2 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Checkbox
                       checked={selectedIds.includes(template.id)}
-                      onChange={e => handleSelectTemplate(template.id, e.target.checked)}
+                      onChange={(e) =>
+                        handleSelectTemplate(template.id, e.target.checked)
+                      }
                     />
                   </div>
                 )}
@@ -401,13 +430,18 @@ export const TemplateList: React.FC<TemplateListProps> = ({
           </Row>
         ) : (
           <div>
-            {templates.map(template => (
+            {templates.map((template) => (
               <div key={template.id} className="relative">
                 {selectedIds.length > 0 && (
-                  <div className="absolute top-4 left-4 z-10" onClick={e => e.stopPropagation()}>
+                  <div
+                    className="absolute top-4 left-4 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Checkbox
                       checked={selectedIds.includes(template.id)}
-                      onChange={e => handleSelectTemplate(template.id, e.target.checked)}
+                      onChange={(e) =>
+                        handleSelectTemplate(template.id, e.target.checked)
+                      }
                       style={{ paddingLeft: selectedIds.length > 0 ? '32px' : 0 }}
                     />
                   </div>
@@ -444,7 +478,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
               onChange={handlePageChange}
               showSizeChanger
               showQuickJumper
-              showTotal={total => `共 ${total} 条`}
+              showTotal={(total) => `共 ${total} 条`}
               pageSizeOptions={['12', '24', '48', '96']}
             />
           </div>
@@ -455,3 +489,4 @@ export const TemplateList: React.FC<TemplateListProps> = ({
 };
 
 export default TemplateList;
+

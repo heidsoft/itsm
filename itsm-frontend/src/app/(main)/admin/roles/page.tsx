@@ -160,8 +160,8 @@ export default function RoleManagement() {
 
       // 计算统计数据
       const totalRoles = response.roles.length;
-      const activeRoles = response.roles.filter((r: any) => r.status === 'active').length;
-      const inactiveRoles = response.roles.filter((r: any) => r.status === 'inactive').length;
+      const activeRoles = response.roles.filter((r: unknown) => r.status === 'active').length;
+      const inactiveRoles = response.roles.filter((r: unknown) => r.status === 'inactive').length;
 
       setStats({
         totalRoles,

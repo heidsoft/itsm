@@ -96,10 +96,10 @@ const getPriorityColor = (priority: string) => {
 interface ChangeListProps {
   changes: Change[];
   loading: boolean;
-  pagination: any;
+  pagination: unknown;
   selectedRowKeys: React.Key[];
   onSelectedRowKeysChange: (keys: React.Key[]) => void;
-  onTableChange: (pagination: any) => void;
+  onTableChange: (pagination: unknown) => void;
 }
 
 export const ChangeList: React.FC<ChangeListProps> = ({

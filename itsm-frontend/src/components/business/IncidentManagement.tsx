@@ -75,11 +75,11 @@ interface IncidentEvent {
   description: string;
   status: string;
   severity: string;
-  data?: any;
+  data?: unknown;
   occurred_at: string;
   user_id?: number;
   source: string;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 interface IncidentAlert {
@@ -107,7 +107,7 @@ interface IncidentMetric {
   unit?: string;
   measured_at: string;
   tags?: Record<string, string>;
-  metadata?: any;
+  metadata?: unknown;
 }
 
 // 事件管理主组件
@@ -149,8 +149,8 @@ export const IncidentManagement: React.FC = () => {
   }, [fetchIncidents]);
 
   // 处理筛选
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters((prev: any) => ({
+  const handleFilterChange = (key: string, value: unknown) => {
+    setFilters((prev: unknown) => ({
       ...prev,
       [key]: value,
     }));
@@ -158,7 +158,7 @@ export const IncidentManagement: React.FC = () => {
   };
 
   // 处理分页
-  const handleTableChange = (pagination: any) => {
+  const handleTableChange = (pagination: unknown) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
   };
@@ -298,7 +298,7 @@ export const IncidentManagement: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 120,
-      render: (_: any, record: Incident) => (
+      render: (_: unknown, record: Incident) => (
         <Space>
           <Tooltip title="查看详情">
             <Button
@@ -1088,7 +1088,7 @@ const IncidentFormModal: React.FC<{
     }
   }, [visible, incident, form]);
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: unknown) => {
     setLoading(true);
     try {
       const url = incident ? `/api/v1/incidents/${incident.id}` : '/api/v1/incidents';

@@ -273,7 +273,7 @@ export interface DashboardWidget {
     width: number;
     height: number;
   };
-  config: any;
+  config: unknown;
 }
 
 /**
@@ -328,12 +328,12 @@ export interface ReportFilter {
   label: string;
   type: FilterType;
   operator: FilterOperator;
-  value?: any;
-  defaultValue?: any;
+  value?: unknown;
+  defaultValue?: unknown;
   required?: boolean;
   options?: Array<{
     label: string;
-    value: any;
+    value: unknown;
   }>;
   visible?: boolean; // 是否在UI中显示
 }
@@ -370,7 +370,7 @@ export interface ReportExecutionResult {
   // 结果数据
   data?: {
     columns: string[];
-    rows: any[][];
+    rows: unknown[][];
     total: number;
   };
 

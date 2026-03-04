@@ -36,7 +36,7 @@ const { Option } = Select;
 interface AIWorkflowAssistantProps {
   initialTitle?: string;
   initialDescription?: string;
-  onSuggestion?: (suggestion: any) => void;
+  onSuggestion?: (suggestion: unknown) => void;
   className?: string;
 }
 

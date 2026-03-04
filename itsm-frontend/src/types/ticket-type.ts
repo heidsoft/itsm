@@ -42,7 +42,7 @@ export interface CustomFieldDefinition {
   required: boolean;
   description?: string;
   placeholder?: string;
-  defaultValue?: any;
+  defaultValue?: unknown;
   options?: Array<{
     label: string;
     value: string | number;
@@ -56,7 +56,7 @@ export interface CustomFieldDefinition {
   conditionalDisplay?: {
     field: string;
     operator: 'equals' | 'not_equals' | 'contains';
-    value: any;
+    value: unknown;
   };
   order: number;
 }
@@ -130,7 +130,7 @@ export interface ApprovalChainDefinition {
   conditions?: Array<{
     field: string;
     operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than';
-    value: any;
+    value: unknown;
   }>;
   timeout?: number; // 超时时间（小时）
   timeoutAction?: 'auto_approve' | 'auto_reject' | 'escalate';
@@ -146,7 +146,7 @@ export interface AssignmentRule {
   conditions: Array<{
     field: string;
     operator: 'equals' | 'not_equals' | 'contains' | 'greater_than' | 'less_than';
-    value: any;
+    value: unknown;
   }>;
   assignTo: {
     type: 'user' | 'role' | 'department' | 'round_robin' | 'load_balance';

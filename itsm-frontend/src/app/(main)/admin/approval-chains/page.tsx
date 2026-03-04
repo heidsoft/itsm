@@ -240,7 +240,7 @@ export default function ApprovalChainsPage() {
 
   // 处理模态框提交
   const handleModalSubmit = useCallback(
-    async (data: any) => {
+    async (data: unknown) => {
       try {
         if (editingChain) {
           await httpClient.put(`/api/v1/approval-chains/${editingChain.id}`, data);

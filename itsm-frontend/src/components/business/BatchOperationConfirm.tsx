@@ -24,7 +24,7 @@ export interface BatchOperationConfirmProps {
     assignee?: string;
     status?: string;
     priority?: string;
-    [key: string]: any;
+    [key: string]: unknown;
   };
   onConfirm: () => Promise<void>;
   onCancel: () => void;

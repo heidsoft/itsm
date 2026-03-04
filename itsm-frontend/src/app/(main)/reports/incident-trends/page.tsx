@@ -1,7 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Select, DatePicker, Space, Typography, Spin, App, Statistic } from 'antd';
+import {
+  Card,
+  Row,
+  Col,
+  Select,
+  DatePicker,
+  Space,
+  Typography,
+  Spin,
+  App,
+  Statistic,
+} from 'antd';
 import {
   LineChart,
   Line,
@@ -130,9 +141,7 @@ const IncidentTrendsPage = () => {
   const generateMockTrend = () => {
     const days = selectedPeriod === '7d' ? 7 : selectedPeriod === '30d' ? 30 : 90;
     return Array.from({ length: days }, (_, i) => ({
-      date: dayjs()
-        .subtract(days - 1 - i, 'day')
-        .format('MM-DD'),
+      date: dayjs().subtract(days - 1 - i, 'day').format('MM-DD'),
       created: Math.floor(Math.random() * 20) + 5,
       resolved: Math.floor(Math.random() * 15) + 3,
       open: Math.floor(Math.random() * 10) + 2,
@@ -144,12 +153,12 @@ const IncidentTrendsPage = () => {
   }, [selectedPeriod, dateRange]);
 
   // 自定义Tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: unknown) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800 mb-1">{`日期: ${label}`}</p>
-          {payload.map((entry: any, index: number) => (
+          {payload.map((entry: unknown, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value}`}
             </p>
@@ -164,7 +173,9 @@ const IncidentTrendsPage = () => {
     <div className="p-6 bg-gray-50 min-h-full">
       <header className="mb-6">
         <Title level={2}>事件趋势报表</Title>
-        <p className="text-gray-500 mt-1">展示事件数量随时间变化的趋势以及按优先级的分布情况</p>
+        <p className="text-gray-500 mt-1">
+          展示事件数量随时间变化的趋势以及按优先级的分布情况
+        </p>
       </header>
 
       {/* 控制面板 */}
@@ -172,16 +183,20 @@ const IncidentTrendsPage = () => {
         <Row justify="space-between" align="middle">
           <Col>
             <Space>
-              <Select value={selectedPeriod} onChange={setSelectedPeriod} style={{ width: 140 }}>
+              <Select
+                value={selectedPeriod}
+                onChange={setSelectedPeriod}
+                style={{ width: 140 }}
+              >
                 <Option value="7d">最近7天</Option>
                 <Option value="30d">最近30天</Option>
                 <Option value="90d">最近90天</Option>
               </Select>
               <RangePicker
                 value={dateRange}
-                onChange={(dates: any) => {
-                  if (dates) {
-                    setDateRange(dates);
+                onChange={(dates: unknown) => {
+                  if (dates && dates.length === 2) {
+                    setDateRange([dates[0], dates[1]]);
                   }
                 }}
               />

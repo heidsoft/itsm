@@ -264,14 +264,14 @@ export enum VariableType {
 export interface WorkflowVariable {
   name: string;
   type: VariableType;
-  defaultValue?: any;
+  defaultValue?: unknown;
   description?: string;
   required?: boolean;
   validation?: {
     min?: number;
     max?: number;
     pattern?: string;
-    enum?: any[];
+    enum?: unknown[];
   };
 }
 
@@ -311,7 +311,7 @@ export type TriggerConfig =
       type: 'field_change';
       field: string;
       operator: 'equals' | 'not_equals' | 'contains';
-      value: any;
+      value: unknown;
     }
   | {
       type: 'time_based';

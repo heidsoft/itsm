@@ -131,7 +131,7 @@ export default function CreateTicketPage() {
 
       message.success('工单创建成功');
       router.push(`/tickets/${created.id}`);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Create ticket error:', e);
       const errorMsg = e?.message || e?.error?.message || '创建工单失败，请检查输入或重新登录';
       message.error(errorMsg);

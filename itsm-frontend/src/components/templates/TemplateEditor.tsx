@@ -167,7 +167,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const validateCurrentStep = async (): Promise<boolean> => {
     try {
       const step = STEPS[currentStep];
-
+      
       if (step.key === 'basic') {
         await form.validateFields(['name', 'description', 'categoryId']);
       } else if (step.key === 'fields') {
@@ -176,7 +176,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           return false;
         }
       }
-
+      
       return true;
     } catch (error) {
       return false;
@@ -223,7 +223,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
     try {
       // 验证所有步骤
       await form.validateFields();
-
+      
       if (fields.length === 0) {
         message.error('请至少添加一个字段');
         return;
@@ -288,7 +288,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 { min: 2, max: 100, message: '名称长度为2-100个字符' },
               ]}
             >
-              <Input placeholder="如：软件安装申请" size="large" prefix={<FileTextOutlined />} />
+              <Input
+                placeholder="如：软件安装申请"
+                size="large"
+                prefix={<FileTextOutlined />}
+              />
             </Form.Item>
 
             <Form.Item
@@ -314,8 +318,12 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   name="categoryId"
                   rules={[{ required: true, message: '请选择分类' }]}
                 >
-                  <Select placeholder="选择模板分类" showSearch optionFilterProp="children">
-                    {categories.map((cat: any) => (
+                  <Select
+                    placeholder="选择模板分类"
+                    showSearch
+                    optionFilterProp="children"
+                  >
+                    {categories.map((cat: unknown) => (
                       <Option key={cat.id} value={cat.id}>
                         {cat.name}
                       </Option>
@@ -331,7 +339,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             </Row>
 
             <Form.Item label="标签" name="tags">
-              <Select mode="tags" placeholder="添加标签（回车确认）" style={{ width: '100%' }} />
+              <Select
+                mode="tags"
+                placeholder="添加标签（回车确认）"
+                style={{ width: '100%' }}
+              />
             </Form.Item>
           </Col>
 
@@ -351,7 +363,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   </div>
                 )}
               </Upload>
-              <div className="text-xs text-gray-500 mt-2">建议尺寸：400x200，支持 JPG/PNG</div>
+              <div className="text-xs text-gray-500 mt-2">
+                建议尺寸：400x200，支持 JPG/PNG
+              </div>
             </Form.Item>
 
             <Alert
@@ -424,7 +438,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             <Row gutter={16}>
               <Col span={12}>
                 <Form.Item label="默认处理人" name={['defaults', 'assigneeId']}>
-                  <Select placeholder="选择默认处理人" showSearch allowClear>
+                  <Select
+                    placeholder="选择默认处理人"
+                    showSearch
+                    allowClear
+                  >
                     {/* 实际应该从用户列表获取 */}
                     <Option value="user1">张三</Option>
                     <Option value="user2">李四</Option>
@@ -455,20 +473,29 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
           </Tabs.TabPane>
 
           <Tabs.TabPane tab="字段默认值" key="fields">
-            <Alert message="为自定义字段设置默认值" type="info" showIcon className="mb-4" />
+            <Alert
+              message="为自定义字段设置默认值"
+              type="info"
+              showIcon
+              className="mb-4"
+            />
             {fields.length === 0 ? (
               <Empty description="请先在字段设计步骤中添加字段" />
             ) : (
               <Space orientation="vertical" style={{ width: '100%' }}>
-                {fields.map(field => (
-                  <Form.Item key={field.id} label={field.label} name={['defaults', field.name]}>
+                {fields.map((field) => (
+                  <Form.Item
+                    key={field.id}
+                    label={field.label}
+                    name={['defaults', field.name]}
+                  >
                     {field.type === 'text' || field.type === 'textarea' ? (
                       <Input placeholder={`${field.label}的默认值`} />
                     ) : field.type === 'number' ? (
                       <InputNumber style={{ width: '100%' }} />
                     ) : field.type === 'select' ? (
                       <Select placeholder={`选择${field.label}默认值`}>
-                        {field.options?.map(opt => (
+                        {field.options?.map((opt) => (
                           <Option key={opt.value} value={opt.value}>
                             {opt.label}
                           </Option>
@@ -528,7 +555,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <Form.Item
           noStyle
           shouldUpdate={(prevValues, currentValues) =>
-            prevValues.permission?.visibility !== currentValues.permission?.visibility
+            prevValues.permission?.visibility !==
+            currentValues.permission?.visibility
           }
         >
           {({ getFieldValue }) => {
@@ -536,7 +564,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
             if (visibility === 'department') {
               return (
-                <Form.Item label="允许的部门" name={['permission', 'allowedDepartments']}>
+                <Form.Item
+                  label="允许的部门"
+                  name={['permission', 'allowedDepartments']}
+                >
                   <Select mode="multiple" placeholder="选择部门">
                     <Option value="dept1">技术部</Option>
                     <Option value="dept2">运维部</Option>
@@ -548,7 +579,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
             if (visibility === 'role') {
               return (
-                <Form.Item label="允许的角色" name={['permission', 'allowedRoles']}>
+                <Form.Item
+                  label="允许的角色"
+                  name={['permission', 'allowedRoles']}
+                >
                   <Select mode="multiple" placeholder="选择角色">
                     <Option value="admin">管理员</Option>
                     <Option value="agent">工程师</Option>
@@ -560,7 +594,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
             if (visibility === 'team') {
               return (
-                <Form.Item label="允许的团队" name={['permission', 'allowedTeams']}>
+                <Form.Item
+                  label="允许的团队"
+                  name={['permission', 'allowedTeams']}
+                >
                   <Select mode="multiple" placeholder="选择团队">
                     <Option value="team1">技术支持团队</Option>
                     <Option value="team2">运维团队</Option>
@@ -576,7 +613,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <Divider>高级权限</Divider>
 
         <Form.Item label="拒绝的用户" name={['permission', 'denyUsers']}>
-          <Select mode="multiple" placeholder="选择要排除的用户" allowClear>
+          <Select
+            mode="multiple"
+            placeholder="选择要排除的用户"
+            allowClear
+          >
             <Option value="user1">用户1</Option>
             <Option value="user2">用户2</Option>
           </Select>
@@ -589,7 +630,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const renderAutomationStep = () => (
     <Card>
       <Form form={form} layout="vertical">
-        <Collapse defaultActiveKey={['assign']} expandIconPosition="end" className="mb-4">
+        <Collapse
+          defaultActiveKey={['assign']}
+          expandIconPosition="end"
+          className="mb-4"
+        >
           {/* 自动分配 */}
           <Panel
             header={
@@ -611,7 +656,8 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
             <Form.Item
               noStyle
               shouldUpdate={(prevValues, currentValues) =>
-                prevValues.automation?.autoAssign !== currentValues.automation?.autoAssign
+                prevValues.automation?.autoAssign !==
+                currentValues.automation?.autoAssign
               }
             >
               {({ getFieldValue }) => {
@@ -621,7 +667,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
                 return (
                   <>
-                    <Form.Item label="分配规则" name={['automation', 'assignmentRule', 'type']}>
+                    <Form.Item
+                      label="分配规则"
+                      name={['automation', 'assignmentRule', 'type']}
+                    >
                       <Select placeholder="选择分配规则">
                         <Option value="round_robin">轮流分配</Option>
                         <Option value="load_balance">负载均衡</Option>
@@ -671,7 +720,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               }
             >
               {({ getFieldValue }) => {
-                const requiresApproval = getFieldValue(['automation', 'requiresApproval']);
+                const requiresApproval = getFieldValue([
+                  'automation',
+                  'requiresApproval',
+                ]);
 
                 if (!requiresApproval) return null;
 
@@ -679,7 +731,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   <>
                     <Form.Item
                       label="审批级别"
-                      name={['automation', 'approvalWorkflow', 'approvalLevel']}
+                      name={[
+                        'automation',
+                        'approvalWorkflow',
+                        'approvalLevel',
+                      ]}
                     >
                       <Select placeholder="选择审批级别">
                         <Option value="manager">经理审批</Option>
@@ -691,7 +747,11 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
                     <Form.Item
                       label="审批类型"
-                      name={['automation', 'approvalWorkflow', 'approvalType']}
+                      name={[
+                        'automation',
+                        'approvalWorkflow',
+                        'approvalType',
+                      ]}
                     >
                       <Radio.Group>
                         <Radio value="sequential">顺序审批</Radio>
@@ -773,15 +833,25 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
         <div className="flex items-center justify-between">
           <Space size="large">
             <h2 className="text-xl font-bold m-0">
-              {mode === 'create' ? '创建模板' : mode === 'edit' ? '编辑模板' : '复制模板'}
+              {mode === 'create'
+                ? '创建模板'
+                : mode === 'edit'
+                ? '编辑模板'
+                : '复制模板'}
             </h2>
             {template && (
-              <Badge status={isDraft ? 'warning' : 'success'} text={isDraft ? '草稿' : '已发布'} />
+              <Badge
+                status={isDraft ? 'warning' : 'success'}
+                text={isDraft ? '草稿' : '已发布'}
+              />
             )}
           </Space>
 
           <Space>
-            <Button icon={<EyeOutlined />} onClick={() => setActiveTab('preview')}>
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => setActiveTab('preview')}
+            >
               预览
             </Button>
             <Button icon={<SaveOutlined />} onClick={handleSaveDraft}>
@@ -792,7 +862,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
               icon={<RocketOutlined />}
               onClick={handlePublish}
               loading={
-                createMutation.isPending || updateMutation.isPending || publishMutation.isPending
+                createMutation.isPending ||
+                updateMutation.isPending ||
+                publishMutation.isPending
               }
             >
               发布模板
@@ -806,10 +878,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 
       {/* 步骤导航 */}
       <Card className="mb-4">
-        <Steps
-          current={currentStep}
+        <Steps 
+          current={currentStep} 
           onChange={setCurrentStep}
-          items={STEPS.map(step => ({
+          items={STEPS.map((step) => ({
             key: step.key,
             title: step.title,
             description: step.description,
@@ -824,7 +896,10 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
       {/* 底部操作按钮 */}
       <Card>
         <div className="flex justify-between">
-          <Button onClick={handlePrevious} disabled={currentStep === 0}>
+          <Button
+            onClick={handlePrevious}
+            disabled={currentStep === 0}
+          >
             上一步
           </Button>
 
@@ -836,7 +911,9 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                 icon={<RocketOutlined />}
                 onClick={handlePublish}
                 loading={
-                  createMutation.isPending || updateMutation.isPending || publishMutation.isPending
+                  createMutation.isPending ||
+                  updateMutation.isPending ||
+                  publishMutation.isPending
                 }
               >
                 发布模板
@@ -854,3 +931,4 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
 };
 
 export default TemplateEditor;
+

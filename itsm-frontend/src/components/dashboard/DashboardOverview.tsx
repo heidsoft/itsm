@@ -143,7 +143,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       // 转换最近工单
       setRecentTickets(
-        recentTicketsData.tickets.map((t: any) => ({
+        recentTicketsData.tickets.map((t: unknown) => ({
           ...t,
           requester: t.requester
             ? {
@@ -168,7 +168,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
       // 转换活跃用户
       setActiveUsers(
-        activeUsersData.users.map((u: any) => ({
+        activeUsersData.users.map((u: unknown) => ({
           id: u.id,
           username: u.username,
           email: u.email,

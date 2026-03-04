@@ -271,7 +271,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     {
       title: '目标工单',
       key: 'target_ticket',
-      render: (_: any, record: TicketDependency) => (
+      render: (_: unknown, record: TicketDependency) => (
         <div>
           <Text strong style={{ color: '#1890ff' }}>
             {record.target_ticket_number}
@@ -316,7 +316,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     {
       title: '操作',
       key: 'actions',
-      render: (_: any, record: TicketDependency) => (
+      render: (_: unknown, record: TicketDependency) => (
         <Space>
           <Tooltip title="查看工单详情">
             <Button
@@ -365,7 +365,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
     {
       title: '受影响工单',
       key: 'ticket',
-      render: (_: any, record: DependencyImpact) => (
+      render: (_: unknown, record: DependencyImpact) => (
         <div>
           <Text strong style={{ color: '#1890ff' }}>
             {record.ticket_number}

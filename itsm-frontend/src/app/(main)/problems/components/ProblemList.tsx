@@ -11,7 +11,7 @@ interface ProblemListProps {
   loading: boolean;
   selectedRowKeys: React.Key[];
   onSelectedRowKeysChange: (keys: React.Key[]) => void;
-  pagination: any;
+  pagination: unknown;
   onTableChange: (page: number, pageSize?: number) => void;
 }
 

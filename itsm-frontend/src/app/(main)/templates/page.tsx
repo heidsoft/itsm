@@ -224,7 +224,7 @@ const TicketTemplatePage: React.FC = () => {
   };
 
   // 处理表单提交
-  const handleFormSubmit = async (values: any) => {
+  const handleFormSubmit = async (values: unknown) => {
     try {
       const fields: TemplateField[] = formFields.map(field => ({
         name: field.name,

@@ -50,7 +50,7 @@ export class TicketCommentApi {
    */
   static async getComments(ticketId: number): Promise<ListTicketCommentsResponse> {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response: any = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
+    const response: unknown = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
     const data = response?.data || response;
     const comments = Array.isArray(data?.comments)
       ? data.comments

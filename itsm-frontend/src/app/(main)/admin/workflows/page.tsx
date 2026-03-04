@@ -217,7 +217,7 @@ const WorkflowManagement = () => {
       const response = await WorkflowAPI.getWorkflows({});
       // 转换API数据格式
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const workflowList = (response.workflows || []).map((w: any) => ({
+      const workflowList = (response.workflows || []).map((w: unknown) => ({
         id: w.id,
         name: w.name || w.key || '',
         description: w.description || '',

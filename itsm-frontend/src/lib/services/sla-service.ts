@@ -298,7 +298,7 @@ export class SLAService {
   }
 
   // SLA实例管理
-  async getSLAInstances(params?: any): Promise<PaginatedResponse<SLAInstance>> {
+  async getSLAInstances(params?: unknown): Promise<PaginatedResponse<SLAInstance>> {
     const response = await fetch(`${this.baseUrl}/instances?${new URLSearchParams(params)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA instances');
     return response.json();
@@ -327,13 +327,13 @@ export class SLAService {
   }
 
   // SLA统计和报告
-  async getSLAStats(params?: any): Promise<SLAStats> {
+  async getSLAStats(params?: unknown): Promise<SLAStats> {
     const response = await fetch(`${this.baseUrl}/stats?${new URLSearchParams(params)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA stats');
     return response.json();
   }
 
-  async getSLAReport(params: any): Promise<SLAReport> {
+  async getSLAReport(params: unknown): Promise<SLAReport> {
     const response = await fetch(`${this.baseUrl}/reports?${new URLSearchParams(params)}`);
     if (!response.ok) throw new Error('Failed to fetch SLA report');
     return response.json();

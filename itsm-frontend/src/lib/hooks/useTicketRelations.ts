@@ -17,17 +17,20 @@ import type {
 export const TICKET_RELATION_KEYS = {
   all: ['ticket-relations'] as const,
   lists: () => [...TICKET_RELATION_KEYS.all, 'list'] as const,
-  list: (ticketId: number, filters?: any) =>
+  list: (ticketId: number, filters?: unknown) =>
     [...TICKET_RELATION_KEYS.lists(), ticketId, filters] as const,
   details: () => [...TICKET_RELATION_KEYS.all, 'detail'] as const,
-  detail: (relationId: string) => [...TICKET_RELATION_KEYS.details(), relationId] as const,
-  hierarchy: (ticketId: number) => [...TICKET_RELATION_KEYS.all, 'hierarchy', ticketId] as const,
+  detail: (relationId: string) =>
+    [...TICKET_RELATION_KEYS.details(), relationId] as const,
+  hierarchy: (ticketId: number) =>
+    [...TICKET_RELATION_KEYS.all, 'hierarchy', ticketId] as const,
   dependencies: (ticketId: number) =>
     [...TICKET_RELATION_KEYS.all, 'dependencies', ticketId] as const,
   dependencyGraph: (ticketId: number) =>
     [...TICKET_RELATION_KEYS.all, 'dependency-graph', ticketId] as const,
-  stats: (ticketId: number) => [...TICKET_RELATION_KEYS.all, 'stats', ticketId] as const,
-  graph: (ticketId: number, params?: any) =>
+  stats: (ticketId: number) =>
+    [...TICKET_RELATION_KEYS.all, 'stats', ticketId] as const,
+  graph: (ticketId: number, params?: unknown) =>
     [...TICKET_RELATION_KEYS.all, 'graph', ticketId, params] as const,
   suggestions: (ticketId: number) =>
     [...TICKET_RELATION_KEYS.all, 'suggestions', ticketId] as const,
@@ -183,7 +186,8 @@ export function useCreateRelationMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (request: CreateRelationRequest) => TicketRelationsApi.createRelation(request),
+    mutationFn: (request: CreateRelationRequest) =>
+      TicketRelationsApi.createRelation(request),
     onSuccess: (_, variables) => {
       message.success('关联创建成功');
       queryClient.invalidateQueries({
@@ -194,7 +198,7 @@ export function useCreateRelationMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`创建关联失败：${error.message || '未知错误'}`);
     },
   });
@@ -216,7 +220,7 @@ export function useBatchCreateRelationsMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`批量创建关联失败：${error.message || '未知错误'}`);
     },
   });
@@ -229,8 +233,13 @@ export function useUpdateRelationMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ relationId, request }: { relationId: string; request: UpdateRelationRequest }) =>
-      TicketRelationsApi.updateRelation(relationId, request),
+    mutationFn: ({
+      relationId,
+      request,
+    }: {
+      relationId: string;
+      request: UpdateRelationRequest;
+    }) => TicketRelationsApi.updateRelation(relationId, request),
     onSuccess: (_, variables) => {
       message.success('关联更新成功');
       queryClient.invalidateQueries({
@@ -238,7 +247,7 @@ export function useUpdateRelationMutation() {
       });
       queryClient.invalidateQueries({ queryKey: TICKET_RELATION_KEYS.lists() });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`更新关联失败：${error.message || '未知错误'}`);
     },
   });
@@ -258,7 +267,7 @@ export function useDeleteRelationMutation() {
       queryClient.invalidateQueries({ queryKey: TICKET_RELATION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`删除关联失败：${error.message || '未知错误'}`);
     },
   });
@@ -288,7 +297,7 @@ export function useSetParentMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`设置父工单失败：${error.message || '未知错误'}`);
     },
   });
@@ -301,7 +310,8 @@ export function useRemoveParentMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (childTicketId: number) => TicketRelationsApi.removeParent(childTicketId),
+    mutationFn: (childTicketId: number) =>
+      TicketRelationsApi.removeParent(childTicketId),
     onSuccess: (_, childTicketId) => {
       message.success('父工单已移除');
       queryClient.invalidateQueries({
@@ -309,7 +319,7 @@ export function useRemoveParentMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`移除父工单失败：${error.message || '未知错误'}`);
     },
   });
@@ -337,7 +347,7 @@ export function useAddDependencyMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`添加依赖失败：${error.message || '未知错误'}`);
     },
   });
@@ -350,8 +360,13 @@ export function useRemoveDependencyMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ ticketId, dependencyId }: { ticketId: number; dependencyId: string }) =>
-      TicketRelationsApi.removeDependency(ticketId, dependencyId),
+    mutationFn: ({
+      ticketId,
+      dependencyId,
+    }: {
+      ticketId: number;
+      dependencyId: string;
+    }) => TicketRelationsApi.removeDependency(ticketId, dependencyId),
     onSuccess: (_, variables) => {
       message.success('依赖已移除');
       queryClient.invalidateQueries({
@@ -362,7 +377,7 @@ export function useRemoveDependencyMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       message.error(`移除依赖失败：${error.message || '未知错误'}`);
     },
   });
@@ -391,3 +406,4 @@ export default {
   useAddDependencyMutation,
   useRemoveDependencyMutation,
 };
+
