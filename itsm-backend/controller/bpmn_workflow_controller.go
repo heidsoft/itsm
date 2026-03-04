@@ -73,9 +73,9 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.PUT("/versions/:key/:version/rollback", c.RollbackVersion)
 		bpmn.GET("/versions/:key/compare", c.CompareVersions)
 
-		// 版本变更日志
+		// 版本变更日志 (注意：:id 路由必须在 :key 之前定义)
+		bpmn.GET("/process-definitions/changelogs/:id", c.GetVersionChangeLogsByID)
 		bpmn.GET("/process-definitions/:key/changelogs", c.GetVersionChangeLogs)
-		bpmn.GET("/process-definitions/:id/changelogs", c.GetVersionChangeLogsByID)
 	}
 }
 
@@ -951,5 +951,54 @@ func (c *BPMNWorkflowController) Vote(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"code":    0,
 		"message": "success",
+	})
+}
+
+// GetVersionChangeLogs 获取流程定义的版本变更日志列表
+func (c *BPMNWorkflowController) GetVersionChangeLogs(ctx *gin.Context) {
+	processKey := ctx.Param("key")
+	tenantID := ctx.GetInt("tenant_id")
+
+	changelogs, err := c.versionService.GetChangeLogsByProcessKey(ctx, processKey, tenantID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code":    5001,
+			"message": "获取变更日志失败: " + err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    changelogs,
+	})
+}
+
+// GetVersionChangeLogsByID 根据流程定义ID获取版本变更日志
+func (c *BPMNWorkflowController) GetVersionChangeLogsByID(ctx *gin.Context) {
+	processDefIDStr := ctx.Param("id")
+	processDefID, err := strconv.Atoi(processDefIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code":    1001,
+			"message": "无效的流程定义ID",
+		})
+		return
+	}
+
+	changelogs, err := c.versionService.GetChangeLogsByProcessDefinitionID(ctx, processDefID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code":    5001,
+			"message": "获取变更日志失败: " + err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    0,
+		"message": "success",
+		"data":    changelogs,
 	})
 }

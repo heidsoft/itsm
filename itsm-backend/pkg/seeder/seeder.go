@@ -20,6 +20,7 @@ import (
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
 
+	"itsm-backend/database"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -246,11 +247,11 @@ func getEmbeddedConfig() *SeedConfig {
 			{Name: "服务请求审批", Desc: "高价值服务请求需要审批", TicketType: "service_request", Priority: "high", Nodes: []map[string]interface{}{{"type": "approval", "name": "服务审批", "approver_type": "manager", "timeout": 120}}},
 		},
 		ProcessBindings: []ProcessBindingSeed{
-			{BusinessType: "incident", ProcessDefinitionKey: "incident_process", IsDefault: true},
-			{BusinessType: "problem", ProcessDefinitionKey: "problem_process", IsDefault: true},
-			{BusinessType: "change", ProcessDefinitionKey: "change_process", IsDefault: true},
-			{BusinessType: "service_request", ProcessDefinitionKey: "service_request_process", IsDefault: true},
-			{BusinessType: "improvement", ProcessDefinitionKey: "improvement_process", IsDefault: true},
+			{BusinessType: "incident", ProcessDefinitionKey: "incident_emergency_flow", IsDefault: true},
+			{BusinessType: "problem", ProcessDefinitionKey: "problem_management_flow", IsDefault: true},
+			{BusinessType: "change", ProcessDefinitionKey: "change_normal_flow", IsDefault: true},
+			{BusinessType: "service_request", ProcessDefinitionKey: "service_request_flow", IsDefault: true},
+			{BusinessType: "improvement", ProcessDefinitionKey: "ticket_general_flow", IsDefault: true},
 		},
 		TicketViews: []TicketViewSeed{
 			{Name: "我的待办工单", Desc: "分配给我的未关闭工单", IsShared: false, Columns: []string{"id", "title", "priority", "status", "assignee", "created_at"}},
@@ -286,6 +287,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedProcessBindings(ctx)
 	s.seedTicketViews(ctx)
 	s.seedServiceCatalog(ctx)
+	s.seedTicketTypes(ctx) // 新增：初始化工单类型
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -919,4 +921,83 @@ func (s *Seeder) seedServiceCatalog(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("service catalog seeded", "count", len(s.config.ServiceCatalog))
+}
+
+// seedTicketTypes 初始化默认工单类型
+func (s *Seeder) seedTicketTypes(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip ticket types seed", "error", err)
+		return
+	}
+
+	// 获取admin用户ID
+	admin, err := s.client.User.Query().Where(user.UsernameEQ("admin"), user.TenantIDEQ(t.ID)).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("admin user not found; skip ticket types seed", "error", err)
+		return
+	}
+
+	// 检查ticket_types表是否存在
+	rawDB := database.GetRawDB()
+	if rawDB == nil {
+		s.sugar.Warnw("rawDB not available; skip ticket types seed")
+		return
+	}
+
+	// 检查是否已有工单类型
+	var count int
+	err = rawDB.QueryRowContext(ctx, "SELECT COUNT(*) FROM ticket_types WHERE tenant_id = $1", t.ID).Scan(&count)
+	if err != nil {
+		s.sugar.Warnw("check existing ticket types failed", "error", err)
+		return
+	}
+	if count > 0 {
+		s.sugar.Infow("ticket types already seeded")
+		return
+	}
+
+	// 定义默认工单类型（与前端ticket-type-presets.ts保持一致）
+	ticketTypes := []struct {
+		Code        string
+		Name        string
+		Description string
+		Icon        string
+		Color       string
+	}{
+		{"k8s_scale", "K8S扩缩容", "Kubernetes容器集群扩容或缩容请求", "Container", "#1890ff"},
+		{"ddl_execute", "DDL执行", "数据库表结构变更、索引创建等DDL操作", "Database", "#722ed1"},
+		{"data_export", "数据导出", "从数据库或系统导出数据", "Download", "#13c2c2"},
+		{"vm_apply", "虚拟机申请", "申请新的虚拟机资源", "Desktop", "#2f54eb"},
+		{"account_apply", "账号申请", "申请系统账号、VPN账号、堡垒机账号等", "User", "#52c41a"},
+		{"gitlab_repo_apply", "GitLab代码仓库申请", "申请创建新的GitLab代码仓库", "Code", "#fa541c"},
+		{"domain_apply", "域名申请", "申请新的域名或域名解析变更", "Global", "#eb2f96"},
+		{"firewall_apply", "防火墙规则申请", "申请开放或变更防火墙端口规则", "Safety", "#fa8c16"},
+		{"app_apply", "应用申请", "申请在K8S集群中部署新应用服务", "Appstore", "#1890ff"},
+		{"project_apply", "项目申请", "申请创建新项目或项目空间", "Project", "#722ed1"},
+		{"db_account_apply", "数据库账号申请", "申请数据库读写账号、只读账号等", "Key", "#faad14"},
+		{"general", "其他工单", "通用工单类型，用于不属于以上分类的请求", "FileText", "#8c8c8c"},
+	}
+
+	for _, tt := range ticketTypes {
+		_, err := rawDB.ExecContext(ctx, `
+			INSERT INTO ticket_types (
+				code, name, description, icon, color, status,
+				custom_fields, approval_enabled, approval_chain,
+				sla_enabled, auto_assign_enabled,
+				notification_config, permission_config,
+				created_by, tenant_id, created_at, updated_at, usage_count
+			) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, 0)
+		`,
+			tt.Code, tt.Name, tt.Description, tt.Icon, tt.Color, "active",
+			"[]", false, "[]",
+			false, false,
+			"{}", "{}",
+			admin.ID, t.ID, time.Now(), time.Now(),
+		)
+		if err != nil {
+			s.sugar.Warnw("seed ticket type failed", "error", err, "code", tt.Code)
+		}
+	}
+	s.sugar.Infow("ticket types seeded", "count", len(ticketTypes))
 }

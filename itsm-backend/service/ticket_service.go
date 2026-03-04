@@ -137,9 +137,9 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	slaResult, err := s.slaService.CalculateSLADeadlineFromRequest(ctx, tenantID, ticketType, req.Priority)
 	if err != nil {
 		s.logger.Warnw("Failed to calculate SLA deadline", "error", err)
-		// SLA计算失败不阻止工单创建，使用默认值
-		defaultRespDeadline := time.Now().Add(time.Duration(s.config.DefaultResponseHours) * time.Hour)
-		defaultResDeadline := time.Now().Add(time.Duration(s.config.DefaultResolutionHours) * time.Hour)
+		// SLA计算失败不阻止工单创建，使用默认值（响应8小时，解决24小时）
+		defaultRespDeadline := time.Now().Add(8 * time.Hour)
+		defaultResDeadline := time.Now().Add(24 * time.Hour)
 		slaResult = &SLADeadlineResult{
 			SLADefinitionID:    0,
 			ResponseDeadline:   &defaultRespDeadline,
@@ -207,7 +207,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	} else if ent.IsNotFound(err) {
 		// 查找默认分类
 		defaultCat, err := s.client.TicketCategory.Query().
-			Where(ticketcategory.IsDefault(true), ticketcategory.TenantID(tenantID)).
+			Where(ticketcategory.IsActive(true), ticketcategory.TenantID(tenantID)).
 			First(ctx)
 		if err == nil {
 			createBuilder = createBuilder.SetCategoryID(defaultCat.ID)

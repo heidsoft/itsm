@@ -500,3 +500,38 @@ func (s *BPMNVersionService) assessCompatibility(changes []ChangeDetail, breakin
 
 	return "compatible"
 }
+
+// GetChangeLogsByProcessKey 根据流程定义key获取版本变更日志列表
+func (s *BPMNVersionService) GetChangeLogsByProcessKey(ctx context.Context, processKey string, tenantID int) ([]*ent.ProcessVersionChangelog, error) {
+	// 先通过 processdefinition 找到对应的 ID
+	pd, err := s.client.ProcessDefinition.Query().
+		Where(processdefinition.Key(processKey), processdefinition.TenantID(tenantID)).
+		First(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("流程定义不存在: %w", err)
+	}
+
+	// 获取 changelogs
+	changelogs, err := s.client.ProcessVersionChangelog.Query().
+		Where(processversionchangelog.ProcessDefinitionIDEQ(pd.ID)).
+		Order(ent.Desc(processversionchangelog.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取变更日志失败: %w", err)
+	}
+
+	return changelogs, nil
+}
+
+// GetChangeLogsByProcessDefinitionID 根据流程定义ID获取版本变更日志
+func (s *BPMNVersionService) GetChangeLogsByProcessDefinitionID(ctx context.Context, processDefID int) ([]*ent.ProcessVersionChangelog, error) {
+	changelogs, err := s.client.ProcessVersionChangelog.Query().
+		Where(processversionchangelog.ProcessDefinitionIDEQ(processDefID)).
+		Order(ent.Desc(processversionchangelog.FieldCreatedAt)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取变更日志失败: %w", err)
+	}
+
+	return changelogs, nil
+}

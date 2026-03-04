@@ -42,6 +42,7 @@ type UpdateTicketRequest struct {
 	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket"`
 	Category    string                 `json:"category" binding:"omitempty"`
 	AssigneeID  int                    `json:"assignee_id"`
+	RequesterID int                    `json:"requester_id"` // 创建人ID
 	Tags        []string               `json:"tags"`
 	Resolution  string                 `json:"resolution" binding:"omitempty"`
 	FormFields  map[string]interface{} `json:"form_fields"`
