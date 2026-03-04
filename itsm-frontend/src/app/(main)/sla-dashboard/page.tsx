@@ -34,7 +34,7 @@ import {
 import SLAApi from '@/lib/api/sla-api';
 import type { SLADefinition, SLAViolation, SLAComplianceReport } from '@/lib/api/sla-api';
 import SLADashboardCharts from '@/components/charts/SLADashboardCharts';
-import SLAViolationMonitor from '@/components/business/SLAViolationMonitor';
+import SLAViolationMonitor from '@/components/business/sla-monitor/SLAViolationMonitor';
 import { SLAMonitorDashboard } from '@/components/business/SLAMonitorDashboard';
 
 const { Option } = Select;
