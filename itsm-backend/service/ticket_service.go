@@ -23,6 +23,7 @@ import (
 )
 
 type TicketService struct {
+	config *config.Config
 	client                *ent.Client
 	logger                *zap.SugaredLogger
 	notificationService   *TicketNotificationService
