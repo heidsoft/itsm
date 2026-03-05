@@ -1,5 +1,129 @@
 import '@testing-library/jest-dom';
 
+// Mock dayjs - required for Ant Design DatePicker
+// Must mock both default and named exports
+jest.mock('dayjs', () => {
+  const mockDate = {
+    format: () => '2024-01-01',
+    isValid: () => true,
+    isAfter: () => false,
+    isBefore: () => false,
+    isSame: () => false,
+    add: () => mockDate,
+    subtract: () => mockDate,
+    startOf: () => mockDate,
+    endOf: () => mockDate,
+    diff: () => 0,
+    valueOf: () => 1704067200000,
+    toISOString: () => '2024-01-01T00:00:00.000Z',
+    hour: () => 12,
+    minute: () => 30,
+    second: () => 45,
+    year: () => 2024,
+    month: () => 0,
+    date: () => 1,
+    day: () => 1,
+    unix: () => 1704067200,
+    toDate: () => new Date(),
+    toArray: () => [2024, 0, 1, 12, 30, 45, 0],
+    isLeapYear: () => false,
+    clone: () => mockDate,
+    set: () => mockDate,
+  };
+
+  const mockDayjs = jest.fn((date) => {
+    if (!date) return mockDate;
+    return mockDate;
+  });
+
+  // Mock dayjs instance methods
+  mockDayjs.prototype.format = jest.fn(function(format) {
+    return '2024-01-01';
+  });
+  mockDayjs.prototype.isValid = jest.fn(function() {
+    return true;
+  });
+  mockDayjs.prototype.isAfter = jest.fn(function() {
+    return false;
+  });
+  mockDayjs.prototype.isBefore = jest.fn(function() {
+    return false;
+  });
+  mockDayjs.prototype.isSame = jest.fn(function() {
+    return false;
+  });
+  mockDayjs.prototype.add = jest.fn(function() {
+    return mockDate;
+  });
+  mockDayjs.prototype.subtract = jest.fn(function() {
+    return mockDate;
+  });
+  mockDayjs.prototype.startOf = jest.fn(function() {
+    return mockDate;
+  });
+  mockDayjs.prototype.endOf = jest.fn(function() {
+    return mockDate;
+  });
+  mockDayjs.prototype.diff = jest.fn(function() {
+    return 0;
+  });
+  mockDayjs.prototype.valueOf = jest.fn(function() {
+    return 1704067200000;
+  });
+  mockDayjs.prototype.toISOString = jest.fn(function() {
+    return '2024-01-01T00:00:00.000Z';
+  });
+  mockDayjs.prototype.hour = jest.fn(function() {
+    return 12;
+  });
+  mockDayjs.prototype.minute = jest.fn(function() {
+    return 30;
+  });
+  mockDayjs.prototype.second = jest.fn(function() {
+    return 45;
+  });
+  mockDayjs.prototype.year = jest.fn(function() {
+    return 2024;
+  });
+  mockDayjs.prototype.month = jest.fn(function() {
+    return 0;
+  });
+  mockDayjs.prototype.date = jest.fn(function() {
+    return 1;
+  });
+  mockDayjs.prototype.day = jest.fn(function() {
+    return 1;
+  });
+  mockDayjs.prototype.unix = jest.fn(function() {
+    return 1704067200;
+  });
+  mockDayjs.prototype.toDate = jest.fn(function() {
+    return new Date();
+  });
+  mockDayjs.prototype.toArray = jest.fn(function() {
+    return [2024, 0, 1, 12, 30, 45, 0];
+  });
+  mockDayjs.prototype.isLeapYear = jest.fn(function() {
+    return false;
+  });
+  mockDayjs.prototype.clone = jest.fn(function() {
+    return mockDate;
+  });
+  mockDayjs.prototype.set = jest.fn(function() {
+    return mockDate;
+  });
+
+  // Mock static methods
+  mockDayjs.extend = jest.fn();
+  mockDayjs.locale = jest.fn();
+  mockDayjs.unix = jest.fn(function() {
+    return mockDate;
+  });
+  mockDayjs.isDayjs = jest.fn();
+
+  return mockDayjs;
+});
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter() {
