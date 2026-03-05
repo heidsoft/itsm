@@ -137,19 +137,23 @@ func (pbc *ProcessBindingCreate) SetNillableUpdatedAt(t *time.Time) *ProcessBind
 	return pbc
 }
 
-// AddProcessDefinitionIDs adds the "process_definition" edge to the ProcessDefinition entity by IDs.
-func (pbc *ProcessBindingCreate) AddProcessDefinitionIDs(ids ...int) *ProcessBindingCreate {
-	pbc.mutation.AddProcessDefinitionIDs(ids...)
+// SetProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID.
+func (pbc *ProcessBindingCreate) SetProcessDefinitionID(id int) *ProcessBindingCreate {
+	pbc.mutation.SetProcessDefinitionID(id)
 	return pbc
 }
 
-// AddProcessDefinition adds the "process_definition" edges to the ProcessDefinition entity.
-func (pbc *ProcessBindingCreate) AddProcessDefinition(p ...*ProcessDefinition) *ProcessBindingCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID if the given value is not nil.
+func (pbc *ProcessBindingCreate) SetNillableProcessDefinitionID(id *int) *ProcessBindingCreate {
+	if id != nil {
+		pbc = pbc.SetProcessDefinitionID(*id)
 	}
-	return pbc.AddProcessDefinitionIDs(ids...)
+	return pbc
+}
+
+// SetProcessDefinition sets the "process_definition" edge to the ProcessDefinition entity.
+func (pbc *ProcessBindingCreate) SetProcessDefinition(p *ProcessDefinition) *ProcessBindingCreate {
+	return pbc.SetProcessDefinitionID(p.ID)
 }
 
 // Mutation returns the ProcessBindingMutation object of the builder.
@@ -257,9 +261,6 @@ func (pbc *ProcessBindingCreate) check() error {
 	if _, ok := pbc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessBinding.updated_at"`)}
 	}
-	if len(pbc.mutation.ProcessDefinitionIDs()) == 0 {
-		return &ValidationError{Name: "process_definition", err: errors.New(`ent: missing required edge "ProcessBinding.process_definition"`)}
-	}
 	return nil
 }
 
@@ -328,10 +329,10 @@ func (pbc *ProcessBindingCreate) createSpec() (*ProcessBinding, *sqlgraph.Create
 	}
 	if nodes := pbc.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   processbinding.ProcessDefinitionTable,
-			Columns: processbinding.ProcessDefinitionPrimaryKey,
+			Columns: []string{processbinding.ProcessDefinitionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
@@ -340,6 +341,7 @@ func (pbc *ProcessBindingCreate) createSpec() (*ProcessBinding, *sqlgraph.Create
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.process_definition_bindings = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

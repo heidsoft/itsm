@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"itsm-backend/ent/processbinding"
+	"itsm-backend/ent/processdefinition"
 	"strings"
 	"time"
 
@@ -39,24 +40,27 @@ type ProcessBinding struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the ProcessBindingQuery when eager-loading is set.
-	Edges        ProcessBindingEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                       ProcessBindingEdges `json:"edges"`
+	process_definition_bindings *int
+	selectValues                sql.SelectValues
 }
 
 // ProcessBindingEdges holds the relations/edges for other nodes in the graph.
 type ProcessBindingEdges struct {
 	// ProcessDefinition holds the value of the process_definition edge.
-	ProcessDefinition []*ProcessDefinition `json:"process_definition,omitempty"`
+	ProcessDefinition *ProcessDefinition `json:"process_definition,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
 // ProcessDefinitionOrErr returns the ProcessDefinition value or an error if the edge
-// was not loaded in eager-loading.
-func (e ProcessBindingEdges) ProcessDefinitionOrErr() ([]*ProcessDefinition, error) {
-	if e.loadedTypes[0] {
+// was not loaded in eager-loading, or loaded but was not found.
+func (e ProcessBindingEdges) ProcessDefinitionOrErr() (*ProcessDefinition, error) {
+	if e.ProcessDefinition != nil {
 		return e.ProcessDefinition, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: processdefinition.Label}
 	}
 	return nil, &NotLoadedError{edge: "process_definition"}
 }
@@ -74,6 +78,8 @@ func (*ProcessBinding) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case processbinding.FieldCreatedAt, processbinding.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case processbinding.ForeignKeys[0]: // process_definition_bindings
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -154,6 +160,13 @@ func (pb *ProcessBinding) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				pb.UpdatedAt = value.Time
+			}
+		case processbinding.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field process_definition_bindings", value)
+			} else if value.Valid {
+				pb.process_definition_bindings = new(int)
+				*pb.process_definition_bindings = int(value.Int64)
 			}
 		default:
 			pb.selectValues.Set(columns[i], values[i])

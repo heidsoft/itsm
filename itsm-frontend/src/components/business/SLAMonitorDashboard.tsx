@@ -111,7 +111,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
           resolutionTimeCompliance: data.resolution_time_compliance,
         });
         // 转换API响应格式到组件格式
-        const convertedAlerts: SLAAlert[] = (data.alerts || []).map((alert: unknown) => ({
+        const convertedAlerts: SLAAlert[] = (data.alerts || []).map((alert: any) => ({
           id: alert.id,
           ticketId: alert.ticket_id,
           ticketNumber: alert.ticket_number,

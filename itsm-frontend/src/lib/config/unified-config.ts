@@ -442,8 +442,8 @@ export const getConfig = (path?: string) => {
     return config;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return path.split('.').reduce((obj: unknown, key: string) => {
+  // Use any to allow dynamic property access
+  return path.split('.').reduce((obj: any, key: string) => {
     return obj?.[key];
   }, config);
 };

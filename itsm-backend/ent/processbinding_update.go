@@ -188,19 +188,23 @@ func (pbu *ProcessBindingUpdate) SetUpdatedAt(t time.Time) *ProcessBindingUpdate
 	return pbu
 }
 
-// AddProcessDefinitionIDs adds the "process_definition" edge to the ProcessDefinition entity by IDs.
-func (pbu *ProcessBindingUpdate) AddProcessDefinitionIDs(ids ...int) *ProcessBindingUpdate {
-	pbu.mutation.AddProcessDefinitionIDs(ids...)
+// SetProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID.
+func (pbu *ProcessBindingUpdate) SetProcessDefinitionID(id int) *ProcessBindingUpdate {
+	pbu.mutation.SetProcessDefinitionID(id)
 	return pbu
 }
 
-// AddProcessDefinition adds the "process_definition" edges to the ProcessDefinition entity.
-func (pbu *ProcessBindingUpdate) AddProcessDefinition(p ...*ProcessDefinition) *ProcessBindingUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID if the given value is not nil.
+func (pbu *ProcessBindingUpdate) SetNillableProcessDefinitionID(id *int) *ProcessBindingUpdate {
+	if id != nil {
+		pbu = pbu.SetProcessDefinitionID(*id)
 	}
-	return pbu.AddProcessDefinitionIDs(ids...)
+	return pbu
+}
+
+// SetProcessDefinition sets the "process_definition" edge to the ProcessDefinition entity.
+func (pbu *ProcessBindingUpdate) SetProcessDefinition(p *ProcessDefinition) *ProcessBindingUpdate {
+	return pbu.SetProcessDefinitionID(p.ID)
 }
 
 // Mutation returns the ProcessBindingMutation object of the builder.
@@ -208,25 +212,10 @@ func (pbu *ProcessBindingUpdate) Mutation() *ProcessBindingMutation {
 	return pbu.mutation
 }
 
-// ClearProcessDefinition clears all "process_definition" edges to the ProcessDefinition entity.
+// ClearProcessDefinition clears the "process_definition" edge to the ProcessDefinition entity.
 func (pbu *ProcessBindingUpdate) ClearProcessDefinition() *ProcessBindingUpdate {
 	pbu.mutation.ClearProcessDefinition()
 	return pbu
-}
-
-// RemoveProcessDefinitionIDs removes the "process_definition" edge to ProcessDefinition entities by IDs.
-func (pbu *ProcessBindingUpdate) RemoveProcessDefinitionIDs(ids ...int) *ProcessBindingUpdate {
-	pbu.mutation.RemoveProcessDefinitionIDs(ids...)
-	return pbu
-}
-
-// RemoveProcessDefinition removes "process_definition" edges to ProcessDefinition entities.
-func (pbu *ProcessBindingUpdate) RemoveProcessDefinition(p ...*ProcessDefinition) *ProcessBindingUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return pbu.RemoveProcessDefinitionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -341,39 +330,23 @@ func (pbu *ProcessBindingUpdate) sqlSave(ctx context.Context) (n int, err error)
 	}
 	if pbu.mutation.ProcessDefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   processbinding.ProcessDefinitionTable,
-			Columns: processbinding.ProcessDefinitionPrimaryKey,
+			Columns: []string{processbinding.ProcessDefinitionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pbu.mutation.RemovedProcessDefinitionIDs(); len(nodes) > 0 && !pbu.mutation.ProcessDefinitionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   processbinding.ProcessDefinitionTable,
-			Columns: processbinding.ProcessDefinitionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := pbu.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   processbinding.ProcessDefinitionTable,
-			Columns: processbinding.ProcessDefinitionPrimaryKey,
+			Columns: []string{processbinding.ProcessDefinitionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
@@ -563,19 +536,23 @@ func (pbuo *ProcessBindingUpdateOne) SetUpdatedAt(t time.Time) *ProcessBindingUp
 	return pbuo
 }
 
-// AddProcessDefinitionIDs adds the "process_definition" edge to the ProcessDefinition entity by IDs.
-func (pbuo *ProcessBindingUpdateOne) AddProcessDefinitionIDs(ids ...int) *ProcessBindingUpdateOne {
-	pbuo.mutation.AddProcessDefinitionIDs(ids...)
+// SetProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID.
+func (pbuo *ProcessBindingUpdateOne) SetProcessDefinitionID(id int) *ProcessBindingUpdateOne {
+	pbuo.mutation.SetProcessDefinitionID(id)
 	return pbuo
 }
 
-// AddProcessDefinition adds the "process_definition" edges to the ProcessDefinition entity.
-func (pbuo *ProcessBindingUpdateOne) AddProcessDefinition(p ...*ProcessDefinition) *ProcessBindingUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+// SetNillableProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID if the given value is not nil.
+func (pbuo *ProcessBindingUpdateOne) SetNillableProcessDefinitionID(id *int) *ProcessBindingUpdateOne {
+	if id != nil {
+		pbuo = pbuo.SetProcessDefinitionID(*id)
 	}
-	return pbuo.AddProcessDefinitionIDs(ids...)
+	return pbuo
+}
+
+// SetProcessDefinition sets the "process_definition" edge to the ProcessDefinition entity.
+func (pbuo *ProcessBindingUpdateOne) SetProcessDefinition(p *ProcessDefinition) *ProcessBindingUpdateOne {
+	return pbuo.SetProcessDefinitionID(p.ID)
 }
 
 // Mutation returns the ProcessBindingMutation object of the builder.
@@ -583,25 +560,10 @@ func (pbuo *ProcessBindingUpdateOne) Mutation() *ProcessBindingMutation {
 	return pbuo.mutation
 }
 
-// ClearProcessDefinition clears all "process_definition" edges to the ProcessDefinition entity.
+// ClearProcessDefinition clears the "process_definition" edge to the ProcessDefinition entity.
 func (pbuo *ProcessBindingUpdateOne) ClearProcessDefinition() *ProcessBindingUpdateOne {
 	pbuo.mutation.ClearProcessDefinition()
 	return pbuo
-}
-
-// RemoveProcessDefinitionIDs removes the "process_definition" edge to ProcessDefinition entities by IDs.
-func (pbuo *ProcessBindingUpdateOne) RemoveProcessDefinitionIDs(ids ...int) *ProcessBindingUpdateOne {
-	pbuo.mutation.RemoveProcessDefinitionIDs(ids...)
-	return pbuo
-}
-
-// RemoveProcessDefinition removes "process_definition" edges to ProcessDefinition entities.
-func (pbuo *ProcessBindingUpdateOne) RemoveProcessDefinition(p ...*ProcessDefinition) *ProcessBindingUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
-	}
-	return pbuo.RemoveProcessDefinitionIDs(ids...)
 }
 
 // Where appends a list predicates to the ProcessBindingUpdate builder.
@@ -746,39 +708,23 @@ func (pbuo *ProcessBindingUpdateOne) sqlSave(ctx context.Context) (_node *Proces
 	}
 	if pbuo.mutation.ProcessDefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   processbinding.ProcessDefinitionTable,
-			Columns: processbinding.ProcessDefinitionPrimaryKey,
+			Columns: []string{processbinding.ProcessDefinitionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
 			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := pbuo.mutation.RemovedProcessDefinitionIDs(); len(nodes) > 0 && !pbuo.mutation.ProcessDefinitionCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   processbinding.ProcessDefinitionTable,
-			Columns: processbinding.ProcessDefinitionPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
 	if nodes := pbuo.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.M2O,
 			Inverse: true,
 			Table:   processbinding.ProcessDefinitionTable,
-			Columns: processbinding.ProcessDefinitionPrimaryKey,
+			Columns: []string{processbinding.ProcessDefinitionColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt),

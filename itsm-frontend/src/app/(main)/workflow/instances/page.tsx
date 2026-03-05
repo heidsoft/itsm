@@ -136,7 +136,7 @@ const WorkflowInstancesPage = () => {
         page_size: pageSize,
         ...filters,
       });
-      const normalized = response.instances.map((instance: unknown) => ({
+      const normalized = response.instances.map((instance: any) => ({
         ...instance,
         instance_id: instance.instance_id || instance.id,
         business_key: instance.business_key || instance.businessKey || '',
@@ -165,8 +165,8 @@ const WorkflowInstancesPage = () => {
   };
 
   // 分页/排序/筛选变化处理
-  const handleTableChange = async (newPagination: unknown) => {
-    await loadInstances(newPagination.current, newPagination.pageSize);
+  const handleTableChange = async (page: number, pageSize: number) => {
+    await loadInstances(page, pageSize);
     // 分页变化后更新统计数据
     loadStats();
   };

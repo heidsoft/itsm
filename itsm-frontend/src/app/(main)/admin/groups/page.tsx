@@ -13,7 +13,8 @@ import {
 } from 'lucide-react';
 
 import React, { useState } from 'react';
-import { App, Modal } from 'antd';
+import { App, Modal, Form, Input, Select, Tag, Button, Space, Table, message } from 'antd';
+import type { MenuProps } from 'antd';
 // 用户组数据类型定义
 interface Group {
   id: number;
@@ -48,7 +49,7 @@ const GroupManagement = () => {
       const { RoleAPI } = await import('@/lib/api/role-api');
       const response = await RoleAPI.getRoles({ size: 100 }); // 获取所有角色
 
-      const mappedGroups: Group[] = response.roles.map((role: unknown) => ({
+      const mappedGroups: Group[] = response.roles.map((role: any) => ({
         id: role.id,
         name: role.name,
         description: role.description || '',
@@ -479,31 +480,95 @@ const GroupManagement = () => {
         )}
       </div>
 
-      {/* 模态框占位符 */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              {selectedGroup ? '编辑用户组' : '新建用户组'}
-            </h3>
-            <p className="text-gray-600 mb-4">用户组编辑功能正在开发中...</p>
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"
-              >
+      {/* 用户组编辑模态框 */}
+      <Modal
+        title={selectedGroup ? '编辑用户组' : '新建用户组'}
+        open={showModal}
+        onCancel={() => {
+          setShowModal(false);
+          setSelectedGroup(null);
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          layout="vertical"
+          initialValues={selectedGroup || { type: 'custom', status: 'active' }}
+          onFinish={async (values) => {
+            try {
+              const { RoleAPI } = await import('@/lib/api/role-api');
+              if (selectedGroup) {
+                await RoleAPI.updateRole(selectedGroup.id, {
+                  name: values.name,
+                  description: values.description,
+                  permissions: values.permissions,
+                });
+                message.success('用户组更新成功');
+              } else {
+                await RoleAPI.createRole({
+                  name: values.name,
+                  description: values.description,
+                  permissions: values.permissions || [],
+                });
+                message.success('用户组创建成功');
+              }
+              setShowModal(false);
+              setSelectedGroup(null);
+              loadGroups();
+            } catch (error) {
+              message.error('操作失败，请重试');
+            }
+          }}
+        >
+          <Form.Item
+            name="name"
+            label="用户组名称"
+            rules={[{ required: true, message: '请输入用户组名称' }]}
+          >
+            <Input placeholder="请输入用户组名称" />
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label="描述"
+          >
+            <Input.TextArea rows={3} placeholder="请输入描述" />
+          </Form.Item>
+
+          <Form.Item
+            name="permissions"
+            label="权限"
+          >
+            <Select mode="multiple" placeholder="选择权限" allowClear>
+              <Select.Option value="ticket:read">工单查看</Select.Option>
+              <Select.Option value="ticket:write">工单编辑</Select.Option>
+              <Select.Option value="ticket:delete">工单删除</Select.Option>
+              <Select.Option value="incident:read">事件查看</Select.Option>
+              <Select.Option value="incident:write">事件编辑</Select.Option>
+              <Select.Option value="problem:read">问题查看</Select.Option>
+              <Select.Option value="problem:write">问题编辑</Select.Option>
+              <Select.Option value="change:read">变更查看</Select.Option>
+              <Select.Option value="change:write">变更编辑</Select.Option>
+              <Select.Option value="user:manage">用户管理</Select.Option>
+              <Select.Option value="system:config">系统配置</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item>
+            <Space>
+              <Button type="primary" htmlType="submit">
+                {selectedGroup ? '保存' : '创建'}
+              </Button>
+              <Button onClick={() => {
+                setShowModal(false);
+                setSelectedGroup(null);
+              }}>
                 取消
-              </button>
-              <button
-                onClick={() => setShowModal(false)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                确定
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

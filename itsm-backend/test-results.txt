@@ -1,0 +1,366 @@
+# itsm-backend/controller [itsm-backend/controller.test]
+controller/auth_controller_test.go:767:2: declared and not used: refreshToken
+controller/auth_controller_test.go:1017:38: response.Status undefined (type "itsm-backend/common".Response has no field or method Status)
+?   	itsm-backend	[no test files]
+?   	itsm-backend/cache	[no test files]
+?   	itsm-backend/cmd/cmdb	[no test files]
+?   	itsm-backend/cmd/simple	[no test files]
+?   	itsm-backend/common	[no test files]
+?   	itsm-backend/config	[no test files]
+FAIL	itsm-backend/controller [build failed]
+?   	itsm-backend/database	[no test files]
+?   	itsm-backend/docs	[no test files]
+?   	itsm-backend/domain/provisioning	[no test files]
+?   	itsm-backend/dto	[no test files]
+?   	itsm-backend/ent	[no test files]
+?   	itsm-backend/ent/application	[no test files]
+?   	itsm-backend/ent/approvalchain	[no test files]
+?   	itsm-backend/ent/approvalrecord	[no test files]
+?   	itsm-backend/ent/approvalworkflow	[no test files]
+?   	itsm-backend/ent/asset	[no test files]
+?   	itsm-backend/ent/assetlicense	[no test files]
+?   	itsm-backend/ent/auditlog	[no test files]
+?   	itsm-backend/ent/change	[no test files]
+?   	itsm-backend/ent/ciattributedefinition	[no test files]
+?   	itsm-backend/ent/cirelationship	[no test files]
+?   	itsm-backend/ent/citype	[no test files]
+?   	itsm-backend/ent/cloudaccount	[no test files]
+?   	itsm-backend/ent/cloudresource	[no test files]
+?   	itsm-backend/ent/cloudservice	[no test files]
+?   	itsm-backend/ent/configurationitem	[no test files]
+?   	itsm-backend/ent/conversation	[no test files]
+?   	itsm-backend/ent/department	[no test files]
+?   	itsm-backend/ent/discoveryjob	[no test files]
+?   	itsm-backend/ent/discoveryresult	[no test files]
+?   	itsm-backend/ent/discoverysource	[no test files]
+?   	itsm-backend/ent/enttest	[no test files]
+?   	itsm-backend/ent/hook	[no test files]
+?   	itsm-backend/ent/incident	[no test files]
+?   	itsm-backend/ent/incidentalert	[no test files]
+?   	itsm-backend/ent/incidentevent	[no test files]
+?   	itsm-backend/ent/incidentmetric	[no test files]
+?   	itsm-backend/ent/incidentrule	[no test files]
+?   	itsm-backend/ent/incidentruleexecution	[no test files]
+?   	itsm-backend/ent/knowledgearticle	[no test files]
+?   	itsm-backend/ent/knowledgearticlelike	[no test files]
+?   	itsm-backend/ent/message	[no test files]
+?   	itsm-backend/ent/microservice	[no test files]
+?   	itsm-backend/ent/migrate	[no test files]
+?   	itsm-backend/ent/notification	[no test files]
+?   	itsm-backend/ent/notificationpreference	[no test files]
+?   	itsm-backend/ent/passwordresettoken	[no test files]
+?   	itsm-backend/ent/permission	[no test files]
+?   	itsm-backend/ent/predicate	[no test files]
+?   	itsm-backend/ent/problem	[no test files]
+?   	itsm-backend/ent/processbinding	[no test files]
+?   	itsm-backend/ent/processdefinition	[no test files]
+?   	itsm-backend/ent/processdeployment	[no test files]
+?   	itsm-backend/ent/processexecutionhistory	[no test files]
+?   	itsm-backend/ent/processinstance	[no test files]
+?   	itsm-backend/ent/processtask	[no test files]
+?   	itsm-backend/ent/processvariable	[no test files]
+?   	itsm-backend/ent/processversionchangelog	[no test files]
+?   	itsm-backend/ent/project	[no test files]
+?   	itsm-backend/ent/prompttemplate	[no test files]
+?   	itsm-backend/ent/provisioningtask	[no test files]
+?   	itsm-backend/ent/relationshiptype	[no test files]
+?   	itsm-backend/ent/release	[no test files]
+?   	itsm-backend/ent/role	[no test files]
+?   	itsm-backend/ent/rootcauseanalysis	[no test files]
+?   	itsm-backend/ent/runtime	[no test files]
+?   	itsm-backend/ent/schema	[no test files]
+?   	itsm-backend/ent/servicecatalog	[no test files]
+?   	itsm-backend/ent/servicerequest	[no test files]
+?   	itsm-backend/ent/servicerequestapproval	[no test files]
+?   	itsm-backend/ent/slaalerthistory	[no test files]
+?   	itsm-backend/ent/slaalertrule	[no test files]
+?   	itsm-backend/ent/sladefinition	[no test files]
+?   	itsm-backend/ent/slametric	[no test files]
+?   	itsm-backend/ent/slaviolation	[no test files]
+?   	itsm-backend/ent/systemconfig	[no test files]
+?   	itsm-backend/ent/tag	[no test files]
+?   	itsm-backend/ent/team	[no test files]
+?   	itsm-backend/ent/tenant	[no test files]
+?   	itsm-backend/ent/ticket	[no test files]
+?   	itsm-backend/ent/ticketassignmentrule	[no test files]
+?   	itsm-backend/ent/ticketattachment	[no test files]
+?   	itsm-backend/ent/ticketautomationrule	[no test files]
+?   	itsm-backend/ent/ticketcategory	[no test files]
+?   	itsm-backend/ent/ticketcomment	[no test files]
+?   	itsm-backend/ent/ticketnotification	[no test files]
+?   	itsm-backend/ent/tickettag	[no test files]
+?   	itsm-backend/ent/tickettemplate	[no test files]
+?   	itsm-backend/ent/ticketview	[no test files]
+?   	itsm-backend/ent/toolinvocation	[no test files]
+?   	itsm-backend/ent/user	[no test files]
+?   	itsm-backend/ent/workflow	[no test files]
+?   	itsm-backend/ent/workflowinstance	[no test files]
+?   	itsm-backend/ent/workflowtask	[no test files]
+?   	itsm-backend/ent/workflowversion	[no test files]
+?   	itsm-backend/handlers	[no test files]
+?   	itsm-backend/infrastructure/cloud	[no test files]
+?   	itsm-backend/infrastructure/cloud/alicloud	[no test files]
+=== RUN   TestTagServiceIntegration
+=== RUN   TestTagServiceIntegration/创建标签
+--- PASS: TestTagServiceIntegration (0.30s)
+    --- PASS: TestTagServiceIntegration/创建标签 (0.00s)
+=== RUN   TestCategoryServiceIntegration
+=== RUN   TestCategoryServiceIntegration/创建工单分类
+--- PASS: TestCategoryServiceIntegration (0.25s)
+    --- PASS: TestCategoryServiceIntegration/创建工单分类 (0.00s)
+=== RUN   TestPriorityMatrixIntegration
+=== RUN   TestPriorityMatrixIntegration/创建优先级矩阵
+--- PASS: TestPriorityMatrixIntegration (0.29s)
+    --- SKIP: TestPriorityMatrixIntegration/创建优先级矩阵 (0.00s)
+=== RUN   TestSLAIntegration
+=== RUN   TestSLAIntegration/创建SLA定义
+--- PASS: TestSLAIntegration (0.26s)
+    --- PASS: TestSLAIntegration/创建SLA定义 (0.00s)
+=== RUN   TestTicketLifecycleIntegration
+    logger.go:146: 2026-03-04T09:18:54.703+0800	INFO	Ticket createdticket_id1statusopen
+    logger.go:146: 2026-03-04T09:18:54.705+0800	INFO	Ticket assignedticket_id1statusassigned
+    logger.go:146: 2026-03-04T09:18:54.708+0800	INFO	Ticket in progressticket_id1statusin_progress
+    logger.go:146: 2026-03-04T09:18:54.726+0800	INFO	Ticket resolvedticket_id1statusresolved
+    logger.go:146: 2026-03-04T09:18:54.727+0800	INFO	Ticket closedticket_id1statusclosed
+    extended_integration_test.go:92: Ticket lifecycle integration test completed successfully
+--- PASS: TestTicketLifecycleIntegration (0.29s)
+=== RUN   TestIncidentIntegration
+    logger.go:146: 2026-03-04T09:18:54.987+0800	INFO	Created serviceservice_id1
+    logger.go:146: 2026-03-04T09:18:54.988+0800	INFO	Created incidentincident_id1
+    extended_integration_test.go:152: Incident integration test completed successfully
+--- PASS: TestIncidentIntegration (0.26s)
+=== RUN   TestChangeManagementIntegration
+    logger.go:146: 2026-03-04T09:18:55.237+0800	INFO	Created change requestchange_id1
+    extended_integration_test.go:201: Change management integration test completed successfully
+--- PASS: TestChangeManagementIntegration (0.25s)
+=== RUN   TestServiceCatalogIntegration
+    logger.go:146: 2026-03-04T09:18:55.409+0800	INFO	Created service catalogservice_id1
+    extended_integration_test.go:234: Service catalog integration test completed successfully
+--- PASS: TestServiceCatalogIntegration (0.19s)
+=== RUN   TestMultiTenantDataIsolation
+    logger.go:146: 2026-03-04T09:18:55.600+0800	INFO	Total tickets countcount2
+    extended_integration_test.go:317: Multi-tenant data isolation test completed successfully
+--- PASS: TestMultiTenantDataIsolation (0.17s)
+=== RUN   TestTenantServiceIntegration
+=== RUN   TestTenantServiceIntegration/创建租户
+--- PASS: TestTenantServiceIntegration (0.16s)
+    --- PASS: TestTenantServiceIntegration/创建租户 (0.00s)
+=== RUN   TestDepartmentServiceIntegration
+=== RUN   TestDepartmentServiceIntegration/创建部门
+--- PASS: TestDepartmentServiceIntegration (0.18s)
+    --- PASS: TestDepartmentServiceIntegration/创建部门 (0.00s)
+=== RUN   TestRoleServiceIntegration
+=== RUN   TestRoleServiceIntegration/创建角色
+--- PASS: TestRoleServiceIntegration (0.16s)
+    --- PASS: TestRoleServiceIntegration/创建角色 (0.00s)
+=== RUN   TestTeamServiceIntegration
+=== RUN   TestTeamServiceIntegration/创建团队
+--- PASS: TestTeamServiceIntegration (0.19s)
+    --- PASS: TestTeamServiceIntegration/创建团队 (0.00s)
+=== RUN   TestMultiTenantIsolation
+--- PASS: TestMultiTenantIsolation (0.16s)
+=== RUN   TestUserCreation
+--- PASS: TestUserCreation (0.21s)
+=== RUN   TestTicketWithRelations
+--- PASS: TestTicketWithRelations (0.19s)
+PASS
+ok  	itsm-backend/integration	(cached)
+?   	itsm-backend/internal/api	[no test files]
+?   	itsm-backend/internal/application	[no test files]
+?   	itsm-backend/internal/bootstrap	[no test files]
+?   	itsm-backend/internal/controller	[no test files]
+?   	itsm-backend/internal/domain/ai	[no test files]
+?   	itsm-backend/internal/domain/change	[no test files]
+?   	itsm-backend/internal/domain/cmdb	[no test files]
+?   	itsm-backend/internal/domain/common	[no test files]
+?   	itsm-backend/internal/domain/core	[no test files]
+?   	itsm-backend/internal/domain/incident	[no test files]
+?   	itsm-backend/internal/domain/knowledge	[no test files]
+?   	itsm-backend/internal/domain/problem	[no test files]
+?   	itsm-backend/internal/domain/service_catalog	[no test files]
+?   	itsm-backend/internal/domain/service_request	[no test files]
+?   	itsm-backend/internal/domain/shared	[no test files]
+?   	itsm-backend/internal/domain/sla	[no test files]
+?   	itsm-backend/internal/domain/ticket	[no test files]
+?   	itsm-backend/internal/infrastructure/persistence	[no test files]
+?   	itsm-backend/internal/interfaces/http	[no test files]
+?   	itsm-backend/internal/middleware	[no test files]
+?   	itsm-backend/internal/service	[no test files]
+?   	itsm-backend/metrics	[no test files]
+=== RUN   TestAuthMiddleware
+=== RUN   TestAuthMiddleware/No_Token
+=== RUN   TestAuthMiddleware/Invalid_Token_Format
+--- PASS: TestAuthMiddleware (0.00s)
+    --- PASS: TestAuthMiddleware/No_Token (0.00s)
+    --- PASS: TestAuthMiddleware/Invalid_Token_Format (0.00s)
+=== RUN   TestRequirePermission
+=== RUN   TestRequirePermission/Missing_Permissions_in_Context
+=== RUN   TestRequirePermission/Missing_Tenant_in_Context
+=== RUN   TestRequirePermission/Has_Permission
+--- PASS: TestRequirePermission (0.00s)
+    --- PASS: TestRequirePermission/Missing_Permissions_in_Context (0.00s)
+    --- PASS: TestRequirePermission/Missing_Tenant_in_Context (0.00s)
+    --- PASS: TestRequirePermission/Has_Permission (0.00s)
+=== RUN   TestCORSMiddleware
+--- PASS: TestCORSMiddleware (0.00s)
+=== RUN   TestCORSMiddleware_WithAllowedOrigins
+--- PASS: TestCORSMiddleware_WithAllowedOrigins (0.00s)
+=== RUN   TestCORSMiddleware_WithoutOrigin
+--- PASS: TestCORSMiddleware_WithoutOrigin (0.00s)
+=== RUN   TestLoggerMiddleware
+=== RUN   TestLoggerMiddleware/Logger_Outputs_Request_Info
+{"level":"info","msg":"HTTP Request","timestamp":"2026-03-04T09:19:13+08:00","method":"GET","path":"/test","status_code":200,"latency":"1.134µs","client_ip":"","user_agent":"test-agent"}
+2026-03-04T09:19:13+08:00 - GET /test 200 1.134µs
+=== RUN   TestLoggerMiddleware/Logger_Without_Global_Logger
+2026-03-04T09:19:13+08:00 - GET /test 200 891ns
+=== RUN   TestLoggerMiddleware/Request_Completes_Successfully
+2026-03-04T09:19:13+08:00 - POST /api/v1/tickets 201 677ns
+=== RUN   TestLoggerMiddleware/Request_ID_Is_Handled_In_Log
+2026-03-04T09:19:13+08:00 - GET /test 200 4.073µs
+=== RUN   TestLoggerMiddleware/User_ID_Is_Handled_In_Log
+2026-03-04T09:19:13+08:00 - GET /test 200 28.275µs
+=== RUN   TestLoggerMiddleware/Tenant_ID_Is_Handled_In_Log
+2026-03-04T09:19:13+08:00 - GET /test 200 2.193µs
+--- PASS: TestLoggerMiddleware (0.00s)
+    --- PASS: TestLoggerMiddleware/Logger_Outputs_Request_Info (0.00s)
+    --- PASS: TestLoggerMiddleware/Logger_Without_Global_Logger (0.00s)
+    --- PASS: TestLoggerMiddleware/Request_Completes_Successfully (0.00s)
+    --- PASS: TestLoggerMiddleware/Request_ID_Is_Handled_In_Log (0.00s)
+    --- PASS: TestLoggerMiddleware/User_ID_Is_Handled_In_Log (0.00s)
+    --- PASS: TestLoggerMiddleware/Tenant_ID_Is_Handled_In_Log (0.00s)
+=== RUN   TestSetLogger
+=== RUN   TestSetLogger/SetLogger_Updates_Global_Logger
+--- PASS: TestSetLogger (0.00s)
+    --- PASS: TestSetLogger/SetLogger_Updates_Global_Logger (0.00s)
+=== RUN   TestLogFormatter
+=== RUN   TestLogFormatter/GET_Request_Completes_Successfully
+2026-03-04T09:19:13+08:00 - GET /test 200 895ns
+=== RUN   TestLogFormatter/POST_Request_Completes_Successfully
+2026-03-04T09:19:13+08:00 - GET /api/v1/tickets 200 750ns
+2026-03-04T09:19:13+08:00 - POST /api/v1/tickets 201 649ns
+2026-03-04T09:19:13+08:00 - PUT /api/v1/tickets/1 200 556ns
+2026-03-04T09:19:13+08:00 - DELETE /api/v1/tickets/1 204 531ns
+=== RUN   TestLogFormatter/Various_Status_Codes_Handled
+2026-03-04T09:19:13+08:00 - GET /test 200 758ns
+2026-03-04T09:19:13+08:00 - GET /test 201 563ns
+2026-03-04T09:19:13+08:00 - GET /test 400 517ns
+2026-03-04T09:19:13+08:00 - GET /test 401 499ns
+2026-03-04T09:19:13+08:00 - GET /test 403 519ns
+2026-03-04T09:19:13+08:00 - GET /test 404 428ns
+2026-03-04T09:19:13+08:00 - GET /test 500 420ns
+=== RUN   TestLogFormatter/Slow_Request_Completes
+2026-03-04T09:19:13+08:00 - GET /slow 200 26.06742ms
+--- PASS: TestLogFormatter (0.03s)
+    --- PASS: TestLogFormatter/GET_Request_Completes_Successfully (0.00s)
+    --- PASS: TestLogFormatter/POST_Request_Completes_Successfully (0.00s)
+    --- PASS: TestLogFormatter/Various_Status_Codes_Handled (0.00s)
+    --- PASS: TestLogFormatter/Slow_Request_Completes (0.03s)
+=== RUN   TestRBACMiddleware
+=== RUN   TestRBACMiddleware/No_User_ID_in_Context
+=== RUN   TestRBACMiddleware/No_Tenant_ID_in_Context
+--- PASS: TestRBACMiddleware (0.00s)
+    --- PASS: TestRBACMiddleware/No_User_ID_in_Context (0.00s)
+    --- PASS: TestRBACMiddleware/No_Tenant_ID_in_Context (0.00s)
+=== RUN   TestRequirePermissionForRBAC
+=== RUN   TestRequirePermissionForRBAC/Missing_Role_Returns_Error
+=== RUN   TestRequirePermissionForRBAC/Missing_Tenant_ID_Returns_Error
+--- PASS: TestRequirePermissionForRBAC (0.00s)
+    --- PASS: TestRequirePermissionForRBAC/Missing_Role_Returns_Error (0.00s)
+    --- PASS: TestRequirePermissionForRBAC/Missing_Tenant_ID_Returns_Error (0.00s)
+=== RUN   TestRequireRole
+=== RUN   TestRequireRole/Missing_Role_Returns_Error
+=== RUN   TestRequireRole/Role_Not_Allowed_Returns_Error
+=== RUN   TestRequireRole/Role_Allowed_Succeeds
+=== RUN   TestRequireRole/Role_Matching_Is_Case_Insensitive
+--- PASS: TestRequireRole (0.00s)
+    --- PASS: TestRequireRole/Missing_Role_Returns_Error (0.00s)
+    --- PASS: TestRequireRole/Role_Not_Allowed_Returns_Error (0.00s)
+    --- PASS: TestRequireRole/Role_Allowed_Succeeds (0.00s)
+    --- PASS: TestRequireRole/Role_Matching_Is_Case_Insensitive (0.00s)
+=== RUN   TestHasResourcePermission
+=== RUN   TestHasResourcePermission/Super_Admin_Has_All_Permissions
+=== RUN   TestHasResourcePermission/Admin_Has_Ticket_Write_Permission
+=== RUN   TestHasResourcePermission/End_User_Has_Ticket_Read_Permission
+=== RUN   TestHasResourcePermission/End_User_Does_Not_Have_Ticket_Delete_Permission
+=== RUN   TestHasResourcePermission/Agent_Has_Dashboard_Read_Permission
+=== RUN   TestHasResourcePermission/Technician_Has_CMDB_Read_Permission
+=== RUN   TestHasResourcePermission/Manager_Has_User_Read_Permission
+=== RUN   TestHasResourcePermission/Unknown_Role_Has_No_Permissions
+=== RUN   TestHasResourcePermission/Wildcard_Permission
+--- PASS: TestHasResourcePermission (0.00s)
+    --- PASS: TestHasResourcePermission/Super_Admin_Has_All_Permissions (0.00s)
+    --- PASS: TestHasResourcePermission/Admin_Has_Ticket_Write_Permission (0.00s)
+    --- PASS: TestHasResourcePermission/End_User_Has_Ticket_Read_Permission (0.00s)
+    --- PASS: TestHasResourcePermission/End_User_Does_Not_Have_Ticket_Delete_Permission (0.00s)
+    --- PASS: TestHasResourcePermission/Agent_Has_Dashboard_Read_Permission (0.00s)
+    --- PASS: TestHasResourcePermission/Technician_Has_CMDB_Read_Permission (0.00s)
+    --- PASS: TestHasResourcePermission/Manager_Has_User_Read_Permission (0.00s)
+    --- PASS: TestHasResourcePermission/Unknown_Role_Has_No_Permissions (0.00s)
+    --- PASS: TestHasResourcePermission/Wildcard_Permission (0.00s)
+=== RUN   TestMatchPath
+=== RUN   TestMatchPath/Exact_Match
+=== RUN   TestMatchPath/Wildcard_Match
+=== RUN   TestMatchPath/No_Match
+--- PASS: TestMatchPath (0.00s)
+    --- PASS: TestMatchPath/Exact_Match (0.00s)
+    --- PASS: TestMatchPath/Wildcard_Match (0.00s)
+    --- PASS: TestMatchPath/No_Match (0.00s)
+=== RUN   TestGetPermissionFromPath
+=== RUN   TestGetPermissionFromPath/GET_Tickets_Returns_Read_Permission
+=== RUN   TestGetPermissionFromPath/POST_Tickets_Returns_Write_Permission
+=== RUN   TestGetPermissionFromPath/DELETE_Tickets_Returns_Delete_Permission
+=== RUN   TestGetPermissionFromPath/Unknown_Path_Returns_Nil
+--- PASS: TestGetPermissionFromPath (0.00s)
+    --- PASS: TestGetPermissionFromPath/GET_Tickets_Returns_Read_Permission (0.00s)
+    --- PASS: TestGetPermissionFromPath/POST_Tickets_Returns_Write_Permission (0.00s)
+    --- PASS: TestGetPermissionFromPath/DELETE_Tickets_Returns_Delete_Permission (0.00s)
+    --- PASS: TestGetPermissionFromPath/Unknown_Path_Returns_Nil (0.00s)
+=== RUN   TestTenantMiddleware
+=== RUN   TestTenantMiddleware/Missing_Tenant_Information_Returns_Bad_Request
+=== RUN   TestTenantMiddleware/Non-existent_Tenant_Returns_Not_Found
+=== RUN   TestTenantMiddleware/Inactive_Tenant_Returns_Forbidden
+=== RUN   TestTenantMiddleware/Expired_Tenant_Returns_Forbidden
+=== RUN   TestTenantMiddleware/Valid_Tenant_Succeeds
+=== RUN   TestTenantMiddleware/Valid_Tenant_via_X-Tenant-ID_Header
+--- PASS: TestTenantMiddleware (0.12s)
+    --- PASS: TestTenantMiddleware/Missing_Tenant_Information_Returns_Bad_Request (0.00s)
+    --- PASS: TestTenantMiddleware/Non-existent_Tenant_Returns_Not_Found (0.00s)
+    --- PASS: TestTenantMiddleware/Inactive_Tenant_Returns_Forbidden (0.00s)
+    --- PASS: TestTenantMiddleware/Expired_Tenant_Returns_Forbidden (0.00s)
+    --- PASS: TestTenantMiddleware/Valid_Tenant_Succeeds (0.00s)
+    --- PASS: TestTenantMiddleware/Valid_Tenant_via_X-Tenant-ID_Header (0.00s)
+=== RUN   TestExtractTenantFromHost
+=== RUN   TestExtractTenantFromHost/Subdomain_Extraction
+=== RUN   TestExtractTenantFromHost/No_Subdomain_Returns_Empty
+=== RUN   TestExtractTenantFromHost/Single_Part_Host_Returns_Empty
+--- PASS: TestExtractTenantFromHost (0.00s)
+    --- PASS: TestExtractTenantFromHost/Subdomain_Extraction (0.00s)
+    --- PASS: TestExtractTenantFromHost/No_Subdomain_Returns_Empty (0.00s)
+    --- PASS: TestExtractTenantFromHost/Single_Part_Host_Returns_Empty (0.00s)
+=== RUN   TestGetTenantContext
+=== RUN   TestGetTenantContext/Context_Not_Set_Returns_False
+=== RUN   TestGetTenantContext/Context_Set_Returns_True
+--- PASS: TestGetTenantContext (0.00s)
+    --- PASS: TestGetTenantContext/Context_Not_Set_Returns_False (0.00s)
+    --- PASS: TestGetTenantContext/Context_Set_Returns_True (0.00s)
+=== RUN   TestGetTenantID
+=== RUN   TestGetTenantID/No_Context_Returns_Error
+=== RUN   TestGetTenantID/With_Context_Returns_ID
+--- PASS: TestGetTenantID (0.00s)
+    --- PASS: TestGetTenantID/No_Context_Returns_Error (0.00s)
+    --- PASS: TestGetTenantID/With_Context_Returns_ID (0.00s)
+=== RUN   TestGetUserID
+=== RUN   TestGetUserID/No_User_ID_Returns_Error
+=== RUN   TestGetUserID/Valid_User_ID_Returns_ID
+=== RUN   TestGetUserID/Invalid_User_ID_Type_Returns_Error
+--- PASS: TestGetUserID (0.00s)
+    --- PASS: TestGetUserID/No_User_ID_Returns_Error (0.00s)
+    --- PASS: TestGetUserID/Valid_User_ID_Returns_ID (0.00s)
+    --- PASS: TestGetUserID/Invalid_User_ID_Type_Returns_Error (0.00s)
+PASS
+ok  	itsm-backend/middleware	(cached)
+?   	itsm-backend/pkg/bpmn	[no test files]
+?   	itsm-backend/pkg/seeder	[no test files]
+?   	itsm-backend/router	[no test files]
+?   	itsm-backend/scripts/init_data	[no test files]
+?   	itsm-backend/scripts/system_check	[no test files]

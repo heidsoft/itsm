@@ -61,11 +61,13 @@ const (
 	ProcessInstancesInverseTable = "process_instances"
 	// ProcessInstancesColumn is the table column denoting the process_instances relation/edge.
 	ProcessInstancesColumn = "process_definition_id"
-	// BindingsTable is the table that holds the bindings relation/edge. The primary key declared below.
-	BindingsTable = "process_definition_bindings"
+	// BindingsTable is the table that holds the bindings relation/edge.
+	BindingsTable = "process_bindings"
 	// BindingsInverseTable is the table name for the ProcessBinding entity.
 	// It exists in this package in order to avoid circular dependency with the "processbinding" package.
 	BindingsInverseTable = "process_bindings"
+	// BindingsColumn is the table column denoting the bindings relation/edge.
+	BindingsColumn = "process_definition_bindings"
 	// VersionChangelogsTable is the table that holds the version_changelogs relation/edge.
 	VersionChangelogsTable = "process_version_changelogs"
 	// VersionChangelogsInverseTable is the table name for the ProcessVersionChangelog entity.
@@ -101,12 +103,6 @@ var Columns = []string{
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
-
-var (
-	// BindingsPrimaryKey and BindingsColumn2 are the table columns denoting the
-	// primary key for the bindings relation (M2M).
-	BindingsPrimaryKey = []string{"process_definition_id", "process_binding_id"}
-)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -277,7 +273,7 @@ func newBindingsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(BindingsInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, false, BindingsTable, BindingsPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.O2M, false, BindingsTable, BindingsColumn),
 	)
 }
 func newVersionChangelogsStep() *sqlgraph.Step {

@@ -204,7 +204,7 @@ export class SLAApi {
     }>;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }> {
-    const requestBody: unknown = {};
+    const requestBody: any = {};
     if (params?.start_time) requestBody.start_time = params.start_time;
     if (params?.end_time) requestBody.end_time = params.end_time;
     if (params?.sla_definition_id) requestBody.sla_definition_id = params.sla_definition_id;
@@ -281,7 +281,7 @@ export class SLAApi {
       size: 10,
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return history.items.map((item: unknown) => ({
+    return history.items.map((item: any) => ({
       ticket_id: item.ticket_id,
       ticket_title: item.ticket_title || `Ticket #${item.ticket_id}`,
       priority: item.priority || 'medium',
@@ -379,7 +379,7 @@ export class SLAApi {
   // ==================== 兼容别名（旧代码使用） ====================
 
   /** @deprecated 使用 getSLADefinitions */
-  static getDefinitions(params?: unknown) {
+  static getDefinitions(params?: { page?: number; size?: number; is_active?: boolean; name?: string }) {
     return this.getSLADefinitions(params);
   }
 
@@ -389,7 +389,7 @@ export class SLAApi {
   }
 
   /** @deprecated 使用 updateSLADefinition */
-  static updateDefinition(id: number, data: unknown) {
+  static updateDefinition(id: number, data: Partial<SLADefinition>) {
     return this.updateSLADefinition(id, data);
   }
 

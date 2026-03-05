@@ -100,7 +100,7 @@ const WorkflowVersionsPage = () => {
       // 调用真实 API
       const response = await WorkflowAPI.getWorkflowVersions(workflowId.toString());
       // 适配后端返回格式
-      const adaptedVersions = (response || []).map((v: unknown): WorkflowVersion => {
+      const adaptedVersions = (response || []).map((v: any): WorkflowVersion => {
         // 保存 process_key 用于后续 API 调用
         if (v.process_definition_key && !processKey) {
           setProcessKey(v.process_definition_key);

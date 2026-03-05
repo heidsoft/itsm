@@ -43773,8 +43773,7 @@ type ProcessBindingMutation struct {
 	created_at                *time.Time
 	updated_at                *time.Time
 	clearedFields             map[string]struct{}
-	process_definition        map[int]struct{}
-	removedprocess_definition map[int]struct{}
+	process_definition        *int
 	clearedprocess_definition bool
 	done                      bool
 	oldValue                  func(context.Context) (*ProcessBinding, error)
@@ -44312,14 +44311,9 @@ func (m *ProcessBindingMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// AddProcessDefinitionIDs adds the "process_definition" edge to the ProcessDefinition entity by ids.
-func (m *ProcessBindingMutation) AddProcessDefinitionIDs(ids ...int) {
-	if m.process_definition == nil {
-		m.process_definition = make(map[int]struct{})
-	}
-	for i := range ids {
-		m.process_definition[ids[i]] = struct{}{}
-	}
+// SetProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by id.
+func (m *ProcessBindingMutation) SetProcessDefinitionID(id int) {
+	m.process_definition = &id
 }
 
 // ClearProcessDefinition clears the "process_definition" edge to the ProcessDefinition entity.
@@ -44332,29 +44326,20 @@ func (m *ProcessBindingMutation) ProcessDefinitionCleared() bool {
 	return m.clearedprocess_definition
 }
 
-// RemoveProcessDefinitionIDs removes the "process_definition" edge to the ProcessDefinition entity by IDs.
-func (m *ProcessBindingMutation) RemoveProcessDefinitionIDs(ids ...int) {
-	if m.removedprocess_definition == nil {
-		m.removedprocess_definition = make(map[int]struct{})
-	}
-	for i := range ids {
-		delete(m.process_definition, ids[i])
-		m.removedprocess_definition[ids[i]] = struct{}{}
-	}
-}
-
-// RemovedProcessDefinition returns the removed IDs of the "process_definition" edge to the ProcessDefinition entity.
-func (m *ProcessBindingMutation) RemovedProcessDefinitionIDs() (ids []int) {
-	for id := range m.removedprocess_definition {
-		ids = append(ids, id)
+// ProcessDefinitionID returns the "process_definition" edge ID in the mutation.
+func (m *ProcessBindingMutation) ProcessDefinitionID() (id int, exists bool) {
+	if m.process_definition != nil {
+		return *m.process_definition, true
 	}
 	return
 }
 
 // ProcessDefinitionIDs returns the "process_definition" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ProcessDefinitionID instead. It exists only for internal usage by the builders.
 func (m *ProcessBindingMutation) ProcessDefinitionIDs() (ids []int) {
-	for id := range m.process_definition {
-		ids = append(ids, id)
+	if id := m.process_definition; id != nil {
+		ids = append(ids, *id)
 	}
 	return
 }
@@ -44363,7 +44348,6 @@ func (m *ProcessBindingMutation) ProcessDefinitionIDs() (ids []int) {
 func (m *ProcessBindingMutation) ResetProcessDefinition() {
 	m.process_definition = nil
 	m.clearedprocess_definition = false
-	m.removedprocess_definition = nil
 }
 
 // Where appends a list predicates to the ProcessBindingMutation builder.
@@ -44712,11 +44696,9 @@ func (m *ProcessBindingMutation) AddedEdges() []string {
 func (m *ProcessBindingMutation) AddedIDs(name string) []ent.Value {
 	switch name {
 	case processbinding.EdgeProcessDefinition:
-		ids := make([]ent.Value, 0, len(m.process_definition))
-		for id := range m.process_definition {
-			ids = append(ids, id)
+		if id := m.process_definition; id != nil {
+			return []ent.Value{*id}
 		}
-		return ids
 	}
 	return nil
 }
@@ -44724,23 +44706,12 @@ func (m *ProcessBindingMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ProcessBindingMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedprocess_definition != nil {
-		edges = append(edges, processbinding.EdgeProcessDefinition)
-	}
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
 func (m *ProcessBindingMutation) RemovedIDs(name string) []ent.Value {
-	switch name {
-	case processbinding.EdgeProcessDefinition:
-		ids := make([]ent.Value, 0, len(m.removedprocess_definition))
-		for id := range m.removedprocess_definition {
-			ids = append(ids, id)
-		}
-		return ids
-	}
 	return nil
 }
 
@@ -44767,6 +44738,9 @@ func (m *ProcessBindingMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *ProcessBindingMutation) ClearEdge(name string) error {
 	switch name {
+	case processbinding.EdgeProcessDefinition:
+		m.ClearProcessDefinition()
+		return nil
 	}
 	return fmt.Errorf("unknown ProcessBinding unique edge %s", name)
 }

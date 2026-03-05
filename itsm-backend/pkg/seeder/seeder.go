@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"strings"
 	"time"
 
 	"itsm-backend/ent"
@@ -45,6 +46,7 @@ type DepartmentSeed struct {
 }
 
 type TeamSeed struct {
+	Code        string `json:"code"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -332,7 +334,7 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 		_, err = s.client.User.Update().
 			Where(user.ID(existing.ID)).
 			SetPasswordHash(string(passHash)).
-			SetRole("admin").
+			SetRole("super_admin").
 			Save(ctx)
 		if err != nil {
 			s.sugar.Warnw("update admin password failed", "error", err)
@@ -344,7 +346,7 @@ func (s *Seeder) seedAdmin(ctx context.Context) {
 
 	if _, err := s.client.User.Create().
 		SetUsername("admin").
-		SetRole("admin").
+		SetRole("super_admin").
 		SetPasswordHash(string(passHash)).
 		SetEmail("admin@example.com").
 		SetName("系统管理员").
@@ -407,8 +409,14 @@ func (s *Seeder) seedTeams(ctx context.Context) {
 	}
 
 	for _, tm := range s.config.Teams {
+		code := tm.Code
+		if code == "" {
+			// 从名称生成代码：去除空格，转小写
+			code = strings.ToLower(strings.ReplaceAll(tm.Name, " ", "-"))
+		}
 		if _, err := s.client.Team.Create().
 			SetName(tm.Name).
+			SetCode(code).
 			SetDescription(tm.Description).
 			SetStatus("active").
 			SetTenantID(t.ID).
@@ -452,7 +460,7 @@ func (s *Seeder) seedRoles(ctx context.Context) {
 func (s *Seeder) backfillAdminRole(ctx context.Context) {
 	if _, err := s.client.User.Update().
 		Where(user.UsernameEQ("admin")).
-		SetRole("admin").
+		SetRole("super_admin").
 		Save(ctx); err != nil {
 		s.sugar.Warnw("admin role backfill failed", "error", err)
 	} else {
@@ -942,6 +950,14 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) {
 	rawDB := database.GetRawDB()
 	if rawDB == nil {
 		s.sugar.Warnw("rawDB not available; skip ticket types seed")
+		return
+	}
+
+	// 检查 ticket_types 表是否存在
+	var tableExists bool
+	err = rawDB.QueryRowContext(ctx, "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'ticket_types')").Scan(&tableExists)
+	if err != nil || !tableExists {
+		s.sugar.Infow("ticket_types table does not exist; skip seed")
 		return
 	}
 

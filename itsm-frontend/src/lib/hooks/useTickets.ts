@@ -150,7 +150,7 @@ export const useTickets = (): UseTicketsReturn => {
 
   // Create ticket
   const createTicket = useCallback(
-    async (ticketData: unknown) => {
+    async (ticketData: any) => {
       try {
         await ticketService.createTicket(ticketData);
         message.success('Ticket created successfully');
@@ -166,7 +166,7 @@ export const useTickets = (): UseTicketsReturn => {
 
   // Update ticket
   const updateTicket = useCallback(
-    async (id: number, ticketData: unknown) => {
+    async (id: number, ticketData: any) => {
       try {
         await ticketService.updateTicket(id, ticketData);
         message.success('Ticket updated successfully');

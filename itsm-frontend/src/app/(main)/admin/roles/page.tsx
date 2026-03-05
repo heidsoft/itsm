@@ -69,6 +69,7 @@ const PERMISSION_ACTIONS = {
 
 // 引入角色API
 import { RoleAPI } from '@/lib/api/role-api';
+import type { Role } from '@/types/common';
 
 // 权限定义
 const PERMISSIONS = [
@@ -160,8 +161,8 @@ export default function RoleManagement() {
 
       // 计算统计数据
       const totalRoles = response.roles.length;
-      const activeRoles = response.roles.filter((r: unknown) => r.status === 'active').length;
-      const inactiveRoles = response.roles.filter((r: unknown) => r.status === 'inactive').length;
+      const activeRoles = response.roles.filter((r: Role) => r.status === 'active').length;
+      const inactiveRoles = response.roles.filter((r: Role) => r.status === 'inactive').length;
 
       setStats({
         totalRoles,

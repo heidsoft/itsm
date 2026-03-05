@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card, Row, Col, Input, Select, Button } from 'antd';
+import { Card, Row, Col, Input, Select, Button, Tooltip } from 'antd';
 import { Search, PlusCircle } from 'lucide-react';
 import { useI18n } from '@/lib/i18n';
 import type { CIType, CloudService } from '@/types/biz/cmdb';
@@ -110,14 +110,19 @@ export const ServiceCatalogFilters: React.FC<ServiceCatalogFiltersProps> = ({
           </Select>
         </Col>
         <Col xs={24} sm={12} md={2}>
-          <Button
-            icon={<Search size={20} />}
-            onClick={() => {}}
-            size="large"
-            style={{ width: '100%' }}
-          >
-            {t('serviceCatalog.refresh')}
-          </Button>
+          <Tooltip title="刷新列表">
+            <Button
+              icon={<Search size={20} />}
+              onClick={() => {
+                // Trigger a page reload by dispatching a custom event
+                window.dispatchEvent(new CustomEvent('refresh-service-catalog'));
+              }}
+              size="large"
+              style={{ width: '100%' }}
+            >
+              {t('serviceCatalog.refresh')}
+            </Button>
+          </Tooltip>
         </Col>
         <Col xs={24} sm={12} md={2}>
           <Button

@@ -29,6 +29,9 @@ export interface FormValidationConfig {
   stopOnFirstError?: boolean;
 }
 
+// 导入 DOMPurify 用于 HTML 清理
+import DOMPurify from 'dompurify';
+
 // 验证器类
 export class Validator {
   // 必填验证
@@ -57,14 +60,14 @@ export class Validator {
     if (min !== undefined && length < min) {
       return {
         isValid: false,
-        message: `长度不能少于${min}个字符`,
+        message: `长度至少需要${min}个字符`,
       };
     }
 
     if (max !== undefined && length > max) {
       return {
         isValid: false,
-        message: `长度不能超过${max}个字符`,
+        message: `长度最多允许${max}个字符`,
       };
     }
 
@@ -123,10 +126,13 @@ export class Validator {
     return Validator.pattern(value, emailRegex, '请输入有效的邮箱地址');
   }
 
-  // 手机号验证
+  // 手机号验证 - 支持带国家代码的格式
   static phone(value: unknown): ValidationResult {
+    // 移除可能的国际区号前缀（如 +86- 或 86-）
+    let phoneStr = String(value).trim();
+    phoneStr = phoneStr.replace(/^(\+?86[-]?)|(^86[-]?)/, '');
     const phoneRegex = /^1[3-9]\d{9}$/;
-    return Validator.pattern(value, phoneRegex, '请输入有效的手机号码');
+    return Validator.pattern(phoneStr, phoneRegex, '请输入有效的手机号码');
   }
 
   // URL验证
@@ -151,6 +157,136 @@ export class Validator {
     const idCardRegex =
       /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/;
     return Validator.pattern(value, idCardRegex, '请输入有效的身份证号码');
+  }
+
+  // 日期验证
+  static date(value: unknown): ValidationResult {
+    if (value === null || value === undefined || value === '') {
+      return { isValid: true };
+    }
+
+    const dateStr = String(value);
+    const date = new Date(dateStr);
+
+    // 检查是否为有效日期
+    if (isNaN(date.getTime())) {
+      return {
+        isValid: false,
+        message: '请输入有效的日期',
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  // 自定义验证（静态方法）
+  static custom(
+    validatorFn: (value: unknown) => ValidationResult,
+    value: unknown
+  ): ValidationResult {
+    try {
+      return validatorFn(value);
+    } catch (error) {
+      return {
+        isValid: false,
+        message: '验证过程中发生错误',
+      };
+    }
+  }
+
+  // HTML 清理
+  static sanitize(html: unknown): string {
+    if (html === null || html === undefined) {
+      return '';
+    }
+    const htmlString = String(html);
+    return DOMPurify.sanitize(htmlString, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
+  }
+
+  // 链式验证器类
+  static createChainValidator(value: unknown): ChainValidator {
+    return new ChainValidator(value);
+  }
+
+  // 别名：chain 方法
+  static chain(value: unknown): ChainValidator {
+    return new ChainValidator(value);
+  }
+
+  // 通用验证方法（可选）
+  static validate(
+    value: unknown,
+    rules: ValidationRule[]
+  ): ValidationResult {
+    const tempValidator = new FormValidator({
+      fields: { temp: rules },
+    });
+    return tempValidator.validateField('temp', value);
+  }
+}
+
+// 链式验证器类
+export class ChainValidator {
+  private value: unknown;
+  private errors: string[] = [];
+
+  constructor(value: unknown) {
+    this.value = value;
+  }
+
+  required(): ChainValidator {
+    const result = Validator.required(this.value);
+    if (!result.isValid && result.message) {
+      this.errors.push(result.message);
+    }
+    return this;
+  }
+
+  minLength(min: number): ChainValidator {
+    const result = Validator.validateLength(this.value, min);
+    if (!result.isValid && result.message) {
+      this.errors.push(result.message);
+    }
+    return this;
+  }
+
+  maxLength(max: number): ChainValidator {
+    const result = Validator.validateLength(this.value, undefined, max);
+    if (!result.isValid && result.message) {
+      this.errors.push(result.message);
+    }
+    return this;
+  }
+
+  email(): ChainValidator {
+    const result = Validator.email(this.value);
+    if (!result.isValid && result.message) {
+      this.errors.push(result.message);
+    }
+    return this;
+  }
+
+  phone(): ChainValidator {
+    const result = Validator.phone(this.value);
+    if (!result.isValid && result.message) {
+      this.errors.push(result.message);
+    }
+    return this;
+  }
+
+  custom(validatorFn: (value: unknown) => ValidationResult): ChainValidator {
+    const result = validatorFn(this.value);
+    if (!result.isValid && result.message) {
+      this.errors.push(result.message);
+    }
+    return this;
+  }
+
+  result(): ValidationResult {
+    return {
+      isValid: this.errors.length === 0,
+      errors: this.errors.length > 0 ? this.errors : undefined,
+    };
   }
 }
 

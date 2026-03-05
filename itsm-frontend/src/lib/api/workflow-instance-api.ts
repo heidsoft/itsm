@@ -152,7 +152,7 @@ export class WorkflowInstanceApi {
   // ==================== 向后兼容的别名方法 ====================
 
   static async listWorkflowInstances(
-    params?: unknown
+    params?: any
   ): Promise<{ instances: WorkflowInstance[]; total: number }> {
     return WorkflowInstanceApi.getInstances(params as any);
   }

@@ -49,10 +49,10 @@ services:
     environment:
       - DATABASE_URL=postgres://itsm:itsm_password_2026@postgres:5432/itsm?sslmode=disable
       - REDIS_URL=redis://redis:6379
-      - PORT=8080
+      - PORT=8090
       - GIN_MODE=release
     ports:
-      - "8080:8080"
+      - "8090:8090"
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,7 +64,7 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -76,7 +76,7 @@ services:
       dockerfile: Dockerfile
     container_name: itsm-frontend
     environment:
-      - REACT_APP_API_URL=http://localhost:8080/api/v1
+      - REACT_APP_API_URL=http://localhost:8090/api/v1
     ports:
       - "3000:80"
     depends_on:

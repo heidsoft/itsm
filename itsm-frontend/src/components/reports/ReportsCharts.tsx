@@ -21,6 +21,32 @@ import {
 import { Table, Empty, Spin } from 'antd';
 import type { AnalyticsDataPoint } from '@/lib/api/ticket-analytics-api';
 
+// Recharts 工具提示类型
+interface CustomTooltipPayload {
+  name: string;
+  value: number;
+  color: string;
+  dataKey: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: CustomTooltipPayload[];
+  label?: string;
+}
+
+// 饼图标签类型
+interface PieChartLabelEntry {
+  innerRadius: number;
+  outerRadius: number;
+  cx: number;
+  cy: number;
+  midAngle: number;
+  percent?: number;
+  name?: string;
+  value?: number;
+}
+
 interface ReportsChartsProps {
   data: AnalyticsDataPoint[];
   loading?: boolean;
@@ -76,12 +102,12 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
   ];
 
   // 自定义Tooltip
-  const CustomTooltip = ({ active, payload, label }: unknown) => {
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded shadow-lg">
           <p className="font-medium">{`${label}`}</p>
-          {payload.map((entry: unknown, index: number) => (
+          {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value.toLocaleString()}`}
             </p>
@@ -93,7 +119,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
   };
 
   // 饼图自定义标签
-  const renderCustomLabel = (entry: unknown) => {
+  const renderCustomLabel = (entry: any) => {
     const RADIAN = Math.PI / 180;
     const radius = entry.innerRadius + (entry.outerRadius - entry.innerRadius) * 0.5;
     const x = entry.cx + radius * Math.cos(-entry.midAngle * RADIAN);

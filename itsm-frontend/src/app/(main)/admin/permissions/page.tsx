@@ -42,6 +42,37 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 const { Panel } = Collapse;
 
+// 类型定义
+interface PermissionAction {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  isEnabled: boolean;
+}
+
+interface PermissionModule {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: React.ReactNode;
+  isEnabled: boolean;
+  actions: PermissionAction[];
+}
+
+interface PermissionCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+}
+
+interface PermissionConfig {
+  modules: PermissionModule[];
+  categories: PermissionCategory[];
+}
+
 // 权限模块定义
 const PERMISSION_MODULES = {
   DASHBOARD: 'dashboard',
@@ -192,7 +223,7 @@ const ACTION_CONFIG = {
 };
 
 // 模拟权限配置数据
-const mockPermissionConfig = {
+const mockPermissionConfig: PermissionConfig = {
   modules: Object.values(PERMISSION_MODULES).map(moduleKey => ({
     id: moduleKey,
     name: MODULE_CONFIG[moduleKey].label,
@@ -238,7 +269,7 @@ const mockPermissionConfig = {
 
 const PermissionConfiguration = () => {
   const { message } = App.useApp();
-  const [permissionConfig, setPermissionConfig] = useState(mockPermissionConfig);
+  const [permissionConfig, setPermissionConfig] = useState<PermissionConfig>(mockPermissionConfig);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [hasChanges, setHasChanges] = useState(false);
@@ -275,13 +306,13 @@ const PermissionConfiguration = () => {
   });
 
   // 按分类分组模块
-  const modulesByCategory = filteredModules.reduce((acc: Record<string, any[]>, module) => {
+  const modulesByCategory = filteredModules.reduce((acc: Record<string, PermissionModule[]>, module) => {
     if (!acc[module.category]) {
       acc[module.category] = [];
     }
     acc[module.category].push(module);
     return acc;
-  }, {});
+  }, {} as Record<string, PermissionModule[]>);
 
   // 处理模块状态切换
   const handleToggleModule = (moduleId: string) => {
@@ -376,7 +407,7 @@ const PermissionConfiguration = () => {
       ),
       key: category.id,
       children:
-        modulesByCategory[category.id]?.map((module: unknown) => ({
+        modulesByCategory[category.id]?.map((module: PermissionModule) => ({
           title: (
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-2">
@@ -391,7 +422,7 @@ const PermissionConfiguration = () => {
             </div>
           ),
           key: module.id,
-          children: module.actions.map((action: unknown) => ({
+          children: module.actions.map((action: PermissionAction) => ({
             title: (
               <div className="flex items-center justify-between w-full">
                 <Tag color={action.color}>{action.name}</Tag>
@@ -446,7 +477,7 @@ const PermissionConfiguration = () => {
             className="enterprise-card"
           >
             <Row gutter={[16, 16]}>
-              {categoryModules.map((module: unknown) => (
+              {categoryModules.map((module: PermissionModule) => (
                 <Col xs={24} md={12} lg={8} key={module.id}>
                   <Card
                     size="small"
@@ -469,7 +500,7 @@ const PermissionConfiguration = () => {
                       {module.description}
                     </Text>
                     <div className="space-y-2">
-                      {module.actions.map((action: unknown) => (
+                      {module.actions.map((action: PermissionAction) => (
                         <div key={action.id} className="flex items-center justify-between">
                           <Tooltip title={action.description}>
                             <Tag

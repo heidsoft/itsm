@@ -462,10 +462,10 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 	}
 	if nodes := pdc.mutation.BindingsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   processdefinition.BindingsTable,
-			Columns: processdefinition.BindingsPrimaryKey,
+			Columns: []string{processdefinition.BindingsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),

@@ -118,7 +118,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setLoadingUsers(true);
     try {
       const response = await UserApi.getUsers({ page: 1, page_size: 100 });
-      const users = (response.users || []).map((u: unknown) => ({
+      const users = (response.users || []).map((u: any) => ({
         id: u.id,
         name: u.name || u.username || '未知用户',
         username: u.username,
@@ -136,7 +136,7 @@ function WorkflowDesignerInner({ workflowId }: { workflowId?: string }) {
     setLoadingRoles(true);
     try {
       const response = (await RoleAPI.getRoles()) as any;
-      const roles = (response.roles || response.data || []).map((r: unknown) => ({
+      const roles = (response.roles || response.data || []).map((r: any) => ({
         id: r.id,
         name: r.name || r.code || '未知角色',
         code: r.code,

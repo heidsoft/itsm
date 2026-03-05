@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -133,6 +134,9 @@ func resolveMapEnvVars(m map[string]interface{}) {
 }
 
 func LoadConfig() (*Config, error) {
+	// 加载 .env 文件（如果存在）
+	_ = godotenv.Load()
+
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(".")

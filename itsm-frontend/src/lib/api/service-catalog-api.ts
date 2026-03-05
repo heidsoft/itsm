@@ -36,7 +36,7 @@ export class ServiceCatalogApi {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private static toServiceItem(raw: unknown): ServiceItem {
+  private static toServiceItem(raw: any): ServiceItem {
     // 后端 dto.ServiceCatalogResponse: {id,name,category,description,delivery_time,status,created_at,updated_at}
     return {
       id: String(raw?.id),

@@ -116,14 +116,14 @@ export const SatisfactionDashboard: React.FC = () => {
         totalResponses: stats.total_ratings || 0,
         responseRate: 0, // API暂不支持
         trend: 'stable', // API暂不支持
-        categoryScores: Object.values(stats.by_category || {}).map((c: unknown) => ({
+        categoryScores: Object.values(stats.by_category || {}).map((c: any) => ({
           category: c.category_name,
           score: c.average_rating,
           count: c.total_ratings,
           trend: 'stable',
         })),
         monthlyTrend: [], // API暂不支持
-        agentPerformance: Object.values(stats.by_assignee || {}).map((a: unknown) => ({
+        agentPerformance: Object.values(stats.by_assignee || {}).map((a: any) => ({
           agent: a.assignee_name,
           avatar: a.assignee_name?.[0] || 'U',
           score: a.average_rating,
@@ -184,7 +184,7 @@ export const SatisfactionDashboard: React.FC = () => {
     {
       title: '处理人',
       key: 'agent',
-      render: (record: unknown) => (
+      render: (record: any) => (
         <Space>
           <Avatar size="small" style={{ backgroundColor: '#1890ff' }}>
             {record.avatar}

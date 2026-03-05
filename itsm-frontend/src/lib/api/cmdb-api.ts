@@ -320,7 +320,7 @@ export class CMDBApi {
   /**
    * 获取云资源列表
    */
-  static async getCloudResources(params?: unknown): Promise<any> {
+  static async getCloudResources(params?: any): Promise<any> {
     return httpClient.get('/api/v1/cmdb/cloud-resources', params);
   }
 
@@ -355,14 +355,14 @@ export class CMDBApi {
   /**
    * 获取对账结果
    */
-  static async getReconciliationResults(params?: unknown): Promise<any> {
+  static async getReconciliationResults(params?: any): Promise<any> {
     return httpClient.get('/api/v1/cmdb/reconciliation', params);
   }
 
   /**
    * 运行对账
    */
-  static async runReconciliation(params?: unknown): Promise<any> {
+  static async runReconciliation(params?: any): Promise<any> {
     return httpClient.post('/api/v1/cmdb/reconciliation/run', params);
   }
 
@@ -377,8 +377,8 @@ export class CMDBApi {
   /** @deprecated 使用 getCIs */
   static get cis() {
     return {
-      list: (params?: unknown) => this.getCIs(params),
-      items: (params?: unknown) => this.getCIs(params).then((r: unknown) => r.cis || r.items || []),
+      list: (params?: GetCIListRequest) => this.getCIs(params),
+      items: (params?: GetCIListRequest) => this.getCIs(params).then((r: GetCIListResponse) => r.cis || r.items || []),
     };
   }
 }

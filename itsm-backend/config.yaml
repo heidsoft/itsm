@@ -10,7 +10,7 @@ database:
 # Install extension: CREATE EXTENSION IF NOT EXISTS vector;
 # vectors table is auto-created if not exists
 vector:
-  enabled: false  # Set to true when pgvector is installed
+  enabled: true  # Set to true when pgvector is installed
   dimension: 1536  # OpenAI text-embedding-3-small dimension
 
 server:

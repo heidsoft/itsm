@@ -226,7 +226,7 @@ const AssetList: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 120,
-      render: (_: unknown, record: unknown) => (
+      render: (_: any, record: any) => (
         <Space aria-label="操作按钮">
           <Tooltip title="查看资产详情">
             <Button

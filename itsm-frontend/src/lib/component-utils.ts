@@ -43,15 +43,15 @@ export const useThrottle = <T>(value: T, delay: number): T => {
 };
 
 // 防抖回调Hook
-export const useDebouncedCallback = <T extends (...args: unknown[]) => unknown>(
+export const useDebouncedCallback = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T => {
-  const debouncedCallback = useMemo(() => debounce(callback, delay), [callback, delay]);
+  const debouncedCallback = useMemo(() => debounce(callback, delay) as any, [callback, delay]);
 
   useEffect(() => {
     return () => {
-      debouncedCallback.cancel();
+      debouncedCallback.cancel?.();
     };
   }, [debouncedCallback]);
 
@@ -59,15 +59,15 @@ export const useDebouncedCallback = <T extends (...args: unknown[]) => unknown>(
 };
 
 // 节流回调Hook
-export const useThrottledCallback = <T extends (...args: unknown[]) => unknown>(
+export const useThrottledCallback = <T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T => {
-  const throttledCallback = useMemo(() => throttle(callback, delay), [callback, delay]);
+  const throttledCallback = useMemo(() => throttle(callback, delay) as any, [callback, delay]);
 
   useEffect(() => {
     return () => {
-      throttledCallback.cancel();
+      throttledCallback.cancel?.();
     };
   }, [throttledCallback]);
 

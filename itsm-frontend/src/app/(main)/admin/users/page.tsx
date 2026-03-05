@@ -107,7 +107,7 @@ const UserManagement: React.FC = () => {
   }, [pagination.current, pagination.pageSize, filters]);
 
   // 创建用户
-  const handleCreateUser = async (values: unknown) => {
+  const handleCreateUser = async (values: any) => {
     setLoading(true);
     try {
       await UserApi.createUser({
@@ -131,7 +131,7 @@ const UserManagement: React.FC = () => {
   };
 
   // 更新用户
-  const handleUpdateUser = async (values: unknown) => {
+  const handleUpdateUser = async (values: any) => {
     if (!selectedUser) return;
     setLoading(true);
     try {
@@ -403,7 +403,30 @@ const UserManagement: React.FC = () => {
               >
                 新建用户
               </Button>
-              <Button icon={<Download size={16} />} onClick={() => message.info('导出功能开发中')}>
+              <Button icon={<Download size={16} />} onClick={() => {
+                  // 导出用户数据
+                  const exportData = users.map(user => ({
+                    用户名: user.username,
+                    姓名: user.name,
+                    邮箱: user.email,
+                    部门: user.department || '',
+                    电话: user.phone || '',
+                    状态: user.active ? '激活' : '禁用',
+                    创建时间: user.created_at,
+                  }));
+                  const csvContent = [
+                    Object.keys(exportData[0] || {}).join(','),
+                    ...exportData.map(row => Object.values(row).join(','))
+                  ].join('\n');
+                  const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = `用户列表_${new Date().toISOString().split('T')[0]}.csv`;
+                  link.click();
+                  URL.revokeObjectURL(url);
+                  message.success('导出成功');
+                }}>
                 导出
               </Button>
             </Space>

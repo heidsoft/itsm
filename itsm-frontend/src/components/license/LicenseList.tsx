@@ -170,7 +170,7 @@ const LicenseList: React.FC = () => {
       title: '使用情况',
       key: 'usage',
       width: 150,
-      render: (_: unknown, record: unknown) => {
+      render: (_: any, record: any) => {
         const percent =
           record.total_quantity > 0 ? (record.used_quantity / record.total_quantity) * 100 : 0;
         return (
@@ -222,7 +222,7 @@ const LicenseList: React.FC = () => {
       title: '操作',
       key: 'action',
       width: 120,
-      render: (_: unknown, record: unknown) => (
+      render: (_: any, record: any) => (
         <Space aria-label="操作按钮">
           <Tooltip title="查看许可证详情">
             <Button

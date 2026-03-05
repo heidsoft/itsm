@@ -38,11 +38,13 @@ const (
 	EdgeProcessDefinition = "process_definition"
 	// Table holds the table name of the processbinding in the database.
 	Table = "process_bindings"
-	// ProcessDefinitionTable is the table that holds the process_definition relation/edge. The primary key declared below.
-	ProcessDefinitionTable = "process_definition_bindings"
+	// ProcessDefinitionTable is the table that holds the process_definition relation/edge.
+	ProcessDefinitionTable = "process_bindings"
 	// ProcessDefinitionInverseTable is the table name for the ProcessDefinition entity.
 	// It exists in this package in order to avoid circular dependency with the "processdefinition" package.
 	ProcessDefinitionInverseTable = "process_definitions"
+	// ProcessDefinitionColumn is the table column denoting the process_definition relation/edge.
+	ProcessDefinitionColumn = "process_definition_bindings"
 )
 
 // Columns holds all SQL columns for processbinding fields.
@@ -60,16 +62,21 @@ var Columns = []string{
 	FieldUpdatedAt,
 }
 
-var (
-	// ProcessDefinitionPrimaryKey and ProcessDefinitionColumn2 are the table columns denoting the
-	// primary key for the process_definition relation (M2M).
-	ProcessDefinitionPrimaryKey = []string{"process_definition_id", "process_binding_id"}
-)
+// ForeignKeys holds the SQL foreign-keys that are owned by the "process_bindings"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"process_definition_bindings",
+}
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -157,23 +164,16 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
-// ByProcessDefinitionCount orders the results by process_definition count.
-func ByProcessDefinitionCount(opts ...sql.OrderTermOption) OrderOption {
+// ByProcessDefinitionField orders the results by process_definition field.
+func ByProcessDefinitionField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborsCount(s, newProcessDefinitionStep(), opts...)
-	}
-}
-
-// ByProcessDefinition orders the results by process_definition terms.
-func ByProcessDefinition(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
-	return func(s *sql.Selector) {
-		sqlgraph.OrderByNeighborTerms(s, newProcessDefinitionStep(), append([]sql.OrderTerm{term}, terms...)...)
+		sqlgraph.OrderByNeighborTerms(s, newProcessDefinitionStep(), sql.OrderByField(field, opts...))
 	}
 }
 func newProcessDefinitionStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ProcessDefinitionInverseTable, FieldID),
-		sqlgraph.Edge(sqlgraph.M2M, true, ProcessDefinitionTable, ProcessDefinitionPrimaryKey...),
+		sqlgraph.Edge(sqlgraph.M2O, true, ProcessDefinitionTable, ProcessDefinitionColumn),
 	)
 }

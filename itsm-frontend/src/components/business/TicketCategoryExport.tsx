@@ -49,6 +49,22 @@ interface ExportOptions {
   encoding: 'utf8' | 'gbk';
 }
 
+interface ExportItem {
+  name?: string;
+  code?: string;
+  description?: string;
+  parent_id?: number;
+  parent_name?: string;
+  level?: number;
+  sort_order?: number;
+  is_active?: string;
+  tenant_id?: number;
+  created_at?: string;
+  updated_at?: string;
+  created_by?: string;
+  updated_by?: string;
+}
+
 const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
   visible,
   onCancel,
@@ -142,11 +158,11 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
   };
 
   // 处理导出数据
-  const processExportData = (categories: CategoryTreeItem[], options: ExportOptions): unknown[] => {
-    const result: unknown[] = [];
+  const processExportData = (categories: CategoryTreeItem[], options: ExportOptions): ExportItem[] => {
+    const result: ExportItem[] = [];
 
     const processCategory = (category: CategoryTreeItem, parentName: string = '') => {
-      const item: unknown = {};
+      const item: ExportItem = {};
 
       // 根据选择的字段构建数据
       options.selectedFields.forEach(field => {
@@ -176,7 +192,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
             item.is_active = category.is_active ? '是' : '否';
             break;
           case 'tenant_id':
-            item.tenant_id = category.tenant_id;
+            item.tenant_id = Number(category.tenant_id) || undefined;
             break;
           case 'created_at':
             item.created_at = category.created_at;
@@ -214,7 +230,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
   };
 
   // 执行导出
-  const performExport = async (data: unknown[], options: ExportOptions) => {
+  const performExport = async (data: ExportItem[], options: ExportOptions) => {
     switch (options.format) {
       case 'csv':
         exportToCSV(data, options);
@@ -229,7 +245,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
   };
 
   // 导出为CSV
-  const exportToCSV = (data: unknown[], options: ExportOptions) => {
+  const exportToCSV = (data: ExportItem[], options: ExportOptions) => {
     if (data.length === 0) return;
 
     const headers = options.selectedFields.map(field => {
@@ -260,7 +276,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
   };
 
   // 导出为Excel
-  const exportToExcel = (data: unknown[], options: ExportOptions) => {
+  const exportToExcel = (data: ExportItem[], options: ExportOptions) => {
     // 这里应该使用库如 xlsx 来生成Excel文件
     // 暂时使用CSV格式，但文件扩展名为.xlsx
     exportToCSV(data, options);
@@ -270,7 +286,7 @@ const TicketCategoryExport: React.FC<TicketCategoryExportProps> = ({
   };
 
   // 导出为JSON
-  const exportToJSON = (data: unknown[], options: ExportOptions) => {
+  const exportToJSON = (data: ExportItem[], options: ExportOptions) => {
     const jsonContent = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonContent], { type: 'application/json' });
     downloadFile(blob, `工单分类_${new Date().toISOString().split('T')[0]}.json`);

@@ -535,7 +535,7 @@ func HasProcessDefinition() predicate.ProcessBinding {
 	return predicate.ProcessBinding(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, ProcessDefinitionTable, ProcessDefinitionPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, ProcessDefinitionTable, ProcessDefinitionColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})

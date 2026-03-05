@@ -107,3 +107,12 @@ export interface UseTicketFormConfig {
   loading?: boolean;
   isEditing?: boolean;
 }
+
+// ============ TicketPreviewStep 组件类型 ============
+
+export interface TicketPreviewStepProps {
+  formData: TicketFormValues;
+  onSubmit: (values: TicketFormValues) => void;
+  onBack: () => void;
+  loading?: boolean;
+}

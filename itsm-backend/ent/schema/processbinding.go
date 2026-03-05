@@ -76,7 +76,7 @@ func (ProcessBinding) Edges() []ent.Edge {
 		// 关联到流程定义
 		edge.From("process_definition", ProcessDefinition.Type).
 			Ref("bindings").
-			Required(),
+			Unique(),
 	}
 }
 

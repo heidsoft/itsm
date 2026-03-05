@@ -639,16 +639,16 @@ export class IncidentAPI {
   // ==================== 兼容别名 ====================
 
   /** @deprecated 使用 listIncidents */
-  static async getIncidents(params?: unknown): Promise<ListIncidentsResponse> {
+  static async getIncidents(params?: ListIncidentsRequest): Promise<ListIncidentsResponse> {
     return this.listIncidents(params);
   }
 
   /** @deprecated 使用 listIncidents */
   static get incidents() {
     return {
-      list: (params?: unknown) => this.listIncidents(params),
-      items: (params?: unknown) =>
-        this.listIncidents(params).then((r: unknown) => r.incidents || r.items || []),
+      list: (params?: ListIncidentsRequest) => this.listIncidents(params),
+      items: (params?: ListIncidentsRequest) =>
+        this.listIncidents(params).then((r: ListIncidentsResponse) => r.incidents || r.items || []),
     };
   }
 

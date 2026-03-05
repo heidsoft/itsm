@@ -556,10 +556,10 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if pdu.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   processdefinition.BindingsTable,
-			Columns: processdefinition.BindingsPrimaryKey,
+			Columns: []string{processdefinition.BindingsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
@@ -569,10 +569,10 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if nodes := pdu.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !pdu.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   processdefinition.BindingsTable,
-			Columns: processdefinition.BindingsPrimaryKey,
+			Columns: []string{processdefinition.BindingsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
@@ -585,10 +585,10 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 	}
 	if nodes := pdu.mutation.BindingsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   processdefinition.BindingsTable,
-			Columns: processdefinition.BindingsPrimaryKey,
+			Columns: []string{processdefinition.BindingsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
@@ -1246,10 +1246,10 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 	}
 	if pduo.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   processdefinition.BindingsTable,
-			Columns: processdefinition.BindingsPrimaryKey,
+			Columns: []string{processdefinition.BindingsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
@@ -1259,10 +1259,10 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 	}
 	if nodes := pduo.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !pduo.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   processdefinition.BindingsTable,
-			Columns: processdefinition.BindingsPrimaryKey,
+			Columns: []string{processdefinition.BindingsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),
@@ -1275,10 +1275,10 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 	}
 	if nodes := pduo.mutation.BindingsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
+			Rel:     sqlgraph.O2M,
 			Inverse: false,
 			Table:   processdefinition.BindingsTable,
-			Columns: processdefinition.BindingsPrimaryKey,
+			Columns: []string{processdefinition.BindingsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt),

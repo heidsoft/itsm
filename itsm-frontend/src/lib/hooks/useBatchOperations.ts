@@ -92,7 +92,8 @@ export function useBatchUpdatePriorityMutation() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`批量更新优先级失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量更新优先级失败：${errorMessage}`);
     },
   });
 }
@@ -117,7 +118,8 @@ export function useBatchUpdateFieldsMutation() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`批量更新字段失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量更新字段失败：${errorMessage}`);
     },
   });
 }
@@ -137,7 +139,8 @@ export function useBatchAddTagsMutation() {
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     onError: (error: unknown) => {
-      message.error(`批量添加标签失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量添加标签失败：${errorMessage}`);
     },
   });
 }
@@ -158,7 +161,8 @@ export function useBatchRemoveTagsMutation() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`批量删除标签失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量删除标签失败：${errorMessage}`);
     },
   });
 }
@@ -179,7 +183,8 @@ export function useBatchDeleteMutation() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`批量删除失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量删除失败：${errorMessage}`);
     },
   });
 }
@@ -203,7 +208,8 @@ export function useBatchCloseMutation() {
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     onError: (error: unknown) => {
-      message.error(`批量关闭失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量关闭失败：${errorMessage}`);
     },
   });
 }
@@ -223,7 +229,8 @@ export function useBatchReopenMutation() {
       queryClient.invalidateQueries({ queryKey: BATCH_OPERATION_KEYS.all });
     },
     onError: (error: unknown) => {
-      message.error(`批量重新打开失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量重新打开失败：${errorMessage}`);
     },
   });
 }
@@ -253,7 +260,8 @@ export function useBatchExportMutation() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`导出失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`导出失败：${errorMessage}`);
     },
   });
 }
@@ -273,7 +281,8 @@ export function useUndoBatchOperationMutation() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`撤销失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`撤销失败：${errorMessage}`);
     },
   });
 }
@@ -296,7 +305,8 @@ export function useBatchOperationMutation() {
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onError: (error: unknown) => {
-      message.error(`批量操作失败：${error.message || '未知错误'}`);
+      const errorMessage = error instanceof Error ? error.message : '未知错误';
+      message.error(`批量操作失败：${errorMessage}`);
     },
   });
 }

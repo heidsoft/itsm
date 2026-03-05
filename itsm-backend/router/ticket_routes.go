@@ -28,13 +28,15 @@ func SetupTicketRoutes(
 		// 基础CRUD操作
 		tickets.GET("", middleware.RequirePermission("ticket", "read"), ticketController.ListTickets)
 		tickets.POST("", middleware.RequirePermission("ticket", "create"), ticketController.CreateTicket)
+
+		// 统计和分析（必须在 /:id 之前）
+		tickets.GET("/stats", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketStats)
+		tickets.GET("/analytics", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketAnalytics)
+
+		// 基础CRUD操作（必须在统计路由之后）
 		tickets.GET("/:id", middleware.RequirePermission("ticket", "read"), ticketController.GetTicket)
 		tickets.PUT("/:id", middleware.RequirePermission("ticket", "update"), ticketController.UpdateTicket)
 		tickets.DELETE("/:id", middleware.RequirePermission("ticket", "delete"), ticketController.DeleteTicket)
-
-		// 统计和分析
-		tickets.GET("/stats", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketStats)
-		tickets.GET("/analytics", middleware.RequirePermission("ticket", "read"), ticketController.GetTicketAnalytics)
 
 		// 批量操作
 		tickets.POST("/batch-delete", middleware.RequirePermission("ticket", "delete"), ticketController.BatchDeleteTickets)

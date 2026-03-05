@@ -174,7 +174,7 @@ const TicketAnalytics: React.FC = () => {
       title: '处理工单数',
       dataIndex: 'total_handled',
       key: 'total_handled',
-      sorter: (a: unknown, b: unknown) => a.total_handled - b.total_handled,
+      sorter: (a: any, b: any) => a.total_handled - b.total_handled,
     },
     {
       title: '已解决',
@@ -206,7 +206,7 @@ const TicketAnalytics: React.FC = () => {
       title: '工单数量',
       dataIndex: 'count',
       key: 'count',
-      sorter: (a: unknown, b: unknown) => a.count - b.count,
+      sorter: (a: any, b: any) => a.count - b.count,
     },
     {
       title: '趋势',
@@ -237,7 +237,7 @@ const TicketAnalytics: React.FC = () => {
           <Space>
             <RangePicker
               value={dateRange}
-              onChange={(dates: unknown) => {
+              onChange={(dates: any) => {
                 if (dates && dates.length === 2) {
                   setDateRange([dates[0], dates[1]]);
                 }

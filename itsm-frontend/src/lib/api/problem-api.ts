@@ -35,7 +35,7 @@ export class ProblemApi {
   /**
    * 获取问题列表
    */
-  static async getProblems(params?: unknown): Promise<ProblemListResponse> {
+  static async getProblems(params?: any): Promise<ProblemListResponse> {
     return httpClient.get('/api/v1/problems', params);
   }
 
@@ -70,7 +70,7 @@ export class ProblemApi {
   /**
    * 获取问题统计
    */
-  static async getProblemStats(params?: unknown): Promise<any> {
+  static async getProblemStats(params?: any): Promise<any> {
     return httpClient.get('/api/v1/problems/stats', params);
   }
 

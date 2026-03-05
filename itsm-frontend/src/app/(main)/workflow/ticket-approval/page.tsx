@@ -83,12 +83,26 @@ const getNodeTypeName = (type: string, t: (key: string) => string) => {
   }
 };
 
+interface WorkflowNode {
+  id: string;
+  name: string;
+  description?: string;
+  type: 'start' | 'approval' | 'condition' | 'action' | 'end';
+  config?: {
+    approvers?: {
+      value: Array<{ id: string; name: string; type: string }>;
+    };
+    [key: string]: any;
+  };
+  [key: string]: any;
+}
+
 interface TicketApprovalWorkflow {
   id?: number;
   name: string;
   description: string;
   type: string;
-  nodes: unknown[];
+  nodes: WorkflowNode[];
   metadata: {
     version: string;
     lastModified: string;
@@ -223,7 +237,7 @@ const TicketApprovalWorkflowPage = () => {
     setCurrentXML(xml);
   };
 
-  const handleSaveWorkflow = (workflowData: unknown) => {
+  const handleSaveWorkflow = (workflowData: TicketApprovalWorkflow) => {
     // 显示保存模态框
     setSaveModalVisible(true);
     setWorkflow(workflowData);
@@ -297,7 +311,7 @@ const TicketApprovalWorkflowPage = () => {
 
     // 创建预览用的流程步骤
     const previewSteps =
-      workflow.nodes?.map((node: unknown, index: number) => {
+      workflow.nodes?.map((node: WorkflowNode, index: number) => {
         const status: 'process' | 'wait' = index === 0 ? 'process' : 'wait';
         return {
           title: node.name,
@@ -332,7 +346,7 @@ const TicketApprovalWorkflowPage = () => {
             message={t('workflow.workflowOverview')}
             description={t('workflow.workflowOverviewDescription', {
               total: workflow.nodes?.length || 0,
-              approval: workflow.nodes?.filter((n: unknown) => n.type === 'approval').length || 0,
+              approval: workflow.nodes?.filter((n: WorkflowNode) => n.type === 'approval').length || 0,
             })}
             type="info"
             showIcon
@@ -348,7 +362,7 @@ const TicketApprovalWorkflowPage = () => {
             <List
               size="small"
               dataSource={workflow.nodes || []}
-              renderItem={(node: unknown, index: number) => (
+              renderItem={(node: WorkflowNode, index: number) => (
                 <List.Item>
                   <div className="flex items-center gap-3 w-full">
                     <Badge count={index + 1} color="blue" />
@@ -483,7 +497,7 @@ const TicketApprovalWorkflowPage = () => {
                   <Statistic
                     title={t('workflow.conditionNodes')}
                     value={
-                      workflow.nodes?.filter((n: unknown) => n.type === 'condition').length || 0
+                      workflow.nodes?.filter((n: WorkflowNode) => n.type === 'condition').length || 0
                     }
                     prefix={<Settings className="w-4 h-4" />}
                   />
@@ -491,7 +505,7 @@ const TicketApprovalWorkflowPage = () => {
                 <Col span={6}>
                   <Statistic
                     title={t('workflow.actionNodes')}
-                    value={workflow.nodes?.filter((n: unknown) => n.type === 'action').length || 0}
+                    value={workflow.nodes?.filter((n: WorkflowNode) => n.type === 'action').length || 0}
                     prefix={<Zap className="w-4 h-4" />}
                   />
                 </Col>

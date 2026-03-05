@@ -126,7 +126,7 @@ const EscalationRuleManagement = () => {
     setLoading(true);
     try {
       const data = await SLAApi.getAlertRules();
-      const rules = (data || []).map((item: unknown) => ({
+      const rules = (data || []).map((item: any) => ({
         id: String(item.id),
         name: item.name || '未命名规则',
         description: item.description || '',

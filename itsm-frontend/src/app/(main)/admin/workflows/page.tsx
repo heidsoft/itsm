@@ -217,7 +217,7 @@ const WorkflowManagement = () => {
       const response = await WorkflowAPI.getWorkflows({});
       // 转换API数据格式
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const workflowList = (response.workflows || []).map((w: unknown) => ({
+      const workflowList = (response.workflows || []).map((w: any) => ({
         id: w.id,
         name: w.name || w.key || '',
         description: w.description || '',
@@ -717,13 +717,6 @@ const WorkflowManagement = () => {
         okText="保存"
         cancelText="取消"
       >
-        <Alert
-          message="工作流设计器正在开发中"
-          description="当前仅支持基本信息编辑，完整的可视化工作流设计器即将发布！"
-          type="info"
-          showIcon
-          className="mb-4"
-        />
         <Form form={form} layout="vertical" className="mt-4">
           <Row gutter={16}>
             <Col span={12}>
@@ -889,12 +882,17 @@ const WorkflowManagement = () => {
               </Row>
             </div>
 
-            <Alert
-              message="工作流设计器预览"
-              description="可视化工作流设计器和实例管理功能正在开发中，将在下个版本中提供完整的流程设计和监控能力。"
-              type="warning"
-              showIcon
-            />
+            <div className="mt-6">
+              <Button
+                type="primary"
+                icon={<GitBranch />}
+                onClick={() => {
+                  window.open(`/workflow/designer?id=${selectedWorkflow.id}`, '_blank');
+                }}
+              >
+                打开工作流设计器
+              </Button>
+            </div>
           </div>
         )}
       </Modal>

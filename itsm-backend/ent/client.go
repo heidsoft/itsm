@@ -6493,7 +6493,7 @@ func (c *ProcessBindingClient) QueryProcessDefinition(pb *ProcessBinding) *Proce
 		step := sqlgraph.NewStep(
 			sqlgraph.From(processbinding.Table, processbinding.FieldID, id),
 			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, processbinding.ProcessDefinitionTable, processbinding.ProcessDefinitionPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, processbinding.ProcessDefinitionTable, processbinding.ProcessDefinitionColumn),
 		)
 		fromV = sqlgraph.Neighbors(pb.driver.Dialect(), step)
 		return fromV, nil
@@ -6658,7 +6658,7 @@ func (c *ProcessDefinitionClient) QueryBindings(pd *ProcessDefinition) *ProcessB
 		step := sqlgraph.NewStep(
 			sqlgraph.From(processdefinition.Table, processdefinition.FieldID, id),
 			sqlgraph.To(processbinding.Table, processbinding.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, false, processdefinition.BindingsTable, processdefinition.BindingsPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.O2M, false, processdefinition.BindingsTable, processdefinition.BindingsColumn),
 		)
 		fromV = sqlgraph.Neighbors(pd.driver.Dialect(), step)
 		return fromV, nil

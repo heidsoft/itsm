@@ -1238,12 +1238,21 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "process_definition_bindings", Type: field.TypeInt, Nullable: true},
 	}
 	// ProcessBindingsTable holds the schema information for the "process_bindings" table.
 	ProcessBindingsTable = &schema.Table{
 		Name:       "process_bindings",
 		Columns:    ProcessBindingsColumns,
 		PrimaryKey: []*schema.Column{ProcessBindingsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "process_bindings_process_definitions_bindings",
+				Columns:    []*schema.Column{ProcessBindingsColumns[11]},
+				RefColumns: []*schema.Column{ProcessDefinitionsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 		Indexes: []*schema.Index{
 			{
 				Name:    "processbinding_business_type_business_sub_type",
@@ -3176,31 +3185,6 @@ var (
 			},
 		},
 	}
-	// ProcessDefinitionBindingsColumns holds the columns for the "process_definition_bindings" table.
-	ProcessDefinitionBindingsColumns = []*schema.Column{
-		{Name: "process_definition_id", Type: field.TypeInt},
-		{Name: "process_binding_id", Type: field.TypeInt},
-	}
-	// ProcessDefinitionBindingsTable holds the schema information for the "process_definition_bindings" table.
-	ProcessDefinitionBindingsTable = &schema.Table{
-		Name:       "process_definition_bindings",
-		Columns:    ProcessDefinitionBindingsColumns,
-		PrimaryKey: []*schema.Column{ProcessDefinitionBindingsColumns[0], ProcessDefinitionBindingsColumns[1]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "process_definition_bindings_process_definition_id",
-				Columns:    []*schema.Column{ProcessDefinitionBindingsColumns[0]},
-				RefColumns: []*schema.Column{ProcessDefinitionsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-			{
-				Symbol:     "process_definition_bindings_process_binding_id",
-				Columns:    []*schema.Column{ProcessDefinitionBindingsColumns[1]},
-				RefColumns: []*schema.Column{ProcessBindingsColumns[0]},
-				OnDelete:   schema.Cascade,
-			},
-		},
-	}
 	// ProjectTagsColumns holds the columns for the "project_tags" table.
 	ProjectTagsColumns = []*schema.Column{
 		{Name: "project_id", Type: field.TypeInt},
@@ -3362,7 +3346,6 @@ var (
 		DepartmentTagsTable,
 		IncidentRelatedIncidentsTable,
 		MicroserviceTagsTable,
-		ProcessDefinitionBindingsTable,
 		ProjectTagsTable,
 		TeamTagsTable,
 		UserRolesTable,
@@ -3392,6 +3375,7 @@ func init() {
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
 	PermissionsTable.ForeignKeys[0].RefTable = RolesTable
+	ProcessBindingsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
 	ProcessDefinitionsTable.ForeignKeys[0].RefTable = ProcessDeploymentsTable
 	ProcessExecutionHistoriesTable.ForeignKeys[0].RefTable = ProcessInstancesTable
 	ProcessInstancesTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
@@ -3446,8 +3430,6 @@ func init() {
 	IncidentRelatedIncidentsTable.ForeignKeys[1].RefTable = IncidentsTable
 	MicroserviceTagsTable.ForeignKeys[0].RefTable = MicroservicesTable
 	MicroserviceTagsTable.ForeignKeys[1].RefTable = TagsTable
-	ProcessDefinitionBindingsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
-	ProcessDefinitionBindingsTable.ForeignKeys[1].RefTable = ProcessBindingsTable
 	ProjectTagsTable.ForeignKeys[0].RefTable = ProjectsTable
 	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
 	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable

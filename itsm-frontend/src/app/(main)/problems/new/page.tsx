@@ -32,7 +32,7 @@ const CreateProblemPageContent = () => {
     }
   }, [searchParams, form]);
 
-  const handleSubmit = async (values: unknown) => {
+  const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
       await problemService.createProblem({

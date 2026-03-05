@@ -14,6 +14,15 @@ import type {
   ActivityQuery,
 } from '@/types/collaboration';
 
+// 工具函数：从 unknown 错误中提取消息
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object' && 'message' in error) {
+    return String((error as any).message);
+  }
+  return String(error);
+}
+
 // ==================== Query Keys ====================
 
 export const COLLABORATION_KEYS = {
@@ -176,7 +185,7 @@ export function useCreateCommentMutation() {
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
     onError: (error: unknown) => {
-      message.error(`发布评论失败：${error.message || '未知错误'}`);
+      message.error(`发布评论失败：${getErrorMessage(error) || '未知错误'}`);
     },
   });
 }
@@ -200,7 +209,7 @@ export function useUpdateCommentMutation() {
       });
     },
     onError: (error: unknown) => {
-      message.error(`更新评论失败：${error.message || '未知错误'}`);
+      message.error(`更新评论失败：${getErrorMessage(error) || '未知错误'}`);
     },
   });
 }
@@ -220,7 +229,7 @@ export function useDeleteCommentMutation() {
       });
     },
     onError: (error: unknown) => {
-      message.error(`删除评论失败：${error.message || '未知错误'}`);
+      message.error(`删除评论失败：${getErrorMessage(error) || '未知错误'}`);
     },
   });
 }
@@ -311,7 +320,7 @@ export function useAddWatcherMutation() {
       });
     },
     onError: (error: unknown) => {
-      message.error(`添加观察者失败：${error.message || '未知错误'}`);
+      message.error(`添加观察者失败：${getErrorMessage(error) || '未知错误'}`);
     },
   });
 }
@@ -332,7 +341,7 @@ export function useRemoveWatcherMutation() {
       });
     },
     onError: (error: unknown) => {
-      message.error(`移除观察者失败：${error.message || '未知错误'}`);
+      message.error(`移除观察者失败：${getErrorMessage(error) || '未知错误'}`);
     },
   });
 }
@@ -352,7 +361,7 @@ export function useWatchTicketMutation() {
       });
     },
     onError: (error: unknown) => {
-      message.error(`观察失败：${error.message || '未知错误'}`);
+      message.error(`观察失败：${getErrorMessage(error) || '未知错误'}`);
     },
   });
 }
@@ -372,7 +381,7 @@ export function useUnwatchTicketMutation() {
       });
     },
     onError: (error: unknown) => {
-      message.error(`取消观察失败：${error.message || '未知错误'}`);
+      message.error(`取消观察失败：${getErrorMessage(error) || '未知错误'}`);
     },
   });
 }

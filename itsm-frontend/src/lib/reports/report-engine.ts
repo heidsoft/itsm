@@ -194,26 +194,27 @@ export class ReportEngine {
   private static calculateMetric(data: unknown[], metric: AggregationMetric): number {
     const values = data
       .map(row => this.getNestedValue(row, metric.field))
-      .filter(v => v !== null && v !== undefined);
+      .filter(v => v !== null && v !== undefined)
+      .map(v => Number(v)) as number[];
 
     switch (metric.function) {
       case 'count':
         return values.length;
 
       case 'sum':
-        return values.reduce((sum, v) => sum + Number(v), 0);
+        return values.reduce((sum, v) => sum + v, 0);
 
       case 'avg':
         if (values.length === 0) return 0;
-        return values.reduce((sum, v) => sum + Number(v), 0) / values.length;
+        return values.reduce((sum, v) => sum + v, 0) / values.length;
 
       case 'min':
         if (values.length === 0) return 0;
-        return Math.min(...values.map(Number));
+        return Math.min(...values);
 
       case 'max':
         if (values.length === 0) return 0;
-        return Math.max(...values.map(Number));
+        return Math.max(...values);
 
       case 'distinct':
         return new Set(values).size;
@@ -241,7 +242,7 @@ export class ReportEngine {
       const timeValue = this.getNestedValue(row, timeField);
       if (!timeValue) continue;
 
-      const timeKey = this.formatTimeKey(new Date(timeValue), granularity);
+      const timeKey = this.formatTimeKey(new Date(String(timeValue)), granularity);
 
       if (!timeGroups[timeKey]) {
         timeGroups[timeKey] = [];
@@ -254,7 +255,7 @@ export class ReportEngine {
     const result: Array<{ time: string; [key: string]: unknown }> = [];
 
     for (const [timeKey, groupData] of Object.entries(timeGroups)) {
-      const row: Record<string, unknown> = { time: timeKey };
+      const row: { time: string; [key: string]: unknown } = { time: timeKey };
 
       for (const metric of metrics) {
         const key = metric.alias || metric.name;
@@ -338,7 +339,7 @@ export class ReportEngine {
         });
 
         // 计算聚合值
-        const cell: unknown = {};
+        const cell: any = {};
         for (const value of values) {
           const metric: AggregationMetric = {
             name: value.field,
@@ -364,16 +365,16 @@ export class ReportEngine {
   /**
    * 获取唯一值组合
    */
-  private static getUniqueValueCombinations(data: unknown[], fields: string[]): unknown[][] {
+  private static getUniqueValueCombinations(data: unknown[], fields: string[]): string[][] {
     const combinations = new Set<string>();
 
     for (const row of data) {
-      const values = fields.map(field => this.getNestedValue(row, field));
+      const values = fields.map(field => String(this.getNestedValue(row, field)));
       combinations.add(JSON.stringify(values));
     }
 
     return Array.from(combinations)
-      .map(str => JSON.parse(str))
+      .map(str => JSON.parse(str) as string[])
       .sort((a, b) => {
         for (let i = 0; i < a.length; i++) {
           const comparison = this.compareValues(a[i], b[i]);

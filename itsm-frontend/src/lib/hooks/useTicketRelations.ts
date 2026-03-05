@@ -194,8 +194,9 @@ export function useCreateRelationMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`创建关联失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`创建关联失败：${errorMessage}`);
     },
   });
 }
@@ -216,8 +217,9 @@ export function useBatchCreateRelationsMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`批量创建关联失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`批量创建关联失败：${errorMessage}`);
     },
   });
 }
@@ -238,8 +240,9 @@ export function useUpdateRelationMutation() {
       });
       queryClient.invalidateQueries({ queryKey: TICKET_RELATION_KEYS.lists() });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`更新关联失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`更新关联失败：${errorMessage}`);
     },
   });
 }
@@ -258,8 +261,9 @@ export function useDeleteRelationMutation() {
       queryClient.invalidateQueries({ queryKey: TICKET_RELATION_KEYS.lists() });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`删除关联失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`删除关联失败：${errorMessage}`);
     },
   });
 }
@@ -288,8 +292,9 @@ export function useSetParentMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`设置父工单失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`设置父工单失败：${errorMessage}`);
     },
   });
 }
@@ -309,8 +314,9 @@ export function useRemoveParentMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`移除父工单失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`移除父工单失败：${errorMessage}`);
     },
   });
 }
@@ -337,8 +343,9 @@ export function useAddDependencyMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`添加依赖失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`添加依赖失败：${errorMessage}`);
     },
   });
 }
@@ -362,8 +369,9 @@ export function useRemoveDependencyMutation() {
       });
       queryClient.invalidateQueries({ queryKey: ['tickets'] });
     },
-    onError: (error: unknown) => { const errorMessage = error instanceof Error ? errorMessage : "Unknown error";
-      message.error(`移除依赖失败：${errorMessage || '未知错误'}`);
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : "Unknown error";
+      message.error(`移除依赖失败：${errorMessage}`);
     },
   });
 }

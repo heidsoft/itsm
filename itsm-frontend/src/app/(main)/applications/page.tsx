@@ -163,30 +163,40 @@ export default function ApplicationsPage() {
     setIsModalVisible(true);
   };
 
-  const handleEdit = (record: unknown, type: 'application' | 'microservice') => {
-    setModalType(type);
-    form.setFieldsValue(record);
-    setIsModalVisible(true);
-  };
+interface ApplicationRecord extends Application {
+  key: string;
+}
 
-  const handleDelete = (record: unknown) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除 "${record.name}" 吗？`,
-      onOk: async () => {
-        try {
-          if (modalType === 'application' || activeTab === 'applications') {
-            await applicationService.deleteApplication(record.id);
-          } else {
-            await applicationService.deleteMicroservice(record.id);
-          }
-          message.success(t('common.deleteSuccess'));
-          fetchData();
-        } catch (error) {
-          message.error(t('common.deleteFailed'));
+interface MicroserviceRecord extends Microservice {
+  key: string;
+}
+
+type RecordData = ApplicationRecord | MicroserviceRecord;
+
+const handleEdit = (record: RecordData, type: 'application' | 'microservice') => {
+  setModalType(type);
+  form.setFieldsValue(record);
+  setIsModalVisible(true);
+};
+
+const handleDelete = (record: RecordData) => {
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除 "${record.name}" 吗？`,
+    onOk: async () => {
+      try {
+        if (modalType === 'application' || activeTab === 'applications') {
+          await applicationService.deleteApplication(record.id);
+        } else {
+          await applicationService.deleteMicroservice(record.id);
         }
-      },
-    });
+        message.success(t('common.deleteSuccess'));
+        fetchData();
+      } catch (error) {
+        message.error(t('common.deleteFailed'));
+      }
+    },
+  });
   };
 
   const handleOk = async () => {

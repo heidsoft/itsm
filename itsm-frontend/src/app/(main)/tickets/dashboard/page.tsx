@@ -68,7 +68,42 @@ const TicketDashboardPage = () => {
   };
 
   const handleExport = () => {
-    message.info('导出功能开发中');
+    try {
+      // 导出工单概览数据
+      const overviewData = getOverviewData();
+      const exportData = [{
+        指标: '总工单数',
+        数值: overviewData.totalTickets,
+      }, {
+        指标: '待处理工单',
+        数值: overviewData.pendingTickets,
+      }, {
+        指标: '今日已解决',
+        数值: overviewData.resolvedTickets,
+      }, {
+        指标: '平均响应时间(分钟)',
+        数值: overviewData.avgResponseTime,
+      }, {
+        指标: '平均解决时间(分钟)',
+        数值: overviewData.avgResolutionTime,
+      }];
+
+      const csvContent = [
+        Object.keys(exportData[0]).join(','),
+        ...exportData.map(row => Object.values(row).join(','))
+      ].join('\n');
+
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `工单仪表盘_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      message.success('导出成功');
+    } catch (error) {
+      message.error('导出失败');
+    }
   };
 
   // 获取概览数据

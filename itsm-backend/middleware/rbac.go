@@ -33,6 +33,9 @@ var RolePermissions = map[string][]Permission{
 	"super_admin": {
 		{Resource: "*", Action: "*"}, // 超级管理员拥有所有权限
 	},
+	"sysadmin": {
+		{Resource: "*", Action: "*"}, // 系统管理员拥有所有权限
+	},
 	"admin": {
 		{Resource: "ticket", Action: "read"},
 		{Resource: "ticket", Action: "write"},

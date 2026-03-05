@@ -34,7 +34,7 @@ export interface AuthFieldConfig {
   /** 是否必填 */
   required?: boolean;
   /** 验证规则 */
-  rules?: unknown[];
+  rules?: any[];
   /** 前缀图标 */
   prefix?: React.ReactNode;
   /** 后缀图标 */
@@ -139,7 +139,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
   // 处理表单值变化
   const handleValuesChange = useCallback(
-    (changedValues: unknown, allValues: unknown) => {
+    (changedValues: Record<string, any>, allValues: Record<string, any>) => {
       setFormValues(allValues);
       onValuesChange?.(changedValues, allValues);
     },
@@ -163,7 +163,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
 
   // 处理表单验证失败
   const handleValidationFailed = useCallback(
-    (errorInfo: unknown) => {
+    (errorInfo: any) => {
       onValidationFailed?.(errorInfo);
     },
     [onValidationFailed]

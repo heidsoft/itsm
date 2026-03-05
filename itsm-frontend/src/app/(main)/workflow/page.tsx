@@ -118,7 +118,7 @@ const WorkflowManagementPage = () => {
           pageSize,
         });
         // 适配后端返回格式
-        const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: unknown) => ({
+        const adaptedWorkflows: Workflow[] = (response.workflows || []).map((w: any) => ({
           id: w.key || w.id || 0, // 使用 key 作为 id，因为后端 API 需要 key
           name: w.name || w.code || 'Unknown',
           description: w.description || '',
@@ -154,8 +154,8 @@ const WorkflowManagementPage = () => {
   );
 
   // 分页/排序/筛选变化处理
-  const handleTableChange = (newPagination: unknown) => {
-    loadWorkflows(newPagination.current, newPagination.pageSize);
+  const handleTableChange = (page: number, pageSize: number) => {
+    loadWorkflows(page, pageSize);
   };
 
   const loadStats = useCallback(async () => {

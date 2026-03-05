@@ -1,0 +1,222 @@
+
+> itsm-prototype@0.1.0 type-check
+> tsc --noEmit
+
+src/app/(main)/admin/approval-chains/components/ApprovalChainFilters.tsx(125,13): error TS2322: Type '(dates: [dayjs.Dayjs, dayjs.Dayjs] | null, dateStrings: [string, string]) => void' is not assignable to type '(dates: NoUndefinedRangeValueType<Dayjs> | null, dateStrings: [string, string]) => void'.
+  Types of parameters 'dates' and 'dates' are incompatible.
+    Type 'NoUndefinedRangeValueType<Dayjs> | null' is not assignable to type '[Dayjs, Dayjs] | null'.
+      Type 'NoUndefinedRangeValueType<Dayjs>' is not assignable to type '[Dayjs, Dayjs]'.
+        Type at position 0 in source is not compatible with type at position 0 in target.
+          Type 'Dayjs | null' is not assignable to type 'Dayjs'.
+            Type 'null' is not assignable to type 'Dayjs'.
+src/app/(main)/admin/roles/page.tsx(163,65): error TS18046: 'r' is of type 'unknown'.
+src/app/(main)/admin/roles/page.tsx(164,67): error TS18046: 'r' is of type 'unknown'.
+src/app/(main)/applications/page.tsx(175,26): error TS18046: 'record' is of type 'unknown'.
+src/app/(main)/applications/page.tsx(179,56): error TS18046: 'record' is of type 'unknown'.
+src/app/(main)/applications/page.tsx(181,57): error TS18046: 'record' is of type 'unknown'.
+src/app/(main)/changes/components/ChangeList.tsx(247,9): error TS2698: Spread types may only be created from object types.
+src/app/(main)/dashboard/components/PeakHoursChart.tsx(56,19): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/ResponseTimeChart.tsx(29,41): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/ResponseTimeChart.tsx(34,19): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/ResponseTimeChart.tsx(34,36): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/TeamWorkloadChart.tsx(29,41): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/TeamWorkloadChart.tsx(34,19): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/TeamWorkloadChart.tsx(34,47): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/TicketTrendChart.tsx(52,13): error TS2698: Spread types may only be created from object types.
+src/app/(main)/dashboard/components/TicketTrendChart.tsx(53,23): error TS18046: 'item' is of type 'unknown'.
+src/app/(main)/dashboard/components/UserSatisfactionChart.tsx(43,41): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/UserSatisfactionChart.tsx(54,19): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/dashboard/components/UserSatisfactionChart.tsx(54,40): error TS18046: 'datum' is of type 'unknown'.
+src/app/(main)/incidents/[id]/edit/page.tsx(68,52): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'UpdateIncidentRequest'.
+src/app/(main)/knowledge/articles/[id]/edit/page.tsx(29,65): error TS18046: 'cat' is of type 'unknown'.
+src/app/(main)/knowledge/articles/[id]/edit/page.tsx(29,77): error TS18046: 'cat' is of type 'unknown'.
+src/app/(main)/knowledge/articles/[id]/edit/page.tsx(78,16): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/knowledge/articles/[id]/edit/page.tsx(79,18): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/knowledge/articles/[id]/edit/page.tsx(80,21): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/knowledge/articles/[id]/edit/page.tsx(81,15): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/knowledge/articles/create/page.tsx(29,65): error TS18046: 'cat' is of type 'unknown'.
+src/app/(main)/knowledge/articles/create/page.tsx(29,77): error TS18046: 'cat' is of type 'unknown'.
+src/app/(main)/knowledge/articles/create/page.tsx(43,16): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/knowledge/articles/create/page.tsx(44,18): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/knowledge/articles/create/page.tsx(45,21): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/knowledge/articles/create/page.tsx(46,15): error TS18046: 'values' is of type 'unknown'.
+src/app/(main)/my-requests/[requestId]/page.tsx(229,41): error TS18046: 'a' is of type 'unknown'.
+src/app/(main)/my-requests/[requestId]/page.tsx(229,58): error TS18046: 'a' is of type 'unknown'.
+src/app/(main)/my-requests/[requestId]/page.tsx(229,71): error TS18046: 'a' is of type 'unknown'.
+src/app/(main)/my-requests/[requestId]/page.tsx(231,39): error TS18046: 'a' is of type 'unknown'.
+src/app/(main)/my-requests/[requestId]/page.tsx(232,49): error TS18046: 'a' is of type 'unknown'.
+src/app/(main)/my-requests/[requestId]/page.tsx(233,48): error TS18046: 'a' is of type 'unknown'.
+src/app/(main)/problems/[id]/edit/page.tsx(60,50): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Partial<Problem>'.
+src/app/(main)/problems/components/ProblemList.tsx(235,18): error TS18046: 'pagination' is of type 'unknown'.
+src/app/(main)/problems/components/ProblemList.tsx(236,19): error TS18046: 'pagination' is of type 'unknown'.
+src/app/(main)/problems/components/ProblemList.tsx(237,16): error TS18046: 'pagination' is of type 'unknown'.
+src/app/(main)/reports/change-success/page.tsx(129,28): error TS2339: Property 'active' does not exist on type 'unknown'.
+src/app/(main)/reports/change-success/page.tsx(129,36): error TS2339: Property 'payload' does not exist on type 'unknown'.
+src/app/(main)/reports/cmdb-quality/page.tsx(87,28): error TS2339: Property 'active' does not exist on type 'unknown'.
+src/app/(main)/reports/cmdb-quality/page.tsx(87,36): error TS2339: Property 'payload' does not exist on type 'unknown'.
+src/app/(main)/reports/cmdb-quality/page.tsx(87,45): error TS2339: Property 'label' does not exist on type 'unknown'.
+src/app/(main)/reports/cmdb-quality/page.tsx(93,64): error TS18046: 'entry' is of type 'unknown'.
+src/app/(main)/reports/cmdb-quality/page.tsx(94,19): error TS18046: 'entry' is of type 'unknown'.
+src/app/(main)/reports/cmdb-quality/page.tsx(94,34): error TS18046: 'entry' is of type 'unknown'.
+src/app/(main)/reports/incident-trends/page.tsx(182,17): error TS2322: Type '(dates: any[]) => void' is not assignable to type '(dates: NoUndefinedRangeValueType<Dayjs> | null, dateStrings: [string, string]) => void'.
+  Types of parameters 'dates' and 'dates' are incompatible.
+    Type 'NoUndefinedRangeValueType<Dayjs> | null' is not assignable to type 'any[]'.
+      Type 'null' is not assignable to type 'any[]'.
+src/app/(main)/reports/problem-efficiency/page.tsx(196,28): error TS2339: Property 'active' does not exist on type 'unknown'.
+src/app/(main)/reports/problem-efficiency/page.tsx(196,36): error TS2339: Property 'payload' does not exist on type 'unknown'.
+src/app/(main)/reports/service-catalog-usage/page.tsx(92,28): error TS2339: Property 'active' does not exist on type 'unknown'.
+src/app/(main)/reports/service-catalog-usage/page.tsx(92,36): error TS2339: Property 'payload' does not exist on type 'unknown'.
+src/app/(main)/reports/sla-performance/page.tsx(98,28): error TS2339: Property 'active' does not exist on type 'unknown'.
+src/app/(main)/reports/sla-performance/page.tsx(98,36): error TS2339: Property 'payload' does not exist on type 'unknown'.
+src/app/(main)/reports/sla-performance/page.tsx(98,45): error TS2339: Property 'label' does not exist on type 'unknown'.
+src/app/(main)/reports/sla-performance/page.tsx(104,64): error TS18046: 'entry' is of type 'unknown'.
+src/app/(main)/reports/sla-performance/page.tsx(105,19): error TS18046: 'entry' is of type 'unknown'.
+src/app/(main)/reports/sla-performance/page.tsx(105,34): error TS18046: 'entry' is of type 'unknown'.
+src/app/(main)/service-catalog/components/CreateServiceModal.tsx(52,13): error TS2322: Type 'unknown' is not assignable to type 'FormInstance<any> | undefined'.
+src/app/(main)/tickets/create/page.tsx(136,27): error TS2339: Property 'message' does not exist on type '{}'.
+src/app/(main)/tickets/create/page.tsx(136,41): error TS2339: Property 'error' does not exist on type '{}'.
+src/app/notifications/page.tsx(539,32): error TS2339: Property 'length' does not exist on type '{}'.
+src/app/notifications/page.tsx(540,29): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
+  Property '0' does not exist on type '{}'.
+src/app/notifications/page.tsx(540,39): error TS7053: Element implicitly has an 'any' type because expression of type '1' can't be used to index type '{}'.
+  Property '1' does not exist on type '{}'.
+src/components/asset/AssetList.tsx(235,53): error TS18046: 'record' is of type 'unknown'.
+src/components/asset/AssetList.tsx(236,35): error TS18046: 'record' is of type 'unknown'.
+src/components/asset/AssetList.tsx(236,50): error TS18046: 'record' is of type 'unknown'.
+src/components/asset/AssetList.tsx(243,53): error TS18046: 'record' is of type 'unknown'.
+src/components/asset/AssetList.tsx(244,35): error TS18046: 'record' is of type 'unknown'.
+src/components/asset/AssetList.tsx(244,50): error TS18046: 'record' is of type 'unknown'.
+src/components/auth/AuthForm.tsx(143,21): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<Record<string, any>>'.
+src/components/auth/AuthForm.tsx(300,15): error TS2322: Type 'unknown[] | undefined' is not assignable to type 'Rule[] | undefined'.
+  Type 'unknown[]' is not assignable to type 'Rule[]'.
+    Type 'unknown' is not assignable to type 'Rule'.
+src/components/business/AdvancedReporting.tsx(737,53): error TS18046: 'widget.config' is of type 'unknown'.
+src/components/business/AdvancedReporting.tsx(917,21): error TS18046: 'obj' is of type 'unknown'.
+src/components/business/AssignmentRuleForm.tsx(68,28): error TS18046: 'form' is of type 'unknown'.
+src/components/business/AssignmentRuleForm.tsx(77,24): error TS18046: 'form' is of type 'unknown'.
+src/components/business/AssignmentRuleForm.tsx(78,5): error TS18046: 'form' is of type 'unknown'.
+src/components/business/AssignmentRuleForm.tsx(92,24): error TS18046: 'form' is of type 'unknown'.
+src/components/business/AssignmentRuleForm.tsx(94,5): error TS18046: 'form' is of type 'unknown'.
+src/components/business/AssignmentRuleForm.tsx(99,7): error TS2322: Type 'unknown' is not assignable to type 'FormInstance<any> | undefined'.
+src/components/business/AssignmentRuleForm.tsx(150,35): error TS18046: 'form' is of type 'unknown'.
+src/components/business/IncidentManagement.tsx(154,7): error TS2698: Spread types may only be created from object types.
+src/components/business/IncidentManagement.tsx(162,20): error TS18046: 'pagination' is of type 'unknown'.
+src/components/business/IncidentManagement.tsx(163,17): error TS18046: 'pagination' is of type 'unknown'.
+src/components/business/IncidentManagement.tsx(1096,55): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'UpdateIncidentRequest'.
+src/components/business/IncidentManagement.tsx(1098,42): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'CreateIncidentRequest'.
+src/components/business/TicketAssociation.tsx(163,50): error TS18046: 'values' is of type 'unknown'.
+src/components/business/TicketAssociation.tsx(164,50): error TS18046: 'values' is of type 'unknown'.
+src/components/business/TicketAssociation.tsx(165,23): error TS18046: 'values' is of type 'unknown'.
+src/components/business/TicketAssociation.tsx(166,22): error TS18046: 'values' is of type 'unknown'.
+src/components/business/TicketAttachmentSection.tsx(122,24): error TS18046: 'error' is of type 'unknown'.
+src/components/business/TicketAttachmentSection.tsx(124,17): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'ProgressEvent<EventTarget> | UploadRequestError'.
+src/components/business/TicketAttachmentSection.tsx(139,24): error TS18046: 'error' is of type 'unknown'.
+src/components/business/TicketCategoryExport.tsx(261,27): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type 'ExportItem'.
+  No index signature with a parameter of type 'string' was found on type 'ExportItem'.
+src/components/business/TicketCategoryImport.tsx(210,18): error TS2339: Property 'fileList' does not exist on type 'unknown'.
+src/components/business/TicketCategorySelector.tsx(126,33): error TS18046: 'item' is of type 'unknown'.
+src/components/business/TicketCategorySelector.tsx(130,39): error TS18046: 'item' is of type 'unknown'.
+src/components/business/TicketCategorySelector.tsx(130,67): error TS18046: 'item' is of type 'unknown'.
+src/components/business/TicketCategorySelector.tsx(135,11): error TS2698: Spread types may only be created from object types.
+src/components/business/TicketCategorySelector.tsx(136,21): error TS18046: 'item' is of type 'unknown'.
+src/components/business/TicketCategorySelector.tsx(136,48): error TS18046: 'item' is of type 'unknown'.
+src/components/business/TicketCategorySelector.tsx(282,17): error TS2322: Type 'unknown[]' is not assignable to type '(BasicDataNode | DataNode)[]'.
+  Type 'unknown' is not assignable to type 'BasicDataNode | DataNode'.
+src/components/business/TicketCategorySelector.tsx(362,15): error TS2322: Type 'unknown[]' is not assignable to type '(BasicDataNode | DataNode)[]'.
+  Type 'unknown' is not assignable to type 'BasicDataNode | DataNode'.
+src/components/business/TicketDeepAnalytics.tsx(170,22): error TS2345: Argument of type 'AnalyticsDataPoint[]' is not assignable to parameter of type 'SetStateAction<ChartData[]>'.
+  Type 'AnalyticsDataPoint[]' is not assignable to type 'ChartData[]'.
+    Type 'AnalyticsDataPoint' is not assignable to type 'ChartData'.
+      Index signature for type 'string' is missing in type 'AnalyticsDataPoint'.
+src/components/business/TicketFilters.tsx(122,7): error TS18046: 'debounce' is of type 'unknown'.
+src/components/business/TicketFilters.tsx(147,33): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
+  Property '0' does not exist on type '{}'.
+src/components/business/TicketFilters.tsx(147,51): error TS7053: Element implicitly has an 'any' type because expression of type '1' can't be used to index type '{}'.
+  Property '1' does not exist on type '{}'.
+src/components/business/TicketFilters.tsx(149,20): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
+  Property '0' does not exist on type '{}'.
+src/components/business/TicketFilters.tsx(150,18): error TS7053: Element implicitly has an 'any' type because expression of type '1' can't be used to index type '{}'.
+  Property '1' does not exist on type '{}'.
+src/components/business/TicketKanbanBoard.tsx(298,17): error TS18046: 'event' is of type 'unknown'.
+src/components/business/TicketKanbanBoard.tsx(303,13): error TS2339: Property 'active' does not exist on type 'unknown'.
+src/components/business/TicketKanbanBoard.tsx(303,21): error TS2339: Property 'over' does not exist on type 'unknown'.
+src/components/business/TicketList.tsx(86,76): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'ListTicketsParams | undefined'.
+src/components/business/TicketList.tsx(120,20): error TS18046: 'pagination' is of type 'unknown'.
+src/components/business/TicketList.tsx(121,17): error TS18046: 'pagination' is of type 'unknown'.
+src/components/business/TicketList.tsx(331,24): error TS2339: Property 'name' does not exist on type '{}'.
+src/components/business/TicketNotificationSection.tsx(122,24): error TS18046: 'error' is of type 'unknown'.
+src/components/business/TicketNotificationSection.tsx(133,24): error TS18046: 'error' is of type 'unknown'.
+src/components/business/TicketRatingSection.tsx(103,24): error TS18046: 'error' is of type 'unknown'.
+src/components/business/TicketSubtasks.tsx(202,48): error TS2339: Property 'name' does not exist on type '{}'.
+src/components/business/TicketViewSelector.tsx(74,35): error TS2339: Property 'message' does not exist on type '{}'.
+src/components/business/TicketWorkflowActions.tsx(112,21): error TS18046: 'error' is of type 'unknown'.
+src/components/business/TicketWorkflowActions.tsx(131,25): error TS18046: 'error' is of type 'unknown'.
+src/components/change/ChangeImpactAnalysis.tsx(154,28): error TS18046: 'values' is of type 'unknown'.
+src/components/change/ChangeImpactAnalysis.tsx(165,27): error TS18046: 'values' is of type 'unknown'.
+src/components/change/ChangeImpactAnalysis.tsx(171,22): error TS18046: 'values' is of type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(151,28): error TS2339: Property 'active' does not exist on type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(151,36): error TS2339: Property 'payload' does not exist on type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(151,45): error TS2339: Property 'label' does not exist on type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(157,64): error TS18046: 'entry' is of type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(158,19): error TS18046: 'entry' is of type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(158,34): error TS18046: 'entry' is of type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(158,48): error TS18046: 'entry' is of type 'unknown'.
+src/components/charts/SLADashboardCharts.tsx(158,87): error TS18046: 'entry' is of type 'unknown'.
+src/components/cmdb/CIRelationshipManager.tsx(158,26): error TS18046: 'values' is of type 'unknown'.
+src/components/cmdb/CIRelationshipManager.tsx(159,14): error TS18046: 'values' is of type 'unknown'.
+src/components/cmdb/CIRelationshipManager.tsx(164,28): error TS18046: 'values' is of type 'unknown'.
+src/components/cmdb/CIRelationshipManager.tsx(165,19): error TS18046: 'values' is of type 'unknown'.
+src/components/cmdb/CIRelationshipManager.tsx(166,23): error TS18046: 'values' is of type 'unknown'.
+src/components/cmdb/CIRelationshipManager.tsx(167,22): error TS18046: 'values' is of type 'unknown'.
+src/components/incident/IncidentDetail.tsx(85,27): error TS18046: 'values' is of type 'unknown'.
+src/components/incident/IncidentDetail.tsx(86,17): error TS18046: 'values' is of type 'unknown'.
+src/components/incident/IncidentDetail.tsx(87,22): error TS18046: 'values' is of type 'unknown'.
+src/components/knowledge/ArticleList.tsx(62,63): error TS18046: 'cat' is of type 'unknown'.
+src/components/knowledge/ArticleList.tsx(62,75): error TS18046: 'cat' is of type 'unknown'.
+src/components/knowledge/ArticleVersionControl.tsx(226,23): error TS18046: 'change' is of type 'unknown'.
+src/components/knowledge/ArticleVersionControl.tsx(226,59): error TS18046: 'change' is of type 'unknown'.
+src/components/knowledge/ArticleVersionControl.tsx(229,22): error TS18046: 'change' is of type 'unknown'.
+src/components/knowledge/ArticleVersionControl.tsx(229,55): error TS18046: 'change' is of type 'unknown'.
+src/components/knowledge/ArticleVersionControl.tsx(232,22): error TS18046: 'change' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(115,15): error TS18046: 'c' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(116,19): error TS18046: 'c' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(117,21): error TS18046: 'c' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(118,20): error TS18046: 'c' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(119,31): error TS18046: 'c' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(120,17): error TS18046: 'c' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(121,21): error TS18046: 'c' is of type 'unknown'.
+src/components/knowledge/KnowledgeCollaboration.tsx(122,20): error TS18046: 'c' is of type 'unknown'.
+src/components/layout/Header.tsx(105,10): error TS18046: 'item' is of type 'unknown'.
+src/components/layout/Header.tsx(106,18): error TS18046: 'item' is of type 'unknown'.
+src/components/release/ReleaseList.tsx(212,55): error TS18046: 'record' is of type 'unknown'.
+src/components/release/ReleaseList.tsx(213,35): error TS18046: 'record' is of type 'unknown'.
+src/components/release/ReleaseList.tsx(213,51): error TS18046: 'record' is of type 'unknown'.
+src/components/release/ReleaseList.tsx(220,55): error TS18046: 'record' is of type 'unknown'.
+src/components/release/ReleaseList.tsx(221,35): error TS18046: 'record' is of type 'unknown'.
+src/components/release/ReleaseList.tsx(221,51): error TS18046: 'record' is of type 'unknown'.
+src/components/reports/RealTimeMonitoring.tsx(481,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+src/components/service-request/ServiceRequestDetail.tsx(100,21): error TS18046: 'error' is of type 'unknown'.
+src/components/templates/TemplateEditor.tsx(319,36): error TS18046: 'cat' is of type 'unknown'.
+src/components/templates/TemplateEditor.tsx(319,51): error TS18046: 'cat' is of type 'unknown'.
+src/components/templates/TemplateEditor.tsx(320,26): error TS18046: 'cat' is of type 'unknown'.
+src/components/templates/TemplateList.tsx(112,36): error TS18046: 'filters' is of type 'unknown'.
+src/components/templates/TemplateList.tsx(113,35): error TS18046: 'filters' is of type 'unknown'.
+src/components/templates/TemplateList.tsx(114,38): error TS18046: 'filters' is of type 'unknown'.
+src/components/templates/TemplateList.tsx(116,34): error TS2698: Spread types may only be created from object types.
+src/components/ui/ResponsiveDashboard.tsx(147,7): error TS18046: 'layoutsMap' is of type 'unknown'.
+src/components/workflow/designer/WorkflowNewModal.tsx(67,20): error TS2345: Argument of type 'unknown' is not assignable to parameter of type '{ name: string; description?: string | undefined; sla_response?: number | undefined; sla_resolution?: number | undefined; }'.
+src/hooks/useDataFetch.ts(71,17): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<T | undefined>'.
+src/lib/api/cmdb-api.ts(133,47): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'object | undefined'.
+src/lib/api/cmdb-api.ts(200,49): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'object | undefined'.
+src/lib/api/cmdb-api.ts(380,23): error TS2304: Cannot find name 'GetCIListRequest'.
+src/lib/api/cmdb-api.ts(381,24): error TS2304: Cannot find name 'GetCIListRequest'.
+src/lib/api/cmdb-api.ts(381,74): error TS2304: Cannot find name 'GetCIListResponse'.
+src/lib/api/incident-api.ts(651,88): error TS2339: Property 'items' does not exist on type 'ListIncidentsResponse'.
+src/lib/api/ticket-comment-api.ts(55,42): error TS2339: Property 'comments' does not exist on type '{}'.
+src/lib/api/ticket-comment-api.ts(56,14): error TS2339: Property 'comments' does not exist on type '{}'.
+src/lib/api/ticket-comment-api.ts(62,27): error TS2339: Property 'total' does not exist on type '{}'.
+src/lib/api/ticket-comment-api.ts(62,53): error TS2339: Property 'total' does not exist on type '{}'.
+src/lib/component-utils.ts(50,43): error TS18046: 'debounce' is of type 'unknown'.
+src/lib/component-utils.ts(54,25): error TS2339: Property 'cancel' does not exist on type 'T'.
+src/lib/component-utils.ts(66,43): error TS18046: 'throttle' is of type 'unknown'.
+src/lib/component-utils.ts(70,25): error TS2339: Property 'cancel' does not exist on type 'T'.

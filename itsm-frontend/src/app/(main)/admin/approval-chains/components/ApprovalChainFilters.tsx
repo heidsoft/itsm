@@ -10,6 +10,7 @@ import { SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icon
 import { ApprovalChainFilters as ApprovalChainFiltersType } from '@/types/approval-chain';
 import { useDebouncedCallback } from '@/lib/component-utils';
 import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -54,7 +55,7 @@ export function ApprovalChainFilters({
   );
 
   const handleDateRangeChange = useCallback(
-    (dates: unknown, dateStrings: unknown) => {
+    (dates: [Dayjs, Dayjs] | null, dateStrings: [string, string]) => {
       const newFilters = {
         ...localFilters,
         dateRange:

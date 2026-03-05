@@ -4,7 +4,6 @@ package ent
 
 import (
 	"context"
-	"database/sql/driver"
 	"fmt"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/processbinding"
@@ -25,6 +24,7 @@ type ProcessBindingQuery struct {
 	inters                []Interceptor
 	predicates            []predicate.ProcessBinding
 	withProcessDefinition *ProcessDefinitionQuery
+	withFKs               bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -75,7 +75,7 @@ func (pbq *ProcessBindingQuery) QueryProcessDefinition() *ProcessDefinitionQuery
 		step := sqlgraph.NewStep(
 			sqlgraph.From(processbinding.Table, processbinding.FieldID, selector),
 			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
-			sqlgraph.Edge(sqlgraph.M2M, true, processbinding.ProcessDefinitionTable, processbinding.ProcessDefinitionPrimaryKey...),
+			sqlgraph.Edge(sqlgraph.M2O, true, processbinding.ProcessDefinitionTable, processbinding.ProcessDefinitionColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(pbq.driver.Dialect(), step)
 		return fromU, nil
@@ -370,11 +370,18 @@ func (pbq *ProcessBindingQuery) prepareQuery(ctx context.Context) error {
 func (pbq *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessBinding, error) {
 	var (
 		nodes       = []*ProcessBinding{}
+		withFKs     = pbq.withFKs
 		_spec       = pbq.querySpec()
 		loadedTypes = [1]bool{
 			pbq.withProcessDefinition != nil,
 		}
 	)
+	if pbq.withProcessDefinition != nil {
+		withFKs = true
+	}
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, processbinding.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessBinding).scanValues(nil, columns)
 	}
@@ -394,11 +401,8 @@ func (pbq *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 		return nodes, nil
 	}
 	if query := pbq.withProcessDefinition; query != nil {
-		if err := pbq.loadProcessDefinition(ctx, query, nodes,
-			func(n *ProcessBinding) { n.Edges.ProcessDefinition = []*ProcessDefinition{} },
-			func(n *ProcessBinding, e *ProcessDefinition) {
-				n.Edges.ProcessDefinition = append(n.Edges.ProcessDefinition, e)
-			}); err != nil {
+		if err := pbq.loadProcessDefinition(ctx, query, nodes, nil,
+			func(n *ProcessBinding, e *ProcessDefinition) { n.Edges.ProcessDefinition = e }); err != nil {
 			return nil, err
 		}
 	}
@@ -406,62 +410,33 @@ func (pbq *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 }
 
 func (pbq *ProcessBindingQuery) loadProcessDefinition(ctx context.Context, query *ProcessDefinitionQuery, nodes []*ProcessBinding, init func(*ProcessBinding), assign func(*ProcessBinding, *ProcessDefinition)) error {
-	edgeIDs := make([]driver.Value, len(nodes))
-	byID := make(map[int]*ProcessBinding)
-	nids := make(map[int]map[*ProcessBinding]struct{})
-	for i, node := range nodes {
-		edgeIDs[i] = node.ID
-		byID[node.ID] = node
-		if init != nil {
-			init(node)
+	ids := make([]int, 0, len(nodes))
+	nodeids := make(map[int][]*ProcessBinding)
+	for i := range nodes {
+		if nodes[i].process_definition_bindings == nil {
+			continue
 		}
+		fk := *nodes[i].process_definition_bindings
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
 	}
-	query.Where(func(s *sql.Selector) {
-		joinT := sql.Table(processbinding.ProcessDefinitionTable)
-		s.Join(joinT).On(s.C(processdefinition.FieldID), joinT.C(processbinding.ProcessDefinitionPrimaryKey[0]))
-		s.Where(sql.InValues(joinT.C(processbinding.ProcessDefinitionPrimaryKey[1]), edgeIDs...))
-		columns := s.SelectedColumns()
-		s.Select(joinT.C(processbinding.ProcessDefinitionPrimaryKey[1]))
-		s.AppendSelect(columns...)
-		s.SetDistinct(false)
-	})
-	if err := query.prepareQuery(ctx); err != nil {
-		return err
+	if len(ids) == 0 {
+		return nil
 	}
-	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
-		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
-			assign := spec.Assign
-			values := spec.ScanValues
-			spec.ScanValues = func(columns []string) ([]any, error) {
-				values, err := values(columns[1:])
-				if err != nil {
-					return nil, err
-				}
-				return append([]any{new(sql.NullInt64)}, values...), nil
-			}
-			spec.Assign = func(columns []string, values []any) error {
-				outValue := int(values[0].(*sql.NullInt64).Int64)
-				inValue := int(values[1].(*sql.NullInt64).Int64)
-				if nids[inValue] == nil {
-					nids[inValue] = map[*ProcessBinding]struct{}{byID[outValue]: {}}
-					return assign(columns[1:], values[1:])
-				}
-				nids[inValue][byID[outValue]] = struct{}{}
-				return nil
-			}
-		})
-	})
-	neighbors, err := withInterceptors[[]*ProcessDefinition](ctx, query, qr, query.inters)
+	query.Where(processdefinition.IDIn(ids...))
+	neighbors, err := query.All(ctx)
 	if err != nil {
 		return err
 	}
 	for _, n := range neighbors {
-		nodes, ok := nids[n.ID]
+		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected "process_definition" node returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "process_definition_bindings" returned %v`, n.ID)
 		}
-		for kn := range nodes {
-			assign(kn, n)
+		for i := range nodes {
+			assign(nodes[i], n)
 		}
 	}
 	return nil
