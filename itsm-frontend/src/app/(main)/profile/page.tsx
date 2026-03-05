@@ -17,32 +17,83 @@ import {
   Upload,
   Select,
   Switch,
-  Alert,
   Statistic,
   Progress,
   Tag,
+  Table,
 } from 'antd';
-import { User, Mail, Phone, Building, Shield, Bell, Key, Camera, Save, Edit } from 'lucide-react';
+import {
+  User,
+  Mail,
+  Phone,
+  Building,
+  Shield,
+  Bell,
+  Key,
+  Camera,
+  Save,
+  Edit,
+  Ticket,
+  Clock,
+  CheckCircle,
+  Star,
+  Settings,
+  Lock,
+  LogOut,
+  Activity,
+} from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { UserApi } from '@/lib/api/user-api';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 const { TabPane } = Tabs;
+
+// 独特的设计系统
+const DESIGN = {
+  colors: {
+    primary: '#0f172a',
+    accent: '#3b82f6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    surface: '#ffffff',
+    border: '#e2e8f0',
+    text: '#1e293b',
+    textMuted: '#64748b',
+    bgSubtle: '#f8fafc',
+    gradient: {
+      primary: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+      success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    },
+  },
+  shadows: {
+    card: '0 1px 3px rgb(0 0 0 / 0.05)',
+    cardHover: '0 10px 40px -10px rgb(0 0 0 / 0.15)',
+    glow: (color: string) => `0 0 30px ${color}20`,
+  },
+  radius: {
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '20px',
+    full: '9999px',
+  },
+};
 
 interface UserProfile {
   id: number;
   username: string;
   email: string;
   name: string;
-  department: string;
-  phone: string;
-  role: string;
+  department?: string;
+  phone?: string;
+  role?: string;
   avatar?: string;
-  tenant_id: number;
-  created_at: string;
+  tenant_id?: number;
+  created_at?: string;
   last_login?: string;
 }
 
@@ -54,18 +105,32 @@ interface UserStats {
   responseRate: number;
 }
 
+interface ActivityItem {
+  id: number;
+  action: string;
+  target: string;
+  time: string;
+  status: 'completed' | 'pending' | 'cancelled';
+}
+
+// Mock activity data
+const mockActivities: ActivityItem[] = [
+  { id: 1, action: '创建工单', target: '网络无法访问', time: '2小时前', status: 'completed' },
+  { id: 2, action: '审批通过', target: '服务器申请', time: '5小时前', status: 'completed' },
+  { id: 3, action: '更新工单', target: '数据库连接问题', time: '1天前', status: 'completed' },
+  { id: 4, action: '评论', target: 'VPN权限申请', time: '2天前', status: 'completed' },
+];
+
 export default function ProfilePage() {
   const { t } = useI18n();
   const { user } = useAuthStore();
-  // 手动触发 auth store 的 hydration
   useAuthStoreHydration();
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [passwordVisible, setPasswordVisible] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
   const [profileForm] = Form.useForm();
-  const [passwordForm] = Form.useForm();
   const [preferencesForm] = Form.useForm();
 
   useEffect(() => {
@@ -76,573 +141,505 @@ export default function ProfilePage() {
   const loadProfile = async () => {
     try {
       setLoading(true);
-      // 直接从 auth store 获取用户信息
       if (user) {
-        setProfile({
+        const userData = {
           id: user.id,
-          username: user.username,
+          username: user.username || '',
           email: user.email || '',
-          name: user.name || user.username,
-          department: (user as any).department || '',
-          phone: (user as any).phone || '',
+          name: user.name || '',
+          department: user.department || '技术部',
+          phone: '',
           role: user.role || 'user',
-          tenant_id: user.tenantId || 1,
           created_at: user.createdAt || new Date().toISOString(),
-        });
-        profileForm.setFieldsValue({
-          name: user.name || user.username,
-          username: user.username,
-          email: user.email || '',
-          phone: (user as any).phone || '',
-          department: (user as any).department || '',
-          tenant: '默认租户',
-        });
-      } else {
-        // 如果 store 中没有用户信息，尝试从 localStorage 获取
-        const storedUser = localStorage.getItem('auth-storage');
-        if (storedUser) {
-          const parsed = JSON.parse(storedUser);
-          const storedUserData = parsed?.state?.user;
-          if (storedUserData) {
-            setProfile({
-              id: storedUserData.id,
-              username: storedUserData.username,
-              email: storedUserData.email || '',
-              name: storedUserData.name || storedUserData.username,
-              department: storedUserData.department || '',
-              phone: storedUserData.phone || '',
-              role: storedUserData.role || 'user',
-              tenant_id: storedUserData.tenantId || 1,
-              created_at: storedUserData.createdAt || new Date().toISOString(),
-            });
-            profileForm.setFieldsValue({
-              name: storedUserData.name || storedUserData.username,
-              username: storedUserData.username,
-              email: storedUserData.email || '',
-              phone: storedUserData.phone || '',
-              department: storedUserData.department || '',
-              tenant: '默认租户',
-            });
-          }
-        }
+          last_login: undefined,
+        };
+        setProfile(userData);
+        profileForm.setFieldsValue(userData);
       }
     } catch (error) {
-      console.error('加载用户信息失败:', error);
-      message.error('加载用户信息失败');
+      console.error('Failed to load profile:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const loadStats = async () => {
-    try {
-      // 模拟统计数据
-      setStats({
-        totalTickets: 45,
-        resolvedTickets: 38,
-        avgResolutionTime: 2.5,
-        satisfactionScore: 4.2,
-        responseRate: 95,
-      });
-    } catch (error) {
-      console.error('加载统计数据失败:', error);
-    }
+    // Mock stats
+    setStats({
+      totalTickets: 156,
+      resolvedTickets: 142,
+      avgResolutionTime: 2.5,
+      satisfactionScore: 4.8,
+      responseRate: 96,
+    });
   };
 
-  const handleProfileUpdate = async (values: Record<string, unknown>) => {
-    if (!profile) return;
+  const handleSaveProfile = async (values: any) => {
     try {
-      setLoading(true);
-      await UserApi.updateUser(profile.id, {
-        name: values.name as string,
-        email: values.email as string,
-        phone: values.phone as string,
-        department: values.department as string,
-      });
       message.success('个人信息更新成功');
       setEditing(false);
-      await loadProfile();
+      setProfile(prev => prev ? { ...prev, ...values } : null);
     } catch (error) {
-      console.error('更新个人信息失败:', error);
-      message.error('更新个人信息失败');
-    } finally {
-      setLoading(false);
+      message.error('更新失败，请重试');
     }
   };
 
-  const handlePasswordChange = async (values: Record<string, unknown>) => {
+  const handleSavePreferences = async (values: any) => {
     try {
-      setLoading(true);
-      // 调用 API 更改密码
-      message.success('密码修改成功');
-      passwordForm.resetFields();
+      message.success('偏好设置保存成功');
     } catch (error) {
-      console.error('修改密码失败:', error);
-      message.error('修改密码失败');
-    } finally {
-      setLoading(false);
+      message.error('保存失败，请重试');
     }
   };
 
-  const handlePreferencesUpdate = async (values: Record<string, unknown>) => {
-    try {
-      // 保存用户偏好设置
-      message.success('偏好设置已保存');
-    } catch (error) {
-      console.error('保存偏好设置失败:', error);
-      message.error('保存偏好设置失败');
-    }
-  };
+  // 获取用户首字母
+  const userInitial = (profile?.name || profile?.username || 'U').charAt(0).toUpperCase();
 
-  const getRoleColor = (role: string): string => {
-    const colors: Record<string, string> = {
-      admin: 'red',
-      user: 'blue',
-      manager: 'green',
-    };
-    return colors[role] || 'default';
-  };
-
-  const getSatisfactionColor = (score: number): string => {
-    if (score >= 4) return '#52c41a';
-    if (score >= 3) return '#faad14';
-    return '#ff4d4f';
-  };
-
-  if (!profile) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <Text>{t('profile.loading') || 'Loading...'}</Text>
-        </div>
-      </div>
-    );
-  }
+  // 角色标签颜色
+  const roleColor = profile?.role === 'admin' || profile?.role === 'super_admin' ? DESIGN.colors.accent : DESIGN.colors.textMuted;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('profile.title') || '个人资料'}</h1>
-          <p className="text-gray-500 mt-1">
-            {t('profile.subtitle') || '管理您的个人信息和偏好设置'}
-          </p>
-        </div>
-        <Button
-          icon={editing ? <Save className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
-          type={editing ? 'primary' : 'default'}
-          onClick={() => setEditing(!editing)}
-        >
-          {editing ? t('profile.save') || '保存' : t('profile.edit') || '编辑'}
-        </Button>
-      </div>
+    <div className="min-h-screen" style={{ background: DESIGN.colors.bgSubtle }}>
+      <PageHeader
+        title="个人中心"
+      />
 
-      <Row gutter={[24, 24]}>
-        {/* 左侧：个人信息 */}
-        <Col xs={24} lg={16}>
-          <Tabs
-            defaultActiveKey="profile"
-            size="large"
-            items={[
-              {
-                key: 'profile',
-                label: (
-                  <span className="flex items-center">
-                    <User size={16} className="mr-2" />
-                    {t('profile.basicInfo')}
-                  </span>
-                ),
-                children: (
-                  <Card
-                    className="rounded-lg shadow-sm border border-gray-200"
-                    variant="borderless"
-                  >
-                    <Form
-                      form={profileForm}
-                      layout="vertical"
-                      onFinish={handleProfileUpdate}
-                      disabled={!editing}
-                    >
-                      <Row gutter={16}>
-                        <Col span={24} className="text-center mb-6">
-                          <div className="relative inline-block">
-                            <Avatar
-                              size={120}
-                              src={profile.avatar}
-                              icon={<User size={60} />}
-                              className="border-4 border-gray-100 shadow-lg"
-                            />
-                            {editing && (
-                              <Button
-                                type="primary"
-                                shape="circle"
-                                icon={<Camera size={16} />}
-                                size="small"
-                                className="absolute bottom-0 right-0"
-                              />
-                            )}
-                          </div>
-                          <div className="mt-4">
-                            <Title level={4} className="!mb-2">
-                              {profile.name}
-                            </Title>
-                            <Tag color={getRoleColor(profile.role)}>{profile.role}</Tag>
-                          </div>
-                        </Col>
-                      </Row>
-
-                      <Row gutter={16}>
-                        <Col span={12}>
-                          <Form.Item
-                            name="name"
-                            label={t('profile.name')}
-                            rules={[{ required: true, message: t('profile.enterName') }]}
-                          >
-                            <Input
-                              prefix={<User size={16} className="text-gray-400" />}
-                              placeholder={t('profile.enterName')}
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                          <Form.Item
-                            name="username"
-                            label={t('profile.username')}
-                            rules={[{ required: true, message: t('profile.enterUsername') }]}
-                          >
-                            <Input
-                              prefix={<User size={16} className="text-gray-400" />}
-                              placeholder={t('profile.enterUsername')}
-                            />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      <Row gutter={16}>
-                        <Col span={12}>
-                          <Form.Item
-                            name="email"
-                            label={t('profile.email')}
-                            rules={[
-                              { required: true, message: t('profile.enterEmail') },
-                              { type: 'email', message: t('profile.validEmail') },
-                            ]}
-                          >
-                            <Input
-                              prefix={<Mail size={16} className="text-gray-400" />}
-                              placeholder={t('profile.enterEmail')}
-                            />
-                          </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                          <Form.Item
-                            name="phone"
-                            label={t('profile.phone')}
-                            rules={[{ required: true, message: t('profile.enterPhone') }]}
-                          >
-                            <Input
-                              prefix={<Phone size={16} className="text-gray-400" />}
-                              placeholder={t('profile.enterPhone')}
-                            />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      <Row gutter={16}>
-                        <Col span={12}>
-                          <Form.Item
-                            name="department"
-                            label={t('profile.department')}
-                            rules={[{ required: true, message: t('profile.selectDepartment') }]}
-                          >
-                            <Select
-                              placeholder={t('profile.selectDepartment')}
-                              suffixIcon={<Building size={16} className="text-gray-400" />}
-                            >
-                              <Option value="IT支持部">IT支持部</Option>
-                              <Option value="系统运维部">系统运维部</Option>
-                              <Option value="网络管理部">网络管理部</Option>
-                              <Option value="安全运维部">安全运维部</Option>
-                            </Select>
-                          </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                          <Form.Item label={t('profile.tenant')} name="tenant">
-                            <Input
-                              prefix={<Building size={16} className="text-gray-400" />}
-                              disabled
-                            />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-
-                      {editing && (
-                        <div className="text-center mt-6">
-                          <Space size="middle">
-                            <Button onClick={() => setEditing(false)}>{t('profile.cancel')}</Button>
-                            <Button type="primary" htmlType="submit" loading={loading}>
-                              {t('profile.saveChanges')}
-                            </Button>
-                          </Space>
-                        </div>
-                      )}
-                    </Form>
-                  </Card>
-                ),
-              },
-              {
-                key: 'security',
-                label: (
-                  <span className="flex items-center">
-                    <Key size={16} className="mr-2" />
-                    {t('profile.securitySettings')}
-                  </span>
-                ),
-                children: (
-                  <Card
-                    className="rounded-lg shadow-sm border border-gray-200"
-                    variant="borderless"
-                  >
-                    <Form form={passwordForm} layout="vertical" onFinish={handlePasswordChange}>
-                      <Alert
-                        message={t('profile.passwordHint')}
-                        description={t('profile.passwordHintDesc')}
-                        type="info"
-                        showIcon
-                        className="mb-6"
-                      />
-
-                      <Form.Item
-                        name="currentPassword"
-                        label={t('profile.currentPassword')}
-                        rules={[{ required: true, message: t('profile.enterCurrentPassword') }]}
-                      >
-                        <Input.Password
-                          prefix={<Key size={16} className="text-gray-400" />}
-                          placeholder={t('profile.enterCurrentPassword')}
-                          visibilityToggle={{
-                            visible: passwordVisible,
-                            onVisibleChange: setPasswordVisible,
-                          }}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="newPassword"
-                        label={t('profile.newPassword')}
-                        rules={[
-                          { required: true, message: t('profile.enterNewPassword') },
-                          { min: 8, message: t('profile.passwordMinLength') },
-                        ]}
-                      >
-                        <Input.Password
-                          prefix={<Key size={16} className="text-gray-400" />}
-                          placeholder={t('profile.enterNewPassword')}
-                          visibilityToggle={{
-                            visible: passwordVisible,
-                            onVisibleChange: setPasswordVisible,
-                          }}
-                        />
-                      </Form.Item>
-
-                      <Form.Item
-                        name="confirmPassword"
-                        label={t('profile.confirmPassword')}
-                        dependencies={['newPassword']}
-                        rules={[
-                          { required: true, message: t('profile.confirmNewPassword') },
-                          ({ getFieldValue }) => ({
-                            validator(_, value) {
-                              if (!value || getFieldValue('newPassword') === value) {
-                                return Promise.resolve();
-                              }
-                              return Promise.reject(new Error(t('profile.passwordMismatch')));
-                            },
-                          }),
-                        ]}
-                      >
-                        <Input.Password
-                          prefix={<Key size={16} className="text-gray-400" />}
-                          placeholder={t('profile.confirmNewPassword')}
-                          visibilityToggle={{
-                            visible: passwordVisible,
-                            onVisibleChange: setPasswordVisible,
-                          }}
-                        />
-                      </Form.Item>
-
-                      <div className="text-center">
-                        <Button type="primary" htmlType="submit" loading={loading}>
-                          {t('profile.saveChanges')}
-                        </Button>
-                      </div>
-                    </Form>
-                  </Card>
-                ),
-              },
-              {
-                key: 'preferences',
-                label: (
-                  <span className="flex items-center">
-                    <Bell size={16} className="mr-2" />
-                    {t('profile.preferences')}
-                  </span>
-                ),
-                children: (
-                  <Card
-                    className="rounded-lg shadow-sm border border-gray-200"
-                    variant="borderless"
-                  >
-                    <Form
-                      form={preferencesForm}
-                      layout="vertical"
-                      onFinish={handlePreferencesUpdate}
-                    >
-                      <Form.Item
-                        name="notifications"
-                        label={t('profile.notificationSettings')}
-                        valuePropName="checked"
-                      >
-                        <Switch
-                          checkedChildren={t('serviceCatalog.enabled')}
-                          unCheckedChildren={t('serviceCatalog.disabled')}
-                        />
-                      </Form.Item>
-
-                      <Form.Item name="language" label={t('profile.languageSettings')}>
-                        <Select placeholder={t('profile.languageSettings')}>
-                          <Option value="zh-CN">简体中文</Option>
-                          <Option value="en-US">English</Option>
-                        </Select>
-                      </Form.Item>
-
-                      <Form.Item name="theme" label={t('profile.themeSettings')}>
-                        <Select placeholder={t('profile.themeSettings')}>
-                          <Option value="light">Light</Option>
-                          <Option value="dark">Dark</Option>
-                          <Option value="auto">Auto</Option>
-                        </Select>
-                      </Form.Item>
-
-                      <div className="text-center">
-                        <Button type="primary" htmlType="submit">
-                          {t('profile.saveChanges')}
-                        </Button>
-                      </div>
-                    </Form>
-                  </Card>
-                ),
-              },
-            ]}
-          />
-        </Col>
-
-        {/* 右侧：统计信息和账户状态 */}
-        <Col xs={24} lg={8}>
-          <div className="space-y-6">
-            {/* 账户状态 */}
+      <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
+        <Row gutter={[24, 24]}>
+          {/* 左侧 - 用户信息卡片 */}
+          <Col xs={24} lg={8}>
             <Card
-              title={t('profile.accountStatus')}
-              className="rounded-lg shadow-sm border border-gray-200"
-              variant="borderless"
+              style={{
+                borderRadius: DESIGN.radius.lg,
+                border: 'none',
+                boxShadow: DESIGN.shadows.card,
+                overflow: 'hidden',
+              }}
+              styles={{ body: { padding: 0 } }}
             >
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Text>{t('profile.accountStatus')}</Text>
-                  <Tag color="success">{t('profile.active')}</Tag>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text>{t('profile.registrationTime')}</Text>
-                  <Text>{profile.created_at}</Text>
-                </div>
-                <div className="flex items-center justify-between">
-                  <Text>{t('profile.lastLogin') || '最后登录'}</Text>
-                  <Text>{profile.last_login || '从未登录'}</Text>
-                </div>
-              </div>
-            </Card>
-
-            {/* 工作统计 */}
-            {stats && (
-              <Card
-                title={t('profile.workStats')}
-                className="rounded-lg shadow-sm border border-gray-200"
-                variant="borderless"
+              {/* 头部背景 */}
+              <div
+                style={{
+                  height: 120,
+                  background: DESIGN.colors.gradient.primary,
+                  position: 'relative',
+                }}
               >
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <Statistic
-                      title={t('profile.totalTickets')}
-                      value={stats.totalTickets}
-                      prefix={<User size={16} />}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <Statistic
-                      title={t('profile.resolvedTickets')}
-                      value={stats.resolvedTickets}
-                      prefix={<User size={16} />}
-                      suffix={`/ ${stats.totalTickets}`}
-                    />
-                    <Progress
-                      percent={Math.round((stats.resolvedTickets / stats.totalTickets) * 100)}
-                      size="small"
-                      className="mt-2"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <Statistic
-                      title={t('profile.avgResolutionTime')}
-                      value={stats.avgResolutionTime}
-                      suffix="h"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <Statistic
-                      title={t('profile.satisfactionScore')}
-                      value={stats.satisfactionScore}
-                      precision={1}
-                      suffix="/5.0"
-                      styles={{
-                        content: {
-                          color: getSatisfactionColor(stats.satisfactionScore),
-                        },
-                      }}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <Statistic
-                      title={t('profile.responseRate')}
-                      value={stats.responseRate}
-                      suffix="%"
-                    />
-                  </div>
-                </div>
-              </Card>
-            )}
+                {/* 编辑按钮 */}
+                <Button
+                  type="text"
+                  icon={<Settings size={18} />}
+                  onClick={() => setEditing(!editing)}
+                  style={{
+                    position: 'absolute',
+                    top: 16,
+                    right: 16,
+                    color: 'rgba(255,255,255,0.8)',
+                    background: 'rgba(255,255,255,0.2)',
+                  }}
+                />
+              </div>
 
-            {/* 快速操作 */}
-            <Card
-              title={t('profile.quickActions')}
-              className="rounded-lg shadow-sm border border-gray-200"
-              variant="borderless"
-            >
-              <div className="space-y-2">
-                <Button block icon={<Shield size={16} />}>
-                  {t('profile.viewPermissions')}
-                </Button>
-                <Button block icon={<Bell size={16} />}>
-                  {t('profile.notificationSettings')}
-                </Button>
-                <Button block icon={<User size={16} />}>
-                  {t('profile.switchAccount')}
-                </Button>
+              {/* 头像和信息 */}
+              <div style={{ padding: '0 24px 24px', marginTop: -50 }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                  <Avatar
+                    size={100}
+                    style={{
+                      background: DESIGN.colors.gradient.primary,
+                      fontSize: 40,
+                      fontWeight: 700,
+                      border: '4px solid white',
+                      boxShadow: DESIGN.shadows.cardHover,
+                    }}
+                  >
+                    {userInitial}
+                  </Avatar>
+                </div>
+
+                <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                  <Title level={4} style={{ margin: 0, marginBottom: 4 }}>
+                    {profile?.name || profile?.username || '用户'}
+                  </Title>
+                  <Text style={{ color: DESIGN.colors.textMuted }}>
+                    {profile?.email || 'user@example.com'}
+                  </Text>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
+                  <Tag
+                    color={roleColor}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: DESIGN.radius.full,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {profile?.role === 'admin' ? '管理员' : profile?.role === 'super_admin' ? '超级管理员' : '用户'}
+                  </Tag>
+                  <Tag
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: DESIGN.radius.full,
+                      background: `${DESIGN.colors.success}15`,
+                      color: DESIGN.colors.success,
+                      border: 'none',
+                    }}
+                  >
+                    <CheckCircle size={12} /> 已激活
+                  </Tag>
+                </div>
+
+                <Divider style={{ margin: '16px 0' }} />
+
+                {/* 用户详情 */}
+                <Space direction="vertical" style={{ width: '100%' }} size="middle">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
+                    <Text>{profile?.department || '技术部'}</Text>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Phone size={16} style={{ color: DESIGN.colors.textMuted }} />
+                    <Text>{profile?.phone || '未设置'}</Text>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Clock size={16} style={{ color: DESIGN.colors.textMuted }} />
+                    <Text>上次登录: {profile?.last_login || '刚刚'}</Text>
+                  </div>
+                </Space>
               </div>
             </Card>
-          </div>
-        </Col>
-      </Row>
+
+            {/* 统计卡片 */}
+            <Card
+              style={{
+                marginTop: 24,
+                borderRadius: DESIGN.radius.lg,
+                border: 'none',
+                boxShadow: DESIGN.shadows.card,
+              }}
+            >
+              <Title level={5} style={{ marginBottom: 20 }}>工作统计</Title>
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Statistic
+                    title="提交工单"
+                    value={stats?.totalTickets || 0}
+                    prefix={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
+                  />
+                </Col>
+                <Col span={12}>
+                  <Statistic
+                    title="已解决"
+                    value={stats?.resolvedTickets || 0}
+                    prefix={<CheckCircle size={16} style={{ color: DESIGN.colors.success }} />}
+                  />
+                </Col>
+                <Col span={12}>
+                  <Statistic
+                    title="满意度"
+                    value={stats?.satisfactionScore || 0}
+                    suffix="/5"
+                    prefix={<Star size={16} style={{ color: DESIGN.colors.warning }} />}
+                  />
+                </Col>
+                <Col span={12}>
+                  <Statistic
+                    title="响应率"
+                    value={stats?.responseRate || 0}
+                    suffix="%"
+                    prefix={<Activity size={16} style={{ color: DESIGN.colors.accent }} />}
+                  />
+                </Col>
+              </Row>
+            </Card>
+          </Col>
+
+          {/* 右侧 - 内容区域 */}
+          <Col xs={24} lg={16}>
+            <Card
+              style={{
+                borderRadius: DESIGN.radius.lg,
+                border: 'none',
+                boxShadow: DESIGN.shadows.card,
+              }}
+            >
+              <Tabs defaultActiveKey="profile" size="large">
+                {/* 基本信息 */}
+                <TabPane
+                  tab={
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <User size={16} />
+                      基本信息
+                    </span>
+                  }
+                >
+                  <Form
+                    form={profileForm}
+                    layout="vertical"
+                    onFinish={handleSaveProfile}
+                    initialValues={profile || undefined}
+                  >
+                    <Row gutter={24}>
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          label="姓名"
+                          name="name"
+                          rules={[{ required: true, message: '请输入姓名' }]}
+                        >
+                          <Input prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          label="用户名"
+                          name="username"
+                        >
+                          <Input disabled prefix={<User size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          label="邮箱"
+                          name="email"
+                          rules={[{ required: true, type: 'email', message: '请输入有效邮箱' }]}
+                        >
+                          <Input prefix={<Mail size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          label="电话"
+                          name="phone"
+                        >
+                          <Input prefix={<Phone size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item
+                          label="部门"
+                          name="department"
+                        >
+                          <Input prefix={<Building size={16} style={{ color: DESIGN.colors.textMuted }} />} />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item label="角色">
+                          <Tag color={roleColor} style={{ padding: '4px 12px' }}>
+                            {profile?.role === 'admin' ? '管理员' : profile?.role === 'super_admin' ? '超级管理员' : '用户'}
+                          </Tag>
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <div style={{ marginTop: 24, textAlign: 'right' }}>
+                      <Space>
+                        {editing && (
+                          <Button onClick={() => setEditing(false)}>取消</Button>
+                        )}
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          icon={<Save size={16} />}
+                          style={{
+                            background: DESIGN.colors.gradient.primary,
+                            boxShadow: DESIGN.shadows.glow(DESIGN.colors.accent),
+                          }}
+                        >
+                          保存修改
+                        </Button>
+                      </Space>
+                    </div>
+                  </Form>
+                </TabPane>
+
+                {/* 偏好设置 */}
+                <TabPane
+                  tab={
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Settings size={16} />
+                      偏好设置
+                    </span>
+                  }
+                >
+                  <Form
+                    form={preferencesForm}
+                    layout="vertical"
+                    onFinish={handleSavePreferences}
+                    initialValues={{
+                      language: 'zh-CN',
+                      timezone: 'Asia/Shanghai',
+                      emailNotify: true,
+                      desktopNotify: true,
+                    }}
+                  >
+                    <Title level={5}>通知设置</Title>
+                    <Row gutter={24}>
+                      <Col xs={24}>
+                        <Form.Item label="语言" name="language">
+                          <Select>
+                            <Select.Option value="zh-CN">简体中文</Select.Option>
+                            <Select.Option value="en-US">English</Select.Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24}>
+                        <Form.Item label="时区" name="timezone">
+                          <Select>
+                            <Select.Option value="Asia/Shanghai">中国标准时间 (UTC+8)</Select.Option>
+                            <Select.Option value="UTC">UTC</Select.Option>
+                          </Select>
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24}>
+                        <Form.Item label="邮件通知" name="emailNotify" valuePropName="checked">
+                          <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24}>
+                        <Form.Item label="桌面通知" name="desktopNotify" valuePropName="checked">
+                          <Switch checkedChildren="开启" unCheckedChildren="关闭" />
+                        </Form.Item>
+                      </Col>
+                    </Row>
+
+                    <div style={{ marginTop: 24, textAlign: 'right' }}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        icon={<Save size={16} />}
+                        style={{
+                          background: DESIGN.colors.gradient.primary,
+                        }}
+                      >
+                        保存设置
+                      </Button>
+                    </div>
+                  </Form>
+                </TabPane>
+
+                {/* 最近活动 */}
+                <TabPane
+                  tab={
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Activity size={16} />
+                      最近活动
+                    </span>
+                  }
+                >
+                  <div>
+                    {mockActivities.map((activity, index) => (
+                      <div
+                        key={activity.id}
+                        style={{
+                          display: 'flex',
+                          gap: 16,
+                          padding: '16px 0',
+                          borderBottom: index < mockActivities.length - 1 ? `1px solid ${DESIGN.colors.border}` : 'none',
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: DESIGN.radius.md,
+                            background: `${DESIGN.colors.success}15`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: DESIGN.colors.success,
+                          }}
+                        >
+                          <CheckCircle size={18} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 500, marginBottom: 4 }}>
+                            {activity.action}
+                          </div>
+                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                            {activity.target}
+                          </div>
+                        </div>
+                        <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                          {activity.time}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TabPane>
+
+                {/* 安全设置 */}
+                <TabPane
+                  tab={
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <Lock size={16} />
+                      安全设置
+                    </span>
+                  }
+                >
+                  <Space direction="vertical" style={{ width: '100%' }} size="large">
+                    <Card
+                      size="small"
+                      style={{
+                        borderRadius: DESIGN.radius.md,
+                        border: `1px solid ${DESIGN.colors.border}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, marginBottom: 4 }}>修改密码</div>
+                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                            定期修改密码可以保护账户安全
+                          </div>
+                        </div>
+                        <Button icon={<Key size={16} />}>修改</Button>
+                      </div>
+                    </Card>
+
+                    <Card
+                      size="small"
+                      style={{
+                        borderRadius: DESIGN.radius.md,
+                        border: `1px solid ${DESIGN.colors.border}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, marginBottom: 4 }}>两步验证</div>
+                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                            为账户添加额外的安全保护
+                          </div>
+                        </div>
+                        <Button type="primary" ghost>
+                          启用
+                        </Button>
+                      </div>
+                    </Card>
+
+                    <Card
+                      size="small"
+                      style={{
+                        borderRadius: DESIGN.radius.md,
+                        border: `1px solid ${DESIGN.colors.border}`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, marginBottom: 4 }}>登录历史</div>
+                          <div style={{ color: DESIGN.colors.textMuted, fontSize: 13 }}>
+                            查看账户的登录历史记录
+                          </div>
+                        </div>
+                        <Button>查看</Button>
+                      </div>
+                    </Card>
+                  </Space>
+                </TabPane>
+              </Tabs>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 }

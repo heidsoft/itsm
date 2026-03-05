@@ -553,7 +553,7 @@ const IncidentDetailDrawer: React.FC<{
   return (
     <Drawer
       title={`事件详情 - ${incident.incident_number}`}
-      width={800}
+      styles={{ wrapper: { width: 800 } }}
       open={visible}
       onClose={onClose}
       extra={
@@ -1215,7 +1215,7 @@ const IncidentMonitoringPanel: React.FC<{
   return (
     <Drawer
       title="事件监控面板"
-      width={1000}
+      styles={{ wrapper: { width: 1000 } }}
       open={visible}
       onClose={onClose}
       extra={

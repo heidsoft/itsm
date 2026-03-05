@@ -12,7 +12,10 @@ import {
   Drawer,
   Input,
   message,
-  Modal,
+  Tag,
+  List,
+  Divider,
+  Space,
 } from 'antd';
 import {
   User,
@@ -24,6 +27,16 @@ import {
   PanelLeftOpen,
   Settings,
   CheckCheck,
+  Ticket,
+  AlertTriangle,
+  Calendar,
+  Clock,
+  ArrowRight,
+  Zap,
+  Mail,
+  Phone,
+  Building,
+  LogIn,
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
@@ -32,11 +45,35 @@ import { useI18n } from '@/lib/i18n';
 import { globalSearchApi, GlobalSearchResult } from '@/lib/api/global-search-api';
 
 const { Header: AntHeader } = Layout;
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
-// 图标样式
-const iconStyle = { width: 16, height: 16 };
-const headerIconStyle = { width: 20, height: 20 };
+// 独特的设计系统
+const DESIGN = {
+  colors: {
+    primary: '#0f172a',
+    accent: '#3b82f6',
+    success: '#10b981',
+    warning: '#f59e0b',
+    danger: '#ef4444',
+    surface: '#ffffff',
+    border: '#e2e8f0',
+    text: '#1e293b',
+    textMuted: '#64748b',
+    bgSubtle: '#f8fafc',
+  },
+  shadows: {
+    dropdown: '0 10px 40px -10px rgba(0,0,0,0.15)',
+    glow: (color: string) => `0 0 20px ${color}20`,
+  },
+  radius: {
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    full: '9999px',
+  },
+};
+
+const { Header: AntDesignHeader } = Layout;
 
 interface HeaderProps {
   collapsed: boolean;
@@ -58,79 +95,64 @@ export const Header: React.FC<HeaderProps> = ({
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
   const { t } = useI18n();
-  // 手动触发 auth store 的 hydration
   useAuthStoreHydration();
+
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchValue, setSearchValue] = useState('');
   const [notifications, setNotifications] = useState([
     {
       id: 1,
-      title: t('header.newTicketAssigned'),
-      content: t('header.newTicketAssignedContent'),
-      time: t('header.twoMinutesAgo'),
+      title: '新工单已分配给您',
+      content: '工单 #1234 需要您的处理',
+      time: '2分钟前',
       read: false,
       type: 'ticket',
       priority: 'high',
     },
     {
       id: 2,
-      title: t('header.systemMaintenanceNotification'),
-      content: t('header.systemMaintenanceNotificationContent'),
-      time: t('header.oneHourAgo'),
+      title: '系统维护通知',
+      content: '系统将于今晚22:00进行维护',
+      time: '1小时前',
       read: true,
       type: 'system',
       priority: 'medium',
     },
     {
       id: 3,
-      title: t('header.slaWarning'),
-      content: t('header.slaWarningContent', { ticketId: '1234' }),
-      time: t('header.threeHoursAgo'),
+      title: 'SLA预警',
+      content: '工单 #1234 即将超时，请及时处理',
+      time: '3小时前',
       read: false,
       type: 'sla',
       priority: 'urgent',
     },
   ]);
 
-  const markAsRead = (id: number) => {
-    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  };
-
-  const handleNotificationClick = (item: unknown) => {
-    if (!item.read) {
-      markAsRead(item.id);
-    }
-  };
   const [searchModalVisible, setSearchModalVisible] = useState(false);
   const [searchResults, setSearchResults] = useState<GlobalSearchResult | null>(null);
   const [isClient, setIsClient] = useState(false);
 
-  // 处理 hydration 问题
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // 用户显示名称（处理空值）
   const displayName = user?.name || user?.username || '';
-  // 用户首字母
   const userInitial = displayName.charAt(0).toUpperCase() || 'U';
-  // 用户角色显示
   const roleText =
     user?.role === 'admin'
-      ? t('header.admin')
+      ? '管理员'
       : user?.role === 'super_admin'
-        ? t('header.superAdmin')
-        : t('header.user');
+        ? '超级管理员'
+        : '用户';
+
+  const roleColor = user?.role === 'admin' || user?.role === 'super_admin' ? '#3b82f6' : '#64748b';
 
   const handleLogout = () => {
     logout();
     router.push('/login');
-    message.success(t('header.logoutSuccess'));
+    message.success('已退出登录');
   };
 
   const handleSearch = async (value: string) => {
@@ -142,202 +164,217 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
+  const markAsRead = (id: number) => {
+    setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    message.success('已全部标记为已读');
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return DESIGN.colors.danger;
+      case 'high': return DESIGN.colors.warning;
+      case 'medium': return DESIGN.colors.accent;
+      default: return DESIGN.colors.textMuted;
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'ticket': return <Ticket size={16} />;
+      case 'sla': return <AlertTriangle size={16} />;
+      default: return <Zap size={16} />;
+    }
+  };
+
+  // 用户菜单项
   const userMenuItems = [
     {
       key: 'profile',
-      label: t('header.profile'),
-      icon: <User style={iconStyle} />,
+      label: (
+        <div style={{ padding: '8px 0', minWidth: 160 }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>{displayName}</div>
+          <div style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>{user?.email}</div>
+        </div>
+      ),
+      disabled: true,
+    },
+    { type: 'divider' as const },
+    {
+      key: 'profile',
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
+          <User size={16} />
+          <span>个人中心</span>
+        </div>
+      ),
       onClick: () => router.push('/profile'),
     },
     {
       key: 'settings',
-      label: t('header.settings'),
-      icon: <Settings style={iconStyle} />,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0' }}>
+          <Settings size={16} />
+          <span>设置</span>
+        </div>
+      ),
       onClick: () => router.push('/profile'),
     },
-    {
-      type: 'divider' as const,
-    },
+    { type: 'divider' as const },
     {
       key: 'logout',
-      label: t('header.logout'),
-      icon: <LogOut style={iconStyle} />,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, color: DESIGN.colors.danger }}>
+          <LogOut size={16} />
+          <span>退出登录</span>
+        </div>
+      ),
       onClick: handleLogout,
     },
   ];
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // 通知项
+  const NotificationItem = ({ item }: { item: typeof notifications[0] }) => (
+    <div
+      onClick={() => markAsRead(item.id)}
+      style={{
+        padding: '16px',
+        borderBottom: `1px solid ${DESIGN.colors.border}`,
+        background: item.read ? 'transparent' : `${DESIGN.colors.accent}08`,
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+      }}
+      className="notification-item"
+    >
+      <div style={{ display: 'flex', gap: 12 }}>
+        {/* 图标 */}
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: DESIGN.radius.md,
+            background: `${getPriorityColor(item.priority)}15`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: getPriorityColor(item.priority),
+            flexShrink: 0,
+          }}
+        >
+          {getNotificationIcon(item.type)}
+        </div>
 
-  // 获取当前页面标题
-  const getCurrentPageTitle = () => {
-    if (breadcrumb && breadcrumb.length > 0) {
-      return breadcrumb[breadcrumb.length - 1].title;
-    }
-
-    // 根据路径获取页面标题
-    const pathTitles: Record<string, string> = {
-      '/dashboard': t('dashboard.title'),
-      '/ticket-management': t('tickets.title'),
-      '/incident-management': t('incidents.title'),
-      '/problem-management': t('problems.title'),
-      '/changes-management': t('changes.title'),
-      '/cmdb': t('cmdb.title'),
-      '/service-catalog': t('serviceCatalog.title'),
-      '/knowledge-base': t('knowledgeBase.title'),
-      '/sla-management': t('sla.title'),
-      '/reports': t('reports.title'),
-      '/workflow': t('workflow.title'),
-      '/admin': t('admin.title'),
-    };
-
-    // 检查是否有匹配的路径前缀
-    for (const [path, title] of Object.entries(pathTitles)) {
-      if (pathname.startsWith(path)) {
-        return title;
-      }
-    }
-
-    return t('header.itsmSystem');
-  };
-
-  // 生成智能面包屑
-  const generateSmartBreadcrumb = (): Array<{
-    title: string;
-    href?: string;
-    current?: boolean;
-  }> => {
-    if (breadcrumb && breadcrumb.length > 0) {
-      return breadcrumb;
-    }
-
-    // 根据路径自动生成面包屑
-    const pathSegments = pathname.split('/').filter(Boolean);
-    const smartBreadcrumb: Array<{
-      title: string;
-      href?: string;
-      current?: boolean;
-    }> = [];
-
-    let currentPath = '';
-    pathSegments.forEach((segment, index) => {
-      currentPath += `/${segment}`;
-
-      // 映射路径到中文名称
-      const segmentNames: Record<string, string> = {
-        dashboard: t('dashboard.title'),
-        'ticket-management': t('tickets.title'),
-        'incident-management': t('incidents.title'),
-        'problem-management': t('problems.title'),
-        'changes-management': t('changes.title'),
-        cmdb: t('cmdb.title'),
-        'service-catalog': t('serviceCatalog.title'),
-        'knowledge-base': t('knowledgeBase.title'),
-        'sla-management': t('sla.title'),
-        reports: t('reports.title'),
-        workflow: t('workflow.title'),
-        admin: t('admin.title'),
-        create: t('header.create'),
-        edit: t('header.edit'),
-        detail: t('header.detail'),
-        templates: t('header.templates'),
-        instances: t('header.instances'),
-        versions: t('header.versions'),
-        automation: t('header.automation'),
-        approval: t('header.approval'),
-        users: t('admin.users'),
-        roles: t('admin.roles'),
-        permissions: t('admin.permissions'),
-        groups: t('admin.userGroups'),
-        tenants: t('admin.tenantManagement'),
-        'escalation-rules': t('admin.escalationRules'),
-        'approval-chains': t('admin.approvalChains'),
-        'service-catalogs': t('admin.serviceCatalog'),
-        'sla-definitions': t('admin.slaDefinitions'),
-        'system-config': t('admin.systemConfig'),
-        'ticket-categories': t('admin.ticketCategories'),
-      };
-
-      const name = segmentNames[segment] || segment;
-
-      // 只有当前页面才显示为不可点击
-      const isLast = index === pathSegments.length - 1;
-
-      smartBreadcrumb.push({
-        title: name,
-        href: isLast ? undefined : currentPath,
-        current: isLast,
-      });
-    });
-
-    return smartBreadcrumb;
-  };
-
-  const smartBreadcrumb = generateSmartBreadcrumb();
-
-  return (
-    <AntHeader className={styles.header}>
-      {/* 左侧区域 */}
-      <div className={styles.left}>
-        {/* 折叠按钮 */}
-        <Button
-          type="text"
-          icon={
-            collapsed ? (
-              <PanelLeftOpen style={headerIconStyle} />
-            ) : (
-              <PanelLeftClose style={headerIconStyle} />
-            )
-          }
-          onClick={() => onCollapse(!collapsed)}
-          className={styles.collapseButton}
-        />
-
-        {/* 当前页面标题 */}
-        <div className={styles.titleContainer}>
-          <Text className={styles.title}>{getCurrentPageTitle()}</Text>
-
-          {/* 智能面包屑导航 - 只在有多级路径时显示 */}
-          {showBreadcrumb && smartBreadcrumb.length > 1 && (
-            <div className={styles.breadcrumb}>
-              {smartBreadcrumb.map((item, index) => (
-                <React.Fragment key={index}>
-                  {index > 0 && <Text className={styles.breadcrumbSeparator}>/</Text>}
-                  {item.href ? (
-                    <Text className={styles.breadcrumbLink} onClick={() => router.push(item.href!)}>
-                      {item.title}
-                    </Text>
-                  ) : (
-                    <Text className={styles.breadcrumbCurrent}>{item.title}</Text>
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          )}
+        {/* 内容 */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+            <Text strong style={{ fontSize: 14, color: item.read ? DESIGN.colors.textMuted : DESIGN.colors.text }}>
+              {item.title}
+            </Text>
+            {!item.read && (
+              <div
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: DESIGN.colors.accent,
+                  flexShrink: 0,
+                  marginLeft: 8,
+                }}
+              />
+            )}
+          </div>
+          <Text style={{ fontSize: 13, color: DESIGN.colors.textMuted, display: 'block', marginBottom: 4 }}>
+            {item.content}
+          </Text>
+          <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
+            {item.time}
+          </Text>
         </div>
       </div>
 
-      {/* 右侧区域 */}
-      <div className={styles.right}>
-        {/* 搜索框 */}
-        <Input
-          placeholder={t('header.searchPlaceholder')}
-          prefix={<Search style={{ width: 16, height: 16, color: '#9ca3af' }} />}
-          value={searchValue}
-          onChange={e => setSearchValue(e.target.value)}
-          onPressEnter={() => handleSearch(searchValue)}
-          size="small"
-          className={styles.searchInput}
+      <style>{`
+        .notification-item:hover {
+          background: ${DESIGN.colors.bgSubtle} !important;
+        }
+      `}</style>
+    </div>
+  );
+
+  return (
+    <AntDesignHeader className={styles.header} style={{ background: DESIGN.colors.surface }}>
+      {/* 左侧 */}
+      <div className={styles.left}>
+        <Button
+          type="text"
+          icon={collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          onClick={() => onCollapse(!collapsed)}
+          className={styles.collapseButton}
+          style={{
+            width: 40,
+            height: 40,
+            borderRadius: DESIGN.radius.md,
+          }}
         />
+      </div>
+
+      {/* 右侧 */}
+      <div className={styles.right}>
+        {/* 搜索 */}
+        <div style={{ position: 'relative' }}>
+          <Input
+            placeholder="搜索工单、事件..."
+            prefix={<Search size={16} style={{ color: DESIGN.colors.textMuted }} />}
+            value={searchValue}
+            onChange={e => setSearchValue(e.target.value)}
+            onPressEnter={() => handleSearch(searchValue)}
+            style={{
+              width: 200,
+              height: 36,
+              borderRadius: DESIGN.radius.full,
+              border: `1px solid ${DESIGN.colors.border}`,
+              background: DESIGN.colors.bgSubtle,
+            }}
+          />
+          <kbd
+            style={{
+              position: 'absolute',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: 11,
+              padding: '2px 6px',
+              borderRadius: 4,
+              background: DESIGN.colors.surface,
+              border: `1px solid ${DESIGN.colors.border}`,
+              color: DESIGN.colors.textMuted,
+            }}
+          >
+            /
+          </kbd>
+        </div>
 
         {/* 通知 */}
-        <Tooltip title={t('header.notificationCenter')}>
+        <Tooltip title="通知中心">
           <Badge count={unreadCount} size="small" offset={[-2, 2]}>
             <Button
               type="text"
-              icon={<Bell style={headerIconStyle} />}
               onClick={() => setNotificationsOpen(true)}
-              className={styles.notificationButton}
-            />
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: DESIGN.radius.md,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Bell size={20} style={{ color: DESIGN.colors.textMuted }} />
+            </Button>
           </Badge>
         </Tooltip>
 
@@ -350,185 +387,189 @@ export const Header: React.FC<HeaderProps> = ({
               trigger={['click']}
               open={userMenuOpen}
               onOpenChange={setUserMenuOpen}
+              overlayStyle={{ padding: 0 }}
             >
-              <div className={styles.userMenu}>
-                <Avatar size={28} className={styles.userAvatar}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '6px 12px 6px 6px',
+                  borderRadius: DESIGN.radius.full,
+                  background: DESIGN.colors.bgSubtle,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  border: `1px solid ${userMenuOpen ? DESIGN.colors.accent : 'transparent'}`,
+                }}
+              >
+                <Avatar
+                  size={32}
+                  style={{
+                    background: `linear-gradient(135deg, ${DESIGN.colors.accent} 0%, #1d4ed8 100%)`,
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
                   {userInitial}
                 </Avatar>
-                <div className={styles.userInfo}>
-                  <Text className={styles.userName}>{displayName}</Text>
-                  <Text className={styles.userRole}>{roleText}</Text>
+                <div style={{ lineHeight: 1.3 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: DESIGN.colors.text }}>
+                    {displayName}
+                  </div>
+                  <Tag
+                    color={roleColor}
+                    style={{
+                      fontSize: 10,
+                      padding: '0 6px',
+                      lineHeight: '16px',
+                      margin: 0,
+                      border: 'none',
+                    }}
+                  >
+                    {roleText}
+                  </Tag>
                 </div>
-                <ChevronDown style={{ width: 14, height: 14, color: '#9ca3af' }} />
+                <ChevronDown
+                  size={14}
+                  style={{
+                    color: DESIGN.colors.textMuted,
+                    transition: 'transform 0.2s',
+                    transform: userMenuOpen ? 'rotate(180deg)' : 'none',
+                  }}
+                />
               </div>
             </Dropdown>
           ) : (
-            <Button type="primary" onClick={() => router.push('/login')}>
-              {t('header.login')}
+            <Button
+              type="primary"
+              icon={<LogIn size={16} />}
+              onClick={() => router.push('/login')}
+              style={{
+                borderRadius: DESIGN.radius.md,
+                height: 36,
+                background: `linear-gradient(135deg, ${DESIGN.colors.accent} 0%, #1d4ed8 100%)`,
+                boxShadow: DESIGN.shadows.glow(DESIGN.colors.accent),
+              }}
+            >
+              登录
             </Button>
           )
         ) : (
-          // Hydration 期间显示占位符
-          <div className={styles.userMenuPlaceholder} />
+          <div style={{ width: 120, height: 36, background: DESIGN.colors.bgSubtle, borderRadius: DESIGN.radius.full }} />
         )}
       </div>
 
       {/* 通知抽屉 */}
       <Drawer
         title={
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 8,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Bell style={{ color: '#3b82f6', width: 20, height: 20 }} />
-              <span>{t('header.notificationCenter')}</span>
-              {unreadCount > 0 && <Badge count={unreadCount} size="small" />}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: DESIGN.radius.md,
+                  background: `linear-gradient(135deg, ${DESIGN.colors.accent} 0%, #1d4ed8 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                }}
+              >
+                <Bell size={18} />
+              </div>
+              <div>
+                <Title level={5} style={{ margin: 0, fontSize: 16 }}>通知中心</Title>
+                <Text style={{ fontSize: 12, color: DESIGN.colors.textMuted }}>
+                  {unreadCount > 0 ? `${unreadCount} 条未读` : '暂无未读'}
+                </Text>
+              </div>
             </div>
             {unreadCount > 0 && (
               <Button
-                type="text"
-                size="small"
-                icon={<CheckCheck size={14} />}
+                type="link"
+                icon={<CheckCheck size={16} />}
                 onClick={markAllAsRead}
-                style={{ color: '#3b82f6' }}
+                style={{ color: DESIGN.colors.accent }}
               >
-                全部标记为已读
+                全部已读
               </Button>
             )}
           </div>
         }
         placement="right"
         size="large"
-        style={{ maxWidth: 'calc(100vw - 64px)' }}
         open={notificationsOpen}
         onClose={() => setNotificationsOpen(false)}
-        className={styles.notificationDrawer}
+        styles={{ body: { padding: 0 } }}
       >
-        {notifications.length === 0 ? (
-          <div
-            className={styles.emptyNotifications}
-            style={{ textAlign: 'center', padding: '48px 0' }}
+        <div style={{ maxHeight: 'calc(100vh - 120px)', overflow: 'auto' }}>
+          {notifications.length === 0 ? (
+            <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+              <Bell size={48} style={{ color: DESIGN.colors.border, marginBottom: 16 }} />
+              <Text style={{ color: DESIGN.colors.textMuted }}>暂无通知</Text>
+            </div>
+          ) : (
+            notifications.map(item => <NotificationItem key={item.id} item={item} />)
+          )}
+        </div>
+
+        {/* 底部链接 */}
+        <div
+          style={{
+            padding: '16px',
+            borderTop: `1px solid ${DESIGN.colors.border}`,
+            textAlign: 'center',
+          }}
+        >
+          <Button
+            type="link"
+            onClick={() => {
+              setNotificationsOpen(false);
+              router.push('/notifications');
+            }}
+            style={{ color: DESIGN.colors.accent }}
           >
-            <Bell style={{ width: 48, height: 48, marginBottom: '16px', opacity: 0.3 }} />
-            <Text style={{ display: 'block', color: '#9ca3af' }}>
-              {t('header.noNotifications')}
-            </Text>
+            查看全部通知 <ArrowRight size={14} />
+          </Button>
+        </div>
+      </Drawer>
+
+      {/* 搜索结果弹窗 */}
+      <Drawer
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Search size={18} style={{ color: DESIGN.colors.accent }} />
+            <span>搜索结果</span>
+          </div>
+        }
+        placement="top"
+        height={500}
+        open={searchModalVisible}
+        onClose={() => setSearchModalVisible(false)}
+      >
+        {searchResults ? (
+          <div style={{ padding: '0 20px' }}>
+            <List
+              header={<strong>工单</strong>}
+              dataSource={searchResults.tickets}
+              renderItem={item => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={<Ticket size={16} style={{ color: DESIGN.colors.accent }} />}
+                    title={<a onClick={() => { setSearchModalVisible(false); router.push(`/tickets/${item.id}`); }}>{item.title}</a>}
+                    description={item.status}
+                  />
+                </List.Item>
+              )}
+            />
           </div>
         ) : (
-          <div
-            className="notifications-list"
-            style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}
-          >
-            {notifications.map(item => (
-              <div
-                key={item.id}
-                className={styles.notificationItem}
-                style={{
-                  opacity: item.read ? 0.7 : 1,
-                  padding: '12px',
-                  borderBottom: '1px solid #f0f0f0',
-                  cursor: 'pointer',
-                  transition: 'background-color 0.2s',
-                }}
-                onClick={() => handleNotificationClick(item)}
-                onMouseEnter={e =>
-                  (e.currentTarget.style.backgroundColor = item.read ? '#f9fafb' : '#eff6ff')
-                }
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-              >
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <div
-                    className={styles.notificationAvatar}
-                    style={{
-                      backgroundColor:
-                        item.priority === 'urgent'
-                          ? '#ef4444'
-                          : item.priority === 'high'
-                            ? '#f59e0b'
-                            : '#3b82f6',
-                      width: 36,
-                      height: 36,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#fff',
-                      fontWeight: 600,
-                      flexShrink: 0,
-                    }}
-                  >
-                    {item.type === 'ticket' ? 'T' : item.type === 'system' ? 'S' : 'SLA'}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className={styles.notificationTitle}>
-                      <Text
-                        style={{
-                          fontWeight: item.read ? '400' : '600',
-                          color: item.read ? '#6b7280' : '#1f2937',
-                          display: 'block',
-                        }}
-                      >
-                        {item.title}
-                      </Text>
-                      <Text style={{ fontSize: '12px', color: '#9ca3af' }}>{item.time}</Text>
-                    </div>
-                    <Text
-                      className={styles.notificationContent}
-                      style={{ display: 'block', marginTop: 4, fontSize: '13px' }}
-                    >
-                      {item.content}
-                    </Text>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div style={{ padding: 40, textAlign: 'center', color: DESIGN.colors.textMuted }}>
+            输入关键词搜索...
           </div>
         )}
       </Drawer>
-
-      <Modal
-        title={t('header.searchResults')}
-        open={searchModalVisible}
-        onCancel={() => setSearchModalVisible(false)}
-        footer={null}
-        width={800}
-      >
-        {searchResults ? (
-          <div>
-            <h3>{t('tickets.title')}</h3>
-            <div className="search-results">
-              {searchResults.tickets.map(item => (
-                <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
-                  <a href={`/tickets/${item.id}`}>{item.title}</a>
-                </div>
-              ))}
-            </div>
-            <h3>{t('incidents.title')}</h3>
-            <div className="search-results">
-              {searchResults.incidents.map(item => (
-                <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
-                  <a href={`/incidents/${item.id}`}>{item.title}</a>
-                </div>
-              ))}
-            </div>
-            <h3>{t('problems.title')}</h3>
-            <div className="search-results">
-              {searchResults.problems.map(item => (
-                <div key={item.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>
-                  <a href={`/problems/${item.id}`}>{item.title}</a>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <p>{t('header.noResults')}</p>
-        )}
-      </Modal>
-    </AntHeader>
+    </AntDesignHeader>
   );
 };

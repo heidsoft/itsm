@@ -367,7 +367,7 @@ const TopologyGraphViewInner: React.FC<TopologyGraphViewProps> = ({
         }
         open={impactDrawerOpen}
         onClose={() => setImpactDrawerOpen(false)}
-        width={600}
+        styles={{ wrapper: { width: 600 } }}
       >
         {impactAnalysis ? (
           <div>
