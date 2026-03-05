@@ -509,6 +509,7 @@ const GroupManagement = () => {
                   name: values.name,
                   description: values.description,
                   permissions: values.permissions || [],
+                  status: 'active',
                 });
                 message.success('用户组创建成功');
               }
