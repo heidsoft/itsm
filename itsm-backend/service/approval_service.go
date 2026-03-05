@@ -547,15 +547,19 @@ func (s *ApprovalService) toWorkflowResponse(ctx context.Context, workflow *ent.
 	nodes := make([]dto.ApprovalNodeResponse, 0)
 	if workflow.Nodes != nil {
 		for i, nodeMap := range workflow.Nodes {
+			level := 0
+			if l, ok := nodeMap["level"].(float64); ok {
+				level = int(l)
+			}
 			node := dto.ApprovalNodeResponse{
 				ID:            fmt.Sprintf("node%d", i+1),
-				Level:         int(nodeMap["level"].(float64)),
-				Name:          nodeMap["name"].(string),
-				ApproverType:  nodeMap["approver_type"].(string),
-				ApprovalMode:  nodeMap["approval_mode"].(string),
-				AllowReject:   nodeMap["allow_reject"].(bool),
-				AllowDelegate: nodeMap["allow_delegate"].(bool),
-				RejectAction:  nodeMap["reject_action"].(string),
+				Level:         level,
+				Name:          getStringValue(nodeMap["name"]),
+				ApproverType:  getStringValue(nodeMap["approver_type"]),
+				ApprovalMode:  getStringValue(nodeMap["approval_mode"]),
+				AllowReject:   getBoolValue(nodeMap["allow_reject"]),
+				AllowDelegate: getBoolValue(nodeMap["allow_delegate"]),
+				RejectAction:  getStringValue(nodeMap["reject_action"]),
 			}
 
 			if approverIDs, ok := nodeMap["approver_ids"].([]interface{}); ok {
@@ -844,4 +848,26 @@ func (s *ApprovalService) resolveApprover(ctx context.Context, assigneeType, ass
 	default:
 		return 1, "管理员", nil
 	}
+}
+
+// 辅助函数：安全获取字符串值
+func getStringValue(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
+}
+
+// 辅助函数：安全获取布尔值
+func getBoolValue(v interface{}) bool {
+	if v == nil {
+		return false
+	}
+	if b, ok := v.(bool); ok {
+		return b
+	}
+	return false
 }

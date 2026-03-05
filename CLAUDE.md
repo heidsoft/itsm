@@ -32,12 +32,22 @@ npm run test:e2e         # E2E tests
 ### Backend (itsm-backend)
 ```bash
 cd itsm-backend
-go run main.go           # Start server (http://localhost:8080)
-go build -o itsm main.go # Binary build
+go run main.go           # Start server (http://localhost:8090)
+go build -o itsm-backend main.go # Binary build
+./itsm-backend           # Run binary
 go test ./...            # Run all tests
 # Database migrations (use build tags)
 go run -tags migrate main.go
 go run -tags create_user main.go
+```
+
+### Environment Setup
+```bash
+# Configure .env file in itsm-backend/
+LOG_LEVEL=info
+DB_PASSWORD=your_password
+JWT_SECRET=your-jwt-secret
+ADMIN_PASSWORD=admin123
 ```
 
 ## Architecture
