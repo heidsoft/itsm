@@ -1,0 +1,277 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库（生产环境）
+  postgres:
+    image: postgres:17-alpine
+    container_name: itsm-postgres-prod
+    hostname: postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-itsm_prod}
+      POSTGRES_USER: ${DB_USER:-itsm}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"  # 生产环境建议只暴露给内网，或使用 SSL
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./backups:/backups:ro
+      - ./scripts/init-db-prod.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-itsm} -d ${DB_NAME:-itsm_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+
+  # Redis 缓存（生产环境）
+  redis:
+    image: redis:7-alpine
+    container_name: itsm-redis-prod
+    hostname: redis
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --maxmemory 2gb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+      --appendonly yes
+      --appendfsync everysec
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_prod_data:/data
+      - ./config/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+
+  # PgBouncer 连接池（可选，高并发场景推荐）
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    container_name: itsm-pgbouncer-prod
+    hostname: pgbouncer
+    environment:
+      - DATABASES__itsm__host=postgres
+      - DATABASES__itsm__port=5432
+      - DATABASES__itsm__dbname=${DB_NAME:-itsm_prod}
+      - DATABASES__itsm__user=${DB_USER:-itsm}
+      - DATABASES__itsm__password=${DB_PASSWORD}
+      - PGBOUNCER_AUTH_TYPE=md5
+      - PGBOUNCER_SERVER_RESET_QUERY=DISCARD ALL
+      - PGBOUNCER_IGNORE_STARTUP_parameters=1
+      - PGBOUNCER_POOL_MODE=transaction
+      - PGBOUNCER_MAX_CLIENT_CONN=1000
+      - PGBOUNCER_DEFAULT_POOL_SIZE=50
+      - PGBOUNCER_MIN_POOL_SIZE=10
+      - PGBOUNCER_RESERVE_POOL_SIZE=10
+    ports:
+      - "6432:6432"
+    networks:
+      - itsm-prod-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: always
+    profiles: ["pgbouncer"]  # 需要显式启用
+
+  # ITSM 后端服务（生产环境）
+  itsm-backend:
+    build:
+      context: ./itsm-backend
+      dockerfile: Dockerfile.backend
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+        - GIT_COMMIT=${GIT_COMMIT:-unknown}
+        - BUILD_DATE=${BUILD_DATE:-unknown}
+    container_name: itsm-backend-prod
+    hostname: backend
+    environment:
+      # 数据库配置（使用 PgBouncer）
+      - DATABASE_URL=postgres://${DB_USER:-itsm}:${DB_PASSWORD}@pgbouncer:6432/${DB_NAME:-itsm_prod}?sslmode=disable
+      # 或直接连接 PostgreSQL:
+      # - DATABASE_URL=postgres://${DB_USER:-itsm}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-itsm_prod}?sslmode=require
+
+      # Redis 配置
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_DB=0
+
+      # 服务配置
+      - PORT=8090
+      - GIN_MODE=release
+      - SERVER_ENV=production
+      - SERVER_HOST=0.0.0.0
+
+      # JWT 配置（生产环境必须更改！）
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRE_TIME=86400
+      - JWT_REFRESH_EXPIRE_TIME=604800
+
+      # 日志配置
+      - LOG_LEVEL=error
+      - LOG_PATH=/app/logs
+      - LOG_FORMAT=json
+
+      # 监控
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+
+      # 对象存储（生产用 S3 或 MinIO）
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=${MINIO_BUCKET:-itsm-uploads}
+      - MINIO_USE_SSL=${MINIO_USE_SSL:-false}
+
+      # LLM 配置（生产环境）
+      - LLM_PROVIDER=${LLM_PROVIDER:-openai}
+      - LLM_MODEL=${LLM_MODEL:-gpt-4}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+
+      # 告警通知
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM=${SMTP_FROM:-noreply@yourdomain.com}
+
+      - DINGTALK_WEBHOOK=${DINGTALK_WEBHOOK}
+      - WECOM_WEBHOOK=${WECOM_WEBHOOK}
+
+      # 其他配置
+      - ENABLE_CORS=true
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-https://yourdomain.com}
+    ports:
+      - "8090:8090"
+      - "9090:9090"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      pgbouncer:
+        condition: service_started
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads:rw
+      - ./config:/app/config:ro
+    networks:
+      - itsm-prod-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+      replicas: 2  # 生产建议至少 2 副本
+
+  # ITSM 前端服务（生产环境）
+  itsm-frontend:
+    build:
+      context: ./itsm-frontend
+      dockerfile: Dockerfile.frontend
+      target: production
+      args:
+        - NODE_ENV=production
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.yourdomain.com}
+        - NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI:-true}
+    container_name: itsm-frontend-prod
+    hostname: frontend
+    ports:
+      - "3000:80"
+    volumes:
+      - ./uploads:/app/public/uploads:ro
+    networks:
+      - itsm-prod-network
+    depends_on:
+      - itsm-backend
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+      replicas: 2
+
+  # Nginx 反向代理/负载均衡（推荐）
+  nginx:
+    image: nginx:alpine
+    container_name: itsm-nginx-prod
+    hostname: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    networks:
+      - itsm-prod-network
+    depends_on:
+      - itsm-frontend
+      - itsm-backend
+    restart: always
+    profiles: ["nginx"]
+
+volumes:
+  postgres_prod_data:
+    driver: local
+  redis_prod_data:
+    driver: local
+  minio_prod_data:
+    driver: local
+  prometheus_prod_data:
+    driver: local
+  grafana_prod_data:
+    driver: local
+
+networks:
+  itsm-prod-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

@@ -1,0 +1,247 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 数据库（开发环境）
+  postgres:
+    image: postgres:17-alpine
+    container_name: itsm-postgres-dev
+    hostname: postgres
+    environment:
+      POSTGRES_DB: itsm_dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./scripts/init-db-dev.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - itsm-dev-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d itsm_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    profiles: ["dev"]
+
+  # Redis 缓存（开发环境）
+  redis:
+    image: redis:7-alpine
+    container_name: itsm-redis-dev
+    hostname: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_dev_data:/data
+    networks:
+      - itsm-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    profiles: ["dev"]
+
+  # MinIO 对象存储（开发环境，可选）
+  minio:
+    image: minio/minio:latest
+    container_name: itsm-minio-dev
+    hostname: minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_dev_data:/data
+    networks:
+      - itsm-dev-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles: ["dev"]
+
+  # ITSM 后端服务（开发环境）
+  itsm-backend:
+    build:
+      context: ./itsm-backend
+      dockerfile: Dockerfile.backend
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    container_name: itsm-backend-dev
+    hostname: backend
+    environment:
+      # 数据库配置
+      - DATABASE_URL=postgres://dev:dev123@postgres:5432/itsm_dev?sslmode=disable
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=dev
+      - DB_PASSWORD=dev123
+      - DB_NAME=itsm_dev
+      - DB_SSLMODE=disable
+
+      # Redis 配置
+      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+
+      # 服务配置
+      - PORT=8090
+      - GIN_MODE=debug
+      - SERVER_ENV=development
+
+      # JWT 配置
+      - JWT_SECRET=dev-secret-key-change-in-production-minimum-32-characters-long
+      - JWT_EXPIRE_TIME=900
+      - JWT_REFRESH_EXPIRE_TIME=604800
+
+      # 日志配置
+      - LOG_LEVEL=debug
+      - LOG_PATH=/app/logs
+
+      # 对象存储
+      - MINIO_ENDPOINT=http://minio:9000
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin123
+      - MINIO_BUCKET=itsm-uploads
+
+      # LLM 配置（开发用本地模型）
+      - LLM_PROVIDER=ollama
+      - LLM_MODEL=llama2
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434  # 指向宿主机（开发用）
+      # 或者使用本地运行的 Ollama 容器:
+      # - OLLAMA_BASE_URL=http://ollama:11434
+
+      # 监控配置
+      - ENABLE_METRICS=true
+      - METRICS_PORT=9090
+
+      # 其他
+      - ENABLE_SWAGGER=true
+      - ENABLE_CORS=true
+    ports:
+      - "8090:8090"
+      - "9090:9090"  # metrics 端口
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./itsm-backend:/app  # 开发模式挂载代码（热重载）
+    networks:
+      - itsm-dev-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8090/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    profiles: ["dev"]
+
+  # ITSM 前端服务（开发环境）
+  itsm-frontend:
+    build:
+      context: ./itsm-frontend
+      dockerfile: Dockerfile.frontend
+      target: development
+      args:
+        - NODE_ENV=development
+    container_name: itsm-frontend-dev
+    hostname: frontend
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8090
+      - NEXT_PUBLIC_ENABLE_AI=true
+      - NEXT_PUBLIC_ENABLE_SWAGGER=true
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node.js debug 端口
+    depends_on:
+      - itsm-backend
+    volumes:
+      - ./itsm-frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - itsm-dev-network
+    command: npm run dev
+    restart: unless-stopped
+    profiles: ["dev"]
+
+  # Ollama（本地 LLM 服务，可选）
+  ollama:
+    image: ollama/ollama:latest
+    container_name: itsm-ollama-dev
+    hostname: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_dev_data:/root/.ollama
+    networks:
+      - itsm-dev-network
+    restart: unless-stopped
+    profiles: ["dev"]
+    # 首次启动后需要拉取模型:
+    # docker exec itsm-ollama-dev ollama pull llama2
+
+  # Prometheus（监控，可选）
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: itsm-prometheus-dev
+    hostname: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_dev_data:/prometheus
+    networks:
+      - itsm-dev-network
+    restart: unless-stopped
+    profiles: ["dev"]
+
+  # Grafana（监控面板，可选）
+  grafana:
+    image: grafana/grafana:latest
+    container_name: itsm-grafana-dev
+    hostname: grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_dev_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    networks:
+      - itsm-dev-network
+    restart: unless-stopped
+    profiles: ["dev"]
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  redis_dev_data:
+    driver: local
+  minio_dev_data:
+    driver: local
+  ollama_dev_data:
+    driver: local
+  prometheus_dev_data:
+    driver: local
+  grafana_dev_data:
+    driver: local
+
+networks:
+  itsm-dev-network:
+    driver: bridge

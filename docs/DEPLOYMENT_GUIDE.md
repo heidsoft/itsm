@@ -31,7 +31,7 @@ docker-compose down
 
 **访问地址**:
 - 前端：http://localhost:3000
-- 后端 API: http://localhost:8080/api/v1
+- 后端 API: http://localhost:8090/api/v1
 - PostgreSQL: localhost:5432
 - Redis: localhost:6379
 
@@ -202,7 +202,7 @@ JWT_EXPIRE=24h
 
 ```bash
 # API 地址
-REACT_APP_API_URL=http://localhost:8080/api/v1
+REACT_APP_API_URL=http://localhost:8090/api/v1
 
 # 其他配置
 REACT_APP_ENV=production
@@ -400,10 +400,10 @@ psql -U itsm -h localhost itsm < backup.sql
 | 服务 | 地址 | 说明 |
 |------|------|------|
 | 前端 | http://localhost:3000 | Web 界面 |
-| 后端 API | http://localhost:8080/api/v1 | REST API |
+| 后端 API | http://localhost:8090/api/v1 | REST API |
 | PostgreSQL | localhost:5432 | 数据库 |
 | Redis | localhost:6379 | 缓存 |
-| 健康检查 | http://localhost:8080/health | 健康检查 |
+| 健康检查 | http://localhost:8090/health | 健康检查 |
 
 ---
 

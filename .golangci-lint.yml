@@ -1,0 +1,251 @@
+# ITSM Go Lint 配置
+# 基于 golangci-lint v1.55+
+# 命令: golangci-lint run --config .golangci-lint.yml
+
+linters:
+  enable:
+    # 基础检查
+    - errcheck        # 检查未处理的错误
+    - gosimple        # 简化代码
+    - govet           # Go 工具检测可疑构造
+    - ineffassign     # 检测无效赋值
+    - staticcheck     # 静态分析（推荐）
+    - typecheck       # 类型检查
+    - unused          # 检查未使用代码
+
+    # 代码质量
+    - bodyclose       # 检查是否关闭 http 响应体
+    - depguard        # 检查禁止的依赖
+    - dogsled         # 检查过多的结构体字段赋值
+    - dupl            # 代码重复检测
+    - exportloopref   # 检查循环中的指针导出
+    - funlen          # 检查函数长度
+    - gocognit        # 检查函数圈复杂度
+    - goconst         # 检查可以替换为常量的重复字符串
+    - gocritic        # 代码分析（广泛）
+    - godot           # 检查注释是否以句点结束
+    - gofmt           # 是否使用了 gofmt
+    - gofumpt         # 更严格的 gofmt（推荐）
+    - goimports       # 检查导入是否正确分组和排序
+    - gomnd           # 魔数检测
+    - gosec           # 安全检查
+    - lll             # 行长度限制
+    - nakedret        # 裸返回检测
+    - nilerr          # nil 错误检查
+    - nolintlint      # 检查无效 //nolint 指令
+    - prealloc        # 检查切片预分配
+    - revive          # 结构化 linter，替代 golint
+    - rowserrcheck    # 检查Rows.Err()是否被调用
+    - sqlclosecheck   # 检查 SQL 连接是否关闭
+    - stylecheck      # 代码风格检查
+    - tenv            # 检查 os.Setenv 使用
+    - testpackage     # 检查测试文件位置
+    - tparallel       # 并行测试检查
+    - unconvert       # 检查不必要的类型转换
+    - unparam        # 检查未使用的参数
+    - wastedassign   # 检查浪费的赋值
+
+    # 可选（根据需要启用）
+    # - cyclop         # 圈复杂度检查（与 gocognit 类似）
+    # - exhaustivestruct # 检查结构体未完全初始化
+    # - gci            # 导入控制（替代 goimports）
+    # - ginkgo         # Ginkgo 测试框架检查
+    # - ginkgolinter   # Ginkgo 特定检查
+    # - goheader       # 检查文件头
+    # - gomoddirectives # 检查 go.mod 指令
+    # - ifshort        # 检查短变量声明
+    # - misspell       # 拼写检查
+    # - mnd            # 魔数检查（与 gomnd 类似）
+    # - paralleltest   # 并行测试检查（与 tparallel 类似）
+    # - tagliatelle    # 命名约定检查
+    # - testableexamples # 可测示例检查
+    # - thelper        # 测试辅助检查
+    # - wrapcheck      # 错误包装检查
+    # - wsl            # 白空间检查
+
+  disable:
+    - exhaustruct   # 禁用结构体字段必须全赋值（可选）
+    - golint        # 已废弃，改用 revive
+
+issues:
+  # 排除特定规则的文件
+  exclude-files:
+    - '_test\.go$'
+    - 'scripts/.*'
+    - 'docs/.*'
+    - '\.pb\.go$'
+    - 'vendor/.*'
+
+  # 排除特定规则
+  exclude-rules:
+    # 禁用测试文件中的某些规则
+    - path: '_test\.go'
+      linters:
+        - funlen
+        - gomnd
+        - gocognit
+
+    # 禁用 main 包中的某些规则
+    - path: 'cmd/main\.go'
+      linters:
+        - gochecknoglobals
+        - godot
+
+    # 允许 SQL 查询中的魔数（如 LIMIT、OFFSET）
+    - text: 'magic number: 20'
+      linters:
+        - gomnd
+      paths:
+        - 'repository/.*'
+
+    # 允许错误消息中的魔数（HTTP 状态码）
+    - text: 'magic number: 404|400|500|403'
+      linters:
+        - gomnd
+
+    # 自动生成的代码跳过某些检查
+    - path: 'docs/.*'
+      linters:
+        - all
+
+  # 每文件最大问题数（0 表示无限制）
+  max-issues-per-linter: 0
+
+  # 总共最大问题数（0 表示无限制）
+  max-same-issues: 0
+
+  # 显示新问题（vs 基准）
+  new: false
+
+  # 可修复问题的自动修复（部分 linter 支持）
+  fix: false
+
+run:
+  # 超时时间（秒）
+  timeout: 5m
+
+  # 分析超时（每个包）
+  analysis:
+    timeout: 5m
+    # 假设缓存已清理，重新分析
+    # 可能改善结果，但会减慢运行速度
+    actual: false
+
+  # 跳过 vendor 目录
+  skip-dirs:
+    - vendor
+    - .git
+    - node_modules
+    - .next
+    - build
+    - dist
+    - bin
+    - '(_|.)?test'  # 测试目录
+
+  # 默认分析每个包的摘要
+  go: '1.25'
+
+# 特定 linter 配置
+linters-settings:
+  # revive 规则配置
+  revive:
+    rules:
+      - name: exported
+        disabled: false
+      - name: package-comments
+        disabled: true
+
+  # gocritic 规则配置
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+      - experimental
+      - opinionated
+    disabled-checks:
+      - ifElseChain          # 有时是必要的
+      - wrapperFunc          # 不强制
+      - dupArg               # 允许重复参数
+      - dupSubExpr           # 允许重复表达式
+      - octalLiteral         # 八进制是允许的
+
+  # staticcheck（go vet 的增强版）
+  staticcheck:
+    # 禁用特定检查
+    checks: ["-SA1019"]  # 禁用弃用API检查（可自行调整）
+
+  # gomnd 魔数检查配置
+  gomnd:
+    checks:
+      - argument
+      - case
+      - condition
+      - operation
+      - return
+    settings:
+      mnd:
+        checks:
+          - case
+          - condition
+          - operation
+          - return
+        ignored-numbers: 0,1,2,3  # 忽略常见魔数
+        ignored-functions: "strconv.Itoa,errors.New,fmt.Sprintf"  # 忽略函数内的魔数
+
+  # funlen 函数长度限制
+  funlen:
+    lines: 100
+    statements: 40
+
+  # lll 行长度限制
+  lll:
+    line-length: 120
+    tab-width: 4
+
+  # gofmt 检查
+  gofmt:
+    simplify: true
+
+  # goimports 检查
+  goimports:
+    local-prefixes: github.com/heidsoft/itsm
+
+  # gosec 安全检查
+  gosec:
+    excludes:
+      - G104                  # 忽略 "error errors.Unwrap()" 审计
+      - G204                  # 忽略子命令执行检查（如有需要）
+      - G301                  # 忽略 "permissions" 检查（创建目录）
+      - G302                  # 忽略 "chmod" 检查
+    config:
+      G301: false
+      G302: false
+      G306: false
+
+  # depguard 依赖导入限制
+  depguard:
+    list-type: blacklist
+    packages:
+      - github.com/sirupsen/logrus  # 使用 slog 替代 logrus
+
+  # nakedret 裸返回限制
+  nakedret:
+    max-func-lines: 30  # 函数少于30行允许裸返回
+
+output:
+  # 输出格式（可选：colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml）
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+  # 颜色配置
+  colors:
+    enabled: true
+    enable-color: always
+
+  # 错误/警告路径显示
+  path-prefix: ""
+
+  # 异步执行（更快）
+  sort-results: true

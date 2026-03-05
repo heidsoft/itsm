@@ -1,0 +1,1739 @@
+openapi: 3.0.3
+info:
+  title: ITSM API
+  description: |
+    ITSM (IT Service Management) 企业级 IT 服务管理平台 API 文档。
+
+    基于 ITIL 最佳实践，支持工单管理、事件管理、问题管理、变更管理、知识库、工作流引擎等功能。
+
+    **环境**: 生产环境
+    **Base URL**: https://api.yourdomain.com
+    **版本**: v1.0
+  version: 1.0.0
+  contact:
+    name: ITSM Team
+    email: heidsoft@qq.com
+    url: https://github.com/heidsoft/itsm
+  license:
+    name: MIT License
+    url: https://github.com/heidsoft/itsm/blob/main/LICENSE
+
+servers:
+  - url: https://api.yourdomain.com/api/v1
+    description: 生产环境服务器
+  - url: http://localhost:8090/api/v1
+    description: 开发环境服务器
+
+tags:
+  - name: Authentication
+    description: 认证相关接口（登录、登出、刷新 Token）
+  - name: Tickets
+    description: 工单管理
+  - name: Incidents
+    description: 事件管理
+  - name: Problems
+    description: 问题管理
+  - name: Changes
+    description: 变更管理
+  - name: Knowledge
+    description: 知识库管理
+  - name: Workflows
+    description: 工作流引擎
+  - name: Users
+    description: 用户管理
+  - name: SLA
+    description: SLA 策略管理
+  - name: CMDB
+    description: 配置管理数据库
+  - name: Notifications
+    description: 通知管理
+  - name: Reports
+    description: 报表统计
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================
+  # 认证相关
+  # ============================================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: 用户登录
+      description: 使用邮箱和密码登录系统，返回 JWT Token
+      operationId: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+      security: []
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: 刷新 Token
+      description: 使用 refresh_token 获取新的访问令牌
+      operationId: RefreshToken
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 刷新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: 登出
+      description: 登出当前会话（使当前 Token 失效）
+      operationId: Logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 登出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: "success"
+                  data:
+                    type: null
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: 获取当前用户信息
+      description: 返回当前登录用户的详细信息
+      operationId: GetCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # 工单管理
+  # ============================================
+  /tickets:
+    get:
+      tags:
+        - Tickets
+      summary: 列出工单
+      description: 获取工单列表，支持分页、过滤、排序
+      operationId: ListTickets
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          description: 按状态过滤
+          schema:
+            type: string
+            enum: [open, in_progress, pending, resolved, closed, rejected]
+        - name: priority
+          in: query
+          description: 按优先级过滤
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: assignee_id
+          in: query
+          description: 指派人 ID
+          schema:
+            type: integer
+        - name: created_after
+          in: query
+          description: 创建时间之后
+          schema:
+            type: string
+            format: date-time
+        - name: created_before
+          in: query
+          description: 创建时间之前
+          schema:
+            type: string
+            format: date-time
+        - name: sort_by
+          in: query
+          description: 排序字段
+          schema:
+            type: string
+            default: created_at
+            enum: [created_at, updated_at, priority, status]
+        - name: sort_order
+          in: query
+          description: 排序方向
+          schema:
+            type: string
+            default: desc
+            enum: [asc, desc]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTicketResponse'
+
+    post:
+      tags:
+        - Tickets
+      summary: 创建工单
+      description: 创建新的工单
+      operationId: CreateTicket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /tickets/{id}:
+    get:
+      tags:
+        - Tickets
+      summary: 获取工单详情
+      description: 根据 ID 获取工单详细信息
+      operationId: GetTicket
+      parameters:
+        - $ref: '#/components/parameters/TicketID'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Tickets
+      summary: 更新工单
+      description: 更新工单信息
+      operationId: UpdateTicket
+      parameters:
+        - $ref: '#/components/parameters/TicketID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags:
+        - Tickets
+      summary: 删除工单
+      description: 删除指定工单（软删除）
+      operationId: DeleteTicket
+      parameters:
+        - $ref: '#/components/parameters/TicketID'
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                    example: 0
+                  message:
+                    type: string
+                    example: "Ticket deleted"
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tickets/{id}/comments:
+    post:
+      tags:
+        - Tickets
+      summary: 添加评论
+      description: 为工单添加评论或备注
+      operationId: AddTicketComment
+      parameters:
+        - $ref: '#/components/parameters/TicketID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+      responses:
+        '201':
+          description: 评论添加成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+
+  /tickets/{id}/assign:
+    post:
+      tags:
+        - Tickets
+      summary: 分配工单
+      description: 将工单分配给指定处理人
+      operationId: AssignTicket
+      parameters:
+        - $ref: '#/components/parameters/TicketID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - assignee_id
+              properties:
+                assignee_id:
+                  type: integer
+                  description: 处理人用户 ID
+      responses:
+        '200':
+          description: 分配成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketResponse'
+
+  /tickets/stats/summary:
+    get:
+      tags:
+        - Tickets
+        - Reports
+      summary: 工单统计概览
+      description: 获取工单统计数据（按状态、优先级、SLA 等）
+      operationId: GetTicketStats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TicketStatsResponse'
+
+  # ============================================
+  # 事件管理
+  # ============================================
+  /incidents:
+    get:
+      tags:
+        - Incidents
+      summary: 列出事件
+      description: 获取事件列表
+      operationId: ListIncidents
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: impact
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: urgency
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, investigating, identified, resolved, closed]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedIncidentResponse'
+
+    post:
+      tags:
+        - Incidents
+      summary: 创建事件
+      description: 创建新的监控事件或人工事件
+      operationId: CreateIncident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIncidentRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncidentResponse'
+
+  /incidents/{id}/escalate:
+    post:
+      tags:
+        - Incidents
+      summary: 升级为问题
+      description: 将严重事件升级为问题管理流程
+      operationId: EscalateToProblem
+      parameters:
+        - $ref: '#/components/parameters/IncidentID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                root_cause:
+                  type: string
+                  description: 临时根因说明
+      responses:
+        '200':
+          description: 升级成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      problem_id:
+                        type: integer
+                        description: 新创建的问题 ID
+
+  # ============================================
+  # 问题管理
+  # ============================================
+  /problems:
+    get:
+      tags:
+        - Problems
+      summary: 列出问题
+      description: 获取问题列表
+      operationId: ListProblems
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, investigating, solved, closed]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProblemResponse'
+
+    post:
+      tags:
+        - Problems
+      summary: 创建问题
+      description: 创建新的问题记录
+      operationId: CreateProblem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProblemRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemResponse'
+
+  # ============================================
+  # 变更管理
+  # ============================================
+  /changes:
+    get:
+      tags:
+        - Changes
+      summary: 列出变更请求
+      description: 获取变更请求列表
+      operationId: ListChanges
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: risk_level
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, submitted, approved, rejected, scheduled, in_progress, completed, cancelled]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedChangeResponse'
+
+    post:
+      tags:
+        - Changes
+      summary: 创建变更请求
+      description: 提交新的变更请求
+      operationId: CreateChange
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChangeRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeResponse'
+
+  /changes/{id}/approve:
+    post:
+      tags:
+        - Changes
+      summary: 审批变更
+      description: 审批通过或拒绝变更请求
+      operationId: ApproveChange
+      parameters:
+        - $ref: '#/components/parameters/ChangeID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - decision
+              properties:
+                decision:
+                  type: string
+                  enum: [approved, rejected]
+                  description: 审批决定
+                comment:
+                  type: string
+                  description: 审批意见
+      responses:
+        '200':
+          description: 审批完成
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeResponse'
+
+  /changes/{id}/execute:
+    post:
+      tags:
+        - Changes
+      summary: 执行变更
+      description: 标记变更为执行状态（需提前审批通过）
+      operationId: ExecuteChange
+      parameters:
+        - $ref: '#/components/parameters/ChangeID'
+      responses:
+        '200':
+          description: 执行成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChangeResponse'
+
+  # ============================================
+  # 知识库
+  # ============================================
+  /knowledge/articles:
+    get:
+      tags:
+        - Knowledge
+      summary: 列出知识文章
+      description: 获取知识库文章列表
+      operationId: ListArticles
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: category
+          in: query
+          description: 按分类过滤
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, archived]
+        - name: keyword
+          in: query
+          description: 关键词搜索
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedArticleResponse'
+
+    post:
+      tags:
+        - Knowledge
+      summary: 创建知识文章
+      description: 创建新的知识库文章
+      operationId: CreateArticle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateArticleRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+
+  /knowledge/articles/{id}:
+    get:
+      tags:
+        - Knowledge
+      summary: 获取知识文章
+      description: 根据 ID 获取知识文章详情
+      operationId: GetArticle
+      parameters:
+        - $ref: '#/components/parameters/ArticleID'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+
+    put:
+      tags:
+        - Knowledge
+      summary: 更新知识文章
+      description: 更新知识文章内容
+      operationId: UpdateArticle
+      parameters:
+        - $ref: '#/components/parameters/ArticleID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateArticleRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArticleResponse'
+
+  /knowledge/search/semantic:
+    post:
+      tags:
+        - Knowledge
+      summary: 语义搜索
+      description: 基于向量相似度的语义搜索（RAG）
+      operationId: SemanticSearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemanticSearchRequest'
+      responses:
+        '200':
+          description: 搜索成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SemanticSearchResponse'
+
+  # ============================================
+  # 用户管理
+  # ============================================
+  /users:
+    get:
+      tags:
+        - Users
+      summary: 列出用户
+      description: 获取用户列表（需要管理员权限）
+      operationId: ListUsers
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, manager, agent, user, readonly]
+        - name: department_id
+          in: query
+          schema:
+            type: integer
+        - name: is_active
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedUserResponse'
+
+    post:
+      tags:
+        - Users
+      summary: 创建用户
+      description: 创建新用户（管理员专用）
+      operationId: CreateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '409':
+          description: 邮箱已存在
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: 获取用户信息
+      description: 根据 ID 获取用户详细信息
+      operationId: GetUser
+      parameters:
+        - $ref: '#/components/parameters/UserID'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Users
+      summary: 更新用户信息
+      description: 更新指定用户信息
+      operationId: UpdateUser
+      parameters:
+        - $ref: '#/components/parameters/UserID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+
+  /users/{id}/reset-password:
+    post:
+      tags:
+        - Users
+      summary: 重置用户密码
+      description: 管理员重置用户密码（需要管理员权限）
+      operationId: ResetUserPassword
+      parameters:
+        - $ref: '#/components/parameters/UserID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - new_password
+              properties:
+                new_password:
+                  type: string
+                  minLength: 12
+                  description: 新密码（至少 12 位）
+      responses:
+        '200':
+          description: 密码重置成功
+
+  # ============================================
+  # 健康检查
+  # ============================================
+  /health:
+    get:
+      tags:
+        - System
+      summary: 服务健康检查
+      description: 返回服务健康状态及依赖组件状态
+      operationId: HealthCheck
+      security: []  # 不需要认证
+      responses:
+        '200':
+          description: 服务正常
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [ok, degraded, error]
+                    example: ok
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        example: "ok"
+                      redis:
+                        type: string
+                        example: "ok"
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2026-03-04T10:30:00Z"
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  /metrics:
+    get:
+      tags:
+        - System
+      summary: Prometheus 指标
+      description: 返回 Prometheus 格式的性能指标
+      operationId: Metrics
+      security: []  # 通常限制内网访问
+      responses:
+        '200':
+          description: 指标数据
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  # ============================================
+  # Schema 定义
+  # ============================================
+  schemas:
+    # 认证相关
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "admin@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "admin123"
+
+    AuthResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: "success"
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/UserResponse'
+            token:
+              type: string
+              description: JWT 访问令牌
+            refresh_token:
+              type: string
+              description: 刷新令牌
+            expires_in:
+              type: integer
+              description: 过期时间（秒）
+              example: 86400
+
+    # 用户相关
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        email:
+          type: string
+          example: "admin@example.com"
+        name:
+          type: string
+          example: "Administrator"
+        role:
+          type: string
+          enum: [admin, manager, agent, user, readonly]
+          example: "admin"
+        department:
+          $ref: '#/components/schemas/Department'
+        avatar_url:
+          type: string
+          format: uri
+          example: "https://example.com/avatar.jpg"
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-03-01T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-03-04T15:30:00Z"
+
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "IT Department"
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+        - role
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 12
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, agent, user, readonly]
+        department_id:
+          type: integer
+        tenant_id:
+          type: integer
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, manager, agent, user, readonly]
+        department_id:
+          type: integer
+        is_active:
+          type: boolean
+
+    # 工单相关
+    TicketResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        ticket_number:
+          type: string
+          example: "TKT-20260304-000001"
+        title:
+          type: string
+          example: "无法登录系统"
+        description:
+          type: string
+          example: "用户反馈无法登录..."
+        status:
+          type: string
+          enum: [open, in_progress, pending, resolved, closed, rejected]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        category:
+          type: string
+          example: "技术支持"
+        submitter:
+          $ref: '#/components/schemas/UserBrief'
+        assignee:
+          $ref: '#/components/schemas/UserBrief'
+        sla:
+          $ref: '#/components/schemas/SLAMetrics'
+        due_date:
+          type: string
+          format: date-time
+        resolved_at:
+          type: string
+          format: date-time
+        closed_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        custom_fields:
+          type: object
+          additionalProperties:
+            type: string
+
+    UserBrief:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+
+    CreateTicketRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          default: medium
+        category:
+          type: string
+        assignee_id:
+          type: integer
+        due_date:
+          type: string
+          format: date-time
+        custom_fields:
+          type: object
+          additionalProperties:
+            type: string
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in_progress, pending, resolved, closed, rejected]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        assignee_id:
+          type: integer
+        due_date:
+          type: string
+          format: date-time
+        custom_fields:
+          type: object
+          additionalProperties:
+            type: string
+
+    AddCommentRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+        is_internal:
+          type: boolean
+          default: false
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+
+    Attachment:
+      type: object
+      properties:
+        filename:
+          type: string
+        url:
+          type: string
+          format: uri
+        size:
+          type: integer
+        mime_type:
+          type: string
+
+    SLAMetrics:
+      type: object
+      properties:
+        response_time:
+          type: integer
+          description: 响应时间（分钟）
+        resolution_time:
+          type: integer
+          description: 解决时间（分钟）
+        status:
+          type: string
+          enum: [met, breached, warning]
+          description: SLA 状态
+
+    PaginatedTicketResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketResponse'
+
+    TicketStatsResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        by_status:
+          type: object
+          additionalProperties:
+            type: integer
+        by_priority:
+          type: object
+          additionalProperties:
+            type: integer
+        sla_metrics:
+          type: object
+          properties:
+            response_met:
+              type: integer
+            response_missed:
+              type: integer
+            resolution_met:
+              type: integer
+            resolution_missed:
+              type: integer
+
+    # 事件相关
+    IncidentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        impact:
+          type: string
+          enum: [low, medium, high, critical]
+        urgency:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [new, investigating, identified, resolved, closed]
+        related_ticket:
+          $ref: '#/components/schemas/TicketResponse'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateIncidentRequest:
+      type: object
+      required:
+        - title
+        - impact
+        - urgency
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        impact:
+          type: string
+          enum: [low, medium, high, critical]
+        urgency:
+          type: string
+          enum: [low, medium, high, critical]
+        source:
+          type: string
+          enum: [manual, monitoring, auto]
+        related_ticket_id:
+          type: integer
+
+    PaginatedIncidentResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentResponse'
+
+    # 问题相关
+    ProblemResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        root_cause:
+          type: string
+        status:
+          type: string
+          enum: [open, investigating, solved, closed]
+        related_incidents:
+          type: array
+          items:
+            $ref: '#/components/schemas/IncidentResponse'
+        created_at:
+          type: string
+          format: date-time
+
+    CreateProblemRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        incident_id:
+          type: integer
+          description: 关联的事件 ID
+
+    PaginatedProblemResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProblemResponse'
+
+    # 变更相关
+    ChangeResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        change_number:
+          type: string
+          example: "CHG-20260304-000001"
+        title:
+          type: string
+        description:
+          type: string
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        status:
+          type: string
+          enum: [draft, submitted, approved, rejected, scheduled, in_progress, completed, cancelled]
+        approver:
+          $ref: '#/components/schemas/UserBrief'
+        planned_start:
+          type: string
+          format: date-time
+        planned_end:
+          type: string
+          format: date-time
+        implementation_plan:
+          type: string
+        backout_plan:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CreateChangeRequest:
+      type: object
+      required:
+        - title
+        - risk_level
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        impact:
+          type: string
+        risk_level:
+          type: string
+          enum: [low, medium, high, critical]
+        planned_start:
+          type: string
+          format: date-time
+        planned_end:
+          type: string
+          format: date-time
+        implementation_plan:
+          type: string
+        backout_plan:
+          type: string
+        approvers:
+          type: array
+          items:
+            type: integer
+            description: 审批人用户 ID
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChangeTask'
+
+    ChangeTask:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+        responsible_user_id:
+          type: integer
+
+    PaginatedChangeResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ChangeResponse'
+
+    # 知识库相关
+    ArticleResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [draft, published, archived]
+        author:
+          $ref: '#/components/schemas/UserBrief'
+        view_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateArticleRequest:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [draft, published, archived]
+          default: draft
+
+    UpdateArticleRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [draft, published, archived]
+
+    PaginatedArticleResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticleResponse'
+
+    SemanticSearchRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: "搜索查询"
+        limit:
+          type: integer
+          default: 10
+          minimum: 1
+          maximum: 50
+        similarity_threshold:
+          type: number
+          format: float
+          default: 0.7
+          minimum: 0.0
+          maximum: 1.0
+
+    SemanticSearchResult:
+      type: object
+      properties:
+        article_id:
+          type: integer
+        title:
+          type: string
+        content:
+          type: string
+        similarity:
+          type: number
+          format: float
+        highlights:
+          type: array
+          items:
+            type: string
+
+    SemanticSearchResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/SemanticSearchResult'
+
+    CommentResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        content:
+          type: string
+        is_internal:
+          type: boolean
+        author:
+          $ref: '#/components/schemas/UserBrief'
+        created_at:
+          type: string
+          format: date-time
+
+    # 通用响应
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+
+    ValidationError:
+      type: object
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+
+  # ============================================
+  # Parameters 定义（复用）
+  # ============================================
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: 页码（从 1 开始）
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+
+    PageSize:
+      name: page_size
+      in: query
+      description: 每页数量（最大 100）
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+
+    TicketID:
+      name: id
+      in: path
+      description: 工单 ID
+      required: true
+      schema:
+        type: integer
+
+    IncidentID:
+      name: id
+      in: path
+      description: 事件 ID
+      required: true
+      schema:
+        type: integer
+
+    ChangeID:
+      name: id
+      in: path
+      description: 变更请求 ID
+      required: true
+      schema:
+        type: integer
+
+    UserID:
+      name: id
+      in: path
+      description: 用户 ID
+      required: true
+      schema:
+        type: integer
+
+    ArticleID:
+      name: id
+      in: path
+      description: 文章 ID
+      required: true
+      schema:
+        type: integer
+
+  # ============================================
+  # Responses 定义（复用）
+  # ============================================
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: 未授权
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: 权限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    ValidationError:
+      description: 数据验证失败
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    RateLimited:
+      description: 请求过于频繁
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalError:
+      description: 服务器内部错误
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        请求头中需要包含:
+        Authorization: Bearer <your_token>

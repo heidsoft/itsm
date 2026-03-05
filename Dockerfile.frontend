@@ -1,0 +1,105 @@
+# ITSM Frontend Dockerfile
+# 多阶段构建，优化生产镜像大小
+
+# ============================================
+# 第一阶段：依赖安装和构建
+# ============================================
+FROM node:22-alpine AS deps
+
+# 检查要求：Node.js 18+
+RUN node --version && npm --version
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制依赖文件
+COPY package.json package-lock.json* ./
+
+# 安装依赖（使用 pnpm 更快，如果项目使用 pnpm）
+RUN npm ci --only=production  # 生产依赖
+# 如果要包含 dev 依赖（开发环境）: npm ci
+
+# ============================================
+# 第二阶段：构建（builder）
+# ============================================
+FROM node:22-alpine AS builder
+
+WORKDIR /app
+
+# 复制依赖（从 deps 阶段复制）
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# 构建参数
+ARG NEXT_PUBLIC_API_URL=http://localhost:8080
+ARG NEXT_PUBLIC_ENABLE_AI=true
+ARG NODE_ENV=production
+
+ENV \
+    NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
+    NEXT_PUBLIC_ENABLE_AI=${NEXT_PUBLIC_ENABLE_AI} \
+    NODE_ENV=${NODE_ENV} \
+    NEXT_TELEMETRY_DISABLED=1
+
+# 构建 Next.js 应用
+RUN npm run build
+
+# 检查构建输出
+RUN ls -la .next/standalone/ && \
+    ls -la .next/static/
+
+# ============================================
+# 第三阶段：运行（runner）
+# ============================================
+FROM node:22-alpine AS runner
+
+# 检查要求：Node.js 18+
+RUN node --version
+
+# 添加非 root 用户
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+WORKDIR /app
+
+# 复制 package.json
+COPY package.json .
+
+# 从 builder 复制必要文件
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/next-env.d.ts ./next-env.d.ts
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.js ./next.config.js 2>/dev/null || true
+
+# 复制通知脚本、配置文件（如有）
+COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts 2>/dev/null || true
+
+# 确保上传目录存在
+RUN mkdir -p /app/uploads && chown -R nextjs:nodejs /app
+
+# 切换到非 root 用户
+USER nextjs
+
+# 暴露端口
+EXPOSE 3000
+
+# 环境变量
+ENV \
+    PORT=3000 \
+    NODE_ENV=production \
+    HOSTNAME="0.0.0.0"
+    # NEXT_PUBLIC_API_URL 应已在构建阶段传入，或运行时传入
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/health', (r) => {if(r.statusCode!==200)throw new Error(r.statusCode)})" || exit 1
+
+# 启动命令
+# 使用 node 直接运行 standalone 模式
+CMD ["node", "server.js"]
+
+# ============================================
+# 开发模式镜像（可选，使用 docker-compose.dev.yml）
+# ============================================
+# 开发阶段使用单独 Dockerfile.dev 或 docker-compose.dev.yml 中的配置
