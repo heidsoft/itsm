@@ -86,6 +86,45 @@ npm run dev
 
 ---
 
+## 📸 系统截图
+
+> 💡 **提示**: 以下是系统界面预览，[在线 Demo](#) 即将上线 (关注更新)
+
+### 工单管理
+
+![工单列表](https://via.placeholder.com/1200x600/4A90E2/FFFFFF?text=工单列表页+-+工单管理+Dashboard)
+*工单列表页 - 支持筛选、排序、批量操作*
+
+![工单详情](https://via.placeholder.com/1200x600/4A90E2/FFFFFF?text=工单详情页+-+完整工单信息+评论+附件)
+*工单详情页 - 完整工单信息、评论、附件*
+
+### 仪表盘
+
+![仪表盘](https://via.placeholder.com/1200x600/4A90E2/FFFFFF?text=仪表盘+-+工单统计+SLA 合规率+趋势图)
+*仪表盘 - 工单统计、SLA 合规率、趋势图表*
+
+### 工作流引擎
+
+![BPMN 工作流](https://via.placeholder.com/1200x600/4A90E2/FFFFFF?text=BPMN+工作流设计器+-+可视化流程配置)
+*BPMN 工作流设计器 - 可视化流程配置*
+
+### SLA 监控
+
+![SLA 监控](https://via.placeholder.com/1200x600/4A90E2/FFFFFF?text=SLA+监控面板+-+实时追踪+违约预警)
+*SLA 监控面板 - 实时追踪、违约预警*
+
+### 知识库
+
+![知识库](https://via.placeholder.com/1200x600/4A90E2/FFFFFF?text=知识库+-+AI+智能问答+RAG+检索)
+*知识库 - AI 智能问答、RAG 检索*
+
+### 移动端
+
+![移动端](https://via.placeholder.com/1200x600/4A90E2/FFFFFF?text=移动端界面+-+响应式设计+PWA+支持)
+*移动端界面 - 响应式设计、PWA 支持*
+
+---
+
 ## 💻 系统要求
 
 ### 最低配置
