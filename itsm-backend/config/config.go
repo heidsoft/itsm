@@ -18,6 +18,12 @@ type Config struct {
 	LLM      LLMConfig      `mapstructure:"llm"`
 	SMS      SMSConfig      `mapstructure:"sms"`
 	SMTP     SMTPConfig     `mapstructure:"smtp"`
+	Ticket   TicketConfig   `mapstructure:"ticket"`
+}
+
+type TicketConfig struct {
+	DefaultResponseHours   int `mapstructure:"default_response_hours"`   // 默认响应时间（小时）
+	DefaultResolutionHours int `mapstructure:"default_resolution_hours"` // 默认解决时间（小时）
 }
 
 type DatabaseConfig struct {

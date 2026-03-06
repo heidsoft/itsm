@@ -53,7 +53,7 @@ func (q *ToolQueue) worker() {
 		switch inv.ToolName {
 		case "create_ticket":
 			if q.tickets == nil {
-				q.tickets = NewTicketService(q.client, nil)
+				q.tickets = NewTicketService(q.client, nil, nil)
 			}
 			title, _ := args["title"].(string)
 			desc, _ := args["description"].(string)
@@ -66,7 +66,7 @@ func (q *ToolQueue) worker() {
 			res, err = q.tickets.CreateTicket(ctx, r, job.TenantID)
 		case "update_ticket":
 			if q.tickets == nil {
-				q.tickets = NewTicketService(q.client, nil)
+				q.tickets = NewTicketService(q.client, nil, nil)
 			}
 			ticketID := 0
 			if v, ok := args["ticket_id"].(float64); ok {

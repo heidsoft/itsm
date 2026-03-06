@@ -75,7 +75,7 @@ func NewApplication() *Application {
 
 	// 初始化业务服务层
 	incidentService := service.NewIncidentService(client, sugar)
-	ticketService := service.NewTicketService(client, sugar)
+	ticketService := service.NewTicketService(client, sugar, cfg)
 	serviceCatalogService := service.NewServiceCatalogService(client, sugar)
 	// 审批服务
 	approvalService := service.NewApprovalService(client, sugar)
