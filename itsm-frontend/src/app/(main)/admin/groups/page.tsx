@@ -31,6 +31,7 @@ interface Group {
 const GroupManagement = () => {
   const { message, modal } = App.useApp();
   const [groups, setGroups] = useState<Group[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -45,9 +46,10 @@ const GroupManagement = () => {
   }, []);
 
   const loadGroups = async () => {
+    setLoading(true);
     try {
       const { RoleAPI } = await import('@/lib/api/role-api');
-      const response = await RoleAPI.getRoles({ size: 100 }); // 获取所有角色
+      const response = await RoleAPI.getRoles({ size: 100 }); // 获取所有角色（暂用角色API）
 
       const mappedGroups: Group[] = response.roles.map((role: any) => ({
         id: role.id,
@@ -63,7 +65,10 @@ const GroupManagement = () => {
 
       setGroups(mappedGroups);
     } catch (error) {
+      console.error('Failed to load groups:', error);
       message.error('加载用户组失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -138,7 +143,7 @@ const GroupManagement = () => {
     setShowModal(true);
   };
 
-  const handleDeleteGroup = (groupId: number) => {
+  const handleDeleteGroup = async (groupId: number) => {
     const group = groups.find(g => g.id === groupId);
     if (group?.type === 'system') {
       message.warning('系统组不能删除！');
@@ -149,25 +154,47 @@ const GroupManagement = () => {
       content: '确定要删除这个用户组吗？',
       okText: '确认',
       cancelText: '取消',
-      onOk: () => {
-        setGroups(groups.filter(g => g.id !== groupId));
-        message.success('删除成功');
+      onOk: async () => {
+        try {
+          const { RoleAPI } = await import('@/lib/api/role-api');
+          await RoleAPI.deleteRole(groupId);
+          setGroups(groups.filter(g => g.id !== groupId));
+          message.success('删除成功');
+        } catch (error) {
+          console.error('Failed to delete group:', error);
+          message.error('删除失败');
+        }
       },
     });
   };
 
-  const handleToggleStatus = (groupId: number) => {
-    setGroups(
-      groups.map(group => {
-        if (group.id === groupId) {
-          return {
-            ...group,
-            status: group.status === 'active' ? 'inactive' : 'active',
-          };
-        }
-        return group;
-      })
-    );
+  const handleToggleStatus = async (groupId: number) => {
+    const group = groups.find(g => g.id === groupId);
+    if (!group) return;
+
+    const newStatus = group.status === 'active' ? 'inactive' : 'active';
+
+    try {
+      const { RoleAPI } = await import('@/lib/api/role-api');
+      await RoleAPI.updateRole(groupId, {
+        status: newStatus,
+      });
+      setGroups(
+        groups.map(g => {
+          if (g.id === groupId) {
+            return {
+              ...g,
+              status: newStatus,
+            };
+          }
+          return g;
+        })
+      );
+      message.success(newStatus === 'active' ? '用户组已启用' : '用户组已禁用');
+    } catch (error) {
+      console.error('Failed to toggle group status:', error);
+      message.error('状态更新失败');
+    }
   };
 
   // 统计数据

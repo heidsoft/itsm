@@ -248,6 +248,18 @@ func (f DiscoverySourceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Va
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.DiscoverySourceMutation", m)
 }
 
+// The EngineerSkillFunc type is an adapter to allow the use of ordinary
+// function as EngineerSkill mutator.
+type EngineerSkillFunc func(context.Context, *ent.EngineerSkillMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f EngineerSkillFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.EngineerSkillMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.EngineerSkillMutation", m)
+}
+
 // The IncidentFunc type is an adapter to allow the use of ordinary
 // function as Incident mutator.
 type IncidentFunc func(context.Context, *ent.IncidentMutation) (ent.Value, error)
@@ -270,6 +282,18 @@ func (f IncidentAlertFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Valu
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentAlertMutation", m)
+}
+
+// The IncidentEscalationRuleFunc type is an adapter to allow the use of ordinary
+// function as IncidentEscalationRule mutator.
+type IncidentEscalationRuleFunc func(context.Context, *ent.IncidentEscalationRuleMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f IncidentEscalationRuleFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.IncidentEscalationRuleMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.IncidentEscalationRuleMutation", m)
 }
 
 // The IncidentEventFunc type is an adapter to allow the use of ordinary
@@ -342,6 +366,18 @@ func (f KnowledgeArticleLikeFunc) Mutate(ctx context.Context, m ent.Mutation) (e
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnowledgeArticleLikeMutation", m)
+}
+
+// The KnownErrorFunc type is an adapter to allow the use of ordinary
+// function as KnownError mutator.
+type KnownErrorFunc func(context.Context, *ent.KnownErrorMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f KnownErrorFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.KnownErrorMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.KnownErrorMutation", m)
 }
 
 // The MessageFunc type is an adapter to allow the use of ordinary
@@ -654,6 +690,18 @@ func (f SLAMetricFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAMetricMutation", m)
+}
+
+// The SLAPolicyFunc type is an adapter to allow the use of ordinary
+// function as SLAPolicy mutator.
+type SLAPolicyFunc func(context.Context, *ent.SLAPolicyMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f SLAPolicyFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.SLAPolicyMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.SLAPolicyMutation", m)
 }
 
 // The SLAViolationFunc type is an adapter to allow the use of ordinary

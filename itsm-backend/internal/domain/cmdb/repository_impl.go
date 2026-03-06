@@ -311,6 +311,40 @@ func (r *EntRepository) ListCITypes(ctx context.Context, tenantID int) ([]*CITyp
 	return results, nil
 }
 
+func (r *EntRepository) UpdateCIType(ctx context.Context, ct *CIType) (*CIType, error) {
+	update := r.client.CIType.UpdateOneID(ct.ID).
+		SetName(ct.Name).
+		SetDescription(ct.Description).
+		SetIcon(ct.Icon).
+		SetColor(ct.Color).
+		SetIsActive(ct.IsActive)
+	if ct.AttributeSchema != "" {
+		update = update.SetAttributeSchema(ct.AttributeSchema)
+	}
+
+	e, err := update.Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return toTypeDomain(e), nil
+}
+
+func (r *EntRepository) DeleteCIType(ctx context.Context, id int, tenantID int) error {
+	_, err := r.client.CIType.Delete().
+		Where(citype.ID(id), citype.TenantID(tenantID)).
+		Exec(ctx)
+	return err
+}
+
+func (r *EntRepository) CountCIsByType(ctx context.Context, typeID int, tenantID int) (int, error) {
+	return r.client.ConfigurationItem.Query().
+		Where(
+			configurationitem.CiTypeID(typeID),
+			configurationitem.TenantID(tenantID),
+		).
+		Count(ctx)
+}
+
 // Relationships
 func (r *EntRepository) CreateRelationship(ctx context.Context, rel *CIRelationship) (*CIRelationship, error) {
 	e, err := r.client.CIRelationship.Create().

@@ -20,6 +20,7 @@ import {
   Table,
   Button,
   Input,
+  InputNumber,
   Select,
   Space,
   Typography,
@@ -278,14 +279,35 @@ const SLADefinitionManagement = () => {
       const values = await form.validateFields();
       setLoading(true);
 
+      // 转换时间值和单位为分钟数
+      const convertToMinutes = (value: number, unit: string): number => {
+        switch (unit) {
+          case 'hours':
+            return value * 60;
+          case 'days':
+            return value * 24 * 60;
+          default:
+            return value;
+        }
+      };
+
+      const responseTimeMinutes = convertToMinutes(
+        values.responseTimeValue || 60,
+        values.responseTimeUnit || 'minutes'
+      );
+      const resolutionTimeMinutes = convertToMinutes(
+        values.resolutionTimeValue || 240,
+        values.resolutionTimeUnit || 'hours'
+      );
+
       // 转换表单值格式
       const apiData = {
         name: values.name,
         description: values.description,
         service_type: values.serviceType,
         priority: values.priority,
-        response_time_minutes: parseInt(values.responseTime) || 60,
-        resolution_time_minutes: parseInt(values.resolutionTime) || 240,
+        response_time_minutes: responseTimeMinutes,
+        resolution_time_minutes: resolutionTimeMinutes,
         availability_target: parseInt(values.availability) || 99,
       };
 
@@ -703,19 +725,39 @@ const SLADefinitionManagement = () => {
             <Col span={8}>
               <Form.Item
                 label="响应时间"
-                name="responseTime"
-                rules={[{ required: true, message: '请输入响应时间' }]}
+                required
               >
-                <Input placeholder="如: 30分钟" />
+                <Space.Compact>
+                  <Form.Item name="responseTimeValue" noStyle rules={[{ required: true, message: '请输入数值' }]}>
+                    <InputNumber min={1} placeholder="30" style={{ width: '60%' }} />
+                  </Form.Item>
+                  <Form.Item name="responseTimeUnit" noInitialValue>
+                    <Select style={{ width: '40%' }} defaultValue="minutes">
+                      <Option value="minutes">分钟</Option>
+                      <Option value="hours">小时</Option>
+                      <Option value="days">天</Option>
+                    </Select>
+                  </Form.Item>
+                </Space.Compact>
               </Form.Item>
             </Col>
             <Col span={8}>
               <Form.Item
                 label="解决时间"
-                name="resolutionTime"
-                rules={[{ required: true, message: '请输入解决时间' }]}
+                required
               >
-                <Input placeholder="如: 4小时" />
+                <Space.Compact>
+                  <Form.Item name="resolutionTimeValue" noStyle rules={[{ required: true, message: '请输入数值' }]}>
+                    <InputNumber min={1} placeholder="4" style={{ width: '60%' }} />
+                  </Form.Item>
+                  <Form.Item name="resolutionTimeUnit" noInitialValue>
+                    <Select style={{ width: '40%' }} defaultValue="hours">
+                      <Option value="minutes">分钟</Option>
+                      <Option value="hours">小时</Option>
+                      <Option value="days">天</Option>
+                    </Select>
+                  </Form.Item>
+                </Space.Compact>
               </Form.Item>
             </Col>
           </Row>

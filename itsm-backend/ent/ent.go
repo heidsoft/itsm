@@ -26,14 +26,17 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentescalationrule"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
@@ -63,6 +66,7 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
@@ -170,14 +174,17 @@ func checkColumn(table, column string) error {
 			discoveryjob.Table:            discoveryjob.ValidColumn,
 			discoveryresult.Table:         discoveryresult.ValidColumn,
 			discoverysource.Table:         discoverysource.ValidColumn,
+			engineerskill.Table:           engineerskill.ValidColumn,
 			incident.Table:                incident.ValidColumn,
 			incidentalert.Table:           incidentalert.ValidColumn,
+			incidentescalationrule.Table:  incidentescalationrule.ValidColumn,
 			incidentevent.Table:           incidentevent.ValidColumn,
 			incidentmetric.Table:          incidentmetric.ValidColumn,
 			incidentrule.Table:            incidentrule.ValidColumn,
 			incidentruleexecution.Table:   incidentruleexecution.ValidColumn,
 			knowledgearticle.Table:        knowledgearticle.ValidColumn,
 			knowledgearticlelike.Table:    knowledgearticlelike.ValidColumn,
+			knownerror.Table:              knownerror.ValidColumn,
 			message.Table:                 message.ValidColumn,
 			microservice.Table:            microservice.ValidColumn,
 			notification.Table:            notification.ValidColumn,
@@ -204,6 +211,7 @@ func checkColumn(table, column string) error {
 			slaalertrule.Table:            slaalertrule.ValidColumn,
 			sladefinition.Table:           sladefinition.ValidColumn,
 			slametric.Table:               slametric.ValidColumn,
+			slapolicy.Table:               slapolicy.ValidColumn,
 			slaviolation.Table:            slaviolation.ValidColumn,
 			servicecatalog.Table:          servicecatalog.ValidColumn,
 			servicerequest.Table:          servicerequest.ValidColumn,

@@ -74,6 +74,7 @@ type Ticket struct {
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TicketQuery when eager-loading is set.
 	Edges              TicketEdges `json:"edges"`
+	sla_policy_tickets *int
 	ticket_tag_tickets *int
 	selectValues       sql.SelectValues
 }
@@ -282,7 +283,9 @@ func (*Ticket) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case ticket.FieldSLAResponseDeadline, ticket.FieldSLAResolutionDeadline, ticket.FieldFirstResponseAt, ticket.FieldResolvedAt, ticket.FieldRatedAt, ticket.FieldCreatedAt, ticket.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case ticket.ForeignKeys[0]: // ticket_tag_tickets
+		case ticket.ForeignKeys[0]: // sla_policy_tickets
+			values[i] = new(sql.NullInt64)
+		case ticket.ForeignKeys[1]: // ticket_tag_tickets
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -456,6 +459,13 @@ func (t *Ticket) assignValues(columns []string, values []any) error {
 				t.UpdatedAt = value.Time
 			}
 		case ticket.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field sla_policy_tickets", value)
+			} else if value.Valid {
+				t.sla_policy_tickets = new(int)
+				*t.sla_policy_tickets = int(value.Int64)
+			}
+		case ticket.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field ticket_tag_tickets", value)
 			} else if value.Valid {

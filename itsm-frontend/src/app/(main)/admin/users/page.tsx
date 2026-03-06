@@ -38,6 +38,7 @@ import {
   Empty,
 } from 'antd';
 import { UserApi, type User } from '@/lib/api/user-api';
+import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
 const { Title, Text } = Typography;
 const { Search: AntSearch } = Input;
@@ -46,6 +47,8 @@ const { Option } = Select;
 const UserManagement: React.FC = () => {
   const { token } = theme.useToken();
   const { message } = App.useApp();
+  const { currentTenant } = useAuthStore();
+  useAuthStoreHydration();
 
   // 状态管理
   const [users, setUsers] = useState<User[]>([]);
@@ -110,6 +113,11 @@ const UserManagement: React.FC = () => {
   const handleCreateUser = async (values: any) => {
     setLoading(true);
     try {
+      const tenantId = currentTenant?.id;
+      if (!tenantId) {
+        message.error('无法获取租户信息，请重新登录');
+        return;
+      }
       await UserApi.createUser({
         username: values.username,
         email: values.email,
@@ -117,7 +125,7 @@ const UserManagement: React.FC = () => {
         department: values.department,
         phone: values.phone,
         password: values.password,
-        tenant_id: 1,
+        tenant_id: tenantId,
       });
       message.success('用户创建成功');
       setIsCreateModalVisible(false);
@@ -172,13 +180,15 @@ const UserManagement: React.FC = () => {
   const handleToggleUserStatus = async (userId: number, currentStatus: boolean) => {
     setLoading(true);
     try {
-      await UserApi.updateUser(userId, { ...{} });
+      const newStatus = !currentStatus;
+      await UserApi.changeUserStatus(userId, newStatus);
       setUsers(prev =>
-        prev.map(user => (user.id === userId ? { ...user, active: !currentStatus } : user))
+        prev.map(user => (user.id === userId ? { ...user, active: newStatus } : user))
       );
-      message.success('状态更新成功');
+      message.success(newStatus ? '用户已激活' : '用户已禁用');
       loadUsers();
     } catch (error) {
+      console.error('Failed to toggle user status:', error);
       message.error('状态更新失败');
     } finally {
       setLoading(false);

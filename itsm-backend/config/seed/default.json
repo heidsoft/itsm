@@ -110,5 +110,15 @@
     {"name": "紧急工单", "description": "紧急和高优先级工单", "is_shared": true, "columns": ["id", "title", "priority", "status", "assignee", "created_at"]},
     {"name": "未分配工单", "description": "尚未分配的工单", "is_shared": true, "columns": ["id", "title", "priority", "status", "creator", "created_at"]},
     {"name": "已关闭工单", "description": "已完成的工单", "is_shared": false, "columns": ["id", "title", "priority", "status", "assignee", "closed_at"]}
+  ],
+  "ci_types": [
+    {"name": "server", "description": "服务器", "icon": "server", "color": "#28a745", "is_active": true},
+    {"name": "database", "description": "数据库", "icon": "database", "color": "#fd7e14", "is_active": true},
+    {"name": "network", "description": "网络设备", "icon": "network", "color": "#17a2b8", "is_active": true},
+    {"name": "storage", "description": "存储设备", "icon": "storage", "color": "#e83e8c", "is_active": true},
+    {"name": "application", "description": "应用服务", "icon": "app", "color": "#6610f2", "is_active": true},
+    {"name": "middleware", "description": "中间件", "icon": "middleware", "color": "#e74c3c", "is_active": true},
+    {"name": "cloud_vm", "description": "云虚拟机", "icon": "cloud", "color": "#6f42c1", "is_active": true},
+    {"name": "kubernetes", "description": "Kubernetes资源", "icon": "kubernetes", "color": "#20c997", "is_active": true}
   ]
 }

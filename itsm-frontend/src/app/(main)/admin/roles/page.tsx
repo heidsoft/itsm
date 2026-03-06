@@ -37,6 +37,7 @@ import {
   Alert,
   Tabs,
 } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -69,7 +70,8 @@ const PERMISSION_ACTIONS = {
 
 // 引入角色API
 import { RoleAPI } from '@/lib/api/role-api';
-import type { Role } from '@/types/common';
+import { UserApi } from '@/lib/api/user-api';
+import type { Role } from '@/lib/api/api-config';
 
 // 权限定义
 const PERMISSIONS = [
@@ -152,25 +154,29 @@ export default function RoleManagement() {
   const loadRoles = async () => {
     setLoading(true);
     try {
-      const response = await RoleAPI.getRoles({
-        search: searchTerm || undefined,
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-      });
+      const [rolesResponse, userStats] = await Promise.all([
+        RoleAPI.getRoles({
+          search: searchTerm || undefined,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+        }),
+        UserApi.getUserStats().catch(() => ({ total: 0, active: 0, inactive: 0 })),
+      ]);
 
-      setRoles(response.roles);
+      setRoles(rolesResponse.roles);
 
       // 计算统计数据
-      const totalRoles = response.roles.length;
-      const activeRoles = response.roles.filter((r: Role) => r.status === 'active').length;
-      const inactiveRoles = response.roles.filter((r: Role) => r.status === 'inactive').length;
+      const totalRoles = rolesResponse.roles.length;
+      const activeRoles = rolesResponse.roles.filter((r: Role) => r.status === 'active').length;
+      const inactiveRoles = rolesResponse.roles.filter((r: Role) => r.status === 'inactive').length;
 
       setStats({
         totalRoles,
         activeRoles,
         inactiveRoles,
-        totalUsers: 128, // 模拟用户数
+        totalUsers: userStats.total,
       });
     } catch (error) {
+      console.error('Failed to load roles:', error);
       message.error('加载角色数据失败');
     } finally {
       setLoading(false);
@@ -263,7 +269,7 @@ export default function RoleManagement() {
   };
 
   // 表格列定义
-  const columns = [
+  const columns: ColumnsType<RoleItem> = [
     {
       title: '角色信息',
       key: 'info',
@@ -288,28 +294,19 @@ export default function RoleManagement() {
       title: '权限数量',
       key: 'permissions',
       dataIndex: 'permissions',
-      render: (permissions: string[]) => <span>{permissions.length}</span>,
+      render: (permissions: string[]) => <span>{permissions?.length || 0}</span>,
     },
     {
       title: '创建时间',
       key: 'created_at',
       dataIndex: 'created_at',
-      render: (createdAt: string) => <span>{new Date(createdAt).toLocaleDateString()}</span>,
+      render: (createdAt: string) => <span>{createdAt ? new Date(createdAt).toLocaleDateString() : '-'}</span>,
     },
     {
       title: '操作',
       key: 'actions',
       width: 150,
-      render: (
-        _: unknown,
-        record: {
-          id: number;
-          name: string;
-          description?: string;
-          status: string;
-          permissions: string[];
-        }
-      ) => (
+      render: (_: unknown, record: RoleItem) => (
         <Space size="small">
           <Tooltip title="编辑">
             <Button
@@ -550,7 +547,7 @@ export default function RoleManagement() {
       {/* 角色列表 */}
       <Card className="enterprise-card">
         <Table
-          columns={columns as any}
+          columns={columns}
           dataSource={roles}
           rowKey="id"
           loading={loading}

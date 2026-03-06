@@ -10,22 +10,31 @@ type CreateCITypeRequest struct {
 	Description     string                 `json:"description"`
 	Icon            string                 `json:"icon"`
 	Color           string                 `json:"color"`
-	AttributeSchema map[string]interface{} `json:"attribute_schema"`
-	IsSystemDefined bool                   `json:"is_system_defined"`
+	AttributeSchema string                 `json:"attribute_schema"`
+	IsActive        *bool                  `json:"is_active"`
 	TenantID        int                    `json:"tenant_id"`
 }
 
-type CITypeResponse struct {
-	ID              int                    `json:"id"`
-	Name            string                 `json:"name"`
+type UpdateCITypeRequest struct {
+	Name            string                 `json:"name" binding:"required"`
 	Description     string                 `json:"description"`
 	Icon            string                 `json:"icon"`
 	Color           string                 `json:"color"`
-	AttributeSchema map[string]interface{} `json:"attribute_schema"`
-	IsSystemDefined bool                   `json:"is_system_defined"`
-	TenantID        int                    `json:"tenant_id"`
-	CreatedAt       time.Time              `json:"created_at"`
-	UpdatedAt       time.Time              `json:"updated_at"`
+	AttributeSchema string                 `json:"attribute_schema"`
+	IsActive        *bool                  `json:"is_active"`
+}
+
+type CITypeResponse struct {
+	ID              int       `json:"id"`
+	Name            string    `json:"name"`
+	Description     string    `json:"description"`
+	Icon            string    `json:"icon"`
+	Color           string    `json:"color"`
+	AttributeSchema string    `json:"attribute_schema"`
+	IsActive        bool      `json:"is_active"`
+	TenantID        int       `json:"tenant_id"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // 生命周期管理DTO

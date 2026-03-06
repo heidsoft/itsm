@@ -7,6 +7,8 @@ import (
 
 	"itsm-backend/dto"
 	"itsm-backend/ent"
+
+	"go.uber.org/zap"
 )
 
 type ToolJob struct {
@@ -53,7 +55,7 @@ func (q *ToolQueue) worker() {
 		switch inv.ToolName {
 		case "create_ticket":
 			if q.tickets == nil {
-				q.tickets = NewTicketService(q.client, nil, nil)
+				q.tickets = NewTicketService(q.client, zap.NewNop().Sugar())
 			}
 			title, _ := args["title"].(string)
 			desc, _ := args["description"].(string)
@@ -66,7 +68,7 @@ func (q *ToolQueue) worker() {
 			res, err = q.tickets.CreateTicket(ctx, r, job.TenantID)
 		case "update_ticket":
 			if q.tickets == nil {
-				q.tickets = NewTicketService(q.client, nil, nil)
+				q.tickets = NewTicketService(q.client, zap.NewNop().Sugar())
 			}
 			ticketID := 0
 			if v, ok := args["ticket_id"].(float64); ok {

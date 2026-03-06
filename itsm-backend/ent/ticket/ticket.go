@@ -237,6 +237,7 @@ var Columns = []string{
 // ForeignKeys holds the SQL foreign-keys that are owned by the "tickets"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
+	"sla_policy_tickets",
 	"ticket_tag_tickets",
 }
 

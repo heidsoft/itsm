@@ -31,14 +31,17 @@ import (
 	"itsm-backend/ent/discoveryjob"
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
+	"itsm-backend/ent/engineerskill"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
+	"itsm-backend/ent/incidentescalationrule"
 	"itsm-backend/ent/incidentevent"
 	"itsm-backend/ent/incidentmetric"
 	"itsm-backend/ent/incidentrule"
 	"itsm-backend/ent/incidentruleexecution"
 	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/knowledgearticlelike"
+	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
 	"itsm-backend/ent/notification"
@@ -68,6 +71,7 @@ import (
 	"itsm-backend/ent/slaalertrule"
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
+	"itsm-backend/ent/slapolicy"
 	"itsm-backend/ent/slaviolation"
 	"itsm-backend/ent/systemconfig"
 	"itsm-backend/ent/tag"
@@ -141,10 +145,14 @@ type Client struct {
 	DiscoveryResult *DiscoveryResultClient
 	// DiscoverySource is the client for interacting with the DiscoverySource builders.
 	DiscoverySource *DiscoverySourceClient
+	// EngineerSkill is the client for interacting with the EngineerSkill builders.
+	EngineerSkill *EngineerSkillClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// IncidentAlert is the client for interacting with the IncidentAlert builders.
 	IncidentAlert *IncidentAlertClient
+	// IncidentEscalationRule is the client for interacting with the IncidentEscalationRule builders.
+	IncidentEscalationRule *IncidentEscalationRuleClient
 	// IncidentEvent is the client for interacting with the IncidentEvent builders.
 	IncidentEvent *IncidentEventClient
 	// IncidentMetric is the client for interacting with the IncidentMetric builders.
@@ -157,6 +165,8 @@ type Client struct {
 	KnowledgeArticle *KnowledgeArticleClient
 	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
 	KnowledgeArticleLike *KnowledgeArticleLikeClient
+	// KnownError is the client for interacting with the KnownError builders.
+	KnownError *KnownErrorClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Microservice is the client for interacting with the Microservice builders.
@@ -209,6 +219,8 @@ type Client struct {
 	SLADefinition *SLADefinitionClient
 	// SLAMetric is the client for interacting with the SLAMetric builders.
 	SLAMetric *SLAMetricClient
+	// SLAPolicy is the client for interacting with the SLAPolicy builders.
+	SLAPolicy *SLAPolicyClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
@@ -288,14 +300,17 @@ func (c *Client) init() {
 	c.DiscoveryJob = NewDiscoveryJobClient(c.config)
 	c.DiscoveryResult = NewDiscoveryResultClient(c.config)
 	c.DiscoverySource = NewDiscoverySourceClient(c.config)
+	c.EngineerSkill = NewEngineerSkillClient(c.config)
 	c.Incident = NewIncidentClient(c.config)
 	c.IncidentAlert = NewIncidentAlertClient(c.config)
+	c.IncidentEscalationRule = NewIncidentEscalationRuleClient(c.config)
 	c.IncidentEvent = NewIncidentEventClient(c.config)
 	c.IncidentMetric = NewIncidentMetricClient(c.config)
 	c.IncidentRule = NewIncidentRuleClient(c.config)
 	c.IncidentRuleExecution = NewIncidentRuleExecutionClient(c.config)
 	c.KnowledgeArticle = NewKnowledgeArticleClient(c.config)
 	c.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(c.config)
+	c.KnownError = NewKnownErrorClient(c.config)
 	c.Message = NewMessageClient(c.config)
 	c.Microservice = NewMicroserviceClient(c.config)
 	c.Notification = NewNotificationClient(c.config)
@@ -322,6 +337,7 @@ func (c *Client) init() {
 	c.SLAAlertRule = NewSLAAlertRuleClient(c.config)
 	c.SLADefinition = NewSLADefinitionClient(c.config)
 	c.SLAMetric = NewSLAMetricClient(c.config)
+	c.SLAPolicy = NewSLAPolicyClient(c.config)
 	c.SLAViolation = NewSLAViolationClient(c.config)
 	c.ServiceCatalog = NewServiceCatalogClient(c.config)
 	c.ServiceRequest = NewServiceRequestClient(c.config)
@@ -458,14 +474,17 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		DiscoveryJob:            NewDiscoveryJobClient(cfg),
 		DiscoveryResult:         NewDiscoveryResultClient(cfg),
 		DiscoverySource:         NewDiscoverySourceClient(cfg),
+		EngineerSkill:           NewEngineerSkillClient(cfg),
 		Incident:                NewIncidentClient(cfg),
 		IncidentAlert:           NewIncidentAlertClient(cfg),
+		IncidentEscalationRule:  NewIncidentEscalationRuleClient(cfg),
 		IncidentEvent:           NewIncidentEventClient(cfg),
 		IncidentMetric:          NewIncidentMetricClient(cfg),
 		IncidentRule:            NewIncidentRuleClient(cfg),
 		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
 		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
 		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
+		KnownError:              NewKnownErrorClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
@@ -492,6 +511,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
 		SLADefinition:           NewSLADefinitionClient(cfg),
 		SLAMetric:               NewSLAMetricClient(cfg),
+		SLAPolicy:               NewSLAPolicyClient(cfg),
 		SLAViolation:            NewSLAViolationClient(cfg),
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
@@ -555,14 +575,17 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		DiscoveryJob:            NewDiscoveryJobClient(cfg),
 		DiscoveryResult:         NewDiscoveryResultClient(cfg),
 		DiscoverySource:         NewDiscoverySourceClient(cfg),
+		EngineerSkill:           NewEngineerSkillClient(cfg),
 		Incident:                NewIncidentClient(cfg),
 		IncidentAlert:           NewIncidentAlertClient(cfg),
+		IncidentEscalationRule:  NewIncidentEscalationRuleClient(cfg),
 		IncidentEvent:           NewIncidentEventClient(cfg),
 		IncidentMetric:          NewIncidentMetricClient(cfg),
 		IncidentRule:            NewIncidentRuleClient(cfg),
 		IncidentRuleExecution:   NewIncidentRuleExecutionClient(cfg),
 		KnowledgeArticle:        NewKnowledgeArticleClient(cfg),
 		KnowledgeArticleLike:    NewKnowledgeArticleLikeClient(cfg),
+		KnownError:              NewKnownErrorClient(cfg),
 		Message:                 NewMessageClient(cfg),
 		Microservice:            NewMicroserviceClient(cfg),
 		Notification:            NewNotificationClient(cfg),
@@ -589,6 +612,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		SLAAlertRule:            NewSLAAlertRuleClient(cfg),
 		SLADefinition:           NewSLADefinitionClient(cfg),
 		SLAMetric:               NewSLAMetricClient(cfg),
+		SLAPolicy:               NewSLAPolicyClient(cfg),
 		SLAViolation:            NewSLAViolationClient(cfg),
 		ServiceCatalog:          NewServiceCatalogClient(cfg),
 		ServiceRequest:          NewServiceRequestClient(cfg),
@@ -646,17 +670,18 @@ func (c *Client) Use(hooks ...Hook) {
 		c.AssetLicense, c.AuditLog, c.CIAttributeDefinition, c.CIRelationship,
 		c.CIType, c.Change, c.CloudAccount, c.CloudResource, c.CloudService,
 		c.ConfigurationItem, c.Conversation, c.Department, c.DiscoveryJob,
-		c.DiscoveryResult, c.DiscoverySource, c.Incident, c.IncidentAlert,
-		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
-		c.KnowledgeArticle, c.KnowledgeArticleLike, c.Message, c.Microservice,
+		c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Incident,
+		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
+		c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.KnownError, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
 		c.Problem, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
 		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
 		c.RelationshipType, c.Release, c.Role, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig,
+		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
 		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
 		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
@@ -674,17 +699,18 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.AssetLicense, c.AuditLog, c.CIAttributeDefinition, c.CIRelationship,
 		c.CIType, c.Change, c.CloudAccount, c.CloudResource, c.CloudService,
 		c.ConfigurationItem, c.Conversation, c.Department, c.DiscoveryJob,
-		c.DiscoveryResult, c.DiscoverySource, c.Incident, c.IncidentAlert,
-		c.IncidentEvent, c.IncidentMetric, c.IncidentRule, c.IncidentRuleExecution,
-		c.KnowledgeArticle, c.KnowledgeArticleLike, c.Message, c.Microservice,
+		c.DiscoveryResult, c.DiscoverySource, c.EngineerSkill, c.Incident,
+		c.IncidentAlert, c.IncidentEscalationRule, c.IncidentEvent, c.IncidentMetric,
+		c.IncidentRule, c.IncidentRuleExecution, c.KnowledgeArticle,
+		c.KnowledgeArticleLike, c.KnownError, c.Message, c.Microservice,
 		c.Notification, c.NotificationPreference, c.PasswordResetToken, c.Permission,
 		c.Problem, c.ProcessBinding, c.ProcessDefinition, c.ProcessDeployment,
 		c.ProcessExecutionHistory, c.ProcessInstance, c.ProcessTask, c.ProcessVariable,
 		c.ProcessVersionChangelog, c.Project, c.PromptTemplate, c.ProvisioningTask,
 		c.RelationshipType, c.Release, c.Role, c.RootCauseAnalysis, c.SLAAlertHistory,
-		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAViolation, c.ServiceCatalog,
-		c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig, c.Tag, c.Team,
-		c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
+		c.SLAAlertRule, c.SLADefinition, c.SLAMetric, c.SLAPolicy, c.SLAViolation,
+		c.ServiceCatalog, c.ServiceRequest, c.ServiceRequestApproval, c.SystemConfig,
+		c.Tag, c.Team, c.Tenant, c.Ticket, c.TicketAssignmentRule, c.TicketAttachment,
 		c.TicketAutomationRule, c.TicketCategory, c.TicketComment,
 		c.TicketNotification, c.TicketTag, c.TicketTemplate, c.TicketView,
 		c.ToolInvocation, c.User, c.Workflow, c.WorkflowInstance, c.WorkflowTask,
@@ -737,10 +763,14 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.DiscoveryResult.mutate(ctx, m)
 	case *DiscoverySourceMutation:
 		return c.DiscoverySource.mutate(ctx, m)
+	case *EngineerSkillMutation:
+		return c.EngineerSkill.mutate(ctx, m)
 	case *IncidentMutation:
 		return c.Incident.mutate(ctx, m)
 	case *IncidentAlertMutation:
 		return c.IncidentAlert.mutate(ctx, m)
+	case *IncidentEscalationRuleMutation:
+		return c.IncidentEscalationRule.mutate(ctx, m)
 	case *IncidentEventMutation:
 		return c.IncidentEvent.mutate(ctx, m)
 	case *IncidentMetricMutation:
@@ -753,6 +783,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.KnowledgeArticle.mutate(ctx, m)
 	case *KnowledgeArticleLikeMutation:
 		return c.KnowledgeArticleLike.mutate(ctx, m)
+	case *KnownErrorMutation:
+		return c.KnownError.mutate(ctx, m)
 	case *MessageMutation:
 		return c.Message.mutate(ctx, m)
 	case *MicroserviceMutation:
@@ -805,6 +837,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.SLADefinition.mutate(ctx, m)
 	case *SLAMetricMutation:
 		return c.SLAMetric.mutate(ctx, m)
+	case *SLAPolicyMutation:
+		return c.SLAPolicy.mutate(ctx, m)
 	case *SLAViolationMutation:
 		return c.SLAViolation.mutate(ctx, m)
 	case *ServiceCatalogMutation:
@@ -4094,6 +4128,139 @@ func (c *DiscoverySourceClient) mutate(ctx context.Context, m *DiscoverySourceMu
 	}
 }
 
+// EngineerSkillClient is a client for the EngineerSkill schema.
+type EngineerSkillClient struct {
+	config
+}
+
+// NewEngineerSkillClient returns a client for the EngineerSkill from the given config.
+func NewEngineerSkillClient(c config) *EngineerSkillClient {
+	return &EngineerSkillClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `engineerskill.Hooks(f(g(h())))`.
+func (c *EngineerSkillClient) Use(hooks ...Hook) {
+	c.hooks.EngineerSkill = append(c.hooks.EngineerSkill, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `engineerskill.Intercept(f(g(h())))`.
+func (c *EngineerSkillClient) Intercept(interceptors ...Interceptor) {
+	c.inters.EngineerSkill = append(c.inters.EngineerSkill, interceptors...)
+}
+
+// Create returns a builder for creating a EngineerSkill entity.
+func (c *EngineerSkillClient) Create() *EngineerSkillCreate {
+	mutation := newEngineerSkillMutation(c.config, OpCreate)
+	return &EngineerSkillCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of EngineerSkill entities.
+func (c *EngineerSkillClient) CreateBulk(builders ...*EngineerSkillCreate) *EngineerSkillCreateBulk {
+	return &EngineerSkillCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *EngineerSkillClient) MapCreateBulk(slice any, setFunc func(*EngineerSkillCreate, int)) *EngineerSkillCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &EngineerSkillCreateBulk{err: fmt.Errorf("calling to EngineerSkillClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*EngineerSkillCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &EngineerSkillCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for EngineerSkill.
+func (c *EngineerSkillClient) Update() *EngineerSkillUpdate {
+	mutation := newEngineerSkillMutation(c.config, OpUpdate)
+	return &EngineerSkillUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *EngineerSkillClient) UpdateOne(es *EngineerSkill) *EngineerSkillUpdateOne {
+	mutation := newEngineerSkillMutation(c.config, OpUpdateOne, withEngineerSkill(es))
+	return &EngineerSkillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *EngineerSkillClient) UpdateOneID(id int) *EngineerSkillUpdateOne {
+	mutation := newEngineerSkillMutation(c.config, OpUpdateOne, withEngineerSkillID(id))
+	return &EngineerSkillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for EngineerSkill.
+func (c *EngineerSkillClient) Delete() *EngineerSkillDelete {
+	mutation := newEngineerSkillMutation(c.config, OpDelete)
+	return &EngineerSkillDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *EngineerSkillClient) DeleteOne(es *EngineerSkill) *EngineerSkillDeleteOne {
+	return c.DeleteOneID(es.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *EngineerSkillClient) DeleteOneID(id int) *EngineerSkillDeleteOne {
+	builder := c.Delete().Where(engineerskill.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &EngineerSkillDeleteOne{builder}
+}
+
+// Query returns a query builder for EngineerSkill.
+func (c *EngineerSkillClient) Query() *EngineerSkillQuery {
+	return &EngineerSkillQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeEngineerSkill},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a EngineerSkill entity by its id.
+func (c *EngineerSkillClient) Get(ctx context.Context, id int) (*EngineerSkill, error) {
+	return c.Query().Where(engineerskill.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *EngineerSkillClient) GetX(ctx context.Context, id int) *EngineerSkill {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *EngineerSkillClient) Hooks() []Hook {
+	return c.hooks.EngineerSkill
+}
+
+// Interceptors returns the client interceptors.
+func (c *EngineerSkillClient) Interceptors() []Interceptor {
+	return c.inters.EngineerSkill
+}
+
+func (c *EngineerSkillClient) mutate(ctx context.Context, m *EngineerSkillMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&EngineerSkillCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&EngineerSkillUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&EngineerSkillUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&EngineerSkillDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown EngineerSkill mutation op: %q", m.Op())
+	}
+}
+
 // IncidentClient is a client for the Incident schema.
 type IncidentClient struct {
 	config
@@ -4469,6 +4636,139 @@ func (c *IncidentAlertClient) mutate(ctx context.Context, m *IncidentAlertMutati
 		return (&IncidentAlertDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown IncidentAlert mutation op: %q", m.Op())
+	}
+}
+
+// IncidentEscalationRuleClient is a client for the IncidentEscalationRule schema.
+type IncidentEscalationRuleClient struct {
+	config
+}
+
+// NewIncidentEscalationRuleClient returns a client for the IncidentEscalationRule from the given config.
+func NewIncidentEscalationRuleClient(c config) *IncidentEscalationRuleClient {
+	return &IncidentEscalationRuleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `incidentescalationrule.Hooks(f(g(h())))`.
+func (c *IncidentEscalationRuleClient) Use(hooks ...Hook) {
+	c.hooks.IncidentEscalationRule = append(c.hooks.IncidentEscalationRule, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `incidentescalationrule.Intercept(f(g(h())))`.
+func (c *IncidentEscalationRuleClient) Intercept(interceptors ...Interceptor) {
+	c.inters.IncidentEscalationRule = append(c.inters.IncidentEscalationRule, interceptors...)
+}
+
+// Create returns a builder for creating a IncidentEscalationRule entity.
+func (c *IncidentEscalationRuleClient) Create() *IncidentEscalationRuleCreate {
+	mutation := newIncidentEscalationRuleMutation(c.config, OpCreate)
+	return &IncidentEscalationRuleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of IncidentEscalationRule entities.
+func (c *IncidentEscalationRuleClient) CreateBulk(builders ...*IncidentEscalationRuleCreate) *IncidentEscalationRuleCreateBulk {
+	return &IncidentEscalationRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *IncidentEscalationRuleClient) MapCreateBulk(slice any, setFunc func(*IncidentEscalationRuleCreate, int)) *IncidentEscalationRuleCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &IncidentEscalationRuleCreateBulk{err: fmt.Errorf("calling to IncidentEscalationRuleClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*IncidentEscalationRuleCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &IncidentEscalationRuleCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for IncidentEscalationRule.
+func (c *IncidentEscalationRuleClient) Update() *IncidentEscalationRuleUpdate {
+	mutation := newIncidentEscalationRuleMutation(c.config, OpUpdate)
+	return &IncidentEscalationRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *IncidentEscalationRuleClient) UpdateOne(ier *IncidentEscalationRule) *IncidentEscalationRuleUpdateOne {
+	mutation := newIncidentEscalationRuleMutation(c.config, OpUpdateOne, withIncidentEscalationRule(ier))
+	return &IncidentEscalationRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *IncidentEscalationRuleClient) UpdateOneID(id int) *IncidentEscalationRuleUpdateOne {
+	mutation := newIncidentEscalationRuleMutation(c.config, OpUpdateOne, withIncidentEscalationRuleID(id))
+	return &IncidentEscalationRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for IncidentEscalationRule.
+func (c *IncidentEscalationRuleClient) Delete() *IncidentEscalationRuleDelete {
+	mutation := newIncidentEscalationRuleMutation(c.config, OpDelete)
+	return &IncidentEscalationRuleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *IncidentEscalationRuleClient) DeleteOne(ier *IncidentEscalationRule) *IncidentEscalationRuleDeleteOne {
+	return c.DeleteOneID(ier.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *IncidentEscalationRuleClient) DeleteOneID(id int) *IncidentEscalationRuleDeleteOne {
+	builder := c.Delete().Where(incidentescalationrule.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &IncidentEscalationRuleDeleteOne{builder}
+}
+
+// Query returns a query builder for IncidentEscalationRule.
+func (c *IncidentEscalationRuleClient) Query() *IncidentEscalationRuleQuery {
+	return &IncidentEscalationRuleQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeIncidentEscalationRule},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a IncidentEscalationRule entity by its id.
+func (c *IncidentEscalationRuleClient) Get(ctx context.Context, id int) (*IncidentEscalationRule, error) {
+	return c.Query().Where(incidentescalationrule.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *IncidentEscalationRuleClient) GetX(ctx context.Context, id int) *IncidentEscalationRule {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *IncidentEscalationRuleClient) Hooks() []Hook {
+	return c.hooks.IncidentEscalationRule
+}
+
+// Interceptors returns the client interceptors.
+func (c *IncidentEscalationRuleClient) Interceptors() []Interceptor {
+	return c.inters.IncidentEscalationRule
+}
+
+func (c *IncidentEscalationRuleClient) mutate(ctx context.Context, m *IncidentEscalationRuleMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&IncidentEscalationRuleCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&IncidentEscalationRuleUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&IncidentEscalationRuleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&IncidentEscalationRuleDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown IncidentEscalationRule mutation op: %q", m.Op())
 	}
 }
 
@@ -5363,6 +5663,171 @@ func (c *KnowledgeArticleLikeClient) mutate(ctx context.Context, m *KnowledgeArt
 		return (&KnowledgeArticleLikeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown KnowledgeArticleLike mutation op: %q", m.Op())
+	}
+}
+
+// KnownErrorClient is a client for the KnownError schema.
+type KnownErrorClient struct {
+	config
+}
+
+// NewKnownErrorClient returns a client for the KnownError from the given config.
+func NewKnownErrorClient(c config) *KnownErrorClient {
+	return &KnownErrorClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `knownerror.Hooks(f(g(h())))`.
+func (c *KnownErrorClient) Use(hooks ...Hook) {
+	c.hooks.KnownError = append(c.hooks.KnownError, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `knownerror.Intercept(f(g(h())))`.
+func (c *KnownErrorClient) Intercept(interceptors ...Interceptor) {
+	c.inters.KnownError = append(c.inters.KnownError, interceptors...)
+}
+
+// Create returns a builder for creating a KnownError entity.
+func (c *KnownErrorClient) Create() *KnownErrorCreate {
+	mutation := newKnownErrorMutation(c.config, OpCreate)
+	return &KnownErrorCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of KnownError entities.
+func (c *KnownErrorClient) CreateBulk(builders ...*KnownErrorCreate) *KnownErrorCreateBulk {
+	return &KnownErrorCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *KnownErrorClient) MapCreateBulk(slice any, setFunc func(*KnownErrorCreate, int)) *KnownErrorCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &KnownErrorCreateBulk{err: fmt.Errorf("calling to KnownErrorClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*KnownErrorCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &KnownErrorCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for KnownError.
+func (c *KnownErrorClient) Update() *KnownErrorUpdate {
+	mutation := newKnownErrorMutation(c.config, OpUpdate)
+	return &KnownErrorUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *KnownErrorClient) UpdateOne(ke *KnownError) *KnownErrorUpdateOne {
+	mutation := newKnownErrorMutation(c.config, OpUpdateOne, withKnownError(ke))
+	return &KnownErrorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *KnownErrorClient) UpdateOneID(id int) *KnownErrorUpdateOne {
+	mutation := newKnownErrorMutation(c.config, OpUpdateOne, withKnownErrorID(id))
+	return &KnownErrorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for KnownError.
+func (c *KnownErrorClient) Delete() *KnownErrorDelete {
+	mutation := newKnownErrorMutation(c.config, OpDelete)
+	return &KnownErrorDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *KnownErrorClient) DeleteOne(ke *KnownError) *KnownErrorDeleteOne {
+	return c.DeleteOneID(ke.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *KnownErrorClient) DeleteOneID(id int) *KnownErrorDeleteOne {
+	builder := c.Delete().Where(knownerror.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &KnownErrorDeleteOne{builder}
+}
+
+// Query returns a query builder for KnownError.
+func (c *KnownErrorClient) Query() *KnownErrorQuery {
+	return &KnownErrorQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeKnownError},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a KnownError entity by its id.
+func (c *KnownErrorClient) Get(ctx context.Context, id int) (*KnownError, error) {
+	return c.Query().Where(knownerror.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *KnownErrorClient) GetX(ctx context.Context, id int) *KnownError {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryProblem queries the problem edge of a KnownError.
+func (c *KnownErrorClient) QueryProblem(ke *KnownError) *ProblemQuery {
+	query := (&ProblemClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ke.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knownerror.Table, knownerror.FieldID, id),
+			sqlgraph.To(problem.Table, problem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, knownerror.ProblemTable, knownerror.ProblemColumn),
+		)
+		fromV = sqlgraph.Neighbors(ke.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryKnowledgeArticles queries the knowledge_articles edge of a KnownError.
+func (c *KnownErrorClient) QueryKnowledgeArticles(ke *KnownError) *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := ke.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(knownerror.Table, knownerror.FieldID, id),
+			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, knownerror.KnowledgeArticlesTable, knownerror.KnowledgeArticlesColumn),
+		)
+		fromV = sqlgraph.Neighbors(ke.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *KnownErrorClient) Hooks() []Hook {
+	return c.hooks.KnownError
+}
+
+// Interceptors returns the client interceptors.
+func (c *KnownErrorClient) Interceptors() []Interceptor {
+	return c.inters.KnownError
+}
+
+func (c *KnownErrorClient) mutate(ctx context.Context, m *KnownErrorMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&KnownErrorCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&KnownErrorUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&KnownErrorUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&KnownErrorDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown KnownError mutation op: %q", m.Op())
 	}
 }
 
@@ -9381,6 +9846,171 @@ func (c *SLAMetricClient) mutate(ctx context.Context, m *SLAMetricMutation) (Val
 		return (&SLAMetricDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown SLAMetric mutation op: %q", m.Op())
+	}
+}
+
+// SLAPolicyClient is a client for the SLAPolicy schema.
+type SLAPolicyClient struct {
+	config
+}
+
+// NewSLAPolicyClient returns a client for the SLAPolicy from the given config.
+func NewSLAPolicyClient(c config) *SLAPolicyClient {
+	return &SLAPolicyClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `slapolicy.Hooks(f(g(h())))`.
+func (c *SLAPolicyClient) Use(hooks ...Hook) {
+	c.hooks.SLAPolicy = append(c.hooks.SLAPolicy, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `slapolicy.Intercept(f(g(h())))`.
+func (c *SLAPolicyClient) Intercept(interceptors ...Interceptor) {
+	c.inters.SLAPolicy = append(c.inters.SLAPolicy, interceptors...)
+}
+
+// Create returns a builder for creating a SLAPolicy entity.
+func (c *SLAPolicyClient) Create() *SLAPolicyCreate {
+	mutation := newSLAPolicyMutation(c.config, OpCreate)
+	return &SLAPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of SLAPolicy entities.
+func (c *SLAPolicyClient) CreateBulk(builders ...*SLAPolicyCreate) *SLAPolicyCreateBulk {
+	return &SLAPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *SLAPolicyClient) MapCreateBulk(slice any, setFunc func(*SLAPolicyCreate, int)) *SLAPolicyCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &SLAPolicyCreateBulk{err: fmt.Errorf("calling to SLAPolicyClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*SLAPolicyCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &SLAPolicyCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for SLAPolicy.
+func (c *SLAPolicyClient) Update() *SLAPolicyUpdate {
+	mutation := newSLAPolicyMutation(c.config, OpUpdate)
+	return &SLAPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *SLAPolicyClient) UpdateOne(sp *SLAPolicy) *SLAPolicyUpdateOne {
+	mutation := newSLAPolicyMutation(c.config, OpUpdateOne, withSLAPolicy(sp))
+	return &SLAPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *SLAPolicyClient) UpdateOneID(id int) *SLAPolicyUpdateOne {
+	mutation := newSLAPolicyMutation(c.config, OpUpdateOne, withSLAPolicyID(id))
+	return &SLAPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for SLAPolicy.
+func (c *SLAPolicyClient) Delete() *SLAPolicyDelete {
+	mutation := newSLAPolicyMutation(c.config, OpDelete)
+	return &SLAPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *SLAPolicyClient) DeleteOne(sp *SLAPolicy) *SLAPolicyDeleteOne {
+	return c.DeleteOneID(sp.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *SLAPolicyClient) DeleteOneID(id int) *SLAPolicyDeleteOne {
+	builder := c.Delete().Where(slapolicy.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &SLAPolicyDeleteOne{builder}
+}
+
+// Query returns a query builder for SLAPolicy.
+func (c *SLAPolicyClient) Query() *SLAPolicyQuery {
+	return &SLAPolicyQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeSLAPolicy},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a SLAPolicy entity by its id.
+func (c *SLAPolicyClient) Get(ctx context.Context, id int) (*SLAPolicy, error) {
+	return c.Query().Where(slapolicy.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *SLAPolicyClient) GetX(ctx context.Context, id int) *SLAPolicy {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QuerySLADefinition queries the sla_definition edge of a SLAPolicy.
+func (c *SLAPolicyClient) QuerySLADefinition(sp *SLAPolicy) *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slapolicy.Table, slapolicy.FieldID, id),
+			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, slapolicy.SLADefinitionTable, slapolicy.SLADefinitionColumn),
+		)
+		fromV = sqlgraph.Neighbors(sp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTickets queries the tickets edge of a SLAPolicy.
+func (c *SLAPolicyClient) QueryTickets(sp *SLAPolicy) *TicketQuery {
+	query := (&TicketClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := sp.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(slapolicy.Table, slapolicy.FieldID, id),
+			sqlgraph.To(ticket.Table, ticket.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, slapolicy.TicketsTable, slapolicy.TicketsColumn),
+		)
+		fromV = sqlgraph.Neighbors(sp.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *SLAPolicyClient) Hooks() []Hook {
+	return c.hooks.SLAPolicy
+}
+
+// Interceptors returns the client interceptors.
+func (c *SLAPolicyClient) Interceptors() []Interceptor {
+	return c.inters.SLAPolicy
+}
+
+func (c *SLAPolicyClient) mutate(ctx context.Context, m *SLAPolicyMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&SLAPolicyCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&SLAPolicyUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&SLAPolicyUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&SLAPolicyDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown SLAPolicy mutation op: %q", m.Op())
 	}
 }
 
@@ -13462,38 +14092,39 @@ type (
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
 		CloudAccount, CloudResource, CloudService, ConfigurationItem, Conversation,
-		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, Incident,
-		IncidentAlert, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, Message,
-		Microservice, Notification, NotificationPreference, PasswordResetToken,
-		Permission, Problem, ProcessBinding, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RootCauseAnalysis, SLAAlertHistory,
-		SLAAlertRule, SLADefinition, SLAMetric, SLAViolation, ServiceCatalog,
-		ServiceRequest, ServiceRequestApproval, SystemConfig, Tag, Team, Tenant,
-		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
-		WorkflowVersion []ent.Hook
+		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, EngineerSkill,
+		Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		KnownError, Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, Problem, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
+		SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Workflow, WorkflowInstance, WorkflowTask, WorkflowVersion []ent.Hook
 	}
 	inters struct {
 		Application, ApprovalChain, ApprovalRecord, ApprovalWorkflow, Asset,
 		AssetLicense, AuditLog, CIAttributeDefinition, CIRelationship, CIType, Change,
 		CloudAccount, CloudResource, CloudService, ConfigurationItem, Conversation,
-		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, Incident,
-		IncidentAlert, IncidentEvent, IncidentMetric, IncidentRule,
-		IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike, Message,
-		Microservice, Notification, NotificationPreference, PasswordResetToken,
-		Permission, Problem, ProcessBinding, ProcessDefinition, ProcessDeployment,
-		ProcessExecutionHistory, ProcessInstance, ProcessTask, ProcessVariable,
-		ProcessVersionChangelog, Project, PromptTemplate, ProvisioningTask,
-		RelationshipType, Release, Role, RootCauseAnalysis, SLAAlertHistory,
-		SLAAlertRule, SLADefinition, SLAMetric, SLAViolation, ServiceCatalog,
-		ServiceRequest, ServiceRequestApproval, SystemConfig, Tag, Team, Tenant,
-		Ticket, TicketAssignmentRule, TicketAttachment, TicketAutomationRule,
-		TicketCategory, TicketComment, TicketNotification, TicketTag, TicketTemplate,
-		TicketView, ToolInvocation, User, Workflow, WorkflowInstance, WorkflowTask,
+		Department, DiscoveryJob, DiscoveryResult, DiscoverySource, EngineerSkill,
+		Incident, IncidentAlert, IncidentEscalationRule, IncidentEvent, IncidentMetric,
+		IncidentRule, IncidentRuleExecution, KnowledgeArticle, KnowledgeArticleLike,
+		KnownError, Message, Microservice, Notification, NotificationPreference,
+		PasswordResetToken, Permission, Problem, ProcessBinding, ProcessDefinition,
+		ProcessDeployment, ProcessExecutionHistory, ProcessInstance, ProcessTask,
+		ProcessVariable, ProcessVersionChangelog, Project, PromptTemplate,
+		ProvisioningTask, RelationshipType, Release, Role, RootCauseAnalysis,
+		SLAAlertHistory, SLAAlertRule, SLADefinition, SLAMetric, SLAPolicy,
+		SLAViolation, ServiceCatalog, ServiceRequest, ServiceRequestApproval,
+		SystemConfig, Tag, Team, Tenant, Ticket, TicketAssignmentRule,
+		TicketAttachment, TicketAutomationRule, TicketCategory, TicketComment,
+		TicketNotification, TicketTag, TicketTemplate, TicketView, ToolInvocation,
+		User, Workflow, WorkflowInstance, WorkflowTask,
 		WorkflowVersion []ent.Interceptor
 	}
 )

@@ -22,7 +22,7 @@ import {
   Row,
   Col,
 } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Plus, MinusCircle, Edit, Trash2 } from 'lucide-react';
 import {
   ApprovalChain,
   ApprovalStep,
@@ -142,7 +142,7 @@ export function ApprovalChainModal({
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <Title level={5}>审批步骤配置</Title>
-          <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddStep}>
+          <Button type="dashed" icon={<Plus className="w-4 h-4" />} onClick={handleAddStep}>
             添加步骤
           </Button>
         </div>
@@ -162,7 +162,7 @@ export function ApprovalChainModal({
               <Button
                 type="text"
                 danger
-                icon={<MinusCircleOutlined />}
+                icon={<MinusCircle className="w-4 h-4" />}
                 onClick={() => handleRemoveStep(index)}
                 size="small"
               />

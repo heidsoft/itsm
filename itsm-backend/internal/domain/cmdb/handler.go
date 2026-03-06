@@ -338,6 +338,125 @@ func (h *Handler) ListTypes(c *gin.Context) {
 	common.Success(c, list)
 }
 
+// CreateType handles POST /api/v1/cmdb/types
+func (h *Handler) CreateType(c *gin.Context) {
+	var req dto.CreateCITypeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	isActive := true
+	if req.IsActive != nil {
+		isActive = *req.IsActive
+	}
+
+	ct := &CIType{
+		Name:            req.Name,
+		Description:     req.Description,
+		Icon:            req.Icon,
+		Color:           req.Color,
+		AttributeSchema: req.AttributeSchema,
+		IsActive:        isActive,
+		TenantID:        tenantID,
+	}
+
+	res, err := h.svc.CreateType(c.Request.Context(), ct)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, toCITypeDTO(res))
+}
+
+// UpdateType handles PUT /api/v1/cmdb/types/:id
+func (h *Handler) UpdateType(c *gin.Context) {
+	idStr := c.Param("id")
+	id, _ := strconv.Atoi(idStr)
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	var req dto.UpdateCITypeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	existing, err := h.svc.GetType(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusNotFound, "CI Type not found")
+		return
+	}
+
+	existing.Name = req.Name
+	existing.Description = req.Description
+	existing.Icon = req.Icon
+	existing.Color = req.Color
+	existing.AttributeSchema = req.AttributeSchema
+
+	if req.IsActive != nil {
+		existing.IsActive = *req.IsActive
+	}
+
+	res, err := h.svc.UpdateType(c.Request.Context(), existing)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, toCITypeDTO(res))
+}
+
+// DeleteType handles DELETE /api/v1/cmdb/types/:id
+func (h *Handler) DeleteType(c *gin.Context) {
+	idStr := c.Param("id")
+	id, _ := strconv.Atoi(idStr)
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	// Check if there are CIs using this type
+	count, err := h.svc.CountCIsByType(c.Request.Context(), id, tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if count > 0 {
+		common.Fail(c, http.StatusBadRequest, fmt.Sprintf("Cannot delete CI type: %d CI(s) are using this type. Please migrate or delete those CIs first.", count))
+		return
+	}
+
+	if err := h.svc.DeleteType(c.Request.Context(), id, tenantID); err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, nil)
+}
+
+// toCITypeDTO maps domain CIType to DTO
+func toCITypeDTO(ct *CIType) *dto.CITypeResponse {
+	if ct == nil {
+		return nil
+	}
+	return &dto.CITypeResponse{
+		ID:              ct.ID,
+		Name:            ct.Name,
+		Description:     ct.Description,
+		Icon:            ct.Icon,
+		Color:           ct.Color,
+		AttributeSchema: ct.AttributeSchema,
+		IsActive:        ct.IsActive,
+		TenantID:        ct.TenantID,
+		CreatedAt:       ct.CreatedAt,
+		UpdatedAt:       ct.UpdatedAt,
+	}
+}
+
 // GetReconciliation handles GET /api/v1/cmdb/reconciliation
 func (h *Handler) GetReconciliation(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")

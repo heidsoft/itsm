@@ -41,8 +41,9 @@ type KnowledgeArticle struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the KnowledgeArticleQuery when eager-loading is set.
-	Edges        KnowledgeArticleEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                          KnowledgeArticleEdges `json:"edges"`
+	known_error_knowledge_articles *int
+	selectValues                   sql.SelectValues
 }
 
 // KnowledgeArticleEdges holds the relations/edges for other nodes in the graph.
@@ -76,6 +77,8 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case knowledgearticle.FieldCreatedAt, knowledgearticle.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case knowledgearticle.ForeignKeys[0]: // known_error_knowledge_articles
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -162,6 +165,13 @@ func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				ka.UpdatedAt = value.Time
+			}
+		case knowledgearticle.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field known_error_knowledge_articles", value)
+			} else if value.Valid {
+				ka.known_error_knowledge_articles = new(int)
+				*ka.known_error_knowledge_articles = int(value.Int64)
 			}
 		default:
 			ka.selectValues.Set(columns[i], values[i])

@@ -7,14 +7,14 @@
 import React, { useMemo, useCallback } from 'react';
 import { Table, Tag, Button, Space, Tooltip, Dropdown, Switch } from 'antd';
 import {
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  MoreOutlined,
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  CopyOutlined,
-} from '@ant-design/icons';
+  Edit,
+  Trash2,
+  Eye,
+  MoreHorizontal,
+  Play,
+  Pause,
+  Copy,
+} from 'lucide-react';
 import { ApprovalChain, ApprovalChainFilters } from '@/types/approval-chain';
 import { TableColumn, ActionButton } from '@/types/common';
 
@@ -111,33 +111,33 @@ export function ApprovalChainTable({
             items: [
               {
                 key: 'view',
-                icon: <EyeOutlined />,
+                icon: <Eye className="w-4 h-4" />,
                 label: '查看详情',
                 onClick: () => onView(record),
               },
               {
                 key: 'edit',
-                icon: <EditOutlined />,
+                icon: <Edit className="w-4 h-4" />,
                 label: '编辑',
                 onClick: () => onEdit(record),
               },
               {
                 key: 'copy',
-                icon: <CopyOutlined />,
+                icon: <Copy className="w-4 h-4" />,
                 label: '复制',
                 onClick: () => onCopy(record),
               },
               { type: 'divider' as const },
               {
                 key: 'toggle',
-                icon: record.isActive ? <PauseCircleOutlined /> : <PlayCircleOutlined />,
+                icon: record.isActive ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />,
                 label: record.isActive ? '停用' : '启用',
                 onClick: () => onToggleStatus(record),
               },
               { type: 'divider' as const },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <Trash2 className="w-4 h-4" />,
                 label: '删除',
                 danger: true,
                 onClick: () => onDelete(record),
@@ -150,7 +150,7 @@ export function ApprovalChainTable({
               <Tooltip title="查看详情">
                 <Button
                   type="text"
-                  icon={<EyeOutlined />}
+                  icon={<Eye className="w-4 h-4" />}
                   onClick={() => onView(record)}
                   size="small"
                 />
@@ -158,13 +158,13 @@ export function ApprovalChainTable({
               <Tooltip title="编辑">
                 <Button
                   type="text"
-                  icon={<EditOutlined />}
+                  icon={<Edit className="w-4 h-4" />}
                   onClick={() => onEdit(record)}
                   size="small"
                 />
               </Tooltip>
               <Dropdown menu={menuProps} trigger={['click']}>
-                <Button type="text" icon={<MoreOutlined />} size="small" />
+                <Button type="text" icon={<MoreHorizontal className="w-4 h-4" />} size="small" />
               </Dropdown>
             </Space>
           );
@@ -192,7 +192,7 @@ export function ApprovalChainTable({
       {
         key: 'batch-delete',
         label: '批量删除',
-        icon: <DeleteOutlined />,
+        icon: <Trash2 className="w-4 h-4" />,
         type: 'default',
         danger: true,
         disabled: selectedRowKeys.length === 0,

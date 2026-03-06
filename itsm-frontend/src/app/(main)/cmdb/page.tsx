@@ -2,41 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, Progress, Space, Input, Select, App } from 'antd';
-import { Database, Server, Cloud, Shield, Plus, AlertTriangle, CheckCircle } from 'lucide-react';
-import { SyncOutlined } from '@ant-design/icons';
-import { SearchOutlined, FilterOutlined } from '@ant-design/icons';
+import { Database, Server, Cloud, Shield, Plus, AlertTriangle, CheckCircle, Search, Filter, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import CIList from '@/components/cmdb/CIList';
+import { CMDBApi } from '@/lib/api/cmdb-api';
 
 const { Title, Text } = Typography;
-
-// Mock CI statistics by type
-const ciTypeStats = [
-  { type: '服务器', count: 45, status: 'online' },
-  { type: '网络设备', count: 28, status: 'online' },
-  { type: '存储设备', count: 15, status: 'online' },
-  { type: '云资源', count: 120, status: 'active' },
-  { type: '安全设备', count: 12, status: 'online' },
-];
-
-// Mock cloud resources data
-const mockCloudResources = [
-  { id: 1, resource_id: 'i-bp123456', resource_name: 'Web服务器-01', resource_type: 'ECS', provider: '阿里云', region: '华东1', status: 'running', ip: '47.xxx.xxx.1', create_time: '2024-01-01' },
-  { id: 2, resource_id: 'i-bp234567', resource_name: 'Web服务器-02', resource_type: 'ECS', provider: '阿里云', region: '华东1', status: 'running', ip: '47.xxx.xxx.2', create_time: '2024-01-02' },
-  { id: 3, resource_id: 'rm-mysql123', resource_name: 'MySQL主库', resource_type: 'RDS', provider: '阿里云', region: '华东1', status: 'running', ip: '172.xxx.xxx.1', create_time: '2024-01-03' },
-  { id: 4, resource_id: 'oss-bucket001', resource_name: '文件存储桶', resource_type: 'OSS', provider: '阿里云', region: '华东1', status: 'running', ip: '-', create_time: '2024-01-04' },
-  { id: 5, resource_id: 'lb-xtest001', resource_name: '负载均衡器', resource_type: 'SLB', provider: '阿里云', region: '华东1', status: 'running', ip: '47.xxx.xxx.10', create_time: '2024-01-05' },
-  { id: 6, resource_id: 'i-bp345678', resource_name: 'API服务器', resource_type: 'ECS', provider: '阿里云', region: '华东2', status: 'stopped', ip: '47.xxx.xxx.3', create_time: '2024-01-06' },
-];
-
-// Mock reconciliation data
-const mockReconciliationData = [
-  { id: 1, ci_name: 'Web服务器-01', ci_type: '服务器', source: 'CMDB', target: '阿里云', source_value: '运行中', target_value: '运行中', status: 'matched', last_check: '2024-01-15 10:00' },
-  { id: 2, ci_name: 'MySQL主库', ci_type: '数据库', source: 'CMDB', target: '阿里云', source_value: '运行中', target_value: '运行中', status: 'matched', last_check: '2024-01-15 10:00' },
-  { id: 3, ci_name: 'Redis缓存', ci_type: '缓存', source: 'CMDB', target: '阿里云', source_value: '运行中', target_value: '已停止', status: 'mismatch', last_check: '2024-01-15 10:00' },
-  { id: 4, ci_name: '文件存储桶', ci_type: '存储', source: 'CMDB', target: '阿里云', source_value: '存在', target_value: '存在', status: 'matched', last_check: '2024-01-15 10:00' },
-  { id: 5, ci_name: '测试服务器', ci_type: '服务器', source: 'CMDB', target: 'VMware', source_value: '运行中', target_value: '不存在', status: 'missing', last_check: '2024-01-15 10:00' },
-];
 
 const providerColors: Record<string, string> = {
   '阿里云': 'blue',
@@ -62,30 +33,80 @@ export default function CMDBPage() {
   const router = useRouter();
   const { message } = App.useApp();
   const [activeTab, setActiveTab] = useState('cis');
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
     totalCIs: 0,
     online: 0,
     offline: 0,
     maintenance: 0,
   });
+  const [ciTypeStats, setCiTypeStats] = useState<any[]>([]);
+  const [cloudResources, setCloudResources] = useState<any[]>([]);
+  const [reconciliationData, setReconciliationData] = useState<any[]>([]);
 
-  // Fetch stats
+  // Fetch all data
   const fetchStats = async () => {
     try {
-      // Mock data - in real app would call API
-      setStats({
-        totalCIs: 220,
-        online: 195,
-        offline: 15,
-        maintenance: 10,
-      });
+      const statsData = await CMDBApi.getCMDBStats();
+      if (statsData.data) {
+        setStats(statsData.data);
+      } else if (typeof statsData === 'object') {
+        setStats({
+          totalCIs: (statsData as any).totalCIs || (statsData as any).total_cis || 0,
+          online: (statsData as any).online || 0,
+          offline: (statsData as any).offline || 0,
+          maintenance: (statsData as any).maintenance || 0,
+        });
+      }
     } catch (error) {
       console.error('Failed to fetch CMDB stats:', error);
     }
   };
 
+  const fetchCiTypeStats = async () => {
+    try {
+      const typesData = await CMDBApi.getCITypes();
+      if (typesData.data && Array.isArray(typesData.data)) {
+        setCiTypeStats(typesData.data);
+      } else if (Array.isArray(typesData)) {
+        setCiTypeStats(typesData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch CI types:', error);
+    }
+  };
+
+  const fetchCloudResources = async () => {
+    try {
+      const resourcesData = await CMDBApi.getCloudResources();
+      if (resourcesData.data && Array.isArray(resourcesData.data)) {
+        setCloudResources(resourcesData.data);
+      } else if (Array.isArray(resourcesData)) {
+        setCloudResources(resourcesData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch cloud resources:', error);
+    }
+  };
+
+  const fetchReconciliationData = async () => {
+    try {
+      const reconciliationResult = await CMDBApi.getReconciliationResults();
+      if (reconciliationResult.data && Array.isArray(reconciliationResult.data)) {
+        setReconciliationData(reconciliationResult.data);
+      } else if (Array.isArray(reconciliationResult)) {
+        setReconciliationData(reconciliationResult);
+      }
+    } catch (error) {
+      console.error('Failed to fetch reconciliation data:', error);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
+    fetchCiTypeStats();
+    fetchCloudResources();
+    fetchReconciliationData();
   }, []);
 
   const ciTypeColumns = [
@@ -247,12 +268,12 @@ export default function CMDBPage() {
 
   // Calculate reconciliation summary
   const reconciliationSummary = React.useMemo(() => {
-    const total = mockReconciliationData.length;
-    const matched = mockReconciliationData.filter(r => r.status === 'matched').length;
-    const mismatch = mockReconciliationData.filter(r => r.status === 'mismatch').length;
-    const missing = mockReconciliationData.filter(r => r.status === 'missing').length;
+    const total = reconciliationData.length;
+    const matched = reconciliationData.filter(r => r.status === 'matched').length;
+    const mismatch = reconciliationData.filter(r => r.status === 'mismatch').length;
+    const missing = reconciliationData.filter(r => r.status === 'missing').length;
     return { total, matched, mismatch, missing };
-  }, []);
+  }, [reconciliationData]);
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
@@ -268,13 +289,19 @@ export default function CMDBPage() {
         </div>
         <Space>
           <Button
-            icon={<SyncOutlined />}
-            loading={false}
-            onClick={() => {
+            icon={<RefreshCw className="w-4 h-4" />}
+            loading={loading}
+            onClick={async () => {
               message.loading({ content: '正在同步云资源...', key: 'sync' });
-              setTimeout(() => {
+              setLoading(true);
+              try {
+                await fetchCloudResources();
                 message.success({ content: '云资源同步完成', key: 'sync' });
-              }, 2000);
+              } catch (error) {
+                message.error({ content: '同步失败', key: 'sync' });
+              } finally {
+                setLoading(false);
+              }
             }}
           >
             同步云资源
@@ -371,7 +398,7 @@ export default function CMDBPage() {
               label: (
                 <span className="flex items-center gap-2">
                   <Cloud />
-                  云资源 ({mockCloudResources.length})
+                  云资源 ({cloudResources.length})
                 </span>
               ),
               children: (
@@ -380,29 +407,29 @@ export default function CMDBPage() {
                   <Row gutter={16} className="mb-4">
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="ECS" value={mockCloudResources.filter(r => r.resource_type === 'ECS').length} prefix={<Server />} />
+                        <Statistic title="ECS" value={cloudResources.filter(r => r.resource_type === 'ECS').length} prefix={<Server />} />
                       </Card>
                     </Col>
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="RDS" value={mockCloudResources.filter(r => r.resource_type === 'RDS').length} prefix={<Database />} />
+                        <Statistic title="RDS" value={cloudResources.filter(r => r.resource_type === 'RDS').length} prefix={<Database />} />
                       </Card>
                     </Col>
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="OSS" value={mockCloudResources.filter(r => r.resource_type === 'OSS').length} prefix={<Cloud />} />
+                        <Statistic title="OSS" value={cloudResources.filter(r => r.resource_type === 'OSS').length} prefix={<Cloud />} />
                       </Card>
                     </Col>
                     <Col span={6}>
                       <Card size="small">
-                        <Statistic title="SLB" value={mockCloudResources.filter(r => r.resource_type === 'SLB').length} prefix={<Shield />} />
+                        <Statistic title="SLB" value={cloudResources.filter(r => r.resource_type === 'SLB').length} prefix={<Shield />} />
                       </Card>
                     </Col>
                   </Row>
 
                   {/* 筛选栏 */}
                   <div className="mb-4 flex gap-2">
-                    <Input placeholder="搜索资源名称" prefix={<SearchOutlined />} style={{ width: 200 }} />
+                    <Input placeholder="搜索资源名称" prefix={<Search className="w-4 h-4" />} style={{ width: 200 }} />
                     <Select placeholder="资源类型" style={{ width: 120 }} allowClear options={[
                       { value: 'ECS', label: 'ECS' },
                       { value: 'RDS', label: 'RDS' },
@@ -413,12 +440,12 @@ export default function CMDBPage() {
                       { value: 'running', label: '运行中' },
                       { value: 'stopped', label: '已停止' },
                     ]} />
-                    <Button icon={<FilterOutlined />}>筛选</Button>
+                    <Button icon={<Filter className="w-4 h-4" />}>筛选</Button>
                   </div>
 
                   <Table
                     columns={cloudResourceColumns}
-                    dataSource={mockCloudResources}
+                    dataSource={cloudResources}
                     rowKey="id"
                     pagination={{ pageSize: 10 }}
                   />
@@ -482,15 +509,24 @@ export default function CMDBPage() {
                   {/* 核对操作栏 */}
                   <div className="mb-4 flex justify-between">
                     <Space>
-                      <Button type="primary" icon={<SyncOutlined />}>执行全量核对</Button>
-                      <Button icon={<SyncOutlined />}>增量同步</Button>
+                      <Button type="primary" icon={<RefreshCw className="w-4 h-4" />} onClick={async () => {
+                        message.loading({ content: '正在执行全量核对...', key: 'reconcile' });
+                        try {
+                          await CMDBApi.runReconciliation();
+                          await fetchReconciliationData();
+                          message.success({ content: '核对完成', key: 'reconcile' });
+                        } catch (error) {
+                          message.error({ content: '核对失败', key: 'reconcile' });
+                        }
+                      }}>执行全量核对</Button>
+                      <Button icon={<RefreshCw className="w-4 h-4" />}>增量同步</Button>
                     </Space>
-                    <Text type="secondary">最后同步: 2024-01-15 10:00</Text>
+                    <Text type="secondary">最后同步: {new Date().toLocaleString('zh-CN')}</Text>
                   </div>
 
                   <Table
                     columns={reconciliationColumns}
-                    dataSource={mockReconciliationData}
+                    dataSource={reconciliationData}
                     rowKey="id"
                     pagination={{ pageSize: 10 }}
                   />

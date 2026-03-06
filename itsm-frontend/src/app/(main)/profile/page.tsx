@@ -44,6 +44,7 @@ import {
 } from 'lucide-react';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { UserApi } from '@/lib/api/user-api';
+import { TicketApi } from '@/lib/api/ticket-api';
 import { useI18n } from '@/lib/i18n';
 import { useAuthStore, useAuthStoreHydration } from '@/lib/store/auth-store';
 
@@ -130,12 +131,14 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [profileForm] = Form.useForm();
   const [preferencesForm] = Form.useForm();
 
   useEffect(() => {
     loadProfile();
     loadStats();
+    loadActivities();
   }, []);
 
   const loadProfile = async () => {
@@ -147,7 +150,7 @@ export default function ProfilePage() {
           username: user.username || '',
           email: user.email || '',
           name: user.name || '',
-          department: user.department || '技术部',
+          department: user.department || '',
           phone: '',
           role: user.role || 'user',
           created_at: user.createdAt || new Date().toISOString(),
@@ -164,23 +167,71 @@ export default function ProfilePage() {
   };
 
   const loadStats = async () => {
-    // Mock stats
-    setStats({
-      totalTickets: 156,
-      resolvedTickets: 142,
-      avgResolutionTime: 2.5,
-      satisfactionScore: 4.8,
-      responseRate: 96,
-    });
+    try {
+      const ticketStats = await TicketApi.getTicketStats();
+      setStats({
+        totalTickets: ticketStats.total || 0,
+        resolvedTickets: ticketStats.resolved || 0,
+        avgResolutionTime: 0, // 需要后端支持
+        satisfactionScore: 0, // 需要后端支持
+        responseRate: ticketStats.total > 0
+          ? Math.round(((ticketStats.total - ticketStats.open) / ticketStats.total) * 100)
+          : 0,
+      });
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+      // 使用默认值
+      setStats({
+        totalTickets: 0,
+        resolvedTickets: 0,
+        avgResolutionTime: 0,
+        satisfactionScore: 0,
+        responseRate: 0,
+      });
+    }
+  };
+
+  const loadActivities = async () => {
+    try {
+      // 从 localStorage 获取用户活动记录
+      const savedActivities = localStorage.getItem('user_activities');
+      if (savedActivities) {
+        setActivities(JSON.parse(savedActivities));
+      } else {
+        // 如果没有记录，使用空数组
+        setActivities([]);
+      }
+    } catch (error) {
+      console.error('Failed to load activities:', error);
+      setActivities([]);
+    }
   };
 
   const handleSaveProfile = async (values: any) => {
+    if (!profile?.id) {
+      message.error('用户信息不完整');
+      return;
+    }
+    setLoading(true);
     try {
+      await UserApi.updateUser(profile.id, {
+        name: values.name,
+        email: values.email,
+        phone: values.phone,
+        department: values.department,
+      });
       message.success('个人信息更新成功');
       setEditing(false);
-      setProfile(prev => prev ? { ...prev, ...values } : null);
+ => prev ? {      setProfile(prev ...prev, ...values } : null);
+
+      // 更新 auth store 中的用户信息
+      const { updateUser } = useAuthStore.getState();
+      updateUser({ ...values });
     } catch (error) {
+      console.error('Failed to update profile:', error);
       message.error('更新失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 

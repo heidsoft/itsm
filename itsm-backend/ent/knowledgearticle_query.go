@@ -25,6 +25,7 @@ type KnowledgeArticleQuery struct {
 	inters        []Interceptor
 	predicates    []predicate.KnowledgeArticle
 	withUserLikes *KnowledgeArticleLikeQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -370,11 +371,15 @@ func (kaq *KnowledgeArticleQuery) prepareQuery(ctx context.Context) error {
 func (kaq *KnowledgeArticleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*KnowledgeArticle, error) {
 	var (
 		nodes       = []*KnowledgeArticle{}
+		withFKs     = kaq.withFKs
 		_spec       = kaq.querySpec()
 		loadedTypes = [1]bool{
 			kaq.withUserLikes != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, knowledgearticle.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*KnowledgeArticle).scanValues(nil, columns)
 	}

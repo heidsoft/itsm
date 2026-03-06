@@ -53,6 +53,22 @@ func (s *Service) CreateType(ctx context.Context, ct *CIType) (*CIType, error) {
 	return s.repo.CreateCIType(ctx, ct)
 }
 
+func (s *Service) UpdateType(ctx context.Context, ct *CIType) (*CIType, error) {
+	return s.repo.UpdateCIType(ctx, ct)
+}
+
+func (s *Service) DeleteType(ctx context.Context, id int, tenantID int) error {
+	return s.repo.DeleteCIType(ctx, id, tenantID)
+}
+
+func (s *Service) GetType(ctx context.Context, id int, tenantID int) (*CIType, error) {
+	return s.repo.GetCIType(ctx, id, tenantID)
+}
+
+func (s *Service) CountCIsByType(ctx context.Context, typeID int, tenantID int) (int, error) {
+	return s.repo.CountCIsByType(ctx, typeID, tenantID)
+}
+
 // Relationship operations
 func (s *Service) CreateRelationship(ctx context.Context, rel *CIRelationship) (*CIRelationship, error) {
 	return s.repo.CreateRelationship(ctx, rel)

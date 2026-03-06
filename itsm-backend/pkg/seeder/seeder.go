@@ -28,14 +28,15 @@ import (
 
 // SeedConfig 种子数据配置结构
 type SeedConfig struct {
-	Departments       []DepartmentSeed       `json:"departments"`
-	Teams             []TeamSeed             `json:"teams"`
-	Roles             []RoleSeed             `json:"roles"`
-	SLADefinitions    []SLADefinitionSeed    `json:"sla_definitions"`
-	ServiceCatalog    []ServiceCatalogSeed   `json:"service_catalog"`
-	ApprovalWorkflows []ApprovalWorkflowSeed `json:"approval_workflows"`
-	ProcessBindings   []ProcessBindingSeed   `json:"process_bindings"`
-	TicketViews       []TicketViewSeed       `json:"ticket_views"`
+	Departments        []DepartmentSeed        `json:"departments"`
+	Teams              []TeamSeed              `json:"teams"`
+	Roles              []RoleSeed              `json:"roles"`
+	SLADefinitions     []SLADefinitionSeed    `json:"sla_definitions"`
+	ServiceCatalog     []ServiceCatalogSeed    `json:"service_catalog"`
+	ApprovalWorkflows  []ApprovalWorkflowSeed  `json:"approval_workflows"`
+	ProcessBindings    []ProcessBindingSeed    `json:"process_bindings"`
+	TicketViews        []TicketViewSeed        `json:"ticket_views"`
+	CITypes            []CITypeSeed            `json:"ci_types"`
 }
 
 type DepartmentSeed struct {
@@ -94,6 +95,14 @@ type TicketViewSeed struct {
 	Desc     string   `json:"description"`
 	IsShared bool     `json:"is_shared"`
 	Columns  []string `json:"columns"`
+}
+
+type CITypeSeed struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Icon        string `json:"icon"`
+	Color       string `json:"color"`
+	IsActive    bool   `json:"is_active"`
 }
 
 // Seeder manages database seeding operations
@@ -290,6 +299,7 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedTicketViews(ctx)
 	s.seedServiceCatalog(ctx)
 	s.seedTicketTypes(ctx) // 新增：初始化工单类型
+	s.seedCITypes(ctx)     // 新增：初始化CI类型
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -1016,4 +1026,55 @@ func (s *Seeder) seedTicketTypes(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("ticket types seeded", "count", len(ticketTypes))
+}
+
+// seedCITypes 初始化CI类型种子数据
+func (s *Seeder) seedCITypes(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip CI types seed", "error", err)
+		return
+	}
+
+	// 检查是否已有CI类型
+	existing, err := s.client.CIType.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query CI types; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("CI types already seeded", "count", existing)
+		return
+	}
+
+	// 使用配置中的CI类型，如果没有配置则使用默认值
+	ciTypes := s.config.CITypes
+	if len(ciTypes) == 0 {
+		// 默认CI类型
+		ciTypes = []CITypeSeed{
+			{Name: "server", Description: "服务器", Icon: "server", Color: "#28a745", IsActive: true},
+			{Name: "database", Description: "数据库", Icon: "database", Color: "#fd7e14", IsActive: true},
+			{Name: "network", Description: "网络设备", Icon: "network", Color: "#17a2b8", IsActive: true},
+			{Name: "storage", Description: "存储设备", Icon: "storage", Color: "#e83e8c", IsActive: true},
+			{Name: "application", Description: "应用服务", Icon: "app", Color: "#6610f2", IsActive: true},
+			{Name: "middleware", Description: "中间件", Icon: "middleware", Color: "#e74c3c", IsActive: true},
+			{Name: "cloud_vm", Description: "云虚拟机", Icon: "cloud", Color: "#6f42c1", IsActive: true},
+			{Name: "kubernetes", Description: "Kubernetes资源", Icon: "kubernetes", Color: "#20c997", IsActive: true},
+		}
+	}
+
+	for _, ct := range ciTypes {
+		_, err := s.client.CIType.Create().
+			SetName(ct.Name).
+			SetDescription(ct.Description).
+			SetIcon(ct.Icon).
+			SetColor(ct.Color).
+			SetIsActive(ct.IsActive).
+			SetTenantID(t.ID).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed CI type failed", "error", err, "name", ct.Name)
+		}
+	}
+	s.sugar.Infow("CI types seeded", "count", len(ciTypes))
 }

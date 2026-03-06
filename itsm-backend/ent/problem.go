@@ -40,8 +40,9 @@ type Problem struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt    time.Time `json:"updated_at,omitempty"`
-	selectValues sql.SelectValues
+	UpdatedAt           time.Time `json:"updated_at,omitempty"`
+	known_error_problem *int
+	selectValues        sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -55,6 +56,8 @@ func (*Problem) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case problem.FieldCreatedAt, problem.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case problem.ForeignKeys[0]: // known_error_problem
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -147,6 +150,13 @@ func (pr *Problem) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				pr.UpdatedAt = value.Time
+			}
+		case problem.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field known_error_problem", value)
+			} else if value.Valid {
+				pr.known_error_problem = new(int)
+				*pr.known_error_problem = int(value.Int64)
 			}
 		default:
 			pr.selectValues.Set(columns[i], values[i])

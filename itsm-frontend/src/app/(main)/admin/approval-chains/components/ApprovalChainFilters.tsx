@@ -6,7 +6,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { Card, Row, Col, Input, Select, DatePicker, Button, Space } from 'antd';
-import { SearchOutlined, ReloadOutlined, FilterOutlined } from '@ant-design/icons';
+import { Search as SearchIcon, RefreshCw, Filter } from 'lucide-react';
 import { ApprovalChainFilters as ApprovalChainFiltersType } from '@/types/approval-chain';
 import { useDebouncedCallback } from '@/lib/component-utils';
 import dayjs from 'dayjs';
@@ -55,7 +55,8 @@ export function ApprovalChainFilters({
   );
 
   const handleDateRangeChange = useCallback(
-    (dates: [Dayjs, Dayjs] | null, dateStrings: [string, string]) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (dates: any, dateStrings: [string, string]) => {
       const newFilters = {
         ...localFilters,
         dateRange:
@@ -133,10 +134,10 @@ export function ApprovalChainFilters({
             <span className="text-sm font-medium text-gray-700">操作</span>
           </div>
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={onRefresh} loading={loading}>
+            <Button icon={<RefreshCw className="w-4 h-4" />} onClick={onRefresh} loading={loading}>
               刷新
             </Button>
-            <Button icon={<FilterOutlined />} onClick={handleReset}>
+            <Button icon={<Filter className="w-4 h-4" />} onClick={handleReset}>
               重置
             </Button>
           </Space>

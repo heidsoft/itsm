@@ -828,6 +828,30 @@ var (
 			},
 		},
 	}
+	// EngineerSkillsColumns holds the columns for the "engineer_skills" table.
+	EngineerSkillsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "category", Type: field.TypeString},
+		{Name: "skill_name", Type: field.TypeString},
+		{Name: "proficiency_level", Type: field.TypeInt, Default: 3},
+		{Name: "experience_years", Type: field.TypeInt, Default: 0},
+		{Name: "certifications", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_available", Type: field.TypeBool, Default: true},
+		{Name: "current_load", Type: field.TypeInt, Default: 0},
+		{Name: "max_load", Type: field.TypeInt, Default: 10},
+		{Name: "preferred_shift", Type: field.TypeString, Nullable: true},
+		{Name: "working_hours", Type: field.TypeJSON, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// EngineerSkillsTable holds the schema information for the "engineer_skills" table.
+	EngineerSkillsTable = &schema.Table{
+		Name:       "engineer_skills",
+		Columns:    EngineerSkillsColumns,
+		PrimaryKey: []*schema.Column{EngineerSkillsColumns[0]},
+	}
 	// IncidentsColumns holds the columns for the "incidents" table.
 	IncidentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -897,6 +921,34 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 		},
+	}
+	// IncidentEscalationRulesColumns holds the columns for the "incident_escalation_rules" table.
+	IncidentEscalationRulesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "trigger_type", Type: field.TypeString},
+		{Name: "escalation_level", Type: field.TypeInt, Default: 1},
+		{Name: "trigger_minutes", Type: field.TypeInt},
+		{Name: "from_status", Type: field.TypeString, Nullable: true},
+		{Name: "to_status", Type: field.TypeString, Nullable: true},
+		{Name: "target_assignee_type", Type: field.TypeString},
+		{Name: "target_assignee_id", Type: field.TypeInt, Nullable: true},
+		{Name: "target_group", Type: field.TypeString, Nullable: true},
+		{Name: "auto_escalate", Type: field.TypeBool, Default: true},
+		{Name: "notification_config", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "priority_match", Type: field.TypeString, Nullable: true},
+		{Name: "category_match", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// IncidentEscalationRulesTable holds the schema information for the "incident_escalation_rules" table.
+	IncidentEscalationRulesTable = &schema.Table{
+		Name:       "incident_escalation_rules",
+		Columns:    IncidentEscalationRulesColumns,
+		PrimaryKey: []*schema.Column{IncidentEscalationRulesColumns[0]},
 	}
 	// IncidentEventsColumns holds the columns for the "incident_events" table.
 	IncidentEventsColumns = []*schema.Column{
@@ -1027,12 +1079,21 @@ var (
 		{Name: "like_count", Type: field.TypeInt, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "known_error_knowledge_articles", Type: field.TypeInt, Nullable: true},
 	}
 	// KnowledgeArticlesTable holds the schema information for the "knowledge_articles" table.
 	KnowledgeArticlesTable = &schema.Table{
 		Name:       "knowledge_articles",
 		Columns:    KnowledgeArticlesColumns,
 		PrimaryKey: []*schema.Column{KnowledgeArticlesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "knowledge_articles_known_errors_knowledge_articles",
+				Columns:    []*schema.Column{KnowledgeArticlesColumns[12]},
+				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// KnowledgeArticleLikesColumns holds the columns for the "knowledge_article_likes" table.
 	KnowledgeArticleLikesColumns = []*schema.Column{
@@ -1055,6 +1116,35 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 		},
+	}
+	// KnownErrorsColumns holds the columns for the "known_errors" table.
+	KnownErrorsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "title", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "symptoms", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "root_cause", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "workaround", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "resolution", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "category", Type: field.TypeString, Nullable: true},
+		{Name: "severity", Type: field.TypeString, Default: "medium"},
+		{Name: "affected_products", Type: field.TypeJSON, Nullable: true},
+		{Name: "affected_cis", Type: field.TypeJSON, Nullable: true},
+		{Name: "keywords", Type: field.TypeJSON, Nullable: true},
+		{Name: "occurrence_count", Type: field.TypeInt, Default: 0},
+		{Name: "created_by", Type: field.TypeInt},
+		{Name: "approved_by", Type: field.TypeInt, Nullable: true},
+		{Name: "approved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// KnownErrorsTable holds the schema information for the "known_errors" table.
+	KnownErrorsTable = &schema.Table{
+		Name:       "known_errors",
+		Columns:    KnownErrorsColumns,
+		PrimaryKey: []*schema.Column{KnownErrorsColumns[0]},
 	}
 	// MessagesColumns holds the columns for the "messages" table.
 	MessagesColumns = []*schema.Column{
@@ -1218,12 +1308,21 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "known_error_problem", Type: field.TypeInt, Nullable: true},
 	}
 	// ProblemsTable holds the schema information for the "problems" table.
 	ProblemsTable = &schema.Table{
 		Name:       "problems",
 		Columns:    ProblemsColumns,
 		PrimaryKey: []*schema.Column{ProblemsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "problems_known_errors_problem",
+				Columns:    []*schema.Column{ProblemsColumns[13]},
+				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// ProcessBindingsColumns holds the columns for the "process_bindings" table.
 	ProcessBindingsColumns = []*schema.Column{
@@ -2099,12 +2198,21 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "sla_policy_sla_definition", Type: field.TypeInt, Nullable: true},
 	}
 	// SLADefinitionsTable holds the schema information for the "sla_definitions" table.
 	SLADefinitionsTable = &schema.Table{
 		Name:       "sla_definitions",
 		Columns:    SLADefinitionsColumns,
 		PrimaryKey: []*schema.Column{SLADefinitionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "sla_definitions_sla_policies_sla_definition",
+				Columns:    []*schema.Column{SLADefinitionsColumns[14]},
+				RefColumns: []*schema.Column{SLAPoliciesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// SLAMetricsColumns holds the columns for the "sla_metrics" table.
 	SLAMetricsColumns = []*schema.Column{
@@ -2133,6 +2241,32 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 		},
+	}
+	// SLAPoliciesColumns holds the columns for the "sla_policies" table.
+	SLAPoliciesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "customer_tier", Type: field.TypeString, Nullable: true},
+		{Name: "ticket_type", Type: field.TypeString, Nullable: true},
+		{Name: "priority", Type: field.TypeString, Nullable: true},
+		{Name: "response_time_minutes", Type: field.TypeInt},
+		{Name: "resolution_time_minutes", Type: field.TypeInt},
+		{Name: "business_hours", Type: field.TypeJSON, Nullable: true},
+		{Name: "exclude_weekends", Type: field.TypeBool, Default: false},
+		{Name: "exclude_holidays", Type: field.TypeBool, Default: false},
+		{Name: "escalation_rules", Type: field.TypeJSON, Nullable: true},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "priority_score", Type: field.TypeInt, Default: 0},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// SLAPoliciesTable holds the schema information for the "sla_policies" table.
+	SLAPoliciesTable = &schema.Table{
+		Name:       "sla_policies",
+		Columns:    SLAPoliciesColumns,
+		PrimaryKey: []*schema.Column{SLAPoliciesColumns[0]},
 	}
 	// SLAViolationsColumns holds the columns for the "sla_violations" table.
 	SLAViolationsColumns = []*schema.Column{
@@ -2456,6 +2590,7 @@ var (
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "sla_definition_id", Type: field.TypeInt, Nullable: true},
+		{Name: "sla_policy_tickets", Type: field.TypeInt, Nullable: true},
 		{Name: "parent_ticket_id", Type: field.TypeInt, Nullable: true},
 		{Name: "category_id", Type: field.TypeInt, Nullable: true},
 		{Name: "ticket_tag_tickets", Type: field.TypeInt, Nullable: true},
@@ -2480,26 +2615,32 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "tickets_tickets_related_tickets",
+				Symbol:     "tickets_sla_policies_tickets",
 				Columns:    []*schema.Column{TicketsColumns[23]},
+				RefColumns: []*schema.Column{SLAPoliciesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "tickets_tickets_related_tickets",
+				Columns:    []*schema.Column{TicketsColumns[24]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_categories_tickets",
-				Columns:    []*schema.Column{TicketsColumns[24]},
+				Columns:    []*schema.Column{TicketsColumns[25]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_tags_tickets",
-				Columns:    []*schema.Column{TicketsColumns[25]},
+				Columns:    []*schema.Column{TicketsColumns[26]},
 				RefColumns: []*schema.Column{TicketTagsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_templates_tickets",
-				Columns:    []*schema.Column{TicketsColumns[26]},
+				Columns:    []*schema.Column{TicketsColumns[27]},
 				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -3282,14 +3423,17 @@ var (
 		DiscoveryJobsTable,
 		DiscoveryResultsTable,
 		DiscoverySourcesTable,
+		EngineerSkillsTable,
 		IncidentsTable,
 		IncidentAlertsTable,
+		IncidentEscalationRulesTable,
 		IncidentEventsTable,
 		IncidentMetricsTable,
 		IncidentRulesTable,
 		IncidentRuleExecutionsTable,
 		KnowledgeArticlesTable,
 		KnowledgeArticleLikesTable,
+		KnownErrorsTable,
 		MessagesTable,
 		MicroservicesTable,
 		NotificationsTable,
@@ -3316,6 +3460,7 @@ var (
 		SLAAlertRulesTable,
 		SLADefinitionsTable,
 		SLAMetricsTable,
+		SLAPoliciesTable,
 		SLAViolationsTable,
 		ServiceCatalogsTable,
 		ServiceRequestsTable,
@@ -3370,11 +3515,13 @@ func init() {
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
+	KnowledgeArticlesTable.ForeignKeys[0].RefTable = KnownErrorsTable
 	KnowledgeArticleLikesTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
 	PermissionsTable.ForeignKeys[0].RefTable = RolesTable
+	ProblemsTable.ForeignKeys[0].RefTable = KnownErrorsTable
 	ProcessBindingsTable.ForeignKeys[0].RefTable = ProcessDefinitionsTable
 	ProcessDefinitionsTable.ForeignKeys[0].RefTable = ProcessDeploymentsTable
 	ProcessExecutionHistoriesTable.ForeignKeys[0].RefTable = ProcessInstancesTable
@@ -3389,15 +3536,17 @@ func init() {
 	SLAAlertHistoriesTable.ForeignKeys[0].RefTable = SLAAlertRulesTable
 	SLAAlertHistoriesTable.ForeignKeys[1].RefTable = TicketsTable
 	SLAAlertRulesTable.ForeignKeys[0].RefTable = SLADefinitionsTable
+	SLADefinitionsTable.ForeignKeys[0].RefTable = SLAPoliciesTable
 	SLAMetricsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[0].RefTable = SLADefinitionsTable
 	SLAViolationsTable.ForeignKeys[1].RefTable = TicketsTable
 	TicketsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	TicketsTable.ForeignKeys[1].RefTable = SLADefinitionsTable
-	TicketsTable.ForeignKeys[2].RefTable = TicketsTable
-	TicketsTable.ForeignKeys[3].RefTable = TicketCategoriesTable
-	TicketsTable.ForeignKeys[4].RefTable = TicketTagsTable
-	TicketsTable.ForeignKeys[5].RefTable = TicketTemplatesTable
+	TicketsTable.ForeignKeys[2].RefTable = SLAPoliciesTable
+	TicketsTable.ForeignKeys[3].RefTable = TicketsTable
+	TicketsTable.ForeignKeys[4].RefTable = TicketCategoriesTable
+	TicketsTable.ForeignKeys[5].RefTable = TicketTagsTable
+	TicketsTable.ForeignKeys[6].RefTable = TicketTemplatesTable
 	TicketAttachmentsTable.ForeignKeys[0].RefTable = TicketsTable
 	TicketAttachmentsTable.ForeignKeys[1].RefTable = UsersTable
 	TicketAutomationRulesTable.ForeignKeys[0].RefTable = UsersTable

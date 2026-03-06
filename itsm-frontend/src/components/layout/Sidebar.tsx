@@ -207,6 +207,23 @@ const getMenuConfig = (t: (key: string, params?: Record<string, string | number>
       permission: 'admin:view',
       description: t('admin.description'),
     },
+    {
+      key: 'cmdb-group',
+      icon: <Database style={iconStyle} />,
+      label: 'CMDB管理',
+      path: '/cmdb',
+      permission: 'cmdb:view',
+      description: 'CMDB配置管理',
+      children: [
+        {
+          key: '/admin/cmdb-types',
+          icon: <Database style={iconStyle} />,
+          label: 'CI类型管理',
+          path: '/admin/cmdb-types',
+          permission: 'cmdb:write',
+        },
+      ],
+    },
   ],
 });
 

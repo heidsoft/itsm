@@ -12,6 +12,7 @@ import {
   Form,
   Input,
   InputNumber,
+  Select,
   message,
   Popconfirm,
   Typography,
@@ -270,15 +271,99 @@ const AutomationRulesPage: React.FC = () => {
             <Switch checkedChildren="启用" unCheckedChildren="禁用" />
           </Form.Item>
 
-          <Form.Item name="conditions" label="触发条件" tooltip="JSON格式的条件数组">
-            <TextArea
-              rows={4}
-              placeholder='[{"field": "status", "operator": "equals", "value": "new"}]'
-            />
+          <Form.Item label="触发条件" required>
+            <Form.List
+              name="conditions"
+              initialValue={[{ field: 'status', operator: 'equals', value: '' }]}
+            >
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'field']}
+                        noStyle
+                      >
+                        <Select style={{ width: 120 }} placeholder="字段">
+                          <Select.Option value="status">状态</Select.Option>
+                          <Select.Option value="priority">优先级</Select.Option>
+                          <Select.Option value="type">类型</Select.Option>
+                          <Select.Option value="category">分类</Select.Option>
+                        </Select>
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'operator']}
+                        noStyle
+                      >
+                        <Select style={{ width: 100 }} placeholder="操作符">
+                          <Select.Option value="equals">等于</Select.Option>
+                          <Select.Option value="not_equals">不等于</Select.Option>
+                          <Select.Option value="contains">包含</Select.Option>
+                          <Select.Option value="in">在列表中</Select.Option>
+                        </Select>
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'value']}
+                        noStyle
+                      >
+                        <Input placeholder="值" style={{ width: 150 }} />
+                      </Form.Item>
+                      <Button type="text" danger icon={<Delete size={14} />} onClick={() => remove(name)} />
+                    </Space>
+                  ))}
+                  <Button type="dashed" onClick={() => add()} block icon={<Plus size={14} />}>
+                    添加条件
+                  </Button>
+                </>
+              )}
+            </Form.List>
           </Form.Item>
 
-          <Form.Item name="actions" label="执行动作" tooltip="JSON格式的动作数组">
-            <TextArea rows={4} placeholder='[{"type": "assign", "assignee_id": 1}]' />
+          <Form.Item label="执行动作" required>
+            <Form.List
+              name="actions"
+              initialValue={[{ type: 'notify', config: {} }]}
+            >
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'type']}
+                        noStyle
+                      >
+                        <Select style={{ width: 140 }} placeholder="动作类型">
+                          <Select.Option value="assign">自动分配</Select.Option>
+                          <Select.Option value="notify">发送通知</Select.Option>
+                          <Select.Option value="update_field">更新字段</Select.Option>
+                          <Select.Option value="escalate">升级</Select.Option>
+                          <Select.Option value="close">自动关闭</Select.Option>
+                        </Select>
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'config']}
+                        noStyle
+                      >
+                        <Input.TextArea
+                          placeholder='{"assignee_id": 1}'
+                          style={{ width: 200 }}
+                          rows={1}
+                        />
+                      </Form.Item>
+                      <Button type="text" danger icon={<Delete size={14} />} onClick={() => remove(name)} />
+                    </Space>
+                  ))}
+                  <Button type="dashed" onClick={() => add()} block icon={<Plus size={14} />}>
+                    添加动作
+                  </Button>
+                </>
+              )}
+            </Form.List>
           </Form.Item>
         </Form>
       </Modal>

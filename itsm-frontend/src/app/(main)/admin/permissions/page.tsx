@@ -27,7 +27,6 @@ import {
   Row,
   Col,
   Statistic,
-  Collapse,
   Checkbox,
   Badge,
   Tag,
@@ -35,6 +34,7 @@ import {
   Alert,
   App,
   Tabs,
+  Collapse,
   Tree,
 } from 'antd';
 import { RoleAPI } from '@/lib/api/role-api';
@@ -281,12 +281,31 @@ const PermissionConfiguration = () => {
   const loadPermissions = async () => {
     setLoading(true);
     try {
-      const permissions = await RoleAPI.getPermissions();
-      // 如果API返回权限列表，可以用来更新配置
-      if (permissions && permissions.length > 0) {
+      // 尝试从 localStorage 加载保存的配置
+      const savedConfig = localStorage.getItem('permission_config');
+      if (savedConfig) {
+        const parsed = JSON.parse(savedConfig);
+        // 合并保存的配置与默认配置
+        setPermissionConfig(prev => ({
+          ...prev,
+          modules: prev.modules.map(m => {
+            const savedModule = parsed.modules?.find((sm: { id: string }) => sm.id === m.id);
+            if (savedModule) {
+              return {
+                ...m,
+                isEnabled: savedModule.isEnabled,
+                actions: m.actions.map(a => {
+                  const savedAction = savedModule.actions?.find((sa: { id: string }) => sa.id === a.id);
+                  return savedAction ? { ...a, isEnabled: savedAction.isEnabled } : a;
+                }),
+              };
+            }
+            return m;
+          }),
+        }));
       }
     } catch (error) {
-      message.error('加载权限失败');
+      console.error('Failed to load saved permissions:', error);
     } finally {
       setLoading(false);
     }
@@ -358,10 +377,25 @@ const PermissionConfiguration = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // TODO: 实现真实的权限保存 API
+      // 临时方案：将权限配置保存到 localStorage
+      const configToSave = {
+        modules: permissionConfig.modules.map(m => ({
+          id: m.id,
+          isEnabled: m.isEnabled,
+          actions: m.actions.map(a => ({
+            id: a.id,
+            isEnabled: a.isEnabled,
+          })),
+        })),
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem('permission_config', JSON.stringify(configToSave));
+
       setHasChanges(false);
       message.success('权限配置保存成功！');
     } catch (error) {
+      console.error('Failed to save permissions:', error);
       message.error('保存失败，请重试！');
     } finally {
       setSaving(false);

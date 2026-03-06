@@ -52,10 +52,14 @@ type Tx struct {
 	DiscoveryResult *DiscoveryResultClient
 	// DiscoverySource is the client for interacting with the DiscoverySource builders.
 	DiscoverySource *DiscoverySourceClient
+	// EngineerSkill is the client for interacting with the EngineerSkill builders.
+	EngineerSkill *EngineerSkillClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// IncidentAlert is the client for interacting with the IncidentAlert builders.
 	IncidentAlert *IncidentAlertClient
+	// IncidentEscalationRule is the client for interacting with the IncidentEscalationRule builders.
+	IncidentEscalationRule *IncidentEscalationRuleClient
 	// IncidentEvent is the client for interacting with the IncidentEvent builders.
 	IncidentEvent *IncidentEventClient
 	// IncidentMetric is the client for interacting with the IncidentMetric builders.
@@ -68,6 +72,8 @@ type Tx struct {
 	KnowledgeArticle *KnowledgeArticleClient
 	// KnowledgeArticleLike is the client for interacting with the KnowledgeArticleLike builders.
 	KnowledgeArticleLike *KnowledgeArticleLikeClient
+	// KnownError is the client for interacting with the KnownError builders.
+	KnownError *KnownErrorClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Microservice is the client for interacting with the Microservice builders.
@@ -120,6 +126,8 @@ type Tx struct {
 	SLADefinition *SLADefinitionClient
 	// SLAMetric is the client for interacting with the SLAMetric builders.
 	SLAMetric *SLAMetricClient
+	// SLAPolicy is the client for interacting with the SLAPolicy builders.
+	SLAPolicy *SLAPolicyClient
 	// SLAViolation is the client for interacting with the SLAViolation builders.
 	SLAViolation *SLAViolationClient
 	// ServiceCatalog is the client for interacting with the ServiceCatalog builders.
@@ -319,14 +327,17 @@ func (tx *Tx) init() {
 	tx.DiscoveryJob = NewDiscoveryJobClient(tx.config)
 	tx.DiscoveryResult = NewDiscoveryResultClient(tx.config)
 	tx.DiscoverySource = NewDiscoverySourceClient(tx.config)
+	tx.EngineerSkill = NewEngineerSkillClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.IncidentAlert = NewIncidentAlertClient(tx.config)
+	tx.IncidentEscalationRule = NewIncidentEscalationRuleClient(tx.config)
 	tx.IncidentEvent = NewIncidentEventClient(tx.config)
 	tx.IncidentMetric = NewIncidentMetricClient(tx.config)
 	tx.IncidentRule = NewIncidentRuleClient(tx.config)
 	tx.IncidentRuleExecution = NewIncidentRuleExecutionClient(tx.config)
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(tx.config)
+	tx.KnownError = NewKnownErrorClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Microservice = NewMicroserviceClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
@@ -353,6 +364,7 @@ func (tx *Tx) init() {
 	tx.SLAAlertRule = NewSLAAlertRuleClient(tx.config)
 	tx.SLADefinition = NewSLADefinitionClient(tx.config)
 	tx.SLAMetric = NewSLAMetricClient(tx.config)
+	tx.SLAPolicy = NewSLAPolicyClient(tx.config)
 	tx.SLAViolation = NewSLAViolationClient(tx.config)
 	tx.ServiceCatalog = NewServiceCatalogClient(tx.config)
 	tx.ServiceRequest = NewServiceRequestClient(tx.config)

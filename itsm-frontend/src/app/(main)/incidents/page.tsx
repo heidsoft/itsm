@@ -10,6 +10,7 @@ import { IncidentFilters } from './components/IncidentFilters';
 import { IncidentStats } from './components/IncidentStats';
 import { Incident } from '@/lib/api/types';
 import { IncidentAPI } from '@/lib/api/incident-api';
+import { useDebounce } from '@/lib/component-utils';
 import dayjs from 'dayjs';
 
 // Stats data format expected by IncidentStats component
@@ -153,6 +154,7 @@ export default function IncidentsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [metrics, setMetrics] = useState<IncidentStatsData | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const debouncedSearch = useDebounce(searchKeyword, 300);
   const [activeTab, setActiveTab] = useState('list');
 
   // Fetch incidents
@@ -162,7 +164,7 @@ export default function IncidentsPage() {
       const response = await IncidentAPI.listIncidents({
         page: 1,
         page_size: 100, // Get more for Kanban view
-        search: searchKeyword || undefined,
+        search: debouncedSearch || undefined,
       });
       const resp = response as unknown as Record<string, unknown>;
       const items = resp.items as Incident[] | undefined;
@@ -207,7 +209,7 @@ export default function IncidentsPage() {
     return () => {
       isMounted = false;
     };
-  }, [searchKeyword]);
+  }, [debouncedSearch]);
 
   const handleEdit = (incident: Incident) => {
     router.push(`/incidents/${incident.id}/edit`);

@@ -46,8 +46,9 @@ type SLADefinition struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SLADefinitionQuery when eager-loading is set.
-	Edges        SLADefinitionEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges                     SLADefinitionEdges `json:"edges"`
+	sla_policy_sla_definition *int
+	selectValues              sql.SelectValues
 }
 
 // SLADefinitionEdges holds the relations/edges for other nodes in the graph.
@@ -116,6 +117,8 @@ func (*SLADefinition) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case sladefinition.FieldCreatedAt, sladefinition.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
+		case sladefinition.ForeignKeys[0]: // sla_policy_sla_definition
+			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -220,6 +223,13 @@ func (sd *SLADefinition) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
 				sd.UpdatedAt = value.Time
+			}
+		case sladefinition.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field sla_policy_sla_definition", value)
+			} else if value.Valid {
+				sd.sla_policy_sla_definition = new(int)
+				*sd.sla_policy_sla_definition = int(value.Int64)
 			}
 		default:
 			sd.selectValues.Set(columns[i], values[i])

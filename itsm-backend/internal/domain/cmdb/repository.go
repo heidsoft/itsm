@@ -18,6 +18,9 @@ type Repository interface {
 	CreateCIType(ctx context.Context, ct *CIType) (*CIType, error)
 	GetCIType(ctx context.Context, id int, tenantID int) (*CIType, error)
 	ListCITypes(ctx context.Context, tenantID int) ([]*CIType, error)
+	UpdateCIType(ctx context.Context, ct *CIType) (*CIType, error)
+	DeleteCIType(ctx context.Context, id int, tenantID int) error
+	CountCIsByType(ctx context.Context, typeID int, tenantID int) (int, error)
 
 	// Relationships
 	CreateRelationship(ctx context.Context, rel *CIRelationship) (*CIRelationship, error)

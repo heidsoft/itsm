@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Button, Space } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Button, Space, message } from 'antd';
 import { Bug, CheckCircle, Clock, AlertTriangle, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ProblemList from '@/components/problem/ProblemList';
+import { ProblemApi } from '@/lib/api/problem-api';
 
 const { Title, Text } = Typography;
 
@@ -20,15 +21,16 @@ export default function ProblemListPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      // Mock data - in real app would call API
+      const stats = await ProblemApi.getProblemStats();
       setStats({
-        total: 28,
-        open: 8,
-        inProgress: 12,
-        resolved: 8,
+        total: stats.total || 0,
+        open: stats.open || 0,
+        inProgress: stats.in_progress || 0,
+        resolved: stats.resolved || 0,
       });
     } catch (error) {
       console.error('Failed to fetch problem stats:', error);
+      message.error('获取问题统计失败，请稍后重试');
     }
   };
 

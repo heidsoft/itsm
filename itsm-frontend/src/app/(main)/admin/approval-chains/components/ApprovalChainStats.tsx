@@ -5,11 +5,11 @@
 import React from 'react';
 import { Card, Row, Col, Statistic, Typography } from 'antd';
 import {
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  SettingOutlined,
-} from '@ant-design/icons';
+  CheckCircle,
+  Clock,
+  Users,
+  Settings,
+} from 'lucide-react';
 import { ApprovalChainStats } from '@/types/approval-chain';
 
 const { Title } = Typography;
@@ -24,25 +24,25 @@ export function ApprovalChainStatsCards({ stats, loading = false }: ApprovalChai
     {
       title: '总审批链数',
       value: stats.total,
-      icon: <SettingOutlined className="text-blue-500" />,
+      icon: <Settings className="w-5 h-5 text-blue-500" />,
       color: '#1890ff',
     },
     {
       title: '活跃审批链',
       value: stats.active,
-      icon: <CheckCircleOutlined className="text-green-500" />,
+      icon: <CheckCircle className="w-5 h-5 text-green-500" />,
       color: '#52c41a',
     },
     {
       title: '非活跃审批链',
       value: stats.inactive,
-      icon: <ClockCircleOutlined className="text-orange-500" />,
+      icon: <Clock className="w-5 h-5 text-orange-500" />,
       color: '#faad14',
     },
     {
       title: '平均步骤数',
       value: stats.avgStepsPerChain.toFixed(1),
-      icon: <UserOutlined className="text-purple-500" />,
+      icon: <Users className="w-5 h-5 text-purple-500" />,
       color: '#722ed1',
     },
   ];

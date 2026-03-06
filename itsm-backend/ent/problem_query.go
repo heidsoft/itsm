@@ -22,6 +22,7 @@ type ProblemQuery struct {
 	order      []problem.OrderOption
 	inters     []Interceptor
 	predicates []predicate.Problem
+	withFKs    bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -332,9 +333,13 @@ func (pq *ProblemQuery) prepareQuery(ctx context.Context) error {
 
 func (pq *ProblemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Problem, error) {
 	var (
-		nodes = []*Problem{}
-		_spec = pq.querySpec()
+		nodes   = []*Problem{}
+		withFKs = pq.withFKs
+		_spec   = pq.querySpec()
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, problem.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Problem).scanValues(nil, columns)
 	}

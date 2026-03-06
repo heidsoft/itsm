@@ -51,11 +51,16 @@ export default function TicketsPage() {
     saveFilters('tickets', advancedFilters);
   }, [advancedFilters]);
 
-  // 从 URL 参数获取当前标签页
+  // 从 URL 参数获取当前标签页和高级搜索状态
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab && ['list', 'kanban', 'analytics', 'search'].includes(tab)) {
       setActiveTab(tab);
+    }
+    // 从 URL 恢复高级搜索面板状态
+    const search = searchParams.get('search');
+    if (search === 'advanced') {
+      setShowAdvancedSearch(true);
     }
   }, [searchParams]);
 
@@ -158,7 +163,17 @@ export default function TicketsPage() {
             <Space>
               <Button
                 icon={<SearchOutlined />}
-                onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                onClick={() => {
+                  const newShow = !showAdvancedSearch;
+                  setShowAdvancedSearch(newShow);
+                  const newParams = new URLSearchParams(searchParams.toString());
+                  if (newShow) {
+                    newParams.set('search', 'advanced');
+                  } else {
+                    newParams.delete('search');
+                  }
+                  router.push(`/tickets?${newParams.toString()}`, { scroll: false });
+                }}
               >
                 高级搜索
               </Button>

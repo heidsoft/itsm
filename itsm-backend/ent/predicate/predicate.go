@@ -66,11 +66,17 @@ type DiscoveryResult func(*sql.Selector)
 // DiscoverySource is the predicate function for discoverysource builders.
 type DiscoverySource func(*sql.Selector)
 
+// EngineerSkill is the predicate function for engineerskill builders.
+type EngineerSkill func(*sql.Selector)
+
 // Incident is the predicate function for incident builders.
 type Incident func(*sql.Selector)
 
 // IncidentAlert is the predicate function for incidentalert builders.
 type IncidentAlert func(*sql.Selector)
+
+// IncidentEscalationRule is the predicate function for incidentescalationrule builders.
+type IncidentEscalationRule func(*sql.Selector)
 
 // IncidentEvent is the predicate function for incidentevent builders.
 type IncidentEvent func(*sql.Selector)
@@ -89,6 +95,9 @@ type KnowledgeArticle func(*sql.Selector)
 
 // KnowledgeArticleLike is the predicate function for knowledgearticlelike builders.
 type KnowledgeArticleLike func(*sql.Selector)
+
+// KnownError is the predicate function for knownerror builders.
+type KnownError func(*sql.Selector)
 
 // Message is the predicate function for message builders.
 type Message func(*sql.Selector)
@@ -167,6 +176,9 @@ type SLADefinition func(*sql.Selector)
 
 // SLAMetric is the predicate function for slametric builders.
 type SLAMetric func(*sql.Selector)
+
+// SLAPolicy is the predicate function for slapolicy builders.
+type SLAPolicy func(*sql.Selector)
 
 // SLAViolation is the predicate function for slaviolation builders.
 type SLAViolation func(*sql.Selector)

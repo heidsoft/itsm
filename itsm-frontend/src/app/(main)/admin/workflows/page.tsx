@@ -76,79 +76,6 @@ interface Workflow {
   completedInstances: number;
 }
 
-// 模拟工作流数据
-const mockWorkflows: Workflow[] = [
-  {
-    id: 1,
-    name: '事件处理流程',
-    description: '标准事件处理和解决流程',
-    type: WORKFLOW_TYPES.INCIDENT,
-    status: WORKFLOW_STATUS.ACTIVE,
-    version: 'v1.2',
-    createdBy: '系统管理员',
-    createdAt: '2024-01-10 14:30',
-    lastModified: '2024-01-15 09:15',
-    stepsCount: 5,
-    activeInstances: 23,
-    completedInstances: 156,
-  },
-  {
-    id: 2,
-    name: '服务请求审批流程',
-    description: '服务请求的多级审批流程',
-    type: WORKFLOW_TYPES.SERVICE_REQUEST,
-    status: WORKFLOW_STATUS.ACTIVE,
-    version: 'v2.0',
-    createdBy: '流程管理员',
-    createdAt: '2024-01-08 16:45',
-    lastModified: '2024-01-14 11:20',
-    stepsCount: 7,
-    activeInstances: 12,
-    completedInstances: 89,
-  },
-  {
-    id: 3,
-    name: '变更管理流程',
-    description: 'IT变更的评估、审批和实施流程',
-    type: WORKFLOW_TYPES.CHANGE,
-    status: WORKFLOW_STATUS.DRAFT,
-    version: 'v1.0',
-    createdBy: '变更管理员',
-    createdAt: '2024-01-12 10:00',
-    lastModified: '2024-01-12 10:00',
-    stepsCount: 8,
-    activeInstances: 0,
-    completedInstances: 0,
-  },
-  {
-    id: 4,
-    name: '问题调查流程',
-    description: '根本原因分析和问题解决流程',
-    type: WORKFLOW_TYPES.PROBLEM,
-    status: WORKFLOW_STATUS.ACTIVE,
-    version: 'v1.1',
-    createdBy: '问题管理员',
-    createdAt: '2024-01-05 11:30',
-    lastModified: '2024-01-10 16:45',
-    stepsCount: 6,
-    activeInstances: 8,
-    completedInstances: 45,
-  },
-  {
-    id: 5,
-    name: '采购审批流程',
-    description: 'IT设备和服务采购的多级审批',
-    type: WORKFLOW_TYPES.APPROVAL,
-    status: WORKFLOW_STATUS.INACTIVE,
-    version: 'v1.0',
-    createdBy: '采购管理员',
-    createdAt: '2024-01-01 09:00',
-    lastModified: '2024-01-20 14:30',
-    stepsCount: 4,
-    activeInstances: 0,
-    completedInstances: 25,
-  },
-];
 
 // 工作流类型配置
 const WORKFLOW_TYPE_CONFIG = {
@@ -233,8 +160,8 @@ const WorkflowManagement = () => {
       }));
       setWorkflows(workflowList);
     } catch (error) {
-      // 失败时使用mock数据
-      setWorkflows(mockWorkflows);
+      console.error('Failed to load workflows:', error);
+      message.error('加载工作流数据失败');
     } finally {
       setLoading(false);
     }
@@ -268,24 +195,40 @@ const WorkflowManagement = () => {
   });
 
   // 处理工作流状态切换
-  const handleStatusToggle = (workflowId: number) => {
-    setWorkflows(prev =>
-      prev.map(workflow => {
-        if (workflow.id === workflowId) {
-          const newStatus =
-            workflow.status === WORKFLOW_STATUS.ACTIVE
-              ? WORKFLOW_STATUS.INACTIVE
-              : WORKFLOW_STATUS.ACTIVE;
-          return {
-            ...workflow,
-            status: newStatus,
-            lastModified: new Date().toLocaleString('zh-CN'),
-          };
-        }
-        return workflow;
-      })
-    );
-    message.success('工作流状态已更新');
+  const handleStatusToggle = async (workflowId: number) => {
+    const workflow = workflows.find(w => w.id === workflowId);
+    if (!workflow) return;
+
+    const newStatus = workflow.status === WORKFLOW_STATUS.ACTIVE
+      ? WORKFLOW_STATUS.INACTIVE
+      : WORKFLOW_STATUS.ACTIVE;
+
+    try {
+      // 调用 API 更新状态
+      if (newStatus === WORKFLOW_STATUS.ACTIVE) {
+        await WorkflowAPI.activateWorkflow(String(workflowId));
+      } else {
+        await WorkflowAPI.deactivateWorkflow(String(workflowId));
+      }
+
+      // 更新本地状态
+      setWorkflows(prev =>
+        prev.map(w => {
+          if (w.id === workflowId) {
+            return {
+              ...w,
+              status: newStatus,
+              lastModified: new Date().toLocaleString('zh-CN'),
+            };
+          }
+          return w;
+        })
+      );
+      message.success('工作流状态已更新');
+    } catch (error) {
+      console.error('Failed to toggle workflow status:', error);
+      message.error('更新状态失败');
+    }
   };
 
   // 处理工作流复制

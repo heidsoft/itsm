@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Button } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Button, message } from 'antd';
 import { GitPullRequest, CheckCircle, Clock, XCircle, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ChangeList from '@/components/change/ChangeList';
+import { ChangeApi } from '@/lib/api/change-api';
 
 const { Title, Text } = Typography;
 
@@ -20,15 +21,16 @@ export default function ChangesPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      // Mock data - in real app would call API
+      const stats = await ChangeApi.getChangeStats();
       setStats({
-        total: 45,
-        pending: 12,
-        inProgress: 8,
-        completed: 25,
+        total: stats.total || 0,
+        pending: stats.pending || 0,
+        inProgress: stats.in_progress || 0,
+        completed: stats.completed || 0,
       });
     } catch (error) {
       console.error('Failed to fetch change stats:', error);
+      message.error('获取变更统计失败，请稍后重试');
     }
   };
 

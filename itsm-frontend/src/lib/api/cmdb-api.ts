@@ -194,6 +194,58 @@ export class CMDBApi {
   }
 
   /**
+   * 创建CI类型 (DDD架构)
+   */
+  static async createCITypes(data: {
+    name: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+    attribute_schema?: string;
+    is_active?: boolean;
+  }): Promise<any> {
+    return httpClient.post('/api/v1/cmdb/types', {
+      name: data.name,
+      description: data.description,
+      icon: data.icon,
+      color: data.color,
+      attribute_schema: data.attribute_schema,
+      is_active: data.is_active ?? true,
+    });
+  }
+
+  /**
+   * 更新CI类型 (DDD架构)
+   */
+  static async updateCITypes(
+    id: number,
+    data: {
+      name: string;
+      description?: string;
+      icon?: string;
+      color?: string;
+      attribute_schema?: string;
+      is_active?: boolean;
+    }
+  ): Promise<any> {
+    return httpClient.put(`/api/v1/cmdb/types/${id}`, {
+      name: data.name,
+      description: data.description,
+      icon: data.icon,
+      color: data.color,
+      attribute_schema: data.attribute_schema,
+      is_active: data.is_active,
+    });
+  }
+
+  /**
+   * 删除CI类型 (DDD架构)
+   */
+  static async deleteCITypes(id: number): Promise<void> {
+    return httpClient.delete(`/api/v1/cmdb/types/${id}`);
+  }
+
+  /**
    * 获取关系图谱
    */
   static async getRelationshipGraph(query: unknown): Promise<any> {

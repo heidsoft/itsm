@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button, App, Modal } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Plus } from 'lucide-react';
 import { ApprovalChainStatsCards } from './components/ApprovalChainStats';
 import { ApprovalChainFilters } from './components/ApprovalChainFilters';
 import { ApprovalChainTable } from './components/ApprovalChainTable';
@@ -13,7 +13,6 @@ import {
   ApprovalChainStats,
 } from '@/types/approval-chain';
 import { httpClient } from '@/lib/api/http-client';
-// import { handleError } from '@/lib/error-handler';
 
 export default function ApprovalChainsPage() {
   const { message } = App.useApp();

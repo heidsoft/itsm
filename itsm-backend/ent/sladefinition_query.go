@@ -31,6 +31,7 @@ type SLADefinitionQuery struct {
 	withMetrics    *SLAMetricQuery
 	withTickets    *TicketQuery
 	withAlertRules *SLAAlertRuleQuery
+	withFKs        bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -478,6 +479,7 @@ func (sdq *SLADefinitionQuery) prepareQuery(ctx context.Context) error {
 func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLADefinition, error) {
 	var (
 		nodes       = []*SLADefinition{}
+		withFKs     = sdq.withFKs
 		_spec       = sdq.querySpec()
 		loadedTypes = [4]bool{
 			sdq.withViolations != nil,
@@ -486,6 +488,9 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 			sdq.withAlertRules != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, sladefinition.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLADefinition).scanValues(nil, columns)
 	}
