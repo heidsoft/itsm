@@ -114,13 +114,6 @@ interface ActivityItem {
   status: 'completed' | 'pending' | 'cancelled';
 }
 
-// Mock activity data
-const mockActivities: ActivityItem[] = [
-  { id: 1, action: '创建工单', target: '网络无法访问', time: '2小时前', status: 'completed' },
-  { id: 2, action: '审批通过', target: '服务器申请', time: '5小时前', status: 'completed' },
-  { id: 3, action: '更新工单', target: '数据库连接问题', time: '1天前', status: 'completed' },
-  { id: 4, action: '评论', target: 'VPN权限申请', time: '2天前', status: 'completed' },
-];
 
 export default function ProfilePage() {
   const { t } = useI18n();
@@ -139,6 +132,16 @@ export default function ProfilePage() {
     loadProfile();
     loadStats();
     loadActivities();
+
+    // 加载保存的偏好设置
+    const savedPreferences = localStorage.getItem('user_preferences');
+    if (savedPreferences) {
+      try {
+        preferencesForm.setFieldsValue(JSON.parse(savedPreferences));
+      } catch (e) {
+        console.error('Failed to load preferences:', e);
+      }
+    }
   }, []);
 
   const loadProfile = async () => {
@@ -222,7 +225,7 @@ export default function ProfilePage() {
       });
       message.success('个人信息更新成功');
       setEditing(false);
- => prev ? {      setProfile(prev ...prev, ...values } : null);
+      setProfile(prev => prev ? { ...prev, ...values } : null);
 
       // 更新 auth store 中的用户信息
       const { updateUser } = useAuthStore.getState();
@@ -237,8 +240,11 @@ export default function ProfilePage() {
 
   const handleSavePreferences = async (values: any) => {
     try {
+      // 保存到 localStorage
+      localStorage.setItem('user_preferences', JSON.stringify(values));
       message.success('偏好设置保存成功');
     } catch (error) {
+      console.error('Failed to save preferences:', error);
       message.error('保存失败，请重试');
     }
   };
@@ -347,7 +353,7 @@ export default function ProfilePage() {
                 <Space direction="vertical" style={{ width: '100%' }} size="middle">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Building size={16} style={{ color: DESIGN.colors.textMuted }} />
-                    <Text>{profile?.department || '技术部'}</Text>
+                    <Text>{profile?.department || '未设置'}</Text>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Phone size={16} style={{ color: DESIGN.colors.textMuted }} />
@@ -579,16 +585,21 @@ export default function ProfilePage() {
                   }
                 >
                   <div>
-                    {mockActivities.map((activity, index) => (
-                      <div
-                        key={activity.id}
-                        style={{
-                          display: 'flex',
-                          gap: 16,
-                          padding: '16px 0',
-                          borderBottom: index < mockActivities.length - 1 ? `1px solid ${DESIGN.colors.border}` : 'none',
-                        }}
-                      >
+                    {activities.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '40px 0', color: DESIGN.colors.textMuted }}>
+                        暂无活动记录
+                      </div>
+                    ) : (
+                      activities.map((activity, index) => (
+                        <div
+                          key={activity.id}
+                          style={{
+                            display: 'flex',
+                            gap: 16,
+                            padding: '16px 0',
+                            borderBottom: index < activities.length - 1 ? `1px solid ${DESIGN.colors.border}` : 'none',
+                          }}
+                        >
                         <div
                           style={{
                             width: 40,
@@ -615,7 +626,8 @@ export default function ProfilePage() {
                           {activity.time}
                         </div>
                       </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </TabPane>
 

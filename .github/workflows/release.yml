@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 env:
-  GOPROXY: "https://goproxy.io,direct"
+  GOPROXY: "https://proxy.golang.org,direct"
 
 jobs:
   build-backend:
