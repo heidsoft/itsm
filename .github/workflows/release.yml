@@ -72,6 +72,7 @@ jobs:
         run: cd itsm-frontend && npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_OUTPUT_MODE: standalone
           NODE_OPTIONS: --max-old-space-size=4096
 
       - name: Check build output
