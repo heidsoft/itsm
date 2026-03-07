@@ -74,7 +74,17 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:8080
           NODE_OPTIONS: --max-old-space-size=4096
 
+      - name: Check build output
+        id: check-frontend
+        run: |
+          if [ -d "itsm-frontend/.next" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Upload artifact
+        if: steps.check-frontend.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: itsm-frontend-build
@@ -97,16 +107,24 @@ jobs:
           path: artifacts/backends
 
       - name: Download frontend artifact
+        continue-on-error: true
         uses: actions/download-artifact@v4
         with:
           name: itsm-frontend-build
           path: artifacts/frontend
 
       - name: Create release archives
+        id: check-artifacts
         run: |
           cd artifacts
           zip -r ../itsm-v1.0.0-backends.zip backends/
-          zip -r ../itsm-v1.0.0-frontend.zip frontend/
+          if [ -d "frontend" ] && [ -n "$(ls -A frontend 2>/dev/null)" ]; then
+            zip -r ../itsm-v1.0.0-frontend.zip frontend/
+            echo "frontend_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "Frontend build not found, skipping frontend artifact"
+            echo "frontend_exists=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -114,8 +132,16 @@ jobs:
         with:
           files: |
             itsm-v1.0.0-backends.zip
-            itsm-v1.0.0-frontend.zip
           generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload frontend if exists
+        if: steps.check-artifacts.outputs.frontend_exists == 'true' && (startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            itsm-v1.0.0-frontend.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
