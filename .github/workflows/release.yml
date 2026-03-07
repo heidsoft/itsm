@@ -77,7 +77,7 @@ jobs:
       - name: Check build output
         id: check-frontend
         run: |
-          if [ -d "itsm-frontend/.next" ]; then
+          if [ -d "itsm-frontend/.next/standalone" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
@@ -88,7 +88,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: itsm-frontend-build
-          path: itsm-frontend/.next
+          path: |
+            itsm-frontend/.next/standalone
+            itsm-frontend/.next/static
           retention-days: 30
 
   release:
