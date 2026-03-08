@@ -133,3 +133,92 @@ func (r *EntRepository) GetCategories(ctx context.Context, tenantID int) ([]stri
 		GroupBy(knowledgearticle.FieldCategory).
 		Strings(ctx)
 }
+
+func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
+	// Query all articles for this tenant
+	query := r.client.KnowledgeArticle.Query().Where(knowledgearticle.TenantID(tenantID))
+
+	// Get total count
+	total, err := query.Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get published count
+	published, err := query.Clone().Where(knowledgearticle.IsPublished(true)).Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Draft count
+	draft, err := query.Clone().Where(knowledgearticle.IsPublished(false)).Count(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sum of view counts
+	type ViewSum struct {
+		TotalViews int `json:"total_views"`
+	}
+	var viewResult []ViewSum
+	err = r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID)).
+		Aggregate(ent.Sum(knowledgearticle.FieldViewCount)).
+		Scan(ctx, &viewResult)
+	if err != nil {
+		return nil, err
+	}
+	totalViews := int64(0)
+	if len(viewResult) > 0 {
+		totalViews = int64(viewResult[0].TotalViews)
+	}
+
+	// Sum of like counts
+	type LikeSum struct {
+		TotalLikes int `json:"total_likes"`
+	}
+	var likeResult []LikeSum
+	err = r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID)).
+		Aggregate(ent.Sum(knowledgearticle.FieldLikeCount)).
+		Scan(ctx, &likeResult)
+	if err != nil {
+		return nil, err
+	}
+	totalLikes := int64(0)
+	if len(likeResult) > 0 {
+		totalLikes = int64(likeResult[0].TotalLikes)
+	}
+
+	// Get category distribution
+	type CategoryGroup struct {
+		Category string `json:"category"`
+		Count    int    `json:"count"`
+	}
+	var categoryResults []CategoryGroup
+	err = r.client.KnowledgeArticle.Query().
+		Where(knowledgearticle.TenantID(tenantID)).
+		GroupBy(knowledgearticle.FieldCategory).
+		Aggregate(ent.Count()).
+		Scan(ctx, &categoryResults)
+	if err != nil {
+		return nil, err
+	}
+
+	categories := make([]CategoryStat, 0, len(categoryResults))
+	for _, cr := range categoryResults {
+		categories = append(categories, CategoryStat{
+			Name:  cr.Category,
+			Count: int64(cr.Count),
+		})
+	}
+
+	return &Stats{
+		Total:      int64(total),
+		Published:  int64(published),
+		Draft:      int64(draft),
+		TotalViews: totalViews,
+		TotalLikes: totalLikes,
+		Categories: categories,
+	}, nil
+}

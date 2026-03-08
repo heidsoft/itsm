@@ -92,6 +92,9 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "system_config", Action: "write"},
 		{Resource: "org", Action: "read"},
 		{Resource: "org", Action: "write"},
+		// Groups management permissions
+		{Resource: "groups", Action: "read"},
+		{Resource: "groups", Action: "write"},
 		// BPMN Workflow permissions
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},
@@ -137,6 +140,9 @@ var RolePermissions = map[string][]Permission{
 		// License Management permissions
 		{Resource: "license", Action: "read"},
 		{Resource: "license", Action: "write"},
+		// Groups management permissions
+		{Resource: "groups", Action: "read"},
+		{Resource: "groups", Action: "write"},
 	},
 	"agent": {
 		{Resource: "ticket", Action: "read"},
@@ -156,6 +162,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "change", Action: "write"},
 		{Resource: "problem", Action: "read"},
 		{Resource: "problem", Action: "write"},
+		// Groups management permissions
+		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},
@@ -171,6 +179,8 @@ var RolePermissions = map[string][]Permission{
 		{Resource: "service_catalog", Action: "read"},
 		{Resource: "service_request", Action: "read"},
 		{Resource: "service_request", Action: "write"},
+		// Groups management permissions
+		{Resource: "groups", Action: "read"},
 		// BPMN Workflow permissions
 		{Resource: "bpmn", Action: "read"},
 		{Resource: "bpmn", Action: "write"},

@@ -3,6 +3,7 @@ package knowledge
 import (
 	"context"
 
+	"itsm-backend/dto"
 	"go.uber.org/zap"
 )
 
@@ -43,4 +44,36 @@ func (s *Service) DeleteArticle(ctx context.Context, id int, tenantID int) error
 
 func (s *Service) GetCategories(ctx context.Context, tenantID int) ([]string, error) {
 	return s.repo.GetCategories(ctx, tenantID)
+}
+
+func (s *Service) GetStats(ctx context.Context, tenantID int) (*dto.KnowledgeStatsResponse, error) {
+	stats, err := s.repo.GetStats(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate average rating based on total likes / total articles
+	// Since we only have likes (not a 1-5 star rating), we'll use likes as a proxy for rating
+	var avgRating float64
+	if stats.Total > 0 {
+		avgRating = float64(stats.TotalLikes) / float64(stats.Total)
+	}
+
+	// Convert categories to DTO format
+	categoryStats := make([]dto.CategoryStats, 0, len(stats.Categories))
+	for _, cat := range stats.Categories {
+		categoryStats = append(categoryStats, dto.CategoryStats{
+			Name:  cat.Name,
+			Count: int(cat.Count),
+		})
+	}
+
+	return &dto.KnowledgeStatsResponse{
+		Total:      int(stats.Total),
+		Published:  int(stats.Published),
+		Draft:      int(stats.Draft),
+		Views:      stats.TotalViews,
+		Rating:     avgRating,
+		Categories: categoryStats,
+	}, nil
 }

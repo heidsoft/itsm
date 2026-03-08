@@ -54,6 +54,8 @@ type Tx struct {
 	DiscoverySource *DiscoverySourceClient
 	// EngineerSkill is the client for interacting with the EngineerSkill builders.
 	EngineerSkill *EngineerSkillClient
+	// Group is the client for interacting with the Group builders.
+	Group *GroupClient
 	// Incident is the client for interacting with the Incident builders.
 	Incident *IncidentClient
 	// IncidentAlert is the client for interacting with the IncidentAlert builders.
@@ -328,6 +330,7 @@ func (tx *Tx) init() {
 	tx.DiscoveryResult = NewDiscoveryResultClient(tx.config)
 	tx.DiscoverySource = NewDiscoverySourceClient(tx.config)
 	tx.EngineerSkill = NewEngineerSkillClient(tx.config)
+	tx.Group = NewGroupClient(tx.config)
 	tx.Incident = NewIncidentClient(tx.config)
 	tx.IncidentAlert = NewIncidentAlertClient(tx.config)
 	tx.IncidentEscalationRule = NewIncidentEscalationRuleClient(tx.config)

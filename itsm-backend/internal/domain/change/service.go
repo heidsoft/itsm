@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"itsm-backend/dto"
+
 	"go.uber.org/zap"
 )
 
@@ -43,6 +45,49 @@ func (s *Service) DeleteChange(ctx context.Context, id int, tenantID int) error 
 
 func (s *Service) GetStats(ctx context.Context, tenantID int) (*Stats, error) {
 	return s.repo.GetStats(ctx, tenantID)
+}
+
+// SubmitChange submits a change for approval
+// Transitions status from 'draft' to 'pending' and creates approval records for specified approvers
+func (s *Service) SubmitChange(ctx context.Context, changeID, tenantID, submitterID int, req *dto.SubmitChangeRequest) (*Change, error) {
+	// 1. Get the change
+	c, err := s.repo.Get(ctx, changeID, tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("change not found")
+	}
+
+	// 2. Check if change is in draft status
+	if c.Status != "draft" {
+		return nil, fmt.Errorf("change must be in draft status to submit")
+	}
+
+	// 3. Update change status to pending
+	c.Status = "pending"
+	updatedChange, err := s.repo.Update(ctx, c)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update change status: %w", err)
+	}
+
+	// 4. Create approval request records for each approver
+	for _, approverID := range req.ApproverIDs {
+		record := &ApprovalRecord{
+			ChangeID:   changeID,
+			ApproverID: approverID,
+			Status:     "pending",
+			Comment:    &req.Comment,
+		}
+		_, err := s.repo.CreateApprovalRecord(ctx, record)
+		if err != nil {
+			s.logger.Warnw("Failed to create approval record", "error", err, "change_id", changeID, "approver_id", approverID)
+			// Continue creating other records even if one fails
+		}
+	}
+
+	// 5. Notify approvers (optional - to be implemented later or via async)
+	// For now, just log the submission
+	s.logger.Infow("Change submitted for approval", "change_id", changeID, "submitter_id", submitterID, "approvers", req.ApproverIDs)
+
+	return updatedChange, nil
 }
 
 // Approval methods

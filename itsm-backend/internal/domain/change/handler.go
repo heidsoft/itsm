@@ -284,6 +284,30 @@ func (h *Handler) SubmitApproval(c *gin.Context) {
 	common.Success(c, res)
 }
 
+// SubmitChange handles POST /api/v1/changes/:id/submit
+func (h *Handler) SubmitChange(c *gin.Context) {
+	idStr := c.Param("id")
+	changeID, _ := strconv.Atoi(idStr)
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+	userIDVal, _ := c.Get("user_id")
+	userID := userIDVal.(int)
+
+	var req dto.SubmitChangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	res, err := h.svc.SubmitChange(c.Request.Context(), changeID, tenantID, userID, &req)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, toDTO(res))
+}
+
 // GetStats handles GET /api/v1/changes/stats
 func (h *Handler) GetStats(c *gin.Context) {
 	tenantIDVal, _ := c.Get("tenant_id")

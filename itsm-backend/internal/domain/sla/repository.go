@@ -2,6 +2,7 @@ package sla
 
 import (
 	"context"
+	"time"
 )
 
 // Repository interface for SLA domain
@@ -33,4 +34,7 @@ type Repository interface {
 	// Alert History
 	CreateAlertHistory(ctx context.Context, h *SLAAlertHistory) (*SLAAlertHistory, error)
 	ListAlertHistory(ctx context.Context, tenantID int, page, size int, filters map[string]interface{}) ([]*SLAAlertHistory, int, error)
+
+	// Compliance Report
+	GetComplianceReportData(ctx context.Context, tenantID int, startDate, endDate time.Time) (totalTickets, metSLA, violatedSLA int, avgResponseTime, avgResolutionTime float64, err error)
 }

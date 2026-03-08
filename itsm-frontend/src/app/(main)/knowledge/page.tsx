@@ -1,58 +1,98 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Button, Space, Tag, Table, List, Avatar, message } from 'antd';
-import { BookOpen, FileText, Eye, CheckCircle, Plus, Clock, User, Star, MessageCircle } from 'lucide-react';
+import { Card, Row, Col, Statistic, Typography, Tabs, Button, Space, Tag, Table, message, Spin, Alert } from 'antd';
+import { BookOpen, FileText, Eye, CheckCircle, Plus, Clock, Star, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ArticleList from '@/components/knowledge/ArticleList';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
 import { ArticleStatus } from '@/types/knowledge-base';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 export default function KnowledgePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('list');
-  const [recentArticles, setRecentArticles] = useState<any[]>([]);
-  const [popularArticles, setPopularArticles] = useState<any[]>([]);
-  const [stats, setStats] = useState({
-    totalArticles: 0,
-    publishedArticles: 0,
-    draftArticles: 0,
-    totalViews: 0,
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [recentArticles, setRecentArticles] = useState<Array<{
+    id: string;
+    title: string;
+    views: number;
+    author: string;
+    date: string;
+    category: string;
+  }>>([]);
+
+  const [popularArticles, setPopularArticles] = useState<Array<{
+    id: string;
+    title: string;
+    views: number;
+    author: string;
+    date: string;
+    category: string;
+    rating: number;
+  }>>([]);
+
+  const [stats, setStats] = useState<{
+    total: number;
+    published: number;
+    draft: number;
+    views: number;
+    rating: number;
+    categories: Array<{ name: string; count: number }>;
+  }>({
+    total: 0,
+    published: 0,
+    draft: 0,
+    views: 0,
+    rating: 0,
+    categories: [],
   });
 
   // Fetch stats and articles
   const fetchStats = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const [kbStats, articlesData] = await Promise.all([
         KnowledgeBaseApi.getStats(),
         KnowledgeBaseApi.getArticles({ page: 1, pageSize: 20, status: ArticleStatus.PUBLISHED })
       ]);
 
+      // Map backend stats to frontend state
       setStats({
-        totalArticles: kbStats.totalArticles || 0,
-        publishedArticles: kbStats.publishedArticles || 0,
-        draftArticles: kbStats.draftArticles || 0,
-        totalViews: kbStats.totalViews || 0,
+        total: kbStats.total || 0,
+        published: kbStats.published || 0,
+        draft: kbStats.draft || 0,
+        views: Number(kbStats.views) || 0,
+        rating: kbStats.rating || 0,
+        categories: kbStats.categories || [],
       });
 
-      // Set recent articles (sorted by date)
+      // Map articles - backend fields: id (int), title, views (int), author (string), published_at, category (string)
       const articles = articlesData.articles || [];
-      setRecentArticles(articles.map((a: any) => ({
-        id: a.id,
-        title: a.title,
-        views: a.view_count || 0,
-        author: a.author?.name || a.author?.username || '-',
+      const mappedArticles = articles.map((a: any) => ({
+        id: String(a.id),
+        title: a.title || '',
+        views: a.views || 0,
+        author: a.author || '-',
         date: a.published_at ? new Date(a.published_at).toLocaleDateString() : '-',
-        category: a.category?.name || '-',
-      })));
+        category: a.category || '-',
+      }));
 
-      // Set popular articles (same data for now, sorted by views)
-      setPopularArticles([...recentArticles].sort((a, b) => b.views - a.views).slice(0, 10));
+      setRecentArticles(mappedArticles);
+
+      // Popular articles: sorted by views, add rating placeholder
+      const sortedByViews = [...mappedArticles].sort((a, b) => b.views - a.views);
+      setPopularArticles(sortedByViews.slice(0, 10).map(a => ({ ...a, rating: 0 })));
     } catch (error) {
       console.error('Failed to fetch knowledge stats:', error);
-      message.error('获取知识库统计数据失败，请稍后重试');
+      setError('加载知识库数据失败，请稍后重试');
+      message.error('获取知识库统计数据失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -134,11 +174,19 @@ export default function KnowledgePage() {
       key: 'rating',
       render: (rating: number) => (
         <span className="flex items-center gap-1">
-          <Star size={14} className="text-yellow-500" fill="currentColor" /> {rating}
+          <Star size={14} className="text-yellow-500" fill="currentColor" /> {rating.toFixed(1)}
         </span>
       ),
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" tip="加载知识库数据..." />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
@@ -162,13 +210,29 @@ export default function KnowledgePage() {
         </Button>
       </div>
 
+      {/* 错误提示 */}
+      {error && (
+        <Alert
+          message={error}
+          description="请检查网络连接或稍后重试"
+          type="error"
+          showIcon
+          className="mb-6"
+          action={
+            <Button size="small" onClick={fetchStats}>
+              重试
+            </Button>
+          }
+        />
+      )}
+
       {/* 统计卡片 */}
       <Row gutter={[16, 16]} className="mb-6">
         <Col xs={24} sm={12} lg={6}>
           <Card className="rounded-lg shadow-sm" variant="borderless">
             <Statistic
               title="文章总数"
-              value={stats.totalArticles}
+              value={stats.total}
               prefix={<BookOpen className="text-blue-500 mr-2" />}
               valueStyle={{ color: '#1890ff' }}
             />
@@ -178,7 +242,7 @@ export default function KnowledgePage() {
           <Card className="rounded-lg shadow-sm" variant="borderless">
             <Statistic
               title="已发布"
-              value={stats.publishedArticles}
+              value={stats.published}
               prefix={<CheckCircle className="text-green-500 mr-2" />}
               valueStyle={{ color: '#52c41a' }}
             />
@@ -188,7 +252,7 @@ export default function KnowledgePage() {
           <Card className="rounded-lg shadow-sm" variant="borderless">
             <Statistic
               title="草稿"
-              value={stats.draftArticles}
+              value={stats.draft}
               prefix={<FileText className="text-orange-500 mr-2" />}
               valueStyle={{ color: '#fa8c16' }}
             />
@@ -198,7 +262,7 @@ export default function KnowledgePage() {
           <Card className="rounded-lg shadow-sm" variant="borderless">
             <Statistic
               title="总浏览量"
-              value={stats.totalViews}
+              value={stats.views}
               prefix={<Eye className="text-purple-500 mr-2" />}
               valueStyle={{ color: '#722ed1' }}
             />
@@ -237,6 +301,7 @@ export default function KnowledgePage() {
                   dataSource={recentArticles}
                   rowKey="id"
                   pagination={false}
+                  locale={{ emptyText: '暂无文章' }}
                 />
               </Card>
             ),
@@ -256,6 +321,7 @@ export default function KnowledgePage() {
                   dataSource={popularArticles}
                   rowKey="id"
                   pagination={false}
+                  locale={{ emptyText: '暂无热门文章' }}
                 />
               </Card>
             ),
