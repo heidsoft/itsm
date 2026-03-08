@@ -2,8 +2,11 @@ package sla
 
 import (
 	"context"
+	"time"
 
 	"go.uber.org/zap"
+
+	"itsm-backend/dto"
 )
 
 type Service struct {
@@ -151,5 +154,33 @@ func (s *Service) GetSLAStats(ctx context.Context, tenantID int) (map[string]int
 		"total_violations":        len(violations),
 		"open_violations":         openViolations,
 		"overall_compliance_rate": complianceRate,
+	}, nil
+}
+
+// GetComplianceReport generates SLA compliance report for a date range
+func (s *Service) GetComplianceReport(ctx context.Context, tenantID int, startDate, endDate time.Time) (*dto.SLAComplianceReport, error) {
+	s.logger.Infow("Generating SLA compliance report", "tenantID", tenantID, "startDate", startDate, "endDate", endDate)
+
+	total, met, violated, avgResp, avgRes, err := s.repo.GetComplianceReportData(ctx, tenantID, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+
+	complianceRate := 0.0
+	if total > 0 {
+		complianceRate = float64(met) / float64(total) * 100
+	}
+
+	return &dto.SLAComplianceReport{
+		TotalTickets:      total,
+		MetSLA:            met,
+		ViolatedSLA:       violated,
+		ComplianceRate:    complianceRate,
+		AvgResponseTime:   avgResp,
+		AvgResolutionTime: avgRes,
+		ReportPeriod: dto.SLAReportPeriod{
+			StartDate: startDate.Format(time.RFC3339),
+			EndDate:   endDate.Format(time.RFC3339),
+		},
 	}, nil
 }

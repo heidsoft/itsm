@@ -177,7 +177,7 @@ const ReleaseList: React.FC = () => {
       dataIndex: 'planned_release_date',
       key: 'planned_release_date',
       width: 150,
-      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
+      render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: '创建人',
@@ -197,7 +197,7 @@ const ReleaseList: React.FC = () => {
       dataIndex: 'created_at',
       key: 'created_at',
       width: 150,
-      render: (date: string) => dayjs(date).format('YYYY-MM-DD HH:mm'),
+      render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD HH:mm') : '-'),
     },
     {
       title: '操作',

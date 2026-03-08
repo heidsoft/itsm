@@ -38,7 +38,7 @@ export default function ProblemEditPage() {
           priority: data.priority,
           category: data.category,
           status: data.status,
-          root_cause: data.root_cause,
+          root_cause: data.rootCause,
           impact: data.impact,
         });
       } catch (error) {
@@ -86,7 +86,7 @@ export default function ProblemEditPage() {
 
       <Card
         title={
-          <span className="text-lg font-medium">编辑问题 - {problemData?.problem_number}</span>
+          <span className="text-lg font-medium">编辑问题 - #{problemData?.id}</span>
         }
         loading={fetching}
       >
@@ -120,8 +120,8 @@ export default function ProblemEditPage() {
               >
                 <Select placeholder="请选择状态">
                   <Option value="open">打开</Option>
-                  <Option value="in_progress">进行中</Option>
-                  <Option value="resolved">已解决</Option>
+                  <Option value="investigating">调查中</Option>
+                  <Option value="solved">已解决</Option>
                   <Option value="closed">已关闭</Option>
                 </Select>
               </Form.Item>

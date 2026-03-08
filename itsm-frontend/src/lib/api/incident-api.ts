@@ -674,14 +674,13 @@ export class IncidentAPI {
   }
 
   // 事件升级
-  static async escalateIncident(data: {
-    incident_id: number;
+  static async escalateIncident(id: number, data: {
     escalation_level: number;
     reason?: string;
     notify_users?: number[];
     auto_assign?: boolean;
   }): Promise<any> {
-    const response = await httpClient.post<any>('/api/v1/incidents/escalate', data);
+    const response = await httpClient.post<any>(`/api/v1/incidents/${id}/escalate`, data);
     return response;
   }
 }

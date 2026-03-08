@@ -10,6 +10,7 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/slametric"
 	"itsm-backend/ent/slaviolation"
+	"itsm-backend/ent/ticket"
 )
 
 type EntRepository struct {
@@ -442,4 +443,81 @@ func (r *EntRepository) GetSLAMonitoring(ctx context.Context, tenantID int, star
 		"active_slas":         activeSLAs,
 		"active_alert_rules":  alertRules,
 	}, nil
+}
+
+// GetComplianceReportData retrieves data for SLA compliance report
+func (r *EntRepository) GetComplianceReportData(ctx context.Context, tenantID int, startDate, endDate time.Time) (totalTickets, metSLA, violatedSLA int, avgResponseTime, avgResolutionTime float64, err error) {
+	// 1. Total tickets created in the period
+	total, err := r.client.Ticket.Query().
+		Where(ticket.TenantID(tenantID), ticket.CreatedAtGTE(startDate), ticket.CreatedAtLTE(endDate)).
+		Count(ctx)
+	if err != nil {
+		return 0, 0, 0, 0, 0, err
+	}
+	totalTickets = total
+	if totalTickets == 0 {
+		return 0, 0, 0, 0, 0, nil
+	}
+
+	// 2. Count distinct tickets with at least one unresolved violation in the period
+	var violatedCount int
+	var groups []struct {
+		TicketID int `json:"ticket_id"`
+	}
+	scanErr := r.client.SLAViolation.Query().
+		Where(
+			slaviolation.TenantID(tenantID),
+			slaviolation.IsResolved(false),
+			slaviolation.ViolationTimeGTE(startDate),
+			slaviolation.ViolationTimeLTE(endDate),
+		).
+		GroupBy(slaviolation.FieldTicketID).
+		Scan(ctx, &groups)
+	if scanErr == nil {
+		violatedCount = len(groups)
+	} else {
+		violatedCount = 0
+	}
+	violatedSLA = violatedCount
+	metSLA = totalTickets - violatedSLA
+
+	// 3. Average response time (minutes) for tickets with first_response_at
+	responseRows, respErr := r.client.Ticket.Query().
+		Where(ticket.TenantID(tenantID), ticket.CreatedAtGTE(startDate), ticket.CreatedAtLTE(endDate)).
+		Select(ticket.FieldCreatedAt, ticket.FieldFirstResponseAt).
+		All(ctx)
+	if respErr == nil {
+		var totalDur time.Duration
+		count := 0
+		for _, t := range responseRows {
+			if !t.CreatedAt.IsZero() && !t.FirstResponseAt.IsZero() {
+				totalDur += t.FirstResponseAt.Sub(t.CreatedAt)
+				count++
+			}
+		}
+		if count > 0 {
+			avgResponseTime = float64(totalDur) / float64(time.Minute) / float64(count)
+		}
+	}
+
+	// 4. Average resolution time (minutes) for tickets with resolved_at
+	resolutionRows, resErr := r.client.Ticket.Query().
+		Where(ticket.TenantID(tenantID), ticket.CreatedAtGTE(startDate), ticket.CreatedAtLTE(endDate)).
+		Select(ticket.FieldCreatedAt, ticket.FieldResolvedAt).
+		All(ctx)
+	if resErr == nil {
+		var totalDur time.Duration
+		count := 0
+		for _, t := range resolutionRows {
+			if !t.CreatedAt.IsZero() && !t.ResolvedAt.IsZero() {
+				totalDur += t.ResolvedAt.Sub(t.CreatedAt)
+				count++
+			}
+		}
+		if count > 0 {
+			avgResolutionTime = float64(totalDur) / float64(time.Minute) / float64(count)
+		}
+	}
+
+	return totalTickets, metSLA, violatedSLA, avgResponseTime, avgResolutionTime, nil
 }

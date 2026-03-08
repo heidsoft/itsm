@@ -852,6 +852,30 @@ var (
 		Columns:    EngineerSkillsColumns,
 		PrimaryKey: []*schema.Column{EngineerSkillsColumns[0]},
 	}
+	// GroupsColumns holds the columns for the "groups" table.
+	GroupsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_groups", Type: field.TypeInt, Nullable: true},
+	}
+	// GroupsTable holds the schema information for the "groups" table.
+	GroupsTable = &schema.Table{
+		Name:       "groups",
+		Columns:    GroupsColumns,
+		PrimaryKey: []*schema.Column{GroupsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "groups_users_groups",
+				Columns:    []*schema.Column{GroupsColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// IncidentsColumns holds the columns for the "incidents" table.
 	IncidentsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -3027,6 +3051,7 @@ var (
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
+		{Name: "group_members", Type: field.TypeInt, Nullable: true},
 		{Name: "team_users", Type: field.TypeInt, Nullable: true},
 	}
 	// UsersTable holds the schema information for the "users" table.
@@ -3042,8 +3067,14 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "users_teams_users",
+				Symbol:     "users_groups_members",
 				Columns:    []*schema.Column{UsersColumns[13]},
+				RefColumns: []*schema.Column{GroupsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "users_teams_users",
+				Columns:    []*schema.Column{UsersColumns[14]},
 				RefColumns: []*schema.Column{TeamsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -3427,6 +3458,7 @@ var (
 		DiscoveryResultsTable,
 		DiscoverySourcesTable,
 		EngineerSkillsTable,
+		GroupsTable,
 		IncidentsTable,
 		IncidentAlertsTable,
 		IncidentEscalationRulesTable,
@@ -3514,6 +3546,7 @@ func init() {
 	DepartmentsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	DiscoveryJobsTable.ForeignKeys[0].RefTable = DiscoverySourcesTable
 	DiscoveryResultsTable.ForeignKeys[0].RefTable = DiscoveryJobsTable
+	GroupsTable.ForeignKeys[0].RefTable = UsersTable
 	IncidentAlertsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentEventsTable.ForeignKeys[0].RefTable = IncidentsTable
 	IncidentMetricsTable.ForeignKeys[0].RefTable = IncidentsTable
@@ -3564,7 +3597,8 @@ func init() {
 	TicketViewsTable.ForeignKeys[0].RefTable = UsersTable
 	ToolInvocationsTable.ForeignKeys[0].RefTable = ConversationsTable
 	UsersTable.ForeignKeys[0].RefTable = DepartmentsTable
-	UsersTable.ForeignKeys[1].RefTable = TeamsTable
+	UsersTable.ForeignKeys[1].RefTable = GroupsTable
+	UsersTable.ForeignKeys[2].RefTable = TeamsTable
 	WorkflowsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	WorkflowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
 	WorkflowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable

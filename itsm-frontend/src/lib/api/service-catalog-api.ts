@@ -266,7 +266,7 @@ export class ServiceCatalogApi {
    * 审批服务请求
    */
   static async approveServiceRequest(id: number, comment?: string): Promise<void> {
-    await httpClient.post(`/api/v1/service-requests/${id}/approvals`, {
+    await httpClient.post(`/api/v1/service-requests/${id}/approval`, {
       action: 'approve',
       comment,
     });
@@ -276,7 +276,7 @@ export class ServiceCatalogApi {
    * 拒绝服务请求
    */
   static async rejectServiceRequest(id: number, reason: string): Promise<void> {
-    await httpClient.post(`/api/v1/service-requests/${id}/approvals`, {
+    await httpClient.post(`/api/v1/service-requests/${id}/approval`, {
       action: 'reject',
       comment: reason,
     });

@@ -66,6 +66,9 @@ type RouterConfig struct {
 	// User Controller
 	UserController *controller.UserController
 
+	// Group Controller
+	GroupController *controller.GroupController
+
 	// Role & Permission Controllers (new database-backed implementation)
 	RoleController                   *controller.RoleController
 	PermissionController             *controller.PermissionController
@@ -414,6 +417,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				changes.POST("/:id/approvals", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitApproval)
 				changes.GET("/:id/approval-summary", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetApprovalSummary)
 				changes.GET("/:id/risk-assessment", middleware.RequirePermission("change", "read"), config.ChangeHandler.GetRiskAssessment)
+				changes.POST("/:id/submit", middleware.RequirePermission("change", "write"), config.ChangeHandler.SubmitChange)
 			}
 		}
 
@@ -475,6 +479,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				cmdbGrp.POST("/types", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateType)
 				cmdbGrp.PUT("/types/:id", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.UpdateType)
 				cmdbGrp.DELETE("/types/:id", middleware.RequirePermission("cmdb", "delete"), config.CMDBHandler.DeleteType)
+				cmdbGrp.POST("/items", middleware.RequirePermission("cmdb", "write"), config.CMDBHandler.CreateCIItem)
 				cmdbGrp.GET("/reconciliation", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.GetReconciliation)
 				cmdbGrp.GET("/relationship-types", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListRelationshipTypes)
 				cmdbGrp.GET("/cloud-services", middleware.RequirePermission("cmdb", "read"), config.CMDBHandler.ListCloudServices)
@@ -532,6 +537,9 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				// Recommendations
 				knowledgeGrp.GET("/recommendations", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecommendations)
 				knowledgeGrp.GET("/recent", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetRecentArticles)
+
+				// Stats
+				knowledgeGrp.GET("/stats", middleware.RequirePermission("knowledge", "read"), config.KnowledgeHandler.GetStats)
 			}
 
 			// Legacy route for backward compatibility: /api/v1/knowledge-articles/*
@@ -580,6 +588,7 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 
 				// SLA Alert History
 				slaGrp.GET("/alert-history", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetAlertHistory)
+				slaGrp.GET("/compliance-report", middleware.RequirePermission("sla", "read"), config.SLAHandler.GetSLAComplianceReport)
 			}
 		}
 
@@ -621,6 +630,21 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 				users := tenant.(*gin.RouterGroup).Group("/users")
 				{
 					users.GET("", config.CommonHandler.ListUsers)
+				}
+			}
+
+			// Groups
+			if config.GroupController != nil {
+				groups := tenant.(*gin.RouterGroup).Group("/groups")
+				{
+					groups.GET("", middleware.RequirePermission("groups", "read"), config.GroupController.ListGroups)
+					groups.POST("", middleware.RequirePermission("groups", "write"), config.GroupController.CreateGroup)
+					groups.GET("/:id", middleware.RequirePermission("groups", "read"), config.GroupController.GetGroup)
+					groups.PUT("/:id", middleware.RequirePermission("groups", "write"), config.GroupController.UpdateGroup)
+					groups.DELETE("/:id", middleware.RequirePermission("groups", "write"), config.GroupController.DeleteGroup)
+					groups.POST("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupController.AddUserToGroup)
+					groups.DELETE("/:id/members", middleware.RequirePermission("groups", "write"), config.GroupController.RemoveUserFromGroup)
+					groups.GET("/:id/members", middleware.RequirePermission("groups", "read"), config.GroupController.GetGroupMembers)
 				}
 			}
 

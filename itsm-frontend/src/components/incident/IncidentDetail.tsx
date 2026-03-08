@@ -80,8 +80,7 @@ const IncidentDetail: React.FC = () => {
     if (!data) return;
     setEscalating(true);
     try {
-      await IncidentAPI.escalateIncident({
-        incident_id: data.id,
+      await IncidentAPI.escalateIncident(data.id, {
         escalation_level: values.escalation_level,
         reason: values.reason,
         auto_assign: values.auto_assign,
