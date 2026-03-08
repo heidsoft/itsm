@@ -16,6 +16,7 @@ import {
   Popover,
   Collapse,
   Typography,
+  message,
 } from 'antd';
 import {
   SearchOutlined,
@@ -381,6 +382,7 @@ const TicketAdvancedSearch: React.FC<TicketAdvancedSearchProps> = ({
         createdAt: dayjs().format('YYYY-MM-DD HH:mm:ss'),
       },
     ]);
+    message.success('搜索条件已保存');
   }, [form]);
 
   // 执行搜索

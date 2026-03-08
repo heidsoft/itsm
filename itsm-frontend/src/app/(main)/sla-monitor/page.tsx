@@ -1,31 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Typography, Row, Col, Statistic, Button, Space, Select, Tabs, Table, Tag, Progress, Tooltip } from 'antd';
+import { Card, Typography, Row, Col, Statistic, Button, Space, Select, Tabs, Table, Tag, Progress, Tooltip, message } from 'antd';
 import { SLAMonitorDashboard } from '@/components/business/SLAMonitorDashboard';
 import { AlertTriangle, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 import { WarningOutlined, LineChartOutlined } from '@ant-design/icons';
+import { SLAApi } from '@/lib/api/sla-api';
 
 const { Title, Text } = Typography;
-
-// Mock SLA ticket data
-const mockSLATickets = [
-  { id: 1, ticket_no: 'INC-001', title: '服务器宕机', priority: '紧急', status: '响应中', sla_target: '1小时', remaining: '15分钟', progress: 85 },
-  { id: 2, ticket_no: 'INC-002', title: '网络无法访问', priority: '高', status: '处理中', sla_target: '2小时', remaining: '45分钟', progress: 60 },
-  { id: 3, ticket_no: 'INC-003', title: '应用响应慢', priority: '中', status: '已响应', sla_target: '4小时', remaining: '2小时', progress: 30 },
-  { id: 4, ticket_no: 'SR-001', title: '账号申请', priority: '低', status: '处理中', sla_target: '8小时', remaining: '6小时', progress: 20 },
-  { id: 5, ticket_no: 'INC-004', title: '数据库连接失败', priority: '紧急', status: '响应中', sla_target: '1小时', remaining: '已超时', progress: 100 },
-];
-
-// Mock Service SLA data
-const mockServiceSLA = [
-  { id: 1, service_name: '云服务器 ECS', total_requests: 1250, compliant: 1180, at_risk: 45, breached: 25, compliance_rate: 94.4, avg_response: '12分钟' },
-  { id: 2, service_name: '云数据库 RDS', total_requests: 856, compliant: 825, at_risk: 20, breached: 11, compliance_rate: 96.4, avg_response: '8分钟' },
-  { id: 3, service_name: '对象存储 OSS', total_requests: 542, compliant: 530, at_risk: 8, breached: 4, compliance_rate: 97.8, avg_response: '5分钟' },
-  { id: 4, service_name: '负载均衡 SLB', total_requests: 320, compliant: 298, at_risk: 15, breached: 7, compliance_rate: 93.1, avg_response: '15分钟' },
-  { id: 5, service_name: 'VPN 网关', total_requests: 180, compliant: 175, at_risk: 3, breached: 2, compliance_rate: 97.2, avg_response: '3分钟' },
-  { id: 6, service_name: '企业邮箱', total_requests: 95, compliant: 93, at_risk: 1, breached: 1, compliance_rate: 97.9, avg_response: '10分钟' },
-];
 
 const priorityColors: Record<string, string> = {
   '紧急': 'red',
@@ -38,6 +20,7 @@ const SLAMonitorPage = () => {
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30);
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
     totalSLA: 0,
     compliant: 0,
@@ -45,20 +28,61 @@ const SLAMonitorPage = () => {
     breached: 0,
     complianceRate: 0,
   });
+  const [violations, setViolations] = useState<any[]>([]);
+  const [serviceSLA, setServiceSLA] = useState<any[]>([]);
 
   // Fetch stats
   const fetchStats = async () => {
+    setLoading(true);
     try {
-      // Mock data - in real app would call API
+      const [statsData, monitoringData, violationsData] = await Promise.all([
+        SLAApi.getSLAStats(),
+        SLAApi.getSLAMonitoring({ start_time: '30d', end_time: 'now' }),
+        SLAApi.getSLAViolations({ page: 1, size: 20, is_resolved: false })
+      ]);
+
       setStats({
-        totalSLA: 45,
-        compliant: 38,
-        atRisk: 5,
-        breached: 2,
-        complianceRate: 84.4,
+        totalSLA: statsData.total_definitions || 0,
+        compliant: statsData.active_definitions || 0,
+        atRisk: Math.round((monitoringData.at_risk_tickets) || 0),
+        breached: statsData.open_violations || 0,
+        complianceRate: statsData.overall_compliance_rate || 0,
       });
+
+      // Set violations for ticket SLA table
+      if (violationsData?.items) {
+        setViolations(violationsData.items.map((v: any) => ({
+          id: v.id,
+          ticket_no: v.ticket_number || `#${v.ticket_id}`,
+          title: v.ticket_title || 'Unknown',
+          priority: v.priority || 'medium',
+          status: v.is_resolved ? '已解决' : '处理中',
+          sla_target: v.sla_name || 'SLA',
+          remaining: v.is_resolved ? '已解决' : `${v.delay_minutes || 0}分钟`,
+          progress: Math.min(100, Math.round((v.delay_minutes || 0) / 60 * 100)),
+        })));
+      }
+
+      // Fetch service SLA data from definitions
+      const slaDefinitions = await SLAApi.getSLADefinitions({ size: 100 });
+      if (slaDefinitions?.items) {
+        const services = slaDefinitions.items.map((sla: any) => ({
+          id: sla.id,
+          service_name: sla.name,
+          total_requests: 0,
+          compliant: 0,
+          at_risk: 0,
+          breached: 0,
+          compliance_rate: sla.is_active ? 95 : 0,
+          avg_response: `${sla.response_time_minutes || 0}分钟`,
+        }));
+        setServiceSLA(services);
+      }
     } catch (error) {
       console.error('Failed to fetch SLA stats:', error);
+      message.error('获取SLA统计数据失败，请稍后重试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -158,8 +182,8 @@ const SLAMonitorPage = () => {
         <Progress
           percent={rate}
           size="small"
-          format={(p) => `${p}%`}
-          status={p === undefined ? 'exception' : p >= 95 ? 'success' : p >= 90 ? 'normal' : 'exception'}
+          format={(percent) => `${percent}%`}
+          status={rate === undefined ? 'exception' : rate >= 95 ? 'success' : rate >= 90 ? 'normal' : 'exception'}
         />
       ),
     },
@@ -179,11 +203,11 @@ const SLAMonitorPage = () => {
 
   // Calculate summary stats for service SLA
   const serviceSummary = React.useMemo(() => {
-    const total = mockServiceSLA.reduce((sum, s) => sum + s.total_requests, 0);
-    const compliant = mockServiceSLA.reduce((sum, s) => sum + s.compliant, 0);
-    const rate = total > 0 ? (compliant / total * 100).toFixed(1) : 0;
+    const total = serviceSLA.reduce((sum, s) => sum + s.total_requests, 0);
+    const compliant = serviceSLA.reduce((sum, s) => sum + s.compliant, 0);
+    const rate = total > 0 ? (compliant / total * 100).toFixed(1) : (stats.complianceRate || 0).toString();
     return { total, compliant, rate };
-  }, []);
+  }, [serviceSLA, stats.complianceRate]);
 
   return (
     <div className="p-6 min-h-screen bg-gray-50">
@@ -289,14 +313,14 @@ const SLAMonitorPage = () => {
               label: (
                 <span className="flex items-center gap-2">
                   <AlertTriangle />
-                  工单SLA ({mockSLATickets.length})
+                  工单SLA ({violations.length})
                 </span>
               ),
               children: (
                 <div>
                   <Table
                     columns={ticketColumns}
-                    dataSource={mockSLATickets}
+                    dataSource={violations}
                     rowKey="id"
                     pagination={false}
                     size="small"
@@ -309,7 +333,7 @@ const SLAMonitorPage = () => {
               label: (
                 <span className="flex items-center gap-2">
                   <CheckCircle />
-                  服务SLA ({mockServiceSLA.length})
+                  服务SLA ({serviceSLA.length})
                 </span>
               ),
               children: (
@@ -320,7 +344,7 @@ const SLAMonitorPage = () => {
                       <Card size="small" className="bg-blue-50">
                         <Statistic
                           title="服务总数"
-                          value={mockServiceSLA.length}
+                          value={serviceSLA.length}
                           prefix={<CheckCircle />}
                         />
                       </Card>
@@ -349,7 +373,7 @@ const SLAMonitorPage = () => {
 
                   <Table
                     columns={serviceColumns}
-                    dataSource={mockServiceSLA}
+                    dataSource={serviceSLA}
                     rowKey="id"
                     pagination={{ pageSize: 10 }}
                   />

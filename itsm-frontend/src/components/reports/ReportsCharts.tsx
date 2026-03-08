@@ -238,6 +238,7 @@ const ReportsCharts: React.FC<ReportsChartsProps> = ({
           <Table
             columns={tableColumns}
             dataSource={data}
+            scroll={{ x: 'max-content' }}
             pagination={false}
             size="middle"
             rowKey={record => record.name}

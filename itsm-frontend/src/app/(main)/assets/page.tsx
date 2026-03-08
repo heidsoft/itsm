@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Button, Space } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Button, Space, message } from 'antd';
 import { Package, CheckCircle, Clock, AlertTriangle, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import AssetList from '@/components/asset/AssetList';
+import { AssetApi } from '@/lib/api/asset-api';
 
 const { Title, Text } = Typography;
 
@@ -20,15 +21,16 @@ export default function AssetsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      // Mock data - in real app would call API
+      const assetStats = await AssetApi.getAssetStats();
       setStats({
-        totalAssets: 256,
-        inUse: 180,
-        available: 52,
-        maintenance: 24,
+        totalAssets: assetStats.total || 0,
+        inUse: assetStats.in_use || 0,
+        available: assetStats.available || 0,
+        maintenance: assetStats.maintenance || 0,
       });
     } catch (error) {
       console.error('Failed to fetch asset stats:', error);
+      message.error('获取资产统计数据失败，请稍后重试');
     }
   };
 
@@ -103,7 +105,7 @@ export default function AssetsPage() {
       </Row>
 
       {/* 资产列表 */}
-      <AssetList />
+      <AssetList showActions={false} />
     </div>
   );
 }

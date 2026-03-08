@@ -56,7 +56,11 @@ const statusColors: Record<string, string> = {
   [ChangeStatus.CANCELLED]: 'default',
 };
 
-const ChangeList: React.FC = () => {
+interface ChangeListProps {
+  showHeader?: boolean;
+}
+
+const ChangeList: React.FC<ChangeListProps> = ({ showHeader = true }) => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
@@ -170,20 +174,22 @@ const ChangeList: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">变更管理</h1>
-          <p className="text-gray-500 mt-1">管理IT基础架构和服务的变更请求，最小化变更风险</p>
+      {showHeader && (
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">变更管理</h1>
+            <p className="text-gray-500 mt-1">管理IT基础架构和服务的变更请求，最小化变更风险</p>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/changes/new')}
+            size="large"
+          >
+            新建变更
+          </Button>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/changes/new')}
-          size="large"
-        >
-          新建变更
-        </Button>
-      </div>
+      )}
 
       <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">

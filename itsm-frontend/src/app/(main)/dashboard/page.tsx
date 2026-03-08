@@ -320,7 +320,10 @@ export default function DashboardPage() {
                             <TeamWorkloadChart data={data?.teamWorkload || []} />
                           </Col>
                           <Col xs={24} lg={12}>
-                            <SLAComplianceChart data={data?.slaData || []} />
+                            {(() => {
+                              const slaOverall = data?.kpiMetrics?.find(m => m.id === 'sla-compliance')?.value;
+                              return <SLAComplianceChart data={data?.slaData || []} overallValue={slaOverall} />;
+                            })()}
                           </Col>
                           <Col xs={24} lg={12}>
                             <PeakHoursChart data={data?.peakHours || []} />
@@ -371,7 +374,10 @@ export default function DashboardPage() {
                       <div className="pt-4">
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
-                            <SLAComplianceChart data={data?.slaData || []} />
+                            {(() => {
+                              const slaOverall = data?.kpiMetrics?.find(m => m.id === 'sla-compliance')?.value;
+                              return <SLAComplianceChart data={data?.slaData || []} overallValue={slaOverall} />;
+                            })()}
                           </Col>
                           <Col xs={24} lg={12}>
                             <UserSatisfactionChart data={data?.satisfactionData || []} />

@@ -6,7 +6,7 @@ import { GaugeIcon } from 'lucide-react';
 import { SLAData } from '../types/dashboard.types';
 import { DashboardChartCard } from './DashboardChartCard';
 
-const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) => {
+const SLAComplianceChart: React.FC<{ data: SLAData[]; overallValue?: number }> = React.memo(({ data, overallValue }) => {
   // 确保数据有效性
   const validData = Array.isArray(data)
     ? data.filter(
@@ -14,10 +14,12 @@ const SLAComplianceChart: React.FC<{ data: SLAData[] }> = React.memo(({ data }) 
       )
     : [];
 
-  const averageSLA =
-    validData.length > 0
-      ? validData.reduce((sum, item) => sum + (item.actual ?? 0), 0) / validData.length
-      : 0;
+  // 如果传入了 overallValue 则优先使用，否则计算平均值
+  const averageSLA = overallValue !== undefined && !isNaN(overallValue) && overallValue >= 0
+    ? overallValue
+    : (validData.length > 0
+        ? validData.reduce((sum, item) => sum + (item.actual ?? 0), 0) / validData.length
+        : 0);
 
   // 确保 percent 在 0-1 之间，且是有效数字
   const safePercent = (() => {

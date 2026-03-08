@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Card,
   Row,
@@ -41,6 +42,8 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const SLADashboardPage = () => {
+  const router = useRouter();
+
   // 状态管理
   const [slaStats, setSlaStats] = useState({
     total_definitions: 0,
@@ -316,7 +319,7 @@ const SLADashboardPage = () => {
               >
                 刷新
               </Button>
-              <Button type="primary" icon={<Bell className="w-4 h-4" />}>
+              <Button type="primary" icon={<Bell className="w-4 h-4" />} onClick={() => router.push('/slas')}>
                 SLA预警设置
               </Button>
             </Space>
@@ -568,7 +571,7 @@ const SLADashboardPage = () => {
                         variant="borderless"
                         title="SLA定义"
                         extra={
-                          <Button type="primary" size="small">
+                          <Button type="primary" size="small" onClick={() => router.push('/slas')}>
                             管理SLA
                           </Button>
                         }

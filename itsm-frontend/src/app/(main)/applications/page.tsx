@@ -89,18 +89,18 @@ export default function ApplicationsPage() {
     {
       title: '操作',
       key: 'action',
-      render: (_: unknown, record: Application) => (
+      render: (_: unknown, record: Application & { id: number }) => (
         <Space size="middle">
           <Button
             type="text"
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record, 'application')}
+            onClick={() => handleEdit(record as ApplicationRecord, 'application')}
           />
           <Button
             type="text"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
+            onClick={() => handleDelete(record as ApplicationRecord)}
           />
         </Space>
       ),
@@ -139,18 +139,18 @@ export default function ApplicationsPage() {
     {
       title: '操作',
       key: 'action',
-      render: (_: unknown, record: Microservice) => (
+      render: (_: unknown, record: Microservice & { id: number }) => (
         <Space size="middle">
           <Button
             type="text"
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record, 'microservice')}
+            onClick={() => handleEdit(record as MicroserviceRecord, 'microservice')}
           />
           <Button
             type="text"
             danger
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record)}
+            onClick={() => handleDelete(record as MicroserviceRecord)}
           />
         </Space>
       ),

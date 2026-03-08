@@ -3,6 +3,7 @@
 import React from 'react';
 import { Table, Tag, Button, Space, Badge } from 'antd';
 import { Eye, Edit, MoreHorizontal, AlertTriangle } from 'lucide-react';
+import dayjs from 'dayjs';
 import { Incident } from '@/lib/api/types';
 import { useI18n } from '@/lib/i18n';
 
@@ -191,7 +192,7 @@ export const IncidentList: React.FC<IncidentListProps> = ({
       width: 150,
       render: (created_at: string) => (
         <div style={{ fontSize: 'small', color: '#666' }}>
-          {new Date(created_at).toLocaleDateString()}
+          {created_at ? dayjs(created_at).format('YYYY-MM-DD HH:mm') : '-'}
         </div>
       ),
     },

@@ -84,12 +84,12 @@ const CMDBQualityReport = () => {
       ? qualityData.reduce((sum, d) => sum + d.consistency, 0) / qualityData.length
       : 0;
 
-  const CustomTooltip = ({ active, payload, label }: unknown) => {
+  const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800 mb-2">{`分类: ${label}`}</p>
-          {payload.map((entry: unknown, index: number) => (
+          {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {`${entry.name}: ${entry.value}%`}
             </p>

@@ -52,7 +52,7 @@ export default function ProblemEditPage() {
     fetchProblem();
   }, [id, form, router]);
 
-  const handleSubmit = async (values: unknown) => {
+  const handleSubmit = async (values: any) => {
     if (!id) return;
 
     setLoading(true);

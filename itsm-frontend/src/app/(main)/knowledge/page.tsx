@@ -1,34 +1,20 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Button, Space, Tag, Table, List, Avatar } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Tabs, Button, Space, Tag, Table, List, Avatar, message } from 'antd';
 import { BookOpen, FileText, Eye, CheckCircle, Plus, Clock, User, Star, MessageCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ArticleList from '@/components/knowledge/ArticleList';
+import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
+import { ArticleStatus } from '@/types/knowledge-base';
 
 const { Title, Text, Paragraph } = Typography;
-
-// Mock recent articles
-const recentArticles = [
-  { id: 1, title: '如何申请云服务器', views: 1250, author: '张三', date: '2024-01-15', category: '云资源' },
-  { id: 2, title: 'VPN连接配置指南', views: 980, author: '李四', date: '2024-01-14', category: '网络' },
-  { id: 3, title: '账号权限申请流程', views: 856, author: '王五', date: '2024-01-13', category: '账号' },
-  { id: 4, title: '数据库备份策略', views: 742, author: '赵六', date: '2024-01-12', category: '数据库' },
-  { id: 5, title: '安全组配置最佳实践', views: 625, author: '钱七', date: '2024-01-11', category: '安全' },
-];
-
-// Mock popular articles
-const popularArticles = [
-  { id: 1, title: 'IT服务请求常见问题解答', views: 3560, rating: 4.8, category: 'FAQ' },
-  { id: 2, title: '云服务器申请完全指南', views: 2890, rating: 4.9, category: '云资源' },
-  { id: 3, title: '企业邮箱配置教程', views: 2450, rating: 4.7, category: '账号' },
-  { id: 4, title: '网络故障排查手册', views: 2100, rating: 4.6, category: '网络' },
-  { id: 5, title: '数据库连接问题汇总', views: 1850, rating: 4.5, category: '数据库' },
-];
 
 export default function KnowledgePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('list');
+  const [recentArticles, setRecentArticles] = useState<any[]>([]);
+  const [popularArticles, setPopularArticles] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalArticles: 0,
     publishedArticles: 0,
@@ -36,18 +22,37 @@ export default function KnowledgePage() {
     totalViews: 0,
   });
 
-  // Fetch stats
+  // Fetch stats and articles
   const fetchStats = async () => {
     try {
-      // Mock data - in real app would call API
+      const [kbStats, articlesData] = await Promise.all([
+        KnowledgeBaseApi.getStats(),
+        KnowledgeBaseApi.getArticles({ page: 1, pageSize: 20, status: ArticleStatus.PUBLISHED })
+      ]);
+
       setStats({
-        totalArticles: 156,
-        publishedArticles: 128,
-        draftArticles: 28,
-        totalViews: 4562,
+        totalArticles: kbStats.totalArticles || 0,
+        publishedArticles: kbStats.publishedArticles || 0,
+        draftArticles: kbStats.draftArticles || 0,
+        totalViews: kbStats.totalViews || 0,
       });
+
+      // Set recent articles (sorted by date)
+      const articles = articlesData.articles || [];
+      setRecentArticles(articles.map((a: any) => ({
+        id: a.id,
+        title: a.title,
+        views: a.view_count || 0,
+        author: a.author?.name || a.author?.username || '-',
+        date: a.published_at ? new Date(a.published_at).toLocaleDateString() : '-',
+        category: a.category?.name || '-',
+      })));
+
+      // Set popular articles (same data for now, sorted by views)
+      setPopularArticles([...recentArticles].sort((a, b) => b.views - a.views).slice(0, 10));
     } catch (error) {
       console.error('Failed to fetch knowledge stats:', error);
+      message.error('获取知识库统计数据失败，请稍后重试');
     }
   };
 
@@ -215,7 +220,7 @@ export default function KnowledgePage() {
                 文章列表
               </span>
             ),
-            children: <ArticleList />,
+            children: <ArticleList showHeader={false} />,
           },
           {
             key: 'recent',

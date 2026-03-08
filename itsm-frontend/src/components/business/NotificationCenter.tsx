@@ -797,6 +797,7 @@ const NotificationCenter: React.FC<{
               dataSource={notifications}
               rowKey="id"
               loading={loading}
+              scroll={{ x: 'max-content' }}
               pagination={{
                 pageSize: 10,
                 showSizeChanger: true,
@@ -825,7 +826,7 @@ const NotificationCenter: React.FC<{
               </Button>
             </div>
 
-            <Table columns={templateColumns} dataSource={templates} rowKey="id" size="small" />
+            <Table columns={templateColumns} dataSource={templates} rowKey="id" size="small" scroll={{ x: 'max-content' }} />
           </div>
         </TabPane>
 
@@ -846,7 +847,7 @@ const NotificationCenter: React.FC<{
               </Button>
             </div>
 
-            <Table columns={channelColumns} dataSource={channels} rowKey="id" size="small" />
+            <Table columns={channelColumns} dataSource={channels} rowKey="id" size="small" scroll={{ x: 'max-content' }} />
           </div>
         </TabPane>
       </Tabs>

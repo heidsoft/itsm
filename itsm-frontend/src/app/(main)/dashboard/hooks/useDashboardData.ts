@@ -41,11 +41,15 @@ export function useDashboardData() {
             case 'total-tickets':
               return { ...metric, value: stats.total, description: '实时工单总数' };
             case 'pending-tickets':
-              return { ...metric, value: stats.pending, description: '实时待处理' };
+              // 使用 open + in_progress 作为待处理工单数（后端 stats 无 pending 字段）
+              const pendingCount = (stats.open || 0) + (stats.in_progress || 0);
+              return { ...metric, value: pendingCount, description: '实时待处理' };
             case 'in-progress-tickets':
               return { ...metric, value: stats.in_progress, description: '实时处理中' };
             case 'completed-tickets':
-              return { ...metric, value: stats.resolved + stats.closed, description: '实时已完成' };
+              // resolved + closed，若 closed 不存在则只使用 resolved
+              const closedCount = stats.closed || 0;
+              return { ...metric, value: stats.resolved + closedCount, description: '实时已完成' };
             case 'overdue-tickets':
               return { ...metric, value: stats.overdue || 0, description: '实时超时工单' };
             default:
