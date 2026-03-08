@@ -15,13 +15,13 @@ type CreateProblemRequest struct {
 
 // UpdateProblemRequest 更新问题请求
 type UpdateProblemRequest struct {
-	Title       string `json:"title" binding:"omitempty,min=2,max=200"`
-	Description string `json:"description" binding:"omitempty,min=10,max=5000"`
-	Priority    string `json:"priority" binding:"omitempty"`
-	Status      string `json:"status" binding:"omitempty"`
-	Category    string `json:"category" binding:"omitempty"`
-	RootCause   string `json:"root_cause" binding:"omitempty"`
-	Impact      string `json:"impact" binding:"omitempty"`
+	Title       *string `json:"title" binding:"omitempty,min=2,max=200"`
+	Description *string `json:"description" binding:"omitempty,min=10,max=5000"`
+	Priority    *string `json:"priority" binding:"omitempty"`
+	Status      *string `json:"status" binding:"omitempty"`
+	Category    *string `json:"category" binding:"omitempty"`
+	RootCause   *string `json:"root_cause" binding:"omitempty"`
+	Impact      *string `json:"impact" binding:"omitempty"`
 }
 
 // ListProblemsRequest 获取问题列表请求

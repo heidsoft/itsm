@@ -160,10 +160,14 @@ export interface Incident {
   severity: IncidentSeverity;
   status: IncidentStatus;
   category?: string;
+  priority?: TicketPriority; // Added for compatibility
   reporter_id: number;
+  reporter?: UserBasicInfo; // Added for display compatibility
   assignee_id?: number;
   assignee?: UserBasicInfo;
+  assignee_name?: string; // Added for display compatibility
   impact_analysis?: Record<string, unknown>;
+  impact?: string; // Added for compatibility
   detected_at: string;
   resolved_at?: string;
   created_at: string;

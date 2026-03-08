@@ -26,10 +26,10 @@ const TeamWorkloadChart: React.FC<{ data: TeamWorkload[] }> = React.memo(({ data
         fill: '#666',
         fontSize: 12,
       },
-      formatter: (datum: unknown) => `${datum.ticketCount}个`,
+      formatter: (datum: { ticketCount: number }) => `${datum.ticketCount}个`,
     },
     tooltip: {
-      formatter: (datum: unknown) => ({
+      formatter: (datum: { ticketCount: number; completionRate: number }) => ({
         name: '工单数',
         value: `${datum.ticketCount}个 (完成率: ${datum.completionRate}%)`,
       }),

@@ -432,6 +432,7 @@ export const TicketTemplate: React.FC<TicketTemplateProps> = ({
           columns={columns}
           dataSource={templates}
           rowKey="id"
+          scroll={{ x: 'max-content' }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

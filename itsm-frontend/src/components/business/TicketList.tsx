@@ -116,7 +116,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
   }, []);
 
   // 处理分页
-  const handleTableChange = useCallback((pagination: unknown) => {
+  const handleTableChange = useCallback((pagination: any) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
   }, []);
@@ -325,7 +325,7 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
         dataIndex: 'assignee',
         key: 'assignee',
         width: 100,
-        render: (assignee: unknown) => (
+        render: (assignee: any) => (
           <span>
             <UserOutlined className="mr-1" />
             {assignee?.name || '未分配'}

@@ -327,6 +327,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
               columns={rootCauseColumns}
               dataSource={analysisReport.root_causes}
               rowKey="id"
+              scroll={{ x: 'max-content' }}
               pagination={false}
             />
           </Card>
@@ -410,6 +411,7 @@ export const TicketRootCauseAnalysis: React.FC<TicketRootCauseAnalysisProps> = (
                       },
                     ]}
                     rowKey="id"
+                    scroll={{ x: 'max-content' }}
                     pagination={false}
                     size="small"
                   />

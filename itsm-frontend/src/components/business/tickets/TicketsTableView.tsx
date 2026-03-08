@@ -64,8 +64,8 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
   const columns: ColumnsType<Ticket> = [
     {
       title: '工单编号',
-      dataIndex: 'ticket_number',
-      key: 'ticket_number',
+      dataIndex: 'ticketNumber',
+      key: 'ticketNumber',
       width: 120,
       fixed: 'left',
       render: (text: string) => (
@@ -159,8 +159,8 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
     },
     {
       title: '创建时间',
-      dataIndex: 'created_at',
-      key: 'created_at',
+      dataIndex: 'createdAt',
+      key: 'createdAt',
       width: 160,
       sorter: true,
       render: (date: string) => (
@@ -169,8 +169,8 @@ export const TicketsTableView: React.FC<TicketsTableViewProps> = ({
     },
     {
       title: '更新时间',
-      dataIndex: 'updated_at',
-      key: 'updated_at',
+      dataIndex: 'updatedAt',
+      key: 'updatedAt',
       width: 160,
       sorter: true,
       render: (date: string) => (

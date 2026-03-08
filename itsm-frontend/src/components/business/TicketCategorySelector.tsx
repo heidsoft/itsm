@@ -79,7 +79,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
 
   // 构建树形数据
   const treeData = useMemo(() => {
-    const buildTree = (items: CategoryTreeItem[]): unknown[] => {
+    const buildTree = (items: CategoryTreeItem[]): any[] => {
       return items.map(item => ({
         key: item.id,
         title: (
@@ -120,7 +120,7 @@ const TicketCategorySelector: React.FC<TicketCategorySelectorProps> = ({
   const filteredTreeData = useMemo(() => {
     if (!searchTerm) return treeData;
 
-    const filterTree = (items: unknown[]): unknown[] => {
+    const filterTree = (items: any[]): any[] => {
       return items
         .filter(item => {
           const matchesSearch = item.title.props.children[0].props.children[1].props.children

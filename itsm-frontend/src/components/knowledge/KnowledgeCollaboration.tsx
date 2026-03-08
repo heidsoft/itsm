@@ -111,7 +111,7 @@ const KnowledgeCollaboration: React.FC<KnowledgeCollaborationProps> = ({
         const response = await KnowledgeBaseApi.getComments(articleId);
 
         // 转换API评论数据到组件格式
-        const mappedComments: Comment[] = response.comments.map((c: unknown) => ({
+        const mappedComments: Comment[] = response.comments.map((c: any) => ({
           id: c.id,
           userId: c.userId,
           userName: c.userName,

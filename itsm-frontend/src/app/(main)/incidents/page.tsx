@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Button, Input, Space, Card, Pagination, message, Empty, Tabs, Table, Badge, Tag, Avatar, Tooltip, Row, Col } from 'antd';
-import { Plus, Search, Filter, Edit, Eye, AlertCircle, Table as TableIcon, Clock, User, MoreOutlined } from 'lucide-react';
+import { Button, Input, Space, Card, Pagination, message, Empty, Tabs, Badge, Tag, Avatar } from 'antd';
+import { Plus, Search, Filter, Table as TableIcon } from 'lucide-react';
 import { AppstoreOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/navigation';
 import { IncidentList } from './components/IncidentList';
@@ -10,6 +10,8 @@ import { IncidentFilters } from './components/IncidentFilters';
 import { IncidentStats } from './components/IncidentStats';
 import { Incident } from '@/lib/api/types';
 import { IncidentAPI } from '@/lib/api/incident-api';
+import { UserApi } from '@/lib/api/user-api';
+import { UnifiedKanbanBoard, type KanbanColumnConfig } from '@/components/business/UnifiedKanbanBoard';
 import { useDebounce } from '@/lib/component-utils';
 import dayjs from 'dayjs';
 
@@ -22,126 +24,22 @@ interface IncidentStatsData {
   avgResolutionTime?: number;
 }
 
-// Kanban status config
-const KANBAN_STATUS_CONFIG = [
+// Priority config
+const PRIORITY_CONFIG = {
+  critical: { color: 'red', text: '紧急', label: '紧急', icon: '🔴' },
+  high: { color: 'orange', text: '高', label: '高', icon: '🟠' },
+  medium: { color: 'blue', text: '中', label: '中', icon: '🔵' },
+  low: { color: 'green', text: '低', label: '低', icon: '🟢' },
+};
+
+// Kanban column configurations (与Tickets看板保持一致的视觉风格)
+const KANBAN_COLUMNS: KanbanColumnConfig<Incident>[] = [
   { key: 'new', title: '新建', color: '#1890ff' },
   { key: 'investigating', title: '调查中', color: '#722ed1' },
   { key: 'identified', title: '已识别', color: '#fa8c16' },
-  { key: 'resolved', title: '已解决', titleEn: 'Resolved', color: '#52c41a' },
+  { key: 'resolved', title: '已解决', color: '#52c41a' },
   { key: 'closed', title: '已关闭', color: '#d9d9d9' },
 ];
-
-// Priority config
-const PRIORITY_CONFIG = {
-  critical: { color: 'red', text: '紧急', icon: '🔴' },
-  high: { color: 'orange', text: '高', icon: '🟠' },
-  medium: { color: 'blue', text: '中', icon: '🔵' },
-  low: { color: 'green', text: '低', icon: '🟢' },
-};
-
-// Incident Kanban Card Component
-const IncidentKanbanCard: React.FC<{
-  incident: Incident;
-  onClick: () => void;
-}> = ({ incident, onClick }) => {
-  const priority = PRIORITY_CONFIG[incident.priority as keyof typeof PRIORITY_CONFIG] || PRIORITY_CONFIG.medium;
-
-  return (
-    <Card
-      size="small"
-      className="mb-2 cursor-pointer hover:shadow-md transition-shadow"
-      onClick={onClick}
-      styles={{ body: { padding: '12px' } }}
-    >
-      <div className="flex items-start gap-2">
-        <Tag color={priority.color} className="!m-0 text-xs">
-          {priority.text}
-        </Tag>
-        <div className="flex-1 min-w-0">
-          <div className="font-medium text-sm truncate">
-            {incident.title || `事件 #${incident.id}`}
-          </div>
-          <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
-            <span>ID: {incident.id}</span>
-            <span>•</span>
-            <span>{dayjs(incident.created_at).format('MM-DD HH:mm')}</span>
-          </div>
-        </div>
-      </div>
-      {incident.assignee_name && (
-        <div className="mt-2 flex items-center gap-1">
-          <Avatar size="small" className="!text-xs">{incident.assignee_name[0]}</Avatar>
-          <span className="text-xs text-gray-500">{incident.assignee_name}</span>
-        </div>
-      )}
-    </Card>
-  );
-};
-
-// Incident Kanban Board Component
-const IncidentKanbanBoard: React.FC<{
-  incidents: Incident[];
-  onIncidentClick: (incident: Incident) => void;
-  loading: boolean;
-}> = ({ incidents, onIncidentClick, loading }) => {
-  // Group incidents by status
-  const incidentsByStatus = useMemo(() => {
-    const grouped: Record<string, Incident[]> = {};
-    KANBAN_STATUS_CONFIG.forEach(status => {
-      grouped[status.key] = incidents.filter(
-        inc => (inc.status as string) === status.key || inc.status === status.title
-      );
-    });
-    return grouped;
-  }, [incidents]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <span>加载中...</span>
-      </div>
-    );
-  }
-
-  return (
-    <Row gutter={[16, 16]} className="!mt-4">
-      {KANBAN_STATUS_CONFIG.map(status => (
-        <Col key={status.key} xs={24} sm={12} md={8} lg={4}>
-          <div
-            className="rounded-lg h-full"
-            style={{ backgroundColor: '#f5f5f5' }}
-          >
-            <div
-              className="p-3 rounded-t-lg flex items-center justify-between"
-              style={{ backgroundColor: status.color }}
-            >
-              <span className="font-medium text-white">{status.title}</span>
-              <Badge
-                count={incidentsByStatus[status.key]?.length || 0}
-                style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
-              />
-            </div>
-            <div className="p-2 min-h-[400px] max-h-[600px] overflow-y-auto">
-              {incidentsByStatus[status.key]?.length === 0 ? (
-                <div className="text-center text-gray-400 py-8 text-sm">
-                  暂无事件
-                </div>
-              ) : (
-                incidentsByStatus[status.key]?.map(incident => (
-                  <IncidentKanbanCard
-                    key={incident.id}
-                    incident={incident}
-                    onClick={() => onIncidentClick(incident)}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        </Col>
-      ))}
-    </Row>
-  );
-};
 
 export default function IncidentsPage() {
   const router = useRouter();
@@ -167,10 +65,30 @@ export default function IncidentsPage() {
         search: debouncedSearch || undefined,
       });
       const resp = response as unknown as Record<string, unknown>;
-      const items = resp.items as Incident[] | undefined;
-      const totalCount = resp.total as number | undefined;
-      setIncidents((items || []) as unknown as Incident[]);
-      setTotal(totalCount || 0);
+      const items = (resp.items || resp.incidents || []) as Incident[];
+      
+      // Fetch users to map reporter names
+      const userMap = new Map<number, string>();
+      try {
+        const usersResponse = await UserApi.getUsers({ page_size: 1000 });
+        usersResponse.users.forEach(user => userMap.set(user.id, user.name));
+      } catch (e) {
+        console.warn('Failed to fetch users for reporter names', e);
+      }
+      
+      // Enrich incidents with reporter object if user exists
+      const enriched = items.map(inc => {
+        const reporterId = inc.reporter_id;
+        const reporterName = userMap.get(reporterId);
+        return {
+          ...inc,
+          ...(reporterId && reporterName ? { reporter: { id: reporterId, name: reporterName } } : {}),
+        };
+      });
+      
+      setIncidents(enriched);
+      const totalCount = (resp as any).total || enriched.length;
+      setTotal(totalCount);
     } catch (error) {
       console.error('Failed to fetch incidents:', error);
       setIncidents([]);
@@ -331,10 +249,32 @@ export default function IncidentsPage() {
         )}
 
         {activeTab === 'kanban' && (
-          <IncidentKanbanBoard
-            incidents={incidents}
-            onIncidentClick={handleView}
+          <UnifiedKanbanBoard<Incident>
+            items={incidents}
             loading={loading}
+            getItemId={(incident: Incident) => incident.id}
+            getItemStatus={(incident: Incident) => incident.status}
+            getItemTitle={(incident: Incident) => incident.title || `事件 #${incident.id}`}
+            getItemNumber={(incident: Incident) => incident.incident_number || String(incident.id)}
+            getItemDescription={(incident: Incident) => incident.description || ''}
+            getItemPriority={(incident: Incident) => incident.priority || incident.severity || 'medium'}
+            getItemAssignee={(incident: Incident) =>
+              incident.assignee
+                ? { name: incident.assignee.name || incident.assignee_name || '未分配' }
+                : null
+            }
+            getItemCreatedAt={(incident: Incident) => incident.created_at}
+            getItemUpdatedAt={(incident: Incident) => incident.updated_at}
+            onItemClick={handleView}
+            onItemEdit={handleEdit}
+            columnConfigs={KANBAN_COLUMNS}
+            searchPlaceholder="搜索事件ID、标题或描述..."
+            priorityOptions={[
+              { value: 'critical', label: '紧急', color: 'red' },
+              { value: 'high', label: '高', color: 'orange' },
+              { value: 'medium', label: '中', color: 'blue' },
+              { value: 'low', label: '低', color: 'green' },
+            ]}
           />
         )}
       </Card>

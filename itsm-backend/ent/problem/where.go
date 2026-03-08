@@ -114,6 +114,21 @@ func UpdatedAt(v time.Time) predicate.Problem {
 	return predicate.Problem(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// ResolvedAt applies equality check predicate on the "resolved_at" field. It's identical to ResolvedAtEQ.
+func ResolvedAt(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldResolvedAt, v))
+}
+
+// ClosedAt applies equality check predicate on the "closed_at" field. It's identical to ClosedAtEQ.
+func ClosedAt(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldClosedAt, v))
+}
+
+// DeletedAt applies equality check predicate on the "deleted_at" field. It's identical to DeletedAtEQ.
+func DeletedAt(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldDeletedAt, v))
+}
+
 // TitleEQ applies the EQ predicate on the "title" field.
 func TitleEQ(v string) predicate.Problem {
 	return predicate.Problem(sql.FieldEQ(FieldTitle, v))
@@ -817,6 +832,156 @@ func UpdatedAtLT(v time.Time) predicate.Problem {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Problem {
 	return predicate.Problem(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// ResolvedAtEQ applies the EQ predicate on the "resolved_at" field.
+func ResolvedAtEQ(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldResolvedAt, v))
+}
+
+// ResolvedAtNEQ applies the NEQ predicate on the "resolved_at" field.
+func ResolvedAtNEQ(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldNEQ(FieldResolvedAt, v))
+}
+
+// ResolvedAtIn applies the In predicate on the "resolved_at" field.
+func ResolvedAtIn(vs ...time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldIn(FieldResolvedAt, vs...))
+}
+
+// ResolvedAtNotIn applies the NotIn predicate on the "resolved_at" field.
+func ResolvedAtNotIn(vs ...time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldNotIn(FieldResolvedAt, vs...))
+}
+
+// ResolvedAtGT applies the GT predicate on the "resolved_at" field.
+func ResolvedAtGT(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldGT(FieldResolvedAt, v))
+}
+
+// ResolvedAtGTE applies the GTE predicate on the "resolved_at" field.
+func ResolvedAtGTE(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldGTE(FieldResolvedAt, v))
+}
+
+// ResolvedAtLT applies the LT predicate on the "resolved_at" field.
+func ResolvedAtLT(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldLT(FieldResolvedAt, v))
+}
+
+// ResolvedAtLTE applies the LTE predicate on the "resolved_at" field.
+func ResolvedAtLTE(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldLTE(FieldResolvedAt, v))
+}
+
+// ResolvedAtIsNil applies the IsNil predicate on the "resolved_at" field.
+func ResolvedAtIsNil() predicate.Problem {
+	return predicate.Problem(sql.FieldIsNull(FieldResolvedAt))
+}
+
+// ResolvedAtNotNil applies the NotNil predicate on the "resolved_at" field.
+func ResolvedAtNotNil() predicate.Problem {
+	return predicate.Problem(sql.FieldNotNull(FieldResolvedAt))
+}
+
+// ClosedAtEQ applies the EQ predicate on the "closed_at" field.
+func ClosedAtEQ(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldClosedAt, v))
+}
+
+// ClosedAtNEQ applies the NEQ predicate on the "closed_at" field.
+func ClosedAtNEQ(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldNEQ(FieldClosedAt, v))
+}
+
+// ClosedAtIn applies the In predicate on the "closed_at" field.
+func ClosedAtIn(vs ...time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldIn(FieldClosedAt, vs...))
+}
+
+// ClosedAtNotIn applies the NotIn predicate on the "closed_at" field.
+func ClosedAtNotIn(vs ...time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldNotIn(FieldClosedAt, vs...))
+}
+
+// ClosedAtGT applies the GT predicate on the "closed_at" field.
+func ClosedAtGT(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldGT(FieldClosedAt, v))
+}
+
+// ClosedAtGTE applies the GTE predicate on the "closed_at" field.
+func ClosedAtGTE(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldGTE(FieldClosedAt, v))
+}
+
+// ClosedAtLT applies the LT predicate on the "closed_at" field.
+func ClosedAtLT(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldLT(FieldClosedAt, v))
+}
+
+// ClosedAtLTE applies the LTE predicate on the "closed_at" field.
+func ClosedAtLTE(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldLTE(FieldClosedAt, v))
+}
+
+// ClosedAtIsNil applies the IsNil predicate on the "closed_at" field.
+func ClosedAtIsNil() predicate.Problem {
+	return predicate.Problem(sql.FieldIsNull(FieldClosedAt))
+}
+
+// ClosedAtNotNil applies the NotNil predicate on the "closed_at" field.
+func ClosedAtNotNil() predicate.Problem {
+	return predicate.Problem(sql.FieldNotNull(FieldClosedAt))
+}
+
+// DeletedAtEQ applies the EQ predicate on the "deleted_at" field.
+func DeletedAtEQ(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtNEQ applies the NEQ predicate on the "deleted_at" field.
+func DeletedAtNEQ(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldNEQ(FieldDeletedAt, v))
+}
+
+// DeletedAtIn applies the In predicate on the "deleted_at" field.
+func DeletedAtIn(vs ...time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtNotIn applies the NotIn predicate on the "deleted_at" field.
+func DeletedAtNotIn(vs ...time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldNotIn(FieldDeletedAt, vs...))
+}
+
+// DeletedAtGT applies the GT predicate on the "deleted_at" field.
+func DeletedAtGT(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldGT(FieldDeletedAt, v))
+}
+
+// DeletedAtGTE applies the GTE predicate on the "deleted_at" field.
+func DeletedAtGTE(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldGTE(FieldDeletedAt, v))
+}
+
+// DeletedAtLT applies the LT predicate on the "deleted_at" field.
+func DeletedAtLT(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldLT(FieldDeletedAt, v))
+}
+
+// DeletedAtLTE applies the LTE predicate on the "deleted_at" field.
+func DeletedAtLTE(v time.Time) predicate.Problem {
+	return predicate.Problem(sql.FieldLTE(FieldDeletedAt, v))
+}
+
+// DeletedAtIsNil applies the IsNil predicate on the "deleted_at" field.
+func DeletedAtIsNil() predicate.Problem {
+	return predicate.Problem(sql.FieldIsNull(FieldDeletedAt))
+}
+
+// DeletedAtNotNil applies the NotNil predicate on the "deleted_at" field.
+func DeletedAtNotNil() predicate.Problem {
+	return predicate.Problem(sql.FieldNotNull(FieldDeletedAt))
 }
 
 // And groups predicates with the AND operator between them.
