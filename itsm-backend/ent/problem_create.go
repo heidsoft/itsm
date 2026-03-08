@@ -164,6 +164,48 @@ func (pc *ProblemCreate) SetNillableUpdatedAt(t *time.Time) *ProblemCreate {
 	return pc
 }
 
+// SetResolvedAt sets the "resolved_at" field.
+func (pc *ProblemCreate) SetResolvedAt(t time.Time) *ProblemCreate {
+	pc.mutation.SetResolvedAt(t)
+	return pc
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (pc *ProblemCreate) SetNillableResolvedAt(t *time.Time) *ProblemCreate {
+	if t != nil {
+		pc.SetResolvedAt(*t)
+	}
+	return pc
+}
+
+// SetClosedAt sets the "closed_at" field.
+func (pc *ProblemCreate) SetClosedAt(t time.Time) *ProblemCreate {
+	pc.mutation.SetClosedAt(t)
+	return pc
+}
+
+// SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
+func (pc *ProblemCreate) SetNillableClosedAt(t *time.Time) *ProblemCreate {
+	if t != nil {
+		pc.SetClosedAt(*t)
+	}
+	return pc
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (pc *ProblemCreate) SetDeletedAt(t time.Time) *ProblemCreate {
+	pc.mutation.SetDeletedAt(t)
+	return pc
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pc *ProblemCreate) SetNillableDeletedAt(t *time.Time) *ProblemCreate {
+	if t != nil {
+		pc.SetDeletedAt(*t)
+	}
+	return pc
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (pc *ProblemCreate) Mutation() *ProblemMutation {
 	return pc.mutation
@@ -328,6 +370,18 @@ func (pc *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 	if value, ok := pc.mutation.UpdatedAt(); ok {
 		_spec.SetField(problem.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := pc.mutation.ResolvedAt(); ok {
+		_spec.SetField(problem.FieldResolvedAt, field.TypeTime, value)
+		_node.ResolvedAt = &value
+	}
+	if value, ok := pc.mutation.ClosedAt(); ok {
+		_spec.SetField(problem.FieldClosedAt, field.TypeTime, value)
+		_node.ClosedAt = &value
+	}
+	if value, ok := pc.mutation.DeletedAt(); ok {
+		_spec.SetField(problem.FieldDeletedAt, field.TypeTime, value)
+		_node.DeletedAt = &value
 	}
 	return _node, _spec
 }

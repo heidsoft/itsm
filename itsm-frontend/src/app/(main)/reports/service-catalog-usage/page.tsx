@@ -89,7 +89,7 @@ const ServiceCatalogUsagePage = () => {
     loadData();
   }, []);
 
-  const CustomTooltip = ({ active, payload }: unknown) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-gray-200">

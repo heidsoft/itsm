@@ -173,14 +173,28 @@ func (h *Handler) Update(c *gin.Context) {
 
 	tenantID, _ := c.Get("tenant_id")
 
-	updates := &Problem{
-		Title:       req.Title,
-		Description: req.Description,
-		Status:      req.Status,
-		Priority:    req.Priority,
-		Category:    req.Category,
-		RootCause:   req.RootCause,
-		Impact:      req.Impact,
+	// 将 DTO 指针字段转换为 domain entity
+	updates := &Problem{}
+	if req.Title != nil {
+		updates.Title = *req.Title
+	}
+	if req.Description != nil {
+		updates.Description = *req.Description
+	}
+	if req.Status != nil {
+		updates.Status = *req.Status
+	}
+	if req.Priority != nil {
+		updates.Priority = *req.Priority
+	}
+	if req.Category != nil {
+		updates.Category = *req.Category
+	}
+	if req.RootCause != nil {
+		updates.RootCause = *req.RootCause
+	}
+	if req.Impact != nil {
+		updates.Impact = *req.Impact
 	}
 
 	updated, err := h.service.Update(c.Request.Context(), tenantID.(int), id, updates)

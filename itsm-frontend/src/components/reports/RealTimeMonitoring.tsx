@@ -439,6 +439,7 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
               columns={alertColumns}
               dataSource={activeAlerts}
               rowKey="id"
+              scroll={{ x: 'max-content' }}
               pagination={false}
               size="small"
               onRow={record => ({

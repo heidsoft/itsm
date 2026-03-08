@@ -1,0 +1,21 @@
+database:
+  host: postgres
+  port: 5432
+  user: dev
+  password: "StrongPassword123!"
+  dbname: itsm
+  sslmode: disable
+
+server:
+  port: 8080
+  mode: release
+  jwt_secret: "itsm-jwt-secret-2024"
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+
+redis:
+  url: "redis://redis:6379"
+
+log:
+  level: info

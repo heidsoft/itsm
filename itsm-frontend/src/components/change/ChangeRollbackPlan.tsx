@@ -406,6 +406,7 @@ const ChangeRollbackPlan: React.FC<ChangeRollbackPlanProps> = ({
               columns={stepColumns}
               dataSource={rollbackSteps}
               rowKey="id"
+              scroll={{ x: 'max-content' }}
               pagination={false}
               size="small"
               className="rollback-steps-table"
