@@ -150,7 +150,7 @@ export const IncidentManagement: React.FC = () => {
 
   // 处理筛选
   const handleFilterChange = (key: string, value: unknown) => {
-    setFilters((prev: unknown) => ({
+    setFilters((prev: any) => ({
       ...prev,
       [key]: value,
     }));
@@ -158,7 +158,7 @@ export const IncidentManagement: React.FC = () => {
   };
 
   // 处理分页
-  const handleTableChange = (pagination: unknown) => {
+  const handleTableChange = (pagination: any) => {
     setCurrentPage(pagination.current);
     setPageSize(pagination.pageSize);
   };
@@ -1088,7 +1088,7 @@ const IncidentFormModal: React.FC<{
     }
   }, [visible, incident, form]);
 
-  const handleSubmit = async (values: unknown) => {
+  const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
       const url = incident ? `/api/v1/incidents/${incident.id}` : '/api/v1/incidents';

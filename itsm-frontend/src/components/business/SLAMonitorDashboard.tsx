@@ -604,6 +604,7 @@ export const SLAMonitorDashboard: React.FC<SLAMonitorDashboardProps> = ({
             dataSource={alerts}
             columns={alertColumns}
             rowKey="id"
+            scroll={{ x: 'max-content' }}
             pagination={false}
             size={isFullscreen ? 'large' : 'middle'}
             rowClassName={record =>

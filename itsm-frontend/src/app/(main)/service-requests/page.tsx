@@ -1,19 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button } from 'antd';
+import { Card, Row, Col, Statistic, Typography, Tabs, Table, Tag, Button, message } from 'antd';
 import ServiceRequestList from '@/components/service-request/ServiceRequestList';
 import { FileText, Clock, CheckCircle, XCircle, Plus, Inbox } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { serviceRequestAPI } from '@/lib/api/service-request-api';
 
 const { Title, Text } = Typography;
-
-// Mock pending approvals data
-const pendingApprovals = [
-  { id: 1, request_no: 'SR-001', title: '申请云服务器', applicant: '张三', date: '2024-01-15', priority: '高' },
-  { id: 2, request_no: 'SR-002', title: '开通VPN权限', applicant: '李四', date: '2024-01-14', priority: '中' },
-  { id: 3, request_no: 'SR-003', title: '数据库扩容', applicant: '王五', date: '2024-01-13', priority: '高' },
-];
 
 const priorityColors: Record<string, string> = {
   '高': 'red',
@@ -24,6 +18,7 @@ const priorityColors: Record<string, string> = {
 export default function ServiceRequestsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('requests');
+  const [pendingApprovals, setPendingApprovals] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalRequests: 0,
     pending: 0,
@@ -34,15 +29,34 @@ export default function ServiceRequestsPage() {
   // Fetch stats
   const fetchStats = async () => {
     try {
-      // Mock data - in real app would call API
+      // Fetch pending approvals
+      const pendingData = await serviceRequestAPI.getPendingApprovals({ page: 1, size: 20 });
+      setPendingApprovals(pendingData.requests.map((r: any) => ({
+        id: r.id,
+        request_no: r.id,
+        title: r.title || r.catalog?.name || '服务请求',
+        applicant: r.requester?.name || r.requester?.username || '-',
+        date: r.created_at ? new Date(r.created_at).toLocaleDateString() : '-',
+        priority: '中',
+      })));
+
+      // Fetch all requests for stats (with large page size)
+      const allRequests = await serviceRequestAPI.getUserServiceRequests({ page: 1, size: 1000 });
+      const requests = allRequests.requests || [];
+
+      const pending = requests.filter((r: any) => r.status === 'submitted' || r.status === 'manager_approved' || r.status === 'it_approved' || r.status === 'security_approved').length;
+      const processing = requests.filter((r: any) => r.status === 'provisioning').length;
+      const completed = requests.filter((r: any) => r.status === 'delivered').length;
+
       setStats({
-        totalRequests: 156,
-        pending: 12,
-        processing: 28,
-        completed: 116,
+        totalRequests: allRequests.total || 0,
+        pending,
+        processing,
+        completed,
       });
     } catch (error) {
       console.error('Failed to fetch service request stats:', error);
+      message.error('获取服务请求统计数据失败，请稍后重试');
     }
   };
 

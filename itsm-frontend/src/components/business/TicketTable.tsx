@@ -257,6 +257,7 @@ export const TicketTable: React.FC<TicketTableProps> = React.memo(
             columns={tableColumns}
             dataSource={tickets}
             rowKey="id"
+            scroll={{ x: 'max-content' }}
             pagination={pagination}
             loading={loading}
             onRow={record => ({

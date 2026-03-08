@@ -264,7 +264,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           children: item.children.map((child: MenuItem) => ({
             key: child.key,
             icon: child.icon,
-            label: child.label,
+            label: (
+              <div className={styles.menuItemLabel}>
+                <span className="truncate">{child.label}</span>
+              </div>
+            ),
             onClick: () => handleMenuClick({ key: child.key }),
           })),
         };

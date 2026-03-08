@@ -46,7 +46,7 @@ const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ da
     tooltip: {
       shared: true,
       showCrosshairs: true,
-      customItems: (originalItems: unknown[]) => {
+      customItems: (originalItems: { color?: string; name?: string; value?: number | string }[]) => {
         return originalItems.map(item => {
           return {
             ...item,
@@ -69,7 +69,19 @@ const TicketTrendChart: React.FC<{ data: TicketTrendData[] }> = React.memo(({ da
     (sum, item) => sum + item.open + item.inProgress + item.resolved + item.closed,
     0
   );
-  const trend = data.length > 1 ? (data[data.length - 1].resolved / data[0].resolved - 1) * 100 : 0;
+
+  // 计算趋势，避免除以零
+  let trend = 0;
+  if (data.length > 1) {
+    const firstResolved = data[0].resolved || 0;
+    const lastResolved = data[data.length - 1].resolved || 0;
+    if (firstResolved > 0) {
+      trend = ((lastResolved / firstResolved) - 1) * 100;
+    } else {
+      // 如果首日解决数为0，末期有解决则视为100%增长，否则为0
+      trend = lastResolved > 0 ? 100 : 0;
+    }
+  }
 
   return (
     <DashboardChartCard

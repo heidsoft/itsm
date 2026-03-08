@@ -26,7 +26,7 @@ export default function EditArticlePage() {
       try {
         const res = await KnowledgeBaseApi.getCategories();
         // Map KnowledgeCategory objects to strings for backward compatibility
-        const categoryNames = (res || []).map((cat: unknown) => cat.name || cat.id || String(cat));
+        const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
         setCategories(categoryNames);
       } catch (error) {
         setCategories(['故障排查', '解决方案', '操作流程', '最佳实践', '技术文档']);
@@ -69,7 +69,7 @@ export default function EditArticlePage() {
     fetchArticle();
   }, [id, form, router]);
 
-  const handleSubmit = async (values: unknown) => {
+  const handleSubmit = async (values: any) => {
     if (!id) return;
 
     setLoading(true);

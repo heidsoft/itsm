@@ -560,6 +560,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                         dataSource={dependencies}
                         rowKey="id"
                         loading={loading}
+                        scroll={{ x: 'max-content' }}
                         pagination={false}
                       />
                     </>
@@ -593,6 +594,7 @@ export const TicketDependencyManager: React.FC<TicketDependencyManagerProps> = (
                       columns={impactColumns}
                       dataSource={impactAnalysis}
                       rowKey="ticket_id"
+                      scroll={{ x: 'max-content' }}
                       pagination={false}
                     />
                   )}

@@ -716,6 +716,7 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
             columns={workflowColumns}
             dataSource={workflows}
             rowKey="id"
+            scroll={{ x: 'max-content' }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,
@@ -737,6 +738,7 @@ export const WorkflowEngine: React.FC<WorkflowEngineProps> = ({ mode = 'manage' 
             columns={instanceColumns}
             dataSource={instances}
             rowKey="id"
+            scroll={{ x: 'max-content' }}
             pagination={{
               pageSize: 10,
               showSizeChanger: true,

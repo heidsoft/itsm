@@ -155,7 +155,7 @@ export const TicketAssociation: React.FC = () => {
     }
   };
 
-  const handleCreateRelation = async (values: unknown) => {
+  const handleCreateRelation = async (values: any) => {
     try {
       // 模拟创建关联关系
       const newRelation: TicketRelation = {
@@ -377,6 +377,7 @@ export const TicketAssociation: React.FC = () => {
           columns={columns}
           dataSource={tickets}
           rowKey="id"
+          scroll={{ x: 'max-content' }}
           rowSelection={{
             type: 'checkbox',
             selectedRowKeys: selectedTickets,
@@ -406,6 +407,7 @@ export const TicketAssociation: React.FC = () => {
             columns={relationColumns}
             dataSource={relations}
             rowKey="id"
+            scroll={{ x: 'max-content' }}
             pagination={{ pageSize: 5 }}
           />
         )}

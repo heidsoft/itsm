@@ -150,13 +150,7 @@ export function getSavedFilterPages(): string[] {
 // 常用的默认筛选条件模板
 export const DEFAULT_FILTERS = {
   // 工单列表
-  tickets: {
-    status: 'all',
-    priority: 'all',
-    assignee: 'all',
-    category: 'all',
-    dateRange: null,
-  },
+  tickets: {},
   // 事件列表
   incidents: {
     status: 'all',

@@ -1308,6 +1308,9 @@ var (
 		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "resolved_at", Type: field.TypeTime, Nullable: true},
+		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
+		{Name: "deleted_at", Type: field.TypeTime, Nullable: true},
 		{Name: "known_error_problem", Type: field.TypeInt, Nullable: true},
 	}
 	// ProblemsTable holds the schema information for the "problems" table.
@@ -1318,7 +1321,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "problems_known_errors_problem",
-				Columns:    []*schema.Column{ProblemsColumns[13]},
+				Columns:    []*schema.Column{ProblemsColumns[16]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

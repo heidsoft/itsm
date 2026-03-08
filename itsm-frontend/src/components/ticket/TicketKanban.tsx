@@ -288,7 +288,7 @@ const TicketKanban: React.FC<TicketKanbanProps> = ({ onTicketSelect }) => {
   };
 
   return (
-    <div className="ticket-kanban p-4">
+    <div className="ticket-kanban">
       {/* 工具栏 */}
       <Card className="mb-4">
         <Row gutter={[16, 16]} align="middle">

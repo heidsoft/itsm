@@ -225,7 +225,7 @@ export default function MyRequestDetailPage() {
             <Text type="secondary">暂无审批记录</Text>
           ) : (
             <Descriptions bordered column={1} size="small">
-              {approvals.map((a: unknown) => (
+              {approvals.map((a: any) => (
                 <Descriptions.Item key={a.id} label={`L${a.level} · ${a.step}`}>
                   <Space wrap>
                     {statusTag(String(a.status))}

@@ -23,7 +23,8 @@ import dayjs from 'dayjs';
 import { TicketViewSelector } from './TicketViewSelector';
 import { TicketView } from '@/lib/api/ticket-view-api';
 import { FilterPresetSelector } from './FilterPresetSelector';
-import { debounce } from 'lodash-es';
+import { debounce as _debounce } from 'lodash-es';
+const debounce = _debounce as any;
 
 const { RangePicker } = DatePicker;
 
@@ -143,7 +144,7 @@ function TicketFilters({
     }
   };
 
-  const handleDateRangeChange = (dates: unknown, dateStrings: unknown) => {
+  const handleDateRangeChange = (dates: any, dateStrings: any) => {
     if (dates && dateStrings && dateStrings[0] && dateStrings[1]) {
       onFilterChange({
         dateStart: dateStrings[0],

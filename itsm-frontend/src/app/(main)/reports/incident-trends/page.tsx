@@ -179,7 +179,7 @@ const IncidentTrendsPage = () => {
               </Select>
               <RangePicker
                 value={dateRange}
-                onChange={(dates: any[]) => {
+                onChange={(dates: any, dateStrings: any) => {
                   if (dates && dates.length === 2) {
                     setDateRange([dates[0], dates[1]]);
                   }

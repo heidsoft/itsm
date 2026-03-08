@@ -47375,6 +47375,9 @@ type ProblemMutation struct {
 	addtenant_id   *int
 	created_at     *time.Time
 	updated_at     *time.Time
+	resolved_at    *time.Time
+	closed_at      *time.Time
+	deleted_at     *time.Time
 	clearedFields  map[string]struct{}
 	done           bool
 	oldValue       func(context.Context) (*Problem, error)
@@ -48037,6 +48040,153 @@ func (m *ProblemMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetResolvedAt sets the "resolved_at" field.
+func (m *ProblemMutation) SetResolvedAt(t time.Time) {
+	m.resolved_at = &t
+}
+
+// ResolvedAt returns the value of the "resolved_at" field in the mutation.
+func (m *ProblemMutation) ResolvedAt() (r time.Time, exists bool) {
+	v := m.resolved_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldResolvedAt returns the old "resolved_at" field's value of the Problem entity.
+// If the Problem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemMutation) OldResolvedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldResolvedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldResolvedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldResolvedAt: %w", err)
+	}
+	return oldValue.ResolvedAt, nil
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (m *ProblemMutation) ClearResolvedAt() {
+	m.resolved_at = nil
+	m.clearedFields[problem.FieldResolvedAt] = struct{}{}
+}
+
+// ResolvedAtCleared returns if the "resolved_at" field was cleared in this mutation.
+func (m *ProblemMutation) ResolvedAtCleared() bool {
+	_, ok := m.clearedFields[problem.FieldResolvedAt]
+	return ok
+}
+
+// ResetResolvedAt resets all changes to the "resolved_at" field.
+func (m *ProblemMutation) ResetResolvedAt() {
+	m.resolved_at = nil
+	delete(m.clearedFields, problem.FieldResolvedAt)
+}
+
+// SetClosedAt sets the "closed_at" field.
+func (m *ProblemMutation) SetClosedAt(t time.Time) {
+	m.closed_at = &t
+}
+
+// ClosedAt returns the value of the "closed_at" field in the mutation.
+func (m *ProblemMutation) ClosedAt() (r time.Time, exists bool) {
+	v := m.closed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClosedAt returns the old "closed_at" field's value of the Problem entity.
+// If the Problem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemMutation) OldClosedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClosedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClosedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClosedAt: %w", err)
+	}
+	return oldValue.ClosedAt, nil
+}
+
+// ClearClosedAt clears the value of the "closed_at" field.
+func (m *ProblemMutation) ClearClosedAt() {
+	m.closed_at = nil
+	m.clearedFields[problem.FieldClosedAt] = struct{}{}
+}
+
+// ClosedAtCleared returns if the "closed_at" field was cleared in this mutation.
+func (m *ProblemMutation) ClosedAtCleared() bool {
+	_, ok := m.clearedFields[problem.FieldClosedAt]
+	return ok
+}
+
+// ResetClosedAt resets all changes to the "closed_at" field.
+func (m *ProblemMutation) ResetClosedAt() {
+	m.closed_at = nil
+	delete(m.clearedFields, problem.FieldClosedAt)
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (m *ProblemMutation) SetDeletedAt(t time.Time) {
+	m.deleted_at = &t
+}
+
+// DeletedAt returns the value of the "deleted_at" field in the mutation.
+func (m *ProblemMutation) DeletedAt() (r time.Time, exists bool) {
+	v := m.deleted_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDeletedAt returns the old "deleted_at" field's value of the Problem entity.
+// If the Problem object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ProblemMutation) OldDeletedAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDeletedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDeletedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDeletedAt: %w", err)
+	}
+	return oldValue.DeletedAt, nil
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (m *ProblemMutation) ClearDeletedAt() {
+	m.deleted_at = nil
+	m.clearedFields[problem.FieldDeletedAt] = struct{}{}
+}
+
+// DeletedAtCleared returns if the "deleted_at" field was cleared in this mutation.
+func (m *ProblemMutation) DeletedAtCleared() bool {
+	_, ok := m.clearedFields[problem.FieldDeletedAt]
+	return ok
+}
+
+// ResetDeletedAt resets all changes to the "deleted_at" field.
+func (m *ProblemMutation) ResetDeletedAt() {
+	m.deleted_at = nil
+	delete(m.clearedFields, problem.FieldDeletedAt)
+}
+
 // Where appends a list predicates to the ProblemMutation builder.
 func (m *ProblemMutation) Where(ps ...predicate.Problem) {
 	m.predicates = append(m.predicates, ps...)
@@ -48071,7 +48221,7 @@ func (m *ProblemMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ProblemMutation) Fields() []string {
-	fields := make([]string, 0, 12)
+	fields := make([]string, 0, 15)
 	if m.title != nil {
 		fields = append(fields, problem.FieldTitle)
 	}
@@ -48108,6 +48258,15 @@ func (m *ProblemMutation) Fields() []string {
 	if m.updated_at != nil {
 		fields = append(fields, problem.FieldUpdatedAt)
 	}
+	if m.resolved_at != nil {
+		fields = append(fields, problem.FieldResolvedAt)
+	}
+	if m.closed_at != nil {
+		fields = append(fields, problem.FieldClosedAt)
+	}
+	if m.deleted_at != nil {
+		fields = append(fields, problem.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -48140,6 +48299,12 @@ func (m *ProblemMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case problem.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case problem.FieldResolvedAt:
+		return m.ResolvedAt()
+	case problem.FieldClosedAt:
+		return m.ClosedAt()
+	case problem.FieldDeletedAt:
+		return m.DeletedAt()
 	}
 	return nil, false
 }
@@ -48173,6 +48338,12 @@ func (m *ProblemMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldCreatedAt(ctx)
 	case problem.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case problem.FieldResolvedAt:
+		return m.OldResolvedAt(ctx)
+	case problem.FieldClosedAt:
+		return m.OldClosedAt(ctx)
+	case problem.FieldDeletedAt:
+		return m.OldDeletedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Problem field %s", name)
 }
@@ -48266,6 +48437,27 @@ func (m *ProblemMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetUpdatedAt(v)
 		return nil
+	case problem.FieldResolvedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetResolvedAt(v)
+		return nil
+	case problem.FieldClosedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClosedAt(v)
+		return nil
+	case problem.FieldDeletedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDeletedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Problem field %s", name)
 }
@@ -48350,6 +48542,15 @@ func (m *ProblemMutation) ClearedFields() []string {
 	if m.FieldCleared(problem.FieldAssigneeID) {
 		fields = append(fields, problem.FieldAssigneeID)
 	}
+	if m.FieldCleared(problem.FieldResolvedAt) {
+		fields = append(fields, problem.FieldResolvedAt)
+	}
+	if m.FieldCleared(problem.FieldClosedAt) {
+		fields = append(fields, problem.FieldClosedAt)
+	}
+	if m.FieldCleared(problem.FieldDeletedAt) {
+		fields = append(fields, problem.FieldDeletedAt)
+	}
 	return fields
 }
 
@@ -48378,6 +48579,15 @@ func (m *ProblemMutation) ClearField(name string) error {
 		return nil
 	case problem.FieldAssigneeID:
 		m.ClearAssigneeID()
+		return nil
+	case problem.FieldResolvedAt:
+		m.ClearResolvedAt()
+		return nil
+	case problem.FieldClosedAt:
+		m.ClearClosedAt()
+		return nil
+	case problem.FieldDeletedAt:
+		m.ClearDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Problem nullable field %s", name)
@@ -48422,6 +48632,15 @@ func (m *ProblemMutation) ResetField(name string) error {
 		return nil
 	case problem.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case problem.FieldResolvedAt:
+		m.ResetResolvedAt()
+		return nil
+	case problem.FieldClosedAt:
+		m.ResetClosedAt()
+		return nil
+	case problem.FieldDeletedAt:
+		m.ResetDeletedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Problem field %s", name)

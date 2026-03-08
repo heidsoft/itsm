@@ -421,6 +421,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
             dataSource={subtasks}
             rowKey="id"
             loading={loading}
+            scroll={{ x: 'max-content' }}
             pagination={false}
             size="small"
           />

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Card, Form, Input, Select, Row, Col, Space, Divider, App } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { KnowledgeBaseApi } from '@/lib/api/knowledge-base-api';
+import type { KnowledgeCategory } from '@/types/knowledge-base';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -26,7 +27,7 @@ export default function CreateArticlePage() {
       try {
         const res = await KnowledgeBaseApi.getCategories();
         // Map KnowledgeCategory objects to strings for backward compatibility
-        const categoryNames = (res || []).map((cat: unknown) => cat.name || cat.id || String(cat));
+        const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
         setCategories(categoryNames);
       } catch (error) {
         // Use default categories if API fails
@@ -36,7 +37,7 @@ export default function CreateArticlePage() {
     loadCategories();
   }, []);
 
-  const handleSubmit = async (values: unknown) => {
+  const handleSubmit = async (values: any) => {
     setLoading(true);
     try {
       await KnowledgeBaseApi.createArticle({

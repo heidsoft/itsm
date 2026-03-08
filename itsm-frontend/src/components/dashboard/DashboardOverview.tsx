@@ -514,6 +514,7 @@ const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                 columns={ticketColumns}
                 dataSource={recentTickets}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
                 pagination={false}
                 size="small"
               />

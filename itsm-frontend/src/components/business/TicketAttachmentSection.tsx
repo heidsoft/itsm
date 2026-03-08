@@ -118,7 +118,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       if (onSuccess) {
         onSuccess(attachment);
       }
-    } catch (error: unknown) {
+    } catch (error: any) {
       antMessage.error(error.message || '附件上传失败');
       if (onError) {
         onError(error);
@@ -135,7 +135,7 @@ export const TicketAttachmentSection: React.FC<TicketAttachmentSectionProps> = (
       antMessage.success('附件删除成功');
       await loadAttachments();
       onAttachmentDeleted?.(attachment.id);
-    } catch (error: unknown) {
+    } catch (error: any) {
       antMessage.error(error.message || '附件删除失败');
     }
   };

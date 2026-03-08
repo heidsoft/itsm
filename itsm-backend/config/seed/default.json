@@ -120,5 +120,49 @@
     {"name": "middleware", "description": "中间件", "icon": "middleware", "color": "#e74c3c", "is_active": true},
     {"name": "cloud_vm", "description": "云虚拟机", "icon": "cloud", "color": "#6f42c1", "is_active": true},
     {"name": "kubernetes", "description": "Kubernetes资源", "icon": "kubernetes", "color": "#20c997", "is_active": true}
+  ],
+  "incident_categories": [
+    {"name": "硬件故障", "description": "服务器、存储、网络设备等硬件故障"},
+    {"name": "软件故障", "description": "操作系统、应用软件故障"},
+    {"name": "网络故障", "description": "网络连接、网络设备问题"},
+    {"name": "数据库问题", "description": "数据库性能、连接问题"},
+    {"name": "安全问题", "description": "安全事件、漏洞"},
+    {"name": "性能问题", "description": "系统响应慢、卡顿"},
+    {"name": "配置问题", "description": "系统配置错误"},
+    {"name": "其他", "description": "其他类型事件"}
+  ],
+  "incidents": [
+    {"title": "服务器宕机", "description": "生产环境服务器突然宕机，无法访问", "status": "resolved", "priority": "critical", "severity": "critical", "incident_number": "INC-001", "category": "硬件故障"},
+    {"title": "网络无法访问", "description": "办公区网络无法访问外网", "status": "resolved", "priority": "high", "severity": "major", "incident_number": "INC-002", "category": "网络故障"},
+    {"title": "应用响应慢", "description": "核心业务系统响应时间超过10秒", "status": "in_progress", "priority": "medium", "severity": "minor", "incident_number": "INC-003", "category": "性能问题"},
+    {"title": "数据库连接失败", "description": "应用无法连接数据库", "status": "new", "priority": "high", "severity": "major", "incident_number": "INC-004", "category": "数据库问题"},
+    {"title": "用户无法登录", "description": "部分用户报告无法登录系统", "status": "investigating", "priority": "critical", "severity": "critical", "incident_number": "INC-005", "category": "安全问题"},
+    {"title": "邮件服务异常", "description": "企业邮件收发延迟严重", "status": "resolved", "priority": "medium", "severity": "minor", "incident_number": "INC-006", "category": "其他"},
+    {"title": "VPN连接断开", "description": "远程办公用户VPN连接不稳定", "status": "new", "priority": "high", "severity": "major", "incident_number": "INC-007", "category": "网络故障"},
+    {"title": "存储空间不足", "description": "文件服务器存储空间即将用尽", "status": "in_progress", "priority": "medium", "severity": "minor", "incident_number": "INC-008", "category": "其他"}
+  ],
+  "problems": [
+    {"title": "频繁的网络中断", "description": "过去一个月内发生多次网络中断事件，影响业务连续性", "status": "analyzing", "priority": "high", "category": "网络故障", "root_cause": "核心交换机老化", "impact": "全公司网络受影响"},
+    {"title": "数据库性能下降", "description": "数据库查询响应时间逐渐变慢", "status": "open", "priority": "medium", "category": "数据库问题", "root_cause": "缺少索引和缓存配置", "impact": "影响所有业务系统"},
+    {"title": "用户认证失败", "description": "部分用户频繁出现认证失败", "status": "resolved", "priority": "high", "category": "安全问题", "root_cause": "LDAP同步延迟", "impact": "用户无法正常登录"},
+    {"title": "存储容量告警", "description": "存储系统频繁告警容量不足", "status": "monitoring", "priority": "medium", "category": "其他", "root_cause": "数据增长未预估", "impact": "文件存储风险"},
+    {"title": "邮件延迟严重", "description": "邮件收发延迟超过1小时", "status": "open", "priority": "medium", "category": "其他", "root_cause": "邮件服务器资源不足", "impact": "影响内外沟通"},
+    {"title": "VPN不稳定", "description": "远程用户VPN连接经常断开", "status": "analyzing", "priority": "low", "category": "网络故障", "root_cause": "带宽不足", "impact": "远程办公受影响"}
+  ],
+  "changes": [
+    {"title": "数据库版本升级", "description": "将MySQL 5.7升级到8.0版本", "type": "normal", "status": "approved", "priority": "high", "impact_scope": "全局", "risk_level": "medium", "justification": "提升性能和安全性"},
+    {"title": "应用服务器扩容", "description": "增加2台应用服务器以应对流量高峰", "type": "normal", "status": "implemented", "priority": "medium", "impact_scope": "局部", "risk_level": "low", "justification": "提升系统可用性"},
+    {"title": "网络安全策略调整", "description": "更新防火墙规则，开放新的API端口", "type": "normal", "status": "review", "priority": "high", "impact_scope": "全局", "risk_level": "high", "justification": "支持新业务上线"},
+    {"title": "存储系统迁移", "description": "将文件存储从NAS迁移到对象存储", "type": "major", "status": "draft", "priority": "medium", "impact_scope": "局部", "risk_level": "medium", "justification": "降低存储成本"},
+    {"title": "SSL证书更新", "description": "更新即将过期的SSL证书", "type": "emergency", "status": "scheduled", "priority": "low", "impact_scope": "无", "risk_level": "low", "justification": "证书即将过期"},
+    {"title": "负载均衡配置优化", "description": "优化负载均衡算法和健康检查配置", "type": "normal", "status": "cancelled", "priority": "medium", "impact_scope": "局部", "risk_level": "low", "justification": "提升访问体验"}
+  ],
+  "knowledge_articles": [
+    {"title": "如何申请云服务器 ECS", "content": "# 云服务器申请指南\n\n## 申请流程\n\n1. 登录IT服务门户\n2. 选择服务目录->云资源申请->云服务器\n3. 填写申请表单\n4. 提交申请\n5. 等待审批", "category": "云资源", "is_published": true, "view_count": 1250},
+    {"title": "VPN连接配置指南", "content": "# VPN连接配置指南\n\n## 配置步骤\n\n1. 下载VPN客户端\n2. 配置连接信息\n3. 连接", "category": "网络问题", "is_published": true, "view_count": 980},
+    {"title": "账号权限申请流程", "content": "# 账号权限申请指南\n\n## 申请流程\n\n根据岗位职责申请相应权限。", "category": "账号权限", "is_published": true, "view_count": 856},
+    {"title": "数据库备份与恢复", "content": "# 数据库备份恢复指南\n\n## 自动备份\n\n系统每天凌晨2点自动执行全量备份。\n\n## 手动备份\n\n使用mysqldump命令备份。", "category": "数据库", "is_published": true, "view_count": 742},
+    {"title": "IT服务请求常见问题解答", "content": "# IT服务常见问题FAQ\n\n## 如何提交IT工单?\n\n1. 登录IT服务门户\n2. 点击提交工单\n3. 填写详细信息\n\n## 工单处理时限\n\n- 紧急: 4小时内响应\n- 高优先级: 8小时内响应", "category": "常见问题", "is_published": true, "view_count": 3560},
+    {"title": "安全组配置最佳实践", "content": "# 安全组配置指南\n\n## 基本原则\n\n1. 最小权限\n2. 分层控制\n3. 禁止0.0.0.0/0", "category": "安全", "is_published": true, "view_count": 625}
   ]
 }

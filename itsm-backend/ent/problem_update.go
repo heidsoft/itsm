@@ -239,6 +239,66 @@ func (pu *ProblemUpdate) SetUpdatedAt(t time.Time) *ProblemUpdate {
 	return pu
 }
 
+// SetResolvedAt sets the "resolved_at" field.
+func (pu *ProblemUpdate) SetResolvedAt(t time.Time) *ProblemUpdate {
+	pu.mutation.SetResolvedAt(t)
+	return pu
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (pu *ProblemUpdate) SetNillableResolvedAt(t *time.Time) *ProblemUpdate {
+	if t != nil {
+		pu.SetResolvedAt(*t)
+	}
+	return pu
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (pu *ProblemUpdate) ClearResolvedAt() *ProblemUpdate {
+	pu.mutation.ClearResolvedAt()
+	return pu
+}
+
+// SetClosedAt sets the "closed_at" field.
+func (pu *ProblemUpdate) SetClosedAt(t time.Time) *ProblemUpdate {
+	pu.mutation.SetClosedAt(t)
+	return pu
+}
+
+// SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
+func (pu *ProblemUpdate) SetNillableClosedAt(t *time.Time) *ProblemUpdate {
+	if t != nil {
+		pu.SetClosedAt(*t)
+	}
+	return pu
+}
+
+// ClearClosedAt clears the value of the "closed_at" field.
+func (pu *ProblemUpdate) ClearClosedAt() *ProblemUpdate {
+	pu.mutation.ClearClosedAt()
+	return pu
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (pu *ProblemUpdate) SetDeletedAt(t time.Time) *ProblemUpdate {
+	pu.mutation.SetDeletedAt(t)
+	return pu
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (pu *ProblemUpdate) SetNillableDeletedAt(t *time.Time) *ProblemUpdate {
+	if t != nil {
+		pu.SetDeletedAt(*t)
+	}
+	return pu
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (pu *ProblemUpdate) ClearDeletedAt() *ProblemUpdate {
+	pu.mutation.ClearDeletedAt()
+	return pu
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (pu *ProblemUpdate) Mutation() *ProblemMutation {
 	return pu.mutation
@@ -371,6 +431,24 @@ func (pu *ProblemUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := pu.mutation.UpdatedAt(); ok {
 		_spec.SetField(problem.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := pu.mutation.ResolvedAt(); ok {
+		_spec.SetField(problem.FieldResolvedAt, field.TypeTime, value)
+	}
+	if pu.mutation.ResolvedAtCleared() {
+		_spec.ClearField(problem.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := pu.mutation.ClosedAt(); ok {
+		_spec.SetField(problem.FieldClosedAt, field.TypeTime, value)
+	}
+	if pu.mutation.ClosedAtCleared() {
+		_spec.ClearField(problem.FieldClosedAt, field.TypeTime)
+	}
+	if value, ok := pu.mutation.DeletedAt(); ok {
+		_spec.SetField(problem.FieldDeletedAt, field.TypeTime, value)
+	}
+	if pu.mutation.DeletedAtCleared() {
+		_spec.ClearField(problem.FieldDeletedAt, field.TypeTime)
 	}
 	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -603,6 +681,66 @@ func (puo *ProblemUpdateOne) SetUpdatedAt(t time.Time) *ProblemUpdateOne {
 	return puo
 }
 
+// SetResolvedAt sets the "resolved_at" field.
+func (puo *ProblemUpdateOne) SetResolvedAt(t time.Time) *ProblemUpdateOne {
+	puo.mutation.SetResolvedAt(t)
+	return puo
+}
+
+// SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
+func (puo *ProblemUpdateOne) SetNillableResolvedAt(t *time.Time) *ProblemUpdateOne {
+	if t != nil {
+		puo.SetResolvedAt(*t)
+	}
+	return puo
+}
+
+// ClearResolvedAt clears the value of the "resolved_at" field.
+func (puo *ProblemUpdateOne) ClearResolvedAt() *ProblemUpdateOne {
+	puo.mutation.ClearResolvedAt()
+	return puo
+}
+
+// SetClosedAt sets the "closed_at" field.
+func (puo *ProblemUpdateOne) SetClosedAt(t time.Time) *ProblemUpdateOne {
+	puo.mutation.SetClosedAt(t)
+	return puo
+}
+
+// SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
+func (puo *ProblemUpdateOne) SetNillableClosedAt(t *time.Time) *ProblemUpdateOne {
+	if t != nil {
+		puo.SetClosedAt(*t)
+	}
+	return puo
+}
+
+// ClearClosedAt clears the value of the "closed_at" field.
+func (puo *ProblemUpdateOne) ClearClosedAt() *ProblemUpdateOne {
+	puo.mutation.ClearClosedAt()
+	return puo
+}
+
+// SetDeletedAt sets the "deleted_at" field.
+func (puo *ProblemUpdateOne) SetDeletedAt(t time.Time) *ProblemUpdateOne {
+	puo.mutation.SetDeletedAt(t)
+	return puo
+}
+
+// SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
+func (puo *ProblemUpdateOne) SetNillableDeletedAt(t *time.Time) *ProblemUpdateOne {
+	if t != nil {
+		puo.SetDeletedAt(*t)
+	}
+	return puo
+}
+
+// ClearDeletedAt clears the value of the "deleted_at" field.
+func (puo *ProblemUpdateOne) ClearDeletedAt() *ProblemUpdateOne {
+	puo.mutation.ClearDeletedAt()
+	return puo
+}
+
 // Mutation returns the ProblemMutation object of the builder.
 func (puo *ProblemUpdateOne) Mutation() *ProblemMutation {
 	return puo.mutation
@@ -765,6 +903,24 @@ func (puo *ProblemUpdateOne) sqlSave(ctx context.Context) (_node *Problem, err e
 	}
 	if value, ok := puo.mutation.UpdatedAt(); ok {
 		_spec.SetField(problem.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := puo.mutation.ResolvedAt(); ok {
+		_spec.SetField(problem.FieldResolvedAt, field.TypeTime, value)
+	}
+	if puo.mutation.ResolvedAtCleared() {
+		_spec.ClearField(problem.FieldResolvedAt, field.TypeTime)
+	}
+	if value, ok := puo.mutation.ClosedAt(); ok {
+		_spec.SetField(problem.FieldClosedAt, field.TypeTime, value)
+	}
+	if puo.mutation.ClosedAtCleared() {
+		_spec.ClearField(problem.FieldClosedAt, field.TypeTime)
+	}
+	if value, ok := puo.mutation.DeletedAt(); ok {
+		_spec.SetField(problem.FieldDeletedAt, field.TypeTime, value)
+	}
+	if puo.mutation.DeletedAtCleared() {
+		_spec.ClearField(problem.FieldDeletedAt, field.TypeTime)
 	}
 	_node = &Problem{config: puo.config}
 	_spec.Assign = _node.assignValues

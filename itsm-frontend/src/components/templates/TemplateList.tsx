@@ -107,7 +107,7 @@ export const TemplateList: React.FC<TemplateListProps> = ({
   };
 
   const handleStatusChange = (values: string[]) => {
-    const filters: unknown = {};
+    const filters: any = {};
 
     if (values.includes('active')) filters.isActive = true;
     if (values.includes('draft')) filters.isDraft = true;

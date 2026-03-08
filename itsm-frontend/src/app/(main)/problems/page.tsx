@@ -105,7 +105,7 @@ export default function ProblemListPage() {
       </Row>
 
       {/* 问题列表 */}
-      <ProblemList />
+      <ProblemList showHeader={false} />
     </div>
   );
 }

@@ -486,6 +486,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
                   <Table
                     size="small"
                     pagination={false}
+                    scroll={{ x: 'max-content' }}
                     columns={solutionColumns.slice(0, 4)}
                     dataSource={summary.solutions}
                     rowKey="id"
@@ -526,6 +527,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               columns={stepColumns}
               dataSource={summary.steps}
               rowKey="id"
+              scroll={{ x: 'max-content' }}
               pagination={false}
             />
           ) : (
@@ -630,6 +632,7 @@ const ProblemInvestigationTab: React.FC<ProblemInvestigationTabProps> = ({
               columns={solutionColumns}
               dataSource={summary.solutions}
               rowKey="id"
+              scroll={{ x: 'max-content' }}
               pagination={false}
             />
           ) : (

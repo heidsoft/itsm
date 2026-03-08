@@ -52,6 +52,18 @@ func (Problem) Fields() []ent.Field {
 			Comment("更新时间").
 			Default(time.Now).
 			UpdateDefault(time.Now),
+		field.Time("resolved_at").
+			Comment("解决时间").
+			Optional().
+			Nillable(),
+		field.Time("closed_at").
+			Comment("关闭时间").
+			Optional().
+			Nillable(),
+		field.Time("deleted_at").
+			Comment("删除时间").
+			Optional().
+			Nillable(),
 	}
 }
 

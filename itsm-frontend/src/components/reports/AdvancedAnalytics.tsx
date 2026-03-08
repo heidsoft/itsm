@@ -460,6 +460,7 @@ const AdvancedAnalytics: React.FC<AdvancedAnalyticsProps> = ({ tenantId }) => {
             <Table
               columns={performerColumns}
               dataSource={topPerformers}
+              scroll={{ x: 'max-content' }}
               pagination={false}
               size="small"
               rowKey="name"

@@ -153,7 +153,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
   };
 
   // 创建关系
-  const handleCreate = async (values: unknown) => {
+  const handleCreate = async (values: any) => {
     try {
       const targetCiId = values.target_ci_id;
       delete values.target_ci_id;
@@ -281,6 +281,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           columns={columns}
           dataSource={outgoingRelations}
           rowKey="id"
+          scroll={{ x: 'max-content' }}
           pagination={false}
           size="small"
           loading={loading}
@@ -299,6 +300,7 @@ const CIRelationshipManager: React.FC<CIRelationshipManagerProps> = ({
           columns={columns}
           dataSource={incomingRelations}
           rowKey="id"
+          scroll={{ x: 'max-content' }}
           pagination={false}
           size="small"
           loading={loading}

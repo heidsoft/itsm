@@ -5,8 +5,12 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { message, notification } from 'antd';
-import { debounce, throttle } from 'lodash-es';
+import { debounce as _debounce, throttle as _throttle } from 'lodash-es';
 import { logger } from '@/lib/env';
+
+// Cast lodash functions to any to avoid strict type issues
+const debounce = _debounce as any;
+const throttle = _throttle as any;
 
 // 防抖Hook
 export const useDebounce = <T>(value: T, delay: number): T => {

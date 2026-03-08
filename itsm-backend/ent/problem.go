@@ -40,7 +40,13 @@ type Problem struct {
 	// 创建时间
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// 更新时间
-	UpdatedAt           time.Time `json:"updated_at,omitempty"`
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// 解决时间
+	ResolvedAt *time.Time `json:"resolved_at,omitempty"`
+	// 关闭时间
+	ClosedAt *time.Time `json:"closed_at,omitempty"`
+	// 删除时间
+	DeletedAt           *time.Time `json:"deleted_at,omitempty"`
 	known_error_problem *int
 	selectValues        sql.SelectValues
 }
@@ -54,7 +60,7 @@ func (*Problem) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case problem.FieldTitle, problem.FieldDescription, problem.FieldStatus, problem.FieldPriority, problem.FieldCategory, problem.FieldRootCause, problem.FieldImpact:
 			values[i] = new(sql.NullString)
-		case problem.FieldCreatedAt, problem.FieldUpdatedAt:
+		case problem.FieldCreatedAt, problem.FieldUpdatedAt, problem.FieldResolvedAt, problem.FieldClosedAt, problem.FieldDeletedAt:
 			values[i] = new(sql.NullTime)
 		case problem.ForeignKeys[0]: // known_error_problem
 			values[i] = new(sql.NullInt64)
@@ -151,6 +157,27 @@ func (pr *Problem) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				pr.UpdatedAt = value.Time
 			}
+		case problem.FieldResolvedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
+			} else if value.Valid {
+				pr.ResolvedAt = new(time.Time)
+				*pr.ResolvedAt = value.Time
+			}
+		case problem.FieldClosedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field closed_at", values[i])
+			} else if value.Valid {
+				pr.ClosedAt = new(time.Time)
+				*pr.ClosedAt = value.Time
+			}
+		case problem.FieldDeletedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
+			} else if value.Valid {
+				pr.DeletedAt = new(time.Time)
+				*pr.DeletedAt = value.Time
+			}
 		case problem.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field known_error_problem", value)
@@ -229,6 +256,21 @@ func (pr *Problem) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(pr.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	if v := pr.ResolvedAt; v != nil {
+		builder.WriteString("resolved_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := pr.ClosedAt; v != nil {
+		builder.WriteString("closed_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	if v := pr.DeletedAt; v != nil {
+		builder.WriteString("deleted_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }

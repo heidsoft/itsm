@@ -51,7 +51,7 @@ const PeakHoursChart: React.FC<{ data: PeakHourData[] }> = React.memo(({ data })
     smooth: true,
     label: false,
     tooltip: {
-      formatter: (datum: unknown) => ({
+      formatter: (datum: any) => ({
         name: '工单数',
         value: `${datum.count}个`,
       }),

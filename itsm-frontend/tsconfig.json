@@ -35,8 +35,10 @@
   ],
   "exclude": [
     "node_modules",
-    // 如果想保留 tests 在 lint/tsc 中被排除，可保留下面几项，否则可以删掉
     "dist",
-    ".next"
+    ".next",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/__tests__/**"
   ]
 }

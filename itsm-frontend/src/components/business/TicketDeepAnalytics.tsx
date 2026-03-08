@@ -315,6 +315,7 @@ export const TicketDeepAnalytics: React.FC<TicketDeepAnalyticsProps> = ({
                 : []),
             ]}
             rowKey="name"
+            scroll={{ x: 'max-content' }}
             pagination={false}
           />
         );

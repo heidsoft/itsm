@@ -731,8 +731,8 @@ const SLADefinitionManagement = () => {
                   <Form.Item name="responseTimeValue" noStyle rules={[{ required: true, message: '请输入数值' }]}>
                     <InputNumber min={1} placeholder="30" style={{ width: '60%' }} />
                   </Form.Item>
-                  <Form.Item name="responseTimeUnit" noInitialValue>
-                    <Select style={{ width: '40%' }} defaultValue="minutes">
+                  <Form.Item name="responseTimeUnit" initialValue="minutes">
+                    <Select style={{ width: '40%' }}>
                       <Option value="minutes">分钟</Option>
                       <Option value="hours">小时</Option>
                       <Option value="days">天</Option>
@@ -750,8 +750,8 @@ const SLADefinitionManagement = () => {
                   <Form.Item name="resolutionTimeValue" noStyle rules={[{ required: true, message: '请输入数值' }]}>
                     <InputNumber min={1} placeholder="4" style={{ width: '60%' }} />
                   </Form.Item>
-                  <Form.Item name="resolutionTimeUnit" noInitialValue>
-                    <Select style={{ width: '40%' }} defaultValue="hours">
+                  <Form.Item name="resolutionTimeUnit" initialValue="hours">
+                    <Select style={{ width: '40%' }}>
                       <Option value="minutes">分钟</Option>
                       <Option value="hours">小时</Option>
                       <Option value="days">天</Option>

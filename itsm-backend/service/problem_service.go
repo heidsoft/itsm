@@ -35,6 +35,8 @@ func (s *ProblemService) SetProcessTriggerService(triggerService ProcessTriggerS
 
 // CreateProblem 创建问题
 func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProblemRequest, createdBy, tenantID int) (*ent.Problem, error) {
+	s.logger.Infow("Creating problem", "title", req.Title, "tenant_id", tenantID, "created_by", createdBy)
+
 	problem, err := s.client.Problem.Create().
 		SetTitle(req.Title).
 		SetDescription(req.Description).
@@ -47,8 +49,11 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 		SetCreatedBy(createdBy).
 		Save(ctx)
 	if err != nil {
+		s.logger.Errorw("Failed to create problem", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("创建问题失败: %v", err)
 	}
+
+	s.logger.Infow("Problem created successfully", "id", problem.ID, "tenant_id", tenantID)
 
 	// 触发BPMN工作流（异步执行，不阻塞问题创建）
 	if s.processTriggerService != nil {
@@ -66,10 +71,17 @@ func (s *ProblemService) CreateProblem(ctx context.Context, req *dto.CreateProbl
 
 // GetProblem 获取问题详情
 func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (*ent.Problem, error) {
+	s.logger.Infow("Getting problem", "id", id, "tenant_id", tenantID)
+
 	problem, err := s.client.Problem.Query().
 		Where(problem.ID(id), problem.TenantID(tenantID)).
 		First(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			s.logger.Warnw("Problem not found", "id", id, "tenant_id", tenantID)
+			return nil, fmt.Errorf("问题不存在")
+		}
+		s.logger.Errorw("Failed to get problem", "error", err, "id", id)
 		return nil, fmt.Errorf("获取问题失败: %v", err)
 	}
 
@@ -78,6 +90,8 @@ func (s *ProblemService) GetProblem(ctx context.Context, id int, tenantID int) (
 
 // ListProblems 获取问题列表
 func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblemsRequest, tenantID int) (*dto.ListProblemsResponse, error) {
+	s.logger.Infow("Listing problems", "tenant_id", tenantID, "page", req.Page, "page_size", req.PageSize)
+
 	query := s.client.Problem.Query().Where(problem.TenantID(tenantID))
 
 	// 应用过滤条件
@@ -156,30 +170,80 @@ func (s *ProblemService) ListProblems(ctx context.Context, req *dto.ListProblems
 
 // UpdateProblem 更新问题
 func (s *ProblemService) UpdateProblem(ctx context.Context, id int, req *dto.UpdateProblemRequest, tenantID int) (*ent.Problem, error) {
-	problem, err := s.client.Problem.UpdateOneID(id).
-		SetTitle(req.Title).
-		SetDescription(req.Description).
-		SetPriority(req.Priority).
-		SetStatus(req.Status).
-		SetCategory(req.Category).
-		SetRootCause(req.RootCause).
-		SetImpact(req.Impact).
-		SetUpdatedAt(time.Now()).
-		Save(ctx)
+	s.logger.Infow("Updating problem", "id", id, "tenant_id", tenantID)
+
+	// 检查问题是否存在
+	existing, err := s.client.Problem.Query().
+		Where(problem.ID(id), problem.TenantID(tenantID)).
+		First(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			s.logger.Warnw("Problem not found", "id", id, "tenant_id", tenantID)
+			return nil, fmt.Errorf("问题不存在")
+		}
+		s.logger.Errorw("Failed to get problem for update", "error", err, "id", id)
+		return nil, fmt.Errorf("获取问题失败: %v", err)
+	}
+
+	// 构建更新字段
+	update := existing.Update()
+
+	if req.Title != nil {
+		update.SetTitle(*req.Title)
+	}
+	if req.Description != nil {
+		update.SetDescription(*req.Description)
+	}
+	if req.Priority != nil {
+		update.SetPriority(*req.Priority)
+	}
+	if req.Status != nil {
+		update.SetStatus(*req.Status)
+		// 如果状态变更为resolved，设置解决时间
+		if *req.Status == "resolved" {
+			update.SetResolvedAt(time.Now())
+		}
+		// 如果状态变更为closed，设置关闭时间
+		if *req.Status == "closed" {
+			update.SetClosedAt(time.Now())
+		}
+	}
+	if req.Category != nil {
+		update.SetCategory(*req.Category)
+	}
+	if req.RootCause != nil {
+		update.SetRootCause(*req.RootCause)
+	}
+	if req.Impact != nil {
+		update.SetImpact(*req.Impact)
+	}
+	update.SetUpdatedAt(time.Now())
+
+	problem, err := update.Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to update problem", "error", err, "id", id, "tenant_id", tenantID)
 		return nil, fmt.Errorf("更新问题失败: %v", err)
 	}
 
+	s.logger.Infow("Problem updated successfully", "id", id, "tenant_id", tenantID)
 	return problem, nil
 }
 
-// DeleteProblem 删除问题
+// DeleteProblem 删除问题（软删除）
 func (s *ProblemService) DeleteProblem(ctx context.Context, id int, tenantID int) error {
-	err := s.client.Problem.DeleteOneID(id).Exec(ctx)
+	s.logger.Infow("Deleting problem", "id", id, "tenant_id", tenantID)
+
+	// 使用软删除
+	_, err := s.client.Problem.UpdateOneID(id).
+		Where(problem.TenantID(tenantID)).
+		SetDeletedAt(time.Now()).
+		Save(ctx)
 	if err != nil {
+		s.logger.Errorw("Failed to delete problem", "error", err, "id", id, "tenant_id", tenantID)
 		return fmt.Errorf("删除问题失败: %v", err)
 	}
 
+	s.logger.Infow("Problem deleted successfully", "id", id, "tenant_id", tenantID)
 	return nil
 }
 

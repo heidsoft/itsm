@@ -315,7 +315,7 @@ export const TemplateEditor: React.FC<TemplateEditorProps> = ({
                   rules={[{ required: true, message: '请选择分类' }]}
                 >
                   <Select placeholder="选择模板分类" showSearch optionFilterProp="children">
-                    {categories.map((cat: unknown) => (
+                    {categories.map((cat: any) => (
                       <Option key={cat.id} value={cat.id}>
                         {cat.name}
                       </Option>

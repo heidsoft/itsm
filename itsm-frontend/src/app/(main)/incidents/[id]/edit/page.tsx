@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { Button, Card, Form, Input, Select, message, Row, Col, Space, Divider } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { IncidentAPI } from '@/lib/api/incident-api';
-import type { Incident } from '@/lib/api/types';
+import type { Incident, UpdateIncidentRequest } from '@/lib/api/incident-api';
 import { useI18n } from '@/lib/i18n';
 
 const { TextArea } = Input;
@@ -60,7 +60,7 @@ export default function IncidentEditPage() {
     };
   }, [id, form, router]);
 
-  const handleSubmit = async (values: unknown) => {
+  const handleSubmit = async (values: any) => {
     if (!id) return;
 
     setLoading(true);

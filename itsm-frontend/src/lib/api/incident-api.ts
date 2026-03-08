@@ -97,9 +97,12 @@ export interface CreateIncidentRequest {
   type: string;
   is_major_incident?: boolean;
   assignee_id?: number;
+  assigned_to?: number; // Added for compatibility with UI forms
   configuration_item_id?: number;
   category?: string;
   subcategory?: string;
+  impact?: string; // Added for UI
+  urgency?: string; // Added for UI
   // 阿里云相关字段
   alibaba_cloud_instance_id?: string;
   alibaba_cloud_region?: string;
@@ -648,7 +651,7 @@ export class IncidentAPI {
     return {
       list: (params?: ListIncidentsRequest) => this.listIncidents(params),
       items: (params?: ListIncidentsRequest) =>
-        this.listIncidents(params).then((r: ListIncidentsResponse) => r.incidents || r.items || []),
+        this.listIncidents(params).then((r: ListIncidentsResponse) => r.incidents || r.data || []),
     };
   }
 

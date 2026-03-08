@@ -84,14 +84,20 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Prepare frontend build
+        run: |
+          cd itsm-frontend
+          # Create proper directory structure for standalone deployment
+          mkdir -p frontend-standalone
+          cp -r .next/standalone/* frontend-standalone/
+          cp -r .next/static frontend-standalone/.next/
+
       - name: Upload artifact
         if: steps.check-frontend.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: itsm-frontend-build
-          path: |
-            itsm-frontend/.next/standalone
-            itsm-frontend/.next/static
+          path: itsm-frontend/frontend-standalone
           retention-days: 30
 
   release:

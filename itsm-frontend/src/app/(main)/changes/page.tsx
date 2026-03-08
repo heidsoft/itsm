@@ -105,7 +105,7 @@ export default function ChangesPage() {
       </Row>
 
       {/* 变更列表 */}
-      <ChangeList />
+      <ChangeList showHeader={false} />
     </div>
   );
 }

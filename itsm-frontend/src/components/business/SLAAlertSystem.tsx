@@ -424,6 +424,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
           dataSource={alertRules}
           rowKey="id"
           loading={loading}
+          scroll={{ x: 'max-content' }}
           pagination={false}
         />
       </Card>
@@ -442,6 +443,7 @@ export const SLAAlertSystem: React.FC<SLAAlertSystemProps> = ({
           columns={historyColumns}
           dataSource={alertHistory}
           rowKey="id"
+          scroll={{ x: 'max-content' }}
           pagination={{
             pageSize: 10,
             showSizeChanger: true,

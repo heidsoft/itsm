@@ -26,10 +26,10 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
         fontSize: 12,
         fontWeight: 'bold',
       },
-      formatter: (datum: unknown) => `${datum.percentage}%`,
+      formatter: (datum: any) => `${datum.percentage}%`,
     },
     tooltip: {
-      formatter: (datum: unknown) => ({
+      formatter: (datum: any) => ({
         name: '工单数',
         value: `${datum.count}个 (${datum.percentage}%)`,
       }),
@@ -38,8 +38,11 @@ const ResponseTimeChart: React.FC<{ data: ResponseTimeDistribution[] }> = React.
   };
 
   const totalTickets = data.reduce((sum, item) => sum + item.count, 0);
-  const avgTime =
-    data.reduce((sum, item) => sum + (item.avgTime || 0) * item.count, 0) / totalTickets;
+
+  // 计算平均响应时间，避免除以零
+  const avgTime = totalTickets > 0
+    ? data.reduce((sum, item) => sum + (item.avgTime || 0) * item.count, 0) / totalTickets
+    : 0;
 
   return (
     <DashboardChartCard

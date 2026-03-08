@@ -465,6 +465,7 @@ export const SatisfactionDashboard: React.FC = () => {
           columns={agentColumns}
           dataSource={satisfactionData?.agentPerformance}
           rowKey="agent"
+          scroll={{ x: 'max-content' }}
           pagination={false}
           size="small"
         />
@@ -484,6 +485,7 @@ export const SatisfactionDashboard: React.FC = () => {
           columns={feedbackColumns}
           dataSource={satisfactionData?.recentFeedback}
           rowKey="id"
+          scroll={{ x: 'max-content' }}
           pagination={{ pageSize: 5 }}
           expandable={{
             expandedRowRender: record => (

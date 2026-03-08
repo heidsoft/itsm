@@ -41,7 +41,11 @@ import type { KnowledgeArticle, ArticleQuery } from '@/types/knowledge-base';
 
 const { Option } = Select;
 
-const ArticleList: React.FC = () => {
+interface ArticleListProps {
+  showHeader?: boolean;
+}
+
+const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
@@ -188,20 +192,22 @@ const ArticleList: React.FC = () => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">知识库</h1>
-          <p className="text-gray-500 mt-1">创建、维护和分享解决方案与最佳实践</p>
+      {showHeader && (
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">知识库</h1>
+            <p className="text-gray-500 mt-1">创建、维护和分享解决方案与最佳实践</p>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => router.push('/knowledge/articles/new')}
+            size="large"
+          >
+            新建文章
+          </Button>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => router.push('/knowledge/articles/new')}
-          size="large"
-        >
-          新建文章
-        </Button>
-      </div>
+      )}
 
       <Card className="rounded-lg shadow-sm border border-gray-200" variant="borderless">
         <Form form={form} layout="inline" className="mb-6 flex-wrap gap-y-4">

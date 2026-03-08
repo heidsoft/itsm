@@ -218,7 +218,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         {compareResult.changes && compareResult.changes.length > 0 ? (
           <div>
             <Title level={5}>变更详情</Title>
-            {compareResult.changes.map((change: unknown, index: number) => (
+            {compareResult.changes.map((change: any, index: number) => (
               <Card key={index} size="small" className="mb-2">
                 <Space>
                   <Tag
@@ -286,6 +286,7 @@ const ArticleVersionControl: React.FC<ArticleVersionControlProps> = ({
         dataSource={versions}
         rowKey="version"
         loading={loading}
+        scroll={{ x: 'max-content' }}
         pagination={false}
         size="small"
         className="version-table mb-4"

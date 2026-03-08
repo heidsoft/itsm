@@ -53,6 +53,21 @@ export interface CITopology {
   children: CITopology[];
 }
 
+// Compatibility types for legacy code
+export interface GetCIListRequest {
+  ci_type?: string;
+  status?: string;
+  environment?: string;
+  offset?: number;
+  limit?: number;
+}
+
+export interface GetCIListResponse {
+  cis: ConfigurationItem[];
+  total: number;
+  items?: ConfigurationItem[]; // Optional for compatibility
+}
+
 export class CMDBApi {
   // ==================== 新的配置项管理 API ====================
 
@@ -126,10 +141,7 @@ export class CMDBApi {
   /**
    * 获取CI列表 (DDD架构)
    */
-  static async getCIs(query?: unknown): Promise<{
-    cis: ConfigurationItem[];
-    total: number;
-  }> {
+  static async getCIs(query?: GetCIListRequest): Promise<GetCIListResponse> {
     return httpClient.get('/api/v1/cmdb/cis', query);
   }
 
@@ -248,7 +260,7 @@ export class CMDBApi {
   /**
    * 获取关系图谱
    */
-  static async getRelationshipGraph(query: unknown): Promise<any> {
+  static async getRelationshipGraph(query?: Record<string, any>): Promise<any> {
     return httpClient.get('/api/v1/cmdb/graph', query);
   }
 

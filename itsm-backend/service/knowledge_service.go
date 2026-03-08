@@ -27,6 +27,8 @@ func NewKnowledgeService(client *ent.Client, logger *zap.SugaredLogger) *Knowled
 
 // CreateArticle 创建知识库文章
 func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKnowledgeArticleRequest, tenantID int, authorID int) (*ent.KnowledgeArticle, error) {
+	ks.logger.Infow("Creating knowledge article", "title", req.Title, "tenant_id", tenantID, "author_id", authorID)
+
 	if strings.TrimSpace(req.Content) == "" {
 		return nil, fmt.Errorf("内容不能为空")
 	}
@@ -46,11 +48,11 @@ func (ks *KnowledgeService) CreateArticle(ctx context.Context, req *dto.CreateKn
 		SetTenantID(tenantID).
 		Save(ctx)
 	if err != nil {
-		ks.logger.Errorf("创建知识库文章失败: %v", err)
+		ks.logger.Errorw("Failed to create knowledge article", "error", err, "tenant_id", tenantID)
 		return nil, fmt.Errorf("创建文章失败: %w", err)
 	}
 
-	ks.logger.Infof("创建知识库文章成功: %s", article.Title)
+	ks.logger.Infow("Knowledge article created successfully", "id", article.ID, "tenant_id", tenantID)
 	return article, nil
 }
 
@@ -140,26 +142,31 @@ func (ks *KnowledgeService) UpdateArticle(ctx context.Context, id int, req *dto.
 
 	article, err := update.Save(ctx)
 	if err != nil {
-		ks.logger.Errorf("更新知识库文章失败: %v", err)
+		ks.logger.Errorw("Failed to update knowledge article", "error", err, "id", id, "tenant_id", tenantID)
 		return nil, fmt.Errorf("更新文章失败: %w", err)
 	}
 
-	ks.logger.Infof("更新知识库文章成功: %s", article.Title)
+	ks.logger.Infow("Knowledge article updated successfully", "id", id, "tenant_id", tenantID)
 	return article, nil
 }
 
 // DeleteArticle 删除知识库文章
 func (ks *KnowledgeService) DeleteArticle(ctx context.Context, id, tenantID int) error {
+	ks.logger.Infow("Deleting knowledge article", "id", id, "tenant_id", tenantID)
+
 	err := ks.client.KnowledgeArticle.DeleteOneID(id).
 		Where(knowledgearticle.TenantID(tenantID)).
 		Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
+			ks.logger.Warnw("Knowledge article not found", "id", id, "tenant_id", tenantID)
 			return fmt.Errorf("文章不存在")
 		}
+		ks.logger.Errorw("Failed to delete knowledge article", "error", err, "id", id)
 		return fmt.Errorf("删除文章失败: %w", err)
 	}
 
+	ks.logger.Infow("Knowledge article deleted successfully", "id", id)
 	return nil
 }
 

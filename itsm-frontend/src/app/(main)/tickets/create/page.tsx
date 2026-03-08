@@ -121,11 +121,16 @@ export default function CreateTicketPage() {
         return;
       }
 
+      // 构建 title：如果没有选择类型，使用表单中的 title；否则使用类型名称
+      const title = values.title || (selectedType ? `${selectedType.name}请求` : '新建工单');
+      // 构建 priority：如果没有选择类型，使用表单中的 priority；否则使用预设优先级
+      const priority = values.priority || (selectedType ? selectedType.priority : 'medium');
+
       const created = await TicketApi.createTicket({
-        title: values.title,
+        title: title,
         description: description,
-        priority: values.priority,
-        category: values.category,
+        priority: priority,
+        category: values.category || (selectedType ? selectedType.category : undefined),
         formFields: selectedType ? { type: selectedType.id } : undefined,
       });
 
@@ -133,7 +138,8 @@ export default function CreateTicketPage() {
       router.push(`/tickets/${created.id}`);
     } catch (e: unknown) {
       console.error('Create ticket error:', e);
-      const errorMsg = e?.message || e?.error?.message || '创建工单失败，请检查输入或重新登录';
+      const errorObj = e as { message?: string; error?: { message?: string } };
+      const errorMsg = errorObj?.message || errorObj?.error?.message || '创建工单失败，请检查输入或重新登录';
       message.error(errorMsg);
     } finally {
       setLoading(false);

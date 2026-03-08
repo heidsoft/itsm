@@ -51,7 +51,10 @@ export class TicketCommentApi {
   static async getComments(ticketId: number): Promise<ListTicketCommentsResponse> {
     const response = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
     // Type guard to extract data from possible wrapped response
-    const data = (response as { data?: unknown })?.data ?? response;
+    const data = ((response as { data?: unknown })?.data ?? response) as {
+      comments?: TicketComment[];
+      total?: number;
+    } | TicketComment[];
     const comments = Array.isArray(data?.comments)
       ? data.comments
       : Array.isArray(data)

@@ -9,8 +9,12 @@ import (
 
 	"itsm-backend/ent"
 	"itsm-backend/ent/approvalworkflow"
+	"itsm-backend/ent/change"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/incident"
+	"itsm-backend/ent/knowledgearticle"
 	"itsm-backend/ent/permission"
+	"itsm-backend/ent/problem"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/role"
 	"itsm-backend/ent/servicecatalog"
@@ -18,12 +22,22 @@ import (
 	"itsm-backend/ent/sladefinition"
 	"itsm-backend/ent/team"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/ticketcategory"
 	"itsm-backend/ent/ticketview"
 	"itsm-backend/ent/user"
 
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 	"itsm-backend/database"
+)
+
+// Force import usage for ent packages (use predicate functions)
+var (
+	_ = incident.TitleEQ   // Used to ensure incident package is imported
+	_ = problem.TitleEQ     // Used to ensure problem package is imported
+	_ = change.TitleEQ     // Used to ensure change package is imported
+	_ = knowledgearticle.TitleEQ // Used to ensure knowledgearticle package is imported
+	_ = ticketcategory.NameEQ    // Used to ensure ticketcategory package is imported
 )
 
 // SeedConfig 种子数据配置结构
@@ -37,6 +51,12 @@ type SeedConfig struct {
 	ProcessBindings    []ProcessBindingSeed    `json:"process_bindings"`
 	TicketViews        []TicketViewSeed        `json:"ticket_views"`
 	CITypes            []CITypeSeed            `json:"ci_types"`
+	// 新增：可配置的种子数据
+	Incidents          []IncidentSeed          `json:"incidents"`
+	Problems           []ProblemSeed           `json:"problems"`
+	Changes            []ChangeSeed            `json:"changes"`
+	KnowledgeArticles []KnowledgeArticleSeed  `json:"knowledge_articles"`
+	IncidentCategories []TicketCategorySeed    `json:"incident_categories"`
 }
 
 type DepartmentSeed struct {
@@ -103,6 +123,55 @@ type CITypeSeed struct {
 	Icon        string `json:"icon"`
 	Color       string `json:"color"`
 	IsActive    bool   `json:"is_active"`
+}
+
+// IncidentSeed 事件种子数据结构
+type IncidentSeed struct {
+	Title          string `json:"title"`
+	Description    string `json:"description"`
+	Status         string `json:"status"`
+	Priority       string `json:"priority"`
+	Severity       string `json:"severity"`
+	IncidentNumber string `json:"incident_number"`
+	Category       string `json:"category"`
+}
+
+// ProblemSeed 问题种子数据结构
+type ProblemSeed struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	Priority    string `json:"priority"`
+	Category    string `json:"category"`
+	RootCause   string `json:"root_cause"`
+	Impact      string `json:"impact"`
+}
+
+// ChangeSeed 变更种子数据结构
+type ChangeSeed struct {
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	Type          string `json:"type"`
+	Status        string `json:"status"`
+	Priority      string `json:"priority"`
+	ImpactScope   string `json:"impact_scope"`
+	RiskLevel     string `json:"risk_level"`
+	Justification string `json:"justification"`
+}
+
+// KnowledgeArticleSeed 知识库文章种子数据结构
+type KnowledgeArticleSeed struct {
+	Title       string `json:"title"`
+	Content     string `json:"content"`
+	Category    string `json:"category"`
+	IsPublished bool   `json:"is_published"`
+	ViewCount    int    `json:"view_count"`
+}
+
+// TicketCategorySeed 工单分类种子数据结构（用于事件分类）
+type TicketCategorySeed struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 // Seeder manages database seeding operations
@@ -298,8 +367,13 @@ func (s *Seeder) SeedAll(ctx context.Context) {
 	s.seedProcessBindings(ctx)
 	s.seedTicketViews(ctx)
 	s.seedServiceCatalog(ctx)
-	s.seedTicketTypes(ctx) // 新增：初始化工单类型
-	s.seedCITypes(ctx)     // 新增：初始化CI类型
+	s.seedTicketTypes(ctx)         // 新增：初始化工单类型
+	s.seedCITypes(ctx)            // 新增：初始化CI类型
+	s.seedIncidentCategories(ctx) // 新增：初始化事件分类
+	s.seedIncidents(ctx)          // 新增：初始化事件数据
+	s.seedProblems(ctx)           // 新增：初始化问题数据
+	s.seedChanges(ctx)            // 新增：初始化变更数据
+	s.seedKnowledgeArticles(ctx)  // 新增：初始化知识库文章
 }
 
 // seedDefaultTenant ensures default tenant exists
@@ -1077,4 +1151,370 @@ func (s *Seeder) seedCITypes(ctx context.Context) {
 		}
 	}
 	s.sugar.Infow("CI types seeded", "count", len(ciTypes))
+}
+
+// seedIncidents 初始化事件种子数据
+func (s *Seeder) seedIncidents(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip incidents seed", "error", err)
+		return
+	}
+
+	// 检查是否已有事件数据
+	existing, err := s.client.Incident.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query incidents; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("incidents already seeded", "count", existing)
+		return
+	}
+
+	// 获取一个测试用户
+	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
+	if err != nil || len(users) == 0 {
+		s.sugar.Warnw("no users found; skip incidents seed", "error", err)
+		return
+	}
+	reporterID := users[0].ID
+
+	// 使用配置中的数据，如果没有配置则使用默认值
+	incidents := s.config.Incidents
+	if len(incidents) == 0 {
+		// 默认事件种子数据
+		incidents = []IncidentSeed{
+			{Title: "服务器宕机", Description: "生产环境服务器突然宕机，无法访问", Status: "resolved", Priority: "critical", Severity: "critical", IncidentNumber: "INC-001", Category: "硬件故障"},
+			{Title: "网络无法访问", Description: "办公区网络无法访问外网", Status: "resolved", Priority: "high", Severity: "major", IncidentNumber: "INC-002", Category: "网络故障"},
+			{Title: "应用响应慢", Description: "核心业务系统响应时间超过10秒", Status: "in_progress", Priority: "medium", Severity: "minor", IncidentNumber: "INC-003", Category: "性能问题"},
+			{Title: "数据库连接失败", Description: "应用无法连接数据库", Status: "new", Priority: "high", Severity: "major", IncidentNumber: "INC-004", Category: "数据库故障"},
+			{Title: "用户无法登录", Description: "部分用户报告无法登录系统", Status: "investigating", Priority: "critical", Severity: "critical", IncidentNumber: "INC-005", Category: "认证问题"},
+			{Title: "邮件服务异常", Description: "企业邮件收发延迟严重", Status: "resolved", Priority: "medium", Severity: "minor", IncidentNumber: "INC-006", Category: "邮件服务"},
+			{Title: "VPN连接断开", Description: "远程办公用户VPN连接不稳定", Status: "new", Priority: "high", Severity: "major", IncidentNumber: "INC-007", Category: "网络故障"},
+			{Title: "存储空间不足", Description: "文件服务器存储空间即将用尽", Status: "in_progress", Priority: "medium", Severity: "minor", IncidentNumber: "INC-008", Category: "存储问题"},
+		}
+	}
+
+	for _, inc := range incidents {
+		_, err := s.client.Incident.Create().
+			SetTitle(inc.Title).
+			SetDescription(inc.Description).
+			SetStatus(inc.Status).
+			SetPriority(inc.Priority).
+			SetSeverity(inc.Severity).
+			SetIncidentNumber(inc.IncidentNumber).
+			SetCategory(inc.Category).
+			SetReporterID(reporterID).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed incident failed", "error", err, "title", inc.Title)
+		}
+	}
+	s.sugar.Infow("incidents seeded", "count", len(incidents))
+}
+
+// seedProblems 初始化问题种子数据
+func (s *Seeder) seedProblems(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip problems seed", "error", err)
+		return
+	}
+
+	// 检查是否已有问题数据
+	existing, err := s.client.Problem.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query problems; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("problems already seeded", "count", existing)
+		return
+	}
+
+	// 获取测试用户
+	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
+	if err != nil || len(users) == 0 {
+		s.sugar.Warnw("no users found; skip problems seed", "error", err)
+		return
+	}
+	creatorID := users[0].ID
+
+	// 使用配置中的数据，如果没有配置则使用默认值
+	problems := s.config.Problems
+	if len(problems) == 0 {
+		problems = []ProblemSeed{
+			{Title: "频繁的网络中断", Description: "过去一个月内发生多次网络中断事件，影响业务连续性", Status: "analyzing", Priority: "high", Category: "网络问题", RootCause: "核心交换机老化", Impact: "全公司网络受影响"},
+			{Title: "数据库性能下降", Description: "数据库查询响应时间逐渐变慢", Status: "open", Priority: "medium", Category: "数据库问题", RootCause: "缺少索引和缓存配置", Impact: "影响所有业务系统"},
+			{Title: "用户认证失败", Description: "部分用户频繁出现认证失败", Status: "resolved", Priority: "high", Category: "安全问题", RootCause: "LDAP同步延迟", Impact: "用户无法正常登录"},
+			{Title: "存储容量告警", Description: "存储系统频繁告警容量不足", Status: "monitoring", Priority: "medium", Category: "存储问题", RootCause: "数据增长未预估", Impact: "文件存储风险"},
+			{Title: "邮件延迟严重", Description: "邮件收发延迟超过1小时", Status: "open", Priority: "medium", Category: "邮件问题", RootCause: "邮件服务器资源不足", Impact: "影响内外沟通"},
+			{Title: "VPN不稳定", Description: "远程用户VPN连接经常断开", Status: "analyzing", Priority: "low", Category: "网络问题", RootCause: "带宽不足", Impact: "远程办公受影响"},
+		}
+	}
+
+	for _, p := range problems {
+		_, err := s.client.Problem.Create().
+			SetTitle(p.Title).
+			SetDescription(p.Description).
+			SetStatus(p.Status).
+			SetPriority(p.Priority).
+			SetCategory(p.Category).
+			SetRootCause(p.RootCause).
+			SetImpact(p.Impact).
+			SetCreatedBy(creatorID).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed problem failed", "error", err, "title", p.Title)
+		}
+	}
+	s.sugar.Infow("problems seeded", "count", len(problems))
+}
+
+// seedChanges 初始化变更种子数据
+func (s *Seeder) seedChanges(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip changes seed", "error", err)
+		return
+	}
+
+	// 检查是否已有变更数据
+	existing, err := s.client.Change.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query changes; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("changes already seeded", "count", existing)
+		return
+	}
+
+	// 获取测试用户
+	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
+	if err != nil || len(users) == 0 {
+		s.sugar.Warnw("no users found; skip changes seed", "error", err)
+		return
+	}
+	creatorID := users[0].ID
+
+	// 使用配置中的数据，如果没有配置则使用默认值
+	changes := s.config.Changes
+	if len(changes) == 0 {
+		changes = []ChangeSeed{
+			{Title: "数据库版本升级", Description: "将MySQL 5.7升级到8.0版本", Type: "normal", Status: "approved", Priority: "high", ImpactScope: "全局", RiskLevel: "medium", Justification: "提升性能和安全性"},
+			{Title: "应用服务器扩容", Description: "增加2台应用服务器以应对流量高峰", Type: "normal", Status: "implemented", Priority: "medium", ImpactScope: "局部", RiskLevel: "low", Justification: "提升系统可用性"},
+			{Title: "网络安全策略调整", Description: "更新防火墙规则，开放新的API端口", Type: "normal", Status: "review", Priority: "high", ImpactScope: "全局", RiskLevel: "high", Justification: "支持新业务上线"},
+			{Title: "存储系统迁移", Description: "将文件存储从NAS迁移到对象存储", Type: "major", Status: "draft", Priority: "medium", ImpactScope: "局部", RiskLevel: "medium", Justification: "降低存储成本"},
+			{Title: "SSL证书更新", Description: "更新即将过期的SSL证书", Type: "emergency", Status: "scheduled", Priority: "low", ImpactScope: "无", RiskLevel: "low", Justification: "证书即将过期"},
+			{Title: "负载均衡配置优化", Description: "优化负载均衡算法和健康检查配置", Type: "normal", Status: "cancelled", Priority: "medium", ImpactScope: "局部", RiskLevel: "low", Justification: "提升访问体验"},
+		}
+	}
+
+	for _, c := range changes {
+		_, err := s.client.Change.Create().
+			SetTitle(c.Title).
+			SetDescription(c.Description).
+			SetType(c.Type).
+			SetStatus(c.Status).
+			SetPriority(c.Priority).
+			SetImpactScope(c.ImpactScope).
+			SetRiskLevel(c.RiskLevel).
+			SetJustification(c.Justification).
+			SetCreatedBy(creatorID).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed change failed", "error", err, "title", c.Title)
+		}
+	}
+	s.sugar.Infow("changes seeded", "count", len(changes))
+}
+
+// seedKnowledgeArticles 初始化知识库文章种子数据
+func (s *Seeder) seedKnowledgeArticles(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip knowledge articles seed", "error", err)
+		return
+	}
+
+	// 检查是否已有知识库文章
+	existing, err := s.client.KnowledgeArticle.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query knowledge articles; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("knowledge articles already seeded", "count", existing)
+		return
+	}
+
+	// 获取测试用户
+	users, err := s.client.User.Query().Where(user.TenantIDEQ(t.ID)).Limit(1).All(ctx)
+	if err != nil || len(users) == 0 {
+		s.sugar.Warnw("no users found; skip knowledge articles seed", "error", err)
+		return
+	}
+	authorID := users[0].ID
+
+	// 首先创建知识库分类
+	categories := []struct {
+		Name        string
+		Description string
+	}{
+		{"云资源", "云服务器、存储、网络等资源申请和使用指南"},
+		{"账号权限", "账号申请、权限配置相关指南"},
+		{"网络问题", "网络连接、VPN配置问题排查"},
+		{"数据库", "数据库使用和问题处理指南"},
+		{"安全", "安全配置和合规相关指南"},
+		{"常见问题", "常见问题解答FAQ"},
+	}
+
+	var categoryIDs []int
+	for _, cat := range categories {
+		c, err := s.client.TicketCategory.Create().
+			SetName(cat.Name).
+			SetDescription(cat.Description).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed knowledge category failed", "error", err, "name", cat.Name)
+			continue
+		}
+		categoryIDs = append(categoryIDs, c.ID)
+	}
+
+	// 如果没有分类，创建默认分类
+	if len(categoryIDs) == 0 {
+		defaultCat, err := s.client.TicketCategory.Create().
+			SetName("默认分类").
+			SetDescription("默认知识库分类").
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err == nil {
+			categoryIDs = append(categoryIDs, defaultCat.ID)
+		}
+	}
+
+	// 知识库文章种子数据
+	articles := []struct {
+		Title      string
+		Content    string
+		Category   string
+		IsPublished bool
+		ViewCount  int
+	}{
+		{
+			"如何申请云服务器 ECS",
+			"# 云服务器申请指南\n\n## 申请流程\n\n1. 登录IT服务门户\n2. 选择服务目录->云资源申请->云服务器\n3. 填写申请表单\n   - 选择配置(CPU/内存)\n   - 选择地域和可用区\n   - 设置登录密码\n4. 提交申请\n5. 等待审批(通常1-2个工作日)\n\n## 常见配置推荐\n\n- **开发测试环境**: 2核4G\n- **生产环境**: 4核8G起\n\n如有疑问请联系IT支持。",
+			"云资源", true, 1250,
+		},
+		{
+			"VPN连接配置指南",
+			"# VPN连接配置指南\n\n## Windows系统配置\n\n1. 下载VPN客户端\n2. 安装并运行客户端\n3. 配置连接信息:\n   - 服务器地址: vpn.company.com\n   - 用户名: 域账号\n   - 密码: 域密码\n4. 点击连接\n\n## 常见问题\n\n- **无法连接**: 检查网络环境，确认VPN端口(443)未被阻断\n- **连接后无法访问内网**: 尝试刷新DNS缓存 `ipconfig /flushdns`",
+			"网络问题", true, 980,
+		},
+		{
+			"账号权限申请流程",
+			"# 账号权限申请指南\n\n## 需要的权限\n\n根据岗位职责申请相应权限:\n\n| 角色 | 系统权限 | 申请流程 |\n|------|----------|----------|\n| 普通员工 | 基础访问 | 主管审批 |\n| 开发者 | 代码仓库访问 | 技术主管审批 |\n| 管理员 | 系统管理 | IT经理审批 |\n\n## 申请入口\n\nIT服务门户 - 服务目录 - 账号与权限申请",
+			"账号权限", true, 856,
+		},
+		{
+			"数据库备份与恢复",
+			"# 数据库备份恢复指南\n\n## 自动备份\n\n系统每天凌晨2点自动执行全量备份，保留30天。\n\n## 手动备份\n\n```bash\nmysqldump -u root -p database_name > backup.sql\n```\n\n## 恢复数据\n\n```bash\nmysql -u root -p database_name < backup.sql\n```\n\n**注意**: 恢复操作需要DBA权限，请提交工单联系数据库管理员。",
+			"数据库", true, 742,
+		},
+		{
+			"IT服务请求常见问题解答",
+			"# IT服务常见问题FAQ\n\n## 如何提交IT工单?\n\n1. 登录IT服务门户\n2. 点击\"提交工单\"\n3. 选择工单类型\n4. 填写详细信息\n5. 提交\n\n## 工单处理时限多久?\n\n- 紧急: 4小时内响应\n- 高优先级: 8小时内响应\n- 中优先级: 24小时内响应\n- 低优先级: 72小时内响应\n\n## 如何查询工单进度?\n\n在\"我的工单\"页面查看所有提交的工单及状态。",
+			"常见问题", true, 3560,
+		},
+		{
+			"安全组配置最佳实践",
+			"# 安全组配置指南\n\n## 基本原则\n\n1. **最小权限**: 只开放必要的端口\n2. **分层控制**: 不同层级使用不同的安全组\n3. **禁止0.0.0.0/0**: 避免直接对公网开放敏感服务\n\n## 常用端口配置\n\n| 服务 | 端口 | 协议 | 建议 |\n|------|------|------|------|\n| SSH | 22 | TCP | 仅内网访问 |\n| HTTP | 80 | TCP | 可公网访问 |\n| HTTPS | 443 | TCP | 可公网访问 |\n| MySQL | 3306 | TCP | 仅内网访问 |\n\n## 审批要求\n\n安全组规则变更需要安全团队审批。",
+			"安全", true, 625,
+		},
+	}
+
+	// Remove the category ID mapping since we now use category name directly
+	for _, article := range articles {
+		_, err := s.client.KnowledgeArticle.Create().
+			SetTitle(article.Title).
+			SetContent(article.Content).
+			SetIsPublished(article.IsPublished).
+			SetViewCount(article.ViewCount).
+			SetAuthorID(authorID).
+			SetCategory(article.Category).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed knowledge article failed", "error", err, "title", article.Title)
+		}
+	}
+	s.sugar.Infow("knowledge articles seeded", "count", len(articles))
+}
+
+// seedIncidentCategories 初始化事件分类种子数据
+func (s *Seeder) seedIncidentCategories(ctx context.Context) {
+	t, err := s.client.Tenant.Query().Where(tenant.CodeEQ("default")).First(ctx)
+	if err != nil {
+		s.sugar.Warnw("default tenant not found; skip incident categories seed", "error", err)
+		return
+	}
+
+	// 检查是否已有分类数据
+	existing, err := s.client.TicketCategory.Query().Count(ctx)
+	if err != nil {
+		s.sugar.Warnw("failed to query categories; skip seed", "error", err)
+		return
+	}
+	if existing > 0 {
+		s.sugar.Infow("incident categories already seeded", "count", existing)
+		return
+	}
+
+	// 使用配置中的数据，如果没有配置则使用默认值
+	categories := s.config.IncidentCategories
+	if len(categories) == 0 {
+		categories = []TicketCategorySeed{
+			{Name: "硬件故障", Description: "服务器、存储、网络设备等硬件故障"},
+			{Name: "软件故障", Description: "操作系统、应用软件故障"},
+			{Name: "网络故障", Description: "网络连接、网络设备问题"},
+			{Name: "数据库问题", Description: "数据库性能、连接问题"},
+			{Name: "安全问题", Description: "安全事件、漏洞"},
+			{Name: "性能问题", Description: "系统响应慢、卡顿"},
+			{Name: "配置问题", Description: "系统配置错误"},
+			{Name: "其他", Description: "其他类型事件"},
+		}
+	}
+
+	for _, cat := range categories {
+		_, err := s.client.TicketCategory.Create().
+			SetName(cat.Name).
+			SetDescription(cat.Description).
+			SetTenantID(t.ID).
+			SetCreatedAt(time.Now()).
+			SetUpdatedAt(time.Now()).
+			Save(ctx)
+		if err != nil {
+			s.sugar.Warnw("seed incident category failed", "error", err, "name", cat.Name)
+		}
+	}
+	s.sugar.Infow("incident categories seeded", "count", len(categories))
 }

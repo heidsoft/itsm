@@ -68,7 +68,7 @@ export function useDataFetch<T = any>(
     if (cacheTime > 0) {
       const cached = cache.get(cacheKey.current);
       if (cached && Date.now() - cached.timestamp < cacheTime) {
-        setData(cached.data);
+        setData(cached.data as T);
         setLoading(false);
         return;
       }

@@ -148,14 +148,27 @@ export const SLADashboardCharts: React.FC<SLADashboardChartsProps> = ({
   };
 
   // 自定义Tooltip
-  const CustomTooltip = ({ active, payload, label }: unknown) => {
+  interface TooltipPayload {
+    color?: string;
+    name?: string;
+    value?: number | string;
+    dataKey?: string;
+  }
+
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: TooltipPayload[];
+    label?: string;
+  }
+
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800 mb-2">{`日期: ${label}`}</p>
-          {payload.map((entry: unknown, index: number) => (
+          {payload.map((entry: TooltipPayload, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {`${entry.name}: ${entry.value}${entry.dataKey.includes('rate') ? '%' : entry.dataKey.includes('time') ? '小时' : ''}`}
+              {`${entry.name}: ${entry.value}${entry.dataKey?.includes('rate') ? '%' : entry.dataKey?.includes('time') ? '小时' : ''}`}
             </p>
           ))}
         </div>

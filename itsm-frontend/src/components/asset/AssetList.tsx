@@ -53,7 +53,11 @@ const typeColors: Record<string, string> = {
   license: 'orange',
 };
 
-const AssetList: React.FC = () => {
+interface AssetListProps {
+  showActions?: boolean;
+}
+
+const AssetList: React.FC<AssetListProps> = ({ showActions = true }) => {
   const router = useRouter();
   const { message } = App.useApp();
   const [loading, setLoading] = useState(false);
@@ -325,13 +329,15 @@ const AssetList: React.FC = () => {
                 搜索
               </Button>
               <Button onClick={handleReset}>重置</Button>
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={() => router.push('/assets/new')}
-              >
-                创建资产
-              </Button>
+              {showActions && (
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={() => router.push('/assets/new')}
+                >
+                  创建资产
+                </Button>
+              )}
             </Space>
           </Form.Item>
         </Form>

@@ -141,7 +141,17 @@ export const ResponsiveDashboard: React.FC<ResponsiveDashboardProps> = ({
 
   // 生成布局配置
   const generateLayouts = useMemo(() => {
-    const layoutsMap: unknown = {};
+    const layoutsMap: Record<string, Array<{
+      i: string;
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      minW?: number;
+      minH?: number;
+      maxW?: number;
+      maxH?: number;
+    }>> = {};
 
     Object.keys(cols).forEach(breakpoint => {
       layoutsMap[breakpoint] = widgets.map(widget => ({

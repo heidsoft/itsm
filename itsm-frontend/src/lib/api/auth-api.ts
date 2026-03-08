@@ -135,14 +135,17 @@ class AuthApiClient {
       }
 
       // 安全地存储token（仅在成功时）
-      if (data.token) {
+      if (data.access_token) {
         // 统一使用 access_token（通过 token-storage 统一管理）
+        setAccessToken(data.access_token);
+      } else if (data.token) {
+        // 兼容旧接口（如果有）
         setAccessToken(data.token);
       }
 
       return {
         success: true,
-        token: data.token,
+        token: data.access_token || data.token,
         refreshToken: data.refresh_token,
         requiresMfa: data.requires_mfa,
         mfaType: data.mfa_type,
@@ -203,7 +206,7 @@ class AuthApiClient {
 
       return {
         success: true,
-        token: data.token,
+        token: data.access_token || data.token,
       };
     } catch (error) {
       console.error('Token refresh error:', error);
