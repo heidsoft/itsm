@@ -283,6 +283,10 @@ func NewApplication() *Application {
 	userService := service.NewUserService(client, sugar)
 	userController := controller.NewUserController(userService, sugar)
 
+	// Group Controller
+	groupService := service.NewGroupService(client)
+	groupController := controller.NewGroupController(groupService, sugar)
+
 	// Role & Permission Controllers (database-backed with tenant isolation)
 	roleService := service.NewRoleService(client, sugar)
 	roleController := controller.NewRoleController(roleService, sugar)
@@ -347,6 +351,7 @@ func NewApplication() *Application {
 		TicketCategoryController:        ticketCategoryController,
 		TicketTagController:             ticketTagController,
 		UserController:                  userController,
+		GroupController:                 groupController,
 
 		// Role & Permission Controllers
 		RoleController:          roleController,

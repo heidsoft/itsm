@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "NEXT_OUTPUT_MODE=standalone next start",
     "lint": "next lint --fix",
     "lint:check": "next lint",
     "type-check": "tsc --noEmit",

@@ -32,7 +32,6 @@ export const antdTheme: ThemeConfig = {
     colorBgContainer: '#ffffff',
     colorBgElevated: '#ffffff',
     colorBgLayout: '#f8fafc', // slate-50
-    colorBgSpotlight: '#f1f5f9', // slate-100
 
     // 边框色
     colorBorder: '#e2e8f0', // slate-200
@@ -68,6 +67,10 @@ export const antdTheme: ThemeConfig = {
     motionDurationFast: '0.15s',
     motionDurationMid: '0.2s',
     motionDurationSlow: '0.3s',
+
+    // Tooltip/Popover/Dropdown 背景和文字颜色（修复白色背景问题）
+    colorBgSpotlight: '#333', // 覆盖默认的白色背景
+    colorTextLightSolid: '#fff', // 覆盖默认的文字颜色
   },
 
   components: {

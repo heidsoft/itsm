@@ -399,3 +399,9 @@ type ChangeApprovalSummary struct {
 	ApprovalHistory  []ChangeApprovalResponse      `json:"approval_history"`  // 审批历史
 	PendingApprovals []ChangeApprovalChainResponse `json:"pending_approvals"` // 待审批项目
 }
+
+// SubmitChangeRequest 提交变更审批请求
+type SubmitChangeRequest struct {
+	ApproverIDs []int  `json:"approver_ids"` // 审批人ID列表
+	Comment     string `json:"comment"`      // 提交说明（可选）
+}

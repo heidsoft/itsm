@@ -27,6 +27,7 @@ import (
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
 	"itsm-backend/ent/engineerskill"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentescalationrule"
@@ -175,6 +176,7 @@ func checkColumn(table, column string) error {
 			discoveryresult.Table:         discoveryresult.ValidColumn,
 			discoverysource.Table:         discoverysource.ValidColumn,
 			engineerskill.Table:           engineerskill.ValidColumn,
+			group.Table:                   group.ValidColumn,
 			incident.Table:                incident.ValidColumn,
 			incidentalert.Table:           incidentalert.ValidColumn,
 			incidentescalationrule.Table:  incidentescalationrule.ValidColumn,

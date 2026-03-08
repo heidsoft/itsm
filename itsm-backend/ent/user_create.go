@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"itsm-backend/ent/department"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/processversionchangelog"
 	"itsm-backend/ent/role"
@@ -262,6 +263,21 @@ func (uc *UserCreate) AddVersionChangelogs(p ...*ProcessVersionChangelog) *UserC
 		ids[i] = p[i].ID
 	}
 	return uc.AddVersionChangelogIDs(ids...)
+}
+
+// AddGroupIDs adds the "groups" edge to the Group entity by IDs.
+func (uc *UserCreate) AddGroupIDs(ids ...int) *UserCreate {
+	uc.mutation.AddGroupIDs(ids...)
+	return uc
+}
+
+// AddGroups adds the "groups" edges to the Group entity.
+func (uc *UserCreate) AddGroups(g ...*Group) *UserCreate {
+	ids := make([]int, len(g))
+	for i := range g {
+		ids[i] = g[i].ID
+	}
+	return uc.AddGroupIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -552,6 +568,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.GroupsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.GroupsTable,
+			Columns: []string{user.GroupsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(group.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

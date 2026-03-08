@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Input, Button, Tag, Pagination, Spin, Empty, Select } from 'antd';
+import { Card, Input, Button, Tag, Pagination, Spin, Empty, Select, Alert } from 'antd';
 import {
   FileText,
   RefreshCw,
@@ -15,6 +15,7 @@ import {
   Search,
   Filter,
 } from 'lucide-react';
+
 // API 接口类型定义
 interface ServiceRequest {
   id: number;
@@ -47,63 +48,19 @@ interface ServiceRequest {
 }
 
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
+import { message } from 'antd/es/message';
 
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {
-    submitted: {
-      label: '已提交',
-      color: 'gold',
-      icon: Clock,
-      pulse: true,
-    },
-    manager_approved: {
-      label: '主管已批',
-      color: 'blue',
-      icon: Hourglass,
-      pulse: true,
-    },
-    it_approved: {
-      label: 'IT已批',
-      color: 'blue',
-      icon: Hourglass,
-      pulse: true,
-    },
-    security_approved: {
-      label: '安全已批',
-      color: 'green',
-      icon: CheckCircle,
-      pulse: false,
-    },
-    provisioning: {
-      label: '交付中',
-      color: 'processing',
-      icon: Hourglass,
-      pulse: true,
-    },
-    delivered: {
-      label: '已交付',
-      color: 'success',
-      icon: CheckCircle,
-      pulse: false,
-    },
-    failed: {
-      label: '交付失败',
-      color: 'error',
-      icon: XCircle,
-      pulse: false,
-    },
-    rejected: {
-      label: '已拒绝',
-      color: 'error',
-      icon: XCircle,
-      pulse: false,
-    },
-    cancelled: {
-      label: '已取消',
-      color: 'default',
-      icon: XCircle,
-      pulse: false,
-    },
+    submitted: { label: '已提交', color: 'gold', icon: Clock, pulse: true },
+    manager_approved: { label: '主管已批', color: 'blue', icon: Hourglass, pulse: true },
+    it_approved: { label: 'IT已批', color: 'blue', icon: Hourglass, pulse: true },
+    security_approved: { label: '安全已批', color: 'green', icon: CheckCircle, pulse: false },
+    provisioning: { label: '交付中', color: 'processing', icon: Hourglass, pulse: true },
+    delivered: { label: '已交付', color: 'success', icon: CheckCircle, pulse: false },
+    failed: { label: '交付失败', color: 'error', icon: XCircle, pulse: false },
+    rejected: { label: '已拒绝', color: 'error', icon: XCircle, pulse: false },
+    cancelled: { label: '已取消', color: 'default', icon: XCircle, pulse: false },
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.submitted;
@@ -118,8 +75,11 @@ const RequestStatusBadge = ({ status }: { status: string }) => {
 };
 
 const RequestCard = ({ request }: { request: ServiceRequest }) => {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('zh-CN', {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '-';
+    const time = new Date(dateString);
+    if (Number.isNaN(time.getTime())) return '-';
+    return time.toLocaleString('zh-CN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -175,6 +135,7 @@ const RequestCard = ({ request }: { request: ServiceRequest }) => {
 const MyRequestsPage = () => {
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -185,6 +146,7 @@ const MyRequestsPage = () => {
   // 获取服务请求数据
   const fetchRequests = async (page = 1, status = filter) => {
     setLoading(true);
+    setError(null);
     try {
       const data = await ServiceCatalogApi.getServiceRequests({
         page,
@@ -197,6 +159,8 @@ const MyRequestsPage = () => {
       setTotalPages(Math.max(1, Math.ceil((data.total || 0) / pageSize)));
     } catch (error) {
       console.error('API调用失败:', error);
+      setError('加载失败，请重试');
+      message.error('加载服务请求失败');
       setRequests([]);
       setTotal(0);
       setTotalPages(1);
@@ -218,12 +182,13 @@ const MyRequestsPage = () => {
     return matchesSearch;
   });
 
+  // 动态计算过滤选项数量
   const filterOptions = [
     { value: 'all', label: '全部', count: total },
-    { value: 'submitted', label: '已提交', count: 0 },
-    { value: 'provisioning', label: '交付中', count: 0 },
-    { value: 'delivered', label: '已交付', count: 0 },
-    { value: 'rejected', label: '已拒绝', count: 0 },
+    { value: 'submitted', label: '已提交', count: requests.filter(r => r.status === 'submitted').length },
+    { value: 'provisioning', label: '交付中', count: requests.filter(r => r.status === 'provisioning').length },
+    { value: 'delivered', label: '已交付', count: requests.filter(r => r.status === 'delivered').length },
+    { value: 'rejected', label: '已拒绝', count: requests.filter(r => r.status === 'rejected').length },
   ];
 
   return (
@@ -244,6 +209,22 @@ const MyRequestsPage = () => {
             </Button>
           </div>
         </div>
+
+        {/* 错误提示 */}
+        {error && (
+          <Alert
+            message={error}
+            description="请检查网络连接或稍后重试"
+            type="error"
+            showIcon
+            className="mb-6"
+            action={
+              <Button size="small" onClick={() => fetchRequests(currentPage, filter)}>
+                重试
+              </Button>
+            }
+          />
+        )}
 
         {/* 搜索和筛选 */}
         <Card className="mb-6 rounded-lg shadow-sm border border-gray-200" variant="borderless">

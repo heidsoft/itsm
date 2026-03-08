@@ -359,7 +359,10 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* 通知 */}
-        <Tooltip title="通知中心">
+        <Tooltip
+          title="通知中心"
+          overlayInnerStyle={{ backgroundColor: '#333', color: '#fff' }}
+        >
           <Badge count={unreadCount} size="small" offset={[-2, 2]}>
             <Button
               type="text"

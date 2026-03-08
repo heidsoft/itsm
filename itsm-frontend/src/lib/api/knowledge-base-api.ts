@@ -387,7 +387,7 @@ export class KnowledgeBaseApi {
    * 获取知识库统计
    */
   static async getStats(): Promise<KnowledgeBaseStats> {
-    return httpClient.get('/api/v1/knowledge-articles/stats');
+    return httpClient.get('/api/v1/knowledge/stats');
   }
 
   /**

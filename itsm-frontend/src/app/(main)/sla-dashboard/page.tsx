@@ -17,6 +17,8 @@ import {
   Badge,
   List,
   Tabs,
+  Spin,
+  Alert,
 } from 'antd';
 import {
   AlertTriangle,
@@ -45,13 +47,23 @@ const SLADashboardPage = () => {
   const router = useRouter();
 
   // 状态管理
-  const [slaStats, setSlaStats] = useState({
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [slaStats, setSlaStats] = useState<{
+    total_definitions: number;
+    active_definitions: number;
+    total_violations: number;
+    open_violations: number;
+    overall_compliance_rate: number;
+  }>({
     total_definitions: 0,
     active_definitions: 0,
     total_violations: 0,
     open_violations: 0,
-    overall_compliance_rate: 95.5,
+    overall_compliance_rate: 0,
   });
+
   const [slaDefinitions, setSlaDefinitions] = useState<SLADefinition[]>([]);
   const [slaViolations, setSlaViolations] = useState<SLAViolation[]>([]);
   const [complianceReport, setComplianceReport] = useState<SLAComplianceReport | null>(null);
@@ -78,8 +90,10 @@ const SLADashboardPage = () => {
     try {
       const stats = await SLAApi.getSLAStats();
       setSlaStats(stats);
+      setErrors(prev => ({ ...prev, stats: '' }));
     } catch (error) {
       console.error('加载SLA统计失败:', error);
+      setErrors(prev => ({ ...prev, stats: '加载失败，请刷新重试' }));
     }
   };
 
@@ -88,8 +102,10 @@ const SLADashboardPage = () => {
     try {
       const response = await SLAApi.getSLADefinitions({ page: 1, size: 10 });
       setSlaDefinitions(response.items);
+      setErrors(prev => ({ ...prev, definitions: '' }));
     } catch (error) {
       console.error('加载SLA定义失败:', error);
+      setErrors(prev => ({ ...prev, definitions: '加载失败' }));
     }
   };
 
@@ -98,8 +114,10 @@ const SLADashboardPage = () => {
     try {
       const response = await SLAApi.getSLAViolations({ page: 1, size: 10 });
       setSlaViolations(response.items);
+      setErrors(prev => ({ ...prev, violations: '' }));
     } catch (error) {
       console.error('加载SLA违规失败:', error);
+      setErrors(prev => ({ ...prev, violations: '加载失败' }));
     }
   };
 
@@ -108,8 +126,10 @@ const SLADashboardPage = () => {
     try {
       const alerts = await SLAApi.getSLAAlerts();
       setSlaAlerts(alerts);
+      setErrors(prev => ({ ...prev, alerts: '' }));
     } catch (error) {
       console.error('加载SLA预警失败:', error);
+      setErrors(prev => ({ ...prev, alerts: '加载失败' }));
     }
   };
 
@@ -118,8 +138,10 @@ const SLADashboardPage = () => {
     try {
       const metrics = await SLAApi.getSLAMetrics({ period: 'week' });
       setSlaMetrics(metrics);
+      setErrors(prev => ({ ...prev, metrics: '' }));
     } catch (error) {
       console.error('加载SLA指标失败:', error);
+      setErrors(prev => ({ ...prev, metrics: '加载失败' }));
     }
   };
 
@@ -135,21 +157,29 @@ const SLADashboardPage = () => {
         end_date: endDate.toISOString(),
       });
       setComplianceReport(report);
+      setErrors(prev => ({ ...prev, compliance: '' }));
     } catch (error) {
       console.error('加载合规报告失败:', error);
+      setErrors(prev => ({ ...prev, compliance: '加载失败' }));
     }
   };
 
   useEffect(() => {
     const loadAllData = async () => {
-      await Promise.all([
-        loadSLAStats(),
-        loadSLADefinitions(),
-        loadSLAViolations(),
-        loadSLAAlerts(),
-        loadSLAMetrics(),
-        loadComplianceReport(),
-      ]);
+      setLoading(true);
+      setErrors({});
+      try {
+        await Promise.all([
+          loadSLAStats(),
+          loadSLADefinitions(),
+          loadSLAViolations(),
+          loadSLAAlerts(),
+          loadSLAMetrics(),
+          loadComplianceReport(),
+        ]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadAllData();
@@ -189,6 +219,23 @@ const SLADashboardPage = () => {
     const time = new Date(value);
     if (Number.isNaN(time.getTime())) return '-';
     return time.toLocaleString();
+  };
+
+  // 渲染错误状态
+  const renderError = (key: string) => {
+    if (errors[key]) {
+      return (
+        <Card className="text-center py-8">
+          <Alert
+            message={errors[key]}
+            description="请检查网络连接或稍后重试"
+            type="error"
+            showIcon
+          />
+        </Card>
+      );
+    }
+    return null;
   };
 
   // SLA定义表格列
@@ -288,6 +335,14 @@ const SLADashboardPage = () => {
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Spin size="large" tip="加载SLA数据..." />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -297,6 +352,22 @@ const SLADashboardPage = () => {
         </h2>
         <p className="text-gray-500 mt-1">实时监控服务级别协议的执行情况和合规性</p>
       </div>
+
+      {/* 全局错误提示 */}
+      {Object.values(errors).filter(e => e).length > 0 && (
+        <Alert
+          message="部分数据加载失败"
+          description="已加载可用数据，失败项目可点击刷新重试"
+          type="warning"
+          showIcon
+          className="mb-4"
+          action={
+            <Button size="small" onClick={() => window.location.reload()}>
+              刷新全部
+            </Button>
+          }
+        />
+      )}
 
       <Card className="mb-6 rounded-lg shadow-sm border border-gray-200" variant="borderless">
         <Row justify="space-between" align="middle">
@@ -341,6 +412,7 @@ const SLADashboardPage = () => {
               ),
               children: (
                 <div className="space-y-6">
+                  {/* 统计卡片 */}
                   <Row gutter={[16, 16]} className="m-0">
                     <Col xs={24} sm={12} lg={6}>
                       <Card
@@ -426,35 +498,37 @@ const SLADashboardPage = () => {
                         }
                         extra={<Badge count={slaAlerts.length} />}
                       >
-                        <List
-                          dataSource={slaAlerts.slice(0, 5)}
-                          renderItem={alert => (
-                            <List.Item>
-                              <List.Item.Meta
-                                avatar={
-                                  <AlertTriangle
-                                    style={{
-                                      width: 20,
-                                      height: 20,
-                                      color: getViolationLevelColor(alert.alert_level),
-                                    }}
-                                  />
-                                }
-                                title={`工单 #${String(alert.ticket_id).padStart(5, '0')}`}
-                                description={
-                                  <div>
-                                    <div>{alert.ticket_title}</div>
-                                    <span className="text-xs text-gray-500">
-                                      剩余时间: {alert.time_remaining}分钟 | 级别:{' '}
-                                      {alert.alert_level}
-                                    </span>
-                                  </div>
-                                }
-                              />
-                            </List.Item>
-                          )}
-                          locale={{ emptyText: '暂无SLA预警' }}
-                        />
+                        {renderError('alerts') || (
+                          <List
+                            dataSource={slaAlerts.slice(0, 5)}
+                            renderItem={alert => (
+                              <List.Item>
+                                <List.Item.Meta
+                                  avatar={
+                                    <AlertTriangle
+                                      style={{
+                                        width: 20,
+                                        height: 20,
+                                        color: getViolationLevelColor(alert.alert_level),
+                                      }}
+                                    />
+                                  }
+                                  title={`工单 #${String(alert.ticket_id).padStart(5, '0')}`}
+                                  description={
+                                    <div>
+                                      <div>{alert.ticket_title}</div>
+                                      <span className="text-xs text-gray-500">
+                                        剩余时间: {alert.time_remaining}分钟 | 级别:{' '}
+                                        {alert.alert_level}
+                                      </span>
+                                    </div>
+                                  }
+                                />
+                              </List.Item>
+                            )}
+                            locale={{ emptyText: '暂无SLA预警' }}
+                          />
+                        )}
                       </Card>
                     </Col>
                     <Col xs={24} lg={12}>
@@ -468,7 +542,9 @@ const SLADashboardPage = () => {
                           </Space>
                         }
                       >
-                        {slaMetrics && (
+                        {errors.metrics ? (
+                          <Alert message={errors.metrics} type="warning" size="small" />
+                        ) : slaMetrics ? (
                           <div>
                             <Row gutter={16} className="mb-4">
                               <Col span={12}>
@@ -497,12 +573,19 @@ const SLADashboardPage = () => {
                               </span>
                             </div>
                           </div>
+                        ) : (
+                          <div className="text-center text-gray-500 py-8">
+                            暂无指标数据
+                          </div>
                         )}
                       </Card>
                     </Col>
                   </Row>
 
-                  {complianceReport && (
+                  {/* 合规报告 */}
+                  {errors.compliance ? (
+                    <Alert message={errors.compliance} type="warning" />
+                  ) : complianceReport && (
                     <Row gutter={[16, 16]} className="m-0">
                       <Col span={24}>
                         <Card
@@ -564,6 +647,7 @@ const SLADashboardPage = () => {
                     </Row>
                   )}
 
+                  {/* SLA定义与违规表格 */}
                   <Row gutter={[16, 16]} className="m-0">
                     <Col xs={24} lg={12}>
                       <Card
@@ -576,13 +660,15 @@ const SLADashboardPage = () => {
                           </Button>
                         }
                       >
-                        <Table
-                          dataSource={slaDefinitions}
-                          columns={slaDefinitionColumns}
-                          rowKey="id"
-                          pagination={{ pageSize: 5, size: 'small' }}
-                          size="small"
-                        />
+                        {renderError('definitions') || (
+                          <Table
+                            dataSource={slaDefinitions}
+                            columns={slaDefinitionColumns}
+                            rowKey="id"
+                            pagination={{ pageSize: 5, size: 'small' }}
+                            size="small"
+                          />
+                        )}
                       </Card>
                     </Col>
                     <Col xs={24} lg={12}>
@@ -596,13 +682,15 @@ const SLADashboardPage = () => {
                           </Button>
                         }
                       >
-                        <Table
-                          dataSource={slaViolations}
-                          columns={slaViolationColumns}
-                          rowKey="id"
-                          pagination={{ pageSize: 5, size: 'small' }}
-                          size="small"
-                        />
+                        {renderError('violations') || (
+                          <Table
+                            dataSource={slaViolations}
+                            columns={slaViolationColumns}
+                            rowKey="id"
+                            pagination={{ pageSize: 5, size: 'small' }}
+                            size="small"
+                          />
+                        )}
                       </Card>
                     </Col>
                   </Row>

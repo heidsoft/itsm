@@ -44,9 +44,10 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
-	Edges        UserEdges `json:"edges"`
-	team_users   *int
-	selectValues sql.SelectValues
+	Edges         UserEdges `json:"edges"`
+	group_members *int
+	team_users    *int
+	selectValues  sql.SelectValues
 }
 
 // UserEdges holds the relations/edges for other nodes in the graph.
@@ -65,9 +66,11 @@ type UserEdges struct {
 	Roles []*Role `json:"roles,omitempty"`
 	// 版本变更日志
 	VersionChangelogs []*ProcessVersionChangelog `json:"version_changelogs,omitempty"`
+	// 用户所属组
+	Groups []*Group `json:"groups,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [7]bool
+	loadedTypes [8]bool
 }
 
 // DepartmentRefOrErr returns the DepartmentRef value or an error if the edge
@@ -135,6 +138,15 @@ func (e UserEdges) VersionChangelogsOrErr() ([]*ProcessVersionChangelog, error) 
 	return nil, &NotLoadedError{edge: "version_changelogs"}
 }
 
+// GroupsOrErr returns the Groups value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) GroupsOrErr() ([]*Group, error) {
+	if e.loadedTypes[7] {
+		return e.Groups, nil
+	}
+	return nil, &NotLoadedError{edge: "groups"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -148,7 +160,9 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
-		case user.ForeignKeys[0]: // team_users
+		case user.ForeignKeys[0]: // group_members
+			values[i] = new(sql.NullInt64)
+		case user.ForeignKeys[1]: // team_users
 			values[i] = new(sql.NullInt64)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -245,6 +259,13 @@ func (u *User) assignValues(columns []string, values []any) error {
 			}
 		case user.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field group_members", value)
+			} else if value.Valid {
+				u.group_members = new(int)
+				*u.group_members = int(value.Int64)
+			}
+		case user.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field team_users", value)
 			} else if value.Valid {
 				u.team_users = new(int)
@@ -296,6 +317,11 @@ func (u *User) QueryRoles() *RoleQuery {
 // QueryVersionChangelogs queries the "version_changelogs" edge of the User entity.
 func (u *User) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
 	return NewUserClient(u.config).QueryVersionChangelogs(u)
+}
+
+// QueryGroups queries the "groups" edge of the User entity.
+func (u *User) QueryGroups() *GroupQuery {
+	return NewUserClient(u.config).QueryGroups(u)
 }
 
 // Update returns a builder for updating this User.

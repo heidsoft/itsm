@@ -2,10 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // 使用环境变量控制输出模式：
-  // - 'export' 用于 GitHub Pages 静态部署
-  // - 'standalone' 用于 Docker/Node.js 部署
-  output: process.env.NEXT_OUTPUT_MODE === 'standalone' ? 'standalone' : 'export',
+  // 使用独立服务器模式（支持动态路由）
+  output: 'standalone',
   
   // 忽略错误
   eslint: {
