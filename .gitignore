@@ -101,6 +101,8 @@ report.xml
 itsm-backend/itsm
 itsm-backend/itsm-backend
 itsm-backend/server
+deploy/itsm-backend
+deploy/frontend/frontend/static/
 
 # Python / Test
 tests/
