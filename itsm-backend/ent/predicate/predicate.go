@@ -69,6 +69,9 @@ type DiscoverySource func(*sql.Selector)
 // EngineerSkill is the predicate function for engineerskill builders.
 type EngineerSkill func(*sql.Selector)
 
+// Group is the predicate function for group builders.
+type Group func(*sql.Selector)
+
 // Incident is the predicate function for incident builders.
 type Incident func(*sql.Selector)
 

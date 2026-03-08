@@ -301,3 +301,25 @@ func (h *Handler) GetCategories(c *gin.Context) {
 
 	common.Success(c, list)
 }
+
+// GetStats handles GET /api/v1/knowledge/stats
+func (h *Handler) GetStats(c *gin.Context) {
+	tenantIDVal, ok := c.Get("tenant_id")
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Tenant ID not found")
+		return
+	}
+	tenantID, ok := tenantIDVal.(int)
+	if !ok {
+		common.Fail(c, http.StatusBadRequest, "Invalid tenant ID")
+		return
+	}
+
+	stats, err := h.svc.GetStats(c.Request.Context(), tenantID)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, stats)
+}

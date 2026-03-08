@@ -50,3 +50,19 @@ type KnowledgeArticleListResponse struct {
 	Page     int                        `json:"page"`
 	Size     int                        `json:"size"`
 }
+
+// KnowledgeStatsResponse 知识库统计响应
+type KnowledgeStatsResponse struct {
+	Total      int      `json:"total"`               // 总文章数
+	Published  int      `json:"published"`           // 已发布文章数
+	Draft      int      `json:"draft"`               // 草稿数
+	Views      int64    `json:"views"`               // 总浏览次数
+	Rating     float64  `json:"rating"`              // 平均评分 (基于点赞数)
+	Categories []CategoryStats `json:"categories"` // 按分类统计
+}
+
+// CategoryStats 分类统计
+type CategoryStats struct {
+	Name  string `json:"name"`  // 分类名称
+	Count int    `json:"count"` // 文章数量
+}

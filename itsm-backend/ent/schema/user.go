@@ -78,5 +78,7 @@ func (User) Edges() []ent.Edge {
 			Comment("用户角色"),
 		edge.To("version_changelogs", ProcessVersionChangelog.Type).
 			Comment("版本变更日志"),
+		edge.To("groups", Group.Type).
+			Comment("用户所属组"),
 	}
 }

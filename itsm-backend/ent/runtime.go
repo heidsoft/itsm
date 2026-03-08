@@ -24,6 +24,7 @@ import (
 	"itsm-backend/ent/discoveryresult"
 	"itsm-backend/ent/discoverysource"
 	"itsm-backend/ent/engineerskill"
+	"itsm-backend/ent/group"
 	"itsm-backend/ent/incident"
 	"itsm-backend/ent/incidentalert"
 	"itsm-backend/ent/incidentescalationrule"
@@ -771,6 +772,26 @@ func init() {
 	engineerskill.DefaultUpdatedAt = engineerskillDescUpdatedAt.Default.(func() time.Time)
 	// engineerskill.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	engineerskill.UpdateDefaultUpdatedAt = engineerskillDescUpdatedAt.UpdateDefault.(func() time.Time)
+	groupFields := schema.Group{}.Fields()
+	_ = groupFields
+	// groupDescName is the schema descriptor for name field.
+	groupDescName := groupFields[0].Descriptor()
+	// group.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	group.NameValidator = groupDescName.Validators[0].(func(string) error)
+	// groupDescTenantID is the schema descriptor for tenant_id field.
+	groupDescTenantID := groupFields[2].Descriptor()
+	// group.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	group.TenantIDValidator = groupDescTenantID.Validators[0].(func(int) error)
+	// groupDescCreatedAt is the schema descriptor for created_at field.
+	groupDescCreatedAt := groupFields[3].Descriptor()
+	// group.DefaultCreatedAt holds the default value on creation for the created_at field.
+	group.DefaultCreatedAt = groupDescCreatedAt.Default.(func() time.Time)
+	// groupDescUpdatedAt is the schema descriptor for updated_at field.
+	groupDescUpdatedAt := groupFields[4].Descriptor()
+	// group.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	group.DefaultUpdatedAt = groupDescUpdatedAt.Default.(func() time.Time)
+	// group.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	group.UpdateDefaultUpdatedAt = groupDescUpdatedAt.UpdateDefault.(func() time.Time)
 	incidentFields := schema.Incident{}.Fields()
 	_ = incidentFields
 	// incidentDescTitle is the schema descriptor for title field.

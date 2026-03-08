@@ -138,6 +138,58 @@ func (h *Handler) CreateCI(c *gin.Context) {
 	common.Success(c, toCIDTO(res))
 }
 
+// CreateCIItem handles POST /api/v1/cmdb/items
+func (h *Handler) CreateCIItem(c *gin.Context) {
+	var req dto.CreateCIRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		common.Fail(c, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	ci := &ConfigurationItem{
+		Name:               req.Name,
+		CITypeID:           req.CITypeID,
+		Description:        req.Description,
+		Status:             req.Status,
+		TenantID:           tenantID,
+		Environment:        req.Environment,
+		Criticality:        req.Criticality,
+		AssetTag:           req.AssetTag,
+		SerialNumber:       req.SerialNumber,
+		Model:              req.Model,
+		Vendor:             req.Vendor,
+		Location:           req.Location,
+		AssignedTo:         req.AssignedTo,
+		OwnedBy:            req.OwnedBy,
+		DiscoverySource:    req.DiscoverySource,
+		Source:             req.Source,
+		CloudProvider:      req.CloudProvider,
+		CloudAccountID:     req.CloudAccountID,
+		CloudRegion:        req.CloudRegion,
+		CloudZone:          req.CloudZone,
+		CloudResourceID:    req.CloudResourceID,
+		CloudResourceType:  req.CloudResourceType,
+		CloudMetadata:      req.CloudMetadata,
+		CloudTags:          req.CloudTags,
+		CloudMetrics:       req.CloudMetrics,
+		CloudSyncTime:      req.CloudSyncTime,
+		CloudSyncStatus:    req.CloudSyncStatus,
+		CloudResourceRefID: req.CloudResourceRefID,
+		Attributes:         req.Attributes,
+	}
+
+	res, err := h.svc.CreateCI(c.Request.Context(), ci)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, toCIDTO(res))
+}
+
 // GetCI handles GET /api/v1/cmdb/cis/:id
 func (h *Handler) GetCI(c *gin.Context) {
 	idStr := c.Param("id")

@@ -3,6 +3,7 @@ package sla
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"itsm-backend/common"
 	"itsm-backend/dto"
@@ -445,4 +446,39 @@ func (h *Handler) GetSLAStats(c *gin.Context) {
 	}
 
 	common.Success(c, stats)
+}
+
+// GetSLAComplianceReport handles GET /api/v1/sla/compliance-report
+func (h *Handler) GetSLAComplianceReport(c *gin.Context) {
+	tenantIDVal, _ := c.Get("tenant_id")
+	tenantID := tenantIDVal.(int)
+
+	// Parse query parameters
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+
+	if startDateStr == "" || endDateStr == "" {
+		common.Fail(c, http.StatusBadRequest, "start_date and end_date are required")
+		return
+	}
+
+	// Parse ISO 8601 timestamps
+	startDate, err := time.Parse(time.RFC3339, startDateStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "invalid start_date format, use ISO 8601 (e.g., 2024-01-01T00:00:00Z)")
+		return
+	}
+	endDate, err := time.Parse(time.RFC3339, endDateStr)
+	if err != nil {
+		common.Fail(c, http.StatusBadRequest, "invalid end_date format, use ISO 8601 (e.g., 2024-01-31T23:59:59Z)")
+		return
+	}
+
+	report, err := h.svc.GetComplianceReport(c.Request.Context(), tenantID, startDate, endDate)
+	if err != nil {
+		common.Fail(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	common.Success(c, report)
 }

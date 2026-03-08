@@ -151,11 +151,35 @@ export class SLAApi {
   }
 
   // 获取SLA合规报告
+  // 注意：后端暂无 /api/v1/sla/compliance-report 端点，使用 monitoring 数据转换
   static async getSLAComplianceReport(params: {
     start_date: string;
     end_date: string;
   }): Promise<SLAComplianceReport> {
-    return httpClient.get('/api/v1/sla/compliance-report', params);
+    // 使用监控端点获取汇总数据
+    const monitoring = await httpClient.post('/api/v1/sla/monitoring', {
+      start_time: params.start_date,
+      end_time: params.end_date,
+    });
+
+    // 转换为合规报告格式
+    const total_tickets = monitoring.total_tickets || 0;
+    const violated_tickets = monitoring.violated_tickets || 0;
+    const compliant_tickets = total_tickets - violated_tickets;
+    const compliance_rate = total_tickets > 0 ? (compliant_tickets / total_tickets) * 100 : 0;
+
+    return {
+      total_tickets,
+      met_sla: compliant_tickets,
+      violated_sla: violated_tickets,
+      compliance_rate,
+      avg_response_time: monitoring.average_response_time || 0,
+      avg_resolution_time: monitoring.average_resolution_time || 0,
+      report_period: {
+        start_date: params.start_date,
+        end_date: params.end_date,
+      },
+    };
   }
 
   // 检查工单SLA违规

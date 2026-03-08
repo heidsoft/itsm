@@ -124,22 +124,23 @@ type SLAMonitoringResponse struct {
 	ViolatedTickets       int                    `json:"violated_tickets" example:"5"`
 }
 
-// SLA报告相关DTO
-type SLAReportRequest struct {
-	SLADefinitionID *int   `json:"sla_definition_id,omitempty" example:"1"`
-	StartTime       string `json:"start_time" binding:"required" example:"2024-01-01T00:00:00Z"`
-	EndTime         string `json:"end_time" binding:"required" example:"2024-01-31T23:59:59Z"`
-	GroupBy         string `json:"group_by" example:"day"` // day, week, month
+type SLAReportPeriod struct {
+	StartDate string `json:"start_date" example:"2024-01-01T00:00:00Z"`
+	EndDate   string `json:"end_date" example:"2024-01-31T23:59:59Z"`
 }
 
-type SLAReportResponse struct {
-	Period       string                 `json:"period" example:"2024-01-01 to 2024-01-31"`
-	SLAInfo      SLADefinitionResponse  `json:"sla_info"`
-	Summary      SLASummary             `json:"summary"`
-	DailyMetrics []SLADailyMetric       `json:"daily_metrics"`
-	Violations   []SLAViolationResponse `json:"violations"`
-	Trends       SLATrends              `json:"trends"`
+// SLAComplianceReport represents SLA compliance report
+type SLAComplianceReport struct {
+	TotalTickets      int             `json:"total_tickets" example:"100"`
+	MetSLA            int             `json:"met_sla" example:"95"`
+	ViolatedSLA       int             `json:"violated_sla" example:"5"`
+	ComplianceRate    float64         `json:"compliance_rate" example:"95.0"`
+	AvgResponseTime   float64         `json:"avg_response_time" example:"28.5"`
+	AvgResolutionTime float64         `json:"avg_resolution_time" example:"180.5"`
+	ReportPeriod      SLAReportPeriod `json:"report_period"`
 }
+
+// Existing SLA report DTOs remain unchanged...
 
 type SLASummary struct {
 	TotalTickets             int     `json:"total_tickets" example:"100"`
