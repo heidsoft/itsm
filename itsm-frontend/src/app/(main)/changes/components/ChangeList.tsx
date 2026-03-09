@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Table, Button, Space, Badge } from 'antd';
+import type { TablePaginationConfig } from 'antd/es/table';
 import { Eye, Edit, MoreHorizontal } from 'lucide-react';
 import { Change } from '@/lib/services/change-service';
 
@@ -103,7 +104,7 @@ interface ChangeListProps {
   };
   selectedRowKeys: React.Key[];
   onSelectedRowKeysChange: (keys: React.Key[]) => void;
-  onTableChange: (pagination: { current: number; pageSize: number }) => void;
+  onTableChange: (pagination: TablePaginationConfig) => void;
 }
 
 export const ChangeList: React.FC<ChangeListProps> = ({

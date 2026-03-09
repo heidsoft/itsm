@@ -163,7 +163,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	var viewResult []ViewSum
 	err = r.client.KnowledgeArticle.Query().
 		Where(knowledgearticle.TenantID(tenantID)).
-		Aggregate(ent.Sum(knowledgearticle.FieldViewCount)).
+		Aggregate(ent.As(ent.Sum(knowledgearticle.FieldViewCount), "total_views")).
 		Scan(ctx, &viewResult)
 	if err != nil {
 		return nil, err
@@ -180,7 +180,7 @@ func (r *EntRepository) GetStats(ctx context.Context, tenantID int) (*Stats, err
 	var likeResult []LikeSum
 	err = r.client.KnowledgeArticle.Query().
 		Where(knowledgearticle.TenantID(tenantID)).
-		Aggregate(ent.Sum(knowledgearticle.FieldLikeCount)).
+		Aggregate(ent.As(ent.Sum(knowledgearticle.FieldLikeCount), "total_likes")).
 		Scan(ctx, &likeResult)
 	if err != nil {
 		return nil, err

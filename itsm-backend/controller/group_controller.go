@@ -42,17 +42,14 @@ func (gc *GroupController) CreateGroup(c *gin.Context) {
 		return
 	}
 
-	// 验证租户ID（防止前端传入的租户ID与当前用户不符）
+	// 获取当前用户租户ID并自动填充
 	tenantID, err := middleware.GetTenantID(c)
 	if err != nil {
 		common.Fail(c, common.InternalErrorCode, "获取租户ID失败")
 		return
 	}
-	// 确保租户只能为自己的租户创建组
-	if req.TenantID != tenantID {
-		common.Fail(c, common.ForbiddenCode, "无权为该租户创建组")
-		return
-	}
+	// 自动填充租户ID，避免前端传入
+	req.TenantID = tenantID
 
 	group, err := gc.groupService.CreateGroup(c.Request.Context(), &req)
 	if err != nil {

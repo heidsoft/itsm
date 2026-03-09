@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, Input, Button, Tag, Pagination, Spin, Empty, Select, Alert } from 'antd';
+import { Card, Input, Button, Tag, Pagination, Spin, Empty, Select, Alert, message } from 'antd';
 import {
   FileText,
   RefreshCw,
@@ -48,7 +48,6 @@ interface ServiceRequest {
 }
 
 import { ServiceCatalogApi } from '@/lib/api/service-catalog-api';
-import { message } from 'antd/es/message';
 
 const RequestStatusBadge = ({ status }: { status: string }) => {
   const statusConfig = {

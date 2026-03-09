@@ -83,7 +83,7 @@ type CreateCIRequest struct {
 	Name               string                 `json:"name" binding:"required,max=255"`
 	CITypeID           int                    `json:"ci_type_id" binding:"required"`
 	Description        string                 `json:"description"`
-	Status             string                 `json:"status" binding:"required,oneof=active inactive maintenance"`
+	Status             string                 `json:"status" binding:"required"`
 	Environment        string                 `json:"environment,omitempty"`
 	Criticality        string                 `json:"criticality,omitempty"`
 	AssetTag           string                 `json:"asset_tag,omitempty"`
@@ -109,6 +109,8 @@ type CreateCIRequest struct {
 	CloudSyncStatus    string                 `json:"cloud_sync_status,omitempty"`
 	CloudResourceRefID int                    `json:"cloud_resource_ref_id,omitempty"`
 	TenantID           int                    `json:"tenant_id,omitempty"`
+	// Type is optional; will be set from CIType if not provided
+	Type string `json:"type,omitempty"`
 }
 
 // CIResponse 配置项响应

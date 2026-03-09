@@ -63,7 +63,7 @@ const ArticleList: React.FC<ArticleListProps> = ({ showHeader = true }) => {
     try {
       const res = await KnowledgeBaseApi.getCategories();
       // Map KnowledgeCategory objects to strings for backward compatibility
-      const categoryNames = (res || []).map((cat: unknown) => cat.name || cat.id || String(cat));
+      const categoryNames = (res || []).map((cat: any) => cat.name || cat.id || String(cat));
       setCategories(categoryNames);
     } catch (e) {
       // console.error(e);
