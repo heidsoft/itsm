@@ -278,7 +278,9 @@ func (uc *UserController) ChangeUserStatus(c *gin.Context) {
 		return
 	}
 
-	err = uc.userService.ChangeUserStatus(c.Request.Context(), id, req.Active)
+	// 获取当前登录用户ID
+	currentUserID := c.GetInt("user_id")
+	err = uc.userService.ChangeUserStatus(c.Request.Context(), id, req.Active, currentUserID)
 	if err != nil {
 		uc.logger.Errorf("更改用户状态失败: %v", err)
 		if strings.Contains(err.Error(), "用户不存在") {
