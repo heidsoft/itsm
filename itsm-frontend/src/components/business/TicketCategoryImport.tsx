@@ -15,6 +15,7 @@ import {
   Tag,
   Tooltip,
 } from 'antd';
+import type { UploadFile, UploadChangeParam } from 'antd/es/upload';
 import {
   Download,
   FileSpreadsheet,
@@ -207,7 +208,7 @@ const TicketCategoryImport: React.FC<TicketCategoryImportProps> = ({
   const uploadProps = {
     fileList,
     beforeUpload: handleUpload,
-    onChange: ({ fileList }: unknown) => setFileList(fileList),
+    onChange: (info: UploadChangeParam<UploadFile>) => setFileList(info.fileList),
     accept: '.xlsx,.xls,.csv',
     multiple: false,
   };

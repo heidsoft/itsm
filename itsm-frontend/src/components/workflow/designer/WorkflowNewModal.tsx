@@ -63,7 +63,7 @@ export default function WorkflowNewModal({
     onSelectTemplate(newWorkflow);
   };
 
-  const handleSubmit = (values: unknown) => {
+  const handleSubmit = (values: any) => {
     onCreateCustom(values);
   };
 

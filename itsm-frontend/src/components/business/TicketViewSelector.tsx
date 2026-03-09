@@ -71,7 +71,7 @@ export const TicketViewSelector: React.FC<TicketViewSelectorProps> = ({
     } catch (error: unknown) {
       console.error('Failed to load views:', error);
       // 检查错误信息，如果是"无效的工单ID"，说明可能是API参数问题
-      const errorMessage = error?.message || error?.toString() || '';
+      const errorMessage = error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('无效的工单ID') || errorMessage.includes('invalid ticket id')) {
         // 这个错误不应该出现在 listViews 中，可能是后端路由配置问题
         console.warn('工单视图API返回了意外的错误，可能是后端路由配置问题');

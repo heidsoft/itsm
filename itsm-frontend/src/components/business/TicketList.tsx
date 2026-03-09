@@ -34,6 +34,7 @@ import {
   ticketService,
   type Ticket,
   type TicketFilterParams,
+  type ListTicketsParams,
 } from '../../lib/services/ticket-service';
 import { useAuthStore } from '@/lib/store/auth-store';
 import type { TicketListResponse } from '@/lib/api/api-config';
@@ -66,13 +67,13 @@ export const TicketList: React.FC<TicketListProps> = ({ onTicketSelect, onRefres
     setLoading(true);
     try {
       // 构建符合ListTicketsParams的参数
-      const params: unknown = {
+      const params: ListTicketsParams = {
         page: currentPage,
         page_size: pageSize,
         keyword: searchText || undefined,
         status: filters.status as any,
         priority: filters.priority as any,
-        type: filters.type,
+        type: filters.type as any,
         category: filters.category,
         assignee_id: filters.assignee_id,
         requester_id: filters.requester_id,

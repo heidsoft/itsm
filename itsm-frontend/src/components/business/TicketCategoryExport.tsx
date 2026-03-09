@@ -50,6 +50,7 @@ interface ExportOptions {
 }
 
 interface ExportItem {
+  [key: string]: any;
   name?: string;
   code?: string;
   description?: string;

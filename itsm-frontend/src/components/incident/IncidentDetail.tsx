@@ -76,7 +76,7 @@ const IncidentDetail: React.FC = () => {
     setEscalateModalVisible(true);
   };
 
-  const handleEscalateSubmit = async (values: unknown) => {
+  const handleEscalateSubmit = async (values: any) => {
     if (!data) return;
     setEscalating(true);
     try {

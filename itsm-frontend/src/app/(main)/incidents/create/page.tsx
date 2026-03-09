@@ -23,6 +23,8 @@ export default function CreateIncidentPage() {
         title: values.title,
         description: values.description,
         priority: values.priority,
+        source: values.source || 'manual', // Add default source
+        type: values.type || 'incident', // Add default type
         category: values.category,
         impact: values.impact,
         urgency: values.urgency,
@@ -70,6 +72,8 @@ export default function CreateIncidentPage() {
                 priority: 'medium',
                 impact: 'medium',
                 urgency: 'medium',
+                source: 'manual',
+                type: 'incident',
               }}
             >
               <Tabs
@@ -117,6 +121,37 @@ export default function CreateIncidentPage() {
                           </Col>
                           <Col span={8}>
                             <Form.Item
+                              name="source"
+                              label="来源"
+                              rules={[{ required: true }]}
+                            >
+                              <Select>
+                                <Option value="manual">手动创建</Option>
+                                <Option value="monitoring">监控告警</Option>
+                                <Option value="email">邮件</Option>
+                                <Option value="phone">电话</Option>
+                                <Option value="portal">门户网站</Option>
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                          <Col span={8}>
+                            <Form.Item
+                              name="type"
+                              label="类型"
+                              rules={[{ required: true }]}
+                            >
+                              <Select>
+                                <Option value="incident">事件</Option>
+                                <Option value="service_request">服务请求</Option>
+                                <Option value="problem">问题</Option>
+                                <Option value="change">变更</Option>
+                              </Select>
+                            </Form.Item>
+                          </Col>
+                        </Row>
+                        <Row gutter={16}>
+                          <Col span={12}>
+                            <Form.Item
                               name="category"
                               label="事件分类"
                             >
@@ -129,7 +164,7 @@ export default function CreateIncidentPage() {
                               </Select>
                             </Form.Item>
                           </Col>
-                          <Col span={8}>
+                          <Col span={12}>
                             <Form.Item
                               name="assigned_to"
                               label="指派给"
