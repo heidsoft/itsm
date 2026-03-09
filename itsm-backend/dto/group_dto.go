@@ -8,7 +8,7 @@ import (
 type CreateGroupRequest struct {
 	Name        string `json:"name" binding:"required,min=1,max=100"`
 	Description string `json:"description" binding:"omitempty,max=500"`
-	TenantID    int    `json:"tenant_id" binding:"required,min=1"`
+	TenantID    int    `json:"tenant_id" binding:"omitempty,min=1"`
 }
 
 // UpdateGroupRequest 更新组请求

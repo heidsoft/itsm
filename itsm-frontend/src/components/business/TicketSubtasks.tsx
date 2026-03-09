@@ -199,7 +199,7 @@ export const TicketSubtasks: React.FC<TicketSubtasksProps> = ({
       dataIndex: 'assignee',
       key: 'assignee',
       width: 120,
-      render: (assignee: unknown) => assignee?.name || '未分配',
+      render: (assignee: any) => assignee?.name || '未分配',
     },
     {
       title: '截止时间',

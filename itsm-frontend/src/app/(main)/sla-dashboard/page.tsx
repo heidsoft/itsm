@@ -543,7 +543,7 @@ const SLADashboardPage = () => {
                         }
                       >
                         {errors.metrics ? (
-                          <Alert message={errors.metrics} type="warning" size="small" />
+                          <Alert message={errors.metrics} type="warning" />
                         ) : slaMetrics ? (
                           <div>
                             <Row gutter={16} className="mb-4">

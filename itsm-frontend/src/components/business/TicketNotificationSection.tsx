@@ -119,7 +119,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
         onNotificationSent(tempNotification);
       }
     } catch (error: unknown) {
-      antMessage.error(error.message || '通知发送失败');
+      antMessage.error(error instanceof Error ? error.message : '通知发送失败');
     }
   };
 
@@ -130,7 +130,7 @@ export const TicketNotificationSection: React.FC<TicketNotificationSectionProps>
       antMessage.success('已标记为已读');
       await loadNotifications();
     } catch (error: unknown) {
-      antMessage.error(error.message || '标记失败');
+      antMessage.error(error instanceof Error ? error.message : '标记失败');
     }
   };
 

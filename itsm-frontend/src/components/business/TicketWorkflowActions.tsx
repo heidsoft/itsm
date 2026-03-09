@@ -109,7 +109,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
       setModalVisible(false);
       onRefresh();
     } catch (error: unknown) {
-      message.error(error.message || '操作失败');
+      message.error(error instanceof Error ? error.message : '操作失败');
     } finally {
       setLoading(false);
     }
@@ -128,7 +128,7 @@ export const TicketWorkflowActions: React.FC<TicketWorkflowActionsProps> = ({
           message.success('操作成功');
           onRefresh();
         } catch (error: unknown) {
-          message.error(error.message || '操作失败');
+          message.error(error instanceof Error ? error.message : '操作失败');
         }
       },
     });

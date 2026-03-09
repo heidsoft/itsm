@@ -19,6 +19,7 @@ export interface AnalyticsDataPoint {
   count?: number;
   avg_time?: number;
   metadata?: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 export interface AnalyticsSummary {

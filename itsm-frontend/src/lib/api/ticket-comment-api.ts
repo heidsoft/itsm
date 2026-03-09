@@ -51,19 +51,22 @@ export class TicketCommentApi {
   static async getComments(ticketId: number): Promise<ListTicketCommentsResponse> {
     const response = await httpClient.get(`/api/v1/tickets/${ticketId}/comments`);
     // Type guard to extract data from possible wrapped response
-    const data = ((response as { data?: unknown })?.data ?? response) as {
-      comments?: TicketComment[];
-      total?: number;
-    } | TicketComment[];
-    const comments = Array.isArray(data?.comments)
-      ? data.comments
-      : Array.isArray(data)
-        ? data
-        : [];
-    return {
-      comments,
-      total: typeof data?.total === 'number' ? data.total : comments.length,
-    };
+    const rawData = ((response as { data?: unknown })?.data ?? response) as
+      | { comments?: TicketComment[]; total?: number }
+      | TicketComment[];
+    
+    let comments: TicketComment[] = [];
+    let total: number = 0;
+    
+    if (Array.isArray(rawData)) {
+      comments = rawData;
+      total = rawData.length;
+    } else {
+      comments = Array.isArray(rawData?.comments) ? rawData.comments : [];
+      total = typeof rawData?.total === 'number' ? rawData.total : comments.length;
+    }
+    
+    return { comments, total };
   }
 
   /**

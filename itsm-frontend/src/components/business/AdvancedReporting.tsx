@@ -114,7 +114,7 @@ interface DashboardWidget {
   id: string;
   title: string;
   type: 'chart' | 'metric' | 'table';
-  config: unknown;
+  config: any; // Changed from unknown to any for chartType access
   position: { x: number; y: number; w: number; h: number };
 }
 
@@ -734,7 +734,7 @@ const AdvancedReporting: React.FC = () => {
                         <div className="text-center text-gray-500">
                           <BarChart3 className="w-12 h-12 mx-auto mb-2" />
                           <div>图表组件</div>
-                          <div className="text-xs">{widget.config.chartType}</div>
+                          <div className="text-xs">{(widget.config as any).chartType}</div>
                         </div>
                       )}
                       {widget.type === 'metric' && (
@@ -912,7 +912,7 @@ const AdvancedReporting: React.FC = () => {
                   key: col,
                 }))}
                 dataSource={reportData.rows.map((row, index) => {
-                  const obj: unknown = { key: index };
+                  const obj: Record<string, any> = { key: index };
                   row.forEach((cell, cellIndex) => {
                     obj[reportData.columns[cellIndex]] = cell;
                   });

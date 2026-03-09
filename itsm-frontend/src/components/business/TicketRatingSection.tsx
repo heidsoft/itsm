@@ -100,7 +100,7 @@ export const TicketRatingSection: React.FC<TicketRatingSectionProps> = ({
         onRatingSubmitted(newRating);
       }
     } catch (error: unknown) {
-      antMessage.error(error.message || '提交评分失败');
+      antMessage.error(error instanceof Error ? error.message : '提交评分失败');
     } finally {
       setSubmitting(false);
     }
