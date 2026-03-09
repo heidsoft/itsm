@@ -536,31 +536,35 @@ func TestUserService_ChangeUserStatus(t *testing.T) {
 		name          string
 		userID        int
 		active        bool
+		currentUserID int
 		expectedError bool
 	}{
 		{
 			name:          "禁用用户",
 			userID:        testUser.ID,
 			active:        false,
+			currentUserID: 0, // 使用不同的用户ID
 			expectedError: false,
 		},
 		{
 			name:          "启用用户",
 			userID:        testUser.ID,
 			active:        true,
+			currentUserID: 0,
 			expectedError: false,
 		},
 		{
 			name:          "用户不存在",
 			userID:        99999,
 			active:        false,
+			currentUserID: 0,
 			expectedError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := userService.ChangeUserStatus(ctx, tt.userID, tt.active)
+			err := userService.ChangeUserStatus(ctx, tt.userID, tt.active, tt.currentUserID)
 
 			if tt.expectedError {
 				assert.Error(t, err)

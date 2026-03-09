@@ -274,13 +274,19 @@ func (s *UserService) DeleteUser(ctx context.Context, id int) error {
 }
 
 // ChangeUserStatus 更改用户状态
-func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool) error {
-	s.logger.Infof("更改用户状态: ID=%d, active=%t", id, active)
+// currentUserID 是当前操作的用户ID，用于防止用户停用自己
+func (s *UserService) ChangeUserStatus(ctx context.Context, id int, active bool, currentUserID int) error {
+	s.logger.Infof("更改用户状态: ID=%d, active=%t, currentUserID=%d", id, active, currentUserID)
 
 	// 检查用户是否存在
 	_, err := s.GetUserByID(ctx, id)
 	if err != nil {
 		return err
+	}
+
+	// 防止用户停用自己
+	if id == currentUserID && !active {
+		return fmt.Errorf("不能停用当前登录用户")
 	}
 
 	err = s.client.User.UpdateOneID(id).
