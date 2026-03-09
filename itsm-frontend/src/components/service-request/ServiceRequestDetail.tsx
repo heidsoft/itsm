@@ -97,7 +97,7 @@ const ServiceRequestDetail: React.FC = () => {
       loadDetail(); // 刷新数据
     } catch (error: unknown) {
       // console.error(error);
-      message.error(error.message || '操作失败');
+      message.error(error instanceof Error ? error.message : '操作失败');
     } finally {
       setSubmitting(false);
     }

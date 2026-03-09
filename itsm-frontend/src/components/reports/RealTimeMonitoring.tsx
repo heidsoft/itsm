@@ -64,7 +64,7 @@ interface RecentActivity {
   description: string;
   user?: string;
   timestamp: Date;
-  details?: unknown;
+  details?: Record<string, any>; // Changed from unknown to any to fix TS error
 }
 
 const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
@@ -479,9 +479,9 @@ const RealTimeMonitoring: React.FC<RealTimeMonitoringProps> = ({
                         操作者: {activity.user}
                       </Text>
                     )}
-                    {activity.details && (
+                    {activity.details && typeof activity.details === 'object' && (
                       <div className="text-xs text-gray-500 mt-1">
-                        {Object.entries(activity.details).map(([key, value]) => (
+                        {Object.entries(activity.details as Record<string, any>).map(([key, value]) => (
                           <div key={key}>
                             {key}: {JSON.stringify(value)}
                           </div>

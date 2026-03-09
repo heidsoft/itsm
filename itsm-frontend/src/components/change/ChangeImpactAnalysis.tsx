@@ -147,7 +147,7 @@ const ChangeImpactAnalysis: React.FC<ChangeImpactAnalysisProps> = ({
   };
 
   // 计算影响分数
-  const calculateImpactScore = (values: unknown) => {
+  const calculateImpactScore = (values: any) => {
     let score = 0;
 
     // 业务影响分数

@@ -8,8 +8,8 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "start": "NEXT_OUTPUT_MODE=standalone next start",
+    "build": "NEXT_DISABLE_TURBOPACK=1 npx next build && cp -r .next/static .next/standalone/.next/ 2>/dev/null || true",
+    "start": "node .next/standalone/server.js",
     "lint": "next lint --fix",
     "lint:check": "next lint",
     "type-check": "tsc --noEmit",
@@ -87,7 +87,7 @@
     "lint-staged": "^16.3.1",
     "prettier": "^3.8.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "5.9.3"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

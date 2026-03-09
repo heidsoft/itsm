@@ -321,7 +321,8 @@ export default function DashboardPage() {
                           </Col>
                           <Col xs={24} lg={12}>
                             {(() => {
-                              const slaOverall = data?.kpiMetrics?.find(m => m.id === 'sla-compliance')?.value;
+                              const slaMetric = data?.kpiMetrics?.find(m => m.id === 'sla-compliance');
+                              const slaOverall = slaMetric?.value !== undefined ? Number(slaMetric.value) : undefined;
                               return <SLAComplianceChart data={data?.slaData || []} overallValue={slaOverall} />;
                             })()}
                           </Col>
@@ -375,7 +376,8 @@ export default function DashboardPage() {
                         <ChartsSection loading={loading}>
                           <Col xs={24} lg={12}>
                             {(() => {
-                              const slaOverall = data?.kpiMetrics?.find(m => m.id === 'sla-compliance')?.value;
+                              const slaMetric = data?.kpiMetrics?.find(m => m.id === 'sla-compliance');
+                              const slaOverall = slaMetric?.value !== undefined ? Number(slaMetric.value) : undefined;
                               return <SLAComplianceChart data={data?.slaData || []} overallValue={slaOverall} />;
                             })()}
                           </Col>

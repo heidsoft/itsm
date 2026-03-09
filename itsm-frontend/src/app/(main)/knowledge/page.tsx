@@ -63,12 +63,15 @@ export default function KnowledgePage() {
 
       // Map backend stats to frontend state
       setStats({
-        total: kbStats.total || 0,
-        published: kbStats.published || 0,
-        draft: kbStats.draft || 0,
-        views: Number(kbStats.views) || 0,
-        rating: kbStats.rating || 0,
-        categories: kbStats.categories || [],
+        total: kbStats.totalArticles || 0,
+        published: kbStats.publishedArticles || 0,
+        draft: kbStats.draftArticles || 0,
+        views: kbStats.totalViews || 0,
+        rating: 0, // Rating not directly available in stats, could be calculated from topArticles
+        categories: Object.entries(kbStats.articlesByCategory || {}).map(([name, count]) => ({
+          name,
+          count,
+        })),
       });
 
       // Map articles - backend fields: id (int), title, views (int), author (string), published_at, category (string)

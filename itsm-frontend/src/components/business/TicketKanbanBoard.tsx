@@ -37,6 +37,8 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragStartEvent,
+  DragEndEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -294,12 +296,12 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
   }, [filteredTickets]);
 
   // 拖拽开始
-  const handleDragStart = (event: unknown) => {
-    setActiveId(event.active.id);
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId((event.active.id as any).toString());
   };
 
   // 拖拽结束
-  const handleDragEnd = async (event: unknown) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
 
@@ -307,7 +309,7 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
       return;
     }
 
-    const ticketId = Number(active.id);
+    const ticketId = Number((active.id as any).toString());
 
     // 获取源工单状态
     const sourceTicket = tickets.find(t => t.id === ticketId);
@@ -316,14 +318,17 @@ export const TicketKanbanBoard: React.FC<TicketKanbanBoardProps> = ({
     const sourceStatus = sourceTicket.status || 'open';
 
     // 获取目标状态（从列ID或数据中获取）
-    let targetStatus = over.id;
+    let targetStatus: string;
     if (over.data?.current?.status) {
       targetStatus = over.data.current.status;
     } else {
       // 从列配置中查找
-      const targetColumn = statusColumns.find(col => col.id === over.id);
+      const targetColumn = statusColumns.find(col => col.id === over.id.toString());
       if (targetColumn) {
         targetStatus = targetColumn.status;
+      } else {
+        // Fallback to over.id converted to string
+        targetStatus = over.id.toString();
       }
     }
 
