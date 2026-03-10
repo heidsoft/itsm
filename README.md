@@ -296,6 +296,9 @@ make test-coverage   # 生成覆盖率报告
 # 代码质量
 make lint            # 代码检查
 make fmt             # 代码格式化
+
+# 自动化测试 (需先启动前后端服务)
+python auto_test.py  # 运行页面功能测试
 ```
 
 ---
@@ -326,6 +329,23 @@ git push origin feature/your-feature
 - **TypeScript**: 严格模式，ESLint + Prettier
 - **提交信息**: 使用 [Conventional Commits](https://www.conventionalcommits.org/) 格式
 - **测试**: 新增功能需配套单元测试
+
+### 自动化测试
+
+项目提供自动化测试脚本，用于验证系统功能：
+
+```bash
+# 安装测试依赖
+pip install playwright requests
+
+# 启动前后端服务后运行测试
+python auto_test.py
+```
+
+测试脚本会依次验证：
+- 用户登录
+- 15+ 页面的加载（工单、事件、问题、变更、知识库、SLA等）
+- 后端API集成
 
 ---
 
