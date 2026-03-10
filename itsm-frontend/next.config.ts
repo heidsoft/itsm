@@ -4,6 +4,16 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // 使用独立服务器模式
   output: 'standalone',
+
+  // 配置代理以避免跨域问题
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://localhost:8090/api/:path*',
+      },
+    ];
+  },
   
   // 忽略错误
   eslint: {
