@@ -82,8 +82,9 @@
   background-color: rgba(255, 77, 79, 0.1) !important;
 }
 
-/* Select 下拉框样式修复 */
-.ant-select-dropdown {
+/* Select 下拉框样式修复 - 仅在暗色主题下生效 */
+.dark .ant-select-dropdown,
+:root:not(.light) .ant-select-dropdown {
   background-color: #333 !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -91,34 +92,47 @@
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
 }
 
-.ant-select-item,
-.ant-select-item-option-disabled,
-.ant-select-item-option-active,
-.ant-select-item-option-selected {
+.dark .ant-select-item,
+:root:not(.light) .ant-select-item,
+.dark .ant-select-item-option-disabled,
+:root:not(.light) .ant-select-item-option-disabled,
+.dark .ant-select-item-option-active,
+:root:not(.light) .ant-select-item-option-active,
+.dark .ant-select-item-option-selected,
+:root:not(.light) .ant-select-item-option-selected {
   color: #fff !important;
   background-color: transparent !important;
 }
 
-.ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+.dark .ant-select-item-option-active:not(.ant-select-item-option-disabled),
+:root:not(.light) .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.ant-select-item-option-selected {
+.dark .ant-select-item-option-selected,
+:root:not(.light) .ant-select-item-option-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
-.ant-select-selection-item,
-.ant-select-selection-search-input {
+.dark .ant-select-selection-item,
+:root:not(.light) .ant-select-selection-item,
+.dark .ant-select-selection-search-input,
+:root:not(.light) .ant-select-selection-search-input {
   color: #fff !important;
 }
 
-/* DatePicker/TimePicker 下拉面板样式修复 */
-.ant-picker-dropdown,
-.ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
-.ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
-.ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
-.ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight {
+/* DatePicker/TimePicker 下拉面板样式暗色主题下修复 - 仅在生效 */
+.dark .ant-picker-dropdown,
+:root:not(.light) .ant-picker-dropdown,
+.dark .ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
+:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-topLeft,
+.dark .ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
+:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-topRight,
+.dark .ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
+:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomLeft,
+.dark .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight,
+:root:not(.light) .ant-picker-dropdown.ant-picker-dropdown-placement-bottomRight {
   background-color: #333 !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -126,65 +140,81 @@
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05) !important;
 }
 
-.ant-picker-panel {
+.dark .ant-picker-panel,
+:root:not(.light) .ant-picker-panel {
   background-color: #333 !important;
   color: #fff !important;
 }
 
-.ant-picker-header,
-.ant-picker-body,
-.ant-picker-footer {
+.dark .ant-picker-header,
+:root:not(.light) .ant-picker-header,
+.dark .ant-picker-body,
+:root:not(.light) .ant-picker-body,
+.dark .ant-picker-footer,
+:root:not(.light) .ant-picker-footer {
   background-color: transparent !important;
   color: #fff !important;
 }
 
-.ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
-.ant-picker-cell:hover .ant-picker-cell-inner {
+.dark .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
+:root:not(.light) .ant-picker-cell-in-view.ant-picker-cell-today .ant-picker-cell-inner,
+.dark .ant-picker-cell:hover .ant-picker-cell-inner,
+:root:not(.light) .ant-picker-cell:hover .ant-picker-cell-inner {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
-.ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
+.dark .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner,
+:root:not(.light) .ant-picker-cell.ant-picker-cell-in-view.ant-picker-cell-selected .ant-picker-cell-inner {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
-.ant-picker-time-panel-column {
+.dark .ant-picker-time-panel-column,
+:root:not(.light) .ant-picker-time-panel-column {
   background-color: transparent !important;
 }
 
-.ant-picker-time-panel-cell-inner {
+.dark .ant-picker-time-panel-cell-inner,
+:root:not(.light) .ant-picker-time-panel-cell-inner {
   color: #fff !important;
 }
 
-.ant-picker-time-panel-cell-inner:hover {
+.dark .ant-picker-time-panel-cell-inner:hover,
+:root:not(.light) .ant-picker-time-panel-cell-inner:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+.dark .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner,
+:root:not(.light) .ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
-/* ColorPicker 下拉样式修复 */
-.ant-color-dropdown {
+/* ColorPicker 下拉样式修复 - 仅在暗色主题下生效 */
+.dark .ant-color-dropdown,
+:root:not(.light) .ant-color-dropdown {
   background-color: #333 !important;
   border-radius: 4px !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
 }
 
-.ant-color-dropdown-link,
-.ant-color-dropdown-button {
+.dark .ant-color-dropdown-link,
+:root:not(.light) .ant-color-dropdown-link,
+.dark .ant-color-dropdown-button,
+:root:not(.light) .ant-color-dropdown-button {
   color: #fff !important;
 }
 
-.ant-color-dropdown-link:hover {
+.dark .ant-color-dropdown-link:hover,
+:root:not(.light) .ant-color-dropdown-link:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* TreeSelect 下拉样式修复 */
-.ant-select-tree-dropdown {
+/* TreeSelect 下拉样式修复 - 仅在暗色主题下生效 */
+.dark .ant-select-tree-dropdown,
+:root:not(.light) .ant-select-tree-dropdown {
   background-color: #333 !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -192,23 +222,29 @@
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
 }
 
-.ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
-.ant-select-tree-dropdown .ant-select-tree-title {
+.dark .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
+:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper,
+.dark .ant-select-tree-dropdown .ant-select-tree-title,
+:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-title {
   color: #fff !important;
 }
 
-.ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover {
+.dark .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover,
+:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-content-wrapper:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
-.ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title {
+.dark .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
+:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-node-content-wrapper,
+.dark .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title,
+:root:not(.light) .ant-select-tree-dropdown .ant-select-tree-node-selected .ant-select-tree-title {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
-/* Cascader 下拉样式修复 */
-.ant-cascader-dropdown {
+/* Cascader 下拉样式修复 - 仅在暗色主题下生效 */
+.dark .ant-cascader-dropdown,
+:root:not(.light) .ant-cascader-dropdown {
   background-color: #333 !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -216,25 +252,32 @@
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
 }
 
-.ant-cascader-menu-item,
-.ant-cascader-menu-item-active,
-.ant-cascader-menu-item-expand-selected,
-.ant-cascader-menu-item-selected {
+.dark .ant-cascader-menu-item,
+:root:not(.light) .ant-cascader-menu-item,
+.dark .ant-cascader-menu-item-active,
+:root:not(.light) .ant-cascader-menu-item-active,
+.dark .ant-cascader-menu-item-expand-selected,
+:root:not(.light) .ant-cascader-menu-item-expand-selected,
+.dark .ant-cascader-menu-item-selected,
+:root:not(.light) .ant-cascader-menu-item-selected {
   color: #fff !important;
   background-color: transparent !important;
 }
 
-.ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled) {
+.dark .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled),
+:root:not(.light) .ant-cascader-menu-item-active:not(.ant-cascader-menu-item-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-.ant-cascader-menu-item-selected {
+.dark .ant-cascader-menu-item-selected,
+:root:not(.light) .ant-cascader-menu-item-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
-/* Mentions 下拉样式修复 */
-.ant-mentions-dropdown {
+/* Mentions 下拉样式修复 - 仅在暗色主题下生效 */
+.dark .ant-mentions-dropdown,
+:root:not(.light) .ant-mentions-dropdown {
   background-color: #333 !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -242,18 +285,21 @@
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
 }
 
-.ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+.dark .ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled),
+:root:not(.light) .ant-mentions-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
-.ant-mentions-dropdown .ant-select-item-option-selected {
+.dark .ant-mentions-dropdown .ant-select-item-option-selected,
+:root:not(.light) .ant-mentions-dropdown .ant-select-item-option-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
-/* AutoComplete 下拉样式修复 */
-.ant-autocomplete-dropdown {
+/* AutoComplete 下拉样式修复 - 仅在暗色主题下生效 */
+.dark .ant-autocomplete-dropdown,
+:root:not(.light) .ant-autocomplete-dropdown {
   background-color: #333 !important;
   color: #fff !important;
   border-radius: 4px !important;
@@ -261,40 +307,47 @@
   box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08) !important;
 }
 
-.ant-autocomplete-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
+.dark .ant-autocomplete-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled),
+:root:not(.light) .ant-autocomplete-dropdown .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
-.ant-autocomplete-dropdown .ant-select-item-option-selected {
+.dark .ant-autocomplete-dropdown .ant-select-item-option-selected,
+:root:not(.light) .ant-autocomplete-dropdown .ant-select-item-option-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
 
-/* Transfer 左右选择框样式修复 */
-.ant-transfer-dropdown {
+/* Transfer 左右选择框样式修复 - 仅在暗色主题下生效 */
+.dark .ant-transfer-dropdown,
+:root:not(.light) .ant-transfer-dropdown {
   background-color: #333 !important;
   color: #fff !important;
 }
 
-.ant-transfer-list {
+.dark .ant-transfer-list,
+:root:not(.light) .ant-transfer-list {
   background-color: #333 !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-radius: 4px !important;
 }
 
-.ant-transfer-list-header {
+.dark .ant-transfer-list-header,
+:root:not(.light) .ant-transfer-list-header {
   background-color: rgba(255, 255, 255, 0.05) !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
-.ant-transfer-list-body-item:hover {
+.dark .ant-transfer-list-body-item:hover,
+:root:not(.light) .ant-transfer-list-body-item:hover {
   background-color: rgba(255, 255, 255, 0.1) !important;
   color: #fff !important;
 }
 
-.ant-transfer-list-body-item-selected {
+.dark .ant-transfer-list-body-item-selected,
+:root:not(.light) .ant-transfer-list-body-item-selected {
   background-color: rgba(255, 255, 255, 0.15) !important;
   color: #fff !important;
 }
