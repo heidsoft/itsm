@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"itsm-backend/common"
 	"itsm-backend/ent"
 	"itsm-backend/service"
 
@@ -83,42 +84,39 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 func (c *BPMNWorkflowController) CreateProcessDefinition(ctx *gin.Context) {
 	var req service.CreateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.AuthFailed(ctx, "未授权访问")
 		return
 	}
 	req.TenantID = tenantID.(int)
 
 	definition, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建流程定义失败: " + err.Error()})
+		common.InternalError(ctx, "创建流程定义失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"message": "流程定义创建成功",
-		"data":    definition,
-	})
+	common.SuccessWithMessage(ctx, "流程定义创建成功", definition)
 }
 
 // ListProcessDefinitions 获取流程定义列表
 func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 	var req service.ListProcessDefinitionsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.AuthFailed(ctx, "未授权访问")
 		return
 	}
 	req.TenantID = tenantID.(int)
@@ -133,18 +131,13 @@ func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 
 	definitions, total, err := c.processEngine.ProcessDefinitionService().ListProcessDefinitions(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程定义列表失败: " + err.Error()})
+		common.InternalError(ctx, "获取流程定义列表失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": definitions,
-		"pagination": gin.H{
-			"page":      req.Page,
-			"page_size": req.PageSize,
-			"total":     total,
-		},
-	})
+	// 使用统一响应格式
+	listResponse := common.NewListResponse(definitions, common.NewPaginationResponse(total, int64(req.Page), int64(req.PageSize)))
+	common.Success(ctx, listResponse)
 }
 
 // GetProcessDefinition 获取流程定义
@@ -162,13 +155,11 @@ func (c *BPMNWorkflowController) GetProcessDefinition(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "流程定义不存在: " + err.Error()})
+		common.NotFound(ctx, "流程定义不存在: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": definition,
-	})
+	common.Success(ctx, definition)
 }
 
 // UpdateProcessDefinition 更新流程定义
@@ -176,26 +167,23 @@ func (c *BPMNWorkflowController) UpdateProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "版本参数不能为空"})
+		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
 		return
 	}
 
 	var req service.UpdateProcessDefinitionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	definition, err := c.processEngine.ProcessDefinitionService().UpdateProcessDefinition(ctx, key, version, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "更新流程定义失败: " + err.Error()})
+		common.InternalError(ctx, "更新流程定义失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "流程定义更新成功",
-		"data":    definition,
-	})
+	common.SuccessWithMessage(ctx, "流程定义更新成功", definition)
 }
 
 // DeleteProcessDefinition 删除流程定义
@@ -203,19 +191,17 @@ func (c *BPMNWorkflowController) DeleteProcessDefinition(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "版本参数不能为空"})
+		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
 		return
 	}
 
 	err := c.processEngine.ProcessDefinitionService().DeleteProcessDefinition(ctx, key, version)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "删除流程定义失败: " + err.Error()})
+		common.InternalError(ctx, "删除流程定义失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "流程定义删除成功",
-	})
+	common.SuccessWithMessage(ctx, "流程定义删除成功", nil)
 }
 
 // ExportProcessDefinition 导出流程定义
@@ -228,7 +214,7 @@ func (c *BPMNWorkflowController) ExportProcessDefinition(ctx *gin.Context) {
 
 	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(ctx, key, version)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "获取流程定义失败: " + err.Error()})
+		common.NotFound(ctx, "获取流程定义失败: "+err.Error())
 		return
 	}
 
@@ -246,11 +232,7 @@ func (c *BPMNWorkflowController) ExportProcessDefinition(ctx *gin.Context) {
 		"exportVersion": "1.0",
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    exportData,
-	})
+	common.Success(ctx, exportData)
 }
 
 // CloneProcessDefinition 复制流程定义
@@ -266,14 +248,14 @@ func (c *BPMNWorkflowController) CloneProcessDefinition(ctx *gin.Context) {
 		NewName string `json:"new_name" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	// 获取原流程定义
 	definition, err := c.processEngine.ProcessDefinitionService().GetProcessDefinition(ctx, key, version)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "获取流程定义失败: " + err.Error()})
+		common.NotFound(ctx, "获取流程定义失败: "+err.Error())
 		return
 	}
 
@@ -290,15 +272,11 @@ func (c *BPMNWorkflowController) CloneProcessDefinition(ctx *gin.Context) {
 
 	created, err := c.processEngine.ProcessDefinitionService().CreateProcessDefinition(ctx, newDefinition)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "复制流程定义失败: " + err.Error()})
+		common.InternalError(ctx, "复制流程定义失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    created,
-	})
+	common.Success(ctx, created)
 }
 
 // SetProcessDefinitionActive 激活/停用流程定义
@@ -306,7 +284,7 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 	key := ctx.Param("key")
 	version := ctx.Query("version")
 	if version == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "版本参数不能为空"})
+		common.Fail(ctx, common.BadRequestCode, "版本参数不能为空")
 		return
 	}
 
@@ -314,13 +292,13 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 		Active bool `json:"active" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.ProcessDefinitionService().SetProcessDefinitionActive(ctx, key, version, req.Active)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "设置流程定义状态失败: " + err.Error()})
+		common.InternalError(ctx, "设置流程定义状态失败: "+err.Error())
 		return
 	}
 
@@ -329,9 +307,7 @@ func (c *BPMNWorkflowController) SetProcessDefinitionActive(ctx *gin.Context) {
 		status = "停用"
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "流程定义" + status + "成功",
-	})
+	common.SuccessWithMessage(ctx, "流程定义"+status+"成功", nil)
 }
 
 // StartProcess 启动流程实例
@@ -342,34 +318,31 @@ func (c *BPMNWorkflowController) StartProcess(ctx *gin.Context) {
 		Variables            map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	instance, err := c.processEngine.StartProcess(ctx, req.ProcessDefinitionKey, req.BusinessKey, req.Variables)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "启动流程实例失败: " + err.Error()})
+		common.InternalError(ctx, "启动流程实例失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"message": "流程实例启动成功",
-		"data":    instance,
-	})
+	common.SuccessWithMessage(ctx, "流程实例启动成功", instance)
 }
 
 // ListProcessInstances 获取流程实例列表
 func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 	var req service.ListProcessInstancesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.AuthFailed(ctx, "未授权访问")
 		return
 	}
 	req.TenantID = tenantID.(int)
@@ -384,18 +357,13 @@ func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 
 	instances, total, err := c.processEngine.ProcessInstanceService().ListProcessInstances(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取流程实例列表失败: " + err.Error()})
+		common.InternalError(ctx, "获取流程实例列表失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": instances,
-		"pagination": gin.H{
-			"page":      req.Page,
-			"page_size": req.PageSize,
-			"total":     total,
-		},
-	})
+	// 使用统一响应格式
+	listResponse := common.NewListResponse(instances, common.NewPaginationResponse(total, int64(req.Page), int64(req.PageSize)))
+	common.Success(ctx, listResponse)
 }
 
 // GetProcessInstance 获取流程实例
@@ -404,13 +372,11 @@ func (c *BPMNWorkflowController) GetProcessInstance(ctx *gin.Context) {
 
 	instance, err := c.processEngine.ProcessInstanceService().GetProcessInstance(ctx, processInstanceID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "流程实例不存在: " + err.Error()})
+		common.NotFound(ctx, "流程实例不存在: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": instance,
-	})
+	common.Success(ctx, instance)
 }
 
 // SetProcessInstanceVariables 设置流程实例变量
@@ -421,19 +387,17 @@ func (c *BPMNWorkflowController) SetProcessInstanceVariables(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.ProcessInstanceService().SetProcessInstanceVariables(ctx, processInstanceID, req.Variables)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "设置流程实例变量失败: " + err.Error()})
+		common.InternalError(ctx, "设置流程实例变量失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "流程实例变量设置成功",
-	})
+	common.SuccessWithMessage(ctx, "流程实例变量设置成功", nil)
 }
 
 // SuspendProcess 暂停流程实例
@@ -444,19 +408,17 @@ func (c *BPMNWorkflowController) SuspendProcess(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.SuspendProcess(ctx, processInstanceID, req.Reason)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "暂停流程实例失败: " + err.Error()})
+		common.InternalError(ctx, "暂停流程实例失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "流程实例暂停成功",
-	})
+	common.SuccessWithMessage(ctx, "流程实例暂停成功", nil)
 }
 
 // ResumeProcess 恢复流程实例
@@ -465,13 +427,11 @@ func (c *BPMNWorkflowController) ResumeProcess(ctx *gin.Context) {
 
 	err := c.processEngine.ResumeProcess(ctx, processInstanceID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "恢复流程实例失败: " + err.Error()})
+		common.InternalError(ctx, "恢复流程实例失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "流程实例恢复成功",
-	})
+	common.SuccessWithMessage(ctx, "流程实例恢复成功", nil)
 }
 
 // TerminateProcess 终止流程实例
@@ -482,26 +442,24 @@ func (c *BPMNWorkflowController) TerminateProcess(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.TerminateProcess(ctx, processInstanceID, req.Reason)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "终止流程实例失败: " + err.Error()})
+		common.InternalError(ctx, "终止流程实例失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "流程实例终止成功",
-	})
+	common.SuccessWithMessage(ctx, "流程实例终止成功", nil)
 }
 
 // ListUserTasks 获取用户任务列表
 func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 	var req service.ListUserTasksRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -515,7 +473,7 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.AuthFailed(ctx, "未授权访问")
 		return
 	}
 	req.TenantID = tenantID.(int)
@@ -530,18 +488,13 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 
 	tasks, total, err := c.processEngine.TaskService().ListUserTasks(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取用户任务列表失败: " + err.Error()})
+		common.InternalError(ctx, "获取用户任务列表失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": tasks,
-		"pagination": gin.H{
-			"page":      req.Page,
-			"page_size": req.PageSize,
-			"total":     total,
-		},
-	})
+	// 使用统一响应格式
+	listResponse := common.NewListResponse(tasks, common.NewPaginationResponse(total, int64(req.Page), int64(req.PageSize)))
+	common.Success(ctx, listResponse)
 }
 
 // GetTask 获取任务
@@ -550,13 +503,11 @@ func (c *BPMNWorkflowController) GetTask(ctx *gin.Context) {
 
 	task, err := c.processEngine.TaskService().GetTask(ctx, taskID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "任务不存在: " + err.Error()})
+		common.NotFound(ctx, "任务不存在: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"data": task,
-	})
+	common.Success(ctx, task)
 }
 
 // AssignTask 分配任务
@@ -567,19 +518,17 @@ func (c *BPMNWorkflowController) AssignTask(ctx *gin.Context) {
 		Assignee string `json:"assignee" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.TaskService().AssignTask(ctx, taskID, req.Assignee)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "分配任务失败: " + err.Error()})
+		common.InternalError(ctx, "分配任务失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "任务分配成功",
-	})
+	common.SuccessWithMessage(ctx, "任务分配成功", nil)
 }
 
 // CompleteTask 完成任务
@@ -590,19 +539,17 @@ func (c *BPMNWorkflowController) CompleteTask(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.TaskService().CompleteTask(ctx, taskID, req.Variables)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "完成任务失败: " + err.Error()})
+		common.InternalError(ctx, "完成任务失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "任务完成成功",
-	})
+	common.SuccessWithMessage(ctx, "任务完成成功", nil)
 }
 
 // CancelTask 取消任务
@@ -613,19 +560,17 @@ func (c *BPMNWorkflowController) CancelTask(ctx *gin.Context) {
 		Reason string `json:"reason" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.TaskService().CancelTask(ctx, taskID, req.Reason)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "取消任务失败: " + err.Error()})
+		common.InternalError(ctx, "取消任务失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "任务取消成功",
-	})
+	common.SuccessWithMessage(ctx, "任务取消成功", nil)
 }
 
 // SetTaskVariables 设置任务变量
@@ -636,19 +581,17 @@ func (c *BPMNWorkflowController) SetTaskVariables(ctx *gin.Context) {
 		Variables map[string]interface{} `json:"variables" binding:"required"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.TaskService().SetTaskVariables(ctx, taskID, req.Variables)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "设置任务变量失败: " + err.Error()})
+		common.InternalError(ctx, "设置任务变量失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "任务变量设置成功",
-	})
+	common.SuccessWithMessage(ctx, "任务变量设置成功", nil)
 }
 
 // ListVersions 获取版本列表
@@ -657,7 +600,7 @@ func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
 	tenantID := ctx.GetInt("tenant_id")
 
 	if processKey == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "缺少process_key参数"})
+		common.Fail(ctx, common.BadRequestCode, "缺少process_key参数")
 		return
 	}
 
@@ -665,7 +608,7 @@ func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
 	if id, err := strconv.Atoi(processKey); err == nil {
 		def, err := c.processEngine.ProcessDefinitionService().GetProcessDefinitionByID(ctx, id)
 		if err != nil {
-			ctx.JSON(http.StatusNotFound, gin.H{"error": "流程定义不存在"})
+			common.NotFound(ctx, "流程定义不存在")
 			return
 		}
 		processKey = def.Key
@@ -673,15 +616,11 @@ func (c *BPMNWorkflowController) ListVersions(ctx *gin.Context) {
 
 	versions, err := c.versionService.ListVersions(ctx, processKey, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取版本列表失败: " + err.Error()})
+		common.InternalError(ctx, "获取版本列表失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    versions,
-	})
+	common.Success(ctx, versions)
 }
 
 // GetVersion 获取指定版本详情
@@ -692,28 +631,24 @@ func (c *BPMNWorkflowController) GetVersion(ctx *gin.Context) {
 
 	version, err := strconv.Atoi(versionStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的版本号"})
+		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
 	}
 
 	versionInfo, err := c.versionService.GetVersion(ctx, processKey, version, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "版本不存在"})
+		common.NotFound(ctx, "版本不存在")
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    versionInfo,
-	})
+	common.Success(ctx, versionInfo)
 }
 
 // CreateVersion 创建新版本
 func (c *BPMNWorkflowController) CreateVersion(ctx *gin.Context) {
 	var req service.CreateVersionRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
@@ -722,15 +657,11 @@ func (c *BPMNWorkflowController) CreateVersion(ctx *gin.Context) {
 
 	version, err := c.versionService.CreateVersion(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建版本失败: " + err.Error()})
+		common.InternalError(ctx, "创建版本失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    version,
-	})
+	common.Success(ctx, version)
 }
 
 // ActivateVersion 激活指定版本
@@ -741,19 +672,17 @@ func (c *BPMNWorkflowController) ActivateVersion(ctx *gin.Context) {
 
 	version, err := strconv.Atoi(versionStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的版本号"})
+		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
 	}
 
 	err = c.versionService.ActivateVersion(ctx, processKey, version, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "激活版本失败: " + err.Error()})
+		common.InternalError(ctx, "激活版本失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
+	common.Success(ctx, nil)
 	})
 }
 
@@ -765,7 +694,7 @@ func (c *BPMNWorkflowController) RollbackVersion(ctx *gin.Context) {
 
 	version, err := strconv.Atoi(versionStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的版本号"})
+		common.Fail(ctx, common.BadRequestCode, "无效的版本号")
 		return
 	}
 
@@ -776,14 +705,11 @@ func (c *BPMNWorkflowController) RollbackVersion(ctx *gin.Context) {
 
 	err = c.versionService.RollbackToVersion(ctx, processKey, version, tenantID, req.Reason)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "回滚版本失败: " + err.Error()})
+		common.InternalError(ctx, "回滚版本失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-	})
+	common.Success(ctx, nil)
 }
 
 // CompareVersions 比较两个版本
@@ -795,101 +721,85 @@ func (c *BPMNWorkflowController) CompareVersions(ctx *gin.Context) {
 
 	// 如果没有提供版本参数，返回友好错误
 	if baseVersion == "" || targetVersion == "" {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请提供 base_version 和 target_version 参数"})
+		common.Fail(ctx, common.BadRequestCode, "请提供 base_version 和 target_version 参数")
 		return
 	}
 
 	base, err := strconv.Atoi(baseVersion)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的基础版本号"})
+		common.Fail(ctx, common.BadRequestCode, "无效的基础版本号")
 		return
 	}
 
 	target, err := strconv.Atoi(targetVersion)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "无效的目标版本号"})
+		common.Fail(ctx, common.BadRequestCode, "无效的目标版本号")
 		return
 	}
 
 	// 相同版本无需比较
 	if base == target {
-		ctx.JSON(http.StatusOK, gin.H{
-			"code":    0,
-			"message": "版本相同，无需比较",
-			"data":    nil,
-		})
+		common.SuccessWithMessage(ctx, "版本相同，无需比较", nil)
 		return
 	}
 
 	comparison, err := c.versionService.CompareVersions(ctx, processKey, base, target, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "版本比较失败: " + err.Error()})
+		common.InternalError(ctx, "版本比较失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    comparison,
-	})
+	common.Success(ctx, comparison)
 }
 
 // GetInstanceStats 获取实例统计
 func (c *BPMNWorkflowController) GetInstanceStats(ctx *gin.Context) {
 	var req service.InstanceStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.AuthFailed(ctx, "未授权访问")
 		return
 	}
 	req.TenantID = tenantID.(int)
 
 	stats, err := c.processEngine.ProcessInstanceService().GetInstanceStatistics(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取实例统计失败: " + err.Error()})
+		common.InternalError(ctx, "获取实例统计失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    stats,
-	})
+	common.Success(ctx, stats)
 }
 
 // GetTaskStats 获取任务统计
 func (c *BPMNWorkflowController) GetTaskStats(ctx *gin.Context) {
 	var req service.TaskStatisticsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	// 从JWT获取租户ID
 	tenantID, exists := ctx.Get("tenant_id")
 	if !exists {
-		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "未授权访问"})
+		common.AuthFailed(ctx, "未授权访问")
 		return
 	}
 	req.TenantID = tenantID.(int)
 
 	stats, err := c.processEngine.TaskService().GetTaskStatistics(ctx, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取任务统计失败: " + err.Error()})
+		common.InternalError(ctx, "获取任务统计失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    stats,
-	})
+	common.Success(ctx, stats)
 }
 
 // CreateCounterSignTasks 创建会签任务
@@ -898,21 +808,17 @@ func (c *BPMNWorkflowController) CreateCounterSignTasks(ctx *gin.Context) {
 
 	var req service.CounterSignRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	tasks, err := c.processEngine.TaskService().CreateCounterSignTasks(ctx, taskID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "创建会签任务失败: " + err.Error()})
+		common.InternalError(ctx, "创建会签任务失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    tasks,
-	})
+	common.Success(ctx, tasks)
 }
 
 // GetCounterSignStatus 获取会签状态
@@ -921,15 +827,11 @@ func (c *BPMNWorkflowController) GetCounterSignStatus(ctx *gin.Context) {
 
 	status, err := c.processEngine.TaskService().GetCounterSignStatus(ctx, taskID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "获取会签状态失败: " + err.Error()})
+		common.InternalError(ctx, "获取会签状态失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    status,
-	})
+	common.Success(ctx, status)
 }
 
 // Vote 投票
@@ -938,20 +840,17 @@ func (c *BPMNWorkflowController) Vote(ctx *gin.Context) {
 
 	var req service.VoteRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "请求参数错误: " + err.Error()})
+		common.Fail(ctx, common.ParamErrorCode, "请求参数错误: "+err.Error())
 		return
 	}
 
 	err := c.processEngine.TaskService().Vote(ctx, taskID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "投票失败: " + err.Error()})
+		common.InternalError(ctx, "投票失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-	})
+	common.Success(ctx, nil)
 }
 
 // GetVersionChangeLogs 获取流程定义的版本变更日志列表
@@ -961,18 +860,11 @@ func (c *BPMNWorkflowController) GetVersionChangeLogs(ctx *gin.Context) {
 
 	changelogs, err := c.versionService.GetChangeLogsByProcessKey(ctx, processKey, tenantID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":    5001,
-			"message": "获取变更日志失败: " + err.Error(),
-		})
+		common.InternalError(ctx, "获取变更日志失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    changelogs,
-	})
+	common.Success(ctx, changelogs)
 }
 
 // GetVersionChangeLogsByID 根据流程定义ID获取版本变更日志
@@ -980,25 +872,15 @@ func (c *BPMNWorkflowController) GetVersionChangeLogsByID(ctx *gin.Context) {
 	processDefIDStr := ctx.Param("id")
 	processDefID, err := strconv.Atoi(processDefIDStr)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"code":    1001,
-			"message": "无效的流程定义ID",
-		})
+		common.Fail(ctx, common.ParamErrorCode, "无效的流程定义ID")
 		return
 	}
 
 	changelogs, err := c.versionService.GetChangeLogsByProcessDefinitionID(ctx, processDefID)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"code":    5001,
-			"message": "获取变更日志失败: " + err.Error(),
-		})
+		common.InternalError(ctx, "获取变更日志失败: "+err.Error())
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"code":    0,
-		"message": "success",
-		"data":    changelogs,
-	})
+	common.Success(ctx, changelogs)
 }
