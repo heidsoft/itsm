@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw - 一个人的 DevOps 团队 | CloudMesh</title>
+    <meta name="description" content="OpenClaw 让一个人也能像大公司一样高效运维。AI 驱动的 DevOps 平台，整合 CMDB、多云管理、监控告警、自动化运维">
+    <meta name="keywords" content="OpenClaw, 一人公司，DevOps 平台，AI 运维，CMDB, 多云管理，监控告警，自动化运维">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+    <style>
+        /* Page Specific Styles */
+        .comparison-table {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin: 3rem 0;
+        }
+        
+        .comparison-table table {
+            width: 100%;
+            margin: 0;
+        }
+        
+        .comparison-table th {
+            background: var(--dark-700);
+            color: var(--white);
+            padding: 1.5rem;
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+        
+        .comparison-table td {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table tr:nth-child(even) {
+            background: rgba(255,255,255,0.02);
+        }
+        
+        .check-icon { color: #2a9d8f; font-size: 1.25rem; }
+        .cross-icon { color: #e63946; font-size: 1.25rem; }
+        
+        .testimonial-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+        }
+        
+        .testimonial-text {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--gray-400);
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+        }
+        
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        
+        .roadmap {
+            position: relative;
+            padding: 2rem 0;
+        }
+        
+        .roadmap::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--gradient-cyber);
+            transform: translateX(-50%);
+            border-radius: 2px;
+        }
+        
+        .roadmap-item {
+            display: flex;
+            justify-content: flex-end;
+            padding: 1rem 0;
+            position: relative;
+            margin-bottom: 2rem;
+        }
+        
+        .roadmap-item:nth-child(even) {
+            justify-content: flex-start;
+        }
+        
+        .roadmap-content {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            max-width: 45%;
+            position: relative;
+        }
+        
+        .roadmap-dot {
+            position: absolute;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            background: var(--gradient-cyber);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            border: 4px solid var(--dark-900);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+        }
+        
+        .roadmap-item:nth-child(even) .roadmap-content {
+            margin-left: auto;
+        }
+        
+        @media (max-width: 768px) {
+            .roadmap::before { left: 20px; }
+            .roadmap-item, .roadmap-item:nth-child(even) {
+                justify-content: flex-start;
+                padding-left: 50px;
+            }
+            .roadmap-content, .roadmap-item:nth-child(even) .roadmap-content {
+                max-width: 100%;
+                margin-left: 0;
+            }
+            .roadmap-dot { left: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg" id="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cloud"></i>
+                CloudMesh
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">产品</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item active" href="/products/openclaw.html">OpenClaw</a></li>
+                            <li><a class="dropdown-item" href="/products/itsm.html">ITSM</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/open-source/">开源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/#pricing">定价</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact/">联系</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login.html">登录</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-trial ms-2" href="/deploy/">
+                            <i class="fas fa-rocket"></i> 免费试用
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <section class="breadcrumb-section">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">首页</a></li>
+                    <li class="breadcrumb-item"><a href="/#products">产品</a></li>
+                    <li class="breadcrumb-item active">OpenClaw</li>
+                </ol>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Product Hero -->
+    <section class="product-hero">
+        <div class="container text-center">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                <span>One Person Company · 一个人的 DevOps 团队</span>
+            </div>
+            <h1>OpenClaw</h1>
+            <p class="subtitle">让一个人也能像大公司一样高效运维</p>
+            <p class="lead opacity-75 mb-4">AI 驱动 · 自动化 · 全栈运维</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="/deploy/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-play"></i> 立即体验
+                </a>
+                <a href="#contact" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-calendar"></i> 预约演示
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- One Person Concept -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">WHY OPENCLAW</span>
+                <h2>为什么需要 OpenClaw？</h2>
+                <p>一个人的公司，也需要企业级运维能力</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="concept-card">
+                        <div class="feature-icon">😰</div>
+                        <h3 class="text-pink">传统运维的痛点</h3>
+                        <p class="text-muted">一个人要干一个团队的活</p>
+                        <ul class="text-start mt-4">
+                            <li class="mb-3">❌ 要管服务器、网络、数据库...</li>
+                            <li class="mb-3">❌ 要写脚本、做监控、处理告警...</li>
+                            <li class="mb-3">❌ 要部署、要测试、要回滚...</li>
+                            <li class="mb-3">❌ 7x24 小时待命，不敢休假...</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="concept-card">
+                        <div class="feature-icon">😎</div>
+                        <h3 class="text-cyan">用 OpenClaw 之后</h3>
+                        <p class="text-muted">一个人就是一个团队</p>
+                        <ul class="text-start mt-4">
+                            <li class="mb-3">✅ AI 帮你监控、分析、诊断</li>
+                            <li class="mb-3">✅ 自动化处理重复工作</li>
+                            <li class="mb-3">✅ 一键部署、一键回滚</li>
+                            <li class="mb-3">✅ 安心休假，系统自己跑</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">COMPARISON</span>
+                <h2>对比传统方案</h2>
+                <p>OpenClaw 让一个人发挥团队效能</p>
+            </div>
+            
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>能力</th>
+                            <th><i class="fas fa-user"></i> 传统运维（1 人）</th>
+                            <th><i class="fas fa-robot"></i> OpenClaw（1 人 + AI）</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>监控覆盖</strong></td>
+                            <td><i class="fas fa-times cross-icon"></i> 有限，顾此失彼</td>
+                            <td><i class="fas fa-check check-icon"></i> 全栈监控，无死角</td>
+                        </tr>
+                        <tr>
+                            <td><strong>告警响应</strong></td>
+                            <td><i class="fas fa-times cross-icon"></i> 人工值守，易疲劳</td>
+                            <td><i class="fas fa-check check-icon"></i> 智能告警，自动分级</td>
+                        </tr>
+                        <tr>
+                            <td><strong>部署效率</strong></td>
+                            <td><i class="fas fa-times cross-icon"></i> 手动操作，易出错</td>
+                            <td><i class="fas fa-check check-icon"></i> 一键部署，自动化</td>
+                        </tr>
+                        <tr>
+                            <td><strong>故障处理</strong></td>
+                            <td><i class="fas fa-times cross-icon"></i> 人工排查，耗时长</td>
+                            <td><i class="fas fa-check check-icon"></i> AI 诊断，快速定位</td>
+                        </tr>
+                        <tr>
+                            <td><strong>工作时间</strong></td>
+                            <td><i class="fas fa-times cross-icon"></i> 7x24 待命</td>
+                            <td><i class="fas fa-check check-icon"></i> 自动化，可休假</td>
+                        </tr>
+                        <tr>
+                            <td><strong>知识积累</strong></td>
+                            <td><i class="fas fa-times cross-icon"></i> 个人经验，易流失</td>
+                            <td><i class="fas fa-check check-icon"></i> 知识库，持续积累</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Matrix -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">CAPABILITIES</span>
+                <h2>OpenClaw 能力矩阵</h2>
+                <p>一个人需要的运维工具，都在这里</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-4 col-md-6">
+                    <div class="matrix-card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-database"></i></div>
+                        <h3>CMDB 配置管理</h3>
+                        <p>自动发现和管理所有 IT 资产，不用手动维护 Excel 表格了。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-cyan"></i> 自动发现与采集</li>
+                            <li><i class="fas fa-check text-cyan"></i> 配置项关系图谱</li>
+                            <li><i class="fas fa-check text-cyan"></i> 变更追踪审计</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="matrix-card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-cloud"></i></div>
+                        <h3>多云管理</h3>
+                        <p>一个平台管理所有云资源，不用来回切换控制台。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-cyan"></i> 多云资源统一管理</li>
+                            <li><i class="fas fa-check text-cyan"></i> 成本分析与优化</li>
+                            <li><i class="fas fa-check text-cyan"></i> 资源编排调度</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="matrix-card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-chart-line"></i></div>
+                        <h3>监控告警</h3>
+                        <p>全方位监控，智能告警，不用盯着屏幕怕漏掉问题。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-cyan"></i> 全栈监控覆盖</li>
+                            <li><i class="fas fa-check text-cyan"></i> 智能告警收敛</li>
+                            <li><i class="fas fa-check text-cyan"></i> 多渠道通知</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="matrix-card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-infinity"></i></div>
+                        <h3>DevOps 流水线</h3>
+                        <p>自动化构建、测试、部署，不用手动敲命令了。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-cyan"></i> CI/CD 流水线</li>
+                            <li><i class="fas fa-check text-cyan"></i> 自动化测试</li>
+                            <li><i class="fas fa-check text-cyan"></i> 蓝绿/金丝雀发布</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="matrix-card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-robot"></i></div>
+                        <h3>自动化运维</h3>
+                        <p>重复工作交给 AI，不用熬夜处理日常运维。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-cyan"></i> 智能故障诊断</li>
+                            <li><i class="fas fa-check text-cyan"></i> 自动修复执行</li>
+                            <li><i class="fas fa-check text-cyan"></i> 预测性维护</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <div class="matrix-card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-brain"></i></div>
+                        <h3>AI 运维大脑</h3>
+                        <p>AI 帮你分析问题、给出建议，就像有个专家在身边。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-cyan"></i> 异常检测预警</li>
+                            <li><i class="fas fa-check text-cyan"></i> 根因自动分析</li>
+                            <li><i class="fas fa-check text-cyan"></i> 容量智能预测</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">TESTIMONIALS</span>
+                <h2>用户怎么说</h2>
+                <p>一个人的公司，不孤单</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">"以前一个人管 50 多台服务器，天天提心吊胆。用了 OpenClaw 后，AI 帮我监控和告警，终于能睡个安稳觉了。"</p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar">👨‍💻</div>
+                            <div>
+                                <strong class="text-white">张工</strong>
+                                <p class="mb-0 text-muted">创业公司 CTO（兼运维）</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="testimonial-card">
+                        <p class="testimonial-text">"作为独立开发者，既要写代码又要管运维。OpenClaw 的自动化部署让我节省了大量时间，可以专注于产品开发。"</p>
+                        <div class="testimonial-author">
+                            <div class="testimonial-avatar">👩‍💻</div>
+                            <div>
+                                <strong class="text-white">李同学</strong>
+                                <p class="mb-0 text-muted">独立开发者</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section" id="contact">
+        <div class="container">
+            <h2>准备好体验一个人的 DevOps 团队了吗？</h2>
+            <p class="lead mb-4">立即免费试用 30 天，无需信用卡</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="/deploy/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i> 开始免费试用
+                </a>
+                <a href="/contact/" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-envelope"></i> 联系我们
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-brand">
+                        <i class="fas fa-cloud"></i>
+                        <span>CloudMesh</span>
+                    </div>
+                    <p class="footer-text">智能 IT 管理平台，让 IT 管理更简单高效</p>
+                    <div class="d-flex gap-3">
+                        <a href="https://github.com/heidsoft/itsm" target="_blank" class="text-white-50 fs-4"><i class="fab fa-github"></i></a>
+                        <a href="#" class="text-white-50 fs-4"><i class="fab fa-weixin"></i></a>
+                        <a href="mailto:heidsoft@qq.com" class="text-white-50 fs-4"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">产品</h4>
+                    <ul class="footer-links">
+                        <li><a href="/products/openclaw.html">OpenClaw</a></li>
+                        <li><a href="/products/itsm.html">ITSM</a></li>
+                        <li><a href="/#pricing">定价</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">开源</h4>
+                    <ul class="footer-links">
+                        <li><a href="/open-source/">开源社区</a></li>
+                        <li><a href="https://github.com/heidsoft/itsm" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">联系</h4>
+                    <ul class="footer-links">
+                        <li><a href="/contact/">联系我们</a></li>
+                        <li><a href="mailto:heidsoft@qq.com">heidsoft@qq.com</a></li>
+                        <li><a href="/privacy/">隐私政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CloudMesh. All rights reserved. | OpenClaw - One Person Company</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>

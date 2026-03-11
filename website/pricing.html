@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>定价 - OpenClaw | 简单透明的企业级定价</title>
+    <meta name="description" content="选择适合你的 OpenClaw 方案，个人版免费，企业版 ¥999/年起">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --bg-dark: #0f0f1a;
+            --bg-card: rgba(255,255,255,0.03);
+            --bg-hover: rgba(255,255,255,0.05);
+            --border: rgba(255,255,255,0.08);
+            --text-primary: #fff;
+            --text-secondary: #a0aec0;
+            --text-muted: #718096;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Background Gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102,126,234,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(118,75,162,0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 80px 20px 40px; }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 56px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            background: rgba(102,126,234,0.15);
+            border: 1px solid rgba(102,126,234,0.3);
+            border-radius: 30px;
+            font-size: 14px;
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        /* Pricing Cards */
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 32px;
+            margin-bottom: 80px;
+        }
+
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.8s ease-out backwards;
+            backdrop-filter: blur(10px);
+        }
+
+        .pricing-card:nth-child(1) { animation-delay: 0.1s; }
+        .pricing-card:nth-child(2) { animation-delay: 0.2s; }
+        .pricing-card:nth-child(3) { animation-delay: 0.3s; }
+
+        .pricing-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            border-color: rgba(102,126,234,0.4);
+            box-shadow: 
+                0 20px 60px rgba(102,126,234,0.15),
+                0 0 0 1px rgba(102,126,234,0.1);
+        }
+
+        .pricing-card.popular {
+            border-color: var(--primary);
+            background: linear-gradient(135deg, rgba(102,126,234,0.08) 0%, rgba(118,75,162,0.08) 100%);
+        }
+
+        .pricing-card.popular::before {
+            content: '🔥 最受欢迎';
+            position: absolute;
+            top: -14px;
+            right: 32px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.4);
+        }
+
+        .pricing-card h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .pricing-card .price {
+            font-size: 64px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+        }
+
+        .pricing-card .price span {
+            font-size: 18px;
+            color: var(--text-muted);
+            font-weight: 400;
+            -webkit-text-fill-color: var(--text-muted);
+        }
+
+        .pricing-card .desc {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 15px;
+        }
+
+        /* Feature List */
+        .feature-list {
+            list-style: none;
+            margin-bottom: 40px;
+        }
+
+        .feature-list li {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+
+        .feature-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-list li:hover {
+            padding-left: 8px;
+            border-color: rgba(102,126,234,0.3);
+        }
+
+        .feature-list li i {
+            font-size: 18px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .feature-list li .fa-check-circle {
+            color: var(--success);
+            filter: drop-shadow(0 0 8px rgba(16,185,129,0.4));
+        }
+
+        .feature-list li .fa-times-circle {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .feature-list li.unavailable {
+            color: var(--text-muted);
+            opacity: 0.6;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 18px 36px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(102,126,234,0.5);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-hover);
+            border-color: rgba(102,126,234,0.4);
+        }
+
+        .btn-pro {
+            background: linear-gradient(135deg, var(--accent) 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(245,158,11,0.3);
+        }
+
+        .btn-pro:hover {
+            box-shadow: 0 8px 30px rgba(245,158,11,0.5);
+        }
+
+        /* Comparison Table */
+        .comparison-section {
+            margin-bottom: 80px;
+            animation: fadeInUp 0.8s ease-out 0.4s backwards;
+        }
+
+        .comparison-section h2 {
+            text-align: center;
+            font-size: 42px;
+            font-weight: 800;
+            margin-bottom: 48px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--bg-card);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            background: rgba(102,126,234,0.15);
+            padding: 24px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--primary);
+            border-bottom: 2px solid rgba(102,126,234,0.3);
+        }
+
+        .comparison-table td {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            font-size: 15px;
+            color: var(--text-primary);
+            transition: all 0.3s;
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tr:hover td {
+            background: var(--bg-hover);
+        }
+
+        .comparison-table .check {
+            color: var(--success);
+            font-size: 20px;
+            filter: drop-shadow(0 0 8px rgba(16,185,129,0.4));
+        }
+
+        .comparison-table .cross {
+            color: var(--text-muted);
+            opacity: 0.4;
+            font-size: 20px;
+        }
+
+        .comparison-table .feature-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Contact Form */
+        .contact-section {
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(102,126,234,0.05) 100%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 60px;
+            max-width: 900px;
+            margin: 0 auto;
+            animation: fadeInUp 0.8s ease-out 0.6s backwards;
+        }
+
+        .contact-section h2 {
+            text-align: center;
+            font-size: 38px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .contact-section > p {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-size: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 16px 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 0 0 4px rgba(102,126,234,0.1);
+        }
+
+        .form-group select {
+            cursor: pointer;
+        }
+
+        .form-group textarea {
+            min-height: 140px;
+            resize: vertical;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            padding: 20px 32px;
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            border-radius: 14px;
+            box-shadow: 0 10px 40px rgba(16,185,129,0.4);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 60px 16px 30px; }
+            .header h1 { font-size: 40px; }
+            .header p { font-size: 17px; }
+            .pricing-grid { grid-template-columns: 1fr; gap: 24px; }
+            .pricing-card { padding: 36px 28px; }
+            .pricing-card .price { font-size: 48px; }
+            .comparison-table { font-size: 14px; }
+            .comparison-table th, .comparison-table td { padding: 16px; }
+            .form-row { grid-template-columns: 1fr; }
+            .contact-section { padding: 40px 28px; }
+            .toast { left: 20px; right: 20px; bottom: 20px; }
+        }
+
+        /* Smooth Scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* Navbar 样式 */
+        .navbar { background: rgba(15,15,26,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 16px 0; position: sticky; top: 0; z-index: 1000; }
+        .navbar-brand { font-size: 20px; font-weight: 700; color: #fff !important; display: flex; align-items: center; gap: 10px; }
+        .navbar-brand i { color: #667eea; }
+        .nav-link { color: #a0aec0 !important; font-weight: 500; padding: 8px 16px !important; transition: all 0.3s; }
+        .nav-link:hover, .nav-link.active { color: #fff !important; }
+        .btn-trial { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff !important; border-radius: 8px; }
+        .btn-trial:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+        .dropdown-menu { background: rgba(15,15,26,0.98); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+        .dropdown-item { color: #a0aec0; padding: 10px 20px; }
+        .dropdown-item:hover { background: rgba(102,126,234,0.1); color: #fff; }
+        .dropdown-divider { border-color: rgba(255,255,255,0.08); }
+    </style>
+</head>
+<body>
+    <!-- 统一导航栏 -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cloud"></i>
+                <span>CloudMesh</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">产品</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/products/openclaw.html"><i class="fas fa-rocket"></i> OpenClaw</a></li>
+                            <li><a class="dropdown-item" href="/products/itsm.html"><i class="fas fa-ticket-alt"></i> ITSM</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器 <span class="badge bg-warning text-dark ms-1">免费</span></a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/open-source/">开源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/blog/">博客</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/pricing.html">定价</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/docs/quickstart.html">文档</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact/">联系</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login.html">登录</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-trial ms-2" href="/deploy/">
+                            <i class="fas fa-rocket"></i> 免费试用
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 40px;">
+        <div class="header">
+            <div class="header-badge">💎 简单透明 · 无隐藏费用</div>
+            <h1>选择适合你的方案</h1>
+            <p>灵活定价，满足个人开发者到大型企业的所有需求</p>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="pricing-grid">
+            <!-- Personal -->
+            <div class="pricing-card">
+                <h3>👤 个人版</h3>
+                <div class="price">免费</div>
+                <div class="desc">适合个人开发者和小团队快速上手</div>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check-circle"></i> 配置生成器完整功能</li>
+                    <li><i class="fas fa-check-circle"></i> 支持 6 大通讯平台</li>
+                    <li><i class="fas fa-check-circle"></i> 一键安装脚本</li>
+                    <li><i class="fas fa-check-circle"></i> 本地文件配置</li>
+                    <li><i class="fas fa-check-circle"></i> 社区支持</li>
+                    <li class="unavailable"><i class="fas fa-times-circle"></i> 配置中心集成</li>
+                    <li class="unavailable"><i class="fas fa-times-circle"></i> 密钥管理系统</li>
+                    <li class="unavailable"><i class="fas fa-times-circle"></i> 专业技术支持</li>
+                </ul>
+                <a href="/openclaw-generator/" class="btn btn-outline">
+                    <i class="fas fa-rocket"></i> 立即开始
+                </a>
+            </div>
+
+            <!-- Pro -->
+            <div class="pricing-card popular">
+                <h3>🏢 企业版</h3>
+                <div class="price">¥999<span>/年起</span></div>
+                <div class="desc">适合中大型企业和专业团队</div>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check-circle"></i> <strong>个人版所有功能</strong></li>
+                    <li><i class="fas fa-check-circle"></i> Apollo/Nacos 配置中心</li>
+                    <li><i class="fas fa-check-circle"></i> HashiCorp Vault 集成</li>
+                    <li><i class="fas fa-check-circle"></i> Kubernetes 原生支持</li>
+                    <li><i class="fas fa-check-circle"></i> GitOps 工作流</li>
+                    <li><i class="fas fa-check-circle"></i> 多环境管理</li>
+                    <li><i class="fas fa-check-circle"></i> 审计日志</li>
+                    <li><i class="fas fa-check-circle"></i> 专业技术支持</li>
+                </ul>
+                <a href="#contact" class="btn btn-pro">
+                    <i class="fas fa-envelope"></i> 联系销售
+                </a>
+            </div>
+
+            <!-- Enterprise -->
+            <div class="pricing-card">
+                <h3>🏛️ 定制版</h3>
+                <div class="price">面议</div>
+                <div class="desc">超大规模企业专属定制方案</div>
+                <ul class="feature-list">
+                    <li><i class="fas fa-check-circle"></i> <strong>企业版所有功能</strong></li>
+                    <li><i class="fas fa-check-circle"></i> 私有化部署</li>
+                    <li><i class="fas fa-check-circle"></i> 定制开发</li>
+                    <li><i class="fas fa-check-circle"></i> 专属技术支持</li>
+                    <li><i class="fas fa-check-circle"></i> SLA 服务保障</li>
+                    <li><i class="fas fa-check-circle"></i> 现场培训</li>
+                    <li><i class="fas fa-check-circle"></i> 源码授权（可选）</li>
+                    <li><i class="fas fa-check-circle"></i> 联合品牌</li>
+                </ul>
+                <a href="#contact" class="btn btn-outline">
+                    <i class="fas fa-handshake"></i> 联系洽谈
+                </a>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="comparison-section">
+            <h2>功能详细对比</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">功能特性</th>
+                        <th style="width: 21.6%;">👤 个人版</th>
+                        <th style="width: 21.6%;">🏢 企业版</th>
+                        <th style="width: 21.6%;">🏛️ 定制版</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="feature-name">配置生成器</td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">多平台支持（6 个）</td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">配置中心集成</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">密钥管理（Vault）</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">Kubernetes 支持</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">GitOps 工作流</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">多环境管理</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">审计日志</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">私有化部署</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">定制开发</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">SLA 保障</td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-times cross"></i></td>
+                        <td><i class="fas fa-check check"></i></td>
+                    </tr>
+                    <tr>
+                        <td class="feature-name">技术支持</td>
+                        <td style="color: var(--text-secondary);">社区</td>
+                        <td style="color: var(--text-primary);">专业团队</td>
+                        <td style="color: var(--text-primary);">专属团队</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Contact Form -->
+        <div class="contact-section" id="contact">
+            <h2>联系销售团队</h2>
+            <p>填写以下信息，我们的销售专家会在 24 小时内与您联系，提供免费咨询和演示</p>
+            <form onsubmit="submitForm(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">姓名 <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="name" name="name" required placeholder="您的姓名">
+                    </div>
+                    <div class="form-group">
+                        <label for="company">公司名称 <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="company" name="company" required placeholder="公司全称">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">工作邮箱 <span style="color: var(--danger);">*</span></label>
+                        <input type="email" id="email" name="email" required placeholder="name@company.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">联系电话</label>
+                        <input type="tel" id="phone" name="phone" placeholder="手机号码">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="product">感兴趣的产品 <span style="color: var(--danger);">*</span></label>
+                        <select id="product" name="product" required>
+                            <option value="">请选择</option>
+                            <option value="pro">🏢 企业版（¥999/年起）</option>
+                            <option value="enterprise">🏛️ 定制版（面议）</option>
+                            <option value="both">都想了解</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="team_size">团队规模</label>
+                        <select id="team_size" name="team_size">
+                            <option value="">请选择</option>
+                            <option value="1-10">1-10 人</option>
+                            <option value="11-50">11-50 人</option>
+                            <option value="51-200">51-200 人</option>
+                            <option value="200+">200 人以上</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="message">具体需求</label>
+                    <textarea id="message" name="message" placeholder="请描述您的具体需求，如部署方式、集成需求、特殊功能等"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-paper-plane"></i> 提交咨询
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i> 提交成功！我们会尽快联系您
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function submitForm(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            console.log('Form submitted:', data);
+            
+            // 显示成功提示
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            
+            // 3 秒后隐藏
+            setTimeout(() => toast.classList.remove('show'), 3000);
+            
+            // 重置表单
+            form.reset();
+            
+            // TODO: 实际使用时发送到后端
+            // fetch('/api/contact', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(data)
+            // })
+        }
+
+        // 平滑滚动到锚点
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

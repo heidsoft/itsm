@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卸载指南 - OpenClaw</title>
+    <meta name="description" content="完整、干净的 OpenClaw 卸载指南">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --bg-dark: #0f0f1a;
+            --bg-card: rgba(255,255,255,0.03);
+            --bg-code: #1a1a2e;
+            --border: rgba(255,255,255,0.08);
+            --text-primary: #fff;
+            --text-secondary: #a0aec0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 30% 40%, rgba(102,126,234,0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 40px; }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p { color: var(--text-secondary); font-size: 18px; }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 32px;
+            transition: all 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(102,126,234,0.3);
+            box-shadow: 0 8px 30px rgba(102,126,234,0.1);
+        }
+
+        .card h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-primary);
+        }
+
+        .card p { color: var(--text-secondary); margin-bottom: 16px; }
+        .card ul, .card ol { color: var(--text-secondary); margin-bottom: 16px; padding-left: 24px; }
+        .card li { margin-bottom: 10px; }
+
+        .code-block {
+            background: var(--bg-code);
+            border-radius: 14px;
+            padding: 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+
+        .code-block code {
+            color: #e2e8f0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            display: block;
+        }
+
+        .code-title {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .warning-box {
+            padding: 20px 24px;
+            background: rgba(239,68,68,0.1);
+            border-left: 4px solid var(--danger);
+            border-radius: 14px;
+            margin: 24px 0;
+        }
+
+        .warning-box h4 {
+            color: var(--danger);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .warning-box p { color: var(--text-secondary); margin: 0; font-size: 14px; }
+
+        .success-box {
+            padding: 20px 24px;
+            background: rgba(16,185,129,0.1);
+            border-left: 4px solid var(--success);
+            border-radius: 14px;
+            margin: 24px 0;
+        }
+
+        .success-box h4 {
+            color: var(--success);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.4);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 14px 28px;
+            background: rgba(102,126,234,0.1);
+            border-radius: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(102,126,234,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 60px 16px 30px; }
+            .header h1 { font-size: 36px; }
+            .card { padding: 28px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗑️ 卸载指南</h1>
+            <p>完整、干净地卸载 OpenClaw</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-exclamation-triangle"></i> 卸载前须知</h2>
+            <div class="warning-box">
+                <h4>⚠️ 重要提示</h4>
+                <p>卸载前请备份重要配置文件，特别是包含 API Key 的 .env 文件。卸载后数据将无法恢复。</p>
+            </div>
+            <p>建议备份的文件：</p>
+            <ul>
+                <li><code>~/.openclaw/workspace/openclaw.json</code> - 主配置文件</li>
+                <li><code>~/.openclaw/workspace/.env</code> - 环境变量（含敏感信息）</li>
+                <li><code>~/.openclaw/logs/</code> - 日志文件（如需审计）</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2><i class="fab fa-linux"></i> Linux / macOS 卸载</h2>
+            
+            <h3>步骤 1: 停止服务</h3>
+            <div class="code-block">
+                <div class="code-title">终端命令</div>
+                <code>openclaw stop</code>
+            </div>
+
+            <h3>步骤 2: 卸载 OpenClaw</h3>
+            <div class="code-block">
+                <div class="code-title">终端命令</div>
+                <code>npm uninstall -g openclaw</code>
+            </div>
+
+            <h3>步骤 3: 删除配置目录</h3>
+            <div class="code-block">
+                <div class="code-title">终端命令</div>
+                <code>rm -rf ~/.openclaw</code>
+            </div>
+
+            <h3>步骤 4: 删除开机自启（如果设置了）</h3>
+            <div class="code-block">
+                <div class="code-title">Linux</div>
+                <code>sudo systemctl disable openclaw
+sudo rm /etc/systemd/system/openclaw.service
+sudo systemctl daemon-reload</code>
+            </div>
+
+            <div class="code-block">
+                <div class="code-title">macOS</div>
+                <code>launchctl unload ~/Library/LaunchAgents/openclaw.plist
+rm ~/Library/LaunchAgents/openclaw.plist</code>
+            </div>
+
+            <h3>步骤 5: 验证卸载</h3>
+            <div class="code-block">
+                <div class="code-title">终端命令</div>
+                <code>openclaw --version
+# 应该显示：command not found
+
+ls -la ~/.openclaw
+# 应该显示：No such file or directory</code>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fab fa-windows"></i> Windows 卸载</h2>
+            
+            <h3>步骤 1: 停止服务</h3>
+            <div class="code-block">
+                <div class="code-title">PowerShell</div>
+                <code>openclaw stop</code>
+            </div>
+
+            <h3>步骤 2: 卸载 OpenClaw</h3>
+            <div class="code-block">
+                <div class="code-title">PowerShell</div>
+                <code>npm uninstall -g openclaw</code>
+            </div>
+
+            <h3>步骤 3: 删除配置目录</h3>
+            <div class="code-block">
+                <div class="code-title">PowerShell</div>
+                <code>Remove-Item -Recurse -Force $env:USERPROFILE\.openclaw</code>
+            </div>
+
+            <h3>步骤 4: 删除开机自启（如果设置了）</h3>
+            <div class="code-block">
+                <div class="code-title">PowerShell</div>
+                <code>Remove-Item "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\OpenClaw.lnk"</code>
+            </div>
+
+            <h3>步骤 5: 验证卸载</h3>
+            <div class="code-block">
+                <div class="code-title">PowerShell</div>
+                <code>openclaw --version
+# 应该显示：The term 'openclaw' is not recognized
+
+Test-Path $env:USERPROFILE\.openclaw
+# 应该显示：False</code>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-check-circle"></i> 卸载完成</h2>
+            <div class="success-box">
+                <h4>✅ 卸载成功</h4>
+                <p>OpenClaw 已完全从您的系统中移除。如有任何问题，请联系支持团队。</p>
+            </div>
+            <p>如需重新安装，请访问：<a href="/openclaw-generator/" style="color: var(--primary);">配置生成器</a></p>
+        </div>
+
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> 返回首页</a>
+            <a href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器</a>
+            <a href="/docs/quickstart.html"><i class="fas fa-book"></i> 快速入门</a>
+            <a href="/docs/security.html"><i class="fas fa-shield-alt"></i> 安全说明</a>
+        </div>
+    </div>
+</body>
+</html>

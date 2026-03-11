@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Skill 市场</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; color: #fff; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 36px; margin-bottom: 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: #8892b0; font-size: 16px; }
+        .tabs { display: flex; gap: 12px; margin-bottom: 30px; justify-content: center; flex-wrap: wrap; }
+        .tab { padding: 12px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: #8892b0; cursor: pointer; transition: all 0.3s; }
+        .tab:hover { border-color: #667eea; color: #fff; }
+        .tab.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-color: transparent; }
+        .search-box { max-width: 600px; margin: 0 auto 30px; }
+        .search-box input { width: 100%; padding: 16px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: #fff; font-size: 16px; }
+        .search-box input:focus { outline: none; border-color: #667eea; }
+        .skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .skill-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; transition: all 0.3s; }
+        .skill-card:hover { transform: translateY(-4px); border-color: #667eea; box-shadow: 0 8px 30px rgba(102,126,234,0.2); }
+        .skill-card .header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px; text-align: left; }
+        .skill-card .icon { width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .skill-card .info h3 { font-size: 18px; margin-bottom: 4px; }
+        .skill-card .info p { font-size: 13px; color: #8892b0; }
+        .skill-card .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .skill-card .tag { padding: 4px 12px; background: rgba(102,126,234,0.2); border-radius: 20px; font-size: 12px; color: #667eea; }
+        .skill-card .meta { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 13px; color: #8892b0; }
+        .skill-card .btn { padding: 8px 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: white; font-size: 13px; cursor: pointer; transition: all 0.3s; }
+        .skill-card .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+        .filter-section { display: flex; gap: 12px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+        .filter-btn { padding: 8px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: #8892b0; cursor: pointer; font-size: 13px; }
+        .filter-btn.active { background: rgba(102,126,234,0.2); border-color: #667eea; color: #667eea; }
+        .source-badge { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+        .source-clawhub { background: rgba(102,126,234,0.2); color: #667eea; }
+        .source-tencent { background: rgba(0,188,212,0.2); color: #00bcd4; }
+        .source-community { background: rgba(255,152,0,0.2); color: #ff9800; }
+        .stats { text-align: center; margin-bottom: 30px; color: #8892b0; }
+        .stats span { margin: 0 16px; }
+        .stats strong { color: #667eea; }
+        @media (max-width: 768px) { .container { padding: 20px 16px; } .skill-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧩 OpenClaw Skill 市场</h1>
+            <p>发现、安装和管理你的智能体技能</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="switchSource('all')">全部</div>
+            <div class="tab" onclick="switchSource('clawhub')">ClawHub</div>
+            <div class="tab" onclick="switchSource('tencent')">腾讯 SkillHub</div>
+            <div class="tab" onclick="switchSource('community')">社区贡献</div>
+        </div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 搜索技能..." oninput="filterSkills()">
+        </div>
+
+        <div class="filter-section">
+            <button class="filter-btn active" onclick="filterCategory('all')">全部</button>
+            <button class="filter-btn" onclick="filterCategory('communication')">通讯</button>
+            <button class="filter-btn" onclick="filterCategory('productivity')">效率</button>
+            <button class="filter-btn" onclick="filterCategory('development')">开发</button>
+            <button class="filter-btn" onclick="filterCategory('data')">数据</button>
+            <button class="filter-btn" onclick="filterCategory('ai')">AI</button>
+            <button class="filter-btn" onclick="filterCategory('integration')">集成</button>
+        </div>
+
+        <div class="stats">
+            <span>共 <strong id="totalCount">0</strong> 个技能</span>
+            <span>ClawHub: <strong id="clawhubCount">0</strong></span>
+            <span>腾讯：<strong id="tencentCount">0</strong></span>
+            <span>社区：<strong id="communityCount">0</strong></span>
+        </div>
+
+        <div class="skill-grid" id="skillGrid"></div>
+    </div>
+
+    <script>
+        const skills = [
+            // ClawHub 官方技能
+            { id: 1, name: '钉钉机器人', icon: '💬', source: 'clawhub', category: 'communication', author: 'OpenClaw', installs: 12580, rating: 4.8, desc: '连接钉钉企业 IM，支持消息收发、卡片消息、机器人回调' },
+            { id: 2, name: '飞书机器人', icon: '🚀', source: 'clawhub', category: 'communication', author: 'OpenClaw', installs: 8960, rating: 4.7, desc: '集成飞书开放平台，支持消息、日历、云文档' },
+            { id: 3, name: '企业微信', icon: '💚', source: 'clawhub', category: 'communication', author: 'OpenClaw', installs: 10240, rating: 4.8, desc: '企业微信应用/机器人，支持应用消息、群机器人' },
+            { id: 4, name: 'Telegram Bot', icon: '✈️', source: 'clawhub', category: 'communication', author: 'OpenClaw', installs: 6780, rating: 4.6, desc: 'Telegram 机器人集成，支持群组、频道、Inline 查询' },
+            { id: 5, name: 'GitHub Actions', icon: '⚡', source: 'clawhub', category: 'development', author: 'OpenClaw', installs: 5420, rating: 4.9, desc: 'GitHub Actions 工作流管理、状态查询、自动触发' },
+            { id: 6, name: '网页搜索', icon: '🔍', source: 'clawhub', category: 'data', author: 'OpenClaw', installs: 15680, rating: 4.7, desc: 'Brave Search API 集成，支持网页搜索、新闻搜索' },
+            { id: 7, name: '文件操作', icon: '📁', source: 'clawhub', category: 'productivity', author: 'OpenClaw', installs: 9870, rating: 4.8, desc: '文件读写、目录管理、文件搜索、批量操作' },
+            { id: 8, name: '命令执行', icon: '💻', source: 'clawhub', category: 'development', author: 'OpenClaw', installs: 7650, rating: 4.6, desc: '安全执行 Shell 命令，支持超时、日志、权限控制' },
+            { id: 9, name: '记忆管理', icon: '🧠', source: 'clawhub', category: 'ai', author: 'OpenClaw', installs: 11230, rating: 4.9, desc: '长期记忆存储、语义搜索、记忆整理' },
+            { id: 10, name: '浏览器控制', icon: '🌐', source: 'clawhub', category: 'integration', author: 'OpenClaw', installs: 4560, rating: 4.5, desc: 'Playwright 集成，网页自动化、截图、数据抓取' },
+            
+            // 腾讯 SkillHub
+            { id: 11, name: '微信公众号', icon: '📱', source: 'tencent', category: 'communication', author: 'Tencent', installs: 8900, rating: 4.6, desc: '微信公众号消息收发、模板消息、客服消息' },
+            { id: 12, name: '企业微信会议', icon: '📹', source: 'tencent', category: 'productivity', author: 'Tencent', installs: 5670, rating: 4.5, desc: '腾讯会议集成，创建会议、查询状态、录制管理' },
+            { id: 13, name: '腾讯云 COS', icon: '☁️', source: 'tencent', category: 'data', author: 'Tencent', installs: 4320, rating: 4.7, desc: '对象存储操作，文件上传下载、批量管理' },
+            { id: 14, name: '微信客服', icon: '💁', source: 'tencent', category: 'communication', author: 'Tencent', installs: 6780, rating: 4.6, desc: '微信客服消息接入，多客服分配、会话管理' },
+            { id: 15, name: '腾讯文档', icon: '📄', source: 'tencent', category: 'productivity', author: 'Tencent', installs: 3450, rating: 4.4, desc: '腾讯文档 API，创建、编辑、协作管理' },
+            
+            // 社区贡献
+            { id: 16, name: 'Notion 集成', icon: '📝', source: 'community', category: 'productivity', author: '@devzhang', installs: 2340, rating: 4.5, desc: 'Notion API 集成，页面管理、数据库操作' },
+            { id: 17, name: 'Slack 机器人', icon: '💬', source: 'community', category: 'communication', author: '@liwang', installs: 3450, rating: 4.6, desc: 'Slack Bot 集成，消息、频道、互动组件' },
+            { id: 18, name: 'Discord 机器人', icon: '🎮', source: 'community', category: 'communication', author: '@gamerliu', installs: 2890, rating: 4.5, desc: 'Discord.py 集成，消息、语音、Slash Command' },
+            { id: 19, name: 'MySQL 数据库', icon: '🗄️', source: 'community', category: 'data', author: '@dbmaster', installs: 4560, rating: 4.7, desc: 'MySQL 数据库连接、查询、数据操作' },
+            { id: 20, name: 'Redis 缓存', icon: '⚡', source: 'community', category: 'data', author: '@cachepro', installs: 3210, rating: 4.6, desc: 'Redis 缓存操作，键值存储、发布订阅' },
+            { id: 21, name: '阿里云 OSS', icon: '☁️', source: 'community', category: 'data', author: '@aliyunfan', installs: 2780, rating: 4.5, desc: '阿里云对象存储，文件上传下载、生命周期管理' },
+            { id: 22, name: '钉钉审批', icon: '✅', source: 'community', category: 'productivity', author: '@dingdingdev', installs: 1890, rating: 4.4, desc: '钉钉审批流程，创建审批、查询状态' },
+            { id: 23, name: '飞书多维表格', icon: '📊', source: 'community', category: 'data', author: '@feishufan', installs: 2340, rating: 4.6, desc: '飞书多维表格 API，数据读写、自动化' },
+            { id: 24, name: 'Jira 集成', icon: '📋', source: 'community', category: 'productivity', author: '@jiramaster', installs: 1560, rating: 4.3, desc: 'Atlassian Jira，Issue 管理、工作流' },
+            { id: 25, name: 'GitLab CI', icon: '🔄', source: 'community', category: 'development', author: '@gitlabfan', installs: 1890, rating: 4.5, desc: 'GitLab CI/CD，流水线管理、状态查询' }
+        ];
+
+        let currentSource = 'all';
+        let currentCategory = 'all';
+
+        function renderSkills() {
+            const grid = document.getElementById('skillGrid');
+            grid.innerHTML = '';
+            
+            const filtered = skills.filter(s => {
+                const matchSource = currentSource === 'all' || s.source === currentSource;
+                const matchCategory = currentCategory === 'all' || s.category === currentCategory;
+                const matchSearch = document.getElementById('searchInput').value === '' || 
+                    s.name.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase()) ||
+                    s.desc.toLowerCase().includes(document.getElementById('searchInput').value.toLowerCase());
+                return matchSource && matchCategory && matchSearch;
+            });
+
+            filtered.forEach(skill => {
+                const card = document.createElement('div');
+                card.className = 'skill-card';
+                card.innerHTML = `
+                    <div class="header">
+                        <div class="icon">${skill.icon}</div>
+                        <div class="info">
+                            <h3>${skill.name} <span class="source-badge source-${skill.source}">${getSourceName(skill.source)}</span></h3>
+                            <p>${skill.desc}</p>
+                        </div>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">${getCategoryName(skill.category)}</span>
+                        <span class="tag">by ${skill.author}</span>
+                    </div>
+                    <div class="meta">
+                        <span>⬇️ ${skill.installs.toLocaleString()} 安装</span>
+                        <span>⭐ ${skill.rating}</span>
+                        <button class="btn" onclick="installSkill('${skill.name}')">安装</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            updateStats();
+        }
+
+        function getSourceName(source) {
+            return { clawhub: 'ClawHub', tencent: '腾讯', community: '社区' }[source] || source;
+        }
+
+        function getCategoryName(category) {
+            return {
+                communication: '通讯', productivity: '效率', development: '开发',
+                data: '数据', ai: 'AI', integration: '集成'
+            }[category] || category;
+        }
+
+        function switchSource(source) {
+            currentSource = source;
+            document.querySelectorAll('.tabs .tab').forEach((t, i) => {
+                t.classList.toggle('active', ['all', 'clawhub', 'tencent', 'community'].indexOf(source) === i);
+            });
+            renderSkills();
+        }
+
+        function filterCategory(category) {
+            currentCategory = category;
+            document.querySelectorAll('.filter-btn').forEach((b, i) => {
+                b.classList.toggle('active', ['all', 'communication', 'productivity', 'development', 'data', 'ai', 'integration'].indexOf(category) === i);
+            });
+            renderSkills();
+        }
+
+        function filterSkills() {
+            renderSkills();
+        }
+
+        function updateStats() {
+            document.getElementById('totalCount').textContent = skills.length;
+            document.getElementById('clawhubCount').textContent = skills.filter(s => s.source === 'clawhub').length;
+            document.getElementById('tencentCount').textContent = skills.filter(s => s.source === 'tencent').length;
+            document.getElementById('communityCount').textContent = skills.filter(s => s.source === 'community').length;
+        }
+
+        function installSkill(skillName) {
+            alert('🔧 安装功能开发中...\n\n技能：' + skillName + '\n\n即将支持一键安装到 OpenClaw！');
+        }
+
+        renderSkills();
+    </script>
+</body>
+</html>

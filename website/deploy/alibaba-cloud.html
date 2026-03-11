@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>阿里云 ECS 部署 - OpenClaw</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .architecture-section {
+            padding: 100px 0;
+            background: #fff;
+        }
+        
+        .architecture-diagram {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 3rem;
+            color: #fff;
+            margin: 3rem 0;
+        }
+        
+        .instance-card {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .feature-box {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 2rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .feature-box i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .pricing-comparison {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .pricing-header {
+            background: var(--gradient-primary);
+            color: #fff;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        .pricing-body {
+            padding: 2rem;
+        }
+        
+        .pricing-body ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .pricing-body li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .pricing-body li:last-child {
+            border-bottom: none;
+        }
+        
+        .check-icon {
+            color: #28a745;
+            margin-right: 0.5rem;
+        }
+        
+        .cross-icon {
+            color: #dc3545;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo"><h1>OpenClaw</h1></div>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/deploy/">部署服务</a></li>
+                <li><a href="/deploy/alibaba-cloud.html">阿里云部署</a></li>
+                <li><a href="/#pricing">定价</a></li>
+                <li><a href="/#contact">联系</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="deploy-hero">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1>☁️ 阿里云 ECS 部署</h1>
+                    <p class="lead">一人一实例，独立域名，独立账号，企业级隔离</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="architecture-section">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">🏗️ 部署架构</h2>
+            
+            <div class="architecture-diagram">
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <div class="instance-card">
+                            <h4><i class="fas fa-user"></i> 用户 A</h4>
+                            <p>ECS 实例：2 核 4GB</p>
+                            <p>域名：a.openclaw.cn</p>
+                            <p>账号：独立账号</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="instance-card">
+                            <h4><i class="fas fa-user"></i> 用户 B</h4>
+                            <p>ECS 实例：2 核 4GB</p>
+                            <p>域名：b.openclaw.cn</p>
+                            <p>账号：独立账号</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="instance-card">
+                            <h4><i class="fas fa-user"></i> 用户 C</h4>
+                            <p>ECS 实例：2 核 4GB</p>
+                            <p>域名：c.openclaw.cn</p>
+                            <p>账号：独立账号</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <h3><i class="fab fa-alibabacloud"></i> 阿里云基础设施</h3>
+                    <p>安全组隔离 | 网络隔离 | 数据隔离</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">✨ 核心特性</h2>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="feature-box">
+                        <i class="fas fa-server"></i>
+                        <h5>独立实例</h5>
+                        <p>每个用户独享 ECS 实例，资源不共享</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-box">
+                        <i class="fas fa-globe"></i>
+                        <h5>独立域名</h5>
+                        <p>专属子域名，支持自定义域名</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-box">
+                        <i class="fas fa-user-shield"></i>
+                        <h5>独立账号</h5>
+                        <p>独立账号体系，数据完全隔离</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="feature-box">
+                        <i class="fas fa-shield-alt"></i>
+                        <h5>安全保障</h5>
+                        <p>安全组隔离，DDoS 防护</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="pricing-section">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">💰 配置与价格</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="pricing-comparison">
+                        <div class="pricing-header">
+                            <h3>社区版</h3>
+                            <div class="price">
+                                <span class="currency">¥</span>
+                                <span class="amount">0</span>
+                                <span class="period">/永久</span>
+                            </div>
+                        </div>
+                        <div class="pricing-body">
+                            <ul>
+                                <li><i class="fas fa-check check-icon"></i> ECS: 1 核 1GB</li>
+                                <li><i class="fas fa-check check-icon"></i> 带宽：1Mbps</li>
+                                <li><i class="fas fa-check check-icon"></i> 磁盘：20GB</li>
+                                <li><i class="fas fa-check check-icon"></i> 子域名</li>
+                                <li><i class="fas fa-check check-icon"></i> SSL 证书</li>
+                                <li><i class="fas fa-times cross-icon"></i> 自定义域名</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pricing-comparison">
+                        <div class="pricing-header">
+                            <h3>专业版</h3>
+                            <div class="price">
+                                <span class="currency">¥</span>
+                                <span class="amount">9,800</span>
+                                <span class="period">/年</span>
+                            </div>
+                        </div>
+                        <div class="pricing-body">
+                            <ul>
+                                <li><i class="fas fa-check check-icon"></i> ECS: 2 核 4GB</li>
+                                <li><i class="fas fa-check check-icon"></i> 带宽：3Mbps</li>
+                                <li><i class="fas fa-check check-icon"></i> 磁盘：40GB SSD</li>
+                                <li><i class="fas fa-check check-icon"></i> 子域名</li>
+                                <li><i class="fas fa-check check-icon"></i> SSL 证书</li>
+                                <li><i class="fas fa-check check-icon"></i> 自定义域名</li>
+                                <li><i class="fas fa-check check-icon"></i> 每日备份</li>
+                                <li><i class="fas fa-check check-icon"></i> 专业支持</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="pricing-comparison">
+                        <div class="pricing-header">
+                            <h3>企业版</h3>
+                            <div class="price">
+                                <span class="amount">定制</span>
+                            </div>
+                        </div>
+                        <div class="pricing-body">
+                            <ul>
+                                <li><i class="fas fa-check check-icon"></i> ECS: 4 核 8GB+</li>
+                                <li><i class="fas fa-check check-icon"></i> 带宽：5Mbps+</li>
+                                <li><i class="fas fa-check check-icon"></i> 磁盘：100GB+ SSD</li>
+                                <li><i class="fas fa-check check-icon"></i> 自定义域名</li>
+                                <li><i class="fas fa-check check-icon"></i> SSL 证书</li>
+                                <li><i class="fas fa-check check-icon"></i> 每小时备份</li>
+                                <li><i class="fas fa-check check-icon"></i> 专属支持</li>
+                                <li><i class="fas fa-check check-icon"></i> SLA 保障</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="container">
+            <h2>准备好部署您的专属 AI 助手了吗？</h2>
+            <p class="lead">3 分钟完成部署，立即拥有独立的 AI 助手实例</p>
+            <div class="mt-4">
+                <a href="/#contact" class="btn btn-light btn-lg me-3">🚀 开始部署</a>
+                <a href="/deploy/" class="btn btn-outline-light btn-lg">📖 了解更多</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="text-center">
+                <p>&copy; 2026 OpenClaw. All rights reserved.</p>
+                <p>邮箱：heidsoft@qq.com | 微信：heidsoft</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

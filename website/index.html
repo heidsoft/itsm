@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudMesh - 智能 IT 管理平台 | AI 驱动的 DevOps 平台</title>
+    <meta name="description" content="CloudMesh 是 AI 驱动的智能 IT 管理平台，整合 OpenClaw DevOps 和 ITSM 工单系统，让 IT 管理更简单高效">
+    <meta name="keywords" content="CloudMesh, IT 管理平台，DevOps, AI 运维，ITSM, 工单系统，监控告警，自动化运维">
+    <meta name="author" content="CloudMesh">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="CloudMesh - 智能 IT 管理平台">
+    <meta property="og:description" content="AI 驱动的 DevOps 平台，让一个人也能像大公司一样高效运维">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cloudmesh.top/">
+    
+    <!-- Canonical -->
+    <link rel="canonical" href="https://cloudmesh.top/">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/icons/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
+    
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://cdn.bootcdn.net">
+    <link rel="dns-prefetch" href="https://cdn.bootcdn.net">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            /* 主色调 - 科技蓝紫渐变 */
+            --primary-start: #667eea;
+            --primary-end: #764ba2;
+            --primary-dark: #1a202c;
+            --primary-light: #f7fafc;
+            
+            /* 强调色 */
+            --accent-cyan: #00d9ff;
+            --accent-purple: #9d4edd;
+            --accent-pink: #ff006e;
+            
+            /* 中性色 */
+            --dark-900: #0f0f23;
+            --dark-800: #1a1a2e;
+            --dark-700: #16213e;
+            --dark-600: #1f4068;
+            --gray-500: #a0aec0;
+            --gray-400: #cbd5e0;
+            --gray-300: #e2e8f0;
+            --white: #ffffff;
+            
+            /* 渐变 */
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-cyber: linear-gradient(135deg, #00d9ff 0%, #667eea 50%, #764ba2 100%);
+            --gradient-dark: linear-gradient(180deg, #0f0f23 0%, #1a1a2e 100%);
+            
+            /* 阴影 */
+            --shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
+            --shadow-glow-lg: 0 0 60px rgba(102, 126, 234, 0.4);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+            
+            /* 玻璃态 */
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-blur: blur(20px);
+            
+            /* 动画 */
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        /* ===== Base ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { 
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--dark-900);
+            color: var(--gray-400);
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        /* ===== Scrollbar ===== */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--dark-800); }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--gradient-primary); 
+            border-radius: 5px; 
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-cyan); }
+
+        /* ===== Background Animation ===== */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--dark-900);
+            overflow: hidden;
+        }
+        
+        .bg-gradient {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(102,126,234,0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 20s infinite ease-in-out;
+        }
+        
+        .bg-gradient-1 { top: -200px; right: -200px; animation-delay: 0s; }
+        .bg-gradient-2 { bottom: -200px; left: -200px; animation-delay: -7s; }
+        .bg-gradient-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: -14s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -50px) scale(1.1); }
+            50% { transform: translate(-30px, 30px) scale(0.9); }
+            75% { transform: translate(40px, 40px) scale(1.05); }
+        }
+
+        /* ===== Navigation ===== */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 15, 35, 0.8);
+            backdrop-filter: var(--glass-blur);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            padding: 1rem 0;
+            transition: var(--transition-smooth);
+        }
+        
+        .navbar.scrolled {
+            padding: 0.75rem 0;
+            background: rgba(15, 15, 35, 0.95);
+            box-shadow: var(--shadow-glow);
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: var(--transition-smooth);
+        }
+        
+        .navbar-brand:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.5));
+        }
+        
+        .navbar-brand i {
+            font-size: 1.75rem;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: pulse 3s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        .nav-link { 
+            color: var(--gray-400) !important; 
+            font-weight: 600; 
+            padding: 0.5rem 1.25rem !important;
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--gradient-cyber);
+            transition: var(--transition-smooth);
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover { 
+            color: var(--white) !important; 
+        }
+        
+        .nav-link:hover::after { 
+            width: 80%; 
+        }
+        
+        .btn-trial {
+            background: var(--gradient-primary);
+            color: var(--white) !important;
+            border-radius: 50px;
+            padding: 0.625rem 1.75rem !important;
+            font-weight: 700;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .btn-trial:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        .dropdown-menu {
+            background: rgba(26, 26, 46, 0.98);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-glow-lg);
+            border-radius: 16px;
+            padding: 0.75rem;
+            margin-top: 0.5rem;
+        }
+        
+        .dropdown-item {
+            border-radius: 10px;
+            padding: 0.875rem 1.25rem;
+            transition: var(--transition-smooth);
+            color: var(--gray-400);
+            font-weight: 500;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--glass-bg);
+            color: var(--white);
+            padding-left: 1.5rem;
+        }
+
+        /* ===== Hero Section ===== */
+        .hero-section {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 140px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-content {
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 0.625rem 1.5rem;
+            border-radius: 50px;
+            margin-bottom: 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid var(--glass-border);
+            color: var(--accent-cyan);
+            animation: fadeInUp 0.8s ease-out;
+        }
+        
+        .hero-badge .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--accent-cyan); }
+            50% { opacity: 0.5; box-shadow: 0 0 20px var(--accent-cyan); }
+        }
+        
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--white) 0%, var(--gray-400) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        
+        .hero-title span {
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(1.1rem, 2vw, 1.375rem);
+            color: var(--gray-500);
+            max-width: 700px;
+            margin: 0 auto 3rem;
+            line-height: 1.8;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+        }
+        
+        .btn-hero {
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.0625rem;
+            font-weight: 700;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .btn-hero-primary {
+            background: var(--gradient-primary);
+            color: var(--white);
+            border: none;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-hero-primary:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+            color: var(--white);
+        }
+        
+        .btn-hero-outline {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid var(--glass-border);
+            backdrop-filter: var(--glass-blur);
+        }
+        
+        .btn-hero-outline:hover {
+            background: var(--glass-bg);
+            border-color: var(--accent-cyan);
+            color: var(--white);
+            transform: translateY(-4px);
+        }
+        
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 5rem;
+            animation: fadeInUp 0.8s ease-out 0.8s both;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition-smooth);
+        }
+        
+        .stat-item:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            font-weight: 500;
+        }
+        
+        @keyframes fadeInUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(40px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        /* ===== Section ===== */
+        .section {
+            padding: 120px 0;
+            position: relative;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 5rem;
+        }
+        
+        .section-tag {
+            display: inline-block;
+            background: var(--glass-bg);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            border: 1px solid var(--glass-border);
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 1rem;
+        }
+        
+        .section-title p {
+            font-size: 1.125rem;
+            color: var(--gray-500);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ===== Products Section ===== */
+        .products-section {
+            background: var(--dark-800);
+        }
+        
+        .product-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-12px);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.15);
+        }
+        
+        .product-header {
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .product-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+        }
+        
+        .product-header.openclaw::before {
+            background: var(--gradient-cyber);
+        }
+        
+        .product-header.itsm::before {
+            background: linear-gradient(135deg, #ff006e 0%, #9d4edd 100%);
+        }
+        
+        .product-icon {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            animation: float-icon 3s infinite ease-in-out;
+        }
+        
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .product-header h3 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 0.75rem;
+        }
+        
+        .product-header p {
+            font-size: 1rem;
+            color: var(--gray-400);
+            opacity: 0.9;
+        }
+        
+        .product-body {
+            padding: 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .product-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            flex: 1;
+        }
+        
+        .product-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem 0;
+            color: var(--gray-400);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .product-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .product-features li i {
+            color: var(--accent-cyan);
+            font-size: 1.25rem;
+            margin-top: 0.25rem;
+            flex-shrink: 0;
+        }
+        
+        .product-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.875rem;
+        }
+        
+        .btn-product {
+            padding: 1rem;
+            border-radius: 12px;
+            font-weight: 700;
+            text-align: center;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+        }
+        
+        .btn-product-primary {
+            background: var(--gradient-primary);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-product-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            color: var(--white);
+        }
+        
+        .btn-product-outline {
+            background: transparent;
+            border: 2px solid var(--glass-border);
+            color: var(--white);
+        }
+        
+        .btn-product-outline:hover {
+            border-color: var(--accent-cyan);
+            background: var(--glass-bg);
+            color: var(--white);
+            transform: translateY(-3px);
+        }
+
+        /* ===== Features Section ===== */
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 2.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            transition: var(--transition-smooth);
+            height: 100%;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-purple);
+            box-shadow: 0 15px 40px rgba(157, 78, 221, 0.15);
+        }
+        
+        .feature-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.375rem;
+            font-weight: 700;
+            color: var(--white);
+            margin-bottom: 1rem;
+        }
+        
+        .feature-card p {
+            color: var(--gray-500);
+            line-height: 1.8;
+        }
+
+        /* ===== CTA Section ===== */
+        .cta-section {
+            background: var(--gradient-primary);
+            padding: 120px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .cta-section h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        
+        .cta-section p {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        /* ===== Footer ===== */
+        footer {
+            background: var(--dark-800);
+            border-top: 1px solid var(--glass-border);
+            padding: 5rem 0 2rem;
+        }
+        
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-brand i {
+            color: var(--accent-purple);
+            font-size: 1.75rem;
+        }
+        
+        .footer-brand span {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .footer-text {
+            color: var(--gray-500);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-title {
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--white);
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .footer-links li {
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links a {
+            color: var(--gray-500);
+            text-decoration: none;
+            transition: var(--transition-smooth);
+            display: inline-block;
+        }
+        
+        .footer-links a:hover {
+            color: var(--accent-cyan);
+            transform: translateX(8px);
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid var(--glass-border);
+            margin-top: 4rem;
+            padding-top: 2rem;
+            text-align: center;
+            color: var(--gray-500);
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 991px) {
+            .hero-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+            .product-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .hero-buttons {
+                flex-direction: column;
+            }
+            .btn-hero {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg" id="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cloud"></i>
+                CloudMesh
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">产品</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/products/openclaw.html"><i class="fas fa-rocket"></i> OpenClaw</a></li>
+                            <li><a class="dropdown-item" href="/products/itsm.html"><i class="fas fa-ticket-alt"></i> ITSM</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器 <span class="badge bg-warning text-dark ms-1">免费</span></a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/open-source/">开源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/blog/">博客</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/pricing.html">定价</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/docs/quickstart.html">文档</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact/">联系</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login.html">登录</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-trial ms-2" href="/deploy/">
+                            <i class="fas fa-rocket"></i> 免费试用
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <span class="dot"></span>
+                    <span>AI-Driven DevOps Platform</span>
+                </div>
+                <h1 class="hero-title">
+                    让 IT 管理更<span>简单</span><br>
+                    让业务运营更<span>高效</span>
+                </h1>
+                <p class="hero-subtitle">
+                    CloudMesh 提供完整的 IT 管理平台，从部署到运维，从工单到知识库，<br class="d-none d-md-block">
+                    一站式解决企业 IT 管理需求
+                </p>
+                <div class="hero-buttons">
+                    <a href="/deploy/" class="btn-hero btn-hero-primary">
+                        <i class="fas fa-rocket"></i> 开始免费试用
+                    </a>
+                    <a href="#products" class="btn-hero btn-hero-outline">
+                        <i class="fas fa-book"></i> 了解产品
+                    </a>
+                </div>
+                
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">100+</div>
+                        <div class="stat-label">服务企业</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">100 万+</div>
+                        <div class="stat-label">处理工单</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">99%</div>
+                        <div class="stat-label">用户满意</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">99.9%</div>
+                        <div class="stat-label">系统可用</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="section products-section" id="products">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">PRODUCTS</span>
+                <h2>我们的产品</h2>
+                <p>三大核心产品，覆盖 IT 管理全场景</p>
+            </div>
+            
+            <div class="row g-4 justify-content-center">
+                <!-- OpenClaw -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="product-card">
+                        <div class="product-header openclaw">
+                            <span class="product-icon">🚀</span>
+                            <h3>OpenClaw</h3>
+                            <p>AI 驱动的一人 DevOps 团队</p>
+                        </div>
+                        <div class="product-body">
+                            <ul class="product-features">
+                                <li><i class="fas fa-check-circle"></i> CMDB 配置管理</li>
+                                <li><i class="fas fa-check-circle"></i> 多云资源统一管理</li>
+                                <li><i class="fas fa-check-circle"></i> 全栈监控告警</li>
+                                <li><i class="fas fa-check-circle"></i> DevOps 流水线</li>
+                                <li><i class="fas fa-check-circle"></i> AI 运维大脑</li>
+                            </ul>
+                            <div class="product-actions">
+                                <a href="/products/openclaw.html" class="btn-product btn-product-primary">
+                                    <i class="fas fa-info-circle"></i> 了解详情
+                                </a>
+                                <a href="/deploy/" class="btn-product btn-product-outline">
+                                    <i class="fas fa-play"></i> 立即体验
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ITSM -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="product-card">
+                        <div class="product-header itsm">
+                            <span class="product-icon">📋</span>
+                            <h3>ITSM</h3>
+                            <p>企业级 IT 服务管理平台</p>
+                        </div>
+                        <div class="product-body">
+                            <ul class="product-features">
+                                <li><i class="fas fa-check-circle"></i> 完整的 ITIL 流程支持</li>
+                                <li><i class="fas fa-check-circle"></i> 智能工单管理与分配</li>
+                                <li><i class="fas fa-check-circle"></i> SLA 服务级别管理</li>
+                                <li><i class="fas fa-check-circle"></i> CMDB 配置管理数据库</li>
+                                <li><i class="fas fa-check-circle"></i> 知识库与自助服务</li>
+                            </ul>
+                            <div class="product-actions">
+                                <a href="/products/itsm.html" class="btn-product btn-product-primary">
+                                    <i class="fas fa-info-circle"></i> 了解详情
+                                </a>
+                                <a href="/tickets/" class="btn-product btn-product-outline">
+                                    <i class="fas fa-play"></i> 立即体验
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Config Generator -->
+                <div class="col-lg-4 col-md-12">
+                    <div class="product-card">
+                        <div class="product-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                            <span class="product-icon">⚙️</span>
+                            <h3>配置生成器</h3>
+                            <p>3 分钟完成 OpenClaw 配置</p>
+                        </div>
+                        <div class="product-body">
+                            <ul class="product-features">
+                                <li><i class="fas fa-check-circle"></i> 多平台支持（钉钉/飞书/企微）</li>
+                                <li><i class="fas fa-check-circle"></i> 一键安装脚本</li>
+                                <li><i class="fas fa-check-circle"></i> 个人版免费使用</li>
+                                <li><i class="fas fa-check-circle"></i> 企业版对接配置中心</li>
+                                <li><i class="fas fa-check-circle"></i> 安全存储敏感信息</li>
+                            </ul>
+                            <div class="product-actions">
+                                <a href="/openclaw-generator/" class="btn-product btn-product-primary">
+                                    <i class="fas fa-wrench"></i> 立即配置
+                                </a>
+                                <a href="/openclaw-generator/#enterprise" class="btn-product btn-product-outline" onclick="switchMode('enterprise'); return false;">
+                                    <i class="fas fa-building"></i> 企业版
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">FEATURES</span>
+                <h2>核心优势</h2>
+                <p>为什么选择 CloudMesh</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="feature-icon">🤖</span>
+                        <h3>AI 智能赋能</h3>
+                        <p>AI 驱动的自动化和智能分析，异常检测、根因分析、性能优化建议，让运维更智能</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="feature-icon">⚡</span>
+                        <h3>快速部署</h3>
+                        <p>分钟级部署上线，一键部署、蓝绿发布、金丝雀发布，无需复杂配置，开箱即用</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="feature-icon">🔒</span>
+                        <h3>安全可靠</h3>
+                        <p>企业级安全保护，数据加密传输，权限管理，审计日志，99.9% 可用性保障</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="feature-icon">📊</span>
+                        <h3>数据驱动</h3>
+                        <p>多维度数据分析报表，可视化仪表盘，容量预测，成本优化，助力科学决策</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="feature-icon">🔄</span>
+                        <h3>灵活扩展</h3>
+                        <p>模块化设计，按需选择，支持私有化部署，API 开放集成，随业务增长而扩展</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <span class="feature-icon">💬</span>
+                        <h3>专业服务</h3>
+                        <p>7x24 小时技术支持，专业团队全程陪伴，知识库，社区互助，快速响应</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Showcase Section -->
+    <section class="section" style="background: var(--dark-700);" id="skills">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">SKILLS</span>
+                <h2>🧩 Skill 技能市场</h2>
+                <p>像安装 App 一样扩展你的 AI 助手能力</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="feature-card" style="text-align: center;">
+                        <span class="feature-icon" style="font-size: 4rem;">💬</span>
+                        <h4 style="margin: 16px 0 8px;">钉钉机器人</h4>
+                        <p style="font-size: 14px; margin-bottom: 16px;">连接钉钉企业 IM，支持消息收发、卡片消息</p>
+                        <span class="badge bg-success">12,580+ 安装</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="feature-card" style="text-align: center;">
+                        <span class="feature-icon" style="font-size: 4rem;">🚀</span>
+                        <h4 style="margin: 16px 0 8px;">飞书机器人</h4>
+                        <p style="font-size: 14px; margin-bottom: 16px;">集成飞书开放平台，支持消息、日历、云文档</p>
+                        <span class="badge bg-success">8,960+ 安装</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="feature-card" style="text-align: center;">
+                        <span class="feature-icon" style="font-size: 4rem;">🔍</span>
+                        <h4 style="margin: 16px 0 8px;">网页搜索</h4>
+                        <p style="font-size: 14px; margin-bottom: 16px;">Brave Search API 集成，支持网页搜索、新闻搜索</p>
+                        <span class="badge bg-success">15,680+ 安装</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="feature-card" style="text-align: center;">
+                        <span class="feature-icon" style="font-size: 4rem;">🧠</span>
+                        <h4 style="margin: 16px 0 8px;">记忆管理</h4>
+                        <p style="font-size: 14px; margin-bottom: 16px;">长期记忆存储、语义搜索、记忆整理</p>
+                        <span class="badge bg-success">11,230+ 安装</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center" style="margin-top: 40px;">
+                <a href="/skills/" class="btn-hero btn-hero-primary">
+                    <i class="fas fa-puzzle-piece"></i> 浏览全部 Skills
+                </a>
+                <a href="/blog/skill-market-guide.html" class="btn-hero btn-hero-outline ms-3">
+                    <i class="fas fa-book"></i> 使用指南
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="contact">
+        <div class="container">
+            <h2>准备好开始了吗？</h2>
+            <p>立即免费试用 30 天，无需信用卡。我们的专家团队随时为您服务。</p>
+            <div class="hero-buttons justify-content-center">
+                <a href="/deploy/" class="btn-hero btn-hero-primary">
+                    <i class="fas fa-rocket"></i> 免费试用
+                </a>
+                <a href="/contact/" class="btn-hero btn-hero-outline">
+                    <i class="fas fa-envelope"></i> 联系我们
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-brand">
+                        <i class="fas fa-cloud"></i>
+                        <span>CloudMesh</span>
+                    </div>
+                    <p class="footer-text">智能 IT 管理平台，让 IT 管理更简单高效</p>
+                    <div class="d-flex gap-3">
+                        <a href="https://github.com/heidsoft/itsm" target="_blank" class="text-white-50 fs-4"><i class="fab fa-github"></i></a>
+                        <a href="#" class="text-white-50 fs-4"><i class="fab fa-weixin"></i></a>
+                        <a href="mailto:heidsoft@qq.com" class="text-white-50 fs-4"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">产品</h4>
+                    <ul class="footer-links">
+                        <li><a href="/products/openclaw.html">OpenClaw</a></li>
+                        <li><a href="/products/itsm.html">ITSM</a></li>
+                        <li><a href="/#pricing">定价</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">开源</h4>
+                    <ul class="footer-links">
+                        <li><a href="/open-source/">开源社区</a></li>
+                        <li><a href="https://github.com/heidsoft/itsm" target="_blank">GitHub</a></li>
+                        <li><a href="/docs/">文档</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-4 col-md-6">
+                    <h4 class="footer-title">联系</h4>
+                    <ul class="footer-links">
+                        <li><a href="/contact/">联系我们</a></li>
+                        <li><a href="mailto:heidsoft@qq.com">heidsoft@qq.com</a></li>
+                        <li><a href="/privacy/">隐私政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CloudMesh. All rights reserved. | Powered by Open Source</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        });
+
+        // Fade in animation on scroll
+        const fadeElements = document.querySelectorAll('.product-card, .feature-card');
+        const fadeInOnScroll = () => {
+            fadeElements.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                if (elementTop < windowHeight - 100) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+            });
+        };
+        
+        fadeElements.forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+        });
+        
+        window.addEventListener('scroll', fadeInOnScroll);
+        window.addEventListener('load', fadeInOnScroll);
+    </script>
+</body>
+</html>

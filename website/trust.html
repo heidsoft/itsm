@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安全与信任 - OpenClaw</title>
+    <meta name="description" content="OpenClaw 安全承诺：开源、透明、可审计">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #0f0f1a;
+            --bg-card: rgba(255,255,255,0.03);
+            --border: rgba(255,255,255,0.08);
+            --text-primary: #fff;
+            --text-secondary: #a0aec0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; padding: 80px 20px 40px; }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p { color: var(--text-secondary); font-size: 18px; }
+
+        .concern-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 32px;
+        }
+
+        .concern-card h2 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .concern-card.danger h2 { color: var(--danger); }
+        .concern-card.warning h2 { color: var(--warning); }
+        .concern-card.success h2 { color: var(--success); }
+
+        .concern-card h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 24px 0 16px;
+            color: var(--text-primary);
+        }
+
+        .concern-card p { color: var(--text-secondary); margin-bottom: 16px; }
+        .concern-card ul { color: var(--text-secondary); margin-bottom: 16px; padding-left: 24px; }
+        .concern-card li { margin-bottom: 10px; }
+
+        .solution-box {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 14px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .solution-box h4 {
+            color: var(--success);
+            margin-bottom: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .solution-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .solution-box li {
+            padding: 8px 0;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .solution-box li i {
+            color: var(--success);
+            margin-top: 4px;
+        }
+
+        .code-block {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            color: #e2e8f0;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            display: block;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(102,126,234,0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 24px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-number {
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 60px 16px 30px; }
+            .header h1 { font-size: 36px; }
+            .concern-card { padding: 28px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 安全与信任</h1>
+            <p>我们理解您的担忧，让我们坦诚沟通</p>
+        </div>
+
+        <!-- 担忧 1: 安全漏洞 -->
+        <div class="concern-card danger">
+            <h2><i class="fas fa-bug"></i> 担忧 1: 软件有漏洞？</h2>
+            <p>我们理解您对软件安全的担忧。这是负责任的表现！</p>
+            
+            <h3>我们的承诺</h3>
+            <div class="solution-box">
+                <h4><i class="fas fa-check-circle"></i> 开源透明</h4>
+                <ul>
+                    <li><i class="fas fa-check"></i> 所有代码在 GitHub 公开，接受任何人审查</li>
+                    <li><i class="fas fa-check"></i> 无隐藏代码、无后门、无恶意软件</li>
+                    <li><i class="fas fa-check"></i> 欢迎安全专家审计代码</li>
+                    <li><i class="fas fa-check"></i> 发现漏洞立即修复并公开致谢</li>
+                </ul>
+            </div>
+
+            <h3>如何验证？</h3>
+            <div class="code-block">
+                <code># 查看源代码
+git clone https://github.com/openclaw/openclaw.git
+
+# 查看 npm 包
+npm view openclaw
+
+# 检查依赖
+npm audit</code>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <a href="https://github.com/openclaw/openclaw" target="_blank" class="btn">
+                    <i class="fab fa-github"></i> 查看源代码
+                </a>
+                <a href="/docs/security.html" class="btn btn-outline">
+                    <i class="fas fa-shield-alt"></i> 安全白皮书
+                </a>
+            </div>
+        </div>
+
+        <!-- 担忧 2: 安装门槛 -->
+        <div class="concern-card warning">
+            <h2><i class="fas fa-download"></i> 担忧 2: 安装太难？</h2>
+            <p>不懂命令行？不会装 Node.js？没关系！</p>
+            
+            <h3>我们的改进</h3>
+            <div class="solution-box">
+                <h4><i class="fas fa-check-circle"></i> 一键安装</h4>
+                <ul>
+                    <li><i class="fas fa-check"></i> 自动检测并安装 Node.js</li>
+                    <li><i class="fas fa-check"></i> 自动配置环境变量</li>
+                    <li><i class="fas fa-check"></i> 图形化安装向导（开发中）</li>
+                    <li><i class="fas fa-check"></i> 详细安装日志，问题可追溯</li>
+                </ul>
+            </div>
+
+            <h3>安装步骤</h3>
+            <div class="code-block">
+                <code># 只需一行命令
+curl -fsSL "https://cloudmesh.top/openclaw-generator/install.sh" | bash
+
+# 脚本会自动：
+# 1. 检测系统环境
+# 2. 安装 Node.js（如需要）
+# 3. 安装 OpenClaw
+# 4. 创建配置文件</code>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <a href="/docs/quickstart.html" class="btn">
+                    <i class="fas fa-book"></i> 快速入门指南
+                </a>
+                <a href="/openclaw-generator/" class="btn btn-outline">
+                    <i class="fas fa-wrench"></i> 配置生成器
+                </a>
+            </div>
+        </div>
+
+        <!-- 担忧 3: 卸载门槛 -->
+        <div class="concern-card success">
+            <h2><i class="fas fa-trash-alt"></i> 担忧 3: 卸载不掉？</h2>
+            <p>怕安装容易卸载难？我们理解！</p>
+            
+            <h3>我们的承诺</h3>
+            <div class="solution-box">
+                <h4><i class="fas fa-check-circle"></i> 干净卸载</h4>
+                <ul>
+                    <li><i class="fas fa-check"></i> 一行命令完全卸载</li>
+                    <li><i class="fas fa-check"></i> 不残留任何文件</li>
+                    <li><i class="fas fa-check"></i> 不修改系统关键配置</li>
+                    <li><i class="fas fa-check"></i> 详细卸载文档</li>
+                </ul>
+            </div>
+
+            <h3>卸载步骤</h3>
+            <div class="code-block">
+                <code># Linux/macOS
+openclaw stop
+npm uninstall -g openclaw
+rm -rf ~/.openclaw
+
+# Windows
+openclaw stop
+npm uninstall -g openclaw
+Remove-Item -Recurse -Force $env:USERPROFILE\.openclaw
+
+# 就这么简单！</code>
+            </div>
+
+            <div style="margin-top: 24px;">
+                <a href="/uninstall.html" class="btn">
+                    <i class="fas fa-trash"></i> 完整卸载指南
+                </a>
+            </div>
+        </div>
+
+        <!-- 统计数据 -->
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">代码开源</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">0</div>
+                <div class="stat-label">恶意代码</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">1 行</div>
+                <div class="stat-label">安装命令</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">3 步</div>
+                <div class="stat-label">完全卸载</div>
+            </div>
+        </div>
+
+        <!-- 联系我们 -->
+        <div class="concern-card" style="text-align: center;">
+            <h2 style="justify-content: center;"><i class="fas fa-envelope"></i> 还有疑虑？</h2>
+            <p>我们随时为您解答！</p>
+            <div style="margin-top: 24px;">
+                <a href="mailto:support@openclaw.ai" class="btn">
+                    <i class="fas fa-envelope"></i> 发送邮件
+                </a>
+                <a href="https://github.com/openclaw/openclaw/issues" target="_blank" class="btn btn-outline">
+                    <i class="fab fa-github"></i> 提交 Issue
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

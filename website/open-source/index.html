@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>开源社区 - ITSM | CloudMesh</title>
+    <meta name="description" content="ITSM 是开源的 IT 服务管理平台，基于 ITIL 最佳实践，欢迎参与开源贡献">
+    <meta name="keywords" content="ITSM 开源，开源 IT 服务管理，ITIL 开源，GitHub 开源项目">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+    <style>
+        .github-stats {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-label {
+            color: var(--gray-500);
+            margin-top: 0.5rem;
+        }
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .tech-badge {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-400);
+            transition: var(--transition-smooth);
+        }
+        .tech-badge:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            transform: translateY(-3px);
+        }
+        .community-link {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            text-align: center;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .community-link:hover {
+            transform: translateY(-8px);
+            border-color: var(--accent-cyan);
+            text-decoration: none;
+        }
+        .community-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .community-link.github .community-icon { color: #f0f6fc; }
+        .community-link.wechat .community-icon { color: #07C160; }
+        .community-link.discord .community-icon { color: #5865F2; }
+        .license-box {
+            background: var(--gradient-primary);
+            color: var(--white);
+            padding: 3rem;
+            border-radius: 16px;
+            text-align: center;
+        }
+        .license-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg" id="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cloud"></i>
+                CloudMesh
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">产品</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/products/openclaw.html"><i class="fas fa-rocket"></i> OpenClaw</a></li>
+                            <li><a class="dropdown-item" href="/products/itsm.html"><i class="fas fa-ticket-alt"></i> ITSM</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器 <span class="badge bg-warning text-dark ms-1">免费</span></a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/open-source/">开源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/blog/">博客</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/pricing.html">定价</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/docs/quickstart.html">文档</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact/">联系</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login.html">登录</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-trial ms-2" href="/deploy/">
+                            <i class="fas fa-rocket"></i> 免费试用
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <section class="breadcrumb-section">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">首页</a></li>
+                    <li class="breadcrumb-item active">开源社区</li>
+                </ol>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Hero -->
+    <section class="product-hero">
+        <div class="container text-center">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                <span>Open Source Community</span>
+            </div>
+            <h1><i class="fas fa-heart text-pink"></i> 开源驱动创新</h1>
+            <p class="subtitle">ITSM 是开源的 IT 服务管理平台，基于 ITIL 最佳实践</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="https://github.com/heidsoft/itsm" target="_blank" class="btn btn-primary btn-lg">
+                    <i class="fab fa-github"></i> 访问 GitHub
+                </a>
+                <a href="/docs/" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-book"></i> 开发文档
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- GitHub Stats -->
+    <section class="section">
+        <div class="container">
+            <div class="github-stats">
+                <div class="row">
+                    <div class="col-md-3 col-6 stat-item">
+                        <div class="stat-number">📦</div>
+                        <div class="stat-label">开源项目</div>
+                    </div>
+                    <div class="col-md-3 col-6 stat-item">
+                        <div class="stat-number">🌟</div>
+                        <div class="stat-label">GitHub Stars</div>
+                    </div>
+                    <div class="col-md-3 col-6 stat-item">
+                        <div class="stat-number">🍴</div>
+                        <div class="stat-label">Forks</div>
+                    </div>
+                    <div class="col-md-3 col-6 stat-item">
+                        <div class="stat-number">👥</div>
+                        <div class="stat-label">贡献者</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Open Source -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">WHY OPEN SOURCE</span>
+                <h2>为什么选择开源</h2>
+                <p>开源让我们走得更远</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-eye"></i></div>
+                        <h3>透明可信</h3>
+                        <p>代码完全开源，安全可控，无隐藏后门，企业可放心使用</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-users"></i></div>
+                        <h3>社区驱动</h3>
+                        <p>汇聚全球开发者智慧，持续改进，快速响应需求</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="feature-icon text-cyan"><i class="fas fa-hand-holding-heart"></i></div>
+                        <h3>免费使用</h3>
+                        <p>社区版完全免费，企业可按需选择专业版或私有化部署</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">TECH STACK</span>
+                <h2>技术栈</h2>
+                <p>现代化的技术选型</p>
+            </div>
+            
+            <div class="tech-stack">
+                <div class="tech-badge"><i class="fab fa-golang text-cyan"></i> Go</div>
+                <div class="tech-badge"><i class="fab fa-react text-cyan"></i> React</div>
+                <div class="tech-badge"><i class="fab fa-js text-cyan"></i> TypeScript</div>
+                <div class="tech-badge"><i class="fas fa-database text-cyan"></i> MySQL</div>
+                <div class="tech-badge"><i class="fab fa-docker text-cyan"></i> Docker</div>
+                <div class="tech-badge"><i class="fas fa-cloud text-cyan"></i> Kubernetes</div>
+                <div class="tech-badge"><i class="fab fa-node text-cyan"></i> Node.js</div>
+                <div class="tech-badge"><i class="fab fa-python text-cyan"></i> Python</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How to Contribute -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">CONTRIBUTE</span>
+                <h2>如何参与贡献</h2>
+                <p>我们欢迎各种形式的贡献</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="feature-icon text-purple">1</div>
+                        <h3>Fork 项目</h3>
+                        <p class="text-muted">在 GitHub 上 Fork 项目到您的账户，创建开发分支</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="feature-icon text-purple">2</div>
+                        <h3>修改代码</h3>
+                        <p class="text-muted">进行代码修改，确保遵循代码规范，添加必要的测试</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="feature-icon text-purple">3</div>
+                        <h3>提交 PR</h3>
+                        <p class="text-muted">提交 Pull Request，描述修改内容和原因</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="feature-icon text-purple">4</div>
+                        <h3>代码审查</h3>
+                        <p class="text-muted">等待代码审查，根据反馈进行修改，合并到主分支</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-5">
+                <a href="https://github.com/heidsoft/itsm/blob/main/CONTRIBUTING.md" target="_blank" class="btn btn-primary btn-lg">
+                    <i class="fas fa-book"></i> 查看贡献指南
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Community -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">COMMUNITY</span>
+                <h2>加入社区</h2>
+                <p>与开发者和其他用户交流</p>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <a href="https://github.com/heidsoft/itsm" target="_blank" class="community-link github">
+                        <div class="community-icon"><i class="fab fa-github"></i></div>
+                        <h4>GitHub</h4>
+                        <p class="text-muted">代码仓库、Issue 讨论</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="#" class="community-link wechat">
+                        <div class="community-icon"><i class="fab fa-weixin"></i></div>
+                        <h4>微信群</h4>
+                        <p class="text-muted">扫码加入用户交流群</p>
+                    </a>
+                </div>
+                <div class="col-md-4">
+                    <a href="#" class="community-link discord">
+                        <div class="community-icon"><i class="fab fa-discord"></i></div>
+                        <h4>Discord</h4>
+                        <p class="text-muted">国际社区交流</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- License -->
+    <section class="section">
+        <div class="container">
+            <div class="license-box">
+                <div class="license-icon"><i class="fas fa-balance-scale"></i></div>
+                <h2>开源协议</h2>
+                <p class="lead">本项目采用 Apache License 2.0 开源协议</p>
+                <p>您可以自由地使用、修改和分发本软件，无论是商业用途还是个人用途</p>
+                <a href="https://github.com/heidsoft/itsm/blob/main/LICENSE" target="_blank" class="btn btn-light btn-lg mt-3">
+                    <i class="fas fa-file-alt"></i> 查看许可证
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-brand">
+                        <i class="fas fa-cloud"></i>
+                        <span>CloudMesh</span>
+                    </div>
+                    <p class="footer-text">智能 IT 管理平台，让 IT 管理更简单高效</p>
+                    <div class="d-flex gap-3">
+                        <a href="https://github.com/heidsoft/itsm" target="_blank" class="text-white-50 fs-4"><i class="fab fa-github"></i></a>
+                        <a href="#" class="text-white-50 fs-4"><i class="fab fa-weixin"></i></a>
+                        <a href="mailto:heidsoft@qq.com" class="text-white-50 fs-4"><i class="fas fa-envelope"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">产品</h4>
+                    <ul class="footer-links">
+                        <li><a href="/products/openclaw.html">OpenClaw</a></li>
+                        <li><a href="/products/itsm.html">ITSM</a></li>
+                        <li><a href="/#pricing">定价</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">开源</h4>
+                    <ul class="footer-links">
+                        <li><a href="/open-source/">开源社区</a></li>
+                        <li><a href="https://github.com/heidsoft/itsm" target="_blank">GitHub</a></li>
+                        <li><a href="/docs/">开发文档</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">联系</h4>
+                    <ul class="footer-links">
+                        <li><a href="/contact/">联系我们</a></li>
+                        <li><a href="mailto:heidsoft@qq.com">heidsoft@qq.com</a></li>
+                        <li><a href="/privacy/">隐私政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CloudMesh. All rights reserved. | Powered by Open Source</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>

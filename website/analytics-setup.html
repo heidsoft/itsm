@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析设置 - ITSM</title>
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
+    <!-- 百度统计 -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+        var s = document.getElementsByTagName("script")[0]; 
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo"><h1>ITSM</h1></div>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/#resources">资源</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="doc-content">
+        <div class="container">
+            <h1>📊 数据分析设置指南</h1>
+            
+            <div class="doc-section">
+                <h2>1. Google Analytics 设置</h2>
+                <p>替换代码中的 <code>G-XXXXXXXXXX</code> 为您的 Google Analytics 跟踪 ID</p>
+                <ol>
+                    <li>访问 <a href="https://analytics.google.com/" target="_blank">Google Analytics</a></li>
+                    <li>创建账号和媒体资源</li>
+                    <li>获取跟踪 ID（格式：G-XXXXXXXXXX）</li>
+                    <li>替换代码中的跟踪 ID</li>
+                </ol>
+            </div>
+
+            <div class="doc-section">
+                <h2>2. 百度统计设置</h2>
+                <p>替换代码中的 <code>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code> 为您的百度统计 ID</p>
+                <ol>
+                    <li>访问 <a href="https://tongji.baidu.com/" target="_blank">百度统计</a></li>
+                    <li>注册账号并添加网站</li>
+                    <li>获取统计代码</li>
+                    <li>替换代码中的统计 ID</li>
+                </ol>
+            </div>
+
+            <div class="doc-section">
+                <h2>3. 转化跟踪设置</h2>
+                <h3>试用申请跟踪</h3>
+                <pre><code>gtag('event', 'conversion', {
+  'send_to': 'AW-XXXXXXXXX/YYYYYYYYYY'
+});</code></pre>
+
+                <h3>演示预约跟踪</h3>
+                <pre><code>gtag('event', 'schedule_demo', {
+  'event_category': 'engagement',
+  'event_label': 'Demo Request'
+});</code></pre>
+            </div>
+
+            <div class="doc-section">
+                <h2>4. 数据报表</h2>
+                <p>建议监控的核心指标：</p>
+                <ul>
+                    <li>每日访问量（UV/PV）</li>
+                    <li>流量来源渠道</li>
+                    <li>页面停留时间</li>
+                    <li>跳出率</li>
+                    <li>转化率（试用/演示/联系）</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

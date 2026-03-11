@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工业+AI 新闻 - CloudMesh</title>
+    <meta name="description" content="获取最新的工业 AI、智能制造、工业 4.0 相关新闻">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+    <style>
+        .news-header {
+            background: var(--gradient-cyber);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-radius: 16px;
+        }
+        .news-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: var(--transition-smooth);
+        }
+        .news-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-cyan);
+        }
+        .news-source {
+            display: inline-block;
+            background: var(--accent-purple);
+            color: #fff;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        .news-category {
+            display: inline-block;
+            background: var(--accent-cyan);
+            color: #000;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        .news-title {
+            color: var(--white);
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+        .news-summary {
+            color: var(--gray-400);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+        .news-keywords {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .keyword-badge {
+            background: rgba(0, 217, 255, 0.1);
+            color: var(--accent-cyan);
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+        }
+        .btn-refresh {
+            background: var(--gradient-primary);
+            color: #fff;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            transition: var(--transition-smooth);
+        }
+        .btn-refresh:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            color: #fff;
+        }
+        .stats-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .stats-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stats-label {
+            color: var(--gray-500);
+            margin-top: 0.5rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--glass-border);
+            border-top-color: var(--accent-cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg" id="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/"><i class="fas fa-cloud"></i> CloudMesh</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">产品</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/products/openclaw.html">OpenClaw</a></li>
+                            <li><a class="dropdown-item" href="/products/itsm.html">ITSM</a></li>
+                            <li><a class="dropdown-item active" href="/news/">工业+AI 新闻</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/open-source/">开源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact/">联系</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="container" style="margin-top: 100px;">
+        <div class="news-header">
+            <div class="container text-center">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-newspaper"></i> 工业+AI 新闻
+                </h1>
+                <p class="lead opacity-75">
+                    每日更新工业人工智能、智能制造、工业 4.0 最新资讯
+                </p>
+                <button class="btn btn-refresh mt-3" onclick="fetchNews()">
+                    <i class="fas fa-sync-alt"></i> 刷新新闻
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="totalNews">-</div>
+                    <div class="stats-label">新闻总数</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="totalSources">6</div>
+                    <div class="stats-label">新闻源</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stats-card">
+                    <div class="stats-number" id="updateTime">-</div>
+                    <div class="stats-label">更新时间</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="newsList">
+            <div class="loading">
+                <div class="spinner mx-auto mb-3"></div>
+                <p class="text-muted">正在加载新闻...</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="margin-top: 4rem;">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-brand"><i class="fas fa-cloud"></i><span>CloudMesh</span></div>
+                    <p class="footer-text">智能 IT 管理平台</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">产品</h4>
+                    <ul class="footer-links">
+                        <li><a href="/products/openclaw.html">OpenClaw</a></li>
+                        <li><a href="/products/itsm.html">ITSM</a></li>
+                        <li><a href="/news/">工业+AI 新闻</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">关于</h4>
+                    <ul class="footer-links">
+                        <li><a href="/about/">关于我们</a></li>
+                        <li><a href="/contact/">联系</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">联系</h4>
+                    <ul class="footer-links">
+                        <li><a href="mailto:heidsoft@qq.com">heidsoft@qq.com</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CloudMesh. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        async function fetchNews() {
+            const newsList = document.getElementById('newsList');
+            newsList.innerHTML = `
+                <div class="loading">
+                    <div class="spinner mx-auto mb-3"></div>
+                    <p class="text-muted">正在获取最新新闻...</p>
+                </div>
+            `;
+
+            try {
+                // 尝试从 API 获取
+                const response = await fetch('/api/news/industrial-ai/latest');
+                const result = await response.json();
+
+                if (result.success && result.data.news) {
+                    displayNews(result.data.news);
+                    document.getElementById('totalNews').textContent = result.data.news.length;
+                    document.getElementById('updateTime').textContent = new Date(result.data.generated_at).toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+                } else {
+                    // 显示示例新闻
+                    displaySampleNews();
+                }
+            } catch (error) {
+                console.error('获取新闻失败:', error);
+                displaySampleNews();
+            }
+        }
+
+        function displayNews(newsList) {
+            const container = document.getElementById('newsList');
+            
+            if (!newsList || newsList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">暂无新闻</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = newsList.map((news, index) => `
+                <div class="news-card">
+                    <div>
+                        <span class="news-source">${news.source}</span>
+                        <span class="news-category">${news.category}</span>
+                    </div>
+                    <h3 class="news-title mt-2">${news.title}</h3>
+                    <p class="news-summary">${news.summary}</p>
+                    ${news.keywords && news.keywords.length > 0 ? `
+                        <div class="news-keywords mb-3">
+                            ${news.keywords.map(kw => `<span class="keyword-badge">${kw}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                    <div class="news-meta">
+                        <span><i class="far fa-clock"></i> ${formatDate(news.published)}</span>
+                        <a href="${news.link}" target="_blank" class="text-cyan">
+                            阅读原文 <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        function displaySampleNews() {
+            // 示例新闻数据
+            const sampleNews = [
+                {
+                    title: 'AI 赋能智能制造：预测性维护新突破',
+                    summary: '最新研究表明，基于深度学习的预测性维护系统可以将设备停机时间减少 40%，维护成本降低 30%...',
+                    source: '机器之心',
+                    category: '工业 AI',
+                    keywords: ['预测性维护', '深度学习', '智能制造'],
+                    published: new Date().toISOString(),
+                    link: '#'
+                },
+                {
+                    title: '工业 4.0 时代：数字孪生技术应用实践',
+                    summary: '数字孪生技术正在重塑制造业，通过虚拟模型实时映射物理设备，实现全生命周期管理...',
+                    source: 'IEEE Spectrum',
+                    category: '工业 4.0',
+                    keywords: ['数字孪生', '工业 4.0', '智能制造'],
+                    published: new Date().toISOString(),
+                    link: '#'
+                }
+            ];
+
+            displayNews(sampleNews);
+            document.getElementById('totalNews').textContent = sampleNews.length;
+            document.getElementById('updateTime').textContent = new Date().toLocaleTimeString('zh-CN', {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '未知';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 页面加载时获取新闻
+        window.addEventListener('load', fetchNews);
+    </script>
+</body>
+</html>

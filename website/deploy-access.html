@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>访问部署管理系统 - OpenClaw</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .access-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .access-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            padding: 3rem;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .access-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .access-title h1 {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+        
+        .access-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .access-info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .access-info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .access-info-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .access-info-value {
+            color: #667eea;
+            font-family: monospace;
+        }
+        
+        .access-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-page">
+        <div class="access-card">
+            <div class="access-title">
+                <h1><i class="fas fa-rocket"></i> 部署管理系统</h1>
+                <p class="text-muted">OpenClaw Deploy Management System</p>
+            </div>
+
+            <div class="access-info">
+                <div class="access-info-item">
+                    <span class="access-info-label"><i class="fas fa-globe"></i> 管理后台</span>
+                    <a href="https://deploy.cloudmesh.top" target="_blank" class="access-info-value">deploy.cloudmesh.top</a>
+                </div>
+                <div class="access-info-item">
+                    <span class="access-info-label"><i class="fas fa-server"></i> API 地址</span>
+                    <span class="access-info-value">deploy.cloudmesh.top/api/v1</span>
+                </div>
+                <div class="access-info-item">
+                    <span class="access-info-label"><i class="fas fa-database"></i> 数据库</span>
+                    <span class="access-info-value">localhost:5432</span>
+                </div>
+                <div class="access-info-item">
+                    <span class="access-info-label"><i class="fas fa-chart-line"></i> 系统状态</span>
+                    <span class="status-badge status-running">
+                        <i class="fas fa-circle"></i> 运行中
+                    </span>
+                </div>
+            </div>
+
+            <div class="access-buttons">
+                <a href="https://deploy.cloudmesh.top" target="_blank" class="btn btn-primary btn-lg flex-fill">
+                    <i class="fas fa-external-link-alt"></i> 访问管理后台
+                </a>
+                <a href="/deploy/" class="btn btn-outline-secondary btn-lg flex-fill">
+                    <i class="fas fa-book"></i> 查看文档
+                </a>
+            </div>
+
+            <div class="mt-4 text-center">
+                <p class="text-muted mb-2"><i class="fas fa-info-circle"></i> 本地启动命令</p>
+                <code style="background: #f8f9fa; padding: 0.5rem 1rem; border-radius: 4px; display: block;">
+                    cd openclaw-deploy && go run cmd/server/main.go
+                </code>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

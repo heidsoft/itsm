@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 安全最佳实践 - 保护你的 API 密钥和数据</title>
+    <meta name="description" content="OpenClaw 安全最佳实践指南，包括 API 密钥管理、权限控制、审计日志等安全措施">
+    <meta name="keywords" content="OpenClaw,安全，API 密钥，权限控制，最佳实践">
+    <meta name="author" content="OpenClaw Team">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root { --primary: #667eea; --secondary: #764ba2; --danger: #ef4444; --success: #10b981; --bg-dark: #0f0f1a; --bg-card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.08); --text-primary: #fff; --text-secondary: #a0aec0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.7; }
+        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 40px; }
+        .header { text-align: center; margin-bottom: 60px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+        .header h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header .meta { color: var(--text-secondary); font-size: 14px; }
+        .content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; margin-bottom: 32px; }
+        .content h2 { font-size: 28px; margin-bottom: 24px; color: var(--primary); }
+        .content h3 { font-size: 22px; margin-bottom: 18px; color: var(--text-primary); }
+        .content p { color: var(--text-secondary); margin-bottom: 18px; font-size: 16px; }
+        .content ul, .content ol { color: var(--text-secondary); margin-bottom: 18px; padding-left: 24px; }
+        .content li { margin-bottom: 10px; }
+        .code-block { background: #1a1a2e; border-radius: 14px; padding: 24px; margin: 24px 0; overflow-x: auto; border: 1px solid var(--border); }
+        .code-block code { color: #e2e8f0; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; line-height: 1.8; }
+        .warning-box { background: rgba(239,68,68,0.1); border-left: 4px solid var(--danger); border-radius: 14px; padding: 20px; margin: 24px 0; }
+        .success-box { background: rgba(16,185,129,0.1); border-left: 4px solid var(--success); border-radius: 14px; padding: 20px; margin: 24px 0; }
+        .warning-box h4, .success-box h4 { margin-bottom: 12px; }
+        .warning-box p, .success-box p { color: var(--text-secondary); margin: 0; }
+        .nav-links { display: flex; gap: 16px; justify-content: center; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .nav-links a { padding: 14px 28px; background: rgba(102,126,234,0.1); border-radius: 12px; color: var(--primary); text-decoration: none; font-weight: 600; }
+        @media (max-width: 768px) { .container { padding: 60px 16px 30px; } .header h1 { font-size: 32px; } .content { padding: 28px 24px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 OpenClaw 安全最佳实践</h1>
+            <p class="meta">保护你的 API 密钥和数据</p>
+            <p class="meta">2026-03-11 · 阅读时间：8 分钟</p>
+        </div>
+
+        <div class="content">
+            <h2>📖 引言</h2>
+            <p>安全是使用任何工具的首要考虑因素。本文将介绍如何安全地使用 OpenClaw，保护你的 API 密钥和敏感数据。</p>
+            <div class="warning-box">
+                <h4>⚠️ 重要提示</h4>
+                <p>本文档适用于所有 OpenClaw 用户，特别是企业用户。请务必仔细阅读并遵循所有安全建议。</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🔑 API 密钥管理</h2>
+            <h3>不要硬编码密钥</h3>
+            <p>❌ 错误做法：</p>
+            <div class="code-block">
+                <code># 永远不要这样做！
+DINGTALK_APPSECRET=sk_123456789</code>
+            </div>
+
+            <p>✅ 正确做法：</p>
+            <div class="code-block">
+                <code># 使用环境变量
+export DINGTALK_APPSECRET=$(vault kv get -field=appsecret secret/openclaw)
+
+# 或使用 .env 文件（设置正确权限）
+chmod 600 ~/.openclaw/workspace/.env</code>
+            </div>
+
+            <h3>定期轮换密钥</h3>
+            <ul>
+                <li><strong>频率</strong> - 每 3-6 个月更换一次</li>
+                <li><strong>流程</strong> - 先生成新密钥，测试通过后再删除旧密钥</li>
+                <li><strong>记录</strong> - 记录密钥更换时间和负责人</li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2>🛡️ 权限控制</h2>
+            <h3>最小权限原则</h3>
+            <p>只授予 OpenClaw 完成任务所需的最小权限：</p>
+            <ul>
+                <li>✅ 读取监控数据 - 必要</li>
+                <li>✅ 执行运维命令 - 必要</li>
+                <li>❌ 删除生产数据 - 不需要</li>
+                <li>❌ 修改核心配置 - 不需要</li>
+            </ul>
+
+            <h3>敏感操作审批</h3>
+            <p>配置 OpenClaw 要求敏感操作需要用户确认：</p>
+            <div class="code-block">
+                <code># openclaw.json
+{
+  "security": {
+    "require_approval": ["delete", "modify", "restart"],
+    "approval_timeout": 300
+  }
+}</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>📝 审计日志</h2>
+            <h3>启用详细日志</h3>
+            <div class="code-block">
+                <code># 配置日志级别
+log:
+  level: info  # debug, info, warn, error
+  path: /var/log/openclaw/
+  max_size: 100MB
+  max_backups: 30</code>
+            </div>
+
+            <h3>定期审查日志</h3>
+            <ul>
+                <li><strong>每日</strong> - 检查错误和警告</li>
+                <li><strong>每周</strong> - 审查敏感操作记录</li>
+                <li><strong>每月</strong> - 完整安全审计</li>
+            </ul>
+
+            <div class="success-box">
+                <h4>✅ 日志示例</h4>
+                <p><code>2026-03-11 10:30:15 INFO [Coordinator] User admin requested server status check<br>2026-03-11 10:30:16 INFO [Researcher] Querying monitoring system<br>2026-03-11 10:30:17 INFO [Coordinator] Response sent to user</code></p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🔐 文件权限</h2>
+            <h3>设置正确的文件权限</h3>
+            <div class="code-block">
+                <code># 配置文件权限
+chmod 600 ~/.openclaw/workspace/openclaw.json
+chmod 600 ~/.openclaw/workspace/.env
+
+# 目录权限
+chmod 700 ~/.openclaw/
+chmod 700 ~/.openclaw/workspace/
+
+# 日志文件
+chmod 644 ~/.openclaw/logs/*.log</code>
+            </div>
+
+            <h3>验证权限</h3>
+            <div class="code-block">
+                <code># 检查文件权限
+ls -la ~/.openclaw/workspace/
+
+# 应该看到：
+# -rw------- 1 user user ... openclaw.json
+# -rw------- 1 user user ... .env</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🚨 安全监控</h2>
+            <h3>设置告警规则</h3>
+            <ul>
+                <li>异常登录尝试</li>
+                <li>敏感操作频率异常</li>
+                <li>API 调用失败率过高</li>
+                <li>配置文件被修改</li>
+            </ul>
+
+            <h3>应急响应流程</h3>
+            <ol>
+                <li>立即停止 OpenClaw 服务</li>
+                <li>撤销可能泄露的密钥</li>
+                <li>审查审计日志</li>
+                <li>修复安全漏洞</li>
+                <li>重新生成密钥并启动服务</li>
+            </ol>
+        </div>
+
+        <div class="content">
+            <h2>✅ 安全检查清单</h2>
+            <h3>部署前</h3>
+            <ul>
+                <li>☐ API 密钥已安全存储</li>
+                <li>☐ 文件权限已正确设置</li>
+                <li>☐ 日志已启用</li>
+                <li>☐ 敏感操作已配置审批</li>
+            </ul>
+
+            <h3>定期检查</h3>
+            <ul>
+                <li>☐ 审查审计日志</li>
+                <li>☐ 更新密钥（3-6 个月）</li>
+                <li>☐ 检查文件权限</li>
+                <li>☐ 测试告警规则</li>
+            </ul>
+        </div>
+
+        <div class="nav-links">
+            <a href="/blog/"><i class="fas fa-list"></i> 博客列表</a>
+            <a href="/docs/security.html"><i class="fas fa-shield-alt"></i> 安全白皮书</a>
+            <a href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器</a>
+            <a href="/trust.html"><i class="fas fa-lock"></i> 安全与信任</a>
+        </div>
+    </div>
+</body>
+</html>

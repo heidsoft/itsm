@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 配置生成器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #fff; min-height: 100vh; }
+        .app { max-width: 1000px; margin: 0 auto; padding: 40px 20px; }
+        
+        /* Header */
+        .header { text-align: center; margin-bottom: 40px; }
+        .header h1 { font-size: 42px; margin-bottom: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
+        .header p { color: #8892b0; font-size: 16px; margin-bottom: 24px; }
+        
+        /* Mode Switch */
+        .mode-switch { display: inline-flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 6px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); }
+        .mode-btn { padding: 12px 24px; border: none; border-radius: 10px; background: transparent; color: #8892b0; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.3s; }
+        .mode-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .mode-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
+        .mode-btn .badge { display: inline-block; padding: 2px 8px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 11px; margin-left: 6px; }
+        .mode-btn .badge-pro { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        
+        /* Steps */
+        .steps { display: flex; gap: 8px; margin-bottom: 40px; justify-content: center; }
+        .step { flex: 1; max-width: 180px; padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; text-align: center; transition: all 0.3s; }
+        .step.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-color: transparent; }
+        .step .num { font-size: 24px; font-weight: 700; margin-bottom: 8px; opacity: 0.5; }
+        .step.active .num { opacity: 1; }
+        .step .text { font-size: 14px; }
+        
+        /* Cards */
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+        .card h2 { font-size: 22px; margin-bottom: 24px; color: #fff; font-weight: 600; }
+        
+        /* Platform Grid */
+        .platform-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .platform-card { background: rgba(255,255,255,0.02); border: 2px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px 16px; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .platform-card:hover, .platform-card.selected { border-color: #667eea; background: rgba(102,126,234,0.1); transform: translateY(-2px); }
+        .platform-card .icon { font-size: 40px; margin-bottom: 12px; }
+        .platform-card .name { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .platform-card .desc { font-size: 12px; color: #8892b0; }
+        
+        /* Platform Config */
+        .platform-config { display: none; margin-top: 24px; padding: 24px; background: rgba(102,126,234,0.05); border-radius: 12px; border: 1px solid rgba(102,126,234,0.2); }
+        .platform-config.active { display: block; }
+        .guide-box { background: rgba(102,126,234,0.1); border-left: 3px solid #667eea; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .guide-box h4 { color: #667eea; font-size: 14px; margin-bottom: 10px; font-weight: 600; }
+        .guide-box ol { margin-left: 20px; color: #a0aec0; font-size: 13px; line-height: 2; }
+        .guide-box a { color: #667eea; text-decoration: none; }
+        .guide-box a:hover { text-decoration: underline; }
+        
+        /* Form */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #e2e8f0; font-size: 14px; font-weight: 500; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 14px; transition: all 0.3s; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; background: rgba(255,255,255,0.08); }
+        .form-group select option { background: #0f0f1a; color: #fff; }
+        
+        /* Agent Cards */
+        .agent-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .agent-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; }
+        .agent-card h3 { font-size: 16px; margin-bottom: 8px; color: #667eea; }
+        .agent-card .role { font-size: 12px; color: #8892b0; margin-bottom: 12px; }
+        .agent-card .skills { display: flex; flex-wrap: wrap; gap: 6px; }
+        .agent-card .skill-tag { padding: 4px 10px; background: rgba(102,126,234,0.15); border-radius: 20px; font-size: 11px; color: #667eea; }
+        
+        /* Buttons */
+        .btn { padding: 14px 28px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(102,126,234,0.4); }
+        .btn-secondary { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.15); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+        .btn-pro { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+        .btn-pro:hover { box-shadow: 0 8px 24px rgba(245,158,11,0.4); }
+        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+        
+        /* Install Command */
+        .install-cmd { background: #1a1a2e; border: 1px solid rgba(102,126,234,0.3); border-radius: 10px; padding: 20px; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; color: #667eea; word-break: break-all; margin: 20px 0; }
+        .checkbox-group { display: flex; gap: 12px; flex-wrap: wrap; }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .checkbox-item:hover { background: rgba(255,255,255,0.08); }
+        .checkbox-item input { width: 18px; height: 18px; accent-color: #667eea; }
+        
+        /* Output */
+        .output-area { background: #1a1a2e; border-radius: 12px; overflow: hidden; margin-top: 20px; }
+        .tabs { display: flex; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .tab { padding: 14px 24px; background: transparent; border: none; color: #8892b0; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; border-bottom: 2px solid transparent; }
+        .tab:hover { color: #fff; }
+        .tab.active { color: #667eea; border-bottom-color: #667eea; background: rgba(102,126,234,0.05); }
+        .output-content { padding: 20px; max-height: 400px; overflow: auto; }
+        .output-content pre { margin: 0; white-space: pre-wrap; color: #e2e8f0; font-size: 13px; line-height: 1.6; }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 24px; background: #10b981; color: white; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 1000; font-weight: 500; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        
+        /* Info Box */
+        .info-box { padding: 16px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 10px; margin-top: 20px; font-size: 13px; color: #10b981; }
+        .warning-box { padding: 16px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 10px; margin: 20px 0; font-size: 13px; color: #fca5a5; }
+        .pro-box { padding: 20px; background: linear-gradient(135deg, rgba(245,158,11,0.1), rgba(217,119,6,0.1)); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; margin: 20px 0; }
+        .pro-box h4 { color: #f59e0b; font-size: 16px; margin-bottom: 12px; font-weight: 600; }
+        .pro-box ul { margin-left: 20px; color: #e2e8f0; font-size: 14px; line-height: 2; }
+        .pro-box .price { font-size: 28px; color: #f59e0b; font-weight: 700; margin: 16px 0; }
+        .pro-box .price span { font-size: 14px; color: #8892b0; font-weight: 400; }
+        
+        .hidden { display: none; }
+        
+        @media (max-width: 768px) {
+            .app { padding: 20px 16px; }
+            .header h1 { font-size: 32px; }
+            .mode-switch { flex-wrap: wrap; }
+            .mode-btn { flex: 1; min-width: 140px; }
+            .steps { flex-wrap: wrap; }
+            .step { max-width: none; }
+            .form-row { grid-template-columns: 1fr; }
+            .platform-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <h1>🐾 OpenClaw 配置生成器</h1>
+            <p>3 分钟完成配置，立即开始使用</p>
+            
+            <!-- Mode Switch -->
+            <div class="mode-switch">
+                <button class="mode-btn active" onclick="switchMode('personal')">
+                    👤 个人版
+                    <span class="badge">免费</span>
+                </button>
+                <button class="mode-btn" onclick="switchMode('enterprise')">
+                    🏢 企业版
+                    <span class="badge badge-pro">Pro</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Personal Version -->
+        <div id="personalVersion">
+            <!-- Steps -->
+            <div class="steps">
+                <div class="step active" id="step1">
+                    <div class="num">1</div>
+                    <div class="text">选择平台</div>
+                </div>
+                <div class="step" id="step2">
+                    <div class="num">2</div>
+                    <div class="text">配置 Agent</div>
+                </div>
+                <div class="step" id="step3">
+                    <div class="num">3</div>
+                    <div class="text">生成安装</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Platform -->
+            <div class="card" id="card1">
+                <h2>选择通讯平台</h2>
+                <div class="platform-grid">
+                    <div class="platform-card" onclick="selectPlatform('dingtalk')" id="platform-dingtalk">
+                        <div class="icon">💬</div>
+                        <div class="name">钉钉</div>
+                        <div class="desc">企业 IM</div>
+                    </div>
+                    <div class="platform-card" onclick="selectPlatform('feishu')" id="platform-feishu">
+                        <div class="icon">🚀</div>
+                        <div class="name">飞书</div>
+                        <div class="desc">企业协作</div>
+                    </div>
+                    <div class="platform-card" onclick="selectPlatform('wechat')" id="platform-wechat">
+                        <div class="icon">💚</div>
+                        <div class="name">企业微信</div>
+                        <div class="desc">企业通讯</div>
+                    </div>
+                    <div class="platform-card" onclick="selectPlatform('telegram')" id="platform-telegram">
+                        <div class="icon">✈️</div>
+                        <div class="name">Telegram</div>
+                        <div class="desc">即时通讯</div>
+                    </div>
+                    <div class="platform-card" onclick="selectPlatform('discord')" id="platform-discord">
+                        <div class="icon">🎮</div>
+                        <div class="name">Discord</div>
+                        <div class="desc">社群聊天</div>
+                    </div>
+                    <div class="platform-card" onclick="selectPlatform('slack')" id="platform-slack">
+                        <div class="icon">💬</div>
+                        <div class="name">Slack</div>
+                        <div class="desc">团队协作</div>
+                    </div>
+                </div>
+
+                <!-- Platform Configs -->
+                <div class="platform-config" id="config-dingtalk">
+                    <div class="guide-box">
+                        <h4>📖 钉钉机器人创建指南</h4>
+                        <ol>
+                            <li>访问 <a href="https://open.dingtalk.com" target="_blank">open.dingtalk.com</a></li>
+                            <li>创建机器人应用</li>
+                            <li>获取 AppKey 和 AppSecret</li>
+                        </ol>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>AppKey</label>
+                            <input type="text" id="dingtalk-appkey" placeholder="dingxxxxxxxxxx">
+                        </div>
+                        <div class="form-group">
+                            <label>AppSecret</label>
+                            <input type="password" id="dingtalk-appsecret" placeholder="应用密钥">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platform-config" id="config-feishu">
+                    <div class="guide-box">
+                        <h4>📖 飞书机器人创建指南</h4>
+                        <ol>
+                            <li>访问 <a href="https://open.feishu.cn" target="_blank">open.feishu.cn</a></li>
+                            <li>创建机器人应用</li>
+                            <li>获取 App ID 和 App Secret</li>
+                        </ol>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>App ID</label>
+                            <input type="text" id="feishu-appid" placeholder="cli_xxxxxxxxxx">
+                        </div>
+                        <div class="form-group">
+                            <label>App Secret</label>
+                            <input type="password" id="feishu-appsecret" placeholder="应用密钥">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platform-config" id="config-wechat">
+                    <div class="guide-box">
+                        <h4>📖 企业微信机器人创建指南</h4>
+                        <ol>
+                            <li>访问 <a href="https://work.weixin.qq.com" target="_blank">work.weixin.qq.com</a></li>
+                            <li>创建机器人应用</li>
+                            <li>获取 BotID 和 Secret</li>
+                        </ol>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>BotID</label>
+                            <input type="text" id="wechat-botid" placeholder="机器人 ID">
+                        </div>
+                        <div class="form-group">
+                            <label>Secret</label>
+                            <input type="password" id="wechat-secret" placeholder="应用密钥">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platform-config" id="config-telegram">
+                    <div class="guide-box">
+                        <h4>📖 Telegram Bot 创建指南</h4>
+                        <ol>
+                            <li>在 Telegram 搜索 @BotFather</li>
+                            <li>发送 /newbot 创建机器人</li>
+                            <li>获取 Bot Token</li>
+                        </ol>
+                    </div>
+                    <div class="form-group">
+                        <label>Bot Token</label>
+                        <input type="password" id="telegram-token" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz">
+                    </div>
+                </div>
+
+                <div class="platform-config" id="config-discord">
+                    <div class="guide-box">
+                        <h4>📖 Discord Bot 创建指南</h4>
+                        <ol>
+                            <li>访问 <a href="https://discord.com/developers" target="_blank">discord.com/developers</a></li>
+                            <li>创建 Application → Bot</li>
+                            <li>获取 Bot Token 和 Application ID</li>
+                        </ol>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Bot Token</label>
+                            <input type="password" id="discord-token" placeholder="机器人令牌">
+                        </div>
+                        <div class="form-group">
+                            <label>Application ID</label>
+                            <input type="text" id="discord-appid" placeholder="应用 ID">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="platform-config" id="config-slack">
+                    <div class="guide-box">
+                        <h4>📖 Slack App 创建指南</h4>
+                        <ol>
+                            <li>访问 <a href="https://api.slack.com" target="_blank">api.slack.com</a></li>
+                            <li>创建新应用 → 添加 Bot 权限</li>
+                            <li>获取 Bot Token</li>
+                        </ol>
+                    </div>
+                    <div class="form-group">
+                        <label>Bot Token</label>
+                        <input type="password" id="slack-token" placeholder="xoxb-xxxxxxxxxxxx">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Agent -->
+            <div class="card hidden" id="card2">
+                <h2>配置 Agent 团队</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>团队规模</label>
+                        <select id="agentCount" onchange="renderAgentCards()">
+                            <option value="1">👤 1 个 - 单兵作战</option>
+                            <option value="2">👥 2 个 - 双人协作</option>
+                            <option value="3">👨‍💼 3 个 - 专业小队</option>
+                            <option value="4">🏢 4 个 - 完整团队</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>协作模式</label>
+                        <select id="orchestrationMode">
+                            <option value="sequential">🔄 顺序执行</option>
+                            <option value="parallel">⚡ 并行执行</option>
+                            <option value="hierarchical">📊 层级执行</option>
+                            <option value="collaborative">🤝 协作执行</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="agent-list" id="agentList"></div>
+            </div>
+
+            <!-- Step 3: Generate -->
+            <div class="card hidden" id="card3">
+                <h2>生成配置</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>默认模型</label>
+                        <select id="defaultModel">
+                            <option value="bailian/qwen3.5-plus">通义千问 3.5 Plus</option>
+                            <option value="bailian/qwen3-max">通义千问 Max</option>
+                            <option value="openai/gpt-4o">GPT-4o</option>
+                            <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>思考模式</label>
+                        <select id="thinkingMode">
+                            <option value="off">关闭</option>
+                            <option value="on">开启</option>
+                            <option value="auto">自动</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="generateConfig()">🚀 生成配置</button>
+                </div>
+            </div>
+
+            <!-- Install Command -->
+            <div class="card hidden" id="installCard">
+                <h2>🚀 一键安装</h2>
+                <div class="form-group">
+                    <label>操作系统</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-item">
+                            <input type="radio" name="os" value="linux" checked onchange="updateInstallCommand()"> 🐧 Linux / macOS
+                        </label>
+                        <label class="checkbox-item">
+                            <input type="radio" name="os" value="windows" onchange="updateInstallCommand()"> 🪟 Windows
+                        </label>
+                    </div>
+                </div>
+                <div class="install-cmd" id="installCommand">请先生成配置...</div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="copyInstallCommand()">📋 复制命令</button>
+                </div>
+                <div class="warning-box">
+                    ⚠️ 敏感信息（API Key、Secret）只会保存在本地，不会上传到服务器
+                </div>
+                <div class="info-box">
+                    ✅ 安装脚本会自动安装 Node.js、pnpm 和 OpenClaw，并引导你填写凭证
+                </div>
+            </div>
+
+            <!-- Output -->
+            <div class="card hidden" id="outputCard">
+                <h2>📄 配置预览</h2>
+                <div class="output-area">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('json')">openclaw.json</button>
+                        <button class="tab" onclick="switchTab('env')">.env</button>
+                    </div>
+                    <div class="output-content">
+                        <pre id="outputContent"></pre>
+                    </div>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="copyConfig()">📋 复制配置</button>
+                    <button class="btn btn-secondary" onclick="downloadConfig()">💾 下载 ZIP</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Version -->
+        <div id="enterpriseVersion" class="hidden">
+            <div class="pro-box">
+                <h4>🏢 OpenClaw 企业版</h4>
+                <ul>
+                    <li>✅ 配置中心集成（Apollo/Nacos/Consul）</li>
+                    <li>✅ 密钥管理（HashiCorp Vault/AWS Secrets Manager）</li>
+                    <li>✅ GitOps 工作流（ArgoCD/Flux）</li>
+                    <li>✅ Kubernetes 原生支持（ConfigMap/Secret）</li>
+                    <li>✅ 多环境管理（Dev/Test/Prod 隔离）</li>
+                    <li>✅ 审计日志与权限控制</li>
+                    <li>✅ 专业技术支持</li>
+                </ul>
+                <div class="price">
+                    ¥999<span>/年起</span>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-pro" onclick="contactSales()">📞 联系销售</button>
+                    <button class="btn btn-secondary" onclick="viewDemo()">🎬 查看演示</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>选择企业集成方案</h2>
+                <div class="platform-grid">
+                    <div class="platform-card" onclick="selectEnterprise('apollo')">
+                        <div class="icon">🔵</div>
+                        <div class="name">Apollo</div>
+                        <div class="desc">携程配置中心</div>
+                    </div>
+                    <div class="platform-card" onclick="selectEnterprise('nacos')">
+                        <div class="icon">🔶</div>
+                        <div class="name">Nacos</div>
+                        <div class="desc">阿里配置中心</div>
+                    </div>
+                    <div class="platform-card" onclick="selectEnterprise('vault')">
+                        <div class="icon">🏛️</div>
+                        <div class="name">Vault</div>
+                        <div class="desc">密钥管理</div>
+                    </div>
+                    <div class="platform-card" onclick="selectEnterprise('k8s')">
+                        <div class="icon">☸️</div>
+                        <div class="name">Kubernetes</div>
+                        <div class="desc">容器编排</div>
+                    </div>
+                    <div class="platform-card" onclick="selectEnterprise('gitops')">
+                        <div class="icon">📝</div>
+                        <div class="name">GitOps</div>
+                        <div class="desc">Git 工作流</div>
+                    </div>
+                    <div class="platform-card" onclick="selectEnterprise('terraform')">
+                        <div class="icon">🌱</div>
+                        <div class="name">Terraform</div>
+                        <div class="desc">基础设施</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">✅ 已复制</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script>
+        const agentTemplates = {
+            coordinator: { name: 'Coordinator', role: '协调员', skills: ['task_management', 'communication', 'planning'] },
+            researcher: { name: 'Researcher', role: '研究员', skills: ['web_search', 'memory_search', 'analysis'] },
+            developer: { name: 'Developer', role: '开发者', skills: ['file_operations', 'exec', 'debugging'] },
+            tester: { name: 'Tester', role: '测试员', skills: ['testing', 'validation', 'reporting'] }
+        };
+
+        let selectedPlatform = null;
+        let agents = [];
+        let generatedConfig = {};
+        let installCommand = '';
+
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            if (mode === 'personal') {
+                document.getElementById('personalVersion').classList.remove('hidden');
+                document.getElementById('enterpriseVersion').classList.add('hidden');
+            } else {
+                document.getElementById('personalVersion').classList.add('hidden');
+                document.getElementById('enterpriseVersion').classList.remove('hidden');
+            }
+        }
+
+        function selectPlatform(platform) {
+            selectedPlatform = platform;
+            document.querySelectorAll('.platform-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('platform-' + platform).classList.add('selected');
+            document.querySelectorAll('.platform-config').forEach(c => c.classList.remove('active'));
+            document.getElementById('config-' + platform).classList.add('active');
+            
+            document.getElementById('card2').classList.remove('hidden');
+            document.getElementById('card3').classList.remove('hidden');
+            document.getElementById('step2').classList.add('active');
+            document.getElementById('step3').classList.add('active');
+            document.getElementById('card3').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            renderAgentCards();
+        }
+
+        function renderAgentCards() {
+            const count = parseInt(document.getElementById('agentCount').value);
+            const container = document.getElementById('agentList');
+            container.innerHTML = '';
+            const presets = [['coordinator'], ['coordinator', 'researcher'], ['coordinator', 'researcher', 'developer'], ['coordinator', 'researcher', 'developer', 'tester']];
+            agents = presets[count - 1].map((type, i) => ({ id: i + 1, ...agentTemplates[type] }));
+            agents.forEach(agent => {
+                const div = document.createElement('div');
+                div.className = 'agent-card';
+                div.innerHTML = '<h3>' + agent.name + '</h3><div class="role">' + agent.role + '</div><div class="skills">' + agent.skills.map(s => '<span class="skill-tag">' + s + '</span>').join('') + '</div>';
+                container.appendChild(div);
+            });
+        }
+
+        function getPlatformConfig() {
+            const configs = {
+                dingtalk: { appKey: document.getElementById('dingtalk-appkey').value || '', appSecret: document.getElementById('dingtalk-appsecret').value || '' },
+                feishu: { appId: document.getElementById('feishu-appid').value || '', appSecret: document.getElementById('feishu-appsecret').value || '' },
+                wechat: { botId: document.getElementById('wechat-botid').value || '', secret: document.getElementById('wechat-secret').value || '' },
+                telegram: { token: document.getElementById('telegram-token').value || '' },
+                discord: { token: document.getElementById('discord-token').value || '', appId: document.getElementById('discord-appid').value || '' },
+                slack: { token: document.getElementById('slack-token').value || '' }
+            };
+            return configs[selectedPlatform] || {};
+        }
+
+        function generateConfig() {
+            if (!selectedPlatform) { showToast('⚠️ 请先选择平台'); return; }
+            
+            const config = {
+                platform: selectedPlatform,
+                platformConfig: getPlatformConfig(),
+                agents: agents.map(a => ({ name: a.name, role: a.role, skills: a.skills })),
+                orchestration: document.getElementById('orchestrationMode').value,
+                defaultModel: document.getElementById('defaultModel').value,
+                thinking: document.getElementById('thinkingMode').value
+            };
+
+            generatedConfig = {
+                json: generateJSON(config),
+                env: generateENV(config)
+            };
+
+            installCommand = generateInstallCommand();
+            document.getElementById('installCommand').textContent = installCommand;
+            document.getElementById('installCard').classList.remove('hidden');
+            document.getElementById('outputCard').classList.remove('hidden');
+            document.getElementById('outputContent').textContent = generatedConfig.json;
+            document.getElementById('installCard').scrollIntoView({ behavior: 'smooth' });
+            showToast('✅ 配置生成成功！');
+        }
+
+        function generateJSON(config) {
+            return JSON.stringify({
+                meta: { lastTouchedVersion: "2026.2.24", lastTouchedAt: new Date().toISOString(), generatedBy: "OpenClaw Config Generator" },
+                platform: { provider: config.platform },
+                agents: config.agents.map(a => ({ name: a.name, role: a.role, skills: a.skills, model: config.defaultModel })),
+                orchestration: { mode: config.orchestration, timeout: 3600 },
+                runtime: { workdir: "~/.openclaw/workspace", default_model: config.defaultModel, thinking: config.thinking },
+                _note: "敏感信息请填写到 .env 文件"
+            }, null, 2);
+        }
+
+        function generateENV(config) {
+            return `# OpenClaw 环境变量
+PLATFORM_PROVIDER=${config.platform}
+
+# 平台凭证（根据实际使用的平台填写）
+# 钉钉：DINGTALK_APPKEY=xxx, DINGTALK_APPSECRET=xxx
+# 飞书：FEISHU_APPID=xxx, FEISHU_APPSECRET=xxx
+# 企业微信：WECHAT_BOTID=xxx, WECHAT_SECRET=xxx
+# Telegram: TELEGRAM_TOKEN=xxx
+# Discord: DISCORD_TOKEN=xxx, DISCORD_APPID=xxx
+# Slack: SLACK_TOKEN=xxx
+
+DEFAULT_MODEL=${config.defaultModel}
+THINKING_MODE=${config.thinking}
+OPENCLAW_WORKDIR=~/.openclaw/workspace
+`;
+        }
+
+        function generateInstallCommand() {
+            const os = document.querySelector('input[name="os"]:checked').value;
+            if (os === 'windows') {
+                return 'powershell -c "Invoke-RestMethod \'https://cloudmesh.top/openclaw-generator/install.ps1\' -OutFile install.ps1; .\\install.ps1"';
+            }
+            return 'curl -fsSL "https://cloudmesh.top/openclaw-generator/install.sh" -o install.sh && bash install.sh';
+        }
+
+        function updateInstallCommand() {
+            if (generatedConfig.json) {
+                document.getElementById('installCommand').textContent = generateInstallCommand();
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            if (generatedConfig[tab]) document.getElementById('outputContent').textContent = generatedConfig[tab];
+        }
+
+        function copyConfig() {
+            if (!generatedConfig.json) { showToast('⚠️ 请先生成配置'); return; }
+            navigator.clipboard.writeText(document.getElementById('outputContent').textContent).then(() => showToast('✅ 已复制'));
+        }
+
+        function copyInstallCommand() {
+            if (!installCommand) { showToast('⚠️ 请先生成配置'); return; }
+            navigator.clipboard.writeText(installCommand).then(() => showToast('✅ 安装命令已复制！'));
+        }
+
+        function downloadConfig() {
+            if (!generatedConfig.json) { showToast('⚠️ 请先生成配置'); return; }
+            const zip = new JSZip();
+            zip.file('openclaw.json', generatedConfig.json);
+            zip.file('.env', generatedConfig.env);
+            zip.file('install.sh', 'curl -fsSL "https://cloudmesh.top/openclaw-generator/install.sh" | bash');
+            zip.generateAsync({ type: 'blob' }).then(content => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(content);
+                a.download = 'openclaw-config.zip';
+                a.click();
+                showToast('✅ 压缩包已下载');
+            });
+        }
+
+        function selectEnterprise(type) {
+            showToast('🔒 企业版功能，请联系销售解锁');
+        }
+
+        function contactSales() {
+            showToast('📧 邮箱：sales@openclaw.ai');
+            setTimeout(() => {
+                window.open('mailto:sales@openclaw.ai?subject=OpenClaw 企业版咨询', '_blank');
+            }, 1000);
+        }
+
+        function viewDemo() {
+            showToast('🎬 准备演示视频...');
+            setTimeout(() => {
+                alert('演示视频即将推出，敬请期待！\n\n如需立即体验，请联系销售团队。');
+            }, 500);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        renderAgentCards();
+    </script>
+</body>
+</html>

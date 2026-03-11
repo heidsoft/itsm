@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skill 市场使用指南 - 扩展你的 OpenClaw 能力</title>
+    <meta name="description" content="OpenClaw Skill 市场使用指南，了解如何发现、安装和管理 Skill，扩展你的 AI 助手能力">
+    <meta name="keywords" content="OpenClaw,Skill,技能市场，扩展功能">
+    <meta name="author" content="OpenClaw Team">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root { --primary: #667eea; --secondary: #764ba2; --success: #10b981; --bg-dark: #0f0f1a; --bg-card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.08); --text-primary: #fff; --text-secondary: #a0aec0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.7; }
+        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 40px; }
+        .header { text-align: center; margin-bottom: 60px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+        .header h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header .meta { color: var(--text-secondary); font-size: 14px; }
+        .content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; margin-bottom: 32px; }
+        .content h2 { font-size: 28px; margin-bottom: 24px; color: var(--primary); }
+        .content h3 { font-size: 22px; margin-bottom: 18px; color: var(--text-primary); }
+        .content p { color: var(--text-secondary); margin-bottom: 18px; font-size: 16px; }
+        .content ul, .content ol { color: var(--text-secondary); margin-bottom: 18px; padding-left: 24px; }
+        .content li { margin-bottom: 10px; }
+        .code-block { background: #1a1a2e; border-radius: 14px; padding: 24px; margin: 24px 0; overflow-x: auto; border: 1px solid var(--border); }
+        .code-block code { color: #e2e8f0; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; line-height: 1.8; }
+        .skill-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 24px 0; }
+        .skill-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+        .skill-card h4 { color: var(--primary); margin-bottom: 12px; }
+        .skill-card p { color: var(--text-secondary); font-size: 14px; }
+        .nav-links { display: flex; gap: 16px; justify-content: center; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .nav-links a { padding: 14px 28px; background: rgba(102,126,234,0.1); border-radius: 12px; color: var(--primary); text-decoration: none; font-weight: 600; }
+        @media (max-width: 768px) { .container { padding: 60px 16px 30px; } .header h1 { font-size: 32px; } .content { padding: 28px 24px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧩 Skill 市场使用指南</h1>
+            <p class="meta">扩展你的 OpenClaw 能力</p>
+            <p class="meta">2026-03-11 · 阅读时间：6 分钟</p>
+        </div>
+
+        <div class="content">
+            <h2>📖 什么是 Skill？</h2>
+            <p>Skill 是 OpenClaw 的能力扩展模块，就像手机的 App 一样。通过安装不同的 Skill，你可以让 OpenClaw 具备各种专业技能。</p>
+            <ul>
+                <li>🔍 <strong>搜索技能</strong> - 网络搜索、知识库检索</li>
+                <li>📁 <strong>文件技能</strong> - 文件操作、数据导出</li>
+                <li>💻 <strong>执行技能</strong> - 命令执行、脚本运行</li>
+                <li>📊 <strong>分析技能</strong> - 数据分析、报表生成</li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2>🛍️ 浏览 Skill 市场</h2>
+            <p>访问 Skill 市场查看所有可用技能：</p>
+            <div class="code-block">
+                <code>https://cloudmesh.top/skills/</code>
+            </div>
+
+            <div class="skill-grid">
+                <div class="skill-card">
+                    <h4>💬 钉钉机器人</h4>
+                    <p>连接钉钉企业 IM，支持消息收发、卡片消息</p>
+                </div>
+                <div class="skill-card">
+                    <h4>🚀 飞书机器人</h4>
+                    <p>集成飞书开放平台，支持消息、日历、云文档</p>
+                </div>
+                <div class="skill-card">
+                    <h4>🔍 网页搜索</h4>
+                    <p>Brave Search API 集成，支持网页搜索、新闻搜索</p>
+                </div>
+                <div class="skill-card">
+                    <h4>📁 文件操作</h4>
+                    <p>文件读写、目录管理、文件搜索、批量操作</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>📥 安装 Skill</h2>
+            <h3>方法 1: 通过配置生成器</h3>
+            <ol>
+                <li>访问配置生成器页面</li>
+                <li>选择需要的平台和技能</li>
+                <li>生成配置并下载</li>
+                <li>运行安装脚本</li>
+            </ol>
+
+            <h3>方法 2: 手动安装</h3>
+            <div class="code-block">
+                <code># 1. 进入技能目录
+cd ~/.openclaw/workspace/skills/
+
+# 2. 克隆技能仓库
+git clone https://github.com/openclaw/skill-dingtalk.git
+
+# 3. 安装依赖
+cd skill-dingtalk
+npm install
+
+# 4. 配置技能
+cp config.example.json config.json
+# 编辑 config.json 填写配置
+
+# 5. 启用技能
+openclaw skill enable dingtalk</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>⚙️ 管理 Skill</h2>
+            <h3>查看已安装的 Skill</h3>
+            <div class="code-block">
+                <code>openclaw skill list
+
+# 输出示例：
+✅ dingtalk - v1.2.0 - 已启用
+✅ web-search - v2.0.1 - 已启用
+⏸️ file-ops - v1.0.0 - 已禁用</code>
+            </div>
+
+            <h3>启用/禁用 Skill</h3>
+            <div class="code-block">
+                <code># 启用技能
+openclaw skill enable file-ops
+
+# 禁用技能
+openclaw skill disable dingtalk</code>
+            </div>
+
+            <h3>更新 Skill</h3>
+            <div class="code-block">
+                <code># 更新单个技能
+openclaw skill update dingtalk
+
+# 更新所有技能
+openclaw skill update-all</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🔧 配置 Skill</h2>
+            <h3>查看 Skill 配置</h3>
+            <div class="code-block">
+                <code>openclaw skill config dingtalk</code>
+            </div>
+
+            <h3>修改 Skill 配置</h3>
+            <div class="code-block">
+                <code># 编辑配置文件
+vim ~/.openclaw/workspace/skills/dingtalk/config.json
+
+# 配置示例：
+{
+  "appKey": "dingxxxxxxxxxx",
+  "appSecret": "your_secret",
+  "enabled": true,
+  "logLevel": "info"
+}</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🧪 测试 Skill</h2>
+            <h3>运行技能测试</h3>
+            <div class="code-block">
+                <code>openclaw skill test dingtalk
+
+# 输出示例：
+Running tests for dingtalk...
+✅ Connection test passed
+✅ Message send test passed
+✅ Webhook test passed
+All tests passed!</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>📊 热门 Skill 推荐</h2>
+            <div class="skill-grid">
+                <div class="skill-card">
+                    <h4>🔍 网页搜索</h4>
+                    <p>安装量：15,680+ | 评分：4.7⭐</p>
+                    <p style="margin-top: 8px;">最常用的技能，让 OpenClaw 能够搜索互联网获取最新信息。</p>
+                </div>
+                <div class="skill-card">
+                    <h4>🧠 记忆管理</h4>
+                    <p>安装量：11,230+ | 评分：4.9⭐</p>
+                    <p style="margin-top: 8px;">长期记忆存储、语义搜索、记忆整理，让 OpenClaw 记住重要信息。</p>
+                </div>
+                <div class="skill-card">
+                    <h4>💻 命令执行</h4>
+                    <p>安装量：7,650+ | 评分：4.6⭐</p>
+                    <p style="margin-top: 8px;">安全执行 Shell 命令，支持超时、日志、权限控制。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>💡 最佳实践</h2>
+            <ul>
+                <li><strong>按需安装</strong> - 只安装真正需要的技能</li>
+                <li><strong>定期更新</strong> - 保持技能最新版本</li>
+                <li><strong>审查权限</strong> - 定期检查技能权限</li>
+                <li><strong>禁用不用</strong> - 暂时不用的技能可以禁用</li>
+                <li><strong>查看日志</strong> - 定期检查技能运行日志</li>
+            </ul>
+        </div>
+
+        <div class="nav-links">
+            <a href="/blog/"><i class="fas fa-list"></i> 博客列表</a>
+            <a href="/skills/"><i class="fas fa-puzzle-piece"></i> Skill 市场</a>
+            <a href="/docs/quickstart.html"><i class="fas fa-book"></i> 快速入门</a>
+            <a href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器</a>
+        </div>
+    </div>
+</body>
+</html>

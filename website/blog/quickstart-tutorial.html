@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5 分钟快速上手 OpenClaw - 从 0 到 1 配置你的 AI 助手</title>
+    <meta name="description" content="5 分钟快速上手 OpenClaw，从配置到使用，完整教程带你从零开始配置 AI 驱动的 DevOps 助手">
+    <meta name="keywords" content="OpenClaw,教程，快速上手，配置指南，AI 助手">
+    <meta name="author" content="OpenClaw Team">
+    <meta property="og:title" content="5 分钟快速上手 OpenClaw">
+    <meta property="og:description" content="从 0 到 1 配置你的 AI 助手">
+    <meta property="og:type" content="article">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root { --primary: #667eea; --secondary: #764ba2; --success: #10b981; --bg-dark: #0f0f1a; --bg-card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.08); --text-primary: #fff; --text-secondary: #a0aec0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.7; }
+        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 40px; }
+        .header { text-align: center; margin-bottom: 60px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+        .header h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header .meta { color: var(--text-secondary); font-size: 14px; }
+        .content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; margin-bottom: 32px; }
+        .content h2 { font-size: 28px; margin-bottom: 24px; color: var(--primary); }
+        .content h3 { font-size: 22px; margin-bottom: 18px; color: var(--text-primary); }
+        .content p { color: var(--text-secondary); margin-bottom: 18px; font-size: 16px; }
+        .content ul, .content ol { color: var(--text-secondary); margin-bottom: 18px; padding-left: 24px; }
+        .content li { margin-bottom: 10px; }
+        .step { counter-increment: step; margin-bottom: 32px; }
+        .step::before { content: counter(step); display: inline-block; width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); border-radius: 50%; text-align: center; line-height: 36px; font-weight: 700; margin-right: 12px; }
+        .code-block { background: #1a1a2e; border-radius: 14px; padding: 24px; margin: 24px 0; overflow-x: auto; border: 1px solid var(--border); }
+        .code-block code { color: #e2e8f0; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; line-height: 1.8; }
+        .tip-box { background: rgba(16,185,129,0.1); border-left: 4px solid var(--success); border-radius: 14px; padding: 20px; margin: 24px 0; }
+        .tip-box h4 { color: var(--success); margin-bottom: 12px; }
+        .tip-box p { color: var(--text-secondary); margin: 0; }
+        .nav-links { display: flex; gap: 16px; justify-content: center; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .nav-links a { padding: 14px 28px; background: rgba(102,126,234,0.1); border-radius: 12px; color: var(--primary); text-decoration: none; font-weight: 600; }
+        @media (max-width: 768px) { .container { padding: 60px 16px 30px; } .header h1 { font-size: 32px; } .content { padding: 28px 24px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ 5 分钟快速上手 OpenClaw</h1>
+            <p class="meta">从 0 到 1 配置你的 AI 助手</p>
+            <p class="meta">2026-03-11 · 阅读时间：5 分钟</p>
+        </div>
+
+        <div class="content">
+            <h2>📖 前言</h2>
+            <p>本教程将带你用 5 分钟时间完成 OpenClaw 的配置和使用。无论你是个人开发者还是企业用户，都能快速上手。</p>
+            <div class="tip-box">
+                <h4>💡 前提条件</h4>
+                <p>• 一台能上网的电脑（Linux/macOS/Windows）<br>• 钉钉/飞书/企业微信等平台账号<br>• 基础命令行操作知识</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🎯 步骤详解</h2>
+            
+            <div class="step">
+                <h3>访问配置生成器（1 分钟）</h3>
+                <p>打开浏览器，访问配置生成器页面：</p>
+                <div class="code-block">
+                    <code>https://cloudmesh.top/openclaw-generator/</code>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>选择通讯平台（1 分钟）</h3>
+                <p>根据你的使用场景选择合适的平台：</p>
+                <ul>
+                    <li><strong>钉钉</strong> - 企业 IM，适合国内企业</li>
+                    <li><strong>飞书</strong> - 企业协作平台</li>
+                    <li><strong>企业微信</strong> - 企业通讯工具</li>
+                    <li><strong>Telegram</strong> - 国际即时通讯</li>
+                    <li><strong>Discord</strong> - 社群聊天</li>
+                    <li><strong>Slack</strong> - 国际团队协作</li>
+                </ul>
+                <div class="tip-box">
+                    <h4>💡 如何选择？</h4>
+                    <p>国内企业推荐钉钉/飞书/企业微信，国际团队推荐 Slack/Telegram。</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>填写平台凭证（1 分钟）</h3>
+                <p>根据选择的平台，填写对应的应用凭证：</p>
+                <div class="code-block">
+                    <code># 钉钉示例
+AppKey: dingxxxxxxxxxx
+AppSecret: 你的应用密钥
+
+# 飞书示例
+App ID: cli_xxxxxxxxxx
+App Secret: 你的应用密钥
+
+# 企业微信示例
+BotID: 机器人 ID
+Secret: 应用密钥</code>
+                </div>
+                <div class="tip-box">
+                    <h4>🔒 安全提示</h4>
+                    <p>敏感信息只会保存在本地配置文件中，不会上传到服务器，请放心填写。</p>
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>配置 Agent 团队（1 分钟）</h3>
+                <p>选择你的 Agent 团队规模：</p>
+                <ul>
+                    <li>👤 <strong>1 个</strong> - 单兵作战（个人使用）</li>
+                    <li>👥 <strong>2 个</strong> - 双人协作（小团队）</li>
+                    <li>👨‍💼 <strong>3 个</strong> - 专业小队（中型团队）</li>
+                    <li>🏢 <strong>4 个</strong> - 完整团队（大型团队）</li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <h3>生成并安装（1 分钟）</h3>
+                <p>点击"🚀 生成配置"按钮，复制安装命令：</p>
+                <div class="code-block">
+                    <code># Linux/macOS
+curl -fsSL "https://cloudmesh.top/openclaw-generator/install.sh" -o install.sh && bash install.sh
+
+# Windows (PowerShell)
+powershell -c "Invoke-RestMethod 'https://cloudmesh.top/openclaw-generator/install.ps1' -OutFile install.ps1; .\install.ps1"</code>
+                </div>
+                <p>打开终端，粘贴命令并回车，脚本会自动完成所有安装步骤。</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>✅ 验证安装</h2>
+            <h3>检查服务状态</h3>
+            <div class="code-block">
+                <code>openclaw status</code>
+            </div>
+            <p>如果看到以下输出，说明安装成功：</p>
+            <div class="code-block">
+                <code>✅ OpenClaw 运行中
+版本：2026.2.24
+平台：dingtalk</code>
+            </div>
+
+            <h3>测试消息</h3>
+            <p>在钉钉/飞书等平台发送测试消息，OpenClaw 应该能够响应。</p>
+        </div>
+
+        <div class="content">
+            <h2>🎯 下一步</h2>
+            <p>完成基础配置后，你可以：</p>
+            <ul>
+                <li><a href="/docs/quickstart.html" style="color: var(--primary);">查看完整文档</a> - 了解更多功能</li>
+                <li><a href="/skills/" style="color: var(--primary);">浏览 Skill 市场</a> - 扩展更多能力</li>
+                <li><a href="/pricing.html" style="color: var(--primary);">了解企业版</a> - 企业级功能</li>
+            </ul>
+        </div>
+
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> 返回首页</a>
+            <a href="/blog/"><i class="fas fa-list"></i> 博客列表</a>
+            <a href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器</a>
+            <a href="/docs/quickstart.html"><i class="fas fa-book"></i> 完整文档</a>
+        </div>
+    </div>
+</body>
+</html>

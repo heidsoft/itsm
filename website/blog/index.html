@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>博客 - OpenClaw | AI 驱动的 DevOps 技术分享</title>
+    <meta name="description" content="OpenClaw 技术博客，分享 AI Agent、DevOps、自动化运维等最佳实践">
+    <meta name="keywords" content="OpenClaw,博客，技术分享，AI Agent,DevOps">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root { --primary: #667eea; --secondary: #764ba2; --bg-dark: #0f0f1a; --bg-card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.08); --text-primary: #fff; --text-secondary: #a0aec0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text-primary); }
+        .container { max-width: 1200px; margin: 0 auto; padding: 80px 20px 40px; }
+        .header { text-align: center; margin-bottom: 60px; }
+        .header h1 { font-size: 48px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header p { color: var(--text-secondary); font-size: 18px; }
+        .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 32px; }
+        .blog-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 32px; transition: all 0.3s; text-decoration: none; color: inherit; }
+        .blog-card:hover { transform: translateY(-8px); border-color: rgba(102,126,234,0.3); box-shadow: 0 12px 40px rgba(102,126,234,0.15); }
+        .blog-card .tag { display: inline-block; padding: 6px 14px; background: rgba(102,126,234,0.15); border-radius: 20px; font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 16px; }
+        .blog-card h2 { font-size: 24px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); }
+        .blog-card p { color: var(--text-secondary); font-size: 15px; line-height: 1.6; margin-bottom: 20px; }
+        .blog-card .meta { display: flex; gap: 20px; font-size: 13px; color: var(--text-secondary); }
+        .nav-links { display: flex; gap: 16px; justify-content: center; margin-top: 60px; padding-top: 32px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .nav-links a { padding: 14px 28px; background: rgba(102,126,234,0.1); border-radius: 12px; color: var(--primary); text-decoration: none; font-weight: 600; }
+        @media (max-width: 768px) { .container { padding: 60px 16px 30px; } .header h1 { font-size: 36px; } .blog-grid { grid-template-columns: 1fr; } }
+        
+        /* Navbar 样式 */
+        .navbar { background: rgba(15,15,26,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.08); padding: 16px 0; }
+        .navbar-brand { font-size: 20px; font-weight: 700; color: #fff !important; display: flex; align-items: center; gap: 10px; }
+        .navbar-brand i { color: #667eea; }
+        .nav-link { color: #a0aec0 !important; font-weight: 500; padding: 8px 16px !important; transition: all 0.3s; }
+        .nav-link:hover, .nav-link.active { color: #fff !important; }
+        .btn-trial { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff !important; border-radius: 8px; }
+        .btn-trial:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(102,126,234,0.4); }
+        .dropdown-menu { background: rgba(15,15,26,0.98); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+        .dropdown-item { color: #a0aec0; padding: 10px 20px; }
+        .dropdown-item:hover { background: rgba(102,126,234,0.1); color: #fff; }
+        .dropdown-divider { border-color: rgba(255,255,255,0.08); }
+    </style>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+<body>
+    <!-- 统一导航栏 -->
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cloud"></i>
+                <span>CloudMesh</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">产品</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/products/openclaw.html"><i class="fas fa-rocket"></i> OpenClaw</a></li>
+                            <li><a class="dropdown-item" href="/products/itsm.html"><i class="fas fa-ticket-alt"></i> ITSM</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器 <span class="badge bg-warning text-dark ms-1">免费</span></a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/open-source/">开源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/blog/">博客</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/pricing.html">定价</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/docs/quickstart.html">文档</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact/">联系</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login.html">登录</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-trial ms-2" href="/deploy/">
+                            <i class="fas fa-rocket"></i> 免费试用
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 40px;">
+        <div class="header">
+            <h1>📝 OpenClaw 博客</h1>
+            <p>技术分享 · 最佳实践 · 产品更新</p>
+        </div>
+
+        <div class="blog-grid">
+            <a href="/blog/changelog-march-2026.html" class="blog-card">
+                <span class="tag">更新日志</span>
+                <h2>📦 更新日志 - 2026 年 3 月</h2>
+                <p>OpenClaw 3 月更新：配置生成器上线、安全功能增强、性能优化、文档系统完善等新功能和改进。</p>
+                <div class="meta">
+                    <span><i class="far fa-calendar"></i> 2026-03-11</span>
+                    <span><i class="far fa-clock"></i> 5 分钟</span>
+                </div>
+            </a>
+
+            <a href="/blog/security-best-practices.html" class="blog-card">
+                <span class="tag">安全</span>
+                <h2>🔒 OpenClaw 安全最佳实践</h2>
+                <p>保护你的 API 密钥和数据。包括密钥管理、权限控制、审计日志、文件权限等安全措施和最佳实践。</p>
+                <div class="meta">
+                    <span><i class="far fa-calendar"></i> 2026-03-11</span>
+                    <span><i class="far fa-clock"></i> 8 分钟</span>
+                </div>
+            </a>
+
+            <a href="/blog/skill-market-guide.html" class="blog-card">
+                <span class="tag">教程</span>
+                <h2>🧩 Skill 市场使用指南</h2>
+                <p>扩展你的 OpenClaw 能力。了解如何发现、安装和管理 Skill，让 AI 助手具备更多专业技能。</p>
+                <div class="meta">
+                    <span><i class="far fa-calendar"></i> 2026-03-11</span>
+                    <span><i class="far fa-clock"></i> 6 分钟</span>
+                </div>
+            </a>
+
+            <a href="/blog/openclaw-architecture.html" class="blog-card">
+                <span class="tag">架构设计</span>
+                <h2>🏗️ OpenClaw 架构设计 - 一人抵一个 DevOps 团队</h2>
+                <p>深入了解 OpenClaw 的架构设计，如何通过 AI Agent 实现一人抵一个 DevOps 团队。包括多 Agent 协作、技能模块化、系统架构等。</p>
+                <div class="meta">
+                    <span><i class="far fa-calendar"></i> 2026-03-11</span>
+                    <span><i class="far fa-clock"></i> 10 分钟</span>
+                </div>
+            </a>
+
+            <a href="/blog/quickstart-tutorial.html" class="blog-card">
+                <span class="tag">教程</span>
+                <h2>⚡ 5 分钟快速上手 OpenClaw</h2>
+                <p>从 0 到 1 配置你的 AI 助手。本教程将带你用 5 分钟时间完成 OpenClaw 的配置和使用，适合新手快速入门。</p>
+                <div class="meta">
+                    <span><i class="far fa-calendar"></i> 2026-03-11</span>
+                    <span><i class="far fa-clock"></i> 5 分钟</span>
+                </div>
+            </a>
+
+            <a href="/blog/enterprise-deployment.html" class="blog-card">
+                <span class="tag">最佳实践</span>
+                <h2>🏢 企业部署最佳实践</h2>
+                <p>OpenClaw 生产环境部署指南。包括配置中心集成、密钥管理、多环境管理、监控告警等企业级功能。</p>
+                <div class="meta">
+                    <span><i class="far fa-calendar"></i> 2026-03-11</span>
+                    <span><i class="far fa-clock"></i> 15 分钟</span>
+                </div>
+            </a>
+        </div>
+
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> 返回首页</a>
+            <a href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器</a>
+            <a href="/docs/"><i class="fas fa-book"></i> 文档中心</a>
+            <a href="/contact/"><i class="fas fa-envelope"></i> 联系我们</a>
+        </div>
+    </div>
+</body>
+</html>

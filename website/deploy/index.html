@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 部署系统 - CloudMesh</title>
+    <meta name="description" content="OpenClaw 部署管理系统，AI 驱动的一人 DevOps 团队">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+    <style>
+        .deploy-hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 0;
+        }
+        .deploy-card {
+            max-width: 600px;
+            text-align: center;
+        }
+        .deploy-icon {
+            font-size: 6rem;
+            margin-bottom: 2rem;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: float 3s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .deploy-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 1rem;
+        }
+        .deploy-subtitle {
+            font-size: 1.25rem;
+            color: var(--gray-400);
+            margin-bottom: 2rem;
+        }
+        .deploy-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+        .feature-list {
+            text-align: left;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            color: var(--gray-400);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .feature-item:last-child {
+            border-bottom: none;
+        }
+        .feature-item i {
+            color: var(--accent-cyan);
+            font-size: 1.25rem;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--glass-bg);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+            font-size: 0.875rem;
+            color: var(--accent-cyan);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+    </div>
+
+    <section class="deploy-hero">
+        <div class="container">
+            <div class="deploy-card">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span>系统运行中</span>
+                </div>
+                
+                <div class="deploy-icon">🚀</div>
+                
+                <h1 class="deploy-title">OpenClaw 部署系统</h1>
+                <p class="deploy-subtitle">AI 驱动的一人 DevOps 团队</p>
+                
+                <div class="deploy-actions">
+                    <a href="/deploy/login.html" class="btn btn-primary btn-lg">
+                        <i class="fas fa-sign-in-alt"></i> 登录系统
+                    </a>
+                    <a href="/products/openclaw.html" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-info-circle"></i> 了解产品
+                    </a>
+                    <a href="/" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-home"></i> 返回首页
+                    </a>
+                </div>
+                
+                <div class="feature-list">
+                    <h4 class="text-white mb-3">核心功能</h4>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>CMDB 配置管理</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>多云资源统一管理</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>全栈监控告警</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>DevOps 流水线</span>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span>AI 运维大脑</span>
+                    </div>
+                </div>
+                
+                <p class="text-muted">
+                    <i class="fas fa-info-circle"></i> 
+                    登录功能需要后端支持，当前为演示模式
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

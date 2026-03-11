@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 企业版配置中心</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0a0a14; color: #fff; min-height: 100vh; }
+        .app { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+        
+        /* Header */
+        .header { text-align: center; margin-bottom: 50px; }
+        .header h1 { font-size: 42px; margin-bottom: 12px; background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
+        .header p { color: #8892b0; font-size: 16px; margin-bottom: 20px; }
+        .mode-switch { display: inline-flex; gap: 8px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 10px; }
+        .mode-btn { padding: 10px 20px; border: none; border-radius: 8px; background: transparent; color: #8892b0; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; text-decoration: none; }
+        .mode-btn.active { background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%); color: white; }
+        
+        /* Feature Grid */
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .feature-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; }
+        .feature-card .icon { font-size: 36px; margin-bottom: 16px; }
+        .feature-card h3 { font-size: 18px; margin-bottom: 12px; color: #00bcd4; }
+        .feature-card p { color: #8892b0; font-size: 14px; line-height: 1.6; }
+        
+        /* Cards */
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 32px; margin-bottom: 24px; }
+        .card h2 { font-size: 22px; margin-bottom: 24px; color: #fff; font-weight: 600; }
+        
+        /* Form */
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: #e2e8f0; font-size: 14px; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 14px; transition: all 0.3s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #00bcd4; background: rgba(255,255,255,0.08); }
+        .form-group select option { background: #0a0a14; color: #fff; }
+        .form-group textarea { min-height: 120px; font-family: monospace; font-size: 13px; }
+        .form-note { font-size: 12px; color: #8892b0; margin-top: 6px; }
+        
+        /* Buttons */
+        .btn { padding: 14px 28px; border: none; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,188,212,0.4); }
+        .btn-secondary { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.15); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.12); }
+        .btn-group { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+        
+        /* Output */
+        .output-area { background: #1a1a2e; border-radius: 12px; overflow: hidden; margin-top: 20px; }
+        .tabs { display: flex; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .tab { padding: 14px 24px; background: transparent; border: none; color: #8892b0; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; border-bottom: 2px solid transparent; }
+        .tab:hover { color: #fff; }
+        .tab.active { color: #00bcd4; border-bottom-color: #00bcd4; background: rgba(0,188,212,0.05); }
+        .output-content { padding: 20px; max-height: 500px; overflow: auto; }
+        .output-content pre { margin: 0; white-space: pre-wrap; color: #e2e8f0; font-size: 13px; line-height: 1.6; }
+        
+        /* Integration Cards */
+        .integration-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .integration-card { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.3s; }
+        .integration-card:hover, .integration-card.selected { border-color: #00bcd4; background: rgba(0,188,212,0.05); }
+        .integration-card .logo { font-size: 32px; margin-bottom: 12px; }
+        .integration-card h4 { font-size: 16px; margin-bottom: 8px; }
+        .integration-card p { font-size: 13px; color: #8892b0; }
+        
+        /* Toast */
+        .toast { position: fixed; bottom: 30px; right: 30px; padding: 16px 24px; background: #10b981; color: white; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 1000; font-weight: 500; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        
+        .hidden { display: none; }
+        
+        @media (max-width: 768px) {
+            .app { padding: 20px 16px; }
+            .header h1 { font-size: 32px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <h1>🏢 OpenClaw 企业版配置中心</h1>
+            <p>对接配置中心、密钥管理、GitOps 工作流</p>
+            <div class="mode-switch">
+                <a href="/openclaw-generator/" class="mode-btn">👤 个人版</a>
+                <a href="/openclaw-generator/enterprise.html" class="mode-btn active">🏢 企业版</a>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="icon">📦</div>
+                <h3>配置中心集成</h3>
+                <p>支持 Apollo、Nacos、Consul 等配置中心，导出标准格式配置</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔐</div>
+                <h3>密钥管理</h3>
+                <p>对接 HashiCorp Vault、AWS Secrets Manager，安全存储敏感信息</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🔄</div>
+                <h3>GitOps 工作流</h3>
+                <p>配置即代码，通过 Git PR/CR 管理变更，自动审计追踪</p>
+            </div>
+            <div class="feature-card">
+                <div class="icon">🌍</div>
+                <h3>多环境管理</h3>
+                <p>Dev/Test/Prod 环境隔离，支持配置继承和覆盖</p>
+            </div>
+        </div>
+
+        <!-- Step 1: Integration Selection -->
+        <div class="card">
+            <h2>1️⃣ 选择集成平台</h2>
+            <div class="integration-grid">
+                <div class="integration-card" onclick="selectIntegration('apollo')" id="int-apollo">
+                    <div class="logo">🔵</div>
+                    <h4>Apollo</h4>
+                    <p>携程开源配置中心</p>
+                </div>
+                <div class="integration-card" onclick="selectIntegration('nacos')" id="int-nacos">
+                    <div class="logo">🔶</div>
+                    <h4>Nacos</h4>
+                    <p>阿里巴巴配置中心</p>
+                </div>
+                <div class="integration-card" onclick="selectIntegration('vault')" id="int-vault">
+                    <div class="logo">🏛️</div>
+                    <h4>HashiCorp Vault</h4>
+                    <p>密钥管理系统</p>
+                </div>
+                <div class="integration-card" onclick="selectIntegration('k8s')" id="int-k8s">
+                    <div class="logo">☸️</div>
+                    <h4>Kubernetes</h4>
+                    <p>ConfigMap/Secret</p>
+                </div>
+                <div class="integration-card" onclick="selectIntegration('terraform')" id="int-terraform">
+                    <div class="logo">🌱</div>
+                    <h4>Terraform</h4>
+                    <p>基础设施即代码</p>
+                </div>
+                <div class="integration-card" onclick="selectIntegration('gitops')" id="int-gitops">
+                    <div class="logo">📝</div>
+                    <h4>GitOps</h4>
+                    <p>Git 配置管理</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Configuration -->
+        <div class="card hidden" id="configCard">
+            <h2>2️⃣ 配置参数</h2>
+            
+            <!-- Apollo/Nacos Config -->
+            <div id="config-apollo" class="integration-config hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Apollo 配置中心地址</label>
+                        <input type="text" id="apollo-url" placeholder="http://apollo.yourcompany.com">
+                        <div class="form-note">Apollo Portal 地址</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Environment</label>
+                        <select id="apollo-env">
+                            <option value="DEV">DEV (开发环境)</option>
+                            <option value="FAT">FAT (测试环境)</option>
+                            <option value="UAT">UAT (预发环境)</option>
+                            <option value="PRO">PRO (生产环境)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>App ID</label>
+                        <input type="text" id="apollo-appid" placeholder="openclaw">
+                        <div class="form-note">Apollo 应用 ID</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Namespace</label>
+                        <input type="text" id="apollo-namespace" placeholder="application">
+                        <div class="form-note">配置 Namespace</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vault Config -->
+            <div id="config-vault" class="integration-config hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Vault 地址</label>
+                        <input type="text" id="vault-url" placeholder="https://vault.yourcompany.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Secret Engine Path</label>
+                        <input type="text" id="vault-path" placeholder="secret/openclaw">
+                        <div class="form-note">KV Secret 引擎路径</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>认证方式</label>
+                    <select id="vault-auth">
+                        <option value="token">Token 认证</option>
+                        <option value="approle">AppRole 认证</option>
+                        <option value="kubernetes">Kubernetes Auth</option>
+                        <option value="ldap">LDAP/AD 认证</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- K8s Config -->
+            <div id="config-k8s" class="integration-config hidden">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Namespace</label>
+                        <input type="text" id="k8s-namespace" placeholder="openclaw">
+                        <div class="form-note">Kubernetes Namespace</div>
+                    </div>
+                    <div class="form-group">
+                        <label>ConfigMap 名称</label>
+                        <input type="text" id="k8s-configmap" placeholder="openclaw-config">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Secret 名称</label>
+                    <input type="text" id="k8s-secret" placeholder="openclaw-secret">
+                    <div class="form-note">敏感信息存储在 Secret 中</div>
+                </div>
+            </div>
+
+            <!-- GitOps Config -->
+            <div id="config-gitops" class="integration-config hidden">
+                <div class="form-group">
+                    <label>Git 仓库地址</label>
+                    <input type="text" id="gitops-repo" placeholder="https://github.com/yourcompany/openclaw-config.git">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>分支策略</label>
+                        <select id="gitops-branch">
+                            <option value="main">Single Branch (main)</option>
+                            <option value="multi">Multi Branch (dev/test/prod)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>PR 审批流程</label>
+                        <select id="gitops-approval">
+                            <option value="1">1 人审批</option>
+                            <option value="2">2 人审批</option>
+                            <option value="3">3 人审批</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Common Config -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>平台提供商</label>
+                    <select id="platform">
+                        <option value="dingtalk">钉钉</option>
+                        <option value="feishu">飞书</option>
+                        <option value="wechat">企业微信</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="discord">Discord</option>
+                        <option value="slack">Slack</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Agent 数量</label>
+                    <select id="agentCount">
+                        <option value="1">1 个 Agent</option>
+                        <option value="2">2 个 Agent</option>
+                        <option value="3">3 个 Agent</option>
+                        <option value="4">4 个 Agent</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="generateEnterpriseConfig()">🚀 生成企业配置</button>
+            </div>
+        </div>
+
+        <!-- Output -->
+        <div class="card hidden" id="outputCard">
+            <h2>📄 生成的配置</h2>
+            <div class="output-area">
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('main')">主配置</button>
+                    <button class="tab" onclick="switchTab('secret')">密钥配置</button>
+                    <button class="tab" onclick="switchTab('deploy')">部署脚本</button>
+                    <button class="tab" onclick="switchTab('doc')">集成文档</button>
+                </div>
+                <div class="output-content">
+                    <pre id="outputContent"></pre>
+                </div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="copyConfig()">📋 复制配置</button>
+                <button class="btn btn-secondary" onclick="downloadConfig()">💾 下载 ZIP</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast">✅ 已复制</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script>
+        let selectedIntegration = null;
+        let generatedConfig = {};
+
+        function selectIntegration(type) {
+            selectedIntegration = type;
+            document.querySelectorAll('.integration-card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('int-' + type).classList.add('selected');
+            
+            document.querySelectorAll('.integration-config').forEach(c => c.classList.add('hidden'));
+            document.getElementById('config-' + type).classList.remove('hidden');
+            
+            document.getElementById('configCard').classList.remove('hidden');
+            document.getElementById('configCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateEnterpriseConfig() {
+            if (!selectedIntegration) { showToast('⚠️ 请选择集成平台'); return; }
+
+            const config = {
+                integration: selectedIntegration,
+                platform: document.getElementById('platform').value,
+                agentCount: parseInt(document.getElementById('agentCount').value),
+                apollo: {
+                    url: document.getElementById('apollo-url').value,
+                    env: document.getElementById('apollo-env').value,
+                    appId: document.getElementById('apollo-appid').value,
+                    namespace: document.getElementById('apollo-namespace').value
+                },
+                vault: {
+                    url: document.getElementById('vault-url').value,
+                    path: document.getElementById('vault-path').value,
+                    auth: document.getElementById('vault-auth').value
+                },
+                k8s: {
+                    namespace: document.getElementById('k8s-namespace').value,
+                    configmap: document.getElementById('k8s-configmap').value,
+                    secret: document.getElementById('k8s-secret').value
+                },
+                gitops: {
+                    repo: document.getElementById('gitops-repo').value,
+                    branch: document.getElementById('gitops-branch').value,
+                    approval: document.getElementById('gitops-approval').value
+                }
+            };
+
+            generatedConfig = {
+                main: generateMainConfig(config),
+                secret: generateSecretConfig(config),
+                deploy: generateDeployScript(config),
+                doc: generateDoc(config)
+            };
+
+            document.getElementById('outputCard').classList.remove('hidden');
+            document.getElementById('outputContent').textContent = generatedConfig.main;
+            document.getElementById('outputCard').scrollIntoView({ behavior: 'smooth' });
+            showToast('✅ 配置生成成功！');
+        }
+
+        function generateMainConfig(config) {
+            if (config.integration === 'apollo') {
+                return `# Apollo 配置格式
+# 导入到 Apollo 配置中心
+
+openclaw.platform.provider = ${config.platform}
+openclaw.agents.count = ${config.agentCount}
+openclaw.runtime.default_model = bailian/qwen3.5-plus
+openclaw.runtime.thinking = auto
+
+# Apollo 元数据
+app.id = ${config.apollo.appId || 'openclaw'}
+apollo.meta = ${config.apollo.url || 'http://localhost:8070'}
+apollo.env = ${config.apollo.env || 'DEV'}
+apollo.cluster = default
+namespace = ${config.apollo.namespace || 'application'}
+
+# 敏感信息请存入 Vault 或其他密钥管理系统
+# 不要直接写在配置中心
+`;
+            } else if (config.integration === 'nacos') {
+                return `# Nacos 配置格式
+# Data ID: openclaw-${config.platform}.yaml
+# Group: DEFAULT_GROUP
+# Format: YAML
+
+openclaw:
+  platform:
+    provider: ${config.platform}
+  agents:
+    count: ${config.agentCount}
+  runtime:
+    default_model: bailian/qwen3.5-plus
+    thinking: auto
+
+# Nacos 元数据
+spring:
+  cloud:
+    nacos:
+      config:
+        server-addr: ${config.apollo.url || 'localhost:8848'}
+        namespace: ${config.apollo.env || 'dev'}
+        group: DEFAULT_GROUP
+        file-extension: yaml
+`;
+            } else if (config.integration === 'k8s') {
+                return `# Kubernetes ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ${config.k8s.configmap || 'openclaw-config'}
+  namespace: ${config.k8s.namespace || 'openclaw'}
+  labels:
+    app: openclaw
+data:
+  openclaw.json: |
+    {
+      "platform": {
+        "provider": "${config.platform}"
+      },
+      "agents": {
+        "count": ${config.agentCount}
+      },
+      "runtime": {
+        "default_model": "bailian/qwen3.5-plus",
+        "thinking": "auto"
+      }
+    }
+
+---
+# Kubernetes Secret (敏感信息)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${config.k8s.secret || 'openclaw-secret'}
+  namespace: ${config.k8s.namespace || 'openclaw'}
+type: Opaque
+stringData:
+  # 敏感信息，实际使用时替换
+  DINGTALK_APPKEY: "your-appkey-here"
+  DINGTALK_APPSECRET: "your-appsecret-here"
+`;
+            } else if (config.integration === 'vault') {
+                return `# Vault KV Secret 路径：${config.vault.path || 'secret/openclaw'}
+
+# 写入配置
+vault kv put ${config.vault.path || 'secret/openclaw'}/platform \\
+  provider=${config.platform} \\
+  agent_count=${config.agentCount}
+
+# 写入敏感信息
+vault kv put ${config.vault.path || 'secret/openclaw'}/credentials \\
+  appkey=your-appkey-here \\
+  appsecret=your-appsecret-here
+
+# 应用读取示例
+# export PLATFORM_PROVIDER=$(vault kv get -field=provider ${config.vault.path}/platform)
+# export DINGTALK_APPKEY=$(vault kv get -field=appkey ${config.vault.path}/credentials)
+`;
+            } else if (config.integration === 'gitops') {
+                return `# GitOps 目录结构
+openclaw-config/
+├── base/
+│   ├── kustomization.yaml
+│   ├── configmap.yaml
+│   └── secret.yaml
+├── overlays/
+│   ├── dev/
+│   │   └── kustomization.yaml
+│   ├── test/
+│   │   └── kustomization.yaml
+│   └── prod/
+│       └── kustomization.yaml
+└── README.md
+
+# 工作流
+# 1. 开发者修改配置 → 提交 PR
+# 2. 自动触发 CI 检查（${config.gitops.approval} 人审批）
+# 3. 审批通过 → 合并到 ${config.gitops.branch === 'main' ? 'main' : '对应环境分支'}
+# 4. ArgoCD/Flux 自动同步到集群
+`;
+            } else if (config.integration === 'terraform') {
+                return `# Terraform 配置
+# main.tf
+
+resource "vault_generic_secret" "openclaw_platform" {
+  path = "${config.vault.path || 'secret/openclaw'}/platform"
+  
+  data_json = jsonencode({
+    provider = "${config.platform}"
+    agent_count = ${config.agentCount}
+    default_model = "bailian/qwen3.5-plus"
+  })
+}
+
+resource "vault_generic_secret" "openclaw_credentials" {
+  path = "${config.vault.path || 'secret/openclaw'}/credentials"
+  
+  data_json = jsonencode({
+    appkey    = var.dingtalk_appkey
+    appsecret = var.dingtalk_appsecret
+  })
+}
+
+# variables.tf
+variable "dingtalk_appkey" {
+  description = "钉钉 AppKey"
+  type        = string
+  sensitive   = true
+}
+
+variable "dingtalk_appsecret" {
+  description = "钉钉 AppSecret"
+  type        = string
+  sensitive   = true
+}
+
+# 执行
+# terraform init
+# terraform plan -var="dingtalk_appkey=xxx" -var="dingtalk_appsecret=xxx"
+# terraform apply
+`;
+            }
+            return '# 请选择集成平台';
+        }
+
+        function generateSecretConfig(config) {
+            return `# 敏感信息配置模板
+# ⚠️ 请勿将此文件提交到 Git！
+
+# 钉钉配置
+DINGTALK_APPKEY=dingxxxxxxxxxx
+DINGTALK_APPSECRET=your-appsecret-here
+
+# 飞书配置
+FEISHU_APPID=cli_xxxxxxxxxx
+FEISHU_APPSECRET=your-appsecret-here
+
+# 企业微信配置
+WECHAT_BOTID=your-botid-here
+WECHAT_SECRET=your-secret-here
+
+# Telegram
+TELEGRAM_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+
+# Discord
+DISCORD_TOKEN=your-token-here
+DISCORD_APPID=your-appid-here
+
+# Slack
+SLACK_TOKEN=xoxb-your-token-here
+
+# 使用说明：
+# 1. 根据实际使用的平台填写对应配置
+# 2. 将文件保存到安全位置（Vault/Secrets Manager）
+# 3. 应用启动时通过环境变量或密钥管理工具读取
+`;
+        }
+
+        function generateDeployScript(config) {
+            return `#!/bin/bash
+# OpenClaw 企业版部署脚本
+# 集成平台：${config.integration.toUpperCase()}
+
+set -e
+
+echo "🚀 开始部署 OpenClaw 企业版..."
+
+# 1. 从配置中心拉取配置
+echo "📦 拉取配置..."
+case "${config.integration}" in
+    apollo)
+        # Apollo 配置拉取
+        export APOLLO_CONFIG_SERVICE=${config.apollo.url || 'http://localhost:8070'}
+        ;;
+    nacos)
+        # Nacos 配置拉取
+        export NACOS_SERVER_ADDR=${config.apollo.url || 'localhost:8848'}
+        ;;
+    vault)
+        # Vault 密钥读取
+        export VAULT_ADDR=${config.vault.url || 'https://vault.local'}
+        ;;
+    k8s)
+        # Kubernetes 配置挂载
+        echo "ConfigMap 和 Secret 将自动挂载到容器"
+        ;;
+esac
+
+# 2. 安装 OpenClaw
+echo "📦 安装 OpenClaw..."
+npm install -g openclaw
+
+# 3. 初始化配置
+echo "⚙️ 初始化配置..."
+openclaw init --enterprise
+
+# 4. 启动服务
+echo "✅ 启动服务..."
+openclaw start
+
+echo "🎉 部署完成！"
+echo ""
+echo "管理命令:"
+echo "  openclaw status  - 查看状态"
+echo "  openclaw logs    - 查看日志"
+echo "  openclaw stop    - 停止服务"
+`;
+        }
+
+        function generateDoc(config) {
+            return `# OpenClaw 企业版集成文档
+
+## 集成平台：${config.integration.toUpperCase()}
+
+## 快速开始
+
+### 1. 前置要求
+- ${config.integration === 'apollo' ? 'Apollo 配置中心 >= 1.8.0' : ''}
+- ${config.integration === 'nacos' ? 'Nacos Server >= 2.0.0' : ''}
+- ${config.integration === 'vault' ? 'HashiCorp Vault >= 1.9.0' : ''}
+- ${config.integration === 'k8s' ? 'Kubernetes >= 1.20' : ''}
+- ${config.integration === 'gitops' ? 'Git + ArgoCD/Flux' : ''}
+- ${config.integration === 'terraform' ? 'Terraform >= 1.0.0' : ''}
+- Node.js >= 20.0.0
+- OpenClaw >= 2026.2.24
+
+### 2. 配置步骤
+
+#### Apollo 集成
+1. 登录 Apollo Portal
+2. 创建应用：${config.apollo.appId || 'openclaw'}
+3. 添加配置项（参考"主配置"标签页）
+4. 发布配置
+
+#### Vault 集成
+1. 启用 KV Secret 引擎
+2. 创建路径：${config.vault.path || 'secret/openclaw'}
+3. 写入平台凭证
+4. 配置应用访问策略
+
+#### Kubernetes 集成
+1. 创建 Namespace：${config.k8s.namespace || 'openclaw'}
+2. 应用 ConfigMap 和 Secret
+3. 部署 OpenClaw Pod
+4. 配置自动挂载
+
+### 3. 验证
+
+\`\`\`bash
+# 检查配置加载
+openclaw config show
+
+# 检查服务状态
+openclaw status
+
+# 查看日志
+openclaw logs
+\`\`\`
+
+### 4. 故障排查
+
+**常见问题：**
+- 配置中心连接失败：检查网络和认证
+- 密钥读取失败：检查 Vault 策略
+- Pod 启动失败：检查 ConfigMap/Secret 挂载
+
+**日志位置：**
+- ~/.openclaw/logs/openclaw.log
+- Kubernetes: kubectl logs -n ${config.k8s.namespace || 'openclaw'} <pod-name>
+
+### 5. 最佳实践
+
+1. **敏感信息管理**
+   - 永远不要将密钥提交到 Git
+   - 使用 Vault 或云厂商的 Secrets Manager
+   - 定期轮换密钥
+
+2. **多环境隔离**
+   - Dev/Test/Prod 使用不同的 Namespace/AppId
+   - 配置继承 + 覆盖策略
+   - 严格的访问控制
+
+3. **审计和监控**
+   - 启用配置变更审计
+   - 监控配置推送状态
+   - 告警配置异常
+
+---
+生成时间：${new Date().toISOString()}
+`;
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            if (generatedConfig[tab]) document.getElementById('outputContent').textContent = generatedConfig[tab];
+        }
+
+        function copyConfig() {
+            if (!generatedConfig.main) { showToast('⚠️ 请先生成配置'); return; }
+            navigator.clipboard.writeText(document.getElementById('outputContent').textContent).then(() => showToast('✅ 已复制'));
+        }
+
+        function downloadConfig() {
+            if (!generatedConfig.main) { showToast('⚠️ 请先生成配置'); return; }
+            const zip = new JSZip();
+            zip.file('config.txt', generatedConfig.main);
+            zip.file('secret.env', generatedConfig.secret);
+            zip.file('deploy.sh', generatedConfig.deploy);
+            zip.file('README.md', generatedConfig.doc);
+            zip.generateAsync({ type: 'blob' }).then(content => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(content);
+                a.download = 'openclaw-enterprise-config.zip';
+                a.click();
+                showToast('✅ 压缩包已下载');
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+    </script>
+</body>
+</html>

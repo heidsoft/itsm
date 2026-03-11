@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 部署管理后台</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background: #f5f7fa;
+        }
+        
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 250px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            padding: 2rem 0;
+            overflow-y: auto;
+        }
+        
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .sidebar-menu li a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-menu li a:hover,
+        .sidebar-menu li a.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+        
+        .top-bar {
+            background: #fff;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-card {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card .label {
+            color: #666;
+            font-size: 0.9375rem;
+        }
+        
+        .deployment-item {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+        
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-deploying {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fas fa-rocket"></i> OpenClaw
+        </div>
+        <ul class="sidebar-menu">
+            <li><a href="#" class="active"><i class="fas fa-home"></i> 概览</a></li>
+            <li><a href="#"><i class="fas fa-server"></i> 部署实例</a></li>
+            <li><a href="#"><i class="fas fa-chart-line"></i> 监控告警</a></li>
+            <li><a href="#"><i class="fas fa-cog"></i> 配置管理</a></li>
+            <li><a href="#"><i class="fas fa-file-alt"></i> 日志查看</a></li>
+            <li><a href="#"><i class="fas fa-users"></i> 用户管理</a></li>
+            <li><a href="#"><i class="fas fa-credit-card"></i> 计费管理</a></li>
+            <li><a href="/"><i class="fas fa-arrow-left"></i> 返回官网</a></li>
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <div>
+                <h4>部署管理后台</h4>
+                <p class="text-muted mb-0">欢迎回来，管理员</p>
+            </div>
+            <div>
+                <button class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 新建部署
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="icon text-primary">
+                        <i class="fas fa-server"></i>
+                    </div>
+                    <div class="value">12</div>
+                    <div class="label">运行中实例</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="icon text-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="value">99.9%</div>
+                    <div class="label">可用性</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="icon text-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="value">3</div>
+                    <div class="label">告警通知</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="icon text-info">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="value">48</div>
+                    <div class="label">活跃用户</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-12">
+                <h5 class="mb-3">部署实例</h5>
+                <div class="deployment-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h6 class="mb-1">
+                                <i class="fas fa-server text-primary"></i> 
+                                生产环境 - 01
+                            </h6>
+                            <small class="text-muted">ID: prod-001</small>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="status-badge status-running">
+                                <i class="fas fa-circle"></i> 运行中
+                            </span>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>CPU: 45%</strong><br>
+                            <small class="text-muted">内存：2.1GB/4GB</small>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>QPS: 1,234</strong><br>
+                            <small class="text-muted">响应：45ms</small>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> 监控
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-cog"></i> 配置
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-stop"></i> 停止
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="deployment-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h6 class="mb-1">
+                                <i class="fas fa-server text-success"></i> 
+                                生产环境 - 02
+                            </h6>
+                            <small class="text-muted">ID: prod-002</small>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="status-badge status-running">
+                                <i class="fas fa-circle"></i> 运行中
+                            </span>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>CPU: 38%</strong><br>
+                            <small class="text-muted">内存：1.8GB/4GB</small>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>QPS: 987</strong><br>
+                            <small class="text-muted">响应：52ms</small>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> 监控
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-cog"></i> 配置
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-stop"></i> 停止
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="deployment-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <h6 class="mb-1">
+                                <i class="fas fa-server text-warning"></i> 
+                                测试环境 - 01
+                            </h6>
+                            <small class="text-muted">ID: test-001</small>
+                        </div>
+                        <div class="col-md-2">
+                            <span class="status-badge status-deploying">
+                                <i class="fas fa-spinner fa-spin"></i> 部署中
+                            </span>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>CPU: 12%</strong><br>
+                            <small class="text-muted">内存：512MB/2GB</small>
+                        </div>
+                        <div class="col-md-2">
+                            <strong>QPS: 0</strong><br>
+                            <small class="text-muted">响应：-ms</small>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye"></i> 监控
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-file-alt"></i> 日志
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-times"></i> 取消
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 侧边栏菜单激活
+        document.querySelectorAll('.sidebar-menu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                document.querySelectorAll('.sidebar-menu a').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // 模拟实时数据更新
+        setInterval(() => {
+            document.querySelectorAll('.deployment-item').forEach(item => {
+                const cpuEl = item.querySelector('strong');
+                if (cpuEl && cpuEl.textContent.includes('CPU')) {
+                    const currentCpu = parseInt(cpuEl.textContent.match(/\d+/)[0]);
+                    const newCpu = Math.max(10, Math.min(90, currentCpu + (Math.random() - 0.5) * 10));
+                    cpuEl.innerHTML = `CPU: ${Math.round(newCpu)}%`;
+                }
+            });
+        }, 3000);
+    </script>
+</body>
+</html>

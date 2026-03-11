@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - OpenClaw 部署管理系统 | CloudMesh</title>
+    <meta name="description" content="登录 OpenClaw 部署管理系统，体验 AI 驱动的一人 DevOps 团队">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+        .login-container {
+            max-width: 450px;
+            width: 100%;
+            padding: 0 1rem;
+        }
+        .login-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            box-shadow: var(--shadow-card);
+        }
+        .login-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-logo i {
+            font-size: 4rem;
+            background: var(--gradient-cyber);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            display: inline-block;
+            animation: float 3s infinite ease-in-out;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .login-title {
+            text-align: center;
+            color: var(--white);
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+        .login-subtitle {
+            text-align: center;
+            color: var(--gray-500);
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+        }
+        .form-control {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--white);
+            padding: 0.875rem 1.25rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: var(--transition-smooth);
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+        }
+        .form-control::placeholder {
+            color: var(--gray-500);
+        }
+        .form-label {
+            color: var(--white);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-primary);
+            color: var(--white);
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            transition: var(--transition-smooth);
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            color: var(--white);
+        }
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+        .form-check-input:checked {
+            background-color: var(--primary-start);
+            border-color: var(--primary-start);
+        }
+        .form-check-label {
+            color: var(--gray-400);
+        }
+        .forgot-password {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            transition: var(--transition-smooth);
+        }
+        .forgot-password:hover {
+            color: var(--white);
+        }
+        .demo-notice {
+            background: rgba(0, 217, 255, 0.1);
+            border: 1px solid var(--accent-cyan);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            text-align: center;
+            color: var(--accent-cyan);
+            font-size: 0.875rem;
+        }
+        .demo-notice i {
+            margin-right: 0.5rem;
+        }
+        .back-home {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        .back-home a {
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .back-home a:hover {
+            color: var(--accent-cyan);
+        }
+        .quick-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        .btn-quick {
+            padding: 0.75rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: var(--transition-smooth);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-quick-primary {
+            background: var(--gradient-primary);
+            color: var(--white);
+        }
+        .btn-quick-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            color: var(--white);
+        }
+        .btn-quick-outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--gray-400);
+        }
+        .btn-quick-outline:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+    </div>
+
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">
+                <i class="fas fa-rocket"></i>
+                <h1 class="login-title">OpenClaw</h1>
+                <p class="login-subtitle">一个人的 DevOps 团队</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-control" placeholder="your@email.com" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <div class="login-options">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="rememberMe">
+                        <label class="form-check-label" for="rememberMe">记住我</label>
+                    </div>
+                    <a href="#" class="forgot-password">忘记密码？</a>
+                </div>
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> 登录
+                </button>
+            </form>
+
+            <div class="demo-notice">
+                <i class="fas fa-info-circle"></i>
+                <strong>演示模式</strong> - 登录功能需要后端 API 支持
+            </div>
+
+            <div class="quick-links">
+                <a href="/" class="btn-quick btn-quick-primary">
+                    <i class="fas fa-home"></i> 访问首页
+                </a>
+                <a href="/products/openclaw.html" class="btn-quick btn-quick-outline">
+                    <i class="fas fa-rocket"></i> OpenClaw
+                </a>
+            </div>
+
+            <div class="back-home">
+                <a href="/">
+                    <i class="fas fa-arrow-left"></i> 返回首页
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 阻止表单默认提交，保持在当前页面
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 显示提示信息
+            const email = this.querySelector('input[type="email"]').value;
+            alert('欢迎，' + email + '！\n\n当前为演示模式，登录功能需要后端 API 支持。\n\n您可以访问：\n• 首页：https://cloudmesh.top/\n• OpenClaw 产品：/products/openclaw.html\n• ITSM 产品：/products/itsm.html');
+            
+            return false;
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITSM - 企业级 IT 服务管理平台 | CloudMesh</title>
+    <meta name="description" content="ITSM 是基于 ITIL 最佳实践的企业级 IT 服务管理平台，提供工单管理、事件管理、问题管理、变更管理、SLA 管理等完整功能">
+    <meta name="keywords" content="ITSM, IT 服务管理，ITIL, 工单系统，事件管理，问题管理，变更管理，SLA 管理，CMDB">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dark-theme.css">
+</head>
+<body>
+    <!-- Background Animation -->
+    <div class="bg-animation">
+        <div class="bg-gradient bg-gradient-1"></div>
+        <div class="bg-gradient bg-gradient-2"></div>
+        <div class="bg-gradient bg-gradient-3"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg" id="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-cloud"></i>
+                CloudMesh
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="/">首页</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active" href="#" role="button" data-bs-toggle="dropdown">产品</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/products/openclaw.html">OpenClaw</a></li>
+                            <li><a class="dropdown-item active" href="/products/itsm.html">ITSM</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/open-source/">开源</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/#pricing">定价</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/contact/">联系</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/login.html">登录</a></li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-trial ms-2" href="/tickets/">
+                            <i class="fas fa-rocket"></i> 免费试用
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <section class="breadcrumb-section">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">首页</a></li>
+                    <li class="breadcrumb-item"><a href="/#products">产品</a></li>
+                    <li class="breadcrumb-item active">ITSM</li>
+                </ol>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Product Hero -->
+    <section class="product-hero">
+        <div class="container text-center">
+            <div class="hero-badge">
+                <span class="dot"></span>
+                <span>Enterprise IT Service Management</span>
+            </div>
+            <h1>ITSM</h1>
+            <p class="subtitle">企业级 IT 服务管理平台</p>
+            <p class="lead opacity-75 mb-4">基于 ITIL 最佳实践 · AI 智能赋能</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="/tickets/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-play"></i> 立即体验
+                </a>
+                <a href="#contact" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-calendar"></i> 预约演示
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Modules -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <span class="section-tag">MODULES</span>
+                <h2>核心功能模块</h2>
+                <p>完整的 IT 服务管理解决方案</p>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card">
+                        <div class="feature-icon text-purple"><i class="fas fa-ticket-alt"></i></div>
+                        <h3>工单管理</h3>
+                        <p>完整的工单生命周期管理，支持自定义流程、自动分配、SLA 监控。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-purple"></i> 自定义工作流</li>
+                            <li><i class="fas fa-check text-purple"></i> 智能分配</li>
+                            <li><i class="fas fa-check text-purple"></i> 多渠道接入</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card">
+                        <div class="feature-icon text-purple"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h3>事件管理</h3>
+                        <p>快速响应和处理 IT 事件，最小化业务影响，支持分级响应。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-purple"></i> 事件分级</li>
+                            <li><i class="fas fa-check text-purple"></i> 自动升级</li>
+                            <li><i class="fas fa-check text-purple"></i> 应急预案</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card">
+                        <div class="feature-icon text-purple"><i class="fas fa-search"></i></div>
+                        <h3>问题管理</h3>
+                        <p>根因分析，预防问题重复发生，建立知识库，持续改进。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-purple"></i> 根因分析</li>
+                            <li><i class="fas fa-check text-purple"></i> 已知错误库</li>
+                            <li><i class="fas fa-check text-purple"></i> 预防措施</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card">
+                        <div class="feature-icon text-purple"><i class="fas fa-sync-alt"></i></div>
+                        <h3>变更管理</h3>
+                        <p>规范的变更流程，降低变更风险，支持变更评审和回滚。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-purple"></i> 变更评审</li>
+                            <li><i class="fas fa-check text-purple"></i> 风险评估</li>
+                            <li><i class="fas fa-check text-purple"></i> 变更窗口</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card">
+                        <div class="feature-icon text-purple"><i class="fas fa-clock"></i></div>
+                        <h3>SLA 管理</h3>
+                        <p>服务级别协议管理，确保服务质量，支持多维度 SLA 定义。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-purple"></i> SLA 定义</li>
+                            <li><i class="fas fa-check text-purple"></i> 违约告警</li>
+                            <li><i class="fas fa-check text-purple"></i> 报表分析</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <div class="card">
+                        <div class="feature-icon text-purple"><i class="fas fa-database"></i></div>
+                        <h3>CMDB</h3>
+                        <p>配置管理数据库，完整的资产配置和关系管理。</p>
+                        <ul class="product-features">
+                            <li><i class="fas fa-check text-purple"></i> 资产配置</li>
+                            <li><i class="fas fa-check text-purple"></i> 关系映射</li>
+                            <li><i class="fas fa-check text-purple"></i> 自动发现</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section" id="contact">
+        <div class="container">
+            <h2>准备好提升 IT 服务质量了吗？</h2>
+            <p class="lead mb-4">立即免费试用 30 天，无需信用卡</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="/tickets/" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket"></i> 开始免费试用
+                </a>
+                <a href="/contact/" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-envelope"></i> 联系我们
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <div class="footer-brand">
+                        <i class="fas fa-cloud"></i>
+                        <span>CloudMesh</span>
+                    </div>
+                    <p class="footer-text">智能 IT 管理平台，让 IT 管理更简单高效</p>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">产品</h4>
+                    <ul class="footer-links">
+                        <li><a href="/products/openclaw.html">OpenClaw</a></li>
+                        <li><a href="/products/itsm.html">ITSM</a></li>
+                        <li><a href="/#pricing">定价</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">开源</h4>
+                    <ul class="footer-links">
+                        <li><a href="/open-source/">开源社区</a></li>
+                        <li><a href="https://github.com/heidsoft/itsm" target="_blank">GitHub</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4 mb-lg-0">
+                    <h4 class="footer-title">联系</h4>
+                    <ul class="footer-links">
+                        <li><a href="/contact/">联系我们</a></li>
+                        <li><a href="mailto:heidsoft@qq.com">heidsoft@qq.com</a></li>
+                        <li><a href="/privacy/">隐私政策</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 CloudMesh. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        window.addEventListener('scroll', function() {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业部署最佳实践 - OpenClaw 生产环境部署指南</title>
+    <meta name="description" content="OpenClaw 企业部署最佳实践，包括配置中心集成、密钥管理、多环境管理等生产环境部署指南">
+    <meta name="keywords" content="OpenClaw,企业部署，最佳实践，生产环境，配置中心">
+    <meta name="author" content="OpenClaw Team">
+    <meta property="og:title" content="企业部署最佳实践">
+    <meta property="og:description" content="OpenClaw 生产环境部署指南">
+    <meta property="og:type" content="article">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        :root { --primary: #667eea; --secondary: #764ba2; --success: #10b981; --warning: #f59e0b; --bg-dark: #0f0f1a; --bg-card: rgba(255,255,255,0.03); --border: rgba(255,255,255,0.08); --text-primary: #fff; --text-secondary: #a0aec0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg-dark); color: var(--text-primary); line-height: 1.7; }
+        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 40px; }
+        .header { text-align: center; margin-bottom: 60px; padding-bottom: 40px; border-bottom: 1px solid var(--border); }
+        .header h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header .meta { color: var(--text-secondary); font-size: 14px; }
+        .content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; margin-bottom: 32px; }
+        .content h2 { font-size: 28px; margin-bottom: 24px; color: var(--primary); }
+        .content h3 { font-size: 22px; margin-bottom: 18px; color: var(--text-primary); }
+        .content p { color: var(--text-secondary); margin-bottom: 18px; font-size: 16px; }
+        .content ul, .content ol { color: var(--text-secondary); margin-bottom: 18px; padding-left: 24px; }
+        .content li { margin-bottom: 10px; }
+        .code-block { background: #1a1a2e; border-radius: 14px; padding: 24px; margin: 24px 0; overflow-x: auto; border: 1px solid var(--border); }
+        .code-block code { color: #e2e8f0; font-family: 'Monaco', 'Consolas', monospace; font-size: 14px; line-height: 1.8; }
+        .tip-box { background: rgba(16,185,129,0.1); border-left: 4px solid var(--success); border-radius: 14px; padding: 20px; margin: 24px 0; }
+        .warning-box { background: rgba(245,158,11,0.1); border-left: 4px solid var(--warning); border-radius: 14px; padding: 20px; margin: 24px 0; }
+        .tip-box h4, .warning-box h4 { margin-bottom: 12px; }
+        .tip-box p, .warning-box p { color: var(--text-secondary); margin: 0; }
+        .nav-links { display: flex; gap: 16px; justify-content: center; margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .nav-links a { padding: 14px 28px; background: rgba(102,126,234,0.1); border-radius: 12px; color: var(--primary); text-decoration: none; font-weight: 600; }
+        @media (max-width: 768px) { .container { padding: 60px 16px 30px; } .header h1 { font-size: 32px; } .content { padding: 28px 24px; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏢 企业部署最佳实践</h1>
+            <p class="meta">OpenClaw 生产环境部署指南</p>
+            <p class="meta">2026-03-11 · 阅读时间：15 分钟</p>
+        </div>
+
+        <div class="content">
+            <h2>📖 前言</h2>
+            <p>本文档介绍如何在企业生产环境中部署 OpenClaw，包括配置中心集成、密钥管理、多环境管理等最佳实践。</p>
+            <div class="warning-box">
+                <h4>⚠️ 适用场景</h4>
+                <p>本文档适用于中大型企业的生产环境部署。个人用户请参考<a href="/docs/quickstart.html" style="color: var(--primary);">快速入门指南</a>。</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🎯 部署架构</h2>
+            <h3>推荐架构</h3>
+            <ul>
+                <li><strong>配置中心</strong> - Apollo/Nacos 管理配置</li>
+                <li><strong>密钥管理</strong> - HashiCorp Vault 存储敏感信息</li>
+                <li><strong>容器编排</strong> - Kubernetes 部署和管理</li>
+                <li><strong>负载均衡</strong> - Nginx/ALB 分发请求</li>
+                <li><strong>监控告警</strong> - Prometheus + Grafana</li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2>📦 配置中心集成</h2>
+            <h3>Apollo 配置</h3>
+            <div class="code-block">
+                <code># application.yaml
+openclaw:
+  platform:
+    provider: ${OPENCLAW_PLATFORM:dingtalk}
+  agents:
+    count: ${OPENCLAW_AGENTS_COUNT:2}
+  runtime:
+    default_model: ${OPENCLAW_MODEL:bailian/qwen3.5-plus}
+    thinking: ${OPENCLAW_THINKING:auto}</code>
+            </div>
+
+            <h3>Nacos 配置</h3>
+            <div class="code-block">
+                <code># 配置 Data ID: openclaw-prod.yaml
+openclaw:
+  platform:
+    provider: dingtalk
+  agents:
+    - name: Coordinator
+      role: 协调员
+      skills: [task_management, communication]
+  runtime:
+    workdir: /data/openclaw</code>
+            </div>
+
+            <div class="tip-box">
+                <h4>💡 最佳实践</h4>
+                <p>• 使用 Namespace 隔离不同环境（dev/test/prod）<br>• 配置变更走审批流程<br>• 启用配置变更审计日志</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🔐 密钥管理</h2>
+            <h3>Vault 集成</h3>
+            <div class="code-block">
+                <code># 1. 启用 KV Secret 引擎
+vault secrets enable -path=secret/openclaw kv
+
+# 2. 写入平台凭证
+vault kv put secret/openclaw/platform \
+  provider=dingtalk \
+  appkey=dingxxxxxxxxxx \
+  appsecret=your_secret
+
+# 3. 应用读取
+export DINGTALK_APPKEY=$(vault kv get -field=appkey secret/openclaw/platform)
+export DINGTALK_APPSECRET=$(vault kv get -field=appsecret secret/openclaw/platform)</code>
+            </div>
+
+            <h3>Kubernetes Secret</h3>
+            <div class="code-block">
+                <code>apiVersion: v1
+kind: Secret
+metadata:
+  name: openclaw-secret
+  namespace: openclaw
+type: Opaque
+stringData:
+  DINGTALK_APPKEY: dingxxxxxxxxxx
+  DINGTALK_APPSECRET: your_secret</code>
+            </div>
+
+            <div class="tip-box">
+                <h4>🔒 安全建议</h4>
+                <p>• 定期轮换密钥（每 3-6 个月）<br>• 使用 AppRole 认证而非 Token<br>• 启用 Secret 审计日志<br>• 限制访问权限（最小权限原则）</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🌍 多环境管理</h2>
+            <h3>环境隔离</h3>
+            <div class="code-block">
+                <code># 目录结构
+openclaw-config/
+├── base/              # 基础配置（所有环境共用）
+│   ├── kustomization.yaml
+│   ├── configmap.yaml
+│   └── deployment.yaml
+├── overlays/
+│   ├── dev/           # 开发环境
+│   │   └── kustomization.yaml
+│   ├── test/          # 测试环境
+│   │   └── kustomization.yaml
+│   └── prod/          # 生产环境
+│       └── kustomization.yaml</code>
+            </div>
+
+            <h3>环境差异</h3>
+            <ul>
+                <li><strong>开发环境</strong> - 调试模式开启，日志级别 DEBUG</li>
+                <li><strong>测试环境</strong> - 连接测试数据库，模拟数据</li>
+                <li><strong>生产环境</strong> - 严格权限控制，完整监控</li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2>📊 监控告警</h2>
+            <h3>指标采集</h3>
+            <div class="code-block">
+                <code># Prometheus 配置
+scrape_configs:
+  - job_name: 'openclaw'
+    static_configs:
+      - targets: ['openclaw:8080']
+    metrics_path: /metrics</code>
+            </div>
+
+            <h3>关键指标</h3>
+            <ul>
+                <li><code>openclaw_requests_total</code> - 请求总数</li>
+                <li><code>openclaw_request_duration_seconds</code> - 请求耗时</li>
+                <li><code>openclaw_agent_active</code> - 活跃 Agent 数</li>
+                <li><code>openclaw_errors_total</code> - 错误总数</li>
+            </ul>
+
+            <h3>告警规则</h3>
+            <div class="code-block">
+                <code>groups:
+  - name: openclaw
+    rules:
+      - alert: OpenClawHighErrorRate
+        expr: rate(openclaw_errors_total[5m]) > 0.1
+        for: 5m
+        annotations:
+          summary: "OpenClaw 错误率过高"</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>🔄 CI/CD 集成</h2>
+            <h3>GitOps 工作流</h3>
+            <ol>
+                <li>开发者修改配置 → 提交 PR</li>
+                <li>自动触发 CI 检查</li>
+                <li>审批通过 → 合并到 main 分支</li>
+                <li>ArgoCD 自动同步到集群</li>
+            </ol>
+
+            <div class="tip-box">
+                <h4>🎯 建议</h4>
+                <p>• 配置变更必须走 PR 流程<br>• 至少 2 人审批<br>• 自动回滚机制<br>• 变更通知到通讯平台</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2>📋 检查清单</h2>
+            <h3>部署前</h3>
+            <ul>
+                <li>☐ 配置中心已就绪</li>
+                <li>☐ Vault 已配置并测试</li>
+                <li>☐ Kubernetes 集群可用</li>
+                <li>☐ 监控告警已配置</li>
+                <li>☐ 备份策略已制定</li>
+            </ul>
+
+            <h3>部署后</h3>
+            <ul>
+                <li>☐ 服务健康检查通过</li>
+                <li>☐ 监控指标正常</li>
+                <li>☐ 日志采集正常</li>
+                <li>☐ 告警测试通过</li>
+                <li>☐ 备份验证通过</li>
+            </ul>
+        </div>
+
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> 返回首页</a>
+            <a href="/blog/"><i class="fas fa-list"></i> 博客列表</a>
+            <a href="/pricing.html"><i class="fas fa-tags"></i> 企业版定价</a>
+            <a href="/contact/"><i class="fas fa-envelope"></i> 联系销售</a>
+        </div>
+    </div>
+</body>
+</html>

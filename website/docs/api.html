@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 文档 - ITSM</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo"><h1>ITSM</h1></div>
+            <ul class="nav-links">
+                <li><a href="/">首页</a></li>
+                <li><a href="/docs/">文档</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="doc-content">
+        <div class="container">
+            <h1>🔧 API 文档</h1>
+            
+            <div class="doc-section">
+                <h2>认证方式</h2>
+                <pre><code>Authorization: Bearer {token}</code></pre>
+            </div>
+
+            <div class="doc-section">
+                <h2>工单 API</h2>
+                <h3>创建工单</h3>
+                <pre><code>POST /api/v1/tickets
+{
+  "title": "工单标题",
+  "description": "问题描述",
+  "priority": "high",
+  "type": "incident"
+}</code></pre>
+
+                <h3>获取工单列表</h3>
+                <pre><code>GET /api/v1/tickets</code></pre>
+
+                <h3>更新工单</h3>
+                <pre><code>PUT /api/v1/tickets/{id}</code></pre>
+            </div>
+
+            <div class="doc-section">
+                <h2>事件 API</h2>
+                <h3>创建事件</h3>
+                <pre><code>POST /api/v1/incidents</code></pre>
+
+                <h3>获取事件列表</h3>
+                <pre><code>GET /api/v1/incidents</code></pre>
+            </div>
+
+            <div class="doc-section">
+                <h2>完整 API 文档</h2>
+                <p>访问 Swagger UI 查看完整 API 文档：</p>
+                <a href="http://localhost:8080/swagger" class="btn btn-primary">查看 Swagger</a>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

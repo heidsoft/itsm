@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cloudmesh.top/sitemap.xml
+
+# Crawl-delay
+Crawl-delay: 1
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/

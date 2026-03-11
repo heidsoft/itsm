@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 部署系统 - CloudMesh</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/design-system.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+        }
+        .app-container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+        .app-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .app-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        .app-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .app-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        .status-card {
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .status-label {
+            font-weight: 600;
+            opacity: 0.9;
+        }
+        .status-value {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+        }
+        .btn-app {
+            background: #fff;
+            color: #3b82f6;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            margin: 0.5rem;
+        }
+        .btn-app:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            color: #2563eb;
+        }
+        .btn-outline-light-custom {
+            background: transparent;
+            color: #fff;
+            border: 2px solid rgba(255,255,255,0.5);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            margin: 0.5rem;
+        }
+        .btn-outline-light-custom:hover {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            transform: translateY(-3px);
+        }
+        .feature-list {
+            text-align: left;
+            margin: 2rem 0;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+        .feature-item i {
+            color: #4ade80;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <div class="app-icon">🚀</div>
+            <h1 class="app-title">OpenClaw 部署管理系统</h1>
+            <p class="app-subtitle">AI 驱动的智能部署管理平台</p>
+        </div>
+
+        <div class="status-card">
+            <div class="status-item">
+                <span class="status-label"><i class="fas fa-server"></i> API 状态</span>
+                <span class="status-value" id="apiStatus">检测中...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label"><i class="fas fa-network-wired"></i> API 地址</span>
+                <span class="status-value">https://cloudmesh.top:8080</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label"><i class="fas fa-shield-alt"></i> 认证方式</span>
+                <span class="status-value">API Key / OAuth</span>
+            </div>
+        </div>
+
+        <div class="feature-list">
+            <div class="feature-item">
+                <i class="fas fa-check-circle"></i>
+                <span>一键部署应用</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle"></i>
+                <span>实时监控与告警</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle"></i>
+                <span>AI 智能分析</span>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-check-circle"></i>
+                <span>多环境管理</span>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="#" class="btn-app" onclick="alert('即将连接到部署系统...')">
+                <i class="fas fa-sign-in-alt"></i> 进入系统
+            </a>
+            <a href="/" class="btn-outline-light-custom">
+                <i class="fas fa-home"></i> 返回官网
+            </a>
+        </div>
+
+        <div class="text-center mt-4">
+            <small class="opacity-75">
+                <i class="fas fa-info-circle"></i> 
+                提示：首次使用需要注册账户，免费试用 30 天
+            </small>
+        </div>
+    </div>
+
+    <script>
+        // 检测 API 状态
+        async function checkApiStatus() {
+            const statusEl = document.getElementById('apiStatus');
+            try {
+                const response = await fetch('/api/health', {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                    statusEl.innerHTML = '<span style="color: #4ade80;">● 正常运行</span>';
+                } else {
+                    statusEl.innerHTML = '<span style="color: #fbbf24;">● 部分可用</span>';
+                }
+            } catch (error) {
+                statusEl.innerHTML = '<span style="color: #f87171;">● 连接中</span>';
+            }
+        }
+        
+        checkApiStatus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快速入门 - OpenClaw | 5 分钟完成配置</title>
+    <meta name="description" content="5 分钟快速完成 OpenClaw 配置，立即开始使用 AI 驱动的 DevOps 平台">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary: #764ba2;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --info: #00bcd4;
+            --bg-dark: #0f0f1a;
+            --bg-card: rgba(255,255,255,0.03);
+            --bg-code: #1a1a2e;
+            --border: rgba(255,255,255,0.08);
+            --text-primary: #fff;
+            --text-secondary: #a0aec0;
+            --text-muted: #718096;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(102,126,234,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(118,75,162,0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 40px; }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 52px;
+            font-weight: 800;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 30px;
+            font-size: 14px;
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        /* Content Cards */
+        .content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 32px;
+            transition: all 0.3s;
+            animation: fadeInUp 0.8s ease-out backwards;
+        }
+
+        .content:nth-child(2) { animation-delay: 0.1s; }
+        .content:nth-child(3) { animation-delay: 0.2s; }
+        .content:nth-child(4) { animation-delay: 0.3s; }
+        .content:nth-child(5) { animation-delay: 0.4s; }
+
+        .content:hover {
+            border-color: rgba(102,126,234,0.3);
+            box-shadow: 0 8px 30px rgba(102,126,234,0.1);
+        }
+
+        .content h2 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 28px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content h3 {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: var(--text-primary);
+        }
+
+        .content p {
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            font-size: 16px;
+        }
+
+        .content ul, .content ol {
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            padding-left: 24px;
+        }
+
+        .content li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        /* Steps */
+        .steps {
+            counter-reset: step;
+            list-style: none;
+            padding: 0;
+        }
+
+        .steps li {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 32px;
+            counter-increment: step;
+        }
+
+        .steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 44px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 20px rgba(102,126,234,0.4);
+        }
+
+        .steps li h3 {
+            margin-bottom: 14px;
+            color: var(--text-primary);
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--bg-code);
+            border-radius: 14px;
+            padding: 24px;
+            margin: 24px 0;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            position: relative;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            display: flex;
+            gap: 6px;
+        }
+
+        .code-block::after {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            width: 12px;
+            height: 12px;
+            background: #ff5f56;
+            border-radius: 50%;
+        }
+
+        .code-block::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 34px;
+            width: 12px;
+            height: 12px;
+            background: #ffbd2e;
+            border-radius: 50%;
+        }
+
+        .code-block code {
+            color: #e2e8f0;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            display: block;
+        }
+
+        .code-title {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Table */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            background: rgba(255,255,255,0.02);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .table th {
+            background: rgba(102,126,234,0.15);
+            padding: 18px 20px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tr:hover {
+            background: var(--bg-hover);
+        }
+
+        .table a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .table a:hover {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 20px 24px;
+            border-radius: 14px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+
+        .info-box.info {
+            background: rgba(0,188,212,0.1);
+            border-left-color: var(--info);
+        }
+
+        .info-box.warning {
+            background: rgba(239,68,68,0.1);
+            border-left-color: var(--danger);
+        }
+
+        .info-box.success {
+            background: rgba(16,185,129,0.1);
+            border-left-color: var(--success);
+        }
+
+        .info-box h4 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info-box ul {
+            margin: 12px 0 0 20px;
+            color: var(--text-secondary);
+        }
+
+        .info-box li {
+            margin-bottom: 6px;
+        }
+
+        /* File Tree */
+        .file-tree {
+            background: var(--bg-code);
+            border-radius: 14px;
+            padding: 24px;
+            font-family: 'Monaco', 'Consolas', 'Courier New', monospace;
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 2;
+            overflow-x: auto;
+            border: 1px solid var(--border);
+        }
+
+        .file-tree .folder {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .file-tree .file {
+            color: var(--success);
+        }
+
+        /* Navigation */
+        .nav-links {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            padding: 14px 28px;
+            background: rgba(102,126,234,0.1);
+            border-radius: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 1px solid rgba(102,126,234,0.2);
+        }
+
+        .nav-links a:hover {
+            background: rgba(102,126,234,0.2);
+            border-color: rgba(102,126,234,0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 60px 16px 30px; }
+            .header h1 { font-size: 38px; }
+            .header p { font-size: 16px; }
+            .content { padding: 28px 24px; }
+            .content h2 { font-size: 26px; }
+            .steps li { padding-left: 50px; }
+            .steps li::before { width: 38px; height: 38px; line-height: 38px; font-size: 16px; }
+            .table { font-size: 14px; }
+            .table th, .table td { padding: 14px; }
+            .nav-links { flex-direction: column; }
+            .nav-links a { text-align: center; }
+        }
+
+        /* Smooth Scroll */
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 快速入门指南</h1>
+            <p>5 分钟完成 OpenClaw 配置，立即开始使用</p>
+            <div class="time-badge">
+                <i class="fas fa-clock"></i>
+                预计时间：5 分钟
+            </div>
+        </div>
+
+        <div class="content">
+            <h2><i class="fas fa-clipboard-list"></i> 前提条件</h2>
+            <ul>
+                <li>✅ Linux/macOS 或 Windows 系统</li>
+                <li>✅ 已注册钉钉/飞书/企业微信等平台账号</li>
+                <li>✅ 能够访问互联网</li>
+                <li>✅ 基础命令行操作知识</li>
+            </ul>
+        </div>
+
+        <div class="content">
+            <h2><i class="fas fa-bullseye"></i> 快速开始</h2>
+            <ol class="steps">
+                <li>
+                    <h3>访问配置生成器（1 分钟）</h3>
+                    <p>打开浏览器访问配置生成器页面：</p>
+                    <div class="code-block">
+                        <div class="code-title">URL</div>
+                        <code>https://cloudmesh.top/openclaw-generator/</code>
+                    </div>
+                </li>
+
+                <li>
+                    <h3>选择平台（1 分钟）</h3>
+                    <p>根据你的使用场景选择合适的通讯平台：</p>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>平台</th>
+                                <th>适用场景</th>
+                                <th>创建指南</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>💬 钉钉</td>
+                                <td>企业 IM</td>
+                                <td><a href="https://open.dingtalk.com" target="_blank">open.dingtalk.com</a></td>
+                            </tr>
+                            <tr>
+                                <td>🚀 飞书</td>
+                                <td>企业协作</td>
+                                <td><a href="https://open.feishu.cn" target="_blank">open.feishu.cn</a></td>
+                            </tr>
+                            <tr>
+                                <td>💚 企业微信</td>
+                                <td>企业通讯</td>
+                                <td><a href="https://work.weixin.qq.com" target="_blank">work.weixin.qq.com</a></td>
+                            </tr>
+                            <tr>
+                                <td>✈️ Telegram</td>
+                                <td>即时通讯</td>
+                                <td>@BotFather</td>
+                            </tr>
+                            <tr>
+                                <td>🎮 Discord</td>
+                                <td>社群聊天</td>
+                                <td><a href="https://discord.com/developers" target="_blank">discord.com/developers</a></td>
+                            </tr>
+                            <tr>
+                                <td>💬 Slack</td>
+                                <td>团队协作</td>
+                                <td><a href="https://api.slack.com" target="_blank">api.slack.com</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </li>
+
+                <li>
+                    <h3>填写凭证（1 分钟）</h3>
+                    <p>根据选择的平台，填写对应的应用凭证：</p>
+                    
+                    <div class="info-box info">
+                        <h4><i class="fas fa-shield-alt"></i> 安全提示</h4>
+                        <p>敏感信息只会保存在本地配置文件中，<strong>不会上传到任何服务器</strong>，请放心使用。</p>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-title">钉钉示例</div>
+                        <code>AppKey: dingxxxxxxxxxx<br>AppSecret: 你的应用密钥</code>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-title">飞书示例</div>
+                        <code>App ID: cli_xxxxxxxxxx<br>App Secret: 你的应用密钥</code>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-title">企业微信示例</div>
+                        <code>BotID: 机器人 ID<br>Secret: 应用密钥</code>
+                    </div>
+                </li>
+
+                <li>
+                    <h3>配置 Agent 团队（1 分钟）</h3>
+                    <p>选择你的 Agent 团队规模和协作模式：</p>
+                    
+                    <h4 style="margin: 20px 0 12px; color: var(--text-primary);">团队规模</h4>
+                    <ul>
+                        <li>👤 <strong>1 个</strong> - 单兵作战（个人使用）</li>
+                        <li>👥 <strong>2 个</strong> - 双人协作（小团队）</li>
+                        <li>👨‍💼 <strong>3 个</strong> - 专业小队（中型团队）</li>
+                        <li>🏢 <strong>4 个</strong> - 完整团队（大型团队）</li>
+                    </ul>
+
+                    <h4 style="margin: 20px 0 12px; color: var(--text-primary);">协作模式</h4>
+                    <ul>
+                        <li>🔄 <strong>顺序执行</strong> - 流水线处理，按顺序执行任务</li>
+                        <li>⚡ <strong>并行执行</strong> - 同时处理多个任务</li>
+                        <li>📊 <strong>层级执行</strong> - 主管分配任务</li>
+                        <li>🤝 <strong>协作执行</strong> - 自由协作</li>
+                    </ul>
+                </li>
+
+                <li>
+                    <h3>生成并安装（1 分钟）</h3>
+                    <p>点击"🚀 生成配置"按钮，复制安装命令并在终端执行：</p>
+                    
+                    <div class="code-block">
+                        <div class="code-title">Linux / macOS</div>
+                        <code>curl -fsSL "https://cloudmesh.top/openclaw-generator/install.sh" -o install.sh && bash install.sh</code>
+                    </div>
+
+                    <div class="code-block">
+                        <div class="code-title">Windows (PowerShell)</div>
+                        <code>powershell -c "Invoke-RestMethod 'https://cloudmesh.top/openclaw-generator/install.ps1' -OutFile install.ps1; .\install.ps1"</code>
+                    </div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="content">
+            <h2><i class="fas fa-folder-tree"></i> 生成的文件</h2>
+            <p>安装完成后，会在 <code>~/.openclaw/</code> 目录生成以下文件结构：</p>
+            
+            <div class="file-tree">
+<span class="folder">~/.openclaw/</span>
+├── <span class="folder">workspace/</span>
+│   ├── <span class="file">openclaw.json</span>    # 主配置文件
+│   └── <span class="file">.env</span>             # 环境变量（敏感信息）
+├── <span class="folder">logs/</span>
+│   └── <span class="file">openclaw.log</span>     # 运行日志
+└── <span class="file">install.sh</span>           # 安装脚本
+            </div>
+        </div>
+
+        <div class="content">
+            <h2><i class="fas fa-play-circle"></i> 启动服务</h2>
+            <p>安装完成后，使用以下命令管理 OpenClaw 服务：</p>
+            
+            <div class="code-block">
+                <div class="code-title">启动服务</div>
+                <code>openclaw start</code>
+            </div>
+
+            <div class="code-block">
+                <div class="code-title">查看状态</div>
+                <code>openclaw status</code>
+            </div>
+
+            <div class="code-block">
+                <div class="code-title">查看日志</div>
+                <code>openclaw logs</code>
+            </div>
+
+            <div class="code-block">
+                <div class="code-title">停止服务</div>
+                <code>openclaw stop</code>
+            </div>
+
+            <div class="code-block">
+                <div class="code-title">重启服务</div>
+                <code>openclaw restart</code>
+            </div>
+        </div>
+
+        <div class="content">
+            <h2><i class="fas fa-check-double"></i> 验证安装</h2>
+            
+            <h3>1. 检查服务状态</h3>
+            <div class="code-block">
+                <code>openclaw status</code>
+            </div>
+            
+            <div class="info-box success">
+                <h4><i class="fas fa-check-circle"></i> 成功输出</h4>
+                <p>
+                    ✅ OpenClaw 运行中<br>
+                    版本：2026.2.24<br>
+                    平台：dingtalk
+                </p>
+            </div>
+
+            <h3>2. 测试消息</h3>
+            <p>在钉钉/飞书等平台发送测试消息，OpenClaw 应该能够响应。</p>
+        </div>
+
+        <div class="content">
+            <h2><i class="fas fa-question-circle"></i> 常见问题</h2>
+            
+            <h3>Q: 安装失败怎么办？</h3>
+            <div class="info-box warning">
+                <h4><i class="fas fa-exclamation-triangle"></i> 解决方案</h4>
+                <p>检查以下几点：</p>
+                <ol style="margin-top: 10px;">
+                    <li>确保已安装 Node.js（v20+）</li>
+                    <li>确保网络连接正常</li>
+                    <li>查看安装日志：<code>cat ~/.openclaw/logs/install.log</code></li>
+                </ol>
+            </div>
+
+            <h3>Q: 如何修改配置？</h3>
+            <div class="info-box info">
+                <h4><i class="fas fa-edit"></i> 操作步骤</h4>
+                <p>编辑配置文件后重启服务：</p>
+                <div class="code-block" style="margin-top: 12px; margin-bottom: 0;">
+                    <code>vim ~/.openclaw/workspace/openclaw.json<br>openclaw restart</code>
+                </div>
+            </div>
+
+            <h3>Q: 敏感信息是否安全？</h3>
+            <div class="info-box success">
+                <h4><i class="fas fa-lock"></i> 安全保障</h4>
+                <ul>
+                    <li>敏感信息只保存在本地 <code>.env</code> 文件</li>
+                    <li>不会上传到任何服务器</li>
+                    <li>建议设置文件权限：<code>chmod 600 ~/.openclaw/workspace/.env</code></li>
+                </ul>
+            </div>
+
+            <h3>Q: 企业版和个人版有什么区别？</h3>
+            <div class="info-box info">
+                <h4><i class="fas fa-building"></i> 主要区别</h4>
+                <ul>
+                    <li><strong>个人版</strong> - 免费，本地文件配置，适合个人/小团队</li>
+                    <li><strong>企业版</strong> - ¥999/年，支持配置中心、密钥管理、多环境等</li>
+                </ul>
+                <p style="margin-top: 12px;">
+                    <a href="/pricing.html" style="color: var(--primary); text-decoration: none; font-weight: 600;">
+                        查看完整对比 →
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/"><i class="fas fa-home"></i> 返回首页</a>
+            <a href="/openclaw-generator/"><i class="fas fa-wrench"></i> 配置生成器</a>
+            <a href="/pricing.html"><i class="fas fa-tags"></i> 查看定价</a>
+            <a href="/skills/"><i class="fas fa-puzzle-piece"></i> Skill 市场</a>
+        </div>
+    </div>
+
+    <script>
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

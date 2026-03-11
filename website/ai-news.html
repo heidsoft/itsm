@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 新闻 - OpenClaw</title>
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 70px;
+        }
+        
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+        
+        .news-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .news-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+        
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+        
+        .news-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .news-card-body {
+            padding: 1.5rem;
+        }
+        
+        .news-card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: #333;
+        }
+        
+        .news-card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+            color: #666;
+        }
+        
+        .news-card-excerpt {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .news-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .news-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        
+        .news-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .news-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #fff;
+        }
+        
+        .loading i {
+            font-size: 3rem;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .refresh-btn {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        @media (max-width: 768px) {
+            .news-container {
+                padding: 1rem;
+            }
+            
+            .news-card img {
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-rocket"></i> OpenClaw
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> 首页</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/ai-news.html"><i class="fas fa-newspaper"></i> AI 新闻</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://deploy.cloudmesh.top" target="_blank">
+                            <i class="fas fa-rocket"></i> 部署管理
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="news-container">
+        <div class="text-center mb-5">
+            <h1 class="text-white mb-3">
+                <i class="fas fa-newspaper"></i> AI 科技新闻
+            </h1>
+            <p class="text-white-50">获取最新的人工智能和科技资讯</p>
+        </div>
+
+        <div id="newsList">
+            <div class="loading">
+                <i class="fas fa-spinner"></i>
+                <p class="mt-3">正在加载新闻...</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="loadNews()" title="刷新新闻">
+        <i class="fas fa-sync-alt"></i>
+    </button>
+
+    <script>
+        // 新闻数据
+        let newsData = [];
+
+        // 加载新闻
+        async function loadNews() {
+            const newsList = document.getElementById('newsList');
+            newsList.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p class="mt-3">正在加载新闻...</p>
+                </div>
+            `;
+
+            try {
+                // 使用多个新闻源
+                const sources = [
+                    'https://newsapi.org/v2/top-headlines?category=technology&language=en&apiKey=YOUR_API_KEY',
+                    'https://hn.algolia.com/api/v1/search?query=AI&tags=story&hitsPerPage=20',
+                    'https://api.nytimes.com/svc/topstories/v2/technology.json?api-key=YOUR_API_KEY'
+                ];
+
+                // 这里使用模拟数据（因为需要 API Key）
+                // 实际使用时，请替换为真实的 API 调用
+                newsData = getMockNews();
+                
+                displayNews(newsData);
+            } catch (error) {
+                console.error('加载新闻失败:', error);
+                newsList.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        加载新闻失败，请稍后重试
+                    </div>
+                `;
+            }
+        }
+
+        // 显示新闻
+        function displayNews(news) {
+            const newsList = document.getElementById('newsList');
+            
+            const html = news.map(item => `
+                <div class="news-card">
+                    ${item.image ? `<img src="${item.image}" alt="${item.title}">` : ''}
+                    <div class="news-card-body">
+                        <div class="news-card-meta">
+                            <span><i class="fas fa-calendar"></i> ${formatDate(item.publishedAt)}</span>
+                            <span><i class="fas fa-user"></i> ${item.source || '未知'}</span>
+                        </div>
+                        <h3 class="news-card-title">${item.title}</h3>
+                        <p class="news-card-excerpt">${item.description || item.content || ''}</p>
+                        <div class="news-card-footer">
+                            <span class="news-tag">${item.category || '科技'}</span>
+                            <a href="${item.url}" target="_blank" class="news-link">
+                                阅读全文 <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            newsList.innerHTML = html;
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            
+            if (hours < 1) {
+                return '刚刚';
+            } else if (hours < 24) {
+                return `${hours}小时前`;
+            } else {
+                return date.toLocaleDateString('zh-CN');
+            }
+        }
+
+        // 模拟新闻数据（替换为真实 API 调用）
+        function getMockNews() {
+            return [
+                {
+                    title: "OpenAI 发布最新 GPT 模型，性能大幅提升",
+                    description: "OpenAI 今日发布了最新的 GPT 模型，在各项基准测试中表现优异，特别是在逻辑推理和代码生成方面有了显著提升。",
+                    url: "https://openai.com",
+                    publishedAt: new Date().toISOString(),
+                    source: "OpenAI",
+                    category: "AI 模型",
+                    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800"
+                },
+                {
+                    title: "Google DeepMind 在 AI 医疗领域取得重大突破",
+                    description: "Google DeepMind 团队宣布其 AI 系统在疾病诊断方面达到了专业医生水平，有望 revolutionize 医疗行业。",
+                    url: "https://deepmind.google",
+                    publishedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+                    source: "Google DeepMind",
+                    category: "AI 医疗",
+                    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800"
+                },
+                {
+                    title: "Meta 发布开源多模态 AI 模型",
+                    description: "Meta 公司发布了新的开源多模态 AI 模型，支持文本、图像和语音的跨模态理解，推动 AI 技术发展。",
+                    url: "https://ai.meta.com",
+                    publishedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+                    source: "Meta AI",
+                    category: "开源 AI",
+                    image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?w=800"
+                },
+                {
+                    title: "AI 代码助手成为开发者新宠",
+                    description: "最新调查显示，超过 70% 的开发者已经开始使用 AI 代码助手，大大提高了开发效率和代码质量。",
+                    url: "#",
+                    publishedAt: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+                    source: "TechCrunch",
+                    category: "开发工具",
+                    image: "https://images.unsplash.com/photo-1555099962-4199c345e5dd?w=800"
+                },
+                {
+                    title: "自动驾驶技术迎来新里程碑",
+                    description: "多家自动驾驶公司宣布其技术已达到 L4 级别，距离完全自动驾驶又近了一步。",
+                    url: "#",
+                    publishedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+                    source: "Reuters",
+                    category: "自动驾驶",
+                    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800"
+                },
+                {
+                    title: "AI 在气候变化研究中发挥重要作用",
+                    description: "科学家们利用 AI 技术分析气候数据，预测气候变化趋势，为应对全球变暖提供科学依据。",
+                    url: "#",
+                    publishedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+                    source: "Nature",
+                    category: "科学研究",
+                    image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800"
+                }
+            ];
+        }
+
+        // 页面加载时加载新闻
+        document.addEventListener('DOMContentLoaded', loadNews);
+    </script>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
