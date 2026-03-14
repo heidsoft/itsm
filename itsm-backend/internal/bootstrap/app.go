@@ -76,6 +76,11 @@ func NewApplication() *Application {
 	// 初始化业务服务层
 	incidentService := service.NewIncidentService(client, sugar)
 	ticketService := service.NewTicketService(client, sugar)
+
+	// MSP 服务初始化
+	mspAllocationService := service.NewMSPAllocationService(client, sugar)
+	mspController := controller.NewMSPController(mspAllocationService, ticketService, sugar)
+
 	serviceCatalogService := service.NewServiceCatalogService(client, sugar)
 	// 审批服务
 	approvalService := service.NewApprovalService(client, sugar)
@@ -189,6 +194,13 @@ func NewApplication() *Application {
 	processBindingService := service.NewProcessBindingService(client)
 	processTriggerService := service.NewProcessTriggerService(client, processEngine)
 	bpmnProcessTriggerController := controller.NewBPMNProcessTriggerController(processTriggerService, processBindingService)
+
+	// BPMN Dashboard Controller (监控仪表盘)
+	bpmnMetricsService := service.NewBPMNMetricsService(client, sugar)
+	bpmnAuditService := service.NewBPMNAuditService(client, sugar)
+	bpmnTenantService := service.NewBPMNTenantService(client, sugar)
+	bpmnSlaService := service.NewBPMNSLAService(client, sugar)
+	bpmnDashboardController := controller.NewBPMNDashboardController(bpmnMetricsService, bpmnAuditService, bpmnTenantService, bpmnSlaService)
 
 	// A2UI Ticket Controller (AI-driven UI表单)
 	a2uiTicketService := service.NewA2UITicketService(nil)
@@ -344,6 +356,7 @@ func NewApplication() *Application {
 		ApprovalController:              approvalController,
 		BPMNWorkflowController:          bpmnWorkflowController,
 		BPMNProcessTriggerController:    bpmnProcessTriggerController,
+		BPMNDashboardController:         bpmnDashboardController,
 		A2UITicketController:            a2uiTicketController,
 		DashboardHandler:                dashboardHandler,
 		ProjectController:               projectController,
@@ -357,6 +370,7 @@ func NewApplication() *Application {
 		RoleController:          roleController,
 		PermissionController:    permissionController,
 		TenantController:        tenantController,
+		MSPController:          mspController,
 		SystemConfigController:  systemConfigController,
 		ApprovalChainController: approvalChainController,
 

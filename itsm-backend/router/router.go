@@ -49,6 +49,7 @@ type RouterConfig struct {
 	ApprovalController              *controller.ApprovalController
 	BPMNWorkflowController          *controller.BPMNWorkflowController
 	BPMNProcessTriggerController    *controller.BPMNProcessTriggerController
+	BPMNDashboardController         *controller.BPMNDashboardController
 	A2UITicketController            *controller.A2UITicketController
 	DashboardHandler                *handlers.DashboardHandler
 
@@ -73,6 +74,7 @@ type RouterConfig struct {
 	RoleController                   *controller.RoleController
 	PermissionController             *controller.PermissionController
 	TenantController                 *controller.TenantController
+	MSPController                   *controller.MSPController
 	SystemConfigController           *controller.SystemConfigController
 	ApprovalChainController          *controller.ApprovalChainController
 	NotificationPreferenceController *controller.NotificationPreferenceController
@@ -152,6 +154,26 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 	auth := r.Group("/api/v1").Use(middleware.AuthMiddleware(config.JWTSecret))
 	// RBAC 权限控制中间件：保护所有已认证路由
 	auth.Use(middleware.RBACMiddleware(config.Client))
+
+	// MSP Routes (跨租户，不需要租户中间件)
+	if config.MSPController != nil {
+		msp := r.Group("/api/v1/msp")
+		msp.Use(middleware.AuthMiddleware(config.JWTSecret))
+		msp.Use(middleware.MSPMiddleware(config.Client))
+		{
+			msp.GET("/status", config.MSPController.GetMSPStatus)
+			msp.GET("/context", config.MSPController.GetMSPContext)
+			msp.GET("/allocations", config.MSPController.GetAllocations)
+			msp.POST("/allocations", config.MSPController.CreateAllocation)
+			msp.POST("/allocations/deallocate", config.MSPController.Deallocate)
+			msp.GET("/customers", config.MSPController.GetAllCustomers)
+			msp.GET("/customers/:customer_tenant_id/tickets", config.MSPController.GetCustomerTickets)
+			msp.POST("/tickets/:id/assign", config.MSPController.AssignMSPTechnician)
+			msp.GET("/reports/customers", config.MSPController.GetCustomerReports)
+			msp.GET("/reports/performance", config.MSPController.GetPerformanceReports)
+		}
+	}
+
 	{
 		// 租户中间件
 		tenant := auth.Use(middleware.TenantMiddleware(config.Client))
@@ -760,6 +782,11 @@ func SetupRoutes(r *gin.Engine, config *RouterConfig) {
 		// BPMN Process Trigger Controller (统一流程触发接口)
 		if config.BPMNProcessTriggerController != nil {
 			config.BPMNProcessTriggerController.RegisterRoutes(tenant.(*gin.RouterGroup))
+		}
+
+		// BPMN Dashboard Controller (监控仪表盘)
+		if config.BPMNDashboardController != nil {
+			config.BPMNDashboardController.RegisterRoutes(tenant.(*gin.RouterGroup))
 		}
 
 		// A2UI Ticket Controller (AI-driven UI表单)
