@@ -23,223 +23,223 @@ type AuditLogUpdate struct {
 }
 
 // Where appends a list predicates to the AuditLogUpdate builder.
-func (alu *AuditLogUpdate) Where(ps ...predicate.AuditLog) *AuditLogUpdate {
-	alu.mutation.Where(ps...)
-	return alu
+func (_u *AuditLogUpdate) Where(ps ...predicate.AuditLog) *AuditLogUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (alu *AuditLogUpdate) SetCreatedAt(t time.Time) *AuditLogUpdate {
-	alu.mutation.SetCreatedAt(t)
-	return alu
+func (_u *AuditLogUpdate) SetCreatedAt(v time.Time) *AuditLogUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableCreatedAt(t *time.Time) *AuditLogUpdate {
-	if t != nil {
-		alu.SetCreatedAt(*t)
+func (_u *AuditLogUpdate) SetNillableCreatedAt(v *time.Time) *AuditLogUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (alu *AuditLogUpdate) SetTenantID(i int) *AuditLogUpdate {
-	alu.mutation.ResetTenantID()
-	alu.mutation.SetTenantID(i)
-	return alu
+func (_u *AuditLogUpdate) SetTenantID(v int) *AuditLogUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableTenantID(i *int) *AuditLogUpdate {
-	if i != nil {
-		alu.SetTenantID(*i)
+func (_u *AuditLogUpdate) SetNillableTenantID(v *int) *AuditLogUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (alu *AuditLogUpdate) AddTenantID(i int) *AuditLogUpdate {
-	alu.mutation.AddTenantID(i)
-	return alu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *AuditLogUpdate) AddTenantID(v int) *AuditLogUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (alu *AuditLogUpdate) ClearTenantID() *AuditLogUpdate {
-	alu.mutation.ClearTenantID()
-	return alu
+func (_u *AuditLogUpdate) ClearTenantID() *AuditLogUpdate {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (alu *AuditLogUpdate) SetUserID(i int) *AuditLogUpdate {
-	alu.mutation.ResetUserID()
-	alu.mutation.SetUserID(i)
-	return alu
+func (_u *AuditLogUpdate) SetUserID(v int) *AuditLogUpdate {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableUserID(i *int) *AuditLogUpdate {
-	if i != nil {
-		alu.SetUserID(*i)
+func (_u *AuditLogUpdate) SetNillableUserID(v *int) *AuditLogUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (alu *AuditLogUpdate) AddUserID(i int) *AuditLogUpdate {
-	alu.mutation.AddUserID(i)
-	return alu
+// AddUserID adds value to the "user_id" field.
+func (_u *AuditLogUpdate) AddUserID(v int) *AuditLogUpdate {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (alu *AuditLogUpdate) ClearUserID() *AuditLogUpdate {
-	alu.mutation.ClearUserID()
-	return alu
+func (_u *AuditLogUpdate) ClearUserID() *AuditLogUpdate {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetRequestID sets the "request_id" field.
-func (alu *AuditLogUpdate) SetRequestID(s string) *AuditLogUpdate {
-	alu.mutation.SetRequestID(s)
-	return alu
+func (_u *AuditLogUpdate) SetRequestID(v string) *AuditLogUpdate {
+	_u.mutation.SetRequestID(v)
+	return _u
 }
 
 // SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableRequestID(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetRequestID(*s)
+func (_u *AuditLogUpdate) SetNillableRequestID(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetRequestID(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearRequestID clears the value of the "request_id" field.
-func (alu *AuditLogUpdate) ClearRequestID() *AuditLogUpdate {
-	alu.mutation.ClearRequestID()
-	return alu
+func (_u *AuditLogUpdate) ClearRequestID() *AuditLogUpdate {
+	_u.mutation.ClearRequestID()
+	return _u
 }
 
 // SetIP sets the "ip" field.
-func (alu *AuditLogUpdate) SetIP(s string) *AuditLogUpdate {
-	alu.mutation.SetIP(s)
-	return alu
+func (_u *AuditLogUpdate) SetIP(v string) *AuditLogUpdate {
+	_u.mutation.SetIP(v)
+	return _u
 }
 
 // SetNillableIP sets the "ip" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableIP(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetIP(*s)
+func (_u *AuditLogUpdate) SetNillableIP(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetIP(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetResource sets the "resource" field.
-func (alu *AuditLogUpdate) SetResource(s string) *AuditLogUpdate {
-	alu.mutation.SetResource(s)
-	return alu
+func (_u *AuditLogUpdate) SetResource(v string) *AuditLogUpdate {
+	_u.mutation.SetResource(v)
+	return _u
 }
 
 // SetNillableResource sets the "resource" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableResource(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetResource(*s)
+func (_u *AuditLogUpdate) SetNillableResource(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetResource(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (alu *AuditLogUpdate) SetAction(s string) *AuditLogUpdate {
-	alu.mutation.SetAction(s)
-	return alu
+func (_u *AuditLogUpdate) SetAction(v string) *AuditLogUpdate {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableAction(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetAction(*s)
+func (_u *AuditLogUpdate) SetNillableAction(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetPath sets the "path" field.
-func (alu *AuditLogUpdate) SetPath(s string) *AuditLogUpdate {
-	alu.mutation.SetPath(s)
-	return alu
+func (_u *AuditLogUpdate) SetPath(v string) *AuditLogUpdate {
+	_u.mutation.SetPath(v)
+	return _u
 }
 
 // SetNillablePath sets the "path" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillablePath(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetPath(*s)
+func (_u *AuditLogUpdate) SetNillablePath(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetPath(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetMethod sets the "method" field.
-func (alu *AuditLogUpdate) SetMethod(s string) *AuditLogUpdate {
-	alu.mutation.SetMethod(s)
-	return alu
+func (_u *AuditLogUpdate) SetMethod(v string) *AuditLogUpdate {
+	_u.mutation.SetMethod(v)
+	return _u
 }
 
 // SetNillableMethod sets the "method" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableMethod(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetMethod(*s)
+func (_u *AuditLogUpdate) SetNillableMethod(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetMethod(*v)
 	}
-	return alu
+	return _u
 }
 
 // SetStatusCode sets the "status_code" field.
-func (alu *AuditLogUpdate) SetStatusCode(i int) *AuditLogUpdate {
-	alu.mutation.ResetStatusCode()
-	alu.mutation.SetStatusCode(i)
-	return alu
+func (_u *AuditLogUpdate) SetStatusCode(v int) *AuditLogUpdate {
+	_u.mutation.ResetStatusCode()
+	_u.mutation.SetStatusCode(v)
+	return _u
 }
 
 // SetNillableStatusCode sets the "status_code" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableStatusCode(i *int) *AuditLogUpdate {
-	if i != nil {
-		alu.SetStatusCode(*i)
+func (_u *AuditLogUpdate) SetNillableStatusCode(v *int) *AuditLogUpdate {
+	if v != nil {
+		_u.SetStatusCode(*v)
 	}
-	return alu
+	return _u
 }
 
-// AddStatusCode adds i to the "status_code" field.
-func (alu *AuditLogUpdate) AddStatusCode(i int) *AuditLogUpdate {
-	alu.mutation.AddStatusCode(i)
-	return alu
+// AddStatusCode adds value to the "status_code" field.
+func (_u *AuditLogUpdate) AddStatusCode(v int) *AuditLogUpdate {
+	_u.mutation.AddStatusCode(v)
+	return _u
 }
 
 // SetRequestBody sets the "request_body" field.
-func (alu *AuditLogUpdate) SetRequestBody(s string) *AuditLogUpdate {
-	alu.mutation.SetRequestBody(s)
-	return alu
+func (_u *AuditLogUpdate) SetRequestBody(v string) *AuditLogUpdate {
+	_u.mutation.SetRequestBody(v)
+	return _u
 }
 
 // SetNillableRequestBody sets the "request_body" field if the given value is not nil.
-func (alu *AuditLogUpdate) SetNillableRequestBody(s *string) *AuditLogUpdate {
-	if s != nil {
-		alu.SetRequestBody(*s)
+func (_u *AuditLogUpdate) SetNillableRequestBody(v *string) *AuditLogUpdate {
+	if v != nil {
+		_u.SetRequestBody(*v)
 	}
-	return alu
+	return _u
 }
 
 // ClearRequestBody clears the value of the "request_body" field.
-func (alu *AuditLogUpdate) ClearRequestBody() *AuditLogUpdate {
-	alu.mutation.ClearRequestBody()
-	return alu
+func (_u *AuditLogUpdate) ClearRequestBody() *AuditLogUpdate {
+	_u.mutation.ClearRequestBody()
+	return _u
 }
 
 // Mutation returns the AuditLogMutation object of the builder.
-func (alu *AuditLogUpdate) Mutation() *AuditLogMutation {
-	return alu.mutation
+func (_u *AuditLogUpdate) Mutation() *AuditLogMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (alu *AuditLogUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, alu.sqlSave, alu.mutation, alu.hooks)
+func (_u *AuditLogUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (alu *AuditLogUpdate) SaveX(ctx context.Context) int {
-	affected, err := alu.Save(ctx)
+func (_u *AuditLogUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -247,82 +247,82 @@ func (alu *AuditLogUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (alu *AuditLogUpdate) Exec(ctx context.Context) error {
-	_, err := alu.Save(ctx)
+func (_u *AuditLogUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (alu *AuditLogUpdate) ExecX(ctx context.Context) {
-	if err := alu.Exec(ctx); err != nil {
+func (_u *AuditLogUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (alu *AuditLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
+func (_u *AuditLogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeInt))
-	if ps := alu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := alu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(auditlog.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := alu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(auditlog.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(auditlog.FieldTenantID, field.TypeInt, value)
 	}
-	if alu.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(auditlog.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := alu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(auditlog.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(auditlog.FieldUserID, field.TypeInt, value)
 	}
-	if alu.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(auditlog.FieldUserID, field.TypeInt)
 	}
-	if value, ok := alu.mutation.RequestID(); ok {
+	if value, ok := _u.mutation.RequestID(); ok {
 		_spec.SetField(auditlog.FieldRequestID, field.TypeString, value)
 	}
-	if alu.mutation.RequestIDCleared() {
+	if _u.mutation.RequestIDCleared() {
 		_spec.ClearField(auditlog.FieldRequestID, field.TypeString)
 	}
-	if value, ok := alu.mutation.IP(); ok {
+	if value, ok := _u.mutation.IP(); ok {
 		_spec.SetField(auditlog.FieldIP, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.Resource(); ok {
+	if value, ok := _u.mutation.Resource(); ok {
 		_spec.SetField(auditlog.FieldResource, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(auditlog.FieldAction, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.Path(); ok {
+	if value, ok := _u.mutation.Path(); ok {
 		_spec.SetField(auditlog.FieldPath, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.Method(); ok {
+	if value, ok := _u.mutation.Method(); ok {
 		_spec.SetField(auditlog.FieldMethod, field.TypeString, value)
 	}
-	if value, ok := alu.mutation.StatusCode(); ok {
+	if value, ok := _u.mutation.StatusCode(); ok {
 		_spec.SetField(auditlog.FieldStatusCode, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.AddedStatusCode(); ok {
+	if value, ok := _u.mutation.AddedStatusCode(); ok {
 		_spec.AddField(auditlog.FieldStatusCode, field.TypeInt, value)
 	}
-	if value, ok := alu.mutation.RequestBody(); ok {
+	if value, ok := _u.mutation.RequestBody(); ok {
 		_spec.SetField(auditlog.FieldRequestBody, field.TypeString, value)
 	}
-	if alu.mutation.RequestBodyCleared() {
+	if _u.mutation.RequestBodyCleared() {
 		_spec.ClearField(auditlog.FieldRequestBody, field.TypeString)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, alu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{auditlog.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -330,8 +330,8 @@ func (alu *AuditLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	alu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // AuditLogUpdateOne is the builder for updating a single AuditLog entity.
@@ -343,230 +343,230 @@ type AuditLogUpdateOne struct {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (aluo *AuditLogUpdateOne) SetCreatedAt(t time.Time) *AuditLogUpdateOne {
-	aluo.mutation.SetCreatedAt(t)
-	return aluo
+func (_u *AuditLogUpdateOne) SetCreatedAt(v time.Time) *AuditLogUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableCreatedAt(t *time.Time) *AuditLogUpdateOne {
-	if t != nil {
-		aluo.SetCreatedAt(*t)
+func (_u *AuditLogUpdateOne) SetNillableCreatedAt(v *time.Time) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (aluo *AuditLogUpdateOne) SetTenantID(i int) *AuditLogUpdateOne {
-	aluo.mutation.ResetTenantID()
-	aluo.mutation.SetTenantID(i)
-	return aluo
+func (_u *AuditLogUpdateOne) SetTenantID(v int) *AuditLogUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableTenantID(i *int) *AuditLogUpdateOne {
-	if i != nil {
-		aluo.SetTenantID(*i)
+func (_u *AuditLogUpdateOne) SetNillableTenantID(v *int) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (aluo *AuditLogUpdateOne) AddTenantID(i int) *AuditLogUpdateOne {
-	aluo.mutation.AddTenantID(i)
-	return aluo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *AuditLogUpdateOne) AddTenantID(v int) *AuditLogUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (aluo *AuditLogUpdateOne) ClearTenantID() *AuditLogUpdateOne {
-	aluo.mutation.ClearTenantID()
-	return aluo
+func (_u *AuditLogUpdateOne) ClearTenantID() *AuditLogUpdateOne {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (aluo *AuditLogUpdateOne) SetUserID(i int) *AuditLogUpdateOne {
-	aluo.mutation.ResetUserID()
-	aluo.mutation.SetUserID(i)
-	return aluo
+func (_u *AuditLogUpdateOne) SetUserID(v int) *AuditLogUpdateOne {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableUserID(i *int) *AuditLogUpdateOne {
-	if i != nil {
-		aluo.SetUserID(*i)
+func (_u *AuditLogUpdateOne) SetNillableUserID(v *int) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (aluo *AuditLogUpdateOne) AddUserID(i int) *AuditLogUpdateOne {
-	aluo.mutation.AddUserID(i)
-	return aluo
+// AddUserID adds value to the "user_id" field.
+func (_u *AuditLogUpdateOne) AddUserID(v int) *AuditLogUpdateOne {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (aluo *AuditLogUpdateOne) ClearUserID() *AuditLogUpdateOne {
-	aluo.mutation.ClearUserID()
-	return aluo
+func (_u *AuditLogUpdateOne) ClearUserID() *AuditLogUpdateOne {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetRequestID sets the "request_id" field.
-func (aluo *AuditLogUpdateOne) SetRequestID(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetRequestID(s)
-	return aluo
+func (_u *AuditLogUpdateOne) SetRequestID(v string) *AuditLogUpdateOne {
+	_u.mutation.SetRequestID(v)
+	return _u
 }
 
 // SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableRequestID(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetRequestID(*s)
+func (_u *AuditLogUpdateOne) SetNillableRequestID(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetRequestID(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearRequestID clears the value of the "request_id" field.
-func (aluo *AuditLogUpdateOne) ClearRequestID() *AuditLogUpdateOne {
-	aluo.mutation.ClearRequestID()
-	return aluo
+func (_u *AuditLogUpdateOne) ClearRequestID() *AuditLogUpdateOne {
+	_u.mutation.ClearRequestID()
+	return _u
 }
 
 // SetIP sets the "ip" field.
-func (aluo *AuditLogUpdateOne) SetIP(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetIP(s)
-	return aluo
+func (_u *AuditLogUpdateOne) SetIP(v string) *AuditLogUpdateOne {
+	_u.mutation.SetIP(v)
+	return _u
 }
 
 // SetNillableIP sets the "ip" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableIP(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetIP(*s)
+func (_u *AuditLogUpdateOne) SetNillableIP(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetIP(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetResource sets the "resource" field.
-func (aluo *AuditLogUpdateOne) SetResource(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetResource(s)
-	return aluo
+func (_u *AuditLogUpdateOne) SetResource(v string) *AuditLogUpdateOne {
+	_u.mutation.SetResource(v)
+	return _u
 }
 
 // SetNillableResource sets the "resource" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableResource(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetResource(*s)
+func (_u *AuditLogUpdateOne) SetNillableResource(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetResource(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (aluo *AuditLogUpdateOne) SetAction(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetAction(s)
-	return aluo
+func (_u *AuditLogUpdateOne) SetAction(v string) *AuditLogUpdateOne {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableAction(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetAction(*s)
+func (_u *AuditLogUpdateOne) SetNillableAction(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetPath sets the "path" field.
-func (aluo *AuditLogUpdateOne) SetPath(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetPath(s)
-	return aluo
+func (_u *AuditLogUpdateOne) SetPath(v string) *AuditLogUpdateOne {
+	_u.mutation.SetPath(v)
+	return _u
 }
 
 // SetNillablePath sets the "path" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillablePath(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetPath(*s)
+func (_u *AuditLogUpdateOne) SetNillablePath(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetPath(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetMethod sets the "method" field.
-func (aluo *AuditLogUpdateOne) SetMethod(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetMethod(s)
-	return aluo
+func (_u *AuditLogUpdateOne) SetMethod(v string) *AuditLogUpdateOne {
+	_u.mutation.SetMethod(v)
+	return _u
 }
 
 // SetNillableMethod sets the "method" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableMethod(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetMethod(*s)
+func (_u *AuditLogUpdateOne) SetNillableMethod(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetMethod(*v)
 	}
-	return aluo
+	return _u
 }
 
 // SetStatusCode sets the "status_code" field.
-func (aluo *AuditLogUpdateOne) SetStatusCode(i int) *AuditLogUpdateOne {
-	aluo.mutation.ResetStatusCode()
-	aluo.mutation.SetStatusCode(i)
-	return aluo
+func (_u *AuditLogUpdateOne) SetStatusCode(v int) *AuditLogUpdateOne {
+	_u.mutation.ResetStatusCode()
+	_u.mutation.SetStatusCode(v)
+	return _u
 }
 
 // SetNillableStatusCode sets the "status_code" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableStatusCode(i *int) *AuditLogUpdateOne {
-	if i != nil {
-		aluo.SetStatusCode(*i)
+func (_u *AuditLogUpdateOne) SetNillableStatusCode(v *int) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetStatusCode(*v)
 	}
-	return aluo
+	return _u
 }
 
-// AddStatusCode adds i to the "status_code" field.
-func (aluo *AuditLogUpdateOne) AddStatusCode(i int) *AuditLogUpdateOne {
-	aluo.mutation.AddStatusCode(i)
-	return aluo
+// AddStatusCode adds value to the "status_code" field.
+func (_u *AuditLogUpdateOne) AddStatusCode(v int) *AuditLogUpdateOne {
+	_u.mutation.AddStatusCode(v)
+	return _u
 }
 
 // SetRequestBody sets the "request_body" field.
-func (aluo *AuditLogUpdateOne) SetRequestBody(s string) *AuditLogUpdateOne {
-	aluo.mutation.SetRequestBody(s)
-	return aluo
+func (_u *AuditLogUpdateOne) SetRequestBody(v string) *AuditLogUpdateOne {
+	_u.mutation.SetRequestBody(v)
+	return _u
 }
 
 // SetNillableRequestBody sets the "request_body" field if the given value is not nil.
-func (aluo *AuditLogUpdateOne) SetNillableRequestBody(s *string) *AuditLogUpdateOne {
-	if s != nil {
-		aluo.SetRequestBody(*s)
+func (_u *AuditLogUpdateOne) SetNillableRequestBody(v *string) *AuditLogUpdateOne {
+	if v != nil {
+		_u.SetRequestBody(*v)
 	}
-	return aluo
+	return _u
 }
 
 // ClearRequestBody clears the value of the "request_body" field.
-func (aluo *AuditLogUpdateOne) ClearRequestBody() *AuditLogUpdateOne {
-	aluo.mutation.ClearRequestBody()
-	return aluo
+func (_u *AuditLogUpdateOne) ClearRequestBody() *AuditLogUpdateOne {
+	_u.mutation.ClearRequestBody()
+	return _u
 }
 
 // Mutation returns the AuditLogMutation object of the builder.
-func (aluo *AuditLogUpdateOne) Mutation() *AuditLogMutation {
-	return aluo.mutation
+func (_u *AuditLogUpdateOne) Mutation() *AuditLogMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the AuditLogUpdate builder.
-func (aluo *AuditLogUpdateOne) Where(ps ...predicate.AuditLog) *AuditLogUpdateOne {
-	aluo.mutation.Where(ps...)
-	return aluo
+func (_u *AuditLogUpdateOne) Where(ps ...predicate.AuditLog) *AuditLogUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (aluo *AuditLogUpdateOne) Select(field string, fields ...string) *AuditLogUpdateOne {
-	aluo.fields = append([]string{field}, fields...)
-	return aluo
+func (_u *AuditLogUpdateOne) Select(field string, fields ...string) *AuditLogUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated AuditLog entity.
-func (aluo *AuditLogUpdateOne) Save(ctx context.Context) (*AuditLog, error) {
-	return withHooks(ctx, aluo.sqlSave, aluo.mutation, aluo.hooks)
+func (_u *AuditLogUpdateOne) Save(ctx context.Context) (*AuditLog, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (aluo *AuditLogUpdateOne) SaveX(ctx context.Context) *AuditLog {
-	node, err := aluo.Save(ctx)
+func (_u *AuditLogUpdateOne) SaveX(ctx context.Context) *AuditLog {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -574,26 +574,26 @@ func (aluo *AuditLogUpdateOne) SaveX(ctx context.Context) *AuditLog {
 }
 
 // Exec executes the query on the entity.
-func (aluo *AuditLogUpdateOne) Exec(ctx context.Context) error {
-	_, err := aluo.Save(ctx)
+func (_u *AuditLogUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (aluo *AuditLogUpdateOne) ExecX(ctx context.Context) {
-	if err := aluo.Exec(ctx); err != nil {
+func (_u *AuditLogUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err error) {
+func (_u *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, err error) {
 	_spec := sqlgraph.NewUpdateSpec(auditlog.Table, auditlog.Columns, sqlgraph.NewFieldSpec(auditlog.FieldID, field.TypeInt))
-	id, ok := aluo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "AuditLog.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := aluo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, auditlog.FieldID)
 		for _, f := range fields {
@@ -605,71 +605,71 @@ func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, er
 			}
 		}
 	}
-	if ps := aluo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := aluo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(auditlog.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := aluo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(auditlog.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(auditlog.FieldTenantID, field.TypeInt, value)
 	}
-	if aluo.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(auditlog.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := aluo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(auditlog.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(auditlog.FieldUserID, field.TypeInt, value)
 	}
-	if aluo.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(auditlog.FieldUserID, field.TypeInt)
 	}
-	if value, ok := aluo.mutation.RequestID(); ok {
+	if value, ok := _u.mutation.RequestID(); ok {
 		_spec.SetField(auditlog.FieldRequestID, field.TypeString, value)
 	}
-	if aluo.mutation.RequestIDCleared() {
+	if _u.mutation.RequestIDCleared() {
 		_spec.ClearField(auditlog.FieldRequestID, field.TypeString)
 	}
-	if value, ok := aluo.mutation.IP(); ok {
+	if value, ok := _u.mutation.IP(); ok {
 		_spec.SetField(auditlog.FieldIP, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.Resource(); ok {
+	if value, ok := _u.mutation.Resource(); ok {
 		_spec.SetField(auditlog.FieldResource, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(auditlog.FieldAction, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.Path(); ok {
+	if value, ok := _u.mutation.Path(); ok {
 		_spec.SetField(auditlog.FieldPath, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.Method(); ok {
+	if value, ok := _u.mutation.Method(); ok {
 		_spec.SetField(auditlog.FieldMethod, field.TypeString, value)
 	}
-	if value, ok := aluo.mutation.StatusCode(); ok {
+	if value, ok := _u.mutation.StatusCode(); ok {
 		_spec.SetField(auditlog.FieldStatusCode, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.AddedStatusCode(); ok {
+	if value, ok := _u.mutation.AddedStatusCode(); ok {
 		_spec.AddField(auditlog.FieldStatusCode, field.TypeInt, value)
 	}
-	if value, ok := aluo.mutation.RequestBody(); ok {
+	if value, ok := _u.mutation.RequestBody(); ok {
 		_spec.SetField(auditlog.FieldRequestBody, field.TypeString, value)
 	}
-	if aluo.mutation.RequestBodyCleared() {
+	if _u.mutation.RequestBodyCleared() {
 		_spec.ClearField(auditlog.FieldRequestBody, field.TypeString)
 	}
-	_node = &AuditLog{config: aluo.config}
+	_node = &AuditLog{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, aluo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{auditlog.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -677,6 +677,6 @@ func (aluo *AuditLogUpdateOne) sqlSave(ctx context.Context) (_node *AuditLog, er
 		}
 		return nil, err
 	}
-	aluo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

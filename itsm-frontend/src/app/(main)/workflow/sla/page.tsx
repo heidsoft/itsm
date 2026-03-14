@@ -16,6 +16,7 @@ import {
   Spin,
   Alert,
 } from 'antd';
+import dayjs, { Dayjs } from 'dayjs';
 import {
   AlertTriangle,
   CheckCircle,
@@ -37,9 +38,9 @@ export default function SLAMonitoringPage() {
   const [selectedProcess, setSelectedProcess] = useState<string>('');
   const [processes, setProcesses] = useState<{ key: string; name: string }[]>([]);
   const [processMetrics, setProcessMetrics] = useState<ProcessMetrics | null>(null);
-  const [dateRange, setDateRange] = useState<[string, string]>([
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    new Date().toISOString().split('T')[0],
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().subtract(7, 'day'),
+    dayjs(),
   ]);
 
   const tenantId = 1;
@@ -81,8 +82,8 @@ export default function SLAMonitoringPage() {
       const data = await BPMNDashboardApi.getProcessMetrics(
         selectedProcess,
         tenantId,
-        dateRange[0],
-        dateRange[1]
+        dateRange[0].format('YYYY-MM-DD'),
+        dateRange[1].format('YYYY-MM-DD')
       );
       setProcessMetrics(data);
     } catch (error) {
@@ -207,9 +208,9 @@ export default function SLAMonitoringPage() {
           />
           <RangePicker
             value={[dateRange[0], dateRange[1]]}
-            onChange={(dates, dateStrings) => {
-              if (dateStrings[0] && dateStrings[1]) {
-                setDateRange([dateStrings[0], dateStrings[1]]);
+            onChange={(dates) => {
+              if (dates && dates[0] && dates[1]) {
+                setDateRange([dates[0], dates[1]]);
               }
             }}
           />

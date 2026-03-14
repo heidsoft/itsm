@@ -23,277 +23,277 @@ type SLAViolationCreate struct {
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (svc *SLAViolationCreate) SetCreatedBy(i int) *SLAViolationCreate {
-	svc.mutation.SetCreatedBy(i)
-	return svc
+func (_c *SLAViolationCreate) SetCreatedBy(v int) *SLAViolationCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableCreatedBy(i *int) *SLAViolationCreate {
-	if i != nil {
-		svc.SetCreatedBy(*i)
+func (_c *SLAViolationCreate) SetNillableCreatedBy(v *int) *SLAViolationCreate {
+	if v != nil {
+		_c.SetCreatedBy(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
-func (svc *SLAViolationCreate) SetSLADefinitionID(i int) *SLAViolationCreate {
-	svc.mutation.SetSLADefinitionID(i)
-	return svc
+func (_c *SLAViolationCreate) SetSLADefinitionID(v int) *SLAViolationCreate {
+	_c.mutation.SetSLADefinitionID(v)
+	return _c
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (svc *SLAViolationCreate) SetTicketType(s string) *SLAViolationCreate {
-	svc.mutation.SetTicketType(s)
-	return svc
+func (_c *SLAViolationCreate) SetTicketType(v string) *SLAViolationCreate {
+	_c.mutation.SetTicketType(v)
+	return _c
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableTicketType(s *string) *SLAViolationCreate {
-	if s != nil {
-		svc.SetTicketType(*s)
+func (_c *SLAViolationCreate) SetNillableTicketType(v *string) *SLAViolationCreate {
+	if v != nil {
+		_c.SetTicketType(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetSLAName sets the "sla_name" field.
-func (svc *SLAViolationCreate) SetSLAName(s string) *SLAViolationCreate {
-	svc.mutation.SetSLAName(s)
-	return svc
+func (_c *SLAViolationCreate) SetSLAName(v string) *SLAViolationCreate {
+	_c.mutation.SetSLAName(v)
+	return _c
 }
 
 // SetNillableSLAName sets the "sla_name" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableSLAName(s *string) *SLAViolationCreate {
-	if s != nil {
-		svc.SetSLAName(*s)
+func (_c *SLAViolationCreate) SetNillableSLAName(v *string) *SLAViolationCreate {
+	if v != nil {
+		_c.SetSLAName(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (svc *SLAViolationCreate) SetTicketID(i int) *SLAViolationCreate {
-	svc.mutation.SetTicketID(i)
-	return svc
+func (_c *SLAViolationCreate) SetTicketID(v int) *SLAViolationCreate {
+	_c.mutation.SetTicketID(v)
+	return _c
 }
 
 // SetViolationType sets the "violation_type" field.
-func (svc *SLAViolationCreate) SetViolationType(s string) *SLAViolationCreate {
-	svc.mutation.SetViolationType(s)
-	return svc
+func (_c *SLAViolationCreate) SetViolationType(v string) *SLAViolationCreate {
+	_c.mutation.SetViolationType(v)
+	return _c
 }
 
 // SetViolationTime sets the "violation_time" field.
-func (svc *SLAViolationCreate) SetViolationTime(t time.Time) *SLAViolationCreate {
-	svc.mutation.SetViolationTime(t)
-	return svc
+func (_c *SLAViolationCreate) SetViolationTime(v time.Time) *SLAViolationCreate {
+	_c.mutation.SetViolationTime(v)
+	return _c
 }
 
 // SetNillableViolationTime sets the "violation_time" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableViolationTime(t *time.Time) *SLAViolationCreate {
-	if t != nil {
-		svc.SetViolationTime(*t)
+func (_c *SLAViolationCreate) SetNillableViolationTime(v *time.Time) *SLAViolationCreate {
+	if v != nil {
+		_c.SetViolationTime(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetViolationOccurredAt sets the "violation_occurred_at" field.
-func (svc *SLAViolationCreate) SetViolationOccurredAt(t time.Time) *SLAViolationCreate {
-	svc.mutation.SetViolationOccurredAt(t)
-	return svc
+func (_c *SLAViolationCreate) SetViolationOccurredAt(v time.Time) *SLAViolationCreate {
+	_c.mutation.SetViolationOccurredAt(v)
+	return _c
 }
 
 // SetNillableViolationOccurredAt sets the "violation_occurred_at" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableViolationOccurredAt(t *time.Time) *SLAViolationCreate {
-	if t != nil {
-		svc.SetViolationOccurredAt(*t)
+func (_c *SLAViolationCreate) SetNillableViolationOccurredAt(v *time.Time) *SLAViolationCreate {
+	if v != nil {
+		_c.SetViolationOccurredAt(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetExpectedTime sets the "expected_time" field.
-func (svc *SLAViolationCreate) SetExpectedTime(i int) *SLAViolationCreate {
-	svc.mutation.SetExpectedTime(i)
-	return svc
+func (_c *SLAViolationCreate) SetExpectedTime(v int) *SLAViolationCreate {
+	_c.mutation.SetExpectedTime(v)
+	return _c
 }
 
 // SetNillableExpectedTime sets the "expected_time" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableExpectedTime(i *int) *SLAViolationCreate {
-	if i != nil {
-		svc.SetExpectedTime(*i)
+func (_c *SLAViolationCreate) SetNillableExpectedTime(v *int) *SLAViolationCreate {
+	if v != nil {
+		_c.SetExpectedTime(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetActualTime sets the "actual_time" field.
-func (svc *SLAViolationCreate) SetActualTime(i int) *SLAViolationCreate {
-	svc.mutation.SetActualTime(i)
-	return svc
+func (_c *SLAViolationCreate) SetActualTime(v int) *SLAViolationCreate {
+	_c.mutation.SetActualTime(v)
+	return _c
 }
 
 // SetNillableActualTime sets the "actual_time" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableActualTime(i *int) *SLAViolationCreate {
-	if i != nil {
-		svc.SetActualTime(*i)
+func (_c *SLAViolationCreate) SetNillableActualTime(v *int) *SLAViolationCreate {
+	if v != nil {
+		_c.SetActualTime(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetOverdueMinutes sets the "overdue_minutes" field.
-func (svc *SLAViolationCreate) SetOverdueMinutes(i int) *SLAViolationCreate {
-	svc.mutation.SetOverdueMinutes(i)
-	return svc
+func (_c *SLAViolationCreate) SetOverdueMinutes(v int) *SLAViolationCreate {
+	_c.mutation.SetOverdueMinutes(v)
+	return _c
 }
 
 // SetNillableOverdueMinutes sets the "overdue_minutes" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableOverdueMinutes(i *int) *SLAViolationCreate {
-	if i != nil {
-		svc.SetOverdueMinutes(*i)
+func (_c *SLAViolationCreate) SetNillableOverdueMinutes(v *int) *SLAViolationCreate {
+	if v != nil {
+		_c.SetOverdueMinutes(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (svc *SLAViolationCreate) SetStatus(s string) *SLAViolationCreate {
-	svc.mutation.SetStatus(s)
-	return svc
+func (_c *SLAViolationCreate) SetStatus(v string) *SLAViolationCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableStatus(s *string) *SLAViolationCreate {
-	if s != nil {
-		svc.SetStatus(*s)
+func (_c *SLAViolationCreate) SetNillableStatus(v *string) *SLAViolationCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (svc *SLAViolationCreate) SetDescription(s string) *SLAViolationCreate {
-	svc.mutation.SetDescription(s)
-	return svc
+func (_c *SLAViolationCreate) SetDescription(v string) *SLAViolationCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableDescription(s *string) *SLAViolationCreate {
-	if s != nil {
-		svc.SetDescription(*s)
+func (_c *SLAViolationCreate) SetNillableDescription(v *string) *SLAViolationCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetSeverity sets the "severity" field.
-func (svc *SLAViolationCreate) SetSeverity(s string) *SLAViolationCreate {
-	svc.mutation.SetSeverity(s)
-	return svc
+func (_c *SLAViolationCreate) SetSeverity(v string) *SLAViolationCreate {
+	_c.mutation.SetSeverity(v)
+	return _c
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableSeverity(s *string) *SLAViolationCreate {
-	if s != nil {
-		svc.SetSeverity(*s)
+func (_c *SLAViolationCreate) SetNillableSeverity(v *string) *SLAViolationCreate {
+	if v != nil {
+		_c.SetSeverity(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetIsResolved sets the "is_resolved" field.
-func (svc *SLAViolationCreate) SetIsResolved(b bool) *SLAViolationCreate {
-	svc.mutation.SetIsResolved(b)
-	return svc
+func (_c *SLAViolationCreate) SetIsResolved(v bool) *SLAViolationCreate {
+	_c.mutation.SetIsResolved(v)
+	return _c
 }
 
 // SetNillableIsResolved sets the "is_resolved" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableIsResolved(b *bool) *SLAViolationCreate {
-	if b != nil {
-		svc.SetIsResolved(*b)
+func (_c *SLAViolationCreate) SetNillableIsResolved(v *bool) *SLAViolationCreate {
+	if v != nil {
+		_c.SetIsResolved(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (svc *SLAViolationCreate) SetResolvedAt(t time.Time) *SLAViolationCreate {
-	svc.mutation.SetResolvedAt(t)
-	return svc
+func (_c *SLAViolationCreate) SetResolvedAt(v time.Time) *SLAViolationCreate {
+	_c.mutation.SetResolvedAt(v)
+	return _c
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableResolvedAt(t *time.Time) *SLAViolationCreate {
-	if t != nil {
-		svc.SetResolvedAt(*t)
+func (_c *SLAViolationCreate) SetNillableResolvedAt(v *time.Time) *SLAViolationCreate {
+	if v != nil {
+		_c.SetResolvedAt(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetResolutionNotes sets the "resolution_notes" field.
-func (svc *SLAViolationCreate) SetResolutionNotes(s string) *SLAViolationCreate {
-	svc.mutation.SetResolutionNotes(s)
-	return svc
+func (_c *SLAViolationCreate) SetResolutionNotes(v string) *SLAViolationCreate {
+	_c.mutation.SetResolutionNotes(v)
+	return _c
 }
 
 // SetNillableResolutionNotes sets the "resolution_notes" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableResolutionNotes(s *string) *SLAViolationCreate {
-	if s != nil {
-		svc.SetResolutionNotes(*s)
+func (_c *SLAViolationCreate) SetNillableResolutionNotes(v *string) *SLAViolationCreate {
+	if v != nil {
+		_c.SetResolutionNotes(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (svc *SLAViolationCreate) SetTenantID(i int) *SLAViolationCreate {
-	svc.mutation.SetTenantID(i)
-	return svc
+func (_c *SLAViolationCreate) SetTenantID(v int) *SLAViolationCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (svc *SLAViolationCreate) SetCreatedAt(t time.Time) *SLAViolationCreate {
-	svc.mutation.SetCreatedAt(t)
-	return svc
+func (_c *SLAViolationCreate) SetCreatedAt(v time.Time) *SLAViolationCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableCreatedAt(t *time.Time) *SLAViolationCreate {
-	if t != nil {
-		svc.SetCreatedAt(*t)
+func (_c *SLAViolationCreate) SetNillableCreatedAt(v *time.Time) *SLAViolationCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (svc *SLAViolationCreate) SetUpdatedAt(t time.Time) *SLAViolationCreate {
-	svc.mutation.SetUpdatedAt(t)
-	return svc
+func (_c *SLAViolationCreate) SetUpdatedAt(v time.Time) *SLAViolationCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (svc *SLAViolationCreate) SetNillableUpdatedAt(t *time.Time) *SLAViolationCreate {
-	if t != nil {
-		svc.SetUpdatedAt(*t)
+func (_c *SLAViolationCreate) SetNillableUpdatedAt(v *time.Time) *SLAViolationCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return svc
+	return _c
 }
 
 // SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
-func (svc *SLAViolationCreate) SetSLADefinition(s *SLADefinition) *SLAViolationCreate {
-	return svc.SetSLADefinitionID(s.ID)
+func (_c *SLAViolationCreate) SetSLADefinition(v *SLADefinition) *SLAViolationCreate {
+	return _c.SetSLADefinitionID(v.ID)
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (svc *SLAViolationCreate) SetTicket(t *Ticket) *SLAViolationCreate {
-	return svc.SetTicketID(t.ID)
+func (_c *SLAViolationCreate) SetTicket(v *Ticket) *SLAViolationCreate {
+	return _c.SetTicketID(v.ID)
 }
 
 // Mutation returns the SLAViolationMutation object of the builder.
-func (svc *SLAViolationCreate) Mutation() *SLAViolationMutation {
-	return svc.mutation
+func (_c *SLAViolationCreate) Mutation() *SLAViolationMutation {
+	return _c.mutation
 }
 
 // Save creates the SLAViolation in the database.
-func (svc *SLAViolationCreate) Save(ctx context.Context) (*SLAViolation, error) {
-	svc.defaults()
-	return withHooks(ctx, svc.sqlSave, svc.mutation, svc.hooks)
+func (_c *SLAViolationCreate) Save(ctx context.Context) (*SLAViolation, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (svc *SLAViolationCreate) SaveX(ctx context.Context) *SLAViolation {
-	v, err := svc.Save(ctx)
+func (_c *SLAViolationCreate) SaveX(ctx context.Context) *SLAViolation {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -301,148 +301,148 @@ func (svc *SLAViolationCreate) SaveX(ctx context.Context) *SLAViolation {
 }
 
 // Exec executes the query.
-func (svc *SLAViolationCreate) Exec(ctx context.Context) error {
-	_, err := svc.Save(ctx)
+func (_c *SLAViolationCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (svc *SLAViolationCreate) ExecX(ctx context.Context) {
-	if err := svc.Exec(ctx); err != nil {
+func (_c *SLAViolationCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (svc *SLAViolationCreate) defaults() {
-	if _, ok := svc.mutation.CreatedBy(); !ok {
+func (_c *SLAViolationCreate) defaults() {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		v := slaviolation.DefaultCreatedBy
-		svc.mutation.SetCreatedBy(v)
+		_c.mutation.SetCreatedBy(v)
 	}
-	if _, ok := svc.mutation.TicketType(); !ok {
+	if _, ok := _c.mutation.TicketType(); !ok {
 		v := slaviolation.DefaultTicketType
-		svc.mutation.SetTicketType(v)
+		_c.mutation.SetTicketType(v)
 	}
-	if _, ok := svc.mutation.SLAName(); !ok {
+	if _, ok := _c.mutation.SLAName(); !ok {
 		v := slaviolation.DefaultSLAName
-		svc.mutation.SetSLAName(v)
+		_c.mutation.SetSLAName(v)
 	}
-	if _, ok := svc.mutation.ViolationTime(); !ok {
+	if _, ok := _c.mutation.ViolationTime(); !ok {
 		v := slaviolation.DefaultViolationTime()
-		svc.mutation.SetViolationTime(v)
+		_c.mutation.SetViolationTime(v)
 	}
-	if _, ok := svc.mutation.ViolationOccurredAt(); !ok {
+	if _, ok := _c.mutation.ViolationOccurredAt(); !ok {
 		v := slaviolation.DefaultViolationOccurredAt()
-		svc.mutation.SetViolationOccurredAt(v)
+		_c.mutation.SetViolationOccurredAt(v)
 	}
-	if _, ok := svc.mutation.OverdueMinutes(); !ok {
+	if _, ok := _c.mutation.OverdueMinutes(); !ok {
 		v := slaviolation.DefaultOverdueMinutes
-		svc.mutation.SetOverdueMinutes(v)
+		_c.mutation.SetOverdueMinutes(v)
 	}
-	if _, ok := svc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := slaviolation.DefaultStatus
-		svc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := svc.mutation.Severity(); !ok {
+	if _, ok := _c.mutation.Severity(); !ok {
 		v := slaviolation.DefaultSeverity
-		svc.mutation.SetSeverity(v)
+		_c.mutation.SetSeverity(v)
 	}
-	if _, ok := svc.mutation.IsResolved(); !ok {
+	if _, ok := _c.mutation.IsResolved(); !ok {
 		v := slaviolation.DefaultIsResolved
-		svc.mutation.SetIsResolved(v)
+		_c.mutation.SetIsResolved(v)
 	}
-	if _, ok := svc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := slaviolation.DefaultCreatedAt()
-		svc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := svc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := slaviolation.DefaultUpdatedAt()
-		svc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (svc *SLAViolationCreate) check() error {
-	if _, ok := svc.mutation.CreatedBy(); !ok {
+func (_c *SLAViolationCreate) check() error {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "SLAViolation.created_by"`)}
 	}
-	if _, ok := svc.mutation.SLADefinitionID(); !ok {
+	if _, ok := _c.mutation.SLADefinitionID(); !ok {
 		return &ValidationError{Name: "sla_definition_id", err: errors.New(`ent: missing required field "SLAViolation.sla_definition_id"`)}
 	}
-	if v, ok := svc.mutation.SLADefinitionID(); ok {
+	if v, ok := _c.mutation.SLADefinitionID(); ok {
 		if err := slaviolation.SLADefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "sla_definition_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.sla_definition_id": %w`, err)}
 		}
 	}
-	if _, ok := svc.mutation.TicketType(); !ok {
+	if _, ok := _c.mutation.TicketType(); !ok {
 		return &ValidationError{Name: "ticket_type", err: errors.New(`ent: missing required field "SLAViolation.ticket_type"`)}
 	}
-	if _, ok := svc.mutation.SLAName(); !ok {
+	if _, ok := _c.mutation.SLAName(); !ok {
 		return &ValidationError{Name: "sla_name", err: errors.New(`ent: missing required field "SLAViolation.sla_name"`)}
 	}
-	if _, ok := svc.mutation.TicketID(); !ok {
+	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "SLAViolation.ticket_id"`)}
 	}
-	if v, ok := svc.mutation.TicketID(); ok {
+	if v, ok := _c.mutation.TicketID(); ok {
 		if err := slaviolation.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.ticket_id": %w`, err)}
 		}
 	}
-	if _, ok := svc.mutation.ViolationType(); !ok {
+	if _, ok := _c.mutation.ViolationType(); !ok {
 		return &ValidationError{Name: "violation_type", err: errors.New(`ent: missing required field "SLAViolation.violation_type"`)}
 	}
-	if v, ok := svc.mutation.ViolationType(); ok {
+	if v, ok := _c.mutation.ViolationType(); ok {
 		if err := slaviolation.ViolationTypeValidator(v); err != nil {
 			return &ValidationError{Name: "violation_type", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.violation_type": %w`, err)}
 		}
 	}
-	if _, ok := svc.mutation.ViolationTime(); !ok {
+	if _, ok := _c.mutation.ViolationTime(); !ok {
 		return &ValidationError{Name: "violation_time", err: errors.New(`ent: missing required field "SLAViolation.violation_time"`)}
 	}
-	if _, ok := svc.mutation.ViolationOccurredAt(); !ok {
+	if _, ok := _c.mutation.ViolationOccurredAt(); !ok {
 		return &ValidationError{Name: "violation_occurred_at", err: errors.New(`ent: missing required field "SLAViolation.violation_occurred_at"`)}
 	}
-	if _, ok := svc.mutation.OverdueMinutes(); !ok {
+	if _, ok := _c.mutation.OverdueMinutes(); !ok {
 		return &ValidationError{Name: "overdue_minutes", err: errors.New(`ent: missing required field "SLAViolation.overdue_minutes"`)}
 	}
-	if _, ok := svc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "SLAViolation.status"`)}
 	}
-	if _, ok := svc.mutation.Severity(); !ok {
+	if _, ok := _c.mutation.Severity(); !ok {
 		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "SLAViolation.severity"`)}
 	}
-	if _, ok := svc.mutation.IsResolved(); !ok {
+	if _, ok := _c.mutation.IsResolved(); !ok {
 		return &ValidationError{Name: "is_resolved", err: errors.New(`ent: missing required field "SLAViolation.is_resolved"`)}
 	}
-	if _, ok := svc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "SLAViolation.tenant_id"`)}
 	}
-	if v, ok := svc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := slaviolation.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := svc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "SLAViolation.created_at"`)}
 	}
-	if _, ok := svc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "SLAViolation.updated_at"`)}
 	}
-	if len(svc.mutation.SLADefinitionIDs()) == 0 {
+	if len(_c.mutation.SLADefinitionIDs()) == 0 {
 		return &ValidationError{Name: "sla_definition", err: errors.New(`ent: missing required edge "SLAViolation.sla_definition"`)}
 	}
-	if len(svc.mutation.TicketIDs()) == 0 {
+	if len(_c.mutation.TicketIDs()) == 0 {
 		return &ValidationError{Name: "ticket", err: errors.New(`ent: missing required edge "SLAViolation.ticket"`)}
 	}
 	return nil
 }
 
-func (svc *SLAViolationCreate) sqlSave(ctx context.Context) (*SLAViolation, error) {
-	if err := svc.check(); err != nil {
+func (_c *SLAViolationCreate) sqlSave(ctx context.Context) (*SLAViolation, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := svc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, svc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -450,89 +450,89 @@ func (svc *SLAViolationCreate) sqlSave(ctx context.Context) (*SLAViolation, erro
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	svc.mutation.id = &_node.ID
-	svc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (svc *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec) {
+func (_c *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec) {
 	var (
-		_node = &SLAViolation{config: svc.config}
+		_node = &SLAViolation{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(slaviolation.Table, sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt))
 	)
-	if value, ok := svc.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(slaviolation.FieldCreatedBy, field.TypeInt, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := svc.mutation.TicketType(); ok {
+	if value, ok := _c.mutation.TicketType(); ok {
 		_spec.SetField(slaviolation.FieldTicketType, field.TypeString, value)
 		_node.TicketType = value
 	}
-	if value, ok := svc.mutation.SLAName(); ok {
+	if value, ok := _c.mutation.SLAName(); ok {
 		_spec.SetField(slaviolation.FieldSLAName, field.TypeString, value)
 		_node.SLAName = value
 	}
-	if value, ok := svc.mutation.ViolationType(); ok {
+	if value, ok := _c.mutation.ViolationType(); ok {
 		_spec.SetField(slaviolation.FieldViolationType, field.TypeString, value)
 		_node.ViolationType = value
 	}
-	if value, ok := svc.mutation.ViolationTime(); ok {
+	if value, ok := _c.mutation.ViolationTime(); ok {
 		_spec.SetField(slaviolation.FieldViolationTime, field.TypeTime, value)
 		_node.ViolationTime = value
 	}
-	if value, ok := svc.mutation.ViolationOccurredAt(); ok {
+	if value, ok := _c.mutation.ViolationOccurredAt(); ok {
 		_spec.SetField(slaviolation.FieldViolationOccurredAt, field.TypeTime, value)
 		_node.ViolationOccurredAt = value
 	}
-	if value, ok := svc.mutation.ExpectedTime(); ok {
+	if value, ok := _c.mutation.ExpectedTime(); ok {
 		_spec.SetField(slaviolation.FieldExpectedTime, field.TypeInt, value)
 		_node.ExpectedTime = value
 	}
-	if value, ok := svc.mutation.ActualTime(); ok {
+	if value, ok := _c.mutation.ActualTime(); ok {
 		_spec.SetField(slaviolation.FieldActualTime, field.TypeInt, value)
 		_node.ActualTime = value
 	}
-	if value, ok := svc.mutation.OverdueMinutes(); ok {
+	if value, ok := _c.mutation.OverdueMinutes(); ok {
 		_spec.SetField(slaviolation.FieldOverdueMinutes, field.TypeInt, value)
 		_node.OverdueMinutes = value
 	}
-	if value, ok := svc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(slaviolation.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := svc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(slaviolation.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := svc.mutation.Severity(); ok {
+	if value, ok := _c.mutation.Severity(); ok {
 		_spec.SetField(slaviolation.FieldSeverity, field.TypeString, value)
 		_node.Severity = value
 	}
-	if value, ok := svc.mutation.IsResolved(); ok {
+	if value, ok := _c.mutation.IsResolved(); ok {
 		_spec.SetField(slaviolation.FieldIsResolved, field.TypeBool, value)
 		_node.IsResolved = value
 	}
-	if value, ok := svc.mutation.ResolvedAt(); ok {
+	if value, ok := _c.mutation.ResolvedAt(); ok {
 		_spec.SetField(slaviolation.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = value
 	}
-	if value, ok := svc.mutation.ResolutionNotes(); ok {
+	if value, ok := _c.mutation.ResolutionNotes(); ok {
 		_spec.SetField(slaviolation.FieldResolutionNotes, field.TypeString, value)
 		_node.ResolutionNotes = value
 	}
-	if value, ok := svc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(slaviolation.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := svc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(slaviolation.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := svc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaviolation.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := svc.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -549,7 +549,7 @@ func (svc *SLAViolationCreate) createSpec() (*SLAViolation, *sqlgraph.CreateSpec
 		_node.SLADefinitionID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := svc.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -577,16 +577,16 @@ type SLAViolationCreateBulk struct {
 }
 
 // Save creates the SLAViolation entities in the database.
-func (svcb *SLAViolationCreateBulk) Save(ctx context.Context) ([]*SLAViolation, error) {
-	if svcb.err != nil {
-		return nil, svcb.err
+func (_c *SLAViolationCreateBulk) Save(ctx context.Context) ([]*SLAViolation, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(svcb.builders))
-	nodes := make([]*SLAViolation, len(svcb.builders))
-	mutators := make([]Mutator, len(svcb.builders))
-	for i := range svcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*SLAViolation, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := svcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SLAViolationMutation)
@@ -600,11 +600,11 @@ func (svcb *SLAViolationCreateBulk) Save(ctx context.Context) ([]*SLAViolation, 
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, svcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, svcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -628,7 +628,7 @@ func (svcb *SLAViolationCreateBulk) Save(ctx context.Context) ([]*SLAViolation, 
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, svcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -636,8 +636,8 @@ func (svcb *SLAViolationCreateBulk) Save(ctx context.Context) ([]*SLAViolation, 
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (svcb *SLAViolationCreateBulk) SaveX(ctx context.Context) []*SLAViolation {
-	v, err := svcb.Save(ctx)
+func (_c *SLAViolationCreateBulk) SaveX(ctx context.Context) []*SLAViolation {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -645,14 +645,14 @@ func (svcb *SLAViolationCreateBulk) SaveX(ctx context.Context) []*SLAViolation {
 }
 
 // Exec executes the query.
-func (svcb *SLAViolationCreateBulk) Exec(ctx context.Context) error {
-	_, err := svcb.Save(ctx)
+func (_c *SLAViolationCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (svcb *SLAViolationCreateBulk) ExecX(ctx context.Context) {
-	if err := svcb.Exec(ctx); err != nil {
+func (_c *SLAViolationCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

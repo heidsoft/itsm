@@ -22,164 +22,164 @@ type ApprovalWorkflowCreate struct {
 }
 
 // SetName sets the "name" field.
-func (awc *ApprovalWorkflowCreate) SetName(s string) *ApprovalWorkflowCreate {
-	awc.mutation.SetName(s)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetName(v string) *ApprovalWorkflowCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (awc *ApprovalWorkflowCreate) SetDescription(s string) *ApprovalWorkflowCreate {
-	awc.mutation.SetDescription(s)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetDescription(v string) *ApprovalWorkflowCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillableDescription(s *string) *ApprovalWorkflowCreate {
-	if s != nil {
-		awc.SetDescription(*s)
+func (_c *ApprovalWorkflowCreate) SetNillableDescription(v *string) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return awc
+	return _c
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (awc *ApprovalWorkflowCreate) SetTicketType(s string) *ApprovalWorkflowCreate {
-	awc.mutation.SetTicketType(s)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetTicketType(v string) *ApprovalWorkflowCreate {
+	_c.mutation.SetTicketType(v)
+	return _c
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillableTicketType(s *string) *ApprovalWorkflowCreate {
-	if s != nil {
-		awc.SetTicketType(*s)
+func (_c *ApprovalWorkflowCreate) SetNillableTicketType(v *string) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetTicketType(*v)
 	}
-	return awc
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (awc *ApprovalWorkflowCreate) SetPriority(s string) *ApprovalWorkflowCreate {
-	awc.mutation.SetPriority(s)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetPriority(v string) *ApprovalWorkflowCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillablePriority(s *string) *ApprovalWorkflowCreate {
-	if s != nil {
-		awc.SetPriority(*s)
+func (_c *ApprovalWorkflowCreate) SetNillablePriority(v *string) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return awc
+	return _c
 }
 
 // SetNodes sets the "nodes" field.
-func (awc *ApprovalWorkflowCreate) SetNodes(m []map[string]interface{}) *ApprovalWorkflowCreate {
-	awc.mutation.SetNodes(m)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetNodes(v []map[string]interface{}) *ApprovalWorkflowCreate {
+	_c.mutation.SetNodes(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (awc *ApprovalWorkflowCreate) SetStatus(s string) *ApprovalWorkflowCreate {
-	awc.mutation.SetStatus(s)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetStatus(v string) *ApprovalWorkflowCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillableStatus(s *string) *ApprovalWorkflowCreate {
-	if s != nil {
-		awc.SetStatus(*s)
+func (_c *ApprovalWorkflowCreate) SetNillableStatus(v *string) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return awc
+	return _c
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (awc *ApprovalWorkflowCreate) SetCompletedAt(t time.Time) *ApprovalWorkflowCreate {
-	awc.mutation.SetCompletedAt(t)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetCompletedAt(v time.Time) *ApprovalWorkflowCreate {
+	_c.mutation.SetCompletedAt(v)
+	return _c
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillableCompletedAt(t *time.Time) *ApprovalWorkflowCreate {
-	if t != nil {
-		awc.SetCompletedAt(*t)
+func (_c *ApprovalWorkflowCreate) SetNillableCompletedAt(v *time.Time) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetCompletedAt(*v)
 	}
-	return awc
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (awc *ApprovalWorkflowCreate) SetIsActive(b bool) *ApprovalWorkflowCreate {
-	awc.mutation.SetIsActive(b)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetIsActive(v bool) *ApprovalWorkflowCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillableIsActive(b *bool) *ApprovalWorkflowCreate {
-	if b != nil {
-		awc.SetIsActive(*b)
+func (_c *ApprovalWorkflowCreate) SetNillableIsActive(v *bool) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return awc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (awc *ApprovalWorkflowCreate) SetTenantID(i int) *ApprovalWorkflowCreate {
-	awc.mutation.SetTenantID(i)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetTenantID(v int) *ApprovalWorkflowCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (awc *ApprovalWorkflowCreate) SetCreatedAt(t time.Time) *ApprovalWorkflowCreate {
-	awc.mutation.SetCreatedAt(t)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetCreatedAt(v time.Time) *ApprovalWorkflowCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillableCreatedAt(t *time.Time) *ApprovalWorkflowCreate {
-	if t != nil {
-		awc.SetCreatedAt(*t)
+func (_c *ApprovalWorkflowCreate) SetNillableCreatedAt(v *time.Time) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return awc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (awc *ApprovalWorkflowCreate) SetUpdatedAt(t time.Time) *ApprovalWorkflowCreate {
-	awc.mutation.SetUpdatedAt(t)
-	return awc
+func (_c *ApprovalWorkflowCreate) SetUpdatedAt(v time.Time) *ApprovalWorkflowCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (awc *ApprovalWorkflowCreate) SetNillableUpdatedAt(t *time.Time) *ApprovalWorkflowCreate {
-	if t != nil {
-		awc.SetUpdatedAt(*t)
+func (_c *ApprovalWorkflowCreate) SetNillableUpdatedAt(v *time.Time) *ApprovalWorkflowCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return awc
+	return _c
 }
 
 // AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
-func (awc *ApprovalWorkflowCreate) AddApprovalRecordIDs(ids ...int) *ApprovalWorkflowCreate {
-	awc.mutation.AddApprovalRecordIDs(ids...)
-	return awc
+func (_c *ApprovalWorkflowCreate) AddApprovalRecordIDs(ids ...int) *ApprovalWorkflowCreate {
+	_c.mutation.AddApprovalRecordIDs(ids...)
+	return _c
 }
 
 // AddApprovalRecords adds the "approval_records" edges to the ApprovalRecord entity.
-func (awc *ApprovalWorkflowCreate) AddApprovalRecords(a ...*ApprovalRecord) *ApprovalWorkflowCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_c *ApprovalWorkflowCreate) AddApprovalRecords(v ...*ApprovalRecord) *ApprovalWorkflowCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return awc.AddApprovalRecordIDs(ids...)
+	return _c.AddApprovalRecordIDs(ids...)
 }
 
 // Mutation returns the ApprovalWorkflowMutation object of the builder.
-func (awc *ApprovalWorkflowCreate) Mutation() *ApprovalWorkflowMutation {
-	return awc.mutation
+func (_c *ApprovalWorkflowCreate) Mutation() *ApprovalWorkflowMutation {
+	return _c.mutation
 }
 
 // Save creates the ApprovalWorkflow in the database.
-func (awc *ApprovalWorkflowCreate) Save(ctx context.Context) (*ApprovalWorkflow, error) {
-	awc.defaults()
-	return withHooks(ctx, awc.sqlSave, awc.mutation, awc.hooks)
+func (_c *ApprovalWorkflowCreate) Save(ctx context.Context) (*ApprovalWorkflow, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (awc *ApprovalWorkflowCreate) SaveX(ctx context.Context) *ApprovalWorkflow {
-	v, err := awc.Save(ctx)
+func (_c *ApprovalWorkflowCreate) SaveX(ctx context.Context) *ApprovalWorkflow {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -187,84 +187,84 @@ func (awc *ApprovalWorkflowCreate) SaveX(ctx context.Context) *ApprovalWorkflow 
 }
 
 // Exec executes the query.
-func (awc *ApprovalWorkflowCreate) Exec(ctx context.Context) error {
-	_, err := awc.Save(ctx)
+func (_c *ApprovalWorkflowCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (awc *ApprovalWorkflowCreate) ExecX(ctx context.Context) {
-	if err := awc.Exec(ctx); err != nil {
+func (_c *ApprovalWorkflowCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (awc *ApprovalWorkflowCreate) defaults() {
-	if _, ok := awc.mutation.Nodes(); !ok {
+func (_c *ApprovalWorkflowCreate) defaults() {
+	if _, ok := _c.mutation.Nodes(); !ok {
 		v := approvalworkflow.DefaultNodes
-		awc.mutation.SetNodes(v)
+		_c.mutation.SetNodes(v)
 	}
-	if _, ok := awc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := approvalworkflow.DefaultStatus
-		awc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := awc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := approvalworkflow.DefaultIsActive
-		awc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := awc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := approvalworkflow.DefaultCreatedAt()
-		awc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := awc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := approvalworkflow.DefaultUpdatedAt()
-		awc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (awc *ApprovalWorkflowCreate) check() error {
-	if _, ok := awc.mutation.Name(); !ok {
+func (_c *ApprovalWorkflowCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "ApprovalWorkflow.name"`)}
 	}
-	if v, ok := awc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := approvalworkflow.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApprovalWorkflow.name": %w`, err)}
 		}
 	}
-	if _, ok := awc.mutation.Nodes(); !ok {
+	if _, ok := _c.mutation.Nodes(); !ok {
 		return &ValidationError{Name: "nodes", err: errors.New(`ent: missing required field "ApprovalWorkflow.nodes"`)}
 	}
-	if _, ok := awc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ApprovalWorkflow.status"`)}
 	}
-	if _, ok := awc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ApprovalWorkflow.is_active"`)}
 	}
-	if _, ok := awc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ApprovalWorkflow.tenant_id"`)}
 	}
-	if v, ok := awc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := approvalworkflow.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalWorkflow.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := awc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ApprovalWorkflow.created_at"`)}
 	}
-	if _, ok := awc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ApprovalWorkflow.updated_at"`)}
 	}
 	return nil
 }
 
-func (awc *ApprovalWorkflowCreate) sqlSave(ctx context.Context) (*ApprovalWorkflow, error) {
-	if err := awc.check(); err != nil {
+func (_c *ApprovalWorkflowCreate) sqlSave(ctx context.Context) (*ApprovalWorkflow, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := awc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, awc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -272,61 +272,61 @@ func (awc *ApprovalWorkflowCreate) sqlSave(ctx context.Context) (*ApprovalWorkfl
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	awc.mutation.id = &_node.ID
-	awc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (awc *ApprovalWorkflowCreate) createSpec() (*ApprovalWorkflow, *sqlgraph.CreateSpec) {
+func (_c *ApprovalWorkflowCreate) createSpec() (*ApprovalWorkflow, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ApprovalWorkflow{config: awc.config}
+		_node = &ApprovalWorkflow{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(approvalworkflow.Table, sqlgraph.NewFieldSpec(approvalworkflow.FieldID, field.TypeInt))
 	)
-	if value, ok := awc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(approvalworkflow.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := awc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(approvalworkflow.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := awc.mutation.TicketType(); ok {
+	if value, ok := _c.mutation.TicketType(); ok {
 		_spec.SetField(approvalworkflow.FieldTicketType, field.TypeString, value)
 		_node.TicketType = value
 	}
-	if value, ok := awc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(approvalworkflow.FieldPriority, field.TypeString, value)
 		_node.Priority = value
 	}
-	if value, ok := awc.mutation.Nodes(); ok {
+	if value, ok := _c.mutation.Nodes(); ok {
 		_spec.SetField(approvalworkflow.FieldNodes, field.TypeJSON, value)
 		_node.Nodes = value
 	}
-	if value, ok := awc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(approvalworkflow.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := awc.mutation.CompletedAt(); ok {
+	if value, ok := _c.mutation.CompletedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldCompletedAt, field.TypeTime, value)
 		_node.CompletedAt = &value
 	}
-	if value, ok := awc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(approvalworkflow.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := awc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(approvalworkflow.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := awc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := awc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := awc.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -353,16 +353,16 @@ type ApprovalWorkflowCreateBulk struct {
 }
 
 // Save creates the ApprovalWorkflow entities in the database.
-func (awcb *ApprovalWorkflowCreateBulk) Save(ctx context.Context) ([]*ApprovalWorkflow, error) {
-	if awcb.err != nil {
-		return nil, awcb.err
+func (_c *ApprovalWorkflowCreateBulk) Save(ctx context.Context) ([]*ApprovalWorkflow, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(awcb.builders))
-	nodes := make([]*ApprovalWorkflow, len(awcb.builders))
-	mutators := make([]Mutator, len(awcb.builders))
-	for i := range awcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ApprovalWorkflow, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := awcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ApprovalWorkflowMutation)
@@ -376,11 +376,11 @@ func (awcb *ApprovalWorkflowCreateBulk) Save(ctx context.Context) ([]*ApprovalWo
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, awcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, awcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -404,7 +404,7 @@ func (awcb *ApprovalWorkflowCreateBulk) Save(ctx context.Context) ([]*ApprovalWo
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, awcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -412,8 +412,8 @@ func (awcb *ApprovalWorkflowCreateBulk) Save(ctx context.Context) ([]*ApprovalWo
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (awcb *ApprovalWorkflowCreateBulk) SaveX(ctx context.Context) []*ApprovalWorkflow {
-	v, err := awcb.Save(ctx)
+func (_c *ApprovalWorkflowCreateBulk) SaveX(ctx context.Context) []*ApprovalWorkflow {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -421,14 +421,14 @@ func (awcb *ApprovalWorkflowCreateBulk) SaveX(ctx context.Context) []*ApprovalWo
 }
 
 // Exec executes the query.
-func (awcb *ApprovalWorkflowCreateBulk) Exec(ctx context.Context) error {
-	_, err := awcb.Save(ctx)
+func (_c *ApprovalWorkflowCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (awcb *ApprovalWorkflowCreateBulk) ExecX(ctx context.Context) {
-	if err := awcb.Exec(ctx); err != nil {
+func (_c *ApprovalWorkflowCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

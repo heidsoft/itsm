@@ -22,304 +22,304 @@ type ProcessTaskCreate struct {
 }
 
 // SetTaskID sets the "task_id" field.
-func (ptc *ProcessTaskCreate) SetTaskID(s string) *ProcessTaskCreate {
-	ptc.mutation.SetTaskID(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetTaskID(v string) *ProcessTaskCreate {
+	_c.mutation.SetTaskID(v)
+	return _c
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (ptc *ProcessTaskCreate) SetProcessInstanceID(i int) *ProcessTaskCreate {
-	ptc.mutation.SetProcessInstanceID(i)
-	return ptc
+func (_c *ProcessTaskCreate) SetProcessInstanceID(v int) *ProcessTaskCreate {
+	_c.mutation.SetProcessInstanceID(v)
+	return _c
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (ptc *ProcessTaskCreate) SetProcessDefinitionKey(s string) *ProcessTaskCreate {
-	ptc.mutation.SetProcessDefinitionKey(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetProcessDefinitionKey(v string) *ProcessTaskCreate {
+	_c.mutation.SetProcessDefinitionKey(v)
+	return _c
 }
 
 // SetTaskDefinitionKey sets the "task_definition_key" field.
-func (ptc *ProcessTaskCreate) SetTaskDefinitionKey(s string) *ProcessTaskCreate {
-	ptc.mutation.SetTaskDefinitionKey(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetTaskDefinitionKey(v string) *ProcessTaskCreate {
+	_c.mutation.SetTaskDefinitionKey(v)
+	return _c
 }
 
 // SetTaskName sets the "task_name" field.
-func (ptc *ProcessTaskCreate) SetTaskName(s string) *ProcessTaskCreate {
-	ptc.mutation.SetTaskName(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetTaskName(v string) *ProcessTaskCreate {
+	_c.mutation.SetTaskName(v)
+	return _c
 }
 
 // SetTaskType sets the "task_type" field.
-func (ptc *ProcessTaskCreate) SetTaskType(s string) *ProcessTaskCreate {
-	ptc.mutation.SetTaskType(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetTaskType(v string) *ProcessTaskCreate {
+	_c.mutation.SetTaskType(v)
+	return _c
 }
 
 // SetNillableTaskType sets the "task_type" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableTaskType(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetTaskType(*s)
+func (_c *ProcessTaskCreate) SetNillableTaskType(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetTaskType(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetAssignee sets the "assignee" field.
-func (ptc *ProcessTaskCreate) SetAssignee(s string) *ProcessTaskCreate {
-	ptc.mutation.SetAssignee(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetAssignee(v string) *ProcessTaskCreate {
+	_c.mutation.SetAssignee(v)
+	return _c
 }
 
 // SetNillableAssignee sets the "assignee" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableAssignee(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetAssignee(*s)
+func (_c *ProcessTaskCreate) SetNillableAssignee(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetAssignee(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetCandidateUsers sets the "candidate_users" field.
-func (ptc *ProcessTaskCreate) SetCandidateUsers(s string) *ProcessTaskCreate {
-	ptc.mutation.SetCandidateUsers(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetCandidateUsers(v string) *ProcessTaskCreate {
+	_c.mutation.SetCandidateUsers(v)
+	return _c
 }
 
 // SetNillableCandidateUsers sets the "candidate_users" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableCandidateUsers(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetCandidateUsers(*s)
+func (_c *ProcessTaskCreate) SetNillableCandidateUsers(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetCandidateUsers(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetCandidateGroups sets the "candidate_groups" field.
-func (ptc *ProcessTaskCreate) SetCandidateGroups(s string) *ProcessTaskCreate {
-	ptc.mutation.SetCandidateGroups(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetCandidateGroups(v string) *ProcessTaskCreate {
+	_c.mutation.SetCandidateGroups(v)
+	return _c
 }
 
 // SetNillableCandidateGroups sets the "candidate_groups" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableCandidateGroups(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetCandidateGroups(*s)
+func (_c *ProcessTaskCreate) SetNillableCandidateGroups(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetCandidateGroups(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (ptc *ProcessTaskCreate) SetStatus(s string) *ProcessTaskCreate {
-	ptc.mutation.SetStatus(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetStatus(v string) *ProcessTaskCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableStatus(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetStatus(*s)
+func (_c *ProcessTaskCreate) SetNillableStatus(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (ptc *ProcessTaskCreate) SetPriority(s string) *ProcessTaskCreate {
-	ptc.mutation.SetPriority(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetPriority(v string) *ProcessTaskCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillablePriority(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetPriority(*s)
+func (_c *ProcessTaskCreate) SetNillablePriority(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetDueDate sets the "due_date" field.
-func (ptc *ProcessTaskCreate) SetDueDate(t time.Time) *ProcessTaskCreate {
-	ptc.mutation.SetDueDate(t)
-	return ptc
+func (_c *ProcessTaskCreate) SetDueDate(v time.Time) *ProcessTaskCreate {
+	_c.mutation.SetDueDate(v)
+	return _c
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableDueDate(t *time.Time) *ProcessTaskCreate {
-	if t != nil {
-		ptc.SetDueDate(*t)
+func (_c *ProcessTaskCreate) SetNillableDueDate(v *time.Time) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetDueDate(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetCreatedTime sets the "created_time" field.
-func (ptc *ProcessTaskCreate) SetCreatedTime(t time.Time) *ProcessTaskCreate {
-	ptc.mutation.SetCreatedTime(t)
-	return ptc
+func (_c *ProcessTaskCreate) SetCreatedTime(v time.Time) *ProcessTaskCreate {
+	_c.mutation.SetCreatedTime(v)
+	return _c
 }
 
 // SetNillableCreatedTime sets the "created_time" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableCreatedTime(t *time.Time) *ProcessTaskCreate {
-	if t != nil {
-		ptc.SetCreatedTime(*t)
+func (_c *ProcessTaskCreate) SetNillableCreatedTime(v *time.Time) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetCreatedTime(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetAssignedTime sets the "assigned_time" field.
-func (ptc *ProcessTaskCreate) SetAssignedTime(t time.Time) *ProcessTaskCreate {
-	ptc.mutation.SetAssignedTime(t)
-	return ptc
+func (_c *ProcessTaskCreate) SetAssignedTime(v time.Time) *ProcessTaskCreate {
+	_c.mutation.SetAssignedTime(v)
+	return _c
 }
 
 // SetNillableAssignedTime sets the "assigned_time" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableAssignedTime(t *time.Time) *ProcessTaskCreate {
-	if t != nil {
-		ptc.SetAssignedTime(*t)
+func (_c *ProcessTaskCreate) SetNillableAssignedTime(v *time.Time) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetAssignedTime(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetStartedTime sets the "started_time" field.
-func (ptc *ProcessTaskCreate) SetStartedTime(t time.Time) *ProcessTaskCreate {
-	ptc.mutation.SetStartedTime(t)
-	return ptc
+func (_c *ProcessTaskCreate) SetStartedTime(v time.Time) *ProcessTaskCreate {
+	_c.mutation.SetStartedTime(v)
+	return _c
 }
 
 // SetNillableStartedTime sets the "started_time" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableStartedTime(t *time.Time) *ProcessTaskCreate {
-	if t != nil {
-		ptc.SetStartedTime(*t)
+func (_c *ProcessTaskCreate) SetNillableStartedTime(v *time.Time) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetStartedTime(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetCompletedTime sets the "completed_time" field.
-func (ptc *ProcessTaskCreate) SetCompletedTime(t time.Time) *ProcessTaskCreate {
-	ptc.mutation.SetCompletedTime(t)
-	return ptc
+func (_c *ProcessTaskCreate) SetCompletedTime(v time.Time) *ProcessTaskCreate {
+	_c.mutation.SetCompletedTime(v)
+	return _c
 }
 
 // SetNillableCompletedTime sets the "completed_time" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableCompletedTime(t *time.Time) *ProcessTaskCreate {
-	if t != nil {
-		ptc.SetCompletedTime(*t)
+func (_c *ProcessTaskCreate) SetNillableCompletedTime(v *time.Time) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetCompletedTime(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetFormKey sets the "form_key" field.
-func (ptc *ProcessTaskCreate) SetFormKey(s string) *ProcessTaskCreate {
-	ptc.mutation.SetFormKey(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetFormKey(v string) *ProcessTaskCreate {
+	_c.mutation.SetFormKey(v)
+	return _c
 }
 
 // SetNillableFormKey sets the "form_key" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableFormKey(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetFormKey(*s)
+func (_c *ProcessTaskCreate) SetNillableFormKey(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetFormKey(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetTaskVariables sets the "task_variables" field.
-func (ptc *ProcessTaskCreate) SetTaskVariables(m map[string]interface{}) *ProcessTaskCreate {
-	ptc.mutation.SetTaskVariables(m)
-	return ptc
+func (_c *ProcessTaskCreate) SetTaskVariables(v map[string]interface{}) *ProcessTaskCreate {
+	_c.mutation.SetTaskVariables(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (ptc *ProcessTaskCreate) SetDescription(s string) *ProcessTaskCreate {
-	ptc.mutation.SetDescription(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetDescription(v string) *ProcessTaskCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableDescription(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetDescription(*s)
+func (_c *ProcessTaskCreate) SetNillableDescription(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetParentTaskID sets the "parent_task_id" field.
-func (ptc *ProcessTaskCreate) SetParentTaskID(s string) *ProcessTaskCreate {
-	ptc.mutation.SetParentTaskID(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetParentTaskID(v string) *ProcessTaskCreate {
+	_c.mutation.SetParentTaskID(v)
+	return _c
 }
 
 // SetNillableParentTaskID sets the "parent_task_id" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableParentTaskID(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetParentTaskID(*s)
+func (_c *ProcessTaskCreate) SetNillableParentTaskID(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetParentTaskID(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetRootTaskID sets the "root_task_id" field.
-func (ptc *ProcessTaskCreate) SetRootTaskID(s string) *ProcessTaskCreate {
-	ptc.mutation.SetRootTaskID(s)
-	return ptc
+func (_c *ProcessTaskCreate) SetRootTaskID(v string) *ProcessTaskCreate {
+	_c.mutation.SetRootTaskID(v)
+	return _c
 }
 
 // SetNillableRootTaskID sets the "root_task_id" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableRootTaskID(s *string) *ProcessTaskCreate {
-	if s != nil {
-		ptc.SetRootTaskID(*s)
+func (_c *ProcessTaskCreate) SetNillableRootTaskID(v *string) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetRootTaskID(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ptc *ProcessTaskCreate) SetTenantID(i int) *ProcessTaskCreate {
-	ptc.mutation.SetTenantID(i)
-	return ptc
+func (_c *ProcessTaskCreate) SetTenantID(v int) *ProcessTaskCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ptc *ProcessTaskCreate) SetCreatedAt(t time.Time) *ProcessTaskCreate {
-	ptc.mutation.SetCreatedAt(t)
-	return ptc
+func (_c *ProcessTaskCreate) SetCreatedAt(v time.Time) *ProcessTaskCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableCreatedAt(t *time.Time) *ProcessTaskCreate {
-	if t != nil {
-		ptc.SetCreatedAt(*t)
+func (_c *ProcessTaskCreate) SetNillableCreatedAt(v *time.Time) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ptc *ProcessTaskCreate) SetUpdatedAt(t time.Time) *ProcessTaskCreate {
-	ptc.mutation.SetUpdatedAt(t)
-	return ptc
+func (_c *ProcessTaskCreate) SetUpdatedAt(v time.Time) *ProcessTaskCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ptc *ProcessTaskCreate) SetNillableUpdatedAt(t *time.Time) *ProcessTaskCreate {
-	if t != nil {
-		ptc.SetUpdatedAt(*t)
+func (_c *ProcessTaskCreate) SetNillableUpdatedAt(v *time.Time) *ProcessTaskCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (ptc *ProcessTaskCreate) SetProcessInstance(p *ProcessInstance) *ProcessTaskCreate {
-	return ptc.SetProcessInstanceID(p.ID)
+func (_c *ProcessTaskCreate) SetProcessInstance(v *ProcessInstance) *ProcessTaskCreate {
+	return _c.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessTaskMutation object of the builder.
-func (ptc *ProcessTaskCreate) Mutation() *ProcessTaskMutation {
-	return ptc.mutation
+func (_c *ProcessTaskCreate) Mutation() *ProcessTaskMutation {
+	return _c.mutation
 }
 
 // Save creates the ProcessTask in the database.
-func (ptc *ProcessTaskCreate) Save(ctx context.Context) (*ProcessTask, error) {
-	ptc.defaults()
-	return withHooks(ctx, ptc.sqlSave, ptc.mutation, ptc.hooks)
+func (_c *ProcessTaskCreate) Save(ctx context.Context) (*ProcessTask, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ptc *ProcessTaskCreate) SaveX(ctx context.Context) *ProcessTask {
-	v, err := ptc.Save(ctx)
+func (_c *ProcessTaskCreate) SaveX(ctx context.Context) *ProcessTask {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -327,126 +327,126 @@ func (ptc *ProcessTaskCreate) SaveX(ctx context.Context) *ProcessTask {
 }
 
 // Exec executes the query.
-func (ptc *ProcessTaskCreate) Exec(ctx context.Context) error {
-	_, err := ptc.Save(ctx)
+func (_c *ProcessTaskCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptc *ProcessTaskCreate) ExecX(ctx context.Context) {
-	if err := ptc.Exec(ctx); err != nil {
+func (_c *ProcessTaskCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ptc *ProcessTaskCreate) defaults() {
-	if _, ok := ptc.mutation.TaskType(); !ok {
+func (_c *ProcessTaskCreate) defaults() {
+	if _, ok := _c.mutation.TaskType(); !ok {
 		v := processtask.DefaultTaskType
-		ptc.mutation.SetTaskType(v)
+		_c.mutation.SetTaskType(v)
 	}
-	if _, ok := ptc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := processtask.DefaultStatus
-		ptc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := ptc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := processtask.DefaultPriority
-		ptc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := ptc.mutation.CreatedTime(); !ok {
+	if _, ok := _c.mutation.CreatedTime(); !ok {
 		v := processtask.DefaultCreatedTime()
-		ptc.mutation.SetCreatedTime(v)
+		_c.mutation.SetCreatedTime(v)
 	}
-	if _, ok := ptc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processtask.DefaultCreatedAt()
-		ptc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ptc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := processtask.DefaultUpdatedAt()
-		ptc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ptc *ProcessTaskCreate) check() error {
-	if _, ok := ptc.mutation.TaskID(); !ok {
+func (_c *ProcessTaskCreate) check() error {
+	if _, ok := _c.mutation.TaskID(); !ok {
 		return &ValidationError{Name: "task_id", err: errors.New(`ent: missing required field "ProcessTask.task_id"`)}
 	}
-	if v, ok := ptc.mutation.TaskID(); ok {
+	if v, ok := _c.mutation.TaskID(); ok {
 		if err := processtask.TaskIDValidator(v); err != nil {
 			return &ValidationError{Name: "task_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_id": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.ProcessInstanceID(); !ok {
+	if _, ok := _c.mutation.ProcessInstanceID(); !ok {
 		return &ValidationError{Name: "process_instance_id", err: errors.New(`ent: missing required field "ProcessTask.process_instance_id"`)}
 	}
-	if v, ok := ptc.mutation.ProcessInstanceID(); ok {
+	if v, ok := _c.mutation.ProcessInstanceID(); ok {
 		if err := processtask.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.process_instance_id": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.ProcessDefinitionKey(); !ok {
+	if _, ok := _c.mutation.ProcessDefinitionKey(); !ok {
 		return &ValidationError{Name: "process_definition_key", err: errors.New(`ent: missing required field "ProcessTask.process_definition_key"`)}
 	}
-	if v, ok := ptc.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		if err := processtask.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.process_definition_key": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.TaskDefinitionKey(); !ok {
+	if _, ok := _c.mutation.TaskDefinitionKey(); !ok {
 		return &ValidationError{Name: "task_definition_key", err: errors.New(`ent: missing required field "ProcessTask.task_definition_key"`)}
 	}
-	if v, ok := ptc.mutation.TaskDefinitionKey(); ok {
+	if v, ok := _c.mutation.TaskDefinitionKey(); ok {
 		if err := processtask.TaskDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "task_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_definition_key": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.TaskName(); !ok {
+	if _, ok := _c.mutation.TaskName(); !ok {
 		return &ValidationError{Name: "task_name", err: errors.New(`ent: missing required field "ProcessTask.task_name"`)}
 	}
-	if v, ok := ptc.mutation.TaskName(); ok {
+	if v, ok := _c.mutation.TaskName(); ok {
 		if err := processtask.TaskNameValidator(v); err != nil {
 			return &ValidationError{Name: "task_name", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.task_name": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.TaskType(); !ok {
+	if _, ok := _c.mutation.TaskType(); !ok {
 		return &ValidationError{Name: "task_type", err: errors.New(`ent: missing required field "ProcessTask.task_type"`)}
 	}
-	if _, ok := ptc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ProcessTask.status"`)}
 	}
-	if _, ok := ptc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "ProcessTask.priority"`)}
 	}
-	if _, ok := ptc.mutation.CreatedTime(); !ok {
+	if _, ok := _c.mutation.CreatedTime(); !ok {
 		return &ValidationError{Name: "created_time", err: errors.New(`ent: missing required field "ProcessTask.created_time"`)}
 	}
-	if _, ok := ptc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProcessTask.tenant_id"`)}
 	}
-	if v, ok := ptc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := processtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessTask.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessTask.created_at"`)}
 	}
-	if _, ok := ptc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessTask.updated_at"`)}
 	}
-	if len(ptc.mutation.ProcessInstanceIDs()) == 0 {
+	if len(_c.mutation.ProcessInstanceIDs()) == 0 {
 		return &ValidationError{Name: "process_instance", err: errors.New(`ent: missing required edge "ProcessTask.process_instance"`)}
 	}
 	return nil
 }
 
-func (ptc *ProcessTaskCreate) sqlSave(ctx context.Context) (*ProcessTask, error) {
-	if err := ptc.check(); err != nil {
+func (_c *ProcessTaskCreate) sqlSave(ctx context.Context) (*ProcessTask, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ptc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ptc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -454,109 +454,109 @@ func (ptc *ProcessTaskCreate) sqlSave(ctx context.Context) (*ProcessTask, error)
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ptc.mutation.id = &_node.ID
-	ptc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ptc *ProcessTaskCreate) createSpec() (*ProcessTask, *sqlgraph.CreateSpec) {
+func (_c *ProcessTaskCreate) createSpec() (*ProcessTask, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProcessTask{config: ptc.config}
+		_node = &ProcessTask{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(processtask.Table, sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt))
 	)
-	if value, ok := ptc.mutation.TaskID(); ok {
+	if value, ok := _c.mutation.TaskID(); ok {
 		_spec.SetField(processtask.FieldTaskID, field.TypeString, value)
 		_node.TaskID = value
 	}
-	if value, ok := ptc.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldProcessDefinitionKey, field.TypeString, value)
 		_node.ProcessDefinitionKey = value
 	}
-	if value, ok := ptc.mutation.TaskDefinitionKey(); ok {
+	if value, ok := _c.mutation.TaskDefinitionKey(); ok {
 		_spec.SetField(processtask.FieldTaskDefinitionKey, field.TypeString, value)
 		_node.TaskDefinitionKey = value
 	}
-	if value, ok := ptc.mutation.TaskName(); ok {
+	if value, ok := _c.mutation.TaskName(); ok {
 		_spec.SetField(processtask.FieldTaskName, field.TypeString, value)
 		_node.TaskName = value
 	}
-	if value, ok := ptc.mutation.TaskType(); ok {
+	if value, ok := _c.mutation.TaskType(); ok {
 		_spec.SetField(processtask.FieldTaskType, field.TypeString, value)
 		_node.TaskType = value
 	}
-	if value, ok := ptc.mutation.Assignee(); ok {
+	if value, ok := _c.mutation.Assignee(); ok {
 		_spec.SetField(processtask.FieldAssignee, field.TypeString, value)
 		_node.Assignee = value
 	}
-	if value, ok := ptc.mutation.CandidateUsers(); ok {
+	if value, ok := _c.mutation.CandidateUsers(); ok {
 		_spec.SetField(processtask.FieldCandidateUsers, field.TypeString, value)
 		_node.CandidateUsers = value
 	}
-	if value, ok := ptc.mutation.CandidateGroups(); ok {
+	if value, ok := _c.mutation.CandidateGroups(); ok {
 		_spec.SetField(processtask.FieldCandidateGroups, field.TypeString, value)
 		_node.CandidateGroups = value
 	}
-	if value, ok := ptc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(processtask.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := ptc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(processtask.FieldPriority, field.TypeString, value)
 		_node.Priority = value
 	}
-	if value, ok := ptc.mutation.DueDate(); ok {
+	if value, ok := _c.mutation.DueDate(); ok {
 		_spec.SetField(processtask.FieldDueDate, field.TypeTime, value)
 		_node.DueDate = value
 	}
-	if value, ok := ptc.mutation.CreatedTime(); ok {
+	if value, ok := _c.mutation.CreatedTime(); ok {
 		_spec.SetField(processtask.FieldCreatedTime, field.TypeTime, value)
 		_node.CreatedTime = value
 	}
-	if value, ok := ptc.mutation.AssignedTime(); ok {
+	if value, ok := _c.mutation.AssignedTime(); ok {
 		_spec.SetField(processtask.FieldAssignedTime, field.TypeTime, value)
 		_node.AssignedTime = value
 	}
-	if value, ok := ptc.mutation.StartedTime(); ok {
+	if value, ok := _c.mutation.StartedTime(); ok {
 		_spec.SetField(processtask.FieldStartedTime, field.TypeTime, value)
 		_node.StartedTime = value
 	}
-	if value, ok := ptc.mutation.CompletedTime(); ok {
+	if value, ok := _c.mutation.CompletedTime(); ok {
 		_spec.SetField(processtask.FieldCompletedTime, field.TypeTime, value)
 		_node.CompletedTime = value
 	}
-	if value, ok := ptc.mutation.FormKey(); ok {
+	if value, ok := _c.mutation.FormKey(); ok {
 		_spec.SetField(processtask.FieldFormKey, field.TypeString, value)
 		_node.FormKey = value
 	}
-	if value, ok := ptc.mutation.TaskVariables(); ok {
+	if value, ok := _c.mutation.TaskVariables(); ok {
 		_spec.SetField(processtask.FieldTaskVariables, field.TypeJSON, value)
 		_node.TaskVariables = value
 	}
-	if value, ok := ptc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(processtask.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := ptc.mutation.ParentTaskID(); ok {
+	if value, ok := _c.mutation.ParentTaskID(); ok {
 		_spec.SetField(processtask.FieldParentTaskID, field.TypeString, value)
 		_node.ParentTaskID = value
 	}
-	if value, ok := ptc.mutation.RootTaskID(); ok {
+	if value, ok := _c.mutation.RootTaskID(); ok {
 		_spec.SetField(processtask.FieldRootTaskID, field.TypeString, value)
 		_node.RootTaskID = value
 	}
-	if value, ok := ptc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processtask.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := ptc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(processtask.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ptc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(processtask.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := ptc.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -584,16 +584,16 @@ type ProcessTaskCreateBulk struct {
 }
 
 // Save creates the ProcessTask entities in the database.
-func (ptcb *ProcessTaskCreateBulk) Save(ctx context.Context) ([]*ProcessTask, error) {
-	if ptcb.err != nil {
-		return nil, ptcb.err
+func (_c *ProcessTaskCreateBulk) Save(ctx context.Context) ([]*ProcessTask, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ptcb.builders))
-	nodes := make([]*ProcessTask, len(ptcb.builders))
-	mutators := make([]Mutator, len(ptcb.builders))
-	for i := range ptcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProcessTask, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ptcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProcessTaskMutation)
@@ -607,11 +607,11 @@ func (ptcb *ProcessTaskCreateBulk) Save(ctx context.Context) ([]*ProcessTask, er
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ptcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ptcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -635,7 +635,7 @@ func (ptcb *ProcessTaskCreateBulk) Save(ctx context.Context) ([]*ProcessTask, er
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ptcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -643,8 +643,8 @@ func (ptcb *ProcessTaskCreateBulk) Save(ctx context.Context) ([]*ProcessTask, er
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ptcb *ProcessTaskCreateBulk) SaveX(ctx context.Context) []*ProcessTask {
-	v, err := ptcb.Save(ctx)
+func (_c *ProcessTaskCreateBulk) SaveX(ctx context.Context) []*ProcessTask {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -652,14 +652,14 @@ func (ptcb *ProcessTaskCreateBulk) SaveX(ctx context.Context) []*ProcessTask {
 }
 
 // Exec executes the query.
-func (ptcb *ProcessTaskCreateBulk) Exec(ctx context.Context) error {
-	_, err := ptcb.Save(ctx)
+func (_c *ProcessTaskCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptcb *ProcessTaskCreateBulk) ExecX(ctx context.Context) {
-	if err := ptcb.Exec(ctx); err != nil {
+func (_c *ProcessTaskCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

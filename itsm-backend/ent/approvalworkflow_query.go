@@ -31,44 +31,44 @@ type ApprovalWorkflowQuery struct {
 }
 
 // Where adds a new predicate for the ApprovalWorkflowQuery builder.
-func (awq *ApprovalWorkflowQuery) Where(ps ...predicate.ApprovalWorkflow) *ApprovalWorkflowQuery {
-	awq.predicates = append(awq.predicates, ps...)
-	return awq
+func (_q *ApprovalWorkflowQuery) Where(ps ...predicate.ApprovalWorkflow) *ApprovalWorkflowQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (awq *ApprovalWorkflowQuery) Limit(limit int) *ApprovalWorkflowQuery {
-	awq.ctx.Limit = &limit
-	return awq
+func (_q *ApprovalWorkflowQuery) Limit(limit int) *ApprovalWorkflowQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (awq *ApprovalWorkflowQuery) Offset(offset int) *ApprovalWorkflowQuery {
-	awq.ctx.Offset = &offset
-	return awq
+func (_q *ApprovalWorkflowQuery) Offset(offset int) *ApprovalWorkflowQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (awq *ApprovalWorkflowQuery) Unique(unique bool) *ApprovalWorkflowQuery {
-	awq.ctx.Unique = &unique
-	return awq
+func (_q *ApprovalWorkflowQuery) Unique(unique bool) *ApprovalWorkflowQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (awq *ApprovalWorkflowQuery) Order(o ...approvalworkflow.OrderOption) *ApprovalWorkflowQuery {
-	awq.order = append(awq.order, o...)
-	return awq
+func (_q *ApprovalWorkflowQuery) Order(o ...approvalworkflow.OrderOption) *ApprovalWorkflowQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryApprovalRecords chains the current query on the "approval_records" edge.
-func (awq *ApprovalWorkflowQuery) QueryApprovalRecords() *ApprovalRecordQuery {
-	query := (&ApprovalRecordClient{config: awq.config}).Query()
+func (_q *ApprovalWorkflowQuery) QueryApprovalRecords() *ApprovalRecordQuery {
+	query := (&ApprovalRecordClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := awq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := awq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (awq *ApprovalWorkflowQuery) QueryApprovalRecords() *ApprovalRecordQuery {
 			sqlgraph.To(approvalrecord.Table, approvalrecord.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, approvalworkflow.ApprovalRecordsTable, approvalworkflow.ApprovalRecordsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(awq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -85,8 +85,8 @@ func (awq *ApprovalWorkflowQuery) QueryApprovalRecords() *ApprovalRecordQuery {
 
 // First returns the first ApprovalWorkflow entity from the query.
 // Returns a *NotFoundError when no ApprovalWorkflow was found.
-func (awq *ApprovalWorkflowQuery) First(ctx context.Context) (*ApprovalWorkflow, error) {
-	nodes, err := awq.Limit(1).All(setContextOp(ctx, awq.ctx, ent.OpQueryFirst))
+func (_q *ApprovalWorkflowQuery) First(ctx context.Context) (*ApprovalWorkflow, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func (awq *ApprovalWorkflowQuery) First(ctx context.Context) (*ApprovalWorkflow,
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) FirstX(ctx context.Context) *ApprovalWorkflow {
-	node, err := awq.First(ctx)
+func (_q *ApprovalWorkflowQuery) FirstX(ctx context.Context) *ApprovalWorkflow {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -107,9 +107,9 @@ func (awq *ApprovalWorkflowQuery) FirstX(ctx context.Context) *ApprovalWorkflow 
 
 // FirstID returns the first ApprovalWorkflow ID from the query.
 // Returns a *NotFoundError when no ApprovalWorkflow ID was found.
-func (awq *ApprovalWorkflowQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ApprovalWorkflowQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = awq.Limit(1).IDs(setContextOp(ctx, awq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -120,8 +120,8 @@ func (awq *ApprovalWorkflowQuery) FirstID(ctx context.Context) (id int, err erro
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) FirstIDX(ctx context.Context) int {
-	id, err := awq.FirstID(ctx)
+func (_q *ApprovalWorkflowQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,8 +131,8 @@ func (awq *ApprovalWorkflowQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ApprovalWorkflow entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ApprovalWorkflow entity is found.
 // Returns a *NotFoundError when no ApprovalWorkflow entities are found.
-func (awq *ApprovalWorkflowQuery) Only(ctx context.Context) (*ApprovalWorkflow, error) {
-	nodes, err := awq.Limit(2).All(setContextOp(ctx, awq.ctx, ent.OpQueryOnly))
+func (_q *ApprovalWorkflowQuery) Only(ctx context.Context) (*ApprovalWorkflow, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,8 @@ func (awq *ApprovalWorkflowQuery) Only(ctx context.Context) (*ApprovalWorkflow, 
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) OnlyX(ctx context.Context) *ApprovalWorkflow {
-	node, err := awq.Only(ctx)
+func (_q *ApprovalWorkflowQuery) OnlyX(ctx context.Context) *ApprovalWorkflow {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -158,9 +158,9 @@ func (awq *ApprovalWorkflowQuery) OnlyX(ctx context.Context) *ApprovalWorkflow {
 // OnlyID is like Only, but returns the only ApprovalWorkflow ID in the query.
 // Returns a *NotSingularError when more than one ApprovalWorkflow ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (awq *ApprovalWorkflowQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ApprovalWorkflowQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = awq.Limit(2).IDs(setContextOp(ctx, awq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -175,8 +175,8 @@ func (awq *ApprovalWorkflowQuery) OnlyID(ctx context.Context) (id int, err error
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) OnlyIDX(ctx context.Context) int {
-	id, err := awq.OnlyID(ctx)
+func (_q *ApprovalWorkflowQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,18 +184,18 @@ func (awq *ApprovalWorkflowQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ApprovalWorkflows.
-func (awq *ApprovalWorkflowQuery) All(ctx context.Context) ([]*ApprovalWorkflow, error) {
-	ctx = setContextOp(ctx, awq.ctx, ent.OpQueryAll)
-	if err := awq.prepareQuery(ctx); err != nil {
+func (_q *ApprovalWorkflowQuery) All(ctx context.Context) ([]*ApprovalWorkflow, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ApprovalWorkflow, *ApprovalWorkflowQuery]()
-	return withInterceptors[[]*ApprovalWorkflow](ctx, awq, qr, awq.inters)
+	return withInterceptors[[]*ApprovalWorkflow](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) AllX(ctx context.Context) []*ApprovalWorkflow {
-	nodes, err := awq.All(ctx)
+func (_q *ApprovalWorkflowQuery) AllX(ctx context.Context) []*ApprovalWorkflow {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -203,20 +203,20 @@ func (awq *ApprovalWorkflowQuery) AllX(ctx context.Context) []*ApprovalWorkflow 
 }
 
 // IDs executes the query and returns a list of ApprovalWorkflow IDs.
-func (awq *ApprovalWorkflowQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if awq.ctx.Unique == nil && awq.path != nil {
-		awq.Unique(true)
+func (_q *ApprovalWorkflowQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, awq.ctx, ent.OpQueryIDs)
-	if err = awq.Select(approvalworkflow.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(approvalworkflow.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) IDsX(ctx context.Context) []int {
-	ids, err := awq.IDs(ctx)
+func (_q *ApprovalWorkflowQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -224,17 +224,17 @@ func (awq *ApprovalWorkflowQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (awq *ApprovalWorkflowQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, awq.ctx, ent.OpQueryCount)
-	if err := awq.prepareQuery(ctx); err != nil {
+func (_q *ApprovalWorkflowQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, awq, querierCount[*ApprovalWorkflowQuery](), awq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ApprovalWorkflowQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) CountX(ctx context.Context) int {
-	count, err := awq.Count(ctx)
+func (_q *ApprovalWorkflowQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -242,9 +242,9 @@ func (awq *ApprovalWorkflowQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (awq *ApprovalWorkflowQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, awq.ctx, ent.OpQueryExist)
-	switch _, err := awq.FirstID(ctx); {
+func (_q *ApprovalWorkflowQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -255,8 +255,8 @@ func (awq *ApprovalWorkflowQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (awq *ApprovalWorkflowQuery) ExistX(ctx context.Context) bool {
-	exist, err := awq.Exist(ctx)
+func (_q *ApprovalWorkflowQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,32 +265,32 @@ func (awq *ApprovalWorkflowQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ApprovalWorkflowQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (awq *ApprovalWorkflowQuery) Clone() *ApprovalWorkflowQuery {
-	if awq == nil {
+func (_q *ApprovalWorkflowQuery) Clone() *ApprovalWorkflowQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ApprovalWorkflowQuery{
-		config:              awq.config,
-		ctx:                 awq.ctx.Clone(),
-		order:               append([]approvalworkflow.OrderOption{}, awq.order...),
-		inters:              append([]Interceptor{}, awq.inters...),
-		predicates:          append([]predicate.ApprovalWorkflow{}, awq.predicates...),
-		withApprovalRecords: awq.withApprovalRecords.Clone(),
+		config:              _q.config,
+		ctx:                 _q.ctx.Clone(),
+		order:               append([]approvalworkflow.OrderOption{}, _q.order...),
+		inters:              append([]Interceptor{}, _q.inters...),
+		predicates:          append([]predicate.ApprovalWorkflow{}, _q.predicates...),
+		withApprovalRecords: _q.withApprovalRecords.Clone(),
 		// clone intermediate query.
-		sql:  awq.sql.Clone(),
-		path: awq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithApprovalRecords tells the query-builder to eager-load the nodes that are connected to
 // the "approval_records" edge. The optional arguments are used to configure the query builder of the edge.
-func (awq *ApprovalWorkflowQuery) WithApprovalRecords(opts ...func(*ApprovalRecordQuery)) *ApprovalWorkflowQuery {
-	query := (&ApprovalRecordClient{config: awq.config}).Query()
+func (_q *ApprovalWorkflowQuery) WithApprovalRecords(opts ...func(*ApprovalRecordQuery)) *ApprovalWorkflowQuery {
+	query := (&ApprovalRecordClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	awq.withApprovalRecords = query
-	return awq
+	_q.withApprovalRecords = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -307,10 +307,10 @@ func (awq *ApprovalWorkflowQuery) WithApprovalRecords(opts ...func(*ApprovalReco
 //		GroupBy(approvalworkflow.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (awq *ApprovalWorkflowQuery) GroupBy(field string, fields ...string) *ApprovalWorkflowGroupBy {
-	awq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ApprovalWorkflowGroupBy{build: awq}
-	grbuild.flds = &awq.ctx.Fields
+func (_q *ApprovalWorkflowQuery) GroupBy(field string, fields ...string) *ApprovalWorkflowGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ApprovalWorkflowGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = approvalworkflow.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -328,58 +328,58 @@ func (awq *ApprovalWorkflowQuery) GroupBy(field string, fields ...string) *Appro
 //	client.ApprovalWorkflow.Query().
 //		Select(approvalworkflow.FieldName).
 //		Scan(ctx, &v)
-func (awq *ApprovalWorkflowQuery) Select(fields ...string) *ApprovalWorkflowSelect {
-	awq.ctx.Fields = append(awq.ctx.Fields, fields...)
-	sbuild := &ApprovalWorkflowSelect{ApprovalWorkflowQuery: awq}
+func (_q *ApprovalWorkflowQuery) Select(fields ...string) *ApprovalWorkflowSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ApprovalWorkflowSelect{ApprovalWorkflowQuery: _q}
 	sbuild.label = approvalworkflow.Label
-	sbuild.flds, sbuild.scan = &awq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ApprovalWorkflowSelect configured with the given aggregations.
-func (awq *ApprovalWorkflowQuery) Aggregate(fns ...AggregateFunc) *ApprovalWorkflowSelect {
-	return awq.Select().Aggregate(fns...)
+func (_q *ApprovalWorkflowQuery) Aggregate(fns ...AggregateFunc) *ApprovalWorkflowSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (awq *ApprovalWorkflowQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range awq.inters {
+func (_q *ApprovalWorkflowQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, awq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range awq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !approvalworkflow.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if awq.path != nil {
-		prev, err := awq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		awq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (awq *ApprovalWorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApprovalWorkflow, error) {
+func (_q *ApprovalWorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApprovalWorkflow, error) {
 	var (
 		nodes       = []*ApprovalWorkflow{}
-		_spec       = awq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			awq.withApprovalRecords != nil,
+			_q.withApprovalRecords != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ApprovalWorkflow).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ApprovalWorkflow{config: awq.config}
+		node := &ApprovalWorkflow{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -387,14 +387,14 @@ func (awq *ApprovalWorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, awq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := awq.withApprovalRecords; query != nil {
-		if err := awq.loadApprovalRecords(ctx, query, nodes,
+	if query := _q.withApprovalRecords; query != nil {
+		if err := _q.loadApprovalRecords(ctx, query, nodes,
 			func(n *ApprovalWorkflow) { n.Edges.ApprovalRecords = []*ApprovalRecord{} },
 			func(n *ApprovalWorkflow, e *ApprovalRecord) {
 				n.Edges.ApprovalRecords = append(n.Edges.ApprovalRecords, e)
@@ -405,7 +405,7 @@ func (awq *ApprovalWorkflowQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	return nodes, nil
 }
 
-func (awq *ApprovalWorkflowQuery) loadApprovalRecords(ctx context.Context, query *ApprovalRecordQuery, nodes []*ApprovalWorkflow, init func(*ApprovalWorkflow), assign func(*ApprovalWorkflow, *ApprovalRecord)) error {
+func (_q *ApprovalWorkflowQuery) loadApprovalRecords(ctx context.Context, query *ApprovalRecordQuery, nodes []*ApprovalWorkflow, init func(*ApprovalWorkflow), assign func(*ApprovalWorkflow, *ApprovalRecord)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ApprovalWorkflow)
 	for i := range nodes {
@@ -436,24 +436,24 @@ func (awq *ApprovalWorkflowQuery) loadApprovalRecords(ctx context.Context, query
 	return nil
 }
 
-func (awq *ApprovalWorkflowQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := awq.querySpec()
-	_spec.Node.Columns = awq.ctx.Fields
-	if len(awq.ctx.Fields) > 0 {
-		_spec.Unique = awq.ctx.Unique != nil && *awq.ctx.Unique
+func (_q *ApprovalWorkflowQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, awq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (awq *ApprovalWorkflowQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ApprovalWorkflowQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(approvalworkflow.Table, approvalworkflow.Columns, sqlgraph.NewFieldSpec(approvalworkflow.FieldID, field.TypeInt))
-	_spec.From = awq.sql
-	if unique := awq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if awq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := awq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, approvalworkflow.FieldID)
 		for i := range fields {
@@ -462,20 +462,20 @@ func (awq *ApprovalWorkflowQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := awq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := awq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := awq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := awq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -485,33 +485,33 @@ func (awq *ApprovalWorkflowQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (awq *ApprovalWorkflowQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(awq.driver.Dialect())
+func (_q *ApprovalWorkflowQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(approvalworkflow.Table)
-	columns := awq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = approvalworkflow.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if awq.sql != nil {
-		selector = awq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if awq.ctx.Unique != nil && *awq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range awq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range awq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := awq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := awq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -524,41 +524,41 @@ type ApprovalWorkflowGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (awgb *ApprovalWorkflowGroupBy) Aggregate(fns ...AggregateFunc) *ApprovalWorkflowGroupBy {
-	awgb.fns = append(awgb.fns, fns...)
-	return awgb
+func (_g *ApprovalWorkflowGroupBy) Aggregate(fns ...AggregateFunc) *ApprovalWorkflowGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (awgb *ApprovalWorkflowGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, awgb.build.ctx, ent.OpQueryGroupBy)
-	if err := awgb.build.prepareQuery(ctx); err != nil {
+func (_g *ApprovalWorkflowGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ApprovalWorkflowQuery, *ApprovalWorkflowGroupBy](ctx, awgb.build, awgb, awgb.build.inters, v)
+	return scanWithInterceptors[*ApprovalWorkflowQuery, *ApprovalWorkflowGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (awgb *ApprovalWorkflowGroupBy) sqlScan(ctx context.Context, root *ApprovalWorkflowQuery, v any) error {
+func (_g *ApprovalWorkflowGroupBy) sqlScan(ctx context.Context, root *ApprovalWorkflowQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(awgb.fns))
-	for _, fn := range awgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*awgb.flds)+len(awgb.fns))
-		for _, f := range *awgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*awgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := awgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -572,27 +572,27 @@ type ApprovalWorkflowSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (aws *ApprovalWorkflowSelect) Aggregate(fns ...AggregateFunc) *ApprovalWorkflowSelect {
-	aws.fns = append(aws.fns, fns...)
-	return aws
+func (_s *ApprovalWorkflowSelect) Aggregate(fns ...AggregateFunc) *ApprovalWorkflowSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (aws *ApprovalWorkflowSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, aws.ctx, ent.OpQuerySelect)
-	if err := aws.prepareQuery(ctx); err != nil {
+func (_s *ApprovalWorkflowSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ApprovalWorkflowQuery, *ApprovalWorkflowSelect](ctx, aws.ApprovalWorkflowQuery, aws, aws.inters, v)
+	return scanWithInterceptors[*ApprovalWorkflowQuery, *ApprovalWorkflowSelect](ctx, _s.ApprovalWorkflowQuery, _s, _s.inters, v)
 }
 
-func (aws *ApprovalWorkflowSelect) sqlScan(ctx context.Context, root *ApprovalWorkflowQuery, v any) error {
+func (_s *ApprovalWorkflowSelect) sqlScan(ctx context.Context, root *ApprovalWorkflowQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(aws.fns))
-	for _, fn := range aws.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*aws.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -600,7 +600,7 @@ func (aws *ApprovalWorkflowSelect) sqlScan(ctx context.Context, root *ApprovalWo
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := aws.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

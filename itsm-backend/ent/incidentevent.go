@@ -95,7 +95,7 @@ func (*IncidentEvent) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the IncidentEvent fields.
-func (ie *IncidentEvent) assignValues(columns []string, values []any) error {
+func (_m *IncidentEvent) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -106,48 +106,48 @@ func (ie *IncidentEvent) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ie.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case incidentevent.FieldIncidentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field incident_id", values[i])
 			} else if value.Valid {
-				ie.IncidentID = int(value.Int64)
+				_m.IncidentID = int(value.Int64)
 			}
 		case incidentevent.FieldEventType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field event_type", values[i])
 			} else if value.Valid {
-				ie.EventType = value.String
+				_m.EventType = value.String
 			}
 		case incidentevent.FieldEventName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field event_name", values[i])
 			} else if value.Valid {
-				ie.EventName = value.String
+				_m.EventName = value.String
 			}
 		case incidentevent.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				ie.Description = value.String
+				_m.Description = value.String
 			}
 		case incidentevent.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				ie.Status = value.String
+				_m.Status = value.String
 			}
 		case incidentevent.FieldSeverity:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field severity", values[i])
 			} else if value.Valid {
-				ie.Severity = value.String
+				_m.Severity = value.String
 			}
 		case incidentevent.FieldData:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field data", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ie.Data); err != nil {
+				if err := json.Unmarshal(*value, &_m.Data); err != nil {
 					return fmt.Errorf("unmarshal field data: %w", err)
 				}
 			}
@@ -155,25 +155,25 @@ func (ie *IncidentEvent) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field occurred_at", values[i])
 			} else if value.Valid {
-				ie.OccurredAt = value.Time
+				_m.OccurredAt = value.Time
 			}
 		case incidentevent.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				ie.UserID = int(value.Int64)
+				_m.UserID = int(value.Int64)
 			}
 		case incidentevent.FieldSource:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field source", values[i])
 			} else if value.Valid {
-				ie.Source = value.String
+				_m.Source = value.String
 			}
 		case incidentevent.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ie.Metadata); err != nil {
+				if err := json.Unmarshal(*value, &_m.Metadata); err != nil {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
 				}
 			}
@@ -181,22 +181,22 @@ func (ie *IncidentEvent) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ie.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case incidentevent.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ie.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case incidentevent.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ie.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ie.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -204,79 +204,79 @@ func (ie *IncidentEvent) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the IncidentEvent.
 // This includes values selected through modifiers, order, etc.
-func (ie *IncidentEvent) Value(name string) (ent.Value, error) {
-	return ie.selectValues.Get(name)
+func (_m *IncidentEvent) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryIncident queries the "incident" edge of the IncidentEvent entity.
-func (ie *IncidentEvent) QueryIncident() *IncidentQuery {
-	return NewIncidentEventClient(ie.config).QueryIncident(ie)
+func (_m *IncidentEvent) QueryIncident() *IncidentQuery {
+	return NewIncidentEventClient(_m.config).QueryIncident(_m)
 }
 
 // Update returns a builder for updating this IncidentEvent.
 // Note that you need to call IncidentEvent.Unwrap() before calling this method if this IncidentEvent
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ie *IncidentEvent) Update() *IncidentEventUpdateOne {
-	return NewIncidentEventClient(ie.config).UpdateOne(ie)
+func (_m *IncidentEvent) Update() *IncidentEventUpdateOne {
+	return NewIncidentEventClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the IncidentEvent entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ie *IncidentEvent) Unwrap() *IncidentEvent {
-	_tx, ok := ie.config.driver.(*txDriver)
+func (_m *IncidentEvent) Unwrap() *IncidentEvent {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: IncidentEvent is not a transactional entity")
 	}
-	ie.config.driver = _tx.drv
-	return ie
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ie *IncidentEvent) String() string {
+func (_m *IncidentEvent) String() string {
 	var builder strings.Builder
 	builder.WriteString("IncidentEvent(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ie.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("incident_id=")
-	builder.WriteString(fmt.Sprintf("%v", ie.IncidentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.IncidentID))
 	builder.WriteString(", ")
 	builder.WriteString("event_type=")
-	builder.WriteString(ie.EventType)
+	builder.WriteString(_m.EventType)
 	builder.WriteString(", ")
 	builder.WriteString("event_name=")
-	builder.WriteString(ie.EventName)
+	builder.WriteString(_m.EventName)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(ie.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(ie.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
-	builder.WriteString(ie.Severity)
+	builder.WriteString(_m.Severity)
 	builder.WriteString(", ")
 	builder.WriteString("data=")
-	builder.WriteString(fmt.Sprintf("%v", ie.Data))
+	builder.WriteString(fmt.Sprintf("%v", _m.Data))
 	builder.WriteString(", ")
 	builder.WriteString("occurred_at=")
-	builder.WriteString(ie.OccurredAt.Format(time.ANSIC))
+	builder.WriteString(_m.OccurredAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", ie.UserID))
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("source=")
-	builder.WriteString(ie.Source)
+	builder.WriteString(_m.Source)
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
-	builder.WriteString(fmt.Sprintf("%v", ie.Metadata))
+	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ie.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ie.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ie.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -58,7 +58,7 @@ func (*SystemConfig) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the SystemConfig fields.
-func (sc *SystemConfig) assignValues(columns []string, values []any) error {
+func (_m *SystemConfig) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -69,63 +69,63 @@ func (sc *SystemConfig) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sc.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case systemconfig.FieldKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field key", values[i])
 			} else if value.Valid {
-				sc.Key = value.String
+				_m.Key = value.String
 			}
 		case systemconfig.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field value", values[i])
 			} else if value.Valid {
-				sc.Value = value.String
+				_m.Value = value.String
 			}
 		case systemconfig.FieldValueType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field value_type", values[i])
 			} else if value.Valid {
-				sc.ValueType = value.String
+				_m.ValueType = value.String
 			}
 		case systemconfig.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				sc.Category = value.String
+				_m.Category = value.String
 			}
 		case systemconfig.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				sc.Description = value.String
+				_m.Description = value.String
 			}
 		case systemconfig.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				sc.CreatedBy = value.String
+				_m.CreatedBy = value.String
 			}
 		case systemconfig.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sc.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case systemconfig.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sc.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case systemconfig.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				sc.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			sc.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -133,59 +133,59 @@ func (sc *SystemConfig) assignValues(columns []string, values []any) error {
 
 // GetValue returns the ent.Value that was dynamically selected and assigned to the SystemConfig.
 // This includes values selected through modifiers, order, etc.
-func (sc *SystemConfig) GetValue(name string) (ent.Value, error) {
-	return sc.selectValues.Get(name)
+func (_m *SystemConfig) GetValue(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this SystemConfig.
 // Note that you need to call SystemConfig.Unwrap() before calling this method if this SystemConfig
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sc *SystemConfig) Update() *SystemConfigUpdateOne {
-	return NewSystemConfigClient(sc.config).UpdateOne(sc)
+func (_m *SystemConfig) Update() *SystemConfigUpdateOne {
+	return NewSystemConfigClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the SystemConfig entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sc *SystemConfig) Unwrap() *SystemConfig {
-	_tx, ok := sc.config.driver.(*txDriver)
+func (_m *SystemConfig) Unwrap() *SystemConfig {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: SystemConfig is not a transactional entity")
 	}
-	sc.config.driver = _tx.drv
-	return sc
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sc *SystemConfig) String() string {
+func (_m *SystemConfig) String() string {
 	var builder strings.Builder
 	builder.WriteString("SystemConfig(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sc.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("key=")
-	builder.WriteString(sc.Key)
+	builder.WriteString(_m.Key)
 	builder.WriteString(", ")
 	builder.WriteString("value=")
-	builder.WriteString(sc.Value)
+	builder.WriteString(_m.Value)
 	builder.WriteString(", ")
 	builder.WriteString("value_type=")
-	builder.WriteString(sc.ValueType)
+	builder.WriteString(_m.ValueType)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(sc.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(sc.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(sc.CreatedBy)
+	builder.WriteString(_m.CreatedBy)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sc.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sc.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(sc.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

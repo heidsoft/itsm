@@ -28,40 +28,40 @@ type ServiceRequestQuery struct {
 }
 
 // Where adds a new predicate for the ServiceRequestQuery builder.
-func (srq *ServiceRequestQuery) Where(ps ...predicate.ServiceRequest) *ServiceRequestQuery {
-	srq.predicates = append(srq.predicates, ps...)
-	return srq
+func (_q *ServiceRequestQuery) Where(ps ...predicate.ServiceRequest) *ServiceRequestQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (srq *ServiceRequestQuery) Limit(limit int) *ServiceRequestQuery {
-	srq.ctx.Limit = &limit
-	return srq
+func (_q *ServiceRequestQuery) Limit(limit int) *ServiceRequestQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (srq *ServiceRequestQuery) Offset(offset int) *ServiceRequestQuery {
-	srq.ctx.Offset = &offset
-	return srq
+func (_q *ServiceRequestQuery) Offset(offset int) *ServiceRequestQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (srq *ServiceRequestQuery) Unique(unique bool) *ServiceRequestQuery {
-	srq.ctx.Unique = &unique
-	return srq
+func (_q *ServiceRequestQuery) Unique(unique bool) *ServiceRequestQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (srq *ServiceRequestQuery) Order(o ...servicerequest.OrderOption) *ServiceRequestQuery {
-	srq.order = append(srq.order, o...)
-	return srq
+func (_q *ServiceRequestQuery) Order(o ...servicerequest.OrderOption) *ServiceRequestQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // First returns the first ServiceRequest entity from the query.
 // Returns a *NotFoundError when no ServiceRequest was found.
-func (srq *ServiceRequestQuery) First(ctx context.Context) (*ServiceRequest, error) {
-	nodes, err := srq.Limit(1).All(setContextOp(ctx, srq.ctx, ent.OpQueryFirst))
+func (_q *ServiceRequestQuery) First(ctx context.Context) (*ServiceRequest, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (srq *ServiceRequestQuery) First(ctx context.Context) (*ServiceRequest, err
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (srq *ServiceRequestQuery) FirstX(ctx context.Context) *ServiceRequest {
-	node, err := srq.First(ctx)
+func (_q *ServiceRequestQuery) FirstX(ctx context.Context) *ServiceRequest {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -82,9 +82,9 @@ func (srq *ServiceRequestQuery) FirstX(ctx context.Context) *ServiceRequest {
 
 // FirstID returns the first ServiceRequest ID from the query.
 // Returns a *NotFoundError when no ServiceRequest ID was found.
-func (srq *ServiceRequestQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ServiceRequestQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = srq.Limit(1).IDs(setContextOp(ctx, srq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -95,8 +95,8 @@ func (srq *ServiceRequestQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (srq *ServiceRequestQuery) FirstIDX(ctx context.Context) int {
-	id, err := srq.FirstID(ctx)
+func (_q *ServiceRequestQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,8 +106,8 @@ func (srq *ServiceRequestQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ServiceRequest entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ServiceRequest entity is found.
 // Returns a *NotFoundError when no ServiceRequest entities are found.
-func (srq *ServiceRequestQuery) Only(ctx context.Context) (*ServiceRequest, error) {
-	nodes, err := srq.Limit(2).All(setContextOp(ctx, srq.ctx, ent.OpQueryOnly))
+func (_q *ServiceRequestQuery) Only(ctx context.Context) (*ServiceRequest, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func (srq *ServiceRequestQuery) Only(ctx context.Context) (*ServiceRequest, erro
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (srq *ServiceRequestQuery) OnlyX(ctx context.Context) *ServiceRequest {
-	node, err := srq.Only(ctx)
+func (_q *ServiceRequestQuery) OnlyX(ctx context.Context) *ServiceRequest {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,9 +133,9 @@ func (srq *ServiceRequestQuery) OnlyX(ctx context.Context) *ServiceRequest {
 // OnlyID is like Only, but returns the only ServiceRequest ID in the query.
 // Returns a *NotSingularError when more than one ServiceRequest ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (srq *ServiceRequestQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ServiceRequestQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = srq.Limit(2).IDs(setContextOp(ctx, srq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -150,8 +150,8 @@ func (srq *ServiceRequestQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (srq *ServiceRequestQuery) OnlyIDX(ctx context.Context) int {
-	id, err := srq.OnlyID(ctx)
+func (_q *ServiceRequestQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,18 +159,18 @@ func (srq *ServiceRequestQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ServiceRequests.
-func (srq *ServiceRequestQuery) All(ctx context.Context) ([]*ServiceRequest, error) {
-	ctx = setContextOp(ctx, srq.ctx, ent.OpQueryAll)
-	if err := srq.prepareQuery(ctx); err != nil {
+func (_q *ServiceRequestQuery) All(ctx context.Context) ([]*ServiceRequest, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ServiceRequest, *ServiceRequestQuery]()
-	return withInterceptors[[]*ServiceRequest](ctx, srq, qr, srq.inters)
+	return withInterceptors[[]*ServiceRequest](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (srq *ServiceRequestQuery) AllX(ctx context.Context) []*ServiceRequest {
-	nodes, err := srq.All(ctx)
+func (_q *ServiceRequestQuery) AllX(ctx context.Context) []*ServiceRequest {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -178,20 +178,20 @@ func (srq *ServiceRequestQuery) AllX(ctx context.Context) []*ServiceRequest {
 }
 
 // IDs executes the query and returns a list of ServiceRequest IDs.
-func (srq *ServiceRequestQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if srq.ctx.Unique == nil && srq.path != nil {
-		srq.Unique(true)
+func (_q *ServiceRequestQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, srq.ctx, ent.OpQueryIDs)
-	if err = srq.Select(servicerequest.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(servicerequest.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (srq *ServiceRequestQuery) IDsX(ctx context.Context) []int {
-	ids, err := srq.IDs(ctx)
+func (_q *ServiceRequestQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -199,17 +199,17 @@ func (srq *ServiceRequestQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (srq *ServiceRequestQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, srq.ctx, ent.OpQueryCount)
-	if err := srq.prepareQuery(ctx); err != nil {
+func (_q *ServiceRequestQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, srq, querierCount[*ServiceRequestQuery](), srq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ServiceRequestQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (srq *ServiceRequestQuery) CountX(ctx context.Context) int {
-	count, err := srq.Count(ctx)
+func (_q *ServiceRequestQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -217,9 +217,9 @@ func (srq *ServiceRequestQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (srq *ServiceRequestQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, srq.ctx, ent.OpQueryExist)
-	switch _, err := srq.FirstID(ctx); {
+func (_q *ServiceRequestQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -230,8 +230,8 @@ func (srq *ServiceRequestQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (srq *ServiceRequestQuery) ExistX(ctx context.Context) bool {
-	exist, err := srq.Exist(ctx)
+func (_q *ServiceRequestQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,19 +240,19 @@ func (srq *ServiceRequestQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ServiceRequestQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (srq *ServiceRequestQuery) Clone() *ServiceRequestQuery {
-	if srq == nil {
+func (_q *ServiceRequestQuery) Clone() *ServiceRequestQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ServiceRequestQuery{
-		config:     srq.config,
-		ctx:        srq.ctx.Clone(),
-		order:      append([]servicerequest.OrderOption{}, srq.order...),
-		inters:     append([]Interceptor{}, srq.inters...),
-		predicates: append([]predicate.ServiceRequest{}, srq.predicates...),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]servicerequest.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.ServiceRequest{}, _q.predicates...),
 		// clone intermediate query.
-		sql:  srq.sql.Clone(),
-		path: srq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -270,10 +270,10 @@ func (srq *ServiceRequestQuery) Clone() *ServiceRequestQuery {
 //		GroupBy(servicerequest.FieldTenantID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (srq *ServiceRequestQuery) GroupBy(field string, fields ...string) *ServiceRequestGroupBy {
-	srq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ServiceRequestGroupBy{build: srq}
-	grbuild.flds = &srq.ctx.Fields
+func (_q *ServiceRequestQuery) GroupBy(field string, fields ...string) *ServiceRequestGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ServiceRequestGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = servicerequest.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -291,62 +291,62 @@ func (srq *ServiceRequestQuery) GroupBy(field string, fields ...string) *Service
 //	client.ServiceRequest.Query().
 //		Select(servicerequest.FieldTenantID).
 //		Scan(ctx, &v)
-func (srq *ServiceRequestQuery) Select(fields ...string) *ServiceRequestSelect {
-	srq.ctx.Fields = append(srq.ctx.Fields, fields...)
-	sbuild := &ServiceRequestSelect{ServiceRequestQuery: srq}
+func (_q *ServiceRequestQuery) Select(fields ...string) *ServiceRequestSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ServiceRequestSelect{ServiceRequestQuery: _q}
 	sbuild.label = servicerequest.Label
-	sbuild.flds, sbuild.scan = &srq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ServiceRequestSelect configured with the given aggregations.
-func (srq *ServiceRequestQuery) Aggregate(fns ...AggregateFunc) *ServiceRequestSelect {
-	return srq.Select().Aggregate(fns...)
+func (_q *ServiceRequestQuery) Aggregate(fns ...AggregateFunc) *ServiceRequestSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (srq *ServiceRequestQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range srq.inters {
+func (_q *ServiceRequestQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, srq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range srq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !servicerequest.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if srq.path != nil {
-		prev, err := srq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		srq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (srq *ServiceRequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ServiceRequest, error) {
+func (_q *ServiceRequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ServiceRequest, error) {
 	var (
 		nodes = []*ServiceRequest{}
-		_spec = srq.querySpec()
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ServiceRequest).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ServiceRequest{config: srq.config}
+		node := &ServiceRequest{config: _q.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, srq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
@@ -355,24 +355,24 @@ func (srq *ServiceRequestQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
-func (srq *ServiceRequestQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := srq.querySpec()
-	_spec.Node.Columns = srq.ctx.Fields
-	if len(srq.ctx.Fields) > 0 {
-		_spec.Unique = srq.ctx.Unique != nil && *srq.ctx.Unique
+func (_q *ServiceRequestQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, srq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (srq *ServiceRequestQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ServiceRequestQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(servicerequest.Table, servicerequest.Columns, sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt))
-	_spec.From = srq.sql
-	if unique := srq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if srq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := srq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, servicerequest.FieldID)
 		for i := range fields {
@@ -381,20 +381,20 @@ func (srq *ServiceRequestQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := srq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := srq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := srq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := srq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -404,33 +404,33 @@ func (srq *ServiceRequestQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (srq *ServiceRequestQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(srq.driver.Dialect())
+func (_q *ServiceRequestQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(servicerequest.Table)
-	columns := srq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = servicerequest.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if srq.sql != nil {
-		selector = srq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if srq.ctx.Unique != nil && *srq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range srq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range srq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := srq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := srq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -443,41 +443,41 @@ type ServiceRequestGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (srgb *ServiceRequestGroupBy) Aggregate(fns ...AggregateFunc) *ServiceRequestGroupBy {
-	srgb.fns = append(srgb.fns, fns...)
-	return srgb
+func (_g *ServiceRequestGroupBy) Aggregate(fns ...AggregateFunc) *ServiceRequestGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (srgb *ServiceRequestGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, srgb.build.ctx, ent.OpQueryGroupBy)
-	if err := srgb.build.prepareQuery(ctx); err != nil {
+func (_g *ServiceRequestGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ServiceRequestQuery, *ServiceRequestGroupBy](ctx, srgb.build, srgb, srgb.build.inters, v)
+	return scanWithInterceptors[*ServiceRequestQuery, *ServiceRequestGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (srgb *ServiceRequestGroupBy) sqlScan(ctx context.Context, root *ServiceRequestQuery, v any) error {
+func (_g *ServiceRequestGroupBy) sqlScan(ctx context.Context, root *ServiceRequestQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(srgb.fns))
-	for _, fn := range srgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*srgb.flds)+len(srgb.fns))
-		for _, f := range *srgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*srgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := srgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -491,27 +491,27 @@ type ServiceRequestSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (srs *ServiceRequestSelect) Aggregate(fns ...AggregateFunc) *ServiceRequestSelect {
-	srs.fns = append(srs.fns, fns...)
-	return srs
+func (_s *ServiceRequestSelect) Aggregate(fns ...AggregateFunc) *ServiceRequestSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (srs *ServiceRequestSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, srs.ctx, ent.OpQuerySelect)
-	if err := srs.prepareQuery(ctx); err != nil {
+func (_s *ServiceRequestSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ServiceRequestQuery, *ServiceRequestSelect](ctx, srs.ServiceRequestQuery, srs, srs.inters, v)
+	return scanWithInterceptors[*ServiceRequestQuery, *ServiceRequestSelect](ctx, _s.ServiceRequestQuery, _s, _s.inters, v)
 }
 
-func (srs *ServiceRequestSelect) sqlScan(ctx context.Context, root *ServiceRequestQuery, v any) error {
+func (_s *ServiceRequestSelect) sqlScan(ctx context.Context, root *ServiceRequestQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(srs.fns))
-	for _, fn := range srs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*srs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -519,7 +519,7 @@ func (srs *ServiceRequestSelect) sqlScan(ctx context.Context, root *ServiceReque
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := srs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

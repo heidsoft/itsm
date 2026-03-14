@@ -138,7 +138,7 @@ func (*ProcessInstance) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ProcessInstance fields.
-func (pi *ProcessInstance) assignValues(columns []string, values []any) error {
+func (_m *ProcessInstance) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -149,54 +149,54 @@ func (pi *ProcessInstance) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pi.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case processinstance.FieldProcessInstanceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field process_instance_id", values[i])
 			} else if value.Valid {
-				pi.ProcessInstanceID = value.String
+				_m.ProcessInstanceID = value.String
 			}
 		case processinstance.FieldBusinessKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field business_key", values[i])
 			} else if value.Valid {
-				pi.BusinessKey = value.String
+				_m.BusinessKey = value.String
 			}
 		case processinstance.FieldProcessDefinitionKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field process_definition_key", values[i])
 			} else if value.Valid {
-				pi.ProcessDefinitionKey = value.String
+				_m.ProcessDefinitionKey = value.String
 			}
 		case processinstance.FieldProcessDefinitionID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_definition_id", values[i])
 			} else if value.Valid {
-				pi.ProcessDefinitionID = int(value.Int64)
+				_m.ProcessDefinitionID = int(value.Int64)
 			}
 		case processinstance.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				pi.Status = value.String
+				_m.Status = value.String
 			}
 		case processinstance.FieldCurrentActivityID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field current_activity_id", values[i])
 			} else if value.Valid {
-				pi.CurrentActivityID = value.String
+				_m.CurrentActivityID = value.String
 			}
 		case processinstance.FieldCurrentActivityName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field current_activity_name", values[i])
 			} else if value.Valid {
-				pi.CurrentActivityName = value.String
+				_m.CurrentActivityName = value.String
 			}
 		case processinstance.FieldVariables:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field variables", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pi.Variables); err != nil {
+				if err := json.Unmarshal(*value, &_m.Variables); err != nil {
 					return fmt.Errorf("unmarshal field variables: %w", err)
 				}
 			}
@@ -204,55 +204,55 @@ func (pi *ProcessInstance) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field start_time", values[i])
 			} else if value.Valid {
-				pi.StartTime = value.Time
+				_m.StartTime = value.Time
 			}
 		case processinstance.FieldEndTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field end_time", values[i])
 			} else if value.Valid {
-				pi.EndTime = value.Time
+				_m.EndTime = value.Time
 			}
 		case processinstance.FieldSuspendedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field suspended_time", values[i])
 			} else if value.Valid {
-				pi.SuspendedTime = value.Time
+				_m.SuspendedTime = value.Time
 			}
 		case processinstance.FieldSuspendedReason:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field suspended_reason", values[i])
 			} else if value.Valid {
-				pi.SuspendedReason = value.String
+				_m.SuspendedReason = value.String
 			}
 		case processinstance.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pi.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case processinstance.FieldInitiator:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field initiator", values[i])
 			} else if value.Valid {
-				pi.Initiator = value.String
+				_m.Initiator = value.String
 			}
 		case processinstance.FieldParentProcessInstanceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_process_instance_id", values[i])
 			} else if value.Valid {
-				pi.ParentProcessInstanceID = value.String
+				_m.ParentProcessInstanceID = value.String
 			}
 		case processinstance.FieldRootProcessInstanceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field root_process_instance_id", values[i])
 			} else if value.Valid {
-				pi.RootProcessInstanceID = value.String
+				_m.RootProcessInstanceID = value.String
 			}
 		case processinstance.FieldStateSnapshot:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field state_snapshot", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pi.StateSnapshot); err != nil {
+				if err := json.Unmarshal(*value, &_m.StateSnapshot); err != nil {
 					return fmt.Errorf("unmarshal field state_snapshot: %w", err)
 				}
 			}
@@ -260,16 +260,16 @@ func (pi *ProcessInstance) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pi.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case processinstance.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pi.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			pi.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -277,109 +277,109 @@ func (pi *ProcessInstance) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ProcessInstance.
 // This includes values selected through modifiers, order, etc.
-func (pi *ProcessInstance) Value(name string) (ent.Value, error) {
-	return pi.selectValues.Get(name)
+func (_m *ProcessInstance) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProcessTasks queries the "process_tasks" edge of the ProcessInstance entity.
-func (pi *ProcessInstance) QueryProcessTasks() *ProcessTaskQuery {
-	return NewProcessInstanceClient(pi.config).QueryProcessTasks(pi)
+func (_m *ProcessInstance) QueryProcessTasks() *ProcessTaskQuery {
+	return NewProcessInstanceClient(_m.config).QueryProcessTasks(_m)
 }
 
 // QueryProcessVariables queries the "process_variables" edge of the ProcessInstance entity.
-func (pi *ProcessInstance) QueryProcessVariables() *ProcessVariableQuery {
-	return NewProcessInstanceClient(pi.config).QueryProcessVariables(pi)
+func (_m *ProcessInstance) QueryProcessVariables() *ProcessVariableQuery {
+	return NewProcessInstanceClient(_m.config).QueryProcessVariables(_m)
 }
 
 // QueryExecutionHistory queries the "execution_history" edge of the ProcessInstance entity.
-func (pi *ProcessInstance) QueryExecutionHistory() *ProcessExecutionHistoryQuery {
-	return NewProcessInstanceClient(pi.config).QueryExecutionHistory(pi)
+func (_m *ProcessInstance) QueryExecutionHistory() *ProcessExecutionHistoryQuery {
+	return NewProcessInstanceClient(_m.config).QueryExecutionHistory(_m)
 }
 
 // QueryDefinition queries the "definition" edge of the ProcessInstance entity.
-func (pi *ProcessInstance) QueryDefinition() *ProcessDefinitionQuery {
-	return NewProcessInstanceClient(pi.config).QueryDefinition(pi)
+func (_m *ProcessInstance) QueryDefinition() *ProcessDefinitionQuery {
+	return NewProcessInstanceClient(_m.config).QueryDefinition(_m)
 }
 
 // Update returns a builder for updating this ProcessInstance.
 // Note that you need to call ProcessInstance.Unwrap() before calling this method if this ProcessInstance
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pi *ProcessInstance) Update() *ProcessInstanceUpdateOne {
-	return NewProcessInstanceClient(pi.config).UpdateOne(pi)
+func (_m *ProcessInstance) Update() *ProcessInstanceUpdateOne {
+	return NewProcessInstanceClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ProcessInstance entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pi *ProcessInstance) Unwrap() *ProcessInstance {
-	_tx, ok := pi.config.driver.(*txDriver)
+func (_m *ProcessInstance) Unwrap() *ProcessInstance {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ProcessInstance is not a transactional entity")
 	}
-	pi.config.driver = _tx.drv
-	return pi
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pi *ProcessInstance) String() string {
+func (_m *ProcessInstance) String() string {
 	var builder strings.Builder
 	builder.WriteString("ProcessInstance(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pi.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("process_instance_id=")
-	builder.WriteString(pi.ProcessInstanceID)
+	builder.WriteString(_m.ProcessInstanceID)
 	builder.WriteString(", ")
 	builder.WriteString("business_key=")
-	builder.WriteString(pi.BusinessKey)
+	builder.WriteString(_m.BusinessKey)
 	builder.WriteString(", ")
 	builder.WriteString("process_definition_key=")
-	builder.WriteString(pi.ProcessDefinitionKey)
+	builder.WriteString(_m.ProcessDefinitionKey)
 	builder.WriteString(", ")
 	builder.WriteString("process_definition_id=")
-	builder.WriteString(fmt.Sprintf("%v", pi.ProcessDefinitionID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessDefinitionID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(pi.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("current_activity_id=")
-	builder.WriteString(pi.CurrentActivityID)
+	builder.WriteString(_m.CurrentActivityID)
 	builder.WriteString(", ")
 	builder.WriteString("current_activity_name=")
-	builder.WriteString(pi.CurrentActivityName)
+	builder.WriteString(_m.CurrentActivityName)
 	builder.WriteString(", ")
 	builder.WriteString("variables=")
-	builder.WriteString(fmt.Sprintf("%v", pi.Variables))
+	builder.WriteString(fmt.Sprintf("%v", _m.Variables))
 	builder.WriteString(", ")
 	builder.WriteString("start_time=")
-	builder.WriteString(pi.StartTime.Format(time.ANSIC))
+	builder.WriteString(_m.StartTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("end_time=")
-	builder.WriteString(pi.EndTime.Format(time.ANSIC))
+	builder.WriteString(_m.EndTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("suspended_time=")
-	builder.WriteString(pi.SuspendedTime.Format(time.ANSIC))
+	builder.WriteString(_m.SuspendedTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("suspended_reason=")
-	builder.WriteString(pi.SuspendedReason)
+	builder.WriteString(_m.SuspendedReason)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pi.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("initiator=")
-	builder.WriteString(pi.Initiator)
+	builder.WriteString(_m.Initiator)
 	builder.WriteString(", ")
 	builder.WriteString("parent_process_instance_id=")
-	builder.WriteString(pi.ParentProcessInstanceID)
+	builder.WriteString(_m.ParentProcessInstanceID)
 	builder.WriteString(", ")
 	builder.WriteString("root_process_instance_id=")
-	builder.WriteString(pi.RootProcessInstanceID)
+	builder.WriteString(_m.RootProcessInstanceID)
 	builder.WriteString(", ")
 	builder.WriteString("state_snapshot=")
-	builder.WriteString(fmt.Sprintf("%v", pi.StateSnapshot))
+	builder.WriteString(fmt.Sprintf("%v", _m.StateSnapshot))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pi.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pi.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

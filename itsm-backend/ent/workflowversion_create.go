@@ -22,146 +22,146 @@ type WorkflowVersionCreate struct {
 }
 
 // SetWorkflowID sets the "workflow_id" field.
-func (wvc *WorkflowVersionCreate) SetWorkflowID(i int) *WorkflowVersionCreate {
-	wvc.mutation.SetWorkflowID(i)
-	return wvc
+func (_c *WorkflowVersionCreate) SetWorkflowID(v int) *WorkflowVersionCreate {
+	_c.mutation.SetWorkflowID(v)
+	return _c
 }
 
 // SetVersion sets the "version" field.
-func (wvc *WorkflowVersionCreate) SetVersion(s string) *WorkflowVersionCreate {
-	wvc.mutation.SetVersion(s)
-	return wvc
+func (_c *WorkflowVersionCreate) SetVersion(v string) *WorkflowVersionCreate {
+	_c.mutation.SetVersion(v)
+	return _c
 }
 
 // SetBpmnXML sets the "bpmn_xml" field.
-func (wvc *WorkflowVersionCreate) SetBpmnXML(s string) *WorkflowVersionCreate {
-	wvc.mutation.SetBpmnXML(s)
-	return wvc
+func (_c *WorkflowVersionCreate) SetBpmnXML(v string) *WorkflowVersionCreate {
+	_c.mutation.SetBpmnXML(v)
+	return _c
 }
 
 // SetNillableBpmnXML sets the "bpmn_xml" field if the given value is not nil.
-func (wvc *WorkflowVersionCreate) SetNillableBpmnXML(s *string) *WorkflowVersionCreate {
-	if s != nil {
-		wvc.SetBpmnXML(*s)
+func (_c *WorkflowVersionCreate) SetNillableBpmnXML(v *string) *WorkflowVersionCreate {
+	if v != nil {
+		_c.SetBpmnXML(*v)
 	}
-	return wvc
+	return _c
 }
 
 // SetProcessVariables sets the "process_variables" field.
-func (wvc *WorkflowVersionCreate) SetProcessVariables(u []uint8) *WorkflowVersionCreate {
-	wvc.mutation.SetProcessVariables(u)
-	return wvc
+func (_c *WorkflowVersionCreate) SetProcessVariables(v []uint8) *WorkflowVersionCreate {
+	_c.mutation.SetProcessVariables(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (wvc *WorkflowVersionCreate) SetStatus(s string) *WorkflowVersionCreate {
-	wvc.mutation.SetStatus(s)
-	return wvc
+func (_c *WorkflowVersionCreate) SetStatus(v string) *WorkflowVersionCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (wvc *WorkflowVersionCreate) SetNillableStatus(s *string) *WorkflowVersionCreate {
-	if s != nil {
-		wvc.SetStatus(*s)
+func (_c *WorkflowVersionCreate) SetNillableStatus(v *string) *WorkflowVersionCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return wvc
+	return _c
 }
 
 // SetChangeLog sets the "change_log" field.
-func (wvc *WorkflowVersionCreate) SetChangeLog(s string) *WorkflowVersionCreate {
-	wvc.mutation.SetChangeLog(s)
-	return wvc
+func (_c *WorkflowVersionCreate) SetChangeLog(v string) *WorkflowVersionCreate {
+	_c.mutation.SetChangeLog(v)
+	return _c
 }
 
 // SetNillableChangeLog sets the "change_log" field if the given value is not nil.
-func (wvc *WorkflowVersionCreate) SetNillableChangeLog(s *string) *WorkflowVersionCreate {
-	if s != nil {
-		wvc.SetChangeLog(*s)
+func (_c *WorkflowVersionCreate) SetNillableChangeLog(v *string) *WorkflowVersionCreate {
+	if v != nil {
+		_c.SetChangeLog(*v)
 	}
-	return wvc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (wvc *WorkflowVersionCreate) SetCreatedBy(s string) *WorkflowVersionCreate {
-	wvc.mutation.SetCreatedBy(s)
-	return wvc
+func (_c *WorkflowVersionCreate) SetCreatedBy(v string) *WorkflowVersionCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (wvc *WorkflowVersionCreate) SetNillableCreatedBy(s *string) *WorkflowVersionCreate {
-	if s != nil {
-		wvc.SetCreatedBy(*s)
+func (_c *WorkflowVersionCreate) SetNillableCreatedBy(v *string) *WorkflowVersionCreate {
+	if v != nil {
+		_c.SetCreatedBy(*v)
 	}
-	return wvc
+	return _c
 }
 
 // SetIsCurrent sets the "is_current" field.
-func (wvc *WorkflowVersionCreate) SetIsCurrent(b bool) *WorkflowVersionCreate {
-	wvc.mutation.SetIsCurrent(b)
-	return wvc
+func (_c *WorkflowVersionCreate) SetIsCurrent(v bool) *WorkflowVersionCreate {
+	_c.mutation.SetIsCurrent(v)
+	return _c
 }
 
 // SetNillableIsCurrent sets the "is_current" field if the given value is not nil.
-func (wvc *WorkflowVersionCreate) SetNillableIsCurrent(b *bool) *WorkflowVersionCreate {
-	if b != nil {
-		wvc.SetIsCurrent(*b)
+func (_c *WorkflowVersionCreate) SetNillableIsCurrent(v *bool) *WorkflowVersionCreate {
+	if v != nil {
+		_c.SetIsCurrent(*v)
 	}
-	return wvc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (wvc *WorkflowVersionCreate) SetTenantID(i int) *WorkflowVersionCreate {
-	wvc.mutation.SetTenantID(i)
-	return wvc
+func (_c *WorkflowVersionCreate) SetTenantID(v int) *WorkflowVersionCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (wvc *WorkflowVersionCreate) SetCreatedAt(t time.Time) *WorkflowVersionCreate {
-	wvc.mutation.SetCreatedAt(t)
-	return wvc
+func (_c *WorkflowVersionCreate) SetCreatedAt(v time.Time) *WorkflowVersionCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (wvc *WorkflowVersionCreate) SetNillableCreatedAt(t *time.Time) *WorkflowVersionCreate {
-	if t != nil {
-		wvc.SetCreatedAt(*t)
+func (_c *WorkflowVersionCreate) SetNillableCreatedAt(v *time.Time) *WorkflowVersionCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return wvc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (wvc *WorkflowVersionCreate) SetUpdatedAt(t time.Time) *WorkflowVersionCreate {
-	wvc.mutation.SetUpdatedAt(t)
-	return wvc
+func (_c *WorkflowVersionCreate) SetUpdatedAt(v time.Time) *WorkflowVersionCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (wvc *WorkflowVersionCreate) SetNillableUpdatedAt(t *time.Time) *WorkflowVersionCreate {
-	if t != nil {
-		wvc.SetUpdatedAt(*t)
+func (_c *WorkflowVersionCreate) SetNillableUpdatedAt(v *time.Time) *WorkflowVersionCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return wvc
+	return _c
 }
 
 // SetWorkflow sets the "workflow" edge to the Workflow entity.
-func (wvc *WorkflowVersionCreate) SetWorkflow(w *Workflow) *WorkflowVersionCreate {
-	return wvc.SetWorkflowID(w.ID)
+func (_c *WorkflowVersionCreate) SetWorkflow(v *Workflow) *WorkflowVersionCreate {
+	return _c.SetWorkflowID(v.ID)
 }
 
 // Mutation returns the WorkflowVersionMutation object of the builder.
-func (wvc *WorkflowVersionCreate) Mutation() *WorkflowVersionMutation {
-	return wvc.mutation
+func (_c *WorkflowVersionCreate) Mutation() *WorkflowVersionMutation {
+	return _c.mutation
 }
 
 // Save creates the WorkflowVersion in the database.
-func (wvc *WorkflowVersionCreate) Save(ctx context.Context) (*WorkflowVersion, error) {
-	wvc.defaults()
-	return withHooks(ctx, wvc.sqlSave, wvc.mutation, wvc.hooks)
+func (_c *WorkflowVersionCreate) Save(ctx context.Context) (*WorkflowVersion, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (wvc *WorkflowVersionCreate) SaveX(ctx context.Context) *WorkflowVersion {
-	v, err := wvc.Save(ctx)
+func (_c *WorkflowVersionCreate) SaveX(ctx context.Context) *WorkflowVersion {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -169,88 +169,88 @@ func (wvc *WorkflowVersionCreate) SaveX(ctx context.Context) *WorkflowVersion {
 }
 
 // Exec executes the query.
-func (wvc *WorkflowVersionCreate) Exec(ctx context.Context) error {
-	_, err := wvc.Save(ctx)
+func (_c *WorkflowVersionCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wvc *WorkflowVersionCreate) ExecX(ctx context.Context) {
-	if err := wvc.Exec(ctx); err != nil {
+func (_c *WorkflowVersionCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (wvc *WorkflowVersionCreate) defaults() {
-	if _, ok := wvc.mutation.Status(); !ok {
+func (_c *WorkflowVersionCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := workflowversion.DefaultStatus
-		wvc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := wvc.mutation.IsCurrent(); !ok {
+	if _, ok := _c.mutation.IsCurrent(); !ok {
 		v := workflowversion.DefaultIsCurrent
-		wvc.mutation.SetIsCurrent(v)
+		_c.mutation.SetIsCurrent(v)
 	}
-	if _, ok := wvc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := workflowversion.DefaultCreatedAt()
-		wvc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := wvc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := workflowversion.DefaultUpdatedAt()
-		wvc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (wvc *WorkflowVersionCreate) check() error {
-	if _, ok := wvc.mutation.WorkflowID(); !ok {
+func (_c *WorkflowVersionCreate) check() error {
+	if _, ok := _c.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow_id", err: errors.New(`ent: missing required field "WorkflowVersion.workflow_id"`)}
 	}
-	if v, ok := wvc.mutation.WorkflowID(); ok {
+	if v, ok := _c.mutation.WorkflowID(); ok {
 		if err := workflowversion.WorkflowIDValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowVersion.workflow_id": %w`, err)}
 		}
 	}
-	if _, ok := wvc.mutation.Version(); !ok {
+	if _, ok := _c.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "WorkflowVersion.version"`)}
 	}
-	if v, ok := wvc.mutation.Version(); ok {
+	if v, ok := _c.mutation.Version(); ok {
 		if err := workflowversion.VersionValidator(v); err != nil {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "WorkflowVersion.version": %w`, err)}
 		}
 	}
-	if _, ok := wvc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "WorkflowVersion.status"`)}
 	}
-	if _, ok := wvc.mutation.IsCurrent(); !ok {
+	if _, ok := _c.mutation.IsCurrent(); !ok {
 		return &ValidationError{Name: "is_current", err: errors.New(`ent: missing required field "WorkflowVersion.is_current"`)}
 	}
-	if _, ok := wvc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "WorkflowVersion.tenant_id"`)}
 	}
-	if v, ok := wvc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := workflowversion.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowVersion.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := wvc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "WorkflowVersion.created_at"`)}
 	}
-	if _, ok := wvc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "WorkflowVersion.updated_at"`)}
 	}
-	if len(wvc.mutation.WorkflowIDs()) == 0 {
+	if len(_c.mutation.WorkflowIDs()) == 0 {
 		return &ValidationError{Name: "workflow", err: errors.New(`ent: missing required edge "WorkflowVersion.workflow"`)}
 	}
 	return nil
 }
 
-func (wvc *WorkflowVersionCreate) sqlSave(ctx context.Context) (*WorkflowVersion, error) {
-	if err := wvc.check(); err != nil {
+func (_c *WorkflowVersionCreate) sqlSave(ctx context.Context) (*WorkflowVersion, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := wvc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, wvc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -258,57 +258,57 @@ func (wvc *WorkflowVersionCreate) sqlSave(ctx context.Context) (*WorkflowVersion
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	wvc.mutation.id = &_node.ID
-	wvc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (wvc *WorkflowVersionCreate) createSpec() (*WorkflowVersion, *sqlgraph.CreateSpec) {
+func (_c *WorkflowVersionCreate) createSpec() (*WorkflowVersion, *sqlgraph.CreateSpec) {
 	var (
-		_node = &WorkflowVersion{config: wvc.config}
+		_node = &WorkflowVersion{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(workflowversion.Table, sqlgraph.NewFieldSpec(workflowversion.FieldID, field.TypeInt))
 	)
-	if value, ok := wvc.mutation.Version(); ok {
+	if value, ok := _c.mutation.Version(); ok {
 		_spec.SetField(workflowversion.FieldVersion, field.TypeString, value)
 		_node.Version = value
 	}
-	if value, ok := wvc.mutation.BpmnXML(); ok {
+	if value, ok := _c.mutation.BpmnXML(); ok {
 		_spec.SetField(workflowversion.FieldBpmnXML, field.TypeString, value)
 		_node.BpmnXML = value
 	}
-	if value, ok := wvc.mutation.ProcessVariables(); ok {
+	if value, ok := _c.mutation.ProcessVariables(); ok {
 		_spec.SetField(workflowversion.FieldProcessVariables, field.TypeJSON, value)
 		_node.ProcessVariables = value
 	}
-	if value, ok := wvc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(workflowversion.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := wvc.mutation.ChangeLog(); ok {
+	if value, ok := _c.mutation.ChangeLog(); ok {
 		_spec.SetField(workflowversion.FieldChangeLog, field.TypeString, value)
 		_node.ChangeLog = value
 	}
-	if value, ok := wvc.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(workflowversion.FieldCreatedBy, field.TypeString, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := wvc.mutation.IsCurrent(); ok {
+	if value, ok := _c.mutation.IsCurrent(); ok {
 		_spec.SetField(workflowversion.FieldIsCurrent, field.TypeBool, value)
 		_node.IsCurrent = value
 	}
-	if value, ok := wvc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(workflowversion.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := wvc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(workflowversion.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := wvc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(workflowversion.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := wvc.mutation.WorkflowIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.WorkflowIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -336,16 +336,16 @@ type WorkflowVersionCreateBulk struct {
 }
 
 // Save creates the WorkflowVersion entities in the database.
-func (wvcb *WorkflowVersionCreateBulk) Save(ctx context.Context) ([]*WorkflowVersion, error) {
-	if wvcb.err != nil {
-		return nil, wvcb.err
+func (_c *WorkflowVersionCreateBulk) Save(ctx context.Context) ([]*WorkflowVersion, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(wvcb.builders))
-	nodes := make([]*WorkflowVersion, len(wvcb.builders))
-	mutators := make([]Mutator, len(wvcb.builders))
-	for i := range wvcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*WorkflowVersion, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := wvcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*WorkflowVersionMutation)
@@ -359,11 +359,11 @@ func (wvcb *WorkflowVersionCreateBulk) Save(ctx context.Context) ([]*WorkflowVer
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, wvcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, wvcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -387,7 +387,7 @@ func (wvcb *WorkflowVersionCreateBulk) Save(ctx context.Context) ([]*WorkflowVer
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, wvcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -395,8 +395,8 @@ func (wvcb *WorkflowVersionCreateBulk) Save(ctx context.Context) ([]*WorkflowVer
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (wvcb *WorkflowVersionCreateBulk) SaveX(ctx context.Context) []*WorkflowVersion {
-	v, err := wvcb.Save(ctx)
+func (_c *WorkflowVersionCreateBulk) SaveX(ctx context.Context) []*WorkflowVersion {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -404,14 +404,14 @@ func (wvcb *WorkflowVersionCreateBulk) SaveX(ctx context.Context) []*WorkflowVer
 }
 
 // Exec executes the query.
-func (wvcb *WorkflowVersionCreateBulk) Exec(ctx context.Context) error {
-	_, err := wvcb.Save(ctx)
+func (_c *WorkflowVersionCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wvcb *WorkflowVersionCreateBulk) ExecX(ctx context.Context) {
-	if err := wvcb.Exec(ctx); err != nil {
+func (_c *WorkflowVersionCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

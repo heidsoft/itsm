@@ -25,205 +25,205 @@ type TicketNotificationUpdate struct {
 }
 
 // Where appends a list predicates to the TicketNotificationUpdate builder.
-func (tnu *TicketNotificationUpdate) Where(ps ...predicate.TicketNotification) *TicketNotificationUpdate {
-	tnu.mutation.Where(ps...)
-	return tnu
+func (_u *TicketNotificationUpdate) Where(ps ...predicate.TicketNotification) *TicketNotificationUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (tnu *TicketNotificationUpdate) SetTicketID(i int) *TicketNotificationUpdate {
-	tnu.mutation.SetTicketID(i)
-	return tnu
+func (_u *TicketNotificationUpdate) SetTicketID(v int) *TicketNotificationUpdate {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableTicketID(i *int) *TicketNotificationUpdate {
-	if i != nil {
-		tnu.SetTicketID(*i)
+func (_u *TicketNotificationUpdate) SetNillableTicketID(v *int) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return tnu
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (tnu *TicketNotificationUpdate) SetUserID(i int) *TicketNotificationUpdate {
-	tnu.mutation.SetUserID(i)
-	return tnu
+func (_u *TicketNotificationUpdate) SetUserID(v int) *TicketNotificationUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableUserID(i *int) *TicketNotificationUpdate {
-	if i != nil {
-		tnu.SetUserID(*i)
+func (_u *TicketNotificationUpdate) SetNillableUserID(v *int) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return tnu
+	return _u
 }
 
 // SetType sets the "type" field.
-func (tnu *TicketNotificationUpdate) SetType(s string) *TicketNotificationUpdate {
-	tnu.mutation.SetType(s)
-	return tnu
+func (_u *TicketNotificationUpdate) SetType(v string) *TicketNotificationUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableType(s *string) *TicketNotificationUpdate {
-	if s != nil {
-		tnu.SetType(*s)
+func (_u *TicketNotificationUpdate) SetNillableType(v *string) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return tnu
+	return _u
 }
 
 // SetChannel sets the "channel" field.
-func (tnu *TicketNotificationUpdate) SetChannel(s string) *TicketNotificationUpdate {
-	tnu.mutation.SetChannel(s)
-	return tnu
+func (_u *TicketNotificationUpdate) SetChannel(v string) *TicketNotificationUpdate {
+	_u.mutation.SetChannel(v)
+	return _u
 }
 
 // SetNillableChannel sets the "channel" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableChannel(s *string) *TicketNotificationUpdate {
-	if s != nil {
-		tnu.SetChannel(*s)
+func (_u *TicketNotificationUpdate) SetNillableChannel(v *string) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetChannel(*v)
 	}
-	return tnu
+	return _u
 }
 
 // SetContent sets the "content" field.
-func (tnu *TicketNotificationUpdate) SetContent(s string) *TicketNotificationUpdate {
-	tnu.mutation.SetContent(s)
-	return tnu
+func (_u *TicketNotificationUpdate) SetContent(v string) *TicketNotificationUpdate {
+	_u.mutation.SetContent(v)
+	return _u
 }
 
 // SetNillableContent sets the "content" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableContent(s *string) *TicketNotificationUpdate {
-	if s != nil {
-		tnu.SetContent(*s)
+func (_u *TicketNotificationUpdate) SetNillableContent(v *string) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetContent(*v)
 	}
-	return tnu
+	return _u
 }
 
 // SetSentAt sets the "sent_at" field.
-func (tnu *TicketNotificationUpdate) SetSentAt(t time.Time) *TicketNotificationUpdate {
-	tnu.mutation.SetSentAt(t)
-	return tnu
+func (_u *TicketNotificationUpdate) SetSentAt(v time.Time) *TicketNotificationUpdate {
+	_u.mutation.SetSentAt(v)
+	return _u
 }
 
 // SetNillableSentAt sets the "sent_at" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableSentAt(t *time.Time) *TicketNotificationUpdate {
-	if t != nil {
-		tnu.SetSentAt(*t)
+func (_u *TicketNotificationUpdate) SetNillableSentAt(v *time.Time) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetSentAt(*v)
 	}
-	return tnu
+	return _u
 }
 
 // ClearSentAt clears the value of the "sent_at" field.
-func (tnu *TicketNotificationUpdate) ClearSentAt() *TicketNotificationUpdate {
-	tnu.mutation.ClearSentAt()
-	return tnu
+func (_u *TicketNotificationUpdate) ClearSentAt() *TicketNotificationUpdate {
+	_u.mutation.ClearSentAt()
+	return _u
 }
 
 // SetReadAt sets the "read_at" field.
-func (tnu *TicketNotificationUpdate) SetReadAt(t time.Time) *TicketNotificationUpdate {
-	tnu.mutation.SetReadAt(t)
-	return tnu
+func (_u *TicketNotificationUpdate) SetReadAt(v time.Time) *TicketNotificationUpdate {
+	_u.mutation.SetReadAt(v)
+	return _u
 }
 
 // SetNillableReadAt sets the "read_at" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableReadAt(t *time.Time) *TicketNotificationUpdate {
-	if t != nil {
-		tnu.SetReadAt(*t)
+func (_u *TicketNotificationUpdate) SetNillableReadAt(v *time.Time) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetReadAt(*v)
 	}
-	return tnu
+	return _u
 }
 
 // ClearReadAt clears the value of the "read_at" field.
-func (tnu *TicketNotificationUpdate) ClearReadAt() *TicketNotificationUpdate {
-	tnu.mutation.ClearReadAt()
-	return tnu
+func (_u *TicketNotificationUpdate) ClearReadAt() *TicketNotificationUpdate {
+	_u.mutation.ClearReadAt()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (tnu *TicketNotificationUpdate) SetStatus(s string) *TicketNotificationUpdate {
-	tnu.mutation.SetStatus(s)
-	return tnu
+func (_u *TicketNotificationUpdate) SetStatus(v string) *TicketNotificationUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableStatus(s *string) *TicketNotificationUpdate {
-	if s != nil {
-		tnu.SetStatus(*s)
+func (_u *TicketNotificationUpdate) SetNillableStatus(v *string) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return tnu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tnu *TicketNotificationUpdate) SetTenantID(i int) *TicketNotificationUpdate {
-	tnu.mutation.ResetTenantID()
-	tnu.mutation.SetTenantID(i)
-	return tnu
+func (_u *TicketNotificationUpdate) SetTenantID(v int) *TicketNotificationUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableTenantID(i *int) *TicketNotificationUpdate {
-	if i != nil {
-		tnu.SetTenantID(*i)
+func (_u *TicketNotificationUpdate) SetNillableTenantID(v *int) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tnu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tnu *TicketNotificationUpdate) AddTenantID(i int) *TicketNotificationUpdate {
-	tnu.mutation.AddTenantID(i)
-	return tnu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketNotificationUpdate) AddTenantID(v int) *TicketNotificationUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tnu *TicketNotificationUpdate) SetCreatedAt(t time.Time) *TicketNotificationUpdate {
-	tnu.mutation.SetCreatedAt(t)
-	return tnu
+func (_u *TicketNotificationUpdate) SetCreatedAt(v time.Time) *TicketNotificationUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tnu *TicketNotificationUpdate) SetNillableCreatedAt(t *time.Time) *TicketNotificationUpdate {
-	if t != nil {
-		tnu.SetCreatedAt(*t)
+func (_u *TicketNotificationUpdate) SetNillableCreatedAt(v *time.Time) *TicketNotificationUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tnu
+	return _u
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (tnu *TicketNotificationUpdate) SetTicket(t *Ticket) *TicketNotificationUpdate {
-	return tnu.SetTicketID(t.ID)
+func (_u *TicketNotificationUpdate) SetTicket(v *Ticket) *TicketNotificationUpdate {
+	return _u.SetTicketID(v.ID)
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (tnu *TicketNotificationUpdate) SetUser(u *User) *TicketNotificationUpdate {
-	return tnu.SetUserID(u.ID)
+func (_u *TicketNotificationUpdate) SetUser(v *User) *TicketNotificationUpdate {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the TicketNotificationMutation object of the builder.
-func (tnu *TicketNotificationUpdate) Mutation() *TicketNotificationMutation {
-	return tnu.mutation
+func (_u *TicketNotificationUpdate) Mutation() *TicketNotificationMutation {
+	return _u.mutation
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (tnu *TicketNotificationUpdate) ClearTicket() *TicketNotificationUpdate {
-	tnu.mutation.ClearTicket()
-	return tnu
+func (_u *TicketNotificationUpdate) ClearTicket() *TicketNotificationUpdate {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (tnu *TicketNotificationUpdate) ClearUser() *TicketNotificationUpdate {
-	tnu.mutation.ClearUser()
-	return tnu
+func (_u *TicketNotificationUpdate) ClearUser() *TicketNotificationUpdate {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (tnu *TicketNotificationUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, tnu.sqlSave, tnu.mutation, tnu.hooks)
+func (_u *TicketNotificationUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tnu *TicketNotificationUpdate) SaveX(ctx context.Context) int {
-	affected, err := tnu.Save(ctx)
+func (_u *TicketNotificationUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -231,100 +231,100 @@ func (tnu *TicketNotificationUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (tnu *TicketNotificationUpdate) Exec(ctx context.Context) error {
-	_, err := tnu.Save(ctx)
+func (_u *TicketNotificationUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tnu *TicketNotificationUpdate) ExecX(ctx context.Context) {
-	if err := tnu.Exec(ctx); err != nil {
+func (_u *TicketNotificationUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tnu *TicketNotificationUpdate) check() error {
-	if v, ok := tnu.mutation.TicketID(); ok {
+func (_u *TicketNotificationUpdate) check() error {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := ticketnotification.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := tnu.mutation.UserID(); ok {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := ticketnotification.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.user_id": %w`, err)}
 		}
 	}
-	if v, ok := tnu.mutation.GetType(); ok {
+	if v, ok := _u.mutation.GetType(); ok {
 		if err := ticketnotification.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.type": %w`, err)}
 		}
 	}
-	if v, ok := tnu.mutation.Content(); ok {
+	if v, ok := _u.mutation.Content(); ok {
 		if err := ticketnotification.ContentValidator(v); err != nil {
 			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.content": %w`, err)}
 		}
 	}
-	if v, ok := tnu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketnotification.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.tenant_id": %w`, err)}
 		}
 	}
-	if tnu.mutation.TicketCleared() && len(tnu.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketNotification.ticket"`)
 	}
-	if tnu.mutation.UserCleared() && len(tnu.mutation.UserIDs()) > 0 {
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketNotification.user"`)
 	}
 	return nil
 }
 
-func (tnu *TicketNotificationUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := tnu.check(); err != nil {
-		return n, err
+func (_u *TicketNotificationUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketnotification.Table, ticketnotification.Columns, sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt))
-	if ps := tnu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tnu.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ticketnotification.FieldType, field.TypeString, value)
 	}
-	if value, ok := tnu.mutation.Channel(); ok {
+	if value, ok := _u.mutation.Channel(); ok {
 		_spec.SetField(ticketnotification.FieldChannel, field.TypeString, value)
 	}
-	if value, ok := tnu.mutation.Content(); ok {
+	if value, ok := _u.mutation.Content(); ok {
 		_spec.SetField(ticketnotification.FieldContent, field.TypeString, value)
 	}
-	if value, ok := tnu.mutation.SentAt(); ok {
+	if value, ok := _u.mutation.SentAt(); ok {
 		_spec.SetField(ticketnotification.FieldSentAt, field.TypeTime, value)
 	}
-	if tnu.mutation.SentAtCleared() {
+	if _u.mutation.SentAtCleared() {
 		_spec.ClearField(ticketnotification.FieldSentAt, field.TypeTime)
 	}
-	if value, ok := tnu.mutation.ReadAt(); ok {
+	if value, ok := _u.mutation.ReadAt(); ok {
 		_spec.SetField(ticketnotification.FieldReadAt, field.TypeTime, value)
 	}
-	if tnu.mutation.ReadAtCleared() {
+	if _u.mutation.ReadAtCleared() {
 		_spec.ClearField(ticketnotification.FieldReadAt, field.TypeTime)
 	}
-	if value, ok := tnu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(ticketnotification.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := tnu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketnotification.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tnu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketnotification.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tnu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketnotification.FieldCreatedAt, field.TypeTime, value)
 	}
-	if tnu.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -337,7 +337,7 @@ func (tnu *TicketNotificationUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tnu.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -353,7 +353,7 @@ func (tnu *TicketNotificationUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tnu.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -366,7 +366,7 @@ func (tnu *TicketNotificationUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tnu.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -382,7 +382,7 @@ func (tnu *TicketNotificationUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, tnu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketnotification.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -390,8 +390,8 @@ func (tnu *TicketNotificationUpdate) sqlSave(ctx context.Context) (n int, err er
 		}
 		return 0, err
 	}
-	tnu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // TicketNotificationUpdateOne is the builder for updating a single TicketNotification entity.
@@ -403,212 +403,212 @@ type TicketNotificationUpdateOne struct {
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (tnuo *TicketNotificationUpdateOne) SetTicketID(i int) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetTicketID(i)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetTicketID(v int) *TicketNotificationUpdateOne {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableTicketID(i *int) *TicketNotificationUpdateOne {
-	if i != nil {
-		tnuo.SetTicketID(*i)
+func (_u *TicketNotificationUpdateOne) SetNillableTicketID(v *int) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (tnuo *TicketNotificationUpdateOne) SetUserID(i int) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetUserID(i)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetUserID(v int) *TicketNotificationUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableUserID(i *int) *TicketNotificationUpdateOne {
-	if i != nil {
-		tnuo.SetUserID(*i)
+func (_u *TicketNotificationUpdateOne) SetNillableUserID(v *int) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // SetType sets the "type" field.
-func (tnuo *TicketNotificationUpdateOne) SetType(s string) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetType(s)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetType(v string) *TicketNotificationUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableType(s *string) *TicketNotificationUpdateOne {
-	if s != nil {
-		tnuo.SetType(*s)
+func (_u *TicketNotificationUpdateOne) SetNillableType(v *string) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // SetChannel sets the "channel" field.
-func (tnuo *TicketNotificationUpdateOne) SetChannel(s string) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetChannel(s)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetChannel(v string) *TicketNotificationUpdateOne {
+	_u.mutation.SetChannel(v)
+	return _u
 }
 
 // SetNillableChannel sets the "channel" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableChannel(s *string) *TicketNotificationUpdateOne {
-	if s != nil {
-		tnuo.SetChannel(*s)
+func (_u *TicketNotificationUpdateOne) SetNillableChannel(v *string) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetChannel(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // SetContent sets the "content" field.
-func (tnuo *TicketNotificationUpdateOne) SetContent(s string) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetContent(s)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetContent(v string) *TicketNotificationUpdateOne {
+	_u.mutation.SetContent(v)
+	return _u
 }
 
 // SetNillableContent sets the "content" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableContent(s *string) *TicketNotificationUpdateOne {
-	if s != nil {
-		tnuo.SetContent(*s)
+func (_u *TicketNotificationUpdateOne) SetNillableContent(v *string) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetContent(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // SetSentAt sets the "sent_at" field.
-func (tnuo *TicketNotificationUpdateOne) SetSentAt(t time.Time) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetSentAt(t)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetSentAt(v time.Time) *TicketNotificationUpdateOne {
+	_u.mutation.SetSentAt(v)
+	return _u
 }
 
 // SetNillableSentAt sets the "sent_at" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableSentAt(t *time.Time) *TicketNotificationUpdateOne {
-	if t != nil {
-		tnuo.SetSentAt(*t)
+func (_u *TicketNotificationUpdateOne) SetNillableSentAt(v *time.Time) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetSentAt(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // ClearSentAt clears the value of the "sent_at" field.
-func (tnuo *TicketNotificationUpdateOne) ClearSentAt() *TicketNotificationUpdateOne {
-	tnuo.mutation.ClearSentAt()
-	return tnuo
+func (_u *TicketNotificationUpdateOne) ClearSentAt() *TicketNotificationUpdateOne {
+	_u.mutation.ClearSentAt()
+	return _u
 }
 
 // SetReadAt sets the "read_at" field.
-func (tnuo *TicketNotificationUpdateOne) SetReadAt(t time.Time) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetReadAt(t)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetReadAt(v time.Time) *TicketNotificationUpdateOne {
+	_u.mutation.SetReadAt(v)
+	return _u
 }
 
 // SetNillableReadAt sets the "read_at" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableReadAt(t *time.Time) *TicketNotificationUpdateOne {
-	if t != nil {
-		tnuo.SetReadAt(*t)
+func (_u *TicketNotificationUpdateOne) SetNillableReadAt(v *time.Time) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetReadAt(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // ClearReadAt clears the value of the "read_at" field.
-func (tnuo *TicketNotificationUpdateOne) ClearReadAt() *TicketNotificationUpdateOne {
-	tnuo.mutation.ClearReadAt()
-	return tnuo
+func (_u *TicketNotificationUpdateOne) ClearReadAt() *TicketNotificationUpdateOne {
+	_u.mutation.ClearReadAt()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (tnuo *TicketNotificationUpdateOne) SetStatus(s string) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetStatus(s)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetStatus(v string) *TicketNotificationUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableStatus(s *string) *TicketNotificationUpdateOne {
-	if s != nil {
-		tnuo.SetStatus(*s)
+func (_u *TicketNotificationUpdateOne) SetNillableStatus(v *string) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tnuo *TicketNotificationUpdateOne) SetTenantID(i int) *TicketNotificationUpdateOne {
-	tnuo.mutation.ResetTenantID()
-	tnuo.mutation.SetTenantID(i)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetTenantID(v int) *TicketNotificationUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableTenantID(i *int) *TicketNotificationUpdateOne {
-	if i != nil {
-		tnuo.SetTenantID(*i)
+func (_u *TicketNotificationUpdateOne) SetNillableTenantID(v *int) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tnuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tnuo *TicketNotificationUpdateOne) AddTenantID(i int) *TicketNotificationUpdateOne {
-	tnuo.mutation.AddTenantID(i)
-	return tnuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketNotificationUpdateOne) AddTenantID(v int) *TicketNotificationUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tnuo *TicketNotificationUpdateOne) SetCreatedAt(t time.Time) *TicketNotificationUpdateOne {
-	tnuo.mutation.SetCreatedAt(t)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) SetCreatedAt(v time.Time) *TicketNotificationUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tnuo *TicketNotificationUpdateOne) SetNillableCreatedAt(t *time.Time) *TicketNotificationUpdateOne {
-	if t != nil {
-		tnuo.SetCreatedAt(*t)
+func (_u *TicketNotificationUpdateOne) SetNillableCreatedAt(v *time.Time) *TicketNotificationUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tnuo
+	return _u
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (tnuo *TicketNotificationUpdateOne) SetTicket(t *Ticket) *TicketNotificationUpdateOne {
-	return tnuo.SetTicketID(t.ID)
+func (_u *TicketNotificationUpdateOne) SetTicket(v *Ticket) *TicketNotificationUpdateOne {
+	return _u.SetTicketID(v.ID)
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (tnuo *TicketNotificationUpdateOne) SetUser(u *User) *TicketNotificationUpdateOne {
-	return tnuo.SetUserID(u.ID)
+func (_u *TicketNotificationUpdateOne) SetUser(v *User) *TicketNotificationUpdateOne {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the TicketNotificationMutation object of the builder.
-func (tnuo *TicketNotificationUpdateOne) Mutation() *TicketNotificationMutation {
-	return tnuo.mutation
+func (_u *TicketNotificationUpdateOne) Mutation() *TicketNotificationMutation {
+	return _u.mutation
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (tnuo *TicketNotificationUpdateOne) ClearTicket() *TicketNotificationUpdateOne {
-	tnuo.mutation.ClearTicket()
-	return tnuo
+func (_u *TicketNotificationUpdateOne) ClearTicket() *TicketNotificationUpdateOne {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (tnuo *TicketNotificationUpdateOne) ClearUser() *TicketNotificationUpdateOne {
-	tnuo.mutation.ClearUser()
-	return tnuo
+func (_u *TicketNotificationUpdateOne) ClearUser() *TicketNotificationUpdateOne {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Where appends a list predicates to the TicketNotificationUpdate builder.
-func (tnuo *TicketNotificationUpdateOne) Where(ps ...predicate.TicketNotification) *TicketNotificationUpdateOne {
-	tnuo.mutation.Where(ps...)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) Where(ps ...predicate.TicketNotification) *TicketNotificationUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (tnuo *TicketNotificationUpdateOne) Select(field string, fields ...string) *TicketNotificationUpdateOne {
-	tnuo.fields = append([]string{field}, fields...)
-	return tnuo
+func (_u *TicketNotificationUpdateOne) Select(field string, fields ...string) *TicketNotificationUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated TicketNotification entity.
-func (tnuo *TicketNotificationUpdateOne) Save(ctx context.Context) (*TicketNotification, error) {
-	return withHooks(ctx, tnuo.sqlSave, tnuo.mutation, tnuo.hooks)
+func (_u *TicketNotificationUpdateOne) Save(ctx context.Context) (*TicketNotification, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tnuo *TicketNotificationUpdateOne) SaveX(ctx context.Context) *TicketNotification {
-	node, err := tnuo.Save(ctx)
+func (_u *TicketNotificationUpdateOne) SaveX(ctx context.Context) *TicketNotification {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -616,65 +616,65 @@ func (tnuo *TicketNotificationUpdateOne) SaveX(ctx context.Context) *TicketNotif
 }
 
 // Exec executes the query on the entity.
-func (tnuo *TicketNotificationUpdateOne) Exec(ctx context.Context) error {
-	_, err := tnuo.Save(ctx)
+func (_u *TicketNotificationUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tnuo *TicketNotificationUpdateOne) ExecX(ctx context.Context) {
-	if err := tnuo.Exec(ctx); err != nil {
+func (_u *TicketNotificationUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tnuo *TicketNotificationUpdateOne) check() error {
-	if v, ok := tnuo.mutation.TicketID(); ok {
+func (_u *TicketNotificationUpdateOne) check() error {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := ticketnotification.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := tnuo.mutation.UserID(); ok {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := ticketnotification.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.user_id": %w`, err)}
 		}
 	}
-	if v, ok := tnuo.mutation.GetType(); ok {
+	if v, ok := _u.mutation.GetType(); ok {
 		if err := ticketnotification.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.type": %w`, err)}
 		}
 	}
-	if v, ok := tnuo.mutation.Content(); ok {
+	if v, ok := _u.mutation.Content(); ok {
 		if err := ticketnotification.ContentValidator(v); err != nil {
 			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.content": %w`, err)}
 		}
 	}
-	if v, ok := tnuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketnotification.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.tenant_id": %w`, err)}
 		}
 	}
-	if tnuo.mutation.TicketCleared() && len(tnuo.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketNotification.ticket"`)
 	}
-	if tnuo.mutation.UserCleared() && len(tnuo.mutation.UserIDs()) > 0 {
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketNotification.user"`)
 	}
 	return nil
 }
 
-func (tnuo *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *TicketNotification, err error) {
-	if err := tnuo.check(); err != nil {
+func (_u *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *TicketNotification, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketnotification.Table, ticketnotification.Columns, sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt))
-	id, ok := tnuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TicketNotification.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := tnuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketnotification.FieldID)
 		for _, f := range fields {
@@ -686,47 +686,47 @@ func (tnuo *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *Ti
 			}
 		}
 	}
-	if ps := tnuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tnuo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ticketnotification.FieldType, field.TypeString, value)
 	}
-	if value, ok := tnuo.mutation.Channel(); ok {
+	if value, ok := _u.mutation.Channel(); ok {
 		_spec.SetField(ticketnotification.FieldChannel, field.TypeString, value)
 	}
-	if value, ok := tnuo.mutation.Content(); ok {
+	if value, ok := _u.mutation.Content(); ok {
 		_spec.SetField(ticketnotification.FieldContent, field.TypeString, value)
 	}
-	if value, ok := tnuo.mutation.SentAt(); ok {
+	if value, ok := _u.mutation.SentAt(); ok {
 		_spec.SetField(ticketnotification.FieldSentAt, field.TypeTime, value)
 	}
-	if tnuo.mutation.SentAtCleared() {
+	if _u.mutation.SentAtCleared() {
 		_spec.ClearField(ticketnotification.FieldSentAt, field.TypeTime)
 	}
-	if value, ok := tnuo.mutation.ReadAt(); ok {
+	if value, ok := _u.mutation.ReadAt(); ok {
 		_spec.SetField(ticketnotification.FieldReadAt, field.TypeTime, value)
 	}
-	if tnuo.mutation.ReadAtCleared() {
+	if _u.mutation.ReadAtCleared() {
 		_spec.ClearField(ticketnotification.FieldReadAt, field.TypeTime)
 	}
-	if value, ok := tnuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(ticketnotification.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := tnuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketnotification.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tnuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketnotification.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tnuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketnotification.FieldCreatedAt, field.TypeTime, value)
 	}
-	if tnuo.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -739,7 +739,7 @@ func (tnuo *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *Ti
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tnuo.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -755,7 +755,7 @@ func (tnuo *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *Ti
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tnuo.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -768,7 +768,7 @@ func (tnuo *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *Ti
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tnuo.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -784,10 +784,10 @@ func (tnuo *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *Ti
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &TicketNotification{config: tnuo.config}
+	_node = &TicketNotification{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, tnuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketnotification.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -795,6 +795,6 @@ func (tnuo *TicketNotificationUpdateOne) sqlSave(ctx context.Context) (_node *Ti
 		}
 		return nil, err
 	}
-	tnuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

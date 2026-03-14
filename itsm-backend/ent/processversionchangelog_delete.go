@@ -20,56 +20,56 @@ type ProcessVersionChangelogDelete struct {
 }
 
 // Where appends a list predicates to the ProcessVersionChangelogDelete builder.
-func (pvcd *ProcessVersionChangelogDelete) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogDelete {
-	pvcd.mutation.Where(ps...)
-	return pvcd
+func (_d *ProcessVersionChangelogDelete) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (pvcd *ProcessVersionChangelogDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, pvcd.sqlExec, pvcd.mutation, pvcd.hooks)
+func (_d *ProcessVersionChangelogDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvcd *ProcessVersionChangelogDelete) ExecX(ctx context.Context) int {
-	n, err := pvcd.Exec(ctx)
+func (_d *ProcessVersionChangelogDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (pvcd *ProcessVersionChangelogDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *ProcessVersionChangelogDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(processversionchangelog.Table, sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt))
-	if ps := pvcd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, pvcd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	pvcd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // ProcessVersionChangelogDeleteOne is the builder for deleting a single ProcessVersionChangelog entity.
 type ProcessVersionChangelogDeleteOne struct {
-	pvcd *ProcessVersionChangelogDelete
+	_d *ProcessVersionChangelogDelete
 }
 
 // Where appends a list predicates to the ProcessVersionChangelogDelete builder.
-func (pvcdo *ProcessVersionChangelogDeleteOne) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogDeleteOne {
-	pvcdo.pvcd.mutation.Where(ps...)
-	return pvcdo
+func (_d *ProcessVersionChangelogDeleteOne) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (pvcdo *ProcessVersionChangelogDeleteOne) Exec(ctx context.Context) error {
-	n, err := pvcdo.pvcd.Exec(ctx)
+func (_d *ProcessVersionChangelogDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (pvcdo *ProcessVersionChangelogDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvcdo *ProcessVersionChangelogDeleteOne) ExecX(ctx context.Context) {
-	if err := pvcdo.Exec(ctx); err != nil {
+func (_d *ProcessVersionChangelogDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

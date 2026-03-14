@@ -32,44 +32,44 @@ type ApprovalRecordQuery struct {
 }
 
 // Where adds a new predicate for the ApprovalRecordQuery builder.
-func (arq *ApprovalRecordQuery) Where(ps ...predicate.ApprovalRecord) *ApprovalRecordQuery {
-	arq.predicates = append(arq.predicates, ps...)
-	return arq
+func (_q *ApprovalRecordQuery) Where(ps ...predicate.ApprovalRecord) *ApprovalRecordQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (arq *ApprovalRecordQuery) Limit(limit int) *ApprovalRecordQuery {
-	arq.ctx.Limit = &limit
-	return arq
+func (_q *ApprovalRecordQuery) Limit(limit int) *ApprovalRecordQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (arq *ApprovalRecordQuery) Offset(offset int) *ApprovalRecordQuery {
-	arq.ctx.Offset = &offset
-	return arq
+func (_q *ApprovalRecordQuery) Offset(offset int) *ApprovalRecordQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (arq *ApprovalRecordQuery) Unique(unique bool) *ApprovalRecordQuery {
-	arq.ctx.Unique = &unique
-	return arq
+func (_q *ApprovalRecordQuery) Unique(unique bool) *ApprovalRecordQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (arq *ApprovalRecordQuery) Order(o ...approvalrecord.OrderOption) *ApprovalRecordQuery {
-	arq.order = append(arq.order, o...)
-	return arq
+func (_q *ApprovalRecordQuery) Order(o ...approvalrecord.OrderOption) *ApprovalRecordQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryTicket chains the current query on the "ticket" edge.
-func (arq *ApprovalRecordQuery) QueryTicket() *TicketQuery {
-	query := (&TicketClient{config: arq.config}).Query()
+func (_q *ApprovalRecordQuery) QueryTicket() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := arq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := arq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,20 +78,20 @@ func (arq *ApprovalRecordQuery) QueryTicket() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, approvalrecord.TicketTable, approvalrecord.TicketColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(arq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryWorkflow chains the current query on the "workflow" edge.
-func (arq *ApprovalRecordQuery) QueryWorkflow() *ApprovalWorkflowQuery {
-	query := (&ApprovalWorkflowClient{config: arq.config}).Query()
+func (_q *ApprovalRecordQuery) QueryWorkflow() *ApprovalWorkflowQuery {
+	query := (&ApprovalWorkflowClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := arq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := arq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (arq *ApprovalRecordQuery) QueryWorkflow() *ApprovalWorkflowQuery {
 			sqlgraph.To(approvalworkflow.Table, approvalworkflow.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, approvalrecord.WorkflowTable, approvalrecord.WorkflowColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(arq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -108,8 +108,8 @@ func (arq *ApprovalRecordQuery) QueryWorkflow() *ApprovalWorkflowQuery {
 
 // First returns the first ApprovalRecord entity from the query.
 // Returns a *NotFoundError when no ApprovalRecord was found.
-func (arq *ApprovalRecordQuery) First(ctx context.Context) (*ApprovalRecord, error) {
-	nodes, err := arq.Limit(1).All(setContextOp(ctx, arq.ctx, ent.OpQueryFirst))
+func (_q *ApprovalRecordQuery) First(ctx context.Context) (*ApprovalRecord, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +120,8 @@ func (arq *ApprovalRecordQuery) First(ctx context.Context) (*ApprovalRecord, err
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) FirstX(ctx context.Context) *ApprovalRecord {
-	node, err := arq.First(ctx)
+func (_q *ApprovalRecordQuery) FirstX(ctx context.Context) *ApprovalRecord {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,9 +130,9 @@ func (arq *ApprovalRecordQuery) FirstX(ctx context.Context) *ApprovalRecord {
 
 // FirstID returns the first ApprovalRecord ID from the query.
 // Returns a *NotFoundError when no ApprovalRecord ID was found.
-func (arq *ApprovalRecordQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ApprovalRecordQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = arq.Limit(1).IDs(setContextOp(ctx, arq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -143,8 +143,8 @@ func (arq *ApprovalRecordQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) FirstIDX(ctx context.Context) int {
-	id, err := arq.FirstID(ctx)
+func (_q *ApprovalRecordQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -154,8 +154,8 @@ func (arq *ApprovalRecordQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ApprovalRecord entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ApprovalRecord entity is found.
 // Returns a *NotFoundError when no ApprovalRecord entities are found.
-func (arq *ApprovalRecordQuery) Only(ctx context.Context) (*ApprovalRecord, error) {
-	nodes, err := arq.Limit(2).All(setContextOp(ctx, arq.ctx, ent.OpQueryOnly))
+func (_q *ApprovalRecordQuery) Only(ctx context.Context) (*ApprovalRecord, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +170,8 @@ func (arq *ApprovalRecordQuery) Only(ctx context.Context) (*ApprovalRecord, erro
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) OnlyX(ctx context.Context) *ApprovalRecord {
-	node, err := arq.Only(ctx)
+func (_q *ApprovalRecordQuery) OnlyX(ctx context.Context) *ApprovalRecord {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -181,9 +181,9 @@ func (arq *ApprovalRecordQuery) OnlyX(ctx context.Context) *ApprovalRecord {
 // OnlyID is like Only, but returns the only ApprovalRecord ID in the query.
 // Returns a *NotSingularError when more than one ApprovalRecord ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (arq *ApprovalRecordQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ApprovalRecordQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = arq.Limit(2).IDs(setContextOp(ctx, arq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -198,8 +198,8 @@ func (arq *ApprovalRecordQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) OnlyIDX(ctx context.Context) int {
-	id, err := arq.OnlyID(ctx)
+func (_q *ApprovalRecordQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,18 +207,18 @@ func (arq *ApprovalRecordQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ApprovalRecords.
-func (arq *ApprovalRecordQuery) All(ctx context.Context) ([]*ApprovalRecord, error) {
-	ctx = setContextOp(ctx, arq.ctx, ent.OpQueryAll)
-	if err := arq.prepareQuery(ctx); err != nil {
+func (_q *ApprovalRecordQuery) All(ctx context.Context) ([]*ApprovalRecord, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ApprovalRecord, *ApprovalRecordQuery]()
-	return withInterceptors[[]*ApprovalRecord](ctx, arq, qr, arq.inters)
+	return withInterceptors[[]*ApprovalRecord](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) AllX(ctx context.Context) []*ApprovalRecord {
-	nodes, err := arq.All(ctx)
+func (_q *ApprovalRecordQuery) AllX(ctx context.Context) []*ApprovalRecord {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -226,20 +226,20 @@ func (arq *ApprovalRecordQuery) AllX(ctx context.Context) []*ApprovalRecord {
 }
 
 // IDs executes the query and returns a list of ApprovalRecord IDs.
-func (arq *ApprovalRecordQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if arq.ctx.Unique == nil && arq.path != nil {
-		arq.Unique(true)
+func (_q *ApprovalRecordQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, arq.ctx, ent.OpQueryIDs)
-	if err = arq.Select(approvalrecord.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(approvalrecord.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) IDsX(ctx context.Context) []int {
-	ids, err := arq.IDs(ctx)
+func (_q *ApprovalRecordQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -247,17 +247,17 @@ func (arq *ApprovalRecordQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (arq *ApprovalRecordQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, arq.ctx, ent.OpQueryCount)
-	if err := arq.prepareQuery(ctx); err != nil {
+func (_q *ApprovalRecordQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, arq, querierCount[*ApprovalRecordQuery](), arq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ApprovalRecordQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) CountX(ctx context.Context) int {
-	count, err := arq.Count(ctx)
+func (_q *ApprovalRecordQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,9 +265,9 @@ func (arq *ApprovalRecordQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (arq *ApprovalRecordQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, arq.ctx, ent.OpQueryExist)
-	switch _, err := arq.FirstID(ctx); {
+func (_q *ApprovalRecordQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -278,8 +278,8 @@ func (arq *ApprovalRecordQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (arq *ApprovalRecordQuery) ExistX(ctx context.Context) bool {
-	exist, err := arq.Exist(ctx)
+func (_q *ApprovalRecordQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -288,44 +288,44 @@ func (arq *ApprovalRecordQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ApprovalRecordQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (arq *ApprovalRecordQuery) Clone() *ApprovalRecordQuery {
-	if arq == nil {
+func (_q *ApprovalRecordQuery) Clone() *ApprovalRecordQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ApprovalRecordQuery{
-		config:       arq.config,
-		ctx:          arq.ctx.Clone(),
-		order:        append([]approvalrecord.OrderOption{}, arq.order...),
-		inters:       append([]Interceptor{}, arq.inters...),
-		predicates:   append([]predicate.ApprovalRecord{}, arq.predicates...),
-		withTicket:   arq.withTicket.Clone(),
-		withWorkflow: arq.withWorkflow.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]approvalrecord.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.ApprovalRecord{}, _q.predicates...),
+		withTicket:   _q.withTicket.Clone(),
+		withWorkflow: _q.withWorkflow.Clone(),
 		// clone intermediate query.
-		sql:  arq.sql.Clone(),
-		path: arq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithTicket tells the query-builder to eager-load the nodes that are connected to
 // the "ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (arq *ApprovalRecordQuery) WithTicket(opts ...func(*TicketQuery)) *ApprovalRecordQuery {
-	query := (&TicketClient{config: arq.config}).Query()
+func (_q *ApprovalRecordQuery) WithTicket(opts ...func(*TicketQuery)) *ApprovalRecordQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	arq.withTicket = query
-	return arq
+	_q.withTicket = query
+	return _q
 }
 
 // WithWorkflow tells the query-builder to eager-load the nodes that are connected to
 // the "workflow" edge. The optional arguments are used to configure the query builder of the edge.
-func (arq *ApprovalRecordQuery) WithWorkflow(opts ...func(*ApprovalWorkflowQuery)) *ApprovalRecordQuery {
-	query := (&ApprovalWorkflowClient{config: arq.config}).Query()
+func (_q *ApprovalRecordQuery) WithWorkflow(opts ...func(*ApprovalWorkflowQuery)) *ApprovalRecordQuery {
+	query := (&ApprovalWorkflowClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	arq.withWorkflow = query
-	return arq
+	_q.withWorkflow = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -342,10 +342,10 @@ func (arq *ApprovalRecordQuery) WithWorkflow(opts ...func(*ApprovalWorkflowQuery
 //		GroupBy(approvalrecord.FieldTicketID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (arq *ApprovalRecordQuery) GroupBy(field string, fields ...string) *ApprovalRecordGroupBy {
-	arq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ApprovalRecordGroupBy{build: arq}
-	grbuild.flds = &arq.ctx.Fields
+func (_q *ApprovalRecordQuery) GroupBy(field string, fields ...string) *ApprovalRecordGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ApprovalRecordGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = approvalrecord.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -363,59 +363,59 @@ func (arq *ApprovalRecordQuery) GroupBy(field string, fields ...string) *Approva
 //	client.ApprovalRecord.Query().
 //		Select(approvalrecord.FieldTicketID).
 //		Scan(ctx, &v)
-func (arq *ApprovalRecordQuery) Select(fields ...string) *ApprovalRecordSelect {
-	arq.ctx.Fields = append(arq.ctx.Fields, fields...)
-	sbuild := &ApprovalRecordSelect{ApprovalRecordQuery: arq}
+func (_q *ApprovalRecordQuery) Select(fields ...string) *ApprovalRecordSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ApprovalRecordSelect{ApprovalRecordQuery: _q}
 	sbuild.label = approvalrecord.Label
-	sbuild.flds, sbuild.scan = &arq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ApprovalRecordSelect configured with the given aggregations.
-func (arq *ApprovalRecordQuery) Aggregate(fns ...AggregateFunc) *ApprovalRecordSelect {
-	return arq.Select().Aggregate(fns...)
+func (_q *ApprovalRecordQuery) Aggregate(fns ...AggregateFunc) *ApprovalRecordSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (arq *ApprovalRecordQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range arq.inters {
+func (_q *ApprovalRecordQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, arq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range arq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !approvalrecord.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if arq.path != nil {
-		prev, err := arq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		arq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (arq *ApprovalRecordQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApprovalRecord, error) {
+func (_q *ApprovalRecordQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ApprovalRecord, error) {
 	var (
 		nodes       = []*ApprovalRecord{}
-		_spec       = arq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			arq.withTicket != nil,
-			arq.withWorkflow != nil,
+			_q.withTicket != nil,
+			_q.withWorkflow != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ApprovalRecord).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ApprovalRecord{config: arq.config}
+		node := &ApprovalRecord{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -423,20 +423,20 @@ func (arq *ApprovalRecordQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, arq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := arq.withTicket; query != nil {
-		if err := arq.loadTicket(ctx, query, nodes, nil,
+	if query := _q.withTicket; query != nil {
+		if err := _q.loadTicket(ctx, query, nodes, nil,
 			func(n *ApprovalRecord, e *Ticket) { n.Edges.Ticket = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := arq.withWorkflow; query != nil {
-		if err := arq.loadWorkflow(ctx, query, nodes, nil,
+	if query := _q.withWorkflow; query != nil {
+		if err := _q.loadWorkflow(ctx, query, nodes, nil,
 			func(n *ApprovalRecord, e *ApprovalWorkflow) { n.Edges.Workflow = e }); err != nil {
 			return nil, err
 		}
@@ -444,7 +444,7 @@ func (arq *ApprovalRecordQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
-func (arq *ApprovalRecordQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*ApprovalRecord, init func(*ApprovalRecord), assign func(*ApprovalRecord, *Ticket)) error {
+func (_q *ApprovalRecordQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*ApprovalRecord, init func(*ApprovalRecord), assign func(*ApprovalRecord, *Ticket)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ApprovalRecord)
 	for i := range nodes {
@@ -473,7 +473,7 @@ func (arq *ApprovalRecordQuery) loadTicket(ctx context.Context, query *TicketQue
 	}
 	return nil
 }
-func (arq *ApprovalRecordQuery) loadWorkflow(ctx context.Context, query *ApprovalWorkflowQuery, nodes []*ApprovalRecord, init func(*ApprovalRecord), assign func(*ApprovalRecord, *ApprovalWorkflow)) error {
+func (_q *ApprovalRecordQuery) loadWorkflow(ctx context.Context, query *ApprovalWorkflowQuery, nodes []*ApprovalRecord, init func(*ApprovalRecord), assign func(*ApprovalRecord, *ApprovalWorkflow)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ApprovalRecord)
 	for i := range nodes {
@@ -503,24 +503,24 @@ func (arq *ApprovalRecordQuery) loadWorkflow(ctx context.Context, query *Approva
 	return nil
 }
 
-func (arq *ApprovalRecordQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := arq.querySpec()
-	_spec.Node.Columns = arq.ctx.Fields
-	if len(arq.ctx.Fields) > 0 {
-		_spec.Unique = arq.ctx.Unique != nil && *arq.ctx.Unique
+func (_q *ApprovalRecordQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, arq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (arq *ApprovalRecordQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ApprovalRecordQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(approvalrecord.Table, approvalrecord.Columns, sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt))
-	_spec.From = arq.sql
-	if unique := arq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if arq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := arq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, approvalrecord.FieldID)
 		for i := range fields {
@@ -528,27 +528,27 @@ func (arq *ApprovalRecordQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if arq.withTicket != nil {
+		if _q.withTicket != nil {
 			_spec.Node.AddColumnOnce(approvalrecord.FieldTicketID)
 		}
-		if arq.withWorkflow != nil {
+		if _q.withWorkflow != nil {
 			_spec.Node.AddColumnOnce(approvalrecord.FieldWorkflowID)
 		}
 	}
-	if ps := arq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := arq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := arq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := arq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -558,33 +558,33 @@ func (arq *ApprovalRecordQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (arq *ApprovalRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(arq.driver.Dialect())
+func (_q *ApprovalRecordQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(approvalrecord.Table)
-	columns := arq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = approvalrecord.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if arq.sql != nil {
-		selector = arq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if arq.ctx.Unique != nil && *arq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range arq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range arq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := arq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := arq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -597,41 +597,41 @@ type ApprovalRecordGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (argb *ApprovalRecordGroupBy) Aggregate(fns ...AggregateFunc) *ApprovalRecordGroupBy {
-	argb.fns = append(argb.fns, fns...)
-	return argb
+func (_g *ApprovalRecordGroupBy) Aggregate(fns ...AggregateFunc) *ApprovalRecordGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (argb *ApprovalRecordGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, argb.build.ctx, ent.OpQueryGroupBy)
-	if err := argb.build.prepareQuery(ctx); err != nil {
+func (_g *ApprovalRecordGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ApprovalRecordQuery, *ApprovalRecordGroupBy](ctx, argb.build, argb, argb.build.inters, v)
+	return scanWithInterceptors[*ApprovalRecordQuery, *ApprovalRecordGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (argb *ApprovalRecordGroupBy) sqlScan(ctx context.Context, root *ApprovalRecordQuery, v any) error {
+func (_g *ApprovalRecordGroupBy) sqlScan(ctx context.Context, root *ApprovalRecordQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(argb.fns))
-	for _, fn := range argb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*argb.flds)+len(argb.fns))
-		for _, f := range *argb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*argb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := argb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -645,27 +645,27 @@ type ApprovalRecordSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (ars *ApprovalRecordSelect) Aggregate(fns ...AggregateFunc) *ApprovalRecordSelect {
-	ars.fns = append(ars.fns, fns...)
-	return ars
+func (_s *ApprovalRecordSelect) Aggregate(fns ...AggregateFunc) *ApprovalRecordSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ars *ApprovalRecordSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ars.ctx, ent.OpQuerySelect)
-	if err := ars.prepareQuery(ctx); err != nil {
+func (_s *ApprovalRecordSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ApprovalRecordQuery, *ApprovalRecordSelect](ctx, ars.ApprovalRecordQuery, ars, ars.inters, v)
+	return scanWithInterceptors[*ApprovalRecordQuery, *ApprovalRecordSelect](ctx, _s.ApprovalRecordQuery, _s, _s.inters, v)
 }
 
-func (ars *ApprovalRecordSelect) sqlScan(ctx context.Context, root *ApprovalRecordQuery, v any) error {
+func (_s *ApprovalRecordSelect) sqlScan(ctx context.Context, root *ApprovalRecordQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(ars.fns))
-	for _, fn := range ars.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*ars.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -673,7 +673,7 @@ func (ars *ApprovalRecordSelect) sqlScan(ctx context.Context, root *ApprovalReco
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ars.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

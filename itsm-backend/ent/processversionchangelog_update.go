@@ -26,209 +26,209 @@ type ProcessVersionChangelogUpdate struct {
 }
 
 // Where appends a list predicates to the ProcessVersionChangelogUpdate builder.
-func (pvcu *ProcessVersionChangelogUpdate) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.Where(ps...)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetProcessDefinitionID(i int) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetProcessDefinitionID(i)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetProcessDefinitionID(v int) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetProcessDefinitionID(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionID sets the "process_definition_id" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableProcessDefinitionID(i *int) *ProcessVersionChangelogUpdate {
-	if i != nil {
-		pvcu.SetProcessDefinitionID(*i)
+func (_u *ProcessVersionChangelogUpdate) SetNillableProcessDefinitionID(v *int) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetProcessDefinitionID(*v)
 	}
-	return pvcu
+	return _u
 }
 
 // SetVersion sets the "version" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetVersion(s string) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetVersion(s)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetVersion(v string) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetVersion(v)
+	return _u
 }
 
 // SetNillableVersion sets the "version" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableVersion(s *string) *ProcessVersionChangelogUpdate {
-	if s != nil {
-		pvcu.SetVersion(*s)
+func (_u *ProcessVersionChangelogUpdate) SetNillableVersion(v *string) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
 	}
-	return pvcu
+	return _u
 }
 
 // SetChangeLog sets the "change_log" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetChangeLog(s string) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetChangeLog(s)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetChangeLog(v string) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetChangeLog(v)
+	return _u
 }
 
 // SetNillableChangeLog sets the "change_log" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableChangeLog(s *string) *ProcessVersionChangelogUpdate {
-	if s != nil {
-		pvcu.SetChangeLog(*s)
+func (_u *ProcessVersionChangelogUpdate) SetNillableChangeLog(v *string) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetChangeLog(*v)
 	}
-	return pvcu
+	return _u
 }
 
 // SetChangeDetails sets the "change_details" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetChangeDetails(m []map[string]interface{}) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetChangeDetails(m)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetChangeDetails(v []map[string]interface{}) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetChangeDetails(v)
+	return _u
 }
 
-// AppendChangeDetails appends m to the "change_details" field.
-func (pvcu *ProcessVersionChangelogUpdate) AppendChangeDetails(m []map[string]interface{}) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.AppendChangeDetails(m)
-	return pvcu
+// AppendChangeDetails appends value to the "change_details" field.
+func (_u *ProcessVersionChangelogUpdate) AppendChangeDetails(v []map[string]interface{}) *ProcessVersionChangelogUpdate {
+	_u.mutation.AppendChangeDetails(v)
+	return _u
 }
 
 // ClearChangeDetails clears the value of the "change_details" field.
-func (pvcu *ProcessVersionChangelogUpdate) ClearChangeDetails() *ProcessVersionChangelogUpdate {
-	pvcu.mutation.ClearChangeDetails()
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) ClearChangeDetails() *ProcessVersionChangelogUpdate {
+	_u.mutation.ClearChangeDetails()
+	return _u
 }
 
 // SetChangeType sets the "change_type" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetChangeType(s string) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetChangeType(s)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetChangeType(v string) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetChangeType(v)
+	return _u
 }
 
 // SetNillableChangeType sets the "change_type" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableChangeType(s *string) *ProcessVersionChangelogUpdate {
-	if s != nil {
-		pvcu.SetChangeType(*s)
+func (_u *ProcessVersionChangelogUpdate) SetNillableChangeType(v *string) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetChangeType(*v)
 	}
-	return pvcu
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetCreatedBy(i int) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetCreatedBy(i)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetCreatedBy(v int) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableCreatedBy(i *int) *ProcessVersionChangelogUpdate {
-	if i != nil {
-		pvcu.SetCreatedBy(*i)
+func (_u *ProcessVersionChangelogUpdate) SetNillableCreatedBy(v *int) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return pvcu
+	return _u
 }
 
 // ClearCreatedBy clears the value of the "created_by" field.
-func (pvcu *ProcessVersionChangelogUpdate) ClearCreatedBy() *ProcessVersionChangelogUpdate {
-	pvcu.mutation.ClearCreatedBy()
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) ClearCreatedBy() *ProcessVersionChangelogUpdate {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // SetCreatedByName sets the "created_by_name" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetCreatedByName(s string) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetCreatedByName(s)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetCreatedByName(v string) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetCreatedByName(v)
+	return _u
 }
 
 // SetNillableCreatedByName sets the "created_by_name" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableCreatedByName(s *string) *ProcessVersionChangelogUpdate {
-	if s != nil {
-		pvcu.SetCreatedByName(*s)
+func (_u *ProcessVersionChangelogUpdate) SetNillableCreatedByName(v *string) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetCreatedByName(*v)
 	}
-	return pvcu
+	return _u
 }
 
 // ClearCreatedByName clears the value of the "created_by_name" field.
-func (pvcu *ProcessVersionChangelogUpdate) ClearCreatedByName() *ProcessVersionChangelogUpdate {
-	pvcu.mutation.ClearCreatedByName()
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) ClearCreatedByName() *ProcessVersionChangelogUpdate {
+	_u.mutation.ClearCreatedByName()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetTenantID(i int) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.ResetTenantID()
-	pvcu.mutation.SetTenantID(i)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetTenantID(v int) *ProcessVersionChangelogUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableTenantID(i *int) *ProcessVersionChangelogUpdate {
-	if i != nil {
-		pvcu.SetTenantID(*i)
+func (_u *ProcessVersionChangelogUpdate) SetNillableTenantID(v *int) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pvcu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pvcu *ProcessVersionChangelogUpdate) AddTenantID(i int) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.AddTenantID(i)
-	return pvcu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessVersionChangelogUpdate) AddTenantID(v int) *ProcessVersionChangelogUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pvcu *ProcessVersionChangelogUpdate) SetCreatedAt(t time.Time) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetCreatedAt(t)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetCreatedAt(v time.Time) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableCreatedAt(t *time.Time) *ProcessVersionChangelogUpdate {
-	if t != nil {
-		pvcu.SetCreatedAt(*t)
+func (_u *ProcessVersionChangelogUpdate) SetNillableCreatedAt(v *time.Time) *ProcessVersionChangelogUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pvcu
+	return _u
 }
 
 // SetProcessDefinition sets the "process_definition" edge to the ProcessDefinition entity.
-func (pvcu *ProcessVersionChangelogUpdate) SetProcessDefinition(p *ProcessDefinition) *ProcessVersionChangelogUpdate {
-	return pvcu.SetProcessDefinitionID(p.ID)
+func (_u *ProcessVersionChangelogUpdate) SetProcessDefinition(v *ProcessDefinition) *ProcessVersionChangelogUpdate {
+	return _u.SetProcessDefinitionID(v.ID)
 }
 
 // SetUserID sets the "user" edge to the User entity by ID.
-func (pvcu *ProcessVersionChangelogUpdate) SetUserID(id int) *ProcessVersionChangelogUpdate {
-	pvcu.mutation.SetUserID(id)
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) SetUserID(id int) *ProcessVersionChangelogUpdate {
+	_u.mutation.SetUserID(id)
+	return _u
 }
 
 // SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (pvcu *ProcessVersionChangelogUpdate) SetNillableUserID(id *int) *ProcessVersionChangelogUpdate {
+func (_u *ProcessVersionChangelogUpdate) SetNillableUserID(id *int) *ProcessVersionChangelogUpdate {
 	if id != nil {
-		pvcu = pvcu.SetUserID(*id)
+		_u = _u.SetUserID(*id)
 	}
-	return pvcu
+	return _u
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (pvcu *ProcessVersionChangelogUpdate) SetUser(u *User) *ProcessVersionChangelogUpdate {
-	return pvcu.SetUserID(u.ID)
+func (_u *ProcessVersionChangelogUpdate) SetUser(v *User) *ProcessVersionChangelogUpdate {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the ProcessVersionChangelogMutation object of the builder.
-func (pvcu *ProcessVersionChangelogUpdate) Mutation() *ProcessVersionChangelogMutation {
-	return pvcu.mutation
+func (_u *ProcessVersionChangelogUpdate) Mutation() *ProcessVersionChangelogMutation {
+	return _u.mutation
 }
 
 // ClearProcessDefinition clears the "process_definition" edge to the ProcessDefinition entity.
-func (pvcu *ProcessVersionChangelogUpdate) ClearProcessDefinition() *ProcessVersionChangelogUpdate {
-	pvcu.mutation.ClearProcessDefinition()
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) ClearProcessDefinition() *ProcessVersionChangelogUpdate {
+	_u.mutation.ClearProcessDefinition()
+	return _u
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (pvcu *ProcessVersionChangelogUpdate) ClearUser() *ProcessVersionChangelogUpdate {
-	pvcu.mutation.ClearUser()
-	return pvcu
+func (_u *ProcessVersionChangelogUpdate) ClearUser() *ProcessVersionChangelogUpdate {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pvcu *ProcessVersionChangelogUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, pvcu.sqlSave, pvcu.mutation, pvcu.hooks)
+func (_u *ProcessVersionChangelogUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pvcu *ProcessVersionChangelogUpdate) SaveX(ctx context.Context) int {
-	affected, err := pvcu.Save(ctx)
+func (_u *ProcessVersionChangelogUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -236,99 +236,99 @@ func (pvcu *ProcessVersionChangelogUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pvcu *ProcessVersionChangelogUpdate) Exec(ctx context.Context) error {
-	_, err := pvcu.Save(ctx)
+func (_u *ProcessVersionChangelogUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvcu *ProcessVersionChangelogUpdate) ExecX(ctx context.Context) {
-	if err := pvcu.Exec(ctx); err != nil {
+func (_u *ProcessVersionChangelogUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pvcu *ProcessVersionChangelogUpdate) check() error {
-	if v, ok := pvcu.mutation.ProcessDefinitionID(); ok {
+func (_u *ProcessVersionChangelogUpdate) check() error {
+	if v, ok := _u.mutation.ProcessDefinitionID(); ok {
 		if err := processversionchangelog.ProcessDefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.process_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := pvcu.mutation.Version(); ok {
+	if v, ok := _u.mutation.Version(); ok {
 		if err := processversionchangelog.VersionValidator(v); err != nil {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.version": %w`, err)}
 		}
 	}
-	if v, ok := pvcu.mutation.ChangeLog(); ok {
+	if v, ok := _u.mutation.ChangeLog(); ok {
 		if err := processversionchangelog.ChangeLogValidator(v); err != nil {
 			return &ValidationError{Name: "change_log", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.change_log": %w`, err)}
 		}
 	}
-	if v, ok := pvcu.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := processversionchangelog.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.created_by": %w`, err)}
 		}
 	}
-	if v, ok := pvcu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processversionchangelog.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.tenant_id": %w`, err)}
 		}
 	}
-	if pvcu.mutation.ProcessDefinitionCleared() && len(pvcu.mutation.ProcessDefinitionIDs()) > 0 {
+	if _u.mutation.ProcessDefinitionCleared() && len(_u.mutation.ProcessDefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessVersionChangelog.process_definition"`)
 	}
 	return nil
 }
 
-func (pvcu *ProcessVersionChangelogUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pvcu.check(); err != nil {
-		return n, err
+func (_u *ProcessVersionChangelogUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processversionchangelog.Table, processversionchangelog.Columns, sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt))
-	if ps := pvcu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pvcu.mutation.Version(); ok {
+	if value, ok := _u.mutation.Version(); ok {
 		_spec.SetField(processversionchangelog.FieldVersion, field.TypeString, value)
 	}
-	if value, ok := pvcu.mutation.ChangeLog(); ok {
+	if value, ok := _u.mutation.ChangeLog(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeLog, field.TypeString, value)
 	}
-	if value, ok := pvcu.mutation.ChangeDetails(); ok {
+	if value, ok := _u.mutation.ChangeDetails(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeDetails, field.TypeJSON, value)
 	}
-	if value, ok := pvcu.mutation.AppendedChangeDetails(); ok {
+	if value, ok := _u.mutation.AppendedChangeDetails(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, processversionchangelog.FieldChangeDetails, value)
 		})
 	}
-	if pvcu.mutation.ChangeDetailsCleared() {
+	if _u.mutation.ChangeDetailsCleared() {
 		_spec.ClearField(processversionchangelog.FieldChangeDetails, field.TypeJSON)
 	}
-	if value, ok := pvcu.mutation.ChangeType(); ok {
+	if value, ok := _u.mutation.ChangeType(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeType, field.TypeString, value)
 	}
-	if value, ok := pvcu.mutation.CreatedByName(); ok {
+	if value, ok := _u.mutation.CreatedByName(); ok {
 		_spec.SetField(processversionchangelog.FieldCreatedByName, field.TypeString, value)
 	}
-	if pvcu.mutation.CreatedByNameCleared() {
+	if _u.mutation.CreatedByNameCleared() {
 		_spec.ClearField(processversionchangelog.FieldCreatedByName, field.TypeString)
 	}
-	if value, ok := pvcu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processversionchangelog.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvcu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processversionchangelog.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvcu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processversionchangelog.FieldCreatedAt, field.TypeTime, value)
 	}
-	if pvcu.mutation.ProcessDefinitionCleared() {
+	if _u.mutation.ProcessDefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -341,7 +341,7 @@ func (pvcu *ProcessVersionChangelogUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pvcu.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -357,7 +357,7 @@ func (pvcu *ProcessVersionChangelogUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pvcu.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -370,7 +370,7 @@ func (pvcu *ProcessVersionChangelogUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pvcu.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -386,7 +386,7 @@ func (pvcu *ProcessVersionChangelogUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pvcu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processversionchangelog.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -394,8 +394,8 @@ func (pvcu *ProcessVersionChangelogUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		return 0, err
 	}
-	pvcu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProcessVersionChangelogUpdateOne is the builder for updating a single ProcessVersionChangelog entity.
@@ -407,216 +407,216 @@ type ProcessVersionChangelogUpdateOne struct {
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetProcessDefinitionID(i int) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetProcessDefinitionID(i)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetProcessDefinitionID(v int) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetProcessDefinitionID(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionID sets the "process_definition_id" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableProcessDefinitionID(i *int) *ProcessVersionChangelogUpdateOne {
-	if i != nil {
-		pvcuo.SetProcessDefinitionID(*i)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableProcessDefinitionID(v *int) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetProcessDefinitionID(*v)
 	}
-	return pvcuo
+	return _u
 }
 
 // SetVersion sets the "version" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetVersion(s string) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetVersion(s)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetVersion(v string) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetVersion(v)
+	return _u
 }
 
 // SetNillableVersion sets the "version" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableVersion(s *string) *ProcessVersionChangelogUpdateOne {
-	if s != nil {
-		pvcuo.SetVersion(*s)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableVersion(v *string) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
 	}
-	return pvcuo
+	return _u
 }
 
 // SetChangeLog sets the "change_log" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetChangeLog(s string) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetChangeLog(s)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetChangeLog(v string) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetChangeLog(v)
+	return _u
 }
 
 // SetNillableChangeLog sets the "change_log" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableChangeLog(s *string) *ProcessVersionChangelogUpdateOne {
-	if s != nil {
-		pvcuo.SetChangeLog(*s)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableChangeLog(v *string) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetChangeLog(*v)
 	}
-	return pvcuo
+	return _u
 }
 
 // SetChangeDetails sets the "change_details" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetChangeDetails(m []map[string]interface{}) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetChangeDetails(m)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetChangeDetails(v []map[string]interface{}) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetChangeDetails(v)
+	return _u
 }
 
-// AppendChangeDetails appends m to the "change_details" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) AppendChangeDetails(m []map[string]interface{}) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.AppendChangeDetails(m)
-	return pvcuo
+// AppendChangeDetails appends value to the "change_details" field.
+func (_u *ProcessVersionChangelogUpdateOne) AppendChangeDetails(v []map[string]interface{}) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.AppendChangeDetails(v)
+	return _u
 }
 
 // ClearChangeDetails clears the value of the "change_details" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) ClearChangeDetails() *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.ClearChangeDetails()
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) ClearChangeDetails() *ProcessVersionChangelogUpdateOne {
+	_u.mutation.ClearChangeDetails()
+	return _u
 }
 
 // SetChangeType sets the "change_type" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetChangeType(s string) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetChangeType(s)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetChangeType(v string) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetChangeType(v)
+	return _u
 }
 
 // SetNillableChangeType sets the "change_type" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableChangeType(s *string) *ProcessVersionChangelogUpdateOne {
-	if s != nil {
-		pvcuo.SetChangeType(*s)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableChangeType(v *string) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetChangeType(*v)
 	}
-	return pvcuo
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetCreatedBy(i int) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetCreatedBy(i)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetCreatedBy(v int) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableCreatedBy(i *int) *ProcessVersionChangelogUpdateOne {
-	if i != nil {
-		pvcuo.SetCreatedBy(*i)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableCreatedBy(v *int) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return pvcuo
+	return _u
 }
 
 // ClearCreatedBy clears the value of the "created_by" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) ClearCreatedBy() *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.ClearCreatedBy()
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) ClearCreatedBy() *ProcessVersionChangelogUpdateOne {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // SetCreatedByName sets the "created_by_name" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetCreatedByName(s string) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetCreatedByName(s)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetCreatedByName(v string) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetCreatedByName(v)
+	return _u
 }
 
 // SetNillableCreatedByName sets the "created_by_name" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableCreatedByName(s *string) *ProcessVersionChangelogUpdateOne {
-	if s != nil {
-		pvcuo.SetCreatedByName(*s)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableCreatedByName(v *string) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetCreatedByName(*v)
 	}
-	return pvcuo
+	return _u
 }
 
 // ClearCreatedByName clears the value of the "created_by_name" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) ClearCreatedByName() *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.ClearCreatedByName()
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) ClearCreatedByName() *ProcessVersionChangelogUpdateOne {
+	_u.mutation.ClearCreatedByName()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetTenantID(i int) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.ResetTenantID()
-	pvcuo.mutation.SetTenantID(i)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetTenantID(v int) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableTenantID(i *int) *ProcessVersionChangelogUpdateOne {
-	if i != nil {
-		pvcuo.SetTenantID(*i)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableTenantID(v *int) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pvcuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) AddTenantID(i int) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.AddTenantID(i)
-	return pvcuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessVersionChangelogUpdateOne) AddTenantID(v int) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetCreatedAt(t time.Time) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetCreatedAt(t)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetCreatedAt(v time.Time) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableCreatedAt(t *time.Time) *ProcessVersionChangelogUpdateOne {
-	if t != nil {
-		pvcuo.SetCreatedAt(*t)
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableCreatedAt(v *time.Time) *ProcessVersionChangelogUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pvcuo
+	return _u
 }
 
 // SetProcessDefinition sets the "process_definition" edge to the ProcessDefinition entity.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetProcessDefinition(p *ProcessDefinition) *ProcessVersionChangelogUpdateOne {
-	return pvcuo.SetProcessDefinitionID(p.ID)
+func (_u *ProcessVersionChangelogUpdateOne) SetProcessDefinition(v *ProcessDefinition) *ProcessVersionChangelogUpdateOne {
+	return _u.SetProcessDefinitionID(v.ID)
 }
 
 // SetUserID sets the "user" edge to the User entity by ID.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetUserID(id int) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.SetUserID(id)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) SetUserID(id int) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.SetUserID(id)
+	return _u
 }
 
 // SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetNillableUserID(id *int) *ProcessVersionChangelogUpdateOne {
+func (_u *ProcessVersionChangelogUpdateOne) SetNillableUserID(id *int) *ProcessVersionChangelogUpdateOne {
 	if id != nil {
-		pvcuo = pvcuo.SetUserID(*id)
+		_u = _u.SetUserID(*id)
 	}
-	return pvcuo
+	return _u
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SetUser(u *User) *ProcessVersionChangelogUpdateOne {
-	return pvcuo.SetUserID(u.ID)
+func (_u *ProcessVersionChangelogUpdateOne) SetUser(v *User) *ProcessVersionChangelogUpdateOne {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the ProcessVersionChangelogMutation object of the builder.
-func (pvcuo *ProcessVersionChangelogUpdateOne) Mutation() *ProcessVersionChangelogMutation {
-	return pvcuo.mutation
+func (_u *ProcessVersionChangelogUpdateOne) Mutation() *ProcessVersionChangelogMutation {
+	return _u.mutation
 }
 
 // ClearProcessDefinition clears the "process_definition" edge to the ProcessDefinition entity.
-func (pvcuo *ProcessVersionChangelogUpdateOne) ClearProcessDefinition() *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.ClearProcessDefinition()
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) ClearProcessDefinition() *ProcessVersionChangelogUpdateOne {
+	_u.mutation.ClearProcessDefinition()
+	return _u
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (pvcuo *ProcessVersionChangelogUpdateOne) ClearUser() *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.ClearUser()
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) ClearUser() *ProcessVersionChangelogUpdateOne {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Where appends a list predicates to the ProcessVersionChangelogUpdate builder.
-func (pvcuo *ProcessVersionChangelogUpdateOne) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogUpdateOne {
-	pvcuo.mutation.Where(ps...)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (pvcuo *ProcessVersionChangelogUpdateOne) Select(field string, fields ...string) *ProcessVersionChangelogUpdateOne {
-	pvcuo.fields = append([]string{field}, fields...)
-	return pvcuo
+func (_u *ProcessVersionChangelogUpdateOne) Select(field string, fields ...string) *ProcessVersionChangelogUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProcessVersionChangelog entity.
-func (pvcuo *ProcessVersionChangelogUpdateOne) Save(ctx context.Context) (*ProcessVersionChangelog, error) {
-	return withHooks(ctx, pvcuo.sqlSave, pvcuo.mutation, pvcuo.hooks)
+func (_u *ProcessVersionChangelogUpdateOne) Save(ctx context.Context) (*ProcessVersionChangelog, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pvcuo *ProcessVersionChangelogUpdateOne) SaveX(ctx context.Context) *ProcessVersionChangelog {
-	node, err := pvcuo.Save(ctx)
+func (_u *ProcessVersionChangelogUpdateOne) SaveX(ctx context.Context) *ProcessVersionChangelog {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -624,62 +624,62 @@ func (pvcuo *ProcessVersionChangelogUpdateOne) SaveX(ctx context.Context) *Proce
 }
 
 // Exec executes the query on the entity.
-func (pvcuo *ProcessVersionChangelogUpdateOne) Exec(ctx context.Context) error {
-	_, err := pvcuo.Save(ctx)
+func (_u *ProcessVersionChangelogUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvcuo *ProcessVersionChangelogUpdateOne) ExecX(ctx context.Context) {
-	if err := pvcuo.Exec(ctx); err != nil {
+func (_u *ProcessVersionChangelogUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pvcuo *ProcessVersionChangelogUpdateOne) check() error {
-	if v, ok := pvcuo.mutation.ProcessDefinitionID(); ok {
+func (_u *ProcessVersionChangelogUpdateOne) check() error {
+	if v, ok := _u.mutation.ProcessDefinitionID(); ok {
 		if err := processversionchangelog.ProcessDefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.process_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := pvcuo.mutation.Version(); ok {
+	if v, ok := _u.mutation.Version(); ok {
 		if err := processversionchangelog.VersionValidator(v); err != nil {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.version": %w`, err)}
 		}
 	}
-	if v, ok := pvcuo.mutation.ChangeLog(); ok {
+	if v, ok := _u.mutation.ChangeLog(); ok {
 		if err := processversionchangelog.ChangeLogValidator(v); err != nil {
 			return &ValidationError{Name: "change_log", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.change_log": %w`, err)}
 		}
 	}
-	if v, ok := pvcuo.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := processversionchangelog.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.created_by": %w`, err)}
 		}
 	}
-	if v, ok := pvcuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processversionchangelog.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.tenant_id": %w`, err)}
 		}
 	}
-	if pvcuo.mutation.ProcessDefinitionCleared() && len(pvcuo.mutation.ProcessDefinitionIDs()) > 0 {
+	if _u.mutation.ProcessDefinitionCleared() && len(_u.mutation.ProcessDefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessVersionChangelog.process_definition"`)
 	}
 	return nil
 }
 
-func (pvcuo *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_node *ProcessVersionChangelog, err error) {
-	if err := pvcuo.check(); err != nil {
+func (_u *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_node *ProcessVersionChangelog, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processversionchangelog.Table, processversionchangelog.Columns, sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt))
-	id, ok := pvcuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProcessVersionChangelog.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := pvcuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processversionchangelog.FieldID)
 		for _, f := range fields {
@@ -691,49 +691,49 @@ func (pvcuo *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_no
 			}
 		}
 	}
-	if ps := pvcuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pvcuo.mutation.Version(); ok {
+	if value, ok := _u.mutation.Version(); ok {
 		_spec.SetField(processversionchangelog.FieldVersion, field.TypeString, value)
 	}
-	if value, ok := pvcuo.mutation.ChangeLog(); ok {
+	if value, ok := _u.mutation.ChangeLog(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeLog, field.TypeString, value)
 	}
-	if value, ok := pvcuo.mutation.ChangeDetails(); ok {
+	if value, ok := _u.mutation.ChangeDetails(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeDetails, field.TypeJSON, value)
 	}
-	if value, ok := pvcuo.mutation.AppendedChangeDetails(); ok {
+	if value, ok := _u.mutation.AppendedChangeDetails(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, processversionchangelog.FieldChangeDetails, value)
 		})
 	}
-	if pvcuo.mutation.ChangeDetailsCleared() {
+	if _u.mutation.ChangeDetailsCleared() {
 		_spec.ClearField(processversionchangelog.FieldChangeDetails, field.TypeJSON)
 	}
-	if value, ok := pvcuo.mutation.ChangeType(); ok {
+	if value, ok := _u.mutation.ChangeType(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeType, field.TypeString, value)
 	}
-	if value, ok := pvcuo.mutation.CreatedByName(); ok {
+	if value, ok := _u.mutation.CreatedByName(); ok {
 		_spec.SetField(processversionchangelog.FieldCreatedByName, field.TypeString, value)
 	}
-	if pvcuo.mutation.CreatedByNameCleared() {
+	if _u.mutation.CreatedByNameCleared() {
 		_spec.ClearField(processversionchangelog.FieldCreatedByName, field.TypeString)
 	}
-	if value, ok := pvcuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processversionchangelog.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvcuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processversionchangelog.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvcuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processversionchangelog.FieldCreatedAt, field.TypeTime, value)
 	}
-	if pvcuo.mutation.ProcessDefinitionCleared() {
+	if _u.mutation.ProcessDefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -746,7 +746,7 @@ func (pvcuo *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pvcuo.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -762,7 +762,7 @@ func (pvcuo *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pvcuo.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -775,7 +775,7 @@ func (pvcuo *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pvcuo.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -791,10 +791,10 @@ func (pvcuo *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ProcessVersionChangelog{config: pvcuo.config}
+	_node = &ProcessVersionChangelog{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, pvcuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processversionchangelog.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -802,6 +802,6 @@ func (pvcuo *ProcessVersionChangelogUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		return nil, err
 	}
-	pvcuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

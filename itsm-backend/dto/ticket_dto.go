@@ -17,20 +17,21 @@ type UserBasicInfo struct {
 
 // CreateTicketRequest 创建工单请求
 type CreateTicketRequest struct {
-	Title          string                 `json:"title" binding:"required,min=2,max=200"`
-	Description    string                 `json:"description" binding:"required,min=10,max=5000"`
-	Priority       string                 `json:"priority" binding:"required"`
-	Type           string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket"` // 工单类型
-	Category       string                 `json:"category"`                                                              // 分类名称（可选，前端传入）
-	CategoryID     *int                   `json:"category_id,omitempty"`                                                 // 分类ID（优先使用）
-	TemplateID     *int                   `json:"template_id,omitempty"`                                                 // 模板ID
-	RequesterID    int                    `json:"requester_id" binding:"omitempty"`                                      // 从认证上下文中获取，前端可不传
-	AssigneeID     int                    `json:"assignee_id"`
-	ParentTicketID *int                   `json:"parent_ticket_id,omitempty"`
-	TagIDs         []int                  `json:"tag_ids,omitempty"` // 标签ID列表
-	Tags           []string               `json:"tags"`              // 标签名称列表（兼容旧格式）
-	FormFields     map[string]interface{} `json:"form_fields"`
-	Attachments    []string               `json:"attachments"`
+	Title                  string                 `json:"title" binding:"required,min=2,max=200"`
+	Description            string                 `json:"description" binding:"required,min=10,max=5000"`
+	Priority               string                 `json:"priority" binding:"required"`
+	Type                   string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"` // 工单类型
+	Category               string                 `json:"category"`                                                              // 分类名称（可选，前端传入）
+	CategoryID             *int                   `json:"category_id,omitempty"`                                                 // 分类ID（优先使用）
+	TemplateID             *int                   `json:"template_id,omitempty"`                                                 // 模板ID
+	RequesterID            int                    `json:"requester_id" binding:"omitempty"`                                      // 从认证上下文中获取，前端可不传
+	AssigneeID             int                    `json:"assignee_id"`
+	ParentTicketID         *int                   `json:"parent_ticket_id,omitempty"`
+	TagIDs                 []int                  `json:"tag_ids,omitempty"`        // 标签ID列表
+	Tags                   []string               `json:"tags"`                     // 标签名称列表（兼容旧格式）
+	FormFields             map[string]interface{} `json:"form_fields"`
+	Attachments            []string               `json:"attachments"`
+	WorkflowDefinitionKey  string                 `json:"workflow_definition_key"` // 工作流定义Key（可选，优先级高于自动选择）
 }
 
 // UpdateTicketRequest 更新工单请求
@@ -39,7 +40,7 @@ type UpdateTicketRequest struct {
 	Description string                 `json:"description" binding:"omitempty,min=10,max=5000"`
 	Priority    string                 `json:"priority" binding:"omitempty,oneof=low medium high critical"`
 	Status      string                 `json:"status" binding:"omitempty,oneof=open in_progress resolved closed"`
-	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket"`
+	Type        string                 `json:"type" binding:"omitempty,oneof=incident service_request change ticket problem"`
 	Category    string                 `json:"category" binding:"omitempty"`
 	AssigneeID  int                    `json:"assignee_id"`
 	RequesterID int                    `json:"requester_id"` // 创建人ID

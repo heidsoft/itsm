@@ -30,44 +30,44 @@ type IncidentRuleExecutionQuery struct {
 }
 
 // Where adds a new predicate for the IncidentRuleExecutionQuery builder.
-func (ireq *IncidentRuleExecutionQuery) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionQuery {
-	ireq.predicates = append(ireq.predicates, ps...)
-	return ireq
+func (_q *IncidentRuleExecutionQuery) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (ireq *IncidentRuleExecutionQuery) Limit(limit int) *IncidentRuleExecutionQuery {
-	ireq.ctx.Limit = &limit
-	return ireq
+func (_q *IncidentRuleExecutionQuery) Limit(limit int) *IncidentRuleExecutionQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (ireq *IncidentRuleExecutionQuery) Offset(offset int) *IncidentRuleExecutionQuery {
-	ireq.ctx.Offset = &offset
-	return ireq
+func (_q *IncidentRuleExecutionQuery) Offset(offset int) *IncidentRuleExecutionQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (ireq *IncidentRuleExecutionQuery) Unique(unique bool) *IncidentRuleExecutionQuery {
-	ireq.ctx.Unique = &unique
-	return ireq
+func (_q *IncidentRuleExecutionQuery) Unique(unique bool) *IncidentRuleExecutionQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (ireq *IncidentRuleExecutionQuery) Order(o ...incidentruleexecution.OrderOption) *IncidentRuleExecutionQuery {
-	ireq.order = append(ireq.order, o...)
-	return ireq
+func (_q *IncidentRuleExecutionQuery) Order(o ...incidentruleexecution.OrderOption) *IncidentRuleExecutionQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryRule chains the current query on the "rule" edge.
-func (ireq *IncidentRuleExecutionQuery) QueryRule() *IncidentRuleQuery {
-	query := (&IncidentRuleClient{config: ireq.config}).Query()
+func (_q *IncidentRuleExecutionQuery) QueryRule() *IncidentRuleQuery {
+	query := (&IncidentRuleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ireq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ireq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (ireq *IncidentRuleExecutionQuery) QueryRule() *IncidentRuleQuery {
 			sqlgraph.To(incidentrule.Table, incidentrule.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, incidentruleexecution.RuleTable, incidentruleexecution.RuleColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(ireq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (ireq *IncidentRuleExecutionQuery) QueryRule() *IncidentRuleQuery {
 
 // First returns the first IncidentRuleExecution entity from the query.
 // Returns a *NotFoundError when no IncidentRuleExecution was found.
-func (ireq *IncidentRuleExecutionQuery) First(ctx context.Context) (*IncidentRuleExecution, error) {
-	nodes, err := ireq.Limit(1).All(setContextOp(ctx, ireq.ctx, ent.OpQueryFirst))
+func (_q *IncidentRuleExecutionQuery) First(ctx context.Context) (*IncidentRuleExecution, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (ireq *IncidentRuleExecutionQuery) First(ctx context.Context) (*IncidentRul
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) FirstX(ctx context.Context) *IncidentRuleExecution {
-	node, err := ireq.First(ctx)
+func (_q *IncidentRuleExecutionQuery) FirstX(ctx context.Context) *IncidentRuleExecution {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (ireq *IncidentRuleExecutionQuery) FirstX(ctx context.Context) *IncidentRul
 
 // FirstID returns the first IncidentRuleExecution ID from the query.
 // Returns a *NotFoundError when no IncidentRuleExecution ID was found.
-func (ireq *IncidentRuleExecutionQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *IncidentRuleExecutionQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ireq.Limit(1).IDs(setContextOp(ctx, ireq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (ireq *IncidentRuleExecutionQuery) FirstID(ctx context.Context) (id int, er
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) FirstIDX(ctx context.Context) int {
-	id, err := ireq.FirstID(ctx)
+func (_q *IncidentRuleExecutionQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (ireq *IncidentRuleExecutionQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single IncidentRuleExecution entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one IncidentRuleExecution entity is found.
 // Returns a *NotFoundError when no IncidentRuleExecution entities are found.
-func (ireq *IncidentRuleExecutionQuery) Only(ctx context.Context) (*IncidentRuleExecution, error) {
-	nodes, err := ireq.Limit(2).All(setContextOp(ctx, ireq.ctx, ent.OpQueryOnly))
+func (_q *IncidentRuleExecutionQuery) Only(ctx context.Context) (*IncidentRuleExecution, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (ireq *IncidentRuleExecutionQuery) Only(ctx context.Context) (*IncidentRule
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) OnlyX(ctx context.Context) *IncidentRuleExecution {
-	node, err := ireq.Only(ctx)
+func (_q *IncidentRuleExecutionQuery) OnlyX(ctx context.Context) *IncidentRuleExecution {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (ireq *IncidentRuleExecutionQuery) OnlyX(ctx context.Context) *IncidentRule
 // OnlyID is like Only, but returns the only IncidentRuleExecution ID in the query.
 // Returns a *NotSingularError when more than one IncidentRuleExecution ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (ireq *IncidentRuleExecutionQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *IncidentRuleExecutionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ireq.Limit(2).IDs(setContextOp(ctx, ireq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (ireq *IncidentRuleExecutionQuery) OnlyID(ctx context.Context) (id int, err
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) OnlyIDX(ctx context.Context) int {
-	id, err := ireq.OnlyID(ctx)
+func (_q *IncidentRuleExecutionQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (ireq *IncidentRuleExecutionQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of IncidentRuleExecutions.
-func (ireq *IncidentRuleExecutionQuery) All(ctx context.Context) ([]*IncidentRuleExecution, error) {
-	ctx = setContextOp(ctx, ireq.ctx, ent.OpQueryAll)
-	if err := ireq.prepareQuery(ctx); err != nil {
+func (_q *IncidentRuleExecutionQuery) All(ctx context.Context) ([]*IncidentRuleExecution, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*IncidentRuleExecution, *IncidentRuleExecutionQuery]()
-	return withInterceptors[[]*IncidentRuleExecution](ctx, ireq, qr, ireq.inters)
+	return withInterceptors[[]*IncidentRuleExecution](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) AllX(ctx context.Context) []*IncidentRuleExecution {
-	nodes, err := ireq.All(ctx)
+func (_q *IncidentRuleExecutionQuery) AllX(ctx context.Context) []*IncidentRuleExecution {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (ireq *IncidentRuleExecutionQuery) AllX(ctx context.Context) []*IncidentRul
 }
 
 // IDs executes the query and returns a list of IncidentRuleExecution IDs.
-func (ireq *IncidentRuleExecutionQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if ireq.ctx.Unique == nil && ireq.path != nil {
-		ireq.Unique(true)
+func (_q *IncidentRuleExecutionQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, ireq.ctx, ent.OpQueryIDs)
-	if err = ireq.Select(incidentruleexecution.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(incidentruleexecution.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) IDsX(ctx context.Context) []int {
-	ids, err := ireq.IDs(ctx)
+func (_q *IncidentRuleExecutionQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (ireq *IncidentRuleExecutionQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (ireq *IncidentRuleExecutionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, ireq.ctx, ent.OpQueryCount)
-	if err := ireq.prepareQuery(ctx); err != nil {
+func (_q *IncidentRuleExecutionQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, ireq, querierCount[*IncidentRuleExecutionQuery](), ireq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*IncidentRuleExecutionQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) CountX(ctx context.Context) int {
-	count, err := ireq.Count(ctx)
+func (_q *IncidentRuleExecutionQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (ireq *IncidentRuleExecutionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (ireq *IncidentRuleExecutionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, ireq.ctx, ent.OpQueryExist)
-	switch _, err := ireq.FirstID(ctx); {
+func (_q *IncidentRuleExecutionQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (ireq *IncidentRuleExecutionQuery) Exist(ctx context.Context) (bool, error)
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (ireq *IncidentRuleExecutionQuery) ExistX(ctx context.Context) bool {
-	exist, err := ireq.Exist(ctx)
+func (_q *IncidentRuleExecutionQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (ireq *IncidentRuleExecutionQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the IncidentRuleExecutionQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (ireq *IncidentRuleExecutionQuery) Clone() *IncidentRuleExecutionQuery {
-	if ireq == nil {
+func (_q *IncidentRuleExecutionQuery) Clone() *IncidentRuleExecutionQuery {
+	if _q == nil {
 		return nil
 	}
 	return &IncidentRuleExecutionQuery{
-		config:     ireq.config,
-		ctx:        ireq.ctx.Clone(),
-		order:      append([]incidentruleexecution.OrderOption{}, ireq.order...),
-		inters:     append([]Interceptor{}, ireq.inters...),
-		predicates: append([]predicate.IncidentRuleExecution{}, ireq.predicates...),
-		withRule:   ireq.withRule.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]incidentruleexecution.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.IncidentRuleExecution{}, _q.predicates...),
+		withRule:   _q.withRule.Clone(),
 		// clone intermediate query.
-		sql:  ireq.sql.Clone(),
-		path: ireq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithRule tells the query-builder to eager-load the nodes that are connected to
 // the "rule" edge. The optional arguments are used to configure the query builder of the edge.
-func (ireq *IncidentRuleExecutionQuery) WithRule(opts ...func(*IncidentRuleQuery)) *IncidentRuleExecutionQuery {
-	query := (&IncidentRuleClient{config: ireq.config}).Query()
+func (_q *IncidentRuleExecutionQuery) WithRule(opts ...func(*IncidentRuleQuery)) *IncidentRuleExecutionQuery {
+	query := (&IncidentRuleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ireq.withRule = query
-	return ireq
+	_q.withRule = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (ireq *IncidentRuleExecutionQuery) WithRule(opts ...func(*IncidentRuleQuery
 //		GroupBy(incidentruleexecution.FieldRuleID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (ireq *IncidentRuleExecutionQuery) GroupBy(field string, fields ...string) *IncidentRuleExecutionGroupBy {
-	ireq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &IncidentRuleExecutionGroupBy{build: ireq}
-	grbuild.flds = &ireq.ctx.Fields
+func (_q *IncidentRuleExecutionQuery) GroupBy(field string, fields ...string) *IncidentRuleExecutionGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &IncidentRuleExecutionGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = incidentruleexecution.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (ireq *IncidentRuleExecutionQuery) GroupBy(field string, fields ...string) 
 //	client.IncidentRuleExecution.Query().
 //		Select(incidentruleexecution.FieldRuleID).
 //		Scan(ctx, &v)
-func (ireq *IncidentRuleExecutionQuery) Select(fields ...string) *IncidentRuleExecutionSelect {
-	ireq.ctx.Fields = append(ireq.ctx.Fields, fields...)
-	sbuild := &IncidentRuleExecutionSelect{IncidentRuleExecutionQuery: ireq}
+func (_q *IncidentRuleExecutionQuery) Select(fields ...string) *IncidentRuleExecutionSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &IncidentRuleExecutionSelect{IncidentRuleExecutionQuery: _q}
 	sbuild.label = incidentruleexecution.Label
-	sbuild.flds, sbuild.scan = &ireq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a IncidentRuleExecutionSelect configured with the given aggregations.
-func (ireq *IncidentRuleExecutionQuery) Aggregate(fns ...AggregateFunc) *IncidentRuleExecutionSelect {
-	return ireq.Select().Aggregate(fns...)
+func (_q *IncidentRuleExecutionQuery) Aggregate(fns ...AggregateFunc) *IncidentRuleExecutionSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (ireq *IncidentRuleExecutionQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range ireq.inters {
+func (_q *IncidentRuleExecutionQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, ireq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range ireq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !incidentruleexecution.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if ireq.path != nil {
-		prev, err := ireq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		ireq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (ireq *IncidentRuleExecutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*IncidentRuleExecution, error) {
+func (_q *IncidentRuleExecutionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*IncidentRuleExecution, error) {
 	var (
 		nodes       = []*IncidentRuleExecution{}
-		_spec       = ireq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			ireq.withRule != nil,
+			_q.withRule != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*IncidentRuleExecution).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &IncidentRuleExecution{config: ireq.config}
+		node := &IncidentRuleExecution{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (ireq *IncidentRuleExecutionQuery) sqlAll(ctx context.Context, hooks ...que
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, ireq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := ireq.withRule; query != nil {
-		if err := ireq.loadRule(ctx, query, nodes, nil,
+	if query := _q.withRule; query != nil {
+		if err := _q.loadRule(ctx, query, nodes, nil,
 			func(n *IncidentRuleExecution, e *IncidentRule) { n.Edges.Rule = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (ireq *IncidentRuleExecutionQuery) sqlAll(ctx context.Context, hooks ...que
 	return nodes, nil
 }
 
-func (ireq *IncidentRuleExecutionQuery) loadRule(ctx context.Context, query *IncidentRuleQuery, nodes []*IncidentRuleExecution, init func(*IncidentRuleExecution), assign func(*IncidentRuleExecution, *IncidentRule)) error {
+func (_q *IncidentRuleExecutionQuery) loadRule(ctx context.Context, query *IncidentRuleQuery, nodes []*IncidentRuleExecution, init func(*IncidentRuleExecution), assign func(*IncidentRuleExecution, *IncidentRule)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*IncidentRuleExecution)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (ireq *IncidentRuleExecutionQuery) loadRule(ctx context.Context, query *Inc
 	return nil
 }
 
-func (ireq *IncidentRuleExecutionQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := ireq.querySpec()
-	_spec.Node.Columns = ireq.ctx.Fields
-	if len(ireq.ctx.Fields) > 0 {
-		_spec.Unique = ireq.ctx.Unique != nil && *ireq.ctx.Unique
+func (_q *IncidentRuleExecutionQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, ireq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (ireq *IncidentRuleExecutionQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *IncidentRuleExecutionQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(incidentruleexecution.Table, incidentruleexecution.Columns, sqlgraph.NewFieldSpec(incidentruleexecution.FieldID, field.TypeInt))
-	_spec.From = ireq.sql
-	if unique := ireq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if ireq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := ireq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incidentruleexecution.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (ireq *IncidentRuleExecutionQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if ireq.withRule != nil {
+		if _q.withRule != nil {
 			_spec.Node.AddColumnOnce(incidentruleexecution.FieldRuleID)
 		}
 	}
-	if ps := ireq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := ireq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := ireq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := ireq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (ireq *IncidentRuleExecutionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (ireq *IncidentRuleExecutionQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(ireq.driver.Dialect())
+func (_q *IncidentRuleExecutionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(incidentruleexecution.Table)
-	columns := ireq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = incidentruleexecution.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if ireq.sql != nil {
-		selector = ireq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if ireq.ctx.Unique != nil && *ireq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range ireq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range ireq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := ireq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := ireq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type IncidentRuleExecutionGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (iregb *IncidentRuleExecutionGroupBy) Aggregate(fns ...AggregateFunc) *IncidentRuleExecutionGroupBy {
-	iregb.fns = append(iregb.fns, fns...)
-	return iregb
+func (_g *IncidentRuleExecutionGroupBy) Aggregate(fns ...AggregateFunc) *IncidentRuleExecutionGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (iregb *IncidentRuleExecutionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, iregb.build.ctx, ent.OpQueryGroupBy)
-	if err := iregb.build.prepareQuery(ctx); err != nil {
+func (_g *IncidentRuleExecutionGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*IncidentRuleExecutionQuery, *IncidentRuleExecutionGroupBy](ctx, iregb.build, iregb, iregb.build.inters, v)
+	return scanWithInterceptors[*IncidentRuleExecutionQuery, *IncidentRuleExecutionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (iregb *IncidentRuleExecutionGroupBy) sqlScan(ctx context.Context, root *IncidentRuleExecutionQuery, v any) error {
+func (_g *IncidentRuleExecutionGroupBy) sqlScan(ctx context.Context, root *IncidentRuleExecutionQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(iregb.fns))
-	for _, fn := range iregb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*iregb.flds)+len(iregb.fns))
-		for _, f := range *iregb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*iregb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := iregb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type IncidentRuleExecutionSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (ires *IncidentRuleExecutionSelect) Aggregate(fns ...AggregateFunc) *IncidentRuleExecutionSelect {
-	ires.fns = append(ires.fns, fns...)
-	return ires
+func (_s *IncidentRuleExecutionSelect) Aggregate(fns ...AggregateFunc) *IncidentRuleExecutionSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ires *IncidentRuleExecutionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ires.ctx, ent.OpQuerySelect)
-	if err := ires.prepareQuery(ctx); err != nil {
+func (_s *IncidentRuleExecutionSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*IncidentRuleExecutionQuery, *IncidentRuleExecutionSelect](ctx, ires.IncidentRuleExecutionQuery, ires, ires.inters, v)
+	return scanWithInterceptors[*IncidentRuleExecutionQuery, *IncidentRuleExecutionSelect](ctx, _s.IncidentRuleExecutionQuery, _s, _s.inters, v)
 }
 
-func (ires *IncidentRuleExecutionSelect) sqlScan(ctx context.Context, root *IncidentRuleExecutionQuery, v any) error {
+func (_s *IncidentRuleExecutionSelect) sqlScan(ctx context.Context, root *IncidentRuleExecutionQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(ires.fns))
-	for _, fn := range ires.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*ires.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (ires *IncidentRuleExecutionSelect) sqlScan(ctx context.Context, root *Inci
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ires.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

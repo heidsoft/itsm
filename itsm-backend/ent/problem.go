@@ -73,7 +73,7 @@ func (*Problem) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Problem fields.
-func (pr *Problem) assignValues(columns []string, values []any) error {
+func (_m *Problem) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -84,109 +84,109 @@ func (pr *Problem) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pr.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case problem.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				pr.Title = value.String
+				_m.Title = value.String
 			}
 		case problem.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				pr.Description = value.String
+				_m.Description = value.String
 			}
 		case problem.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				pr.Status = value.String
+				_m.Status = value.String
 			}
 		case problem.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				pr.Priority = value.String
+				_m.Priority = value.String
 			}
 		case problem.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				pr.Category = value.String
+				_m.Category = value.String
 			}
 		case problem.FieldRootCause:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field root_cause", values[i])
 			} else if value.Valid {
-				pr.RootCause = value.String
+				_m.RootCause = value.String
 			}
 		case problem.FieldImpact:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field impact", values[i])
 			} else if value.Valid {
-				pr.Impact = value.String
+				_m.Impact = value.String
 			}
 		case problem.FieldAssigneeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field assignee_id", values[i])
 			} else if value.Valid {
-				pr.AssigneeID = int(value.Int64)
+				_m.AssigneeID = int(value.Int64)
 			}
 		case problem.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				pr.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case problem.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pr.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case problem.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pr.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case problem.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pr.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case problem.FieldResolvedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
 			} else if value.Valid {
-				pr.ResolvedAt = new(time.Time)
-				*pr.ResolvedAt = value.Time
+				_m.ResolvedAt = new(time.Time)
+				*_m.ResolvedAt = value.Time
 			}
 		case problem.FieldClosedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field closed_at", values[i])
 			} else if value.Valid {
-				pr.ClosedAt = new(time.Time)
-				*pr.ClosedAt = value.Time
+				_m.ClosedAt = new(time.Time)
+				*_m.ClosedAt = value.Time
 			}
 		case problem.FieldDeletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deleted_at", values[i])
 			} else if value.Valid {
-				pr.DeletedAt = new(time.Time)
-				*pr.DeletedAt = value.Time
+				_m.DeletedAt = new(time.Time)
+				*_m.DeletedAt = value.Time
 			}
 		case problem.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field known_error_problem", value)
 			} else if value.Valid {
-				pr.known_error_problem = new(int)
-				*pr.known_error_problem = int(value.Int64)
+				_m.known_error_problem = new(int)
+				*_m.known_error_problem = int(value.Int64)
 			}
 		default:
-			pr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -194,80 +194,80 @@ func (pr *Problem) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Problem.
 // This includes values selected through modifiers, order, etc.
-func (pr *Problem) Value(name string) (ent.Value, error) {
-	return pr.selectValues.Get(name)
+func (_m *Problem) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this Problem.
 // Note that you need to call Problem.Unwrap() before calling this method if this Problem
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pr *Problem) Update() *ProblemUpdateOne {
-	return NewProblemClient(pr.config).UpdateOne(pr)
+func (_m *Problem) Update() *ProblemUpdateOne {
+	return NewProblemClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Problem entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pr *Problem) Unwrap() *Problem {
-	_tx, ok := pr.config.driver.(*txDriver)
+func (_m *Problem) Unwrap() *Problem {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Problem is not a transactional entity")
 	}
-	pr.config.driver = _tx.drv
-	return pr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pr *Problem) String() string {
+func (_m *Problem) String() string {
 	var builder strings.Builder
 	builder.WriteString("Problem(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("title=")
-	builder.WriteString(pr.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(pr.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(pr.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(pr.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(pr.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("root_cause=")
-	builder.WriteString(pr.RootCause)
+	builder.WriteString(_m.RootCause)
 	builder.WriteString(", ")
 	builder.WriteString("impact=")
-	builder.WriteString(pr.Impact)
+	builder.WriteString(_m.Impact)
 	builder.WriteString(", ")
 	builder.WriteString("assignee_id=")
-	builder.WriteString(fmt.Sprintf("%v", pr.AssigneeID))
+	builder.WriteString(fmt.Sprintf("%v", _m.AssigneeID))
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", pr.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pr.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pr.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pr.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
-	if v := pr.ResolvedAt; v != nil {
+	if v := _m.ResolvedAt; v != nil {
 		builder.WriteString("resolved_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	if v := pr.ClosedAt; v != nil {
+	if v := _m.ClosedAt; v != nil {
 		builder.WriteString("closed_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}
 	builder.WriteString(", ")
-	if v := pr.DeletedAt; v != nil {
+	if v := _m.DeletedAt; v != nil {
 		builder.WriteString("deleted_at=")
 		builder.WriteString(v.Format(time.ANSIC))
 	}

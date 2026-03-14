@@ -81,7 +81,7 @@ func (*IncidentEscalationRule) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the IncidentEscalationRule fields.
-func (ier *IncidentEscalationRule) assignValues(columns []string, values []any) error {
+func (_m *IncidentEscalationRule) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -92,78 +92,78 @@ func (ier *IncidentEscalationRule) assignValues(columns []string, values []any) 
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ier.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case incidentescalationrule.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ier.Name = value.String
+				_m.Name = value.String
 			}
 		case incidentescalationrule.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				ier.Description = value.String
+				_m.Description = value.String
 			}
 		case incidentescalationrule.FieldTriggerType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field trigger_type", values[i])
 			} else if value.Valid {
-				ier.TriggerType = value.String
+				_m.TriggerType = value.String
 			}
 		case incidentescalationrule.FieldEscalationLevel:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field escalation_level", values[i])
 			} else if value.Valid {
-				ier.EscalationLevel = int(value.Int64)
+				_m.EscalationLevel = int(value.Int64)
 			}
 		case incidentescalationrule.FieldTriggerMinutes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field trigger_minutes", values[i])
 			} else if value.Valid {
-				ier.TriggerMinutes = int(value.Int64)
+				_m.TriggerMinutes = int(value.Int64)
 			}
 		case incidentescalationrule.FieldFromStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field from_status", values[i])
 			} else if value.Valid {
-				ier.FromStatus = value.String
+				_m.FromStatus = value.String
 			}
 		case incidentescalationrule.FieldToStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field to_status", values[i])
 			} else if value.Valid {
-				ier.ToStatus = value.String
+				_m.ToStatus = value.String
 			}
 		case incidentescalationrule.FieldTargetAssigneeType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field target_assignee_type", values[i])
 			} else if value.Valid {
-				ier.TargetAssigneeType = value.String
+				_m.TargetAssigneeType = value.String
 			}
 		case incidentescalationrule.FieldTargetAssigneeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field target_assignee_id", values[i])
 			} else if value.Valid {
-				ier.TargetAssigneeID = int(value.Int64)
+				_m.TargetAssigneeID = int(value.Int64)
 			}
 		case incidentescalationrule.FieldTargetGroup:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field target_group", values[i])
 			} else if value.Valid {
-				ier.TargetGroup = value.String
+				_m.TargetGroup = value.String
 			}
 		case incidentescalationrule.FieldAutoEscalate:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field auto_escalate", values[i])
 			} else if value.Valid {
-				ier.AutoEscalate = value.Bool
+				_m.AutoEscalate = value.Bool
 			}
 		case incidentescalationrule.FieldNotificationConfig:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field notification_config", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ier.NotificationConfig); err != nil {
+				if err := json.Unmarshal(*value, &_m.NotificationConfig); err != nil {
 					return fmt.Errorf("unmarshal field notification_config: %w", err)
 				}
 			}
@@ -171,40 +171,40 @@ func (ier *IncidentEscalationRule) assignValues(columns []string, values []any) 
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				ier.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case incidentescalationrule.FieldPriorityMatch:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority_match", values[i])
 			} else if value.Valid {
-				ier.PriorityMatch = value.String
+				_m.PriorityMatch = value.String
 			}
 		case incidentescalationrule.FieldCategoryMatch:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category_match", values[i])
 			} else if value.Valid {
-				ier.CategoryMatch = value.String
+				_m.CategoryMatch = value.String
 			}
 		case incidentescalationrule.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ier.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case incidentescalationrule.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ier.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case incidentescalationrule.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ier.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ier.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -212,86 +212,86 @@ func (ier *IncidentEscalationRule) assignValues(columns []string, values []any) 
 
 // Value returns the ent.Value that was dynamically selected and assigned to the IncidentEscalationRule.
 // This includes values selected through modifiers, order, etc.
-func (ier *IncidentEscalationRule) Value(name string) (ent.Value, error) {
-	return ier.selectValues.Get(name)
+func (_m *IncidentEscalationRule) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this IncidentEscalationRule.
 // Note that you need to call IncidentEscalationRule.Unwrap() before calling this method if this IncidentEscalationRule
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ier *IncidentEscalationRule) Update() *IncidentEscalationRuleUpdateOne {
-	return NewIncidentEscalationRuleClient(ier.config).UpdateOne(ier)
+func (_m *IncidentEscalationRule) Update() *IncidentEscalationRuleUpdateOne {
+	return NewIncidentEscalationRuleClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the IncidentEscalationRule entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ier *IncidentEscalationRule) Unwrap() *IncidentEscalationRule {
-	_tx, ok := ier.config.driver.(*txDriver)
+func (_m *IncidentEscalationRule) Unwrap() *IncidentEscalationRule {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: IncidentEscalationRule is not a transactional entity")
 	}
-	ier.config.driver = _tx.drv
-	return ier
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ier *IncidentEscalationRule) String() string {
+func (_m *IncidentEscalationRule) String() string {
 	var builder strings.Builder
 	builder.WriteString("IncidentEscalationRule(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ier.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(ier.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(ier.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("trigger_type=")
-	builder.WriteString(ier.TriggerType)
+	builder.WriteString(_m.TriggerType)
 	builder.WriteString(", ")
 	builder.WriteString("escalation_level=")
-	builder.WriteString(fmt.Sprintf("%v", ier.EscalationLevel))
+	builder.WriteString(fmt.Sprintf("%v", _m.EscalationLevel))
 	builder.WriteString(", ")
 	builder.WriteString("trigger_minutes=")
-	builder.WriteString(fmt.Sprintf("%v", ier.TriggerMinutes))
+	builder.WriteString(fmt.Sprintf("%v", _m.TriggerMinutes))
 	builder.WriteString(", ")
 	builder.WriteString("from_status=")
-	builder.WriteString(ier.FromStatus)
+	builder.WriteString(_m.FromStatus)
 	builder.WriteString(", ")
 	builder.WriteString("to_status=")
-	builder.WriteString(ier.ToStatus)
+	builder.WriteString(_m.ToStatus)
 	builder.WriteString(", ")
 	builder.WriteString("target_assignee_type=")
-	builder.WriteString(ier.TargetAssigneeType)
+	builder.WriteString(_m.TargetAssigneeType)
 	builder.WriteString(", ")
 	builder.WriteString("target_assignee_id=")
-	builder.WriteString(fmt.Sprintf("%v", ier.TargetAssigneeID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TargetAssigneeID))
 	builder.WriteString(", ")
 	builder.WriteString("target_group=")
-	builder.WriteString(ier.TargetGroup)
+	builder.WriteString(_m.TargetGroup)
 	builder.WriteString(", ")
 	builder.WriteString("auto_escalate=")
-	builder.WriteString(fmt.Sprintf("%v", ier.AutoEscalate))
+	builder.WriteString(fmt.Sprintf("%v", _m.AutoEscalate))
 	builder.WriteString(", ")
 	builder.WriteString("notification_config=")
-	builder.WriteString(fmt.Sprintf("%v", ier.NotificationConfig))
+	builder.WriteString(fmt.Sprintf("%v", _m.NotificationConfig))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", ier.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("priority_match=")
-	builder.WriteString(ier.PriorityMatch)
+	builder.WriteString(_m.PriorityMatch)
 	builder.WriteString(", ")
 	builder.WriteString("category_match=")
-	builder.WriteString(ier.CategoryMatch)
+	builder.WriteString(_m.CategoryMatch)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ier.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ier.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ier.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

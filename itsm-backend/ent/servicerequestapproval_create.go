@@ -21,225 +21,225 @@ type ServiceRequestApprovalCreate struct {
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (srac *ServiceRequestApprovalCreate) SetTenantID(i int) *ServiceRequestApprovalCreate {
-	srac.mutation.SetTenantID(i)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetTenantID(v int) *ServiceRequestApprovalCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetServiceRequestID sets the "service_request_id" field.
-func (srac *ServiceRequestApprovalCreate) SetServiceRequestID(i int) *ServiceRequestApprovalCreate {
-	srac.mutation.SetServiceRequestID(i)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetServiceRequestID(v int) *ServiceRequestApprovalCreate {
+	_c.mutation.SetServiceRequestID(v)
+	return _c
 }
 
 // SetLevel sets the "level" field.
-func (srac *ServiceRequestApprovalCreate) SetLevel(i int) *ServiceRequestApprovalCreate {
-	srac.mutation.SetLevel(i)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetLevel(v int) *ServiceRequestApprovalCreate {
+	_c.mutation.SetLevel(v)
+	return _c
 }
 
 // SetStep sets the "step" field.
-func (srac *ServiceRequestApprovalCreate) SetStep(s string) *ServiceRequestApprovalCreate {
-	srac.mutation.SetStep(s)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetStep(v string) *ServiceRequestApprovalCreate {
+	_c.mutation.SetStep(v)
+	return _c
 }
 
 // SetNillableStep sets the "step" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableStep(s *string) *ServiceRequestApprovalCreate {
-	if s != nil {
-		srac.SetStep(*s)
+func (_c *ServiceRequestApprovalCreate) SetNillableStep(v *string) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetStep(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetNode sets the "node" field.
-func (srac *ServiceRequestApprovalCreate) SetNode(m map[string]interface{}) *ServiceRequestApprovalCreate {
-	srac.mutation.SetNode(m)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetNode(v map[string]interface{}) *ServiceRequestApprovalCreate {
+	_c.mutation.SetNode(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (srac *ServiceRequestApprovalCreate) SetStatus(s string) *ServiceRequestApprovalCreate {
-	srac.mutation.SetStatus(s)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetStatus(v string) *ServiceRequestApprovalCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableStatus(s *string) *ServiceRequestApprovalCreate {
-	if s != nil {
-		srac.SetStatus(*s)
+func (_c *ServiceRequestApprovalCreate) SetNillableStatus(v *string) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetApproverID sets the "approver_id" field.
-func (srac *ServiceRequestApprovalCreate) SetApproverID(i int) *ServiceRequestApprovalCreate {
-	srac.mutation.SetApproverID(i)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetApproverID(v int) *ServiceRequestApprovalCreate {
+	_c.mutation.SetApproverID(v)
+	return _c
 }
 
 // SetNillableApproverID sets the "approver_id" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableApproverID(i *int) *ServiceRequestApprovalCreate {
-	if i != nil {
-		srac.SetApproverID(*i)
+func (_c *ServiceRequestApprovalCreate) SetNillableApproverID(v *int) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetApproverID(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetApproverName sets the "approver_name" field.
-func (srac *ServiceRequestApprovalCreate) SetApproverName(s string) *ServiceRequestApprovalCreate {
-	srac.mutation.SetApproverName(s)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetApproverName(v string) *ServiceRequestApprovalCreate {
+	_c.mutation.SetApproverName(v)
+	return _c
 }
 
 // SetNillableApproverName sets the "approver_name" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableApproverName(s *string) *ServiceRequestApprovalCreate {
-	if s != nil {
-		srac.SetApproverName(*s)
+func (_c *ServiceRequestApprovalCreate) SetNillableApproverName(v *string) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetApproverName(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetAction sets the "action" field.
-func (srac *ServiceRequestApprovalCreate) SetAction(s string) *ServiceRequestApprovalCreate {
-	srac.mutation.SetAction(s)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetAction(v string) *ServiceRequestApprovalCreate {
+	_c.mutation.SetAction(v)
+	return _c
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableAction(s *string) *ServiceRequestApprovalCreate {
-	if s != nil {
-		srac.SetAction(*s)
+func (_c *ServiceRequestApprovalCreate) SetNillableAction(v *string) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetAction(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetComment sets the "comment" field.
-func (srac *ServiceRequestApprovalCreate) SetComment(s string) *ServiceRequestApprovalCreate {
-	srac.mutation.SetComment(s)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetComment(v string) *ServiceRequestApprovalCreate {
+	_c.mutation.SetComment(v)
+	return _c
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableComment(s *string) *ServiceRequestApprovalCreate {
-	if s != nil {
-		srac.SetComment(*s)
+func (_c *ServiceRequestApprovalCreate) SetNillableComment(v *string) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetComment(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetTimeoutHours sets the "timeout_hours" field.
-func (srac *ServiceRequestApprovalCreate) SetTimeoutHours(i int) *ServiceRequestApprovalCreate {
-	srac.mutation.SetTimeoutHours(i)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetTimeoutHours(v int) *ServiceRequestApprovalCreate {
+	_c.mutation.SetTimeoutHours(v)
+	return _c
 }
 
 // SetNillableTimeoutHours sets the "timeout_hours" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableTimeoutHours(i *int) *ServiceRequestApprovalCreate {
-	if i != nil {
-		srac.SetTimeoutHours(*i)
+func (_c *ServiceRequestApprovalCreate) SetNillableTimeoutHours(v *int) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetTimeoutHours(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetDueAt sets the "due_at" field.
-func (srac *ServiceRequestApprovalCreate) SetDueAt(t time.Time) *ServiceRequestApprovalCreate {
-	srac.mutation.SetDueAt(t)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetDueAt(v time.Time) *ServiceRequestApprovalCreate {
+	_c.mutation.SetDueAt(v)
+	return _c
 }
 
 // SetNillableDueAt sets the "due_at" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableDueAt(t *time.Time) *ServiceRequestApprovalCreate {
-	if t != nil {
-		srac.SetDueAt(*t)
+func (_c *ServiceRequestApprovalCreate) SetNillableDueAt(v *time.Time) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetDueAt(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetIsEscalated sets the "is_escalated" field.
-func (srac *ServiceRequestApprovalCreate) SetIsEscalated(b bool) *ServiceRequestApprovalCreate {
-	srac.mutation.SetIsEscalated(b)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetIsEscalated(v bool) *ServiceRequestApprovalCreate {
+	_c.mutation.SetIsEscalated(v)
+	return _c
 }
 
 // SetNillableIsEscalated sets the "is_escalated" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableIsEscalated(b *bool) *ServiceRequestApprovalCreate {
-	if b != nil {
-		srac.SetIsEscalated(*b)
+func (_c *ServiceRequestApprovalCreate) SetNillableIsEscalated(v *bool) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetIsEscalated(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetDelegatedToID sets the "delegated_to_id" field.
-func (srac *ServiceRequestApprovalCreate) SetDelegatedToID(i int) *ServiceRequestApprovalCreate {
-	srac.mutation.SetDelegatedToID(i)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetDelegatedToID(v int) *ServiceRequestApprovalCreate {
+	_c.mutation.SetDelegatedToID(v)
+	return _c
 }
 
 // SetNillableDelegatedToID sets the "delegated_to_id" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableDelegatedToID(i *int) *ServiceRequestApprovalCreate {
-	if i != nil {
-		srac.SetDelegatedToID(*i)
+func (_c *ServiceRequestApprovalCreate) SetNillableDelegatedToID(v *int) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetDelegatedToID(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetEscalationReason sets the "escalation_reason" field.
-func (srac *ServiceRequestApprovalCreate) SetEscalationReason(s string) *ServiceRequestApprovalCreate {
-	srac.mutation.SetEscalationReason(s)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetEscalationReason(v string) *ServiceRequestApprovalCreate {
+	_c.mutation.SetEscalationReason(v)
+	return _c
 }
 
 // SetNillableEscalationReason sets the "escalation_reason" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableEscalationReason(s *string) *ServiceRequestApprovalCreate {
-	if s != nil {
-		srac.SetEscalationReason(*s)
+func (_c *ServiceRequestApprovalCreate) SetNillableEscalationReason(v *string) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetEscalationReason(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (srac *ServiceRequestApprovalCreate) SetCreatedAt(t time.Time) *ServiceRequestApprovalCreate {
-	srac.mutation.SetCreatedAt(t)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetCreatedAt(v time.Time) *ServiceRequestApprovalCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableCreatedAt(t *time.Time) *ServiceRequestApprovalCreate {
-	if t != nil {
-		srac.SetCreatedAt(*t)
+func (_c *ServiceRequestApprovalCreate) SetNillableCreatedAt(v *time.Time) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return srac
+	return _c
 }
 
 // SetProcessedAt sets the "processed_at" field.
-func (srac *ServiceRequestApprovalCreate) SetProcessedAt(t time.Time) *ServiceRequestApprovalCreate {
-	srac.mutation.SetProcessedAt(t)
-	return srac
+func (_c *ServiceRequestApprovalCreate) SetProcessedAt(v time.Time) *ServiceRequestApprovalCreate {
+	_c.mutation.SetProcessedAt(v)
+	return _c
 }
 
 // SetNillableProcessedAt sets the "processed_at" field if the given value is not nil.
-func (srac *ServiceRequestApprovalCreate) SetNillableProcessedAt(t *time.Time) *ServiceRequestApprovalCreate {
-	if t != nil {
-		srac.SetProcessedAt(*t)
+func (_c *ServiceRequestApprovalCreate) SetNillableProcessedAt(v *time.Time) *ServiceRequestApprovalCreate {
+	if v != nil {
+		_c.SetProcessedAt(*v)
 	}
-	return srac
+	return _c
 }
 
 // Mutation returns the ServiceRequestApprovalMutation object of the builder.
-func (srac *ServiceRequestApprovalCreate) Mutation() *ServiceRequestApprovalMutation {
-	return srac.mutation
+func (_c *ServiceRequestApprovalCreate) Mutation() *ServiceRequestApprovalMutation {
+	return _c.mutation
 }
 
 // Save creates the ServiceRequestApproval in the database.
-func (srac *ServiceRequestApprovalCreate) Save(ctx context.Context) (*ServiceRequestApproval, error) {
-	srac.defaults()
-	return withHooks(ctx, srac.sqlSave, srac.mutation, srac.hooks)
+func (_c *ServiceRequestApprovalCreate) Save(ctx context.Context) (*ServiceRequestApproval, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (srac *ServiceRequestApprovalCreate) SaveX(ctx context.Context) *ServiceRequestApproval {
-	v, err := srac.Save(ctx)
+func (_c *ServiceRequestApprovalCreate) SaveX(ctx context.Context) *ServiceRequestApproval {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -247,85 +247,85 @@ func (srac *ServiceRequestApprovalCreate) SaveX(ctx context.Context) *ServiceReq
 }
 
 // Exec executes the query.
-func (srac *ServiceRequestApprovalCreate) Exec(ctx context.Context) error {
-	_, err := srac.Save(ctx)
+func (_c *ServiceRequestApprovalCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (srac *ServiceRequestApprovalCreate) ExecX(ctx context.Context) {
-	if err := srac.Exec(ctx); err != nil {
+func (_c *ServiceRequestApprovalCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (srac *ServiceRequestApprovalCreate) defaults() {
-	if _, ok := srac.mutation.Status(); !ok {
+func (_c *ServiceRequestApprovalCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := servicerequestapproval.DefaultStatus
-		srac.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := srac.mutation.TimeoutHours(); !ok {
+	if _, ok := _c.mutation.TimeoutHours(); !ok {
 		v := servicerequestapproval.DefaultTimeoutHours
-		srac.mutation.SetTimeoutHours(v)
+		_c.mutation.SetTimeoutHours(v)
 	}
-	if _, ok := srac.mutation.IsEscalated(); !ok {
+	if _, ok := _c.mutation.IsEscalated(); !ok {
 		v := servicerequestapproval.DefaultIsEscalated
-		srac.mutation.SetIsEscalated(v)
+		_c.mutation.SetIsEscalated(v)
 	}
-	if _, ok := srac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := servicerequestapproval.DefaultCreatedAt()
-		srac.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (srac *ServiceRequestApprovalCreate) check() error {
-	if _, ok := srac.mutation.TenantID(); !ok {
+func (_c *ServiceRequestApprovalCreate) check() error {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ServiceRequestApproval.tenant_id"`)}
 	}
-	if v, ok := srac.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := servicerequestapproval.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := srac.mutation.ServiceRequestID(); !ok {
+	if _, ok := _c.mutation.ServiceRequestID(); !ok {
 		return &ValidationError{Name: "service_request_id", err: errors.New(`ent: missing required field "ServiceRequestApproval.service_request_id"`)}
 	}
-	if v, ok := srac.mutation.ServiceRequestID(); ok {
+	if v, ok := _c.mutation.ServiceRequestID(); ok {
 		if err := servicerequestapproval.ServiceRequestIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.service_request_id": %w`, err)}
 		}
 	}
-	if _, ok := srac.mutation.Level(); !ok {
+	if _, ok := _c.mutation.Level(); !ok {
 		return &ValidationError{Name: "level", err: errors.New(`ent: missing required field "ServiceRequestApproval.level"`)}
 	}
-	if v, ok := srac.mutation.Level(); ok {
+	if v, ok := _c.mutation.Level(); ok {
 		if err := servicerequestapproval.LevelValidator(v); err != nil {
 			return &ValidationError{Name: "level", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.level": %w`, err)}
 		}
 	}
-	if _, ok := srac.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ServiceRequestApproval.status"`)}
 	}
-	if _, ok := srac.mutation.TimeoutHours(); !ok {
+	if _, ok := _c.mutation.TimeoutHours(); !ok {
 		return &ValidationError{Name: "timeout_hours", err: errors.New(`ent: missing required field "ServiceRequestApproval.timeout_hours"`)}
 	}
-	if _, ok := srac.mutation.IsEscalated(); !ok {
+	if _, ok := _c.mutation.IsEscalated(); !ok {
 		return &ValidationError{Name: "is_escalated", err: errors.New(`ent: missing required field "ServiceRequestApproval.is_escalated"`)}
 	}
-	if _, ok := srac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceRequestApproval.created_at"`)}
 	}
 	return nil
 }
 
-func (srac *ServiceRequestApprovalCreate) sqlSave(ctx context.Context) (*ServiceRequestApproval, error) {
-	if err := srac.check(); err != nil {
+func (_c *ServiceRequestApprovalCreate) sqlSave(ctx context.Context) (*ServiceRequestApproval, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := srac.createSpec()
-	if err := sqlgraph.CreateNode(ctx, srac.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -333,81 +333,81 @@ func (srac *ServiceRequestApprovalCreate) sqlSave(ctx context.Context) (*Service
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	srac.mutation.id = &_node.ID
-	srac.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (srac *ServiceRequestApprovalCreate) createSpec() (*ServiceRequestApproval, *sqlgraph.CreateSpec) {
+func (_c *ServiceRequestApprovalCreate) createSpec() (*ServiceRequestApproval, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ServiceRequestApproval{config: srac.config}
+		_node = &ServiceRequestApproval{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(servicerequestapproval.Table, sqlgraph.NewFieldSpec(servicerequestapproval.FieldID, field.TypeInt))
 	)
-	if value, ok := srac.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(servicerequestapproval.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := srac.mutation.ServiceRequestID(); ok {
+	if value, ok := _c.mutation.ServiceRequestID(); ok {
 		_spec.SetField(servicerequestapproval.FieldServiceRequestID, field.TypeInt, value)
 		_node.ServiceRequestID = value
 	}
-	if value, ok := srac.mutation.Level(); ok {
+	if value, ok := _c.mutation.Level(); ok {
 		_spec.SetField(servicerequestapproval.FieldLevel, field.TypeInt, value)
 		_node.Level = value
 	}
-	if value, ok := srac.mutation.Step(); ok {
+	if value, ok := _c.mutation.Step(); ok {
 		_spec.SetField(servicerequestapproval.FieldStep, field.TypeString, value)
 		_node.Step = value
 	}
-	if value, ok := srac.mutation.Node(); ok {
+	if value, ok := _c.mutation.Node(); ok {
 		_spec.SetField(servicerequestapproval.FieldNode, field.TypeJSON, value)
 		_node.Node = value
 	}
-	if value, ok := srac.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(servicerequestapproval.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := srac.mutation.ApproverID(); ok {
+	if value, ok := _c.mutation.ApproverID(); ok {
 		_spec.SetField(servicerequestapproval.FieldApproverID, field.TypeInt, value)
 		_node.ApproverID = &value
 	}
-	if value, ok := srac.mutation.ApproverName(); ok {
+	if value, ok := _c.mutation.ApproverName(); ok {
 		_spec.SetField(servicerequestapproval.FieldApproverName, field.TypeString, value)
 		_node.ApproverName = value
 	}
-	if value, ok := srac.mutation.Action(); ok {
+	if value, ok := _c.mutation.Action(); ok {
 		_spec.SetField(servicerequestapproval.FieldAction, field.TypeString, value)
 		_node.Action = value
 	}
-	if value, ok := srac.mutation.Comment(); ok {
+	if value, ok := _c.mutation.Comment(); ok {
 		_spec.SetField(servicerequestapproval.FieldComment, field.TypeString, value)
 		_node.Comment = value
 	}
-	if value, ok := srac.mutation.TimeoutHours(); ok {
+	if value, ok := _c.mutation.TimeoutHours(); ok {
 		_spec.SetField(servicerequestapproval.FieldTimeoutHours, field.TypeInt, value)
 		_node.TimeoutHours = value
 	}
-	if value, ok := srac.mutation.DueAt(); ok {
+	if value, ok := _c.mutation.DueAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldDueAt, field.TypeTime, value)
 		_node.DueAt = value
 	}
-	if value, ok := srac.mutation.IsEscalated(); ok {
+	if value, ok := _c.mutation.IsEscalated(); ok {
 		_spec.SetField(servicerequestapproval.FieldIsEscalated, field.TypeBool, value)
 		_node.IsEscalated = value
 	}
-	if value, ok := srac.mutation.DelegatedToID(); ok {
+	if value, ok := _c.mutation.DelegatedToID(); ok {
 		_spec.SetField(servicerequestapproval.FieldDelegatedToID, field.TypeInt, value)
 		_node.DelegatedToID = &value
 	}
-	if value, ok := srac.mutation.EscalationReason(); ok {
+	if value, ok := _c.mutation.EscalationReason(); ok {
 		_spec.SetField(servicerequestapproval.FieldEscalationReason, field.TypeString, value)
 		_node.EscalationReason = value
 	}
-	if value, ok := srac.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := srac.mutation.ProcessedAt(); ok {
+	if value, ok := _c.mutation.ProcessedAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldProcessedAt, field.TypeTime, value)
 		_node.ProcessedAt = value
 	}
@@ -422,16 +422,16 @@ type ServiceRequestApprovalCreateBulk struct {
 }
 
 // Save creates the ServiceRequestApproval entities in the database.
-func (sracb *ServiceRequestApprovalCreateBulk) Save(ctx context.Context) ([]*ServiceRequestApproval, error) {
-	if sracb.err != nil {
-		return nil, sracb.err
+func (_c *ServiceRequestApprovalCreateBulk) Save(ctx context.Context) ([]*ServiceRequestApproval, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(sracb.builders))
-	nodes := make([]*ServiceRequestApproval, len(sracb.builders))
-	mutators := make([]Mutator, len(sracb.builders))
-	for i := range sracb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ServiceRequestApproval, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := sracb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ServiceRequestApprovalMutation)
@@ -445,11 +445,11 @@ func (sracb *ServiceRequestApprovalCreateBulk) Save(ctx context.Context) ([]*Ser
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, sracb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, sracb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -473,7 +473,7 @@ func (sracb *ServiceRequestApprovalCreateBulk) Save(ctx context.Context) ([]*Ser
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, sracb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -481,8 +481,8 @@ func (sracb *ServiceRequestApprovalCreateBulk) Save(ctx context.Context) ([]*Ser
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (sracb *ServiceRequestApprovalCreateBulk) SaveX(ctx context.Context) []*ServiceRequestApproval {
-	v, err := sracb.Save(ctx)
+func (_c *ServiceRequestApprovalCreateBulk) SaveX(ctx context.Context) []*ServiceRequestApproval {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -490,14 +490,14 @@ func (sracb *ServiceRequestApprovalCreateBulk) SaveX(ctx context.Context) []*Ser
 }
 
 // Exec executes the query.
-func (sracb *ServiceRequestApprovalCreateBulk) Exec(ctx context.Context) error {
-	_, err := sracb.Save(ctx)
+func (_c *ServiceRequestApprovalCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sracb *ServiceRequestApprovalCreateBulk) ExecX(ctx context.Context) {
-	if err := sracb.Exec(ctx); err != nil {
+func (_c *ServiceRequestApprovalCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

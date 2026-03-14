@@ -33,44 +33,44 @@ type CloudServiceQuery struct {
 }
 
 // Where adds a new predicate for the CloudServiceQuery builder.
-func (csq *CloudServiceQuery) Where(ps ...predicate.CloudService) *CloudServiceQuery {
-	csq.predicates = append(csq.predicates, ps...)
-	return csq
+func (_q *CloudServiceQuery) Where(ps ...predicate.CloudService) *CloudServiceQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (csq *CloudServiceQuery) Limit(limit int) *CloudServiceQuery {
-	csq.ctx.Limit = &limit
-	return csq
+func (_q *CloudServiceQuery) Limit(limit int) *CloudServiceQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (csq *CloudServiceQuery) Offset(offset int) *CloudServiceQuery {
-	csq.ctx.Offset = &offset
-	return csq
+func (_q *CloudServiceQuery) Offset(offset int) *CloudServiceQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (csq *CloudServiceQuery) Unique(unique bool) *CloudServiceQuery {
-	csq.ctx.Unique = &unique
-	return csq
+func (_q *CloudServiceQuery) Unique(unique bool) *CloudServiceQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (csq *CloudServiceQuery) Order(o ...cloudservice.OrderOption) *CloudServiceQuery {
-	csq.order = append(csq.order, o...)
-	return csq
+func (_q *CloudServiceQuery) Order(o ...cloudservice.OrderOption) *CloudServiceQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryParent chains the current query on the "parent" edge.
-func (csq *CloudServiceQuery) QueryParent() *CloudServiceQuery {
-	query := (&CloudServiceClient{config: csq.config}).Query()
+func (_q *CloudServiceQuery) QueryParent() *CloudServiceQuery {
+	query := (&CloudServiceClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := csq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := csq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -79,20 +79,20 @@ func (csq *CloudServiceQuery) QueryParent() *CloudServiceQuery {
 			sqlgraph.To(cloudservice.Table, cloudservice.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, cloudservice.ParentTable, cloudservice.ParentColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(csq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryChildren chains the current query on the "children" edge.
-func (csq *CloudServiceQuery) QueryChildren() *CloudServiceQuery {
-	query := (&CloudServiceClient{config: csq.config}).Query()
+func (_q *CloudServiceQuery) QueryChildren() *CloudServiceQuery {
+	query := (&CloudServiceClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := csq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := csq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -101,20 +101,20 @@ func (csq *CloudServiceQuery) QueryChildren() *CloudServiceQuery {
 			sqlgraph.To(cloudservice.Table, cloudservice.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, cloudservice.ChildrenTable, cloudservice.ChildrenColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(csq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryResources chains the current query on the "resources" edge.
-func (csq *CloudServiceQuery) QueryResources() *CloudResourceQuery {
-	query := (&CloudResourceClient{config: csq.config}).Query()
+func (_q *CloudServiceQuery) QueryResources() *CloudResourceQuery {
+	query := (&CloudResourceClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := csq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := csq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -123,7 +123,7 @@ func (csq *CloudServiceQuery) QueryResources() *CloudResourceQuery {
 			sqlgraph.To(cloudresource.Table, cloudresource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, cloudservice.ResourcesTable, cloudservice.ResourcesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(csq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -131,8 +131,8 @@ func (csq *CloudServiceQuery) QueryResources() *CloudResourceQuery {
 
 // First returns the first CloudService entity from the query.
 // Returns a *NotFoundError when no CloudService was found.
-func (csq *CloudServiceQuery) First(ctx context.Context) (*CloudService, error) {
-	nodes, err := csq.Limit(1).All(setContextOp(ctx, csq.ctx, ent.OpQueryFirst))
+func (_q *CloudServiceQuery) First(ctx context.Context) (*CloudService, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -143,8 +143,8 @@ func (csq *CloudServiceQuery) First(ctx context.Context) (*CloudService, error) 
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (csq *CloudServiceQuery) FirstX(ctx context.Context) *CloudService {
-	node, err := csq.First(ctx)
+func (_q *CloudServiceQuery) FirstX(ctx context.Context) *CloudService {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -153,9 +153,9 @@ func (csq *CloudServiceQuery) FirstX(ctx context.Context) *CloudService {
 
 // FirstID returns the first CloudService ID from the query.
 // Returns a *NotFoundError when no CloudService ID was found.
-func (csq *CloudServiceQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *CloudServiceQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = csq.Limit(1).IDs(setContextOp(ctx, csq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -166,8 +166,8 @@ func (csq *CloudServiceQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (csq *CloudServiceQuery) FirstIDX(ctx context.Context) int {
-	id, err := csq.FirstID(ctx)
+func (_q *CloudServiceQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -177,8 +177,8 @@ func (csq *CloudServiceQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single CloudService entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one CloudService entity is found.
 // Returns a *NotFoundError when no CloudService entities are found.
-func (csq *CloudServiceQuery) Only(ctx context.Context) (*CloudService, error) {
-	nodes, err := csq.Limit(2).All(setContextOp(ctx, csq.ctx, ent.OpQueryOnly))
+func (_q *CloudServiceQuery) Only(ctx context.Context) (*CloudService, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -193,8 +193,8 @@ func (csq *CloudServiceQuery) Only(ctx context.Context) (*CloudService, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (csq *CloudServiceQuery) OnlyX(ctx context.Context) *CloudService {
-	node, err := csq.Only(ctx)
+func (_q *CloudServiceQuery) OnlyX(ctx context.Context) *CloudService {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -204,9 +204,9 @@ func (csq *CloudServiceQuery) OnlyX(ctx context.Context) *CloudService {
 // OnlyID is like Only, but returns the only CloudService ID in the query.
 // Returns a *NotSingularError when more than one CloudService ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (csq *CloudServiceQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *CloudServiceQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = csq.Limit(2).IDs(setContextOp(ctx, csq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -221,8 +221,8 @@ func (csq *CloudServiceQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (csq *CloudServiceQuery) OnlyIDX(ctx context.Context) int {
-	id, err := csq.OnlyID(ctx)
+func (_q *CloudServiceQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -230,18 +230,18 @@ func (csq *CloudServiceQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of CloudServices.
-func (csq *CloudServiceQuery) All(ctx context.Context) ([]*CloudService, error) {
-	ctx = setContextOp(ctx, csq.ctx, ent.OpQueryAll)
-	if err := csq.prepareQuery(ctx); err != nil {
+func (_q *CloudServiceQuery) All(ctx context.Context) ([]*CloudService, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*CloudService, *CloudServiceQuery]()
-	return withInterceptors[[]*CloudService](ctx, csq, qr, csq.inters)
+	return withInterceptors[[]*CloudService](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (csq *CloudServiceQuery) AllX(ctx context.Context) []*CloudService {
-	nodes, err := csq.All(ctx)
+func (_q *CloudServiceQuery) AllX(ctx context.Context) []*CloudService {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -249,20 +249,20 @@ func (csq *CloudServiceQuery) AllX(ctx context.Context) []*CloudService {
 }
 
 // IDs executes the query and returns a list of CloudService IDs.
-func (csq *CloudServiceQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if csq.ctx.Unique == nil && csq.path != nil {
-		csq.Unique(true)
+func (_q *CloudServiceQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, csq.ctx, ent.OpQueryIDs)
-	if err = csq.Select(cloudservice.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(cloudservice.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (csq *CloudServiceQuery) IDsX(ctx context.Context) []int {
-	ids, err := csq.IDs(ctx)
+func (_q *CloudServiceQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -270,17 +270,17 @@ func (csq *CloudServiceQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (csq *CloudServiceQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, csq.ctx, ent.OpQueryCount)
-	if err := csq.prepareQuery(ctx); err != nil {
+func (_q *CloudServiceQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, csq, querierCount[*CloudServiceQuery](), csq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*CloudServiceQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (csq *CloudServiceQuery) CountX(ctx context.Context) int {
-	count, err := csq.Count(ctx)
+func (_q *CloudServiceQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -288,9 +288,9 @@ func (csq *CloudServiceQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (csq *CloudServiceQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, csq.ctx, ent.OpQueryExist)
-	switch _, err := csq.FirstID(ctx); {
+func (_q *CloudServiceQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -301,8 +301,8 @@ func (csq *CloudServiceQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (csq *CloudServiceQuery) ExistX(ctx context.Context) bool {
-	exist, err := csq.Exist(ctx)
+func (_q *CloudServiceQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -311,56 +311,56 @@ func (csq *CloudServiceQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the CloudServiceQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (csq *CloudServiceQuery) Clone() *CloudServiceQuery {
-	if csq == nil {
+func (_q *CloudServiceQuery) Clone() *CloudServiceQuery {
+	if _q == nil {
 		return nil
 	}
 	return &CloudServiceQuery{
-		config:        csq.config,
-		ctx:           csq.ctx.Clone(),
-		order:         append([]cloudservice.OrderOption{}, csq.order...),
-		inters:        append([]Interceptor{}, csq.inters...),
-		predicates:    append([]predicate.CloudService{}, csq.predicates...),
-		withParent:    csq.withParent.Clone(),
-		withChildren:  csq.withChildren.Clone(),
-		withResources: csq.withResources.Clone(),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]cloudservice.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.CloudService{}, _q.predicates...),
+		withParent:    _q.withParent.Clone(),
+		withChildren:  _q.withChildren.Clone(),
+		withResources: _q.withResources.Clone(),
 		// clone intermediate query.
-		sql:  csq.sql.Clone(),
-		path: csq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithParent tells the query-builder to eager-load the nodes that are connected to
 // the "parent" edge. The optional arguments are used to configure the query builder of the edge.
-func (csq *CloudServiceQuery) WithParent(opts ...func(*CloudServiceQuery)) *CloudServiceQuery {
-	query := (&CloudServiceClient{config: csq.config}).Query()
+func (_q *CloudServiceQuery) WithParent(opts ...func(*CloudServiceQuery)) *CloudServiceQuery {
+	query := (&CloudServiceClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	csq.withParent = query
-	return csq
+	_q.withParent = query
+	return _q
 }
 
 // WithChildren tells the query-builder to eager-load the nodes that are connected to
 // the "children" edge. The optional arguments are used to configure the query builder of the edge.
-func (csq *CloudServiceQuery) WithChildren(opts ...func(*CloudServiceQuery)) *CloudServiceQuery {
-	query := (&CloudServiceClient{config: csq.config}).Query()
+func (_q *CloudServiceQuery) WithChildren(opts ...func(*CloudServiceQuery)) *CloudServiceQuery {
+	query := (&CloudServiceClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	csq.withChildren = query
-	return csq
+	_q.withChildren = query
+	return _q
 }
 
 // WithResources tells the query-builder to eager-load the nodes that are connected to
 // the "resources" edge. The optional arguments are used to configure the query builder of the edge.
-func (csq *CloudServiceQuery) WithResources(opts ...func(*CloudResourceQuery)) *CloudServiceQuery {
-	query := (&CloudResourceClient{config: csq.config}).Query()
+func (_q *CloudServiceQuery) WithResources(opts ...func(*CloudResourceQuery)) *CloudServiceQuery {
+	query := (&CloudResourceClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	csq.withResources = query
-	return csq
+	_q.withResources = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -377,10 +377,10 @@ func (csq *CloudServiceQuery) WithResources(opts ...func(*CloudResourceQuery)) *
 //		GroupBy(cloudservice.FieldParentID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (csq *CloudServiceQuery) GroupBy(field string, fields ...string) *CloudServiceGroupBy {
-	csq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &CloudServiceGroupBy{build: csq}
-	grbuild.flds = &csq.ctx.Fields
+func (_q *CloudServiceQuery) GroupBy(field string, fields ...string) *CloudServiceGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &CloudServiceGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = cloudservice.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -398,60 +398,60 @@ func (csq *CloudServiceQuery) GroupBy(field string, fields ...string) *CloudServ
 //	client.CloudService.Query().
 //		Select(cloudservice.FieldParentID).
 //		Scan(ctx, &v)
-func (csq *CloudServiceQuery) Select(fields ...string) *CloudServiceSelect {
-	csq.ctx.Fields = append(csq.ctx.Fields, fields...)
-	sbuild := &CloudServiceSelect{CloudServiceQuery: csq}
+func (_q *CloudServiceQuery) Select(fields ...string) *CloudServiceSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &CloudServiceSelect{CloudServiceQuery: _q}
 	sbuild.label = cloudservice.Label
-	sbuild.flds, sbuild.scan = &csq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a CloudServiceSelect configured with the given aggregations.
-func (csq *CloudServiceQuery) Aggregate(fns ...AggregateFunc) *CloudServiceSelect {
-	return csq.Select().Aggregate(fns...)
+func (_q *CloudServiceQuery) Aggregate(fns ...AggregateFunc) *CloudServiceSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (csq *CloudServiceQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range csq.inters {
+func (_q *CloudServiceQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, csq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range csq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !cloudservice.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if csq.path != nil {
-		prev, err := csq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		csq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (csq *CloudServiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CloudService, error) {
+func (_q *CloudServiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CloudService, error) {
 	var (
 		nodes       = []*CloudService{}
-		_spec       = csq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [3]bool{
-			csq.withParent != nil,
-			csq.withChildren != nil,
-			csq.withResources != nil,
+			_q.withParent != nil,
+			_q.withChildren != nil,
+			_q.withResources != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*CloudService).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &CloudService{config: csq.config}
+		node := &CloudService{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -459,27 +459,27 @@ func (csq *CloudServiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, csq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := csq.withParent; query != nil {
-		if err := csq.loadParent(ctx, query, nodes, nil,
+	if query := _q.withParent; query != nil {
+		if err := _q.loadParent(ctx, query, nodes, nil,
 			func(n *CloudService, e *CloudService) { n.Edges.Parent = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := csq.withChildren; query != nil {
-		if err := csq.loadChildren(ctx, query, nodes,
+	if query := _q.withChildren; query != nil {
+		if err := _q.loadChildren(ctx, query, nodes,
 			func(n *CloudService) { n.Edges.Children = []*CloudService{} },
 			func(n *CloudService, e *CloudService) { n.Edges.Children = append(n.Edges.Children, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := csq.withResources; query != nil {
-		if err := csq.loadResources(ctx, query, nodes,
+	if query := _q.withResources; query != nil {
+		if err := _q.loadResources(ctx, query, nodes,
 			func(n *CloudService) { n.Edges.Resources = []*CloudResource{} },
 			func(n *CloudService, e *CloudResource) { n.Edges.Resources = append(n.Edges.Resources, e) }); err != nil {
 			return nil, err
@@ -488,7 +488,7 @@ func (csq *CloudServiceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	return nodes, nil
 }
 
-func (csq *CloudServiceQuery) loadParent(ctx context.Context, query *CloudServiceQuery, nodes []*CloudService, init func(*CloudService), assign func(*CloudService, *CloudService)) error {
+func (_q *CloudServiceQuery) loadParent(ctx context.Context, query *CloudServiceQuery, nodes []*CloudService, init func(*CloudService), assign func(*CloudService, *CloudService)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*CloudService)
 	for i := range nodes {
@@ -517,7 +517,7 @@ func (csq *CloudServiceQuery) loadParent(ctx context.Context, query *CloudServic
 	}
 	return nil
 }
-func (csq *CloudServiceQuery) loadChildren(ctx context.Context, query *CloudServiceQuery, nodes []*CloudService, init func(*CloudService), assign func(*CloudService, *CloudService)) error {
+func (_q *CloudServiceQuery) loadChildren(ctx context.Context, query *CloudServiceQuery, nodes []*CloudService, init func(*CloudService), assign func(*CloudService, *CloudService)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*CloudService)
 	for i := range nodes {
@@ -547,7 +547,7 @@ func (csq *CloudServiceQuery) loadChildren(ctx context.Context, query *CloudServ
 	}
 	return nil
 }
-func (csq *CloudServiceQuery) loadResources(ctx context.Context, query *CloudResourceQuery, nodes []*CloudService, init func(*CloudService), assign func(*CloudService, *CloudResource)) error {
+func (_q *CloudServiceQuery) loadResources(ctx context.Context, query *CloudResourceQuery, nodes []*CloudService, init func(*CloudService), assign func(*CloudService, *CloudResource)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*CloudService)
 	for i := range nodes {
@@ -578,24 +578,24 @@ func (csq *CloudServiceQuery) loadResources(ctx context.Context, query *CloudRes
 	return nil
 }
 
-func (csq *CloudServiceQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := csq.querySpec()
-	_spec.Node.Columns = csq.ctx.Fields
-	if len(csq.ctx.Fields) > 0 {
-		_spec.Unique = csq.ctx.Unique != nil && *csq.ctx.Unique
+func (_q *CloudServiceQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, csq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (csq *CloudServiceQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *CloudServiceQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(cloudservice.Table, cloudservice.Columns, sqlgraph.NewFieldSpec(cloudservice.FieldID, field.TypeInt))
-	_spec.From = csq.sql
-	if unique := csq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if csq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := csq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, cloudservice.FieldID)
 		for i := range fields {
@@ -603,24 +603,24 @@ func (csq *CloudServiceQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if csq.withParent != nil {
+		if _q.withParent != nil {
 			_spec.Node.AddColumnOnce(cloudservice.FieldParentID)
 		}
 	}
-	if ps := csq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := csq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := csq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := csq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -630,33 +630,33 @@ func (csq *CloudServiceQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (csq *CloudServiceQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(csq.driver.Dialect())
+func (_q *CloudServiceQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(cloudservice.Table)
-	columns := csq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = cloudservice.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if csq.sql != nil {
-		selector = csq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if csq.ctx.Unique != nil && *csq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range csq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range csq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := csq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := csq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -669,41 +669,41 @@ type CloudServiceGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (csgb *CloudServiceGroupBy) Aggregate(fns ...AggregateFunc) *CloudServiceGroupBy {
-	csgb.fns = append(csgb.fns, fns...)
-	return csgb
+func (_g *CloudServiceGroupBy) Aggregate(fns ...AggregateFunc) *CloudServiceGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (csgb *CloudServiceGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, csgb.build.ctx, ent.OpQueryGroupBy)
-	if err := csgb.build.prepareQuery(ctx); err != nil {
+func (_g *CloudServiceGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CloudServiceQuery, *CloudServiceGroupBy](ctx, csgb.build, csgb, csgb.build.inters, v)
+	return scanWithInterceptors[*CloudServiceQuery, *CloudServiceGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (csgb *CloudServiceGroupBy) sqlScan(ctx context.Context, root *CloudServiceQuery, v any) error {
+func (_g *CloudServiceGroupBy) sqlScan(ctx context.Context, root *CloudServiceQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(csgb.fns))
-	for _, fn := range csgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*csgb.flds)+len(csgb.fns))
-		for _, f := range *csgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*csgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := csgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -717,27 +717,27 @@ type CloudServiceSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (css *CloudServiceSelect) Aggregate(fns ...AggregateFunc) *CloudServiceSelect {
-	css.fns = append(css.fns, fns...)
-	return css
+func (_s *CloudServiceSelect) Aggregate(fns ...AggregateFunc) *CloudServiceSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (css *CloudServiceSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, css.ctx, ent.OpQuerySelect)
-	if err := css.prepareQuery(ctx); err != nil {
+func (_s *CloudServiceSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CloudServiceQuery, *CloudServiceSelect](ctx, css.CloudServiceQuery, css, css.inters, v)
+	return scanWithInterceptors[*CloudServiceQuery, *CloudServiceSelect](ctx, _s.CloudServiceQuery, _s, _s.inters, v)
 }
 
-func (css *CloudServiceSelect) sqlScan(ctx context.Context, root *CloudServiceQuery, v any) error {
+func (_s *CloudServiceSelect) sqlScan(ctx context.Context, root *CloudServiceQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(css.fns))
-	for _, fn := range css.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*css.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -745,7 +745,7 @@ func (css *CloudServiceSelect) sqlScan(ctx context.Context, root *CloudServiceQu
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := css.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

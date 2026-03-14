@@ -99,7 +99,7 @@ func (*ServiceRequest) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ServiceRequest fields.
-func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
+func (_m *ServiceRequest) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -110,54 +110,54 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sr.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case servicerequest.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sr.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case servicerequest.FieldCatalogID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field catalog_id", values[i])
 			} else if value.Valid {
-				sr.CatalogID = int(value.Int64)
+				_m.CatalogID = int(value.Int64)
 			}
 		case servicerequest.FieldCiID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_id", values[i])
 			} else if value.Valid {
-				sr.CiID = int(value.Int64)
+				_m.CiID = int(value.Int64)
 			}
 		case servicerequest.FieldRequesterID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field requester_id", values[i])
 			} else if value.Valid {
-				sr.RequesterID = int(value.Int64)
+				_m.RequesterID = int(value.Int64)
 			}
 		case servicerequest.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				sr.Status = value.String
+				_m.Status = value.String
 			}
 		case servicerequest.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				sr.Title = value.String
+				_m.Title = value.String
 			}
 		case servicerequest.FieldReason:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field reason", values[i])
 			} else if value.Valid {
-				sr.Reason = value.String
+				_m.Reason = value.String
 			}
 		case servicerequest.FieldFormData:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field form_data", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sr.FormData); err != nil {
+				if err := json.Unmarshal(*value, &_m.FormData); err != nil {
 					return fmt.Errorf("unmarshal field form_data: %w", err)
 				}
 			}
@@ -165,25 +165,25 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cost_center", values[i])
 			} else if value.Valid {
-				sr.CostCenter = value.String
+				_m.CostCenter = value.String
 			}
 		case servicerequest.FieldDataClassification:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field data_classification", values[i])
 			} else if value.Valid {
-				sr.DataClassification = value.String
+				_m.DataClassification = value.String
 			}
 		case servicerequest.FieldNeedsPublicIP:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field needs_public_ip", values[i])
 			} else if value.Valid {
-				sr.NeedsPublicIP = value.Bool
+				_m.NeedsPublicIP = value.Bool
 			}
 		case servicerequest.FieldSourceIPWhitelist:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field source_ip_whitelist", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sr.SourceIPWhitelist); err != nil {
+				if err := json.Unmarshal(*value, &_m.SourceIPWhitelist); err != nil {
 					return fmt.Errorf("unmarshal field source_ip_whitelist: %w", err)
 				}
 			}
@@ -191,49 +191,49 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field expire_at", values[i])
 			} else if value.Valid {
-				sr.ExpireAt = value.Time
+				_m.ExpireAt = value.Time
 			}
 		case servicerequest.FieldComplianceAck:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field compliance_ack", values[i])
 			} else if value.Valid {
-				sr.ComplianceAck = value.Bool
+				_m.ComplianceAck = value.Bool
 			}
 		case servicerequest.FieldCurrentLevel:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field current_level", values[i])
 			} else if value.Valid {
-				sr.CurrentLevel = int(value.Int64)
+				_m.CurrentLevel = int(value.Int64)
 			}
 		case servicerequest.FieldTotalLevels:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field total_levels", values[i])
 			} else if value.Valid {
-				sr.TotalLevels = int(value.Int64)
+				_m.TotalLevels = int(value.Int64)
 			}
 		case servicerequest.FieldCurrentApprover:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field current_approver", values[i])
 			} else if value.Valid {
-				sr.CurrentApprover = value.String
+				_m.CurrentApprover = value.String
 			}
 		case servicerequest.FieldApprovedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field approved_at", values[i])
 			} else if value.Valid {
-				sr.ApprovedAt = value.Time
+				_m.ApprovedAt = value.Time
 			}
 		case servicerequest.FieldApproverComment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field approver_comment", values[i])
 			} else if value.Valid {
-				sr.ApproverComment = value.String
+				_m.ApproverComment = value.String
 			}
 		case servicerequest.FieldApprovalHistory:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field approval_history", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sr.ApprovalHistory); err != nil {
+				if err := json.Unmarshal(*value, &_m.ApprovalHistory); err != nil {
 					return fmt.Errorf("unmarshal field approval_history: %w", err)
 				}
 			}
@@ -241,46 +241,46 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field processor_id", values[i])
 			} else if value.Valid {
-				sr.ProcessorID = int(value.Int64)
+				_m.ProcessorID = int(value.Int64)
 			}
 		case servicerequest.FieldStartedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field started_at", values[i])
 			} else if value.Valid {
-				sr.StartedAt = value.Time
+				_m.StartedAt = value.Time
 			}
 		case servicerequest.FieldCompletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field completed_at", values[i])
 			} else if value.Valid {
-				sr.CompletedAt = value.Time
+				_m.CompletedAt = value.Time
 			}
 		case servicerequest.FieldCompletionNote:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field completion_note", values[i])
 			} else if value.Valid {
-				sr.CompletionNote = value.String
+				_m.CompletionNote = value.String
 			}
 		case servicerequest.FieldLastError:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field last_error", values[i])
 			} else if value.Valid {
-				sr.LastError = value.String
+				_m.LastError = value.String
 			}
 		case servicerequest.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sr.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case servicerequest.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				sr.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			sr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -288,113 +288,113 @@ func (sr *ServiceRequest) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ServiceRequest.
 // This includes values selected through modifiers, order, etc.
-func (sr *ServiceRequest) Value(name string) (ent.Value, error) {
-	return sr.selectValues.Get(name)
+func (_m *ServiceRequest) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this ServiceRequest.
 // Note that you need to call ServiceRequest.Unwrap() before calling this method if this ServiceRequest
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sr *ServiceRequest) Update() *ServiceRequestUpdateOne {
-	return NewServiceRequestClient(sr.config).UpdateOne(sr)
+func (_m *ServiceRequest) Update() *ServiceRequestUpdateOne {
+	return NewServiceRequestClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ServiceRequest entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sr *ServiceRequest) Unwrap() *ServiceRequest {
-	_tx, ok := sr.config.driver.(*txDriver)
+func (_m *ServiceRequest) Unwrap() *ServiceRequest {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ServiceRequest is not a transactional entity")
 	}
-	sr.config.driver = _tx.drv
-	return sr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sr *ServiceRequest) String() string {
+func (_m *ServiceRequest) String() string {
 	var builder strings.Builder
 	builder.WriteString("ServiceRequest(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sr.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("catalog_id=")
-	builder.WriteString(fmt.Sprintf("%v", sr.CatalogID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CatalogID))
 	builder.WriteString(", ")
 	builder.WriteString("ci_id=")
-	builder.WriteString(fmt.Sprintf("%v", sr.CiID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CiID))
 	builder.WriteString(", ")
 	builder.WriteString("requester_id=")
-	builder.WriteString(fmt.Sprintf("%v", sr.RequesterID))
+	builder.WriteString(fmt.Sprintf("%v", _m.RequesterID))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(sr.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("title=")
-	builder.WriteString(sr.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("reason=")
-	builder.WriteString(sr.Reason)
+	builder.WriteString(_m.Reason)
 	builder.WriteString(", ")
 	builder.WriteString("form_data=")
-	builder.WriteString(fmt.Sprintf("%v", sr.FormData))
+	builder.WriteString(fmt.Sprintf("%v", _m.FormData))
 	builder.WriteString(", ")
 	builder.WriteString("cost_center=")
-	builder.WriteString(sr.CostCenter)
+	builder.WriteString(_m.CostCenter)
 	builder.WriteString(", ")
 	builder.WriteString("data_classification=")
-	builder.WriteString(sr.DataClassification)
+	builder.WriteString(_m.DataClassification)
 	builder.WriteString(", ")
 	builder.WriteString("needs_public_ip=")
-	builder.WriteString(fmt.Sprintf("%v", sr.NeedsPublicIP))
+	builder.WriteString(fmt.Sprintf("%v", _m.NeedsPublicIP))
 	builder.WriteString(", ")
 	builder.WriteString("source_ip_whitelist=")
-	builder.WriteString(fmt.Sprintf("%v", sr.SourceIPWhitelist))
+	builder.WriteString(fmt.Sprintf("%v", _m.SourceIPWhitelist))
 	builder.WriteString(", ")
 	builder.WriteString("expire_at=")
-	builder.WriteString(sr.ExpireAt.Format(time.ANSIC))
+	builder.WriteString(_m.ExpireAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("compliance_ack=")
-	builder.WriteString(fmt.Sprintf("%v", sr.ComplianceAck))
+	builder.WriteString(fmt.Sprintf("%v", _m.ComplianceAck))
 	builder.WriteString(", ")
 	builder.WriteString("current_level=")
-	builder.WriteString(fmt.Sprintf("%v", sr.CurrentLevel))
+	builder.WriteString(fmt.Sprintf("%v", _m.CurrentLevel))
 	builder.WriteString(", ")
 	builder.WriteString("total_levels=")
-	builder.WriteString(fmt.Sprintf("%v", sr.TotalLevels))
+	builder.WriteString(fmt.Sprintf("%v", _m.TotalLevels))
 	builder.WriteString(", ")
 	builder.WriteString("current_approver=")
-	builder.WriteString(sr.CurrentApprover)
+	builder.WriteString(_m.CurrentApprover)
 	builder.WriteString(", ")
 	builder.WriteString("approved_at=")
-	builder.WriteString(sr.ApprovedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ApprovedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("approver_comment=")
-	builder.WriteString(sr.ApproverComment)
+	builder.WriteString(_m.ApproverComment)
 	builder.WriteString(", ")
 	builder.WriteString("approval_history=")
-	builder.WriteString(fmt.Sprintf("%v", sr.ApprovalHistory))
+	builder.WriteString(fmt.Sprintf("%v", _m.ApprovalHistory))
 	builder.WriteString(", ")
 	builder.WriteString("processor_id=")
-	builder.WriteString(fmt.Sprintf("%v", sr.ProcessorID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessorID))
 	builder.WriteString(", ")
 	builder.WriteString("started_at=")
-	builder.WriteString(sr.StartedAt.Format(time.ANSIC))
+	builder.WriteString(_m.StartedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("completed_at=")
-	builder.WriteString(sr.CompletedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CompletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("completion_note=")
-	builder.WriteString(sr.CompletionNote)
+	builder.WriteString(_m.CompletionNote)
 	builder.WriteString(", ")
 	builder.WriteString("last_error=")
-	builder.WriteString(sr.LastError)
+	builder.WriteString(_m.LastError)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sr.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(sr.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

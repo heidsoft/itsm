@@ -23,337 +23,337 @@ type IncidentEscalationRuleUpdate struct {
 }
 
 // Where appends a list predicates to the IncidentEscalationRuleUpdate builder.
-func (ieru *IncidentEscalationRuleUpdate) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleUpdate {
-	ieru.mutation.Where(ps...)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (ieru *IncidentEscalationRuleUpdate) SetName(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetName(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetName(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableName(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetName(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableName(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ieru
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ieru *IncidentEscalationRuleUpdate) SetDescription(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetDescription(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetDescription(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableDescription(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetDescription(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableDescription(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ieru
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearDescription() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearDescription()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearDescription() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTriggerType sets the "trigger_type" field.
-func (ieru *IncidentEscalationRuleUpdate) SetTriggerType(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetTriggerType(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetTriggerType(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetTriggerType(v)
+	return _u
 }
 
 // SetNillableTriggerType sets the "trigger_type" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableTriggerType(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetTriggerType(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableTriggerType(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetTriggerType(*v)
 	}
-	return ieru
+	return _u
 }
 
 // SetEscalationLevel sets the "escalation_level" field.
-func (ieru *IncidentEscalationRuleUpdate) SetEscalationLevel(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.ResetEscalationLevel()
-	ieru.mutation.SetEscalationLevel(i)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetEscalationLevel(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.ResetEscalationLevel()
+	_u.mutation.SetEscalationLevel(v)
+	return _u
 }
 
 // SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableEscalationLevel(i *int) *IncidentEscalationRuleUpdate {
-	if i != nil {
-		ieru.SetEscalationLevel(*i)
+func (_u *IncidentEscalationRuleUpdate) SetNillableEscalationLevel(v *int) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetEscalationLevel(*v)
 	}
-	return ieru
+	return _u
 }
 
-// AddEscalationLevel adds i to the "escalation_level" field.
-func (ieru *IncidentEscalationRuleUpdate) AddEscalationLevel(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.AddEscalationLevel(i)
-	return ieru
+// AddEscalationLevel adds value to the "escalation_level" field.
+func (_u *IncidentEscalationRuleUpdate) AddEscalationLevel(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.AddEscalationLevel(v)
+	return _u
 }
 
 // SetTriggerMinutes sets the "trigger_minutes" field.
-func (ieru *IncidentEscalationRuleUpdate) SetTriggerMinutes(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.ResetTriggerMinutes()
-	ieru.mutation.SetTriggerMinutes(i)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetTriggerMinutes(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.ResetTriggerMinutes()
+	_u.mutation.SetTriggerMinutes(v)
+	return _u
 }
 
 // SetNillableTriggerMinutes sets the "trigger_minutes" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableTriggerMinutes(i *int) *IncidentEscalationRuleUpdate {
-	if i != nil {
-		ieru.SetTriggerMinutes(*i)
+func (_u *IncidentEscalationRuleUpdate) SetNillableTriggerMinutes(v *int) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetTriggerMinutes(*v)
 	}
-	return ieru
+	return _u
 }
 
-// AddTriggerMinutes adds i to the "trigger_minutes" field.
-func (ieru *IncidentEscalationRuleUpdate) AddTriggerMinutes(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.AddTriggerMinutes(i)
-	return ieru
+// AddTriggerMinutes adds value to the "trigger_minutes" field.
+func (_u *IncidentEscalationRuleUpdate) AddTriggerMinutes(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.AddTriggerMinutes(v)
+	return _u
 }
 
 // SetFromStatus sets the "from_status" field.
-func (ieru *IncidentEscalationRuleUpdate) SetFromStatus(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetFromStatus(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetFromStatus(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetFromStatus(v)
+	return _u
 }
 
 // SetNillableFromStatus sets the "from_status" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableFromStatus(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetFromStatus(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableFromStatus(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetFromStatus(*v)
 	}
-	return ieru
+	return _u
 }
 
 // ClearFromStatus clears the value of the "from_status" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearFromStatus() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearFromStatus()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearFromStatus() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearFromStatus()
+	return _u
 }
 
 // SetToStatus sets the "to_status" field.
-func (ieru *IncidentEscalationRuleUpdate) SetToStatus(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetToStatus(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetToStatus(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetToStatus(v)
+	return _u
 }
 
 // SetNillableToStatus sets the "to_status" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableToStatus(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetToStatus(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableToStatus(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetToStatus(*v)
 	}
-	return ieru
+	return _u
 }
 
 // ClearToStatus clears the value of the "to_status" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearToStatus() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearToStatus()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearToStatus() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearToStatus()
+	return _u
 }
 
 // SetTargetAssigneeType sets the "target_assignee_type" field.
-func (ieru *IncidentEscalationRuleUpdate) SetTargetAssigneeType(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetTargetAssigneeType(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetTargetAssigneeType(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetTargetAssigneeType(v)
+	return _u
 }
 
 // SetNillableTargetAssigneeType sets the "target_assignee_type" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableTargetAssigneeType(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetTargetAssigneeType(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableTargetAssigneeType(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetTargetAssigneeType(*v)
 	}
-	return ieru
+	return _u
 }
 
 // SetTargetAssigneeID sets the "target_assignee_id" field.
-func (ieru *IncidentEscalationRuleUpdate) SetTargetAssigneeID(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.ResetTargetAssigneeID()
-	ieru.mutation.SetTargetAssigneeID(i)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetTargetAssigneeID(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.ResetTargetAssigneeID()
+	_u.mutation.SetTargetAssigneeID(v)
+	return _u
 }
 
 // SetNillableTargetAssigneeID sets the "target_assignee_id" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableTargetAssigneeID(i *int) *IncidentEscalationRuleUpdate {
-	if i != nil {
-		ieru.SetTargetAssigneeID(*i)
+func (_u *IncidentEscalationRuleUpdate) SetNillableTargetAssigneeID(v *int) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetTargetAssigneeID(*v)
 	}
-	return ieru
+	return _u
 }
 
-// AddTargetAssigneeID adds i to the "target_assignee_id" field.
-func (ieru *IncidentEscalationRuleUpdate) AddTargetAssigneeID(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.AddTargetAssigneeID(i)
-	return ieru
+// AddTargetAssigneeID adds value to the "target_assignee_id" field.
+func (_u *IncidentEscalationRuleUpdate) AddTargetAssigneeID(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.AddTargetAssigneeID(v)
+	return _u
 }
 
 // ClearTargetAssigneeID clears the value of the "target_assignee_id" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearTargetAssigneeID() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearTargetAssigneeID()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearTargetAssigneeID() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearTargetAssigneeID()
+	return _u
 }
 
 // SetTargetGroup sets the "target_group" field.
-func (ieru *IncidentEscalationRuleUpdate) SetTargetGroup(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetTargetGroup(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetTargetGroup(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetTargetGroup(v)
+	return _u
 }
 
 // SetNillableTargetGroup sets the "target_group" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableTargetGroup(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetTargetGroup(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableTargetGroup(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetTargetGroup(*v)
 	}
-	return ieru
+	return _u
 }
 
 // ClearTargetGroup clears the value of the "target_group" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearTargetGroup() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearTargetGroup()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearTargetGroup() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearTargetGroup()
+	return _u
 }
 
 // SetAutoEscalate sets the "auto_escalate" field.
-func (ieru *IncidentEscalationRuleUpdate) SetAutoEscalate(b bool) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetAutoEscalate(b)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetAutoEscalate(v bool) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetAutoEscalate(v)
+	return _u
 }
 
 // SetNillableAutoEscalate sets the "auto_escalate" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableAutoEscalate(b *bool) *IncidentEscalationRuleUpdate {
-	if b != nil {
-		ieru.SetAutoEscalate(*b)
+func (_u *IncidentEscalationRuleUpdate) SetNillableAutoEscalate(v *bool) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetAutoEscalate(*v)
 	}
-	return ieru
+	return _u
 }
 
 // SetNotificationConfig sets the "notification_config" field.
-func (ieru *IncidentEscalationRuleUpdate) SetNotificationConfig(m map[string]interface{}) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetNotificationConfig(m)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetNotificationConfig(v map[string]interface{}) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetNotificationConfig(v)
+	return _u
 }
 
 // ClearNotificationConfig clears the value of the "notification_config" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearNotificationConfig() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearNotificationConfig()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearNotificationConfig() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearNotificationConfig()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (ieru *IncidentEscalationRuleUpdate) SetIsActive(b bool) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetIsActive(b)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetIsActive(v bool) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableIsActive(b *bool) *IncidentEscalationRuleUpdate {
-	if b != nil {
-		ieru.SetIsActive(*b)
+func (_u *IncidentEscalationRuleUpdate) SetNillableIsActive(v *bool) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return ieru
+	return _u
 }
 
 // SetPriorityMatch sets the "priority_match" field.
-func (ieru *IncidentEscalationRuleUpdate) SetPriorityMatch(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetPriorityMatch(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetPriorityMatch(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetPriorityMatch(v)
+	return _u
 }
 
 // SetNillablePriorityMatch sets the "priority_match" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillablePriorityMatch(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetPriorityMatch(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillablePriorityMatch(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetPriorityMatch(*v)
 	}
-	return ieru
+	return _u
 }
 
 // ClearPriorityMatch clears the value of the "priority_match" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearPriorityMatch() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearPriorityMatch()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearPriorityMatch() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearPriorityMatch()
+	return _u
 }
 
 // SetCategoryMatch sets the "category_match" field.
-func (ieru *IncidentEscalationRuleUpdate) SetCategoryMatch(s string) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetCategoryMatch(s)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetCategoryMatch(v string) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetCategoryMatch(v)
+	return _u
 }
 
 // SetNillableCategoryMatch sets the "category_match" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableCategoryMatch(s *string) *IncidentEscalationRuleUpdate {
-	if s != nil {
-		ieru.SetCategoryMatch(*s)
+func (_u *IncidentEscalationRuleUpdate) SetNillableCategoryMatch(v *string) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetCategoryMatch(*v)
 	}
-	return ieru
+	return _u
 }
 
 // ClearCategoryMatch clears the value of the "category_match" field.
-func (ieru *IncidentEscalationRuleUpdate) ClearCategoryMatch() *IncidentEscalationRuleUpdate {
-	ieru.mutation.ClearCategoryMatch()
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) ClearCategoryMatch() *IncidentEscalationRuleUpdate {
+	_u.mutation.ClearCategoryMatch()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ieru *IncidentEscalationRuleUpdate) SetTenantID(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.ResetTenantID()
-	ieru.mutation.SetTenantID(i)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetTenantID(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableTenantID(i *int) *IncidentEscalationRuleUpdate {
-	if i != nil {
-		ieru.SetTenantID(*i)
+func (_u *IncidentEscalationRuleUpdate) SetNillableTenantID(v *int) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ieru
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ieru *IncidentEscalationRuleUpdate) AddTenantID(i int) *IncidentEscalationRuleUpdate {
-	ieru.mutation.AddTenantID(i)
-	return ieru
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentEscalationRuleUpdate) AddTenantID(v int) *IncidentEscalationRuleUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ieru *IncidentEscalationRuleUpdate) SetCreatedAt(t time.Time) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetCreatedAt(t)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetCreatedAt(v time.Time) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ieru *IncidentEscalationRuleUpdate) SetNillableCreatedAt(t *time.Time) *IncidentEscalationRuleUpdate {
-	if t != nil {
-		ieru.SetCreatedAt(*t)
+func (_u *IncidentEscalationRuleUpdate) SetNillableCreatedAt(v *time.Time) *IncidentEscalationRuleUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ieru
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ieru *IncidentEscalationRuleUpdate) SetUpdatedAt(t time.Time) *IncidentEscalationRuleUpdate {
-	ieru.mutation.SetUpdatedAt(t)
-	return ieru
+func (_u *IncidentEscalationRuleUpdate) SetUpdatedAt(v time.Time) *IncidentEscalationRuleUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the IncidentEscalationRuleMutation object of the builder.
-func (ieru *IncidentEscalationRuleUpdate) Mutation() *IncidentEscalationRuleMutation {
-	return ieru.mutation
+func (_u *IncidentEscalationRuleUpdate) Mutation() *IncidentEscalationRuleMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ieru *IncidentEscalationRuleUpdate) Save(ctx context.Context) (int, error) {
-	ieru.defaults()
-	return withHooks(ctx, ieru.sqlSave, ieru.mutation, ieru.hooks)
+func (_u *IncidentEscalationRuleUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ieru *IncidentEscalationRuleUpdate) SaveX(ctx context.Context) int {
-	affected, err := ieru.Save(ctx)
+func (_u *IncidentEscalationRuleUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -361,49 +361,49 @@ func (ieru *IncidentEscalationRuleUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ieru *IncidentEscalationRuleUpdate) Exec(ctx context.Context) error {
-	_, err := ieru.Save(ctx)
+func (_u *IncidentEscalationRuleUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ieru *IncidentEscalationRuleUpdate) ExecX(ctx context.Context) {
-	if err := ieru.Exec(ctx); err != nil {
+func (_u *IncidentEscalationRuleUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ieru *IncidentEscalationRuleUpdate) defaults() {
-	if _, ok := ieru.mutation.UpdatedAt(); !ok {
+func (_u *IncidentEscalationRuleUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentescalationrule.UpdateDefaultUpdatedAt()
-		ieru.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ieru *IncidentEscalationRuleUpdate) check() error {
-	if v, ok := ieru.mutation.Name(); ok {
+func (_u *IncidentEscalationRuleUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := incidentescalationrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.name": %w`, err)}
 		}
 	}
-	if v, ok := ieru.mutation.TriggerType(); ok {
+	if v, ok := _u.mutation.TriggerType(); ok {
 		if err := incidentescalationrule.TriggerTypeValidator(v); err != nil {
 			return &ValidationError{Name: "trigger_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.trigger_type": %w`, err)}
 		}
 	}
-	if v, ok := ieru.mutation.TriggerMinutes(); ok {
+	if v, ok := _u.mutation.TriggerMinutes(); ok {
 		if err := incidentescalationrule.TriggerMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "trigger_minutes", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.trigger_minutes": %w`, err)}
 		}
 	}
-	if v, ok := ieru.mutation.TargetAssigneeType(); ok {
+	if v, ok := _u.mutation.TargetAssigneeType(); ok {
 		if err := incidentescalationrule.TargetAssigneeTypeValidator(v); err != nil {
 			return &ValidationError{Name: "target_assignee_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.target_assignee_type": %w`, err)}
 		}
 	}
-	if v, ok := ieru.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentescalationrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.tenant_id": %w`, err)}
 		}
@@ -411,109 +411,109 @@ func (ieru *IncidentEscalationRuleUpdate) check() error {
 	return nil
 }
 
-func (ieru *IncidentEscalationRuleUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ieru.check(); err != nil {
-		return n, err
+func (_u *IncidentEscalationRuleUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentescalationrule.Table, incidentescalationrule.Columns, sqlgraph.NewFieldSpec(incidentescalationrule.FieldID, field.TypeInt))
-	if ps := ieru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ieru.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(incidentescalationrule.FieldName, field.TypeString, value)
 	}
-	if value, ok := ieru.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(incidentescalationrule.FieldDescription, field.TypeString, value)
 	}
-	if ieru.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(incidentescalationrule.FieldDescription, field.TypeString)
 	}
-	if value, ok := ieru.mutation.TriggerType(); ok {
+	if value, ok := _u.mutation.TriggerType(); ok {
 		_spec.SetField(incidentescalationrule.FieldTriggerType, field.TypeString, value)
 	}
-	if value, ok := ieru.mutation.EscalationLevel(); ok {
+	if value, ok := _u.mutation.EscalationLevel(); ok {
 		_spec.SetField(incidentescalationrule.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := ieru.mutation.AddedEscalationLevel(); ok {
+	if value, ok := _u.mutation.AddedEscalationLevel(); ok {
 		_spec.AddField(incidentescalationrule.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := ieru.mutation.TriggerMinutes(); ok {
+	if value, ok := _u.mutation.TriggerMinutes(); ok {
 		_spec.SetField(incidentescalationrule.FieldTriggerMinutes, field.TypeInt, value)
 	}
-	if value, ok := ieru.mutation.AddedTriggerMinutes(); ok {
+	if value, ok := _u.mutation.AddedTriggerMinutes(); ok {
 		_spec.AddField(incidentescalationrule.FieldTriggerMinutes, field.TypeInt, value)
 	}
-	if value, ok := ieru.mutation.FromStatus(); ok {
+	if value, ok := _u.mutation.FromStatus(); ok {
 		_spec.SetField(incidentescalationrule.FieldFromStatus, field.TypeString, value)
 	}
-	if ieru.mutation.FromStatusCleared() {
+	if _u.mutation.FromStatusCleared() {
 		_spec.ClearField(incidentescalationrule.FieldFromStatus, field.TypeString)
 	}
-	if value, ok := ieru.mutation.ToStatus(); ok {
+	if value, ok := _u.mutation.ToStatus(); ok {
 		_spec.SetField(incidentescalationrule.FieldToStatus, field.TypeString, value)
 	}
-	if ieru.mutation.ToStatusCleared() {
+	if _u.mutation.ToStatusCleared() {
 		_spec.ClearField(incidentescalationrule.FieldToStatus, field.TypeString)
 	}
-	if value, ok := ieru.mutation.TargetAssigneeType(); ok {
+	if value, ok := _u.mutation.TargetAssigneeType(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetAssigneeType, field.TypeString, value)
 	}
-	if value, ok := ieru.mutation.TargetAssigneeID(); ok {
+	if value, ok := _u.mutation.TargetAssigneeID(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := ieru.mutation.AddedTargetAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedTargetAssigneeID(); ok {
 		_spec.AddField(incidentescalationrule.FieldTargetAssigneeID, field.TypeInt, value)
 	}
-	if ieru.mutation.TargetAssigneeIDCleared() {
+	if _u.mutation.TargetAssigneeIDCleared() {
 		_spec.ClearField(incidentescalationrule.FieldTargetAssigneeID, field.TypeInt)
 	}
-	if value, ok := ieru.mutation.TargetGroup(); ok {
+	if value, ok := _u.mutation.TargetGroup(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetGroup, field.TypeString, value)
 	}
-	if ieru.mutation.TargetGroupCleared() {
+	if _u.mutation.TargetGroupCleared() {
 		_spec.ClearField(incidentescalationrule.FieldTargetGroup, field.TypeString)
 	}
-	if value, ok := ieru.mutation.AutoEscalate(); ok {
+	if value, ok := _u.mutation.AutoEscalate(); ok {
 		_spec.SetField(incidentescalationrule.FieldAutoEscalate, field.TypeBool, value)
 	}
-	if value, ok := ieru.mutation.NotificationConfig(); ok {
+	if value, ok := _u.mutation.NotificationConfig(); ok {
 		_spec.SetField(incidentescalationrule.FieldNotificationConfig, field.TypeJSON, value)
 	}
-	if ieru.mutation.NotificationConfigCleared() {
+	if _u.mutation.NotificationConfigCleared() {
 		_spec.ClearField(incidentescalationrule.FieldNotificationConfig, field.TypeJSON)
 	}
-	if value, ok := ieru.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(incidentescalationrule.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := ieru.mutation.PriorityMatch(); ok {
+	if value, ok := _u.mutation.PriorityMatch(); ok {
 		_spec.SetField(incidentescalationrule.FieldPriorityMatch, field.TypeString, value)
 	}
-	if ieru.mutation.PriorityMatchCleared() {
+	if _u.mutation.PriorityMatchCleared() {
 		_spec.ClearField(incidentescalationrule.FieldPriorityMatch, field.TypeString)
 	}
-	if value, ok := ieru.mutation.CategoryMatch(); ok {
+	if value, ok := _u.mutation.CategoryMatch(); ok {
 		_spec.SetField(incidentescalationrule.FieldCategoryMatch, field.TypeString, value)
 	}
-	if ieru.mutation.CategoryMatchCleared() {
+	if _u.mutation.CategoryMatchCleared() {
 		_spec.ClearField(incidentescalationrule.FieldCategoryMatch, field.TypeString)
 	}
-	if value, ok := ieru.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentescalationrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieru.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentescalationrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieru.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentescalationrule.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ieru.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentescalationrule.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ieru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentescalationrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -521,8 +521,8 @@ func (ieru *IncidentEscalationRuleUpdate) sqlSave(ctx context.Context) (n int, e
 		}
 		return 0, err
 	}
-	ieru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // IncidentEscalationRuleUpdateOne is the builder for updating a single IncidentEscalationRule entity.
@@ -534,344 +534,344 @@ type IncidentEscalationRuleUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetName(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetName(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetName(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableName(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetName(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableName(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetDescription(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetDescription(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetDescription(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableDescription(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetDescription(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableDescription(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearDescription() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearDescription()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearDescription() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTriggerType sets the "trigger_type" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetTriggerType(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetTriggerType(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetTriggerType(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetTriggerType(v)
+	return _u
 }
 
 // SetNillableTriggerType sets the "trigger_type" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableTriggerType(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetTriggerType(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableTriggerType(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetTriggerType(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // SetEscalationLevel sets the "escalation_level" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetEscalationLevel(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ResetEscalationLevel()
-	ieruo.mutation.SetEscalationLevel(i)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetEscalationLevel(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ResetEscalationLevel()
+	_u.mutation.SetEscalationLevel(v)
+	return _u
 }
 
 // SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableEscalationLevel(i *int) *IncidentEscalationRuleUpdateOne {
-	if i != nil {
-		ieruo.SetEscalationLevel(*i)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableEscalationLevel(v *int) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetEscalationLevel(*v)
 	}
-	return ieruo
+	return _u
 }
 
-// AddEscalationLevel adds i to the "escalation_level" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) AddEscalationLevel(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.AddEscalationLevel(i)
-	return ieruo
+// AddEscalationLevel adds value to the "escalation_level" field.
+func (_u *IncidentEscalationRuleUpdateOne) AddEscalationLevel(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.AddEscalationLevel(v)
+	return _u
 }
 
 // SetTriggerMinutes sets the "trigger_minutes" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetTriggerMinutes(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ResetTriggerMinutes()
-	ieruo.mutation.SetTriggerMinutes(i)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetTriggerMinutes(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ResetTriggerMinutes()
+	_u.mutation.SetTriggerMinutes(v)
+	return _u
 }
 
 // SetNillableTriggerMinutes sets the "trigger_minutes" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableTriggerMinutes(i *int) *IncidentEscalationRuleUpdateOne {
-	if i != nil {
-		ieruo.SetTriggerMinutes(*i)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableTriggerMinutes(v *int) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetTriggerMinutes(*v)
 	}
-	return ieruo
+	return _u
 }
 
-// AddTriggerMinutes adds i to the "trigger_minutes" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) AddTriggerMinutes(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.AddTriggerMinutes(i)
-	return ieruo
+// AddTriggerMinutes adds value to the "trigger_minutes" field.
+func (_u *IncidentEscalationRuleUpdateOne) AddTriggerMinutes(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.AddTriggerMinutes(v)
+	return _u
 }
 
 // SetFromStatus sets the "from_status" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetFromStatus(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetFromStatus(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetFromStatus(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetFromStatus(v)
+	return _u
 }
 
 // SetNillableFromStatus sets the "from_status" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableFromStatus(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetFromStatus(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableFromStatus(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetFromStatus(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // ClearFromStatus clears the value of the "from_status" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearFromStatus() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearFromStatus()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearFromStatus() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearFromStatus()
+	return _u
 }
 
 // SetToStatus sets the "to_status" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetToStatus(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetToStatus(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetToStatus(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetToStatus(v)
+	return _u
 }
 
 // SetNillableToStatus sets the "to_status" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableToStatus(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetToStatus(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableToStatus(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetToStatus(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // ClearToStatus clears the value of the "to_status" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearToStatus() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearToStatus()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearToStatus() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearToStatus()
+	return _u
 }
 
 // SetTargetAssigneeType sets the "target_assignee_type" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetTargetAssigneeType(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetTargetAssigneeType(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetTargetAssigneeType(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetTargetAssigneeType(v)
+	return _u
 }
 
 // SetNillableTargetAssigneeType sets the "target_assignee_type" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableTargetAssigneeType(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetTargetAssigneeType(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableTargetAssigneeType(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetTargetAssigneeType(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // SetTargetAssigneeID sets the "target_assignee_id" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetTargetAssigneeID(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ResetTargetAssigneeID()
-	ieruo.mutation.SetTargetAssigneeID(i)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetTargetAssigneeID(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ResetTargetAssigneeID()
+	_u.mutation.SetTargetAssigneeID(v)
+	return _u
 }
 
 // SetNillableTargetAssigneeID sets the "target_assignee_id" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableTargetAssigneeID(i *int) *IncidentEscalationRuleUpdateOne {
-	if i != nil {
-		ieruo.SetTargetAssigneeID(*i)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableTargetAssigneeID(v *int) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetTargetAssigneeID(*v)
 	}
-	return ieruo
+	return _u
 }
 
-// AddTargetAssigneeID adds i to the "target_assignee_id" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) AddTargetAssigneeID(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.AddTargetAssigneeID(i)
-	return ieruo
+// AddTargetAssigneeID adds value to the "target_assignee_id" field.
+func (_u *IncidentEscalationRuleUpdateOne) AddTargetAssigneeID(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.AddTargetAssigneeID(v)
+	return _u
 }
 
 // ClearTargetAssigneeID clears the value of the "target_assignee_id" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearTargetAssigneeID() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearTargetAssigneeID()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearTargetAssigneeID() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearTargetAssigneeID()
+	return _u
 }
 
 // SetTargetGroup sets the "target_group" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetTargetGroup(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetTargetGroup(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetTargetGroup(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetTargetGroup(v)
+	return _u
 }
 
 // SetNillableTargetGroup sets the "target_group" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableTargetGroup(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetTargetGroup(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableTargetGroup(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetTargetGroup(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // ClearTargetGroup clears the value of the "target_group" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearTargetGroup() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearTargetGroup()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearTargetGroup() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearTargetGroup()
+	return _u
 }
 
 // SetAutoEscalate sets the "auto_escalate" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetAutoEscalate(b bool) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetAutoEscalate(b)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetAutoEscalate(v bool) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetAutoEscalate(v)
+	return _u
 }
 
 // SetNillableAutoEscalate sets the "auto_escalate" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableAutoEscalate(b *bool) *IncidentEscalationRuleUpdateOne {
-	if b != nil {
-		ieruo.SetAutoEscalate(*b)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableAutoEscalate(v *bool) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetAutoEscalate(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // SetNotificationConfig sets the "notification_config" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNotificationConfig(m map[string]interface{}) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetNotificationConfig(m)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetNotificationConfig(v map[string]interface{}) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetNotificationConfig(v)
+	return _u
 }
 
 // ClearNotificationConfig clears the value of the "notification_config" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearNotificationConfig() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearNotificationConfig()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearNotificationConfig() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearNotificationConfig()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetIsActive(b bool) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetIsActive(b)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetIsActive(v bool) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableIsActive(b *bool) *IncidentEscalationRuleUpdateOne {
-	if b != nil {
-		ieruo.SetIsActive(*b)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableIsActive(v *bool) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // SetPriorityMatch sets the "priority_match" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetPriorityMatch(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetPriorityMatch(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetPriorityMatch(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetPriorityMatch(v)
+	return _u
 }
 
 // SetNillablePriorityMatch sets the "priority_match" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillablePriorityMatch(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetPriorityMatch(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillablePriorityMatch(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetPriorityMatch(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // ClearPriorityMatch clears the value of the "priority_match" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearPriorityMatch() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearPriorityMatch()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearPriorityMatch() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearPriorityMatch()
+	return _u
 }
 
 // SetCategoryMatch sets the "category_match" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetCategoryMatch(s string) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetCategoryMatch(s)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetCategoryMatch(v string) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetCategoryMatch(v)
+	return _u
 }
 
 // SetNillableCategoryMatch sets the "category_match" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableCategoryMatch(s *string) *IncidentEscalationRuleUpdateOne {
-	if s != nil {
-		ieruo.SetCategoryMatch(*s)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableCategoryMatch(v *string) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetCategoryMatch(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // ClearCategoryMatch clears the value of the "category_match" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) ClearCategoryMatch() *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ClearCategoryMatch()
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) ClearCategoryMatch() *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ClearCategoryMatch()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetTenantID(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.ResetTenantID()
-	ieruo.mutation.SetTenantID(i)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetTenantID(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableTenantID(i *int) *IncidentEscalationRuleUpdateOne {
-	if i != nil {
-		ieruo.SetTenantID(*i)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableTenantID(v *int) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ieruo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) AddTenantID(i int) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.AddTenantID(i)
-	return ieruo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentEscalationRuleUpdateOne) AddTenantID(v int) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetCreatedAt(t time.Time) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetCreatedAt(t)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetCreatedAt(v time.Time) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetNillableCreatedAt(t *time.Time) *IncidentEscalationRuleUpdateOne {
-	if t != nil {
-		ieruo.SetCreatedAt(*t)
+func (_u *IncidentEscalationRuleUpdateOne) SetNillableCreatedAt(v *time.Time) *IncidentEscalationRuleUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ieruo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ieruo *IncidentEscalationRuleUpdateOne) SetUpdatedAt(t time.Time) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.SetUpdatedAt(t)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) SetUpdatedAt(v time.Time) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the IncidentEscalationRuleMutation object of the builder.
-func (ieruo *IncidentEscalationRuleUpdateOne) Mutation() *IncidentEscalationRuleMutation {
-	return ieruo.mutation
+func (_u *IncidentEscalationRuleUpdateOne) Mutation() *IncidentEscalationRuleMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the IncidentEscalationRuleUpdate builder.
-func (ieruo *IncidentEscalationRuleUpdateOne) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleUpdateOne {
-	ieruo.mutation.Where(ps...)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ieruo *IncidentEscalationRuleUpdateOne) Select(field string, fields ...string) *IncidentEscalationRuleUpdateOne {
-	ieruo.fields = append([]string{field}, fields...)
-	return ieruo
+func (_u *IncidentEscalationRuleUpdateOne) Select(field string, fields ...string) *IncidentEscalationRuleUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated IncidentEscalationRule entity.
-func (ieruo *IncidentEscalationRuleUpdateOne) Save(ctx context.Context) (*IncidentEscalationRule, error) {
-	ieruo.defaults()
-	return withHooks(ctx, ieruo.sqlSave, ieruo.mutation, ieruo.hooks)
+func (_u *IncidentEscalationRuleUpdateOne) Save(ctx context.Context) (*IncidentEscalationRule, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ieruo *IncidentEscalationRuleUpdateOne) SaveX(ctx context.Context) *IncidentEscalationRule {
-	node, err := ieruo.Save(ctx)
+func (_u *IncidentEscalationRuleUpdateOne) SaveX(ctx context.Context) *IncidentEscalationRule {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -879,49 +879,49 @@ func (ieruo *IncidentEscalationRuleUpdateOne) SaveX(ctx context.Context) *Incide
 }
 
 // Exec executes the query on the entity.
-func (ieruo *IncidentEscalationRuleUpdateOne) Exec(ctx context.Context) error {
-	_, err := ieruo.Save(ctx)
+func (_u *IncidentEscalationRuleUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ieruo *IncidentEscalationRuleUpdateOne) ExecX(ctx context.Context) {
-	if err := ieruo.Exec(ctx); err != nil {
+func (_u *IncidentEscalationRuleUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ieruo *IncidentEscalationRuleUpdateOne) defaults() {
-	if _, ok := ieruo.mutation.UpdatedAt(); !ok {
+func (_u *IncidentEscalationRuleUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentescalationrule.UpdateDefaultUpdatedAt()
-		ieruo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ieruo *IncidentEscalationRuleUpdateOne) check() error {
-	if v, ok := ieruo.mutation.Name(); ok {
+func (_u *IncidentEscalationRuleUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := incidentescalationrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.name": %w`, err)}
 		}
 	}
-	if v, ok := ieruo.mutation.TriggerType(); ok {
+	if v, ok := _u.mutation.TriggerType(); ok {
 		if err := incidentescalationrule.TriggerTypeValidator(v); err != nil {
 			return &ValidationError{Name: "trigger_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.trigger_type": %w`, err)}
 		}
 	}
-	if v, ok := ieruo.mutation.TriggerMinutes(); ok {
+	if v, ok := _u.mutation.TriggerMinutes(); ok {
 		if err := incidentescalationrule.TriggerMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "trigger_minutes", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.trigger_minutes": %w`, err)}
 		}
 	}
-	if v, ok := ieruo.mutation.TargetAssigneeType(); ok {
+	if v, ok := _u.mutation.TargetAssigneeType(); ok {
 		if err := incidentescalationrule.TargetAssigneeTypeValidator(v); err != nil {
 			return &ValidationError{Name: "target_assignee_type", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.target_assignee_type": %w`, err)}
 		}
 	}
-	if v, ok := ieruo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentescalationrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentEscalationRule.tenant_id": %w`, err)}
 		}
@@ -929,17 +929,17 @@ func (ieruo *IncidentEscalationRuleUpdateOne) check() error {
 	return nil
 }
 
-func (ieruo *IncidentEscalationRuleUpdateOne) sqlSave(ctx context.Context) (_node *IncidentEscalationRule, err error) {
-	if err := ieruo.check(); err != nil {
+func (_u *IncidentEscalationRuleUpdateOne) sqlSave(ctx context.Context) (_node *IncidentEscalationRule, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentescalationrule.Table, incidentescalationrule.Columns, sqlgraph.NewFieldSpec(incidentescalationrule.FieldID, field.TypeInt))
-	id, ok := ieruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "IncidentEscalationRule.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ieruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incidentescalationrule.FieldID)
 		for _, f := range fields {
@@ -951,107 +951,107 @@ func (ieruo *IncidentEscalationRuleUpdateOne) sqlSave(ctx context.Context) (_nod
 			}
 		}
 	}
-	if ps := ieruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ieruo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(incidentescalationrule.FieldName, field.TypeString, value)
 	}
-	if value, ok := ieruo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(incidentescalationrule.FieldDescription, field.TypeString, value)
 	}
-	if ieruo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(incidentescalationrule.FieldDescription, field.TypeString)
 	}
-	if value, ok := ieruo.mutation.TriggerType(); ok {
+	if value, ok := _u.mutation.TriggerType(); ok {
 		_spec.SetField(incidentescalationrule.FieldTriggerType, field.TypeString, value)
 	}
-	if value, ok := ieruo.mutation.EscalationLevel(); ok {
+	if value, ok := _u.mutation.EscalationLevel(); ok {
 		_spec.SetField(incidentescalationrule.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := ieruo.mutation.AddedEscalationLevel(); ok {
+	if value, ok := _u.mutation.AddedEscalationLevel(); ok {
 		_spec.AddField(incidentescalationrule.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := ieruo.mutation.TriggerMinutes(); ok {
+	if value, ok := _u.mutation.TriggerMinutes(); ok {
 		_spec.SetField(incidentescalationrule.FieldTriggerMinutes, field.TypeInt, value)
 	}
-	if value, ok := ieruo.mutation.AddedTriggerMinutes(); ok {
+	if value, ok := _u.mutation.AddedTriggerMinutes(); ok {
 		_spec.AddField(incidentescalationrule.FieldTriggerMinutes, field.TypeInt, value)
 	}
-	if value, ok := ieruo.mutation.FromStatus(); ok {
+	if value, ok := _u.mutation.FromStatus(); ok {
 		_spec.SetField(incidentescalationrule.FieldFromStatus, field.TypeString, value)
 	}
-	if ieruo.mutation.FromStatusCleared() {
+	if _u.mutation.FromStatusCleared() {
 		_spec.ClearField(incidentescalationrule.FieldFromStatus, field.TypeString)
 	}
-	if value, ok := ieruo.mutation.ToStatus(); ok {
+	if value, ok := _u.mutation.ToStatus(); ok {
 		_spec.SetField(incidentescalationrule.FieldToStatus, field.TypeString, value)
 	}
-	if ieruo.mutation.ToStatusCleared() {
+	if _u.mutation.ToStatusCleared() {
 		_spec.ClearField(incidentescalationrule.FieldToStatus, field.TypeString)
 	}
-	if value, ok := ieruo.mutation.TargetAssigneeType(); ok {
+	if value, ok := _u.mutation.TargetAssigneeType(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetAssigneeType, field.TypeString, value)
 	}
-	if value, ok := ieruo.mutation.TargetAssigneeID(); ok {
+	if value, ok := _u.mutation.TargetAssigneeID(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := ieruo.mutation.AddedTargetAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedTargetAssigneeID(); ok {
 		_spec.AddField(incidentescalationrule.FieldTargetAssigneeID, field.TypeInt, value)
 	}
-	if ieruo.mutation.TargetAssigneeIDCleared() {
+	if _u.mutation.TargetAssigneeIDCleared() {
 		_spec.ClearField(incidentescalationrule.FieldTargetAssigneeID, field.TypeInt)
 	}
-	if value, ok := ieruo.mutation.TargetGroup(); ok {
+	if value, ok := _u.mutation.TargetGroup(); ok {
 		_spec.SetField(incidentescalationrule.FieldTargetGroup, field.TypeString, value)
 	}
-	if ieruo.mutation.TargetGroupCleared() {
+	if _u.mutation.TargetGroupCleared() {
 		_spec.ClearField(incidentescalationrule.FieldTargetGroup, field.TypeString)
 	}
-	if value, ok := ieruo.mutation.AutoEscalate(); ok {
+	if value, ok := _u.mutation.AutoEscalate(); ok {
 		_spec.SetField(incidentescalationrule.FieldAutoEscalate, field.TypeBool, value)
 	}
-	if value, ok := ieruo.mutation.NotificationConfig(); ok {
+	if value, ok := _u.mutation.NotificationConfig(); ok {
 		_spec.SetField(incidentescalationrule.FieldNotificationConfig, field.TypeJSON, value)
 	}
-	if ieruo.mutation.NotificationConfigCleared() {
+	if _u.mutation.NotificationConfigCleared() {
 		_spec.ClearField(incidentescalationrule.FieldNotificationConfig, field.TypeJSON)
 	}
-	if value, ok := ieruo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(incidentescalationrule.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := ieruo.mutation.PriorityMatch(); ok {
+	if value, ok := _u.mutation.PriorityMatch(); ok {
 		_spec.SetField(incidentescalationrule.FieldPriorityMatch, field.TypeString, value)
 	}
-	if ieruo.mutation.PriorityMatchCleared() {
+	if _u.mutation.PriorityMatchCleared() {
 		_spec.ClearField(incidentescalationrule.FieldPriorityMatch, field.TypeString)
 	}
-	if value, ok := ieruo.mutation.CategoryMatch(); ok {
+	if value, ok := _u.mutation.CategoryMatch(); ok {
 		_spec.SetField(incidentescalationrule.FieldCategoryMatch, field.TypeString, value)
 	}
-	if ieruo.mutation.CategoryMatchCleared() {
+	if _u.mutation.CategoryMatchCleared() {
 		_spec.ClearField(incidentescalationrule.FieldCategoryMatch, field.TypeString)
 	}
-	if value, ok := ieruo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentescalationrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieruo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentescalationrule.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ieruo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentescalationrule.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ieruo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentescalationrule.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &IncidentEscalationRule{config: ieruo.config}
+	_node = &IncidentEscalationRule{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ieruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentescalationrule.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1059,6 +1059,6 @@ func (ieruo *IncidentEscalationRuleUpdateOne) sqlSave(ctx context.Context) (_nod
 		}
 		return nil, err
 	}
-	ieruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

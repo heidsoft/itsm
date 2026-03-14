@@ -24,190 +24,190 @@ type DiscoverySourceUpdate struct {
 }
 
 // Where appends a list predicates to the DiscoverySourceUpdate builder.
-func (dsu *DiscoverySourceUpdate) Where(ps ...predicate.DiscoverySource) *DiscoverySourceUpdate {
-	dsu.mutation.Where(ps...)
-	return dsu
+func (_u *DiscoverySourceUpdate) Where(ps ...predicate.DiscoverySource) *DiscoverySourceUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (dsu *DiscoverySourceUpdate) SetName(s string) *DiscoverySourceUpdate {
-	dsu.mutation.SetName(s)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetName(v string) *DiscoverySourceUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (dsu *DiscoverySourceUpdate) SetNillableName(s *string) *DiscoverySourceUpdate {
-	if s != nil {
-		dsu.SetName(*s)
+func (_u *DiscoverySourceUpdate) SetNillableName(v *string) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return dsu
+	return _u
 }
 
 // SetSourceType sets the "source_type" field.
-func (dsu *DiscoverySourceUpdate) SetSourceType(s string) *DiscoverySourceUpdate {
-	dsu.mutation.SetSourceType(s)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetSourceType(v string) *DiscoverySourceUpdate {
+	_u.mutation.SetSourceType(v)
+	return _u
 }
 
 // SetNillableSourceType sets the "source_type" field if the given value is not nil.
-func (dsu *DiscoverySourceUpdate) SetNillableSourceType(s *string) *DiscoverySourceUpdate {
-	if s != nil {
-		dsu.SetSourceType(*s)
+func (_u *DiscoverySourceUpdate) SetNillableSourceType(v *string) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetSourceType(*v)
 	}
-	return dsu
+	return _u
 }
 
 // SetProvider sets the "provider" field.
-func (dsu *DiscoverySourceUpdate) SetProvider(s string) *DiscoverySourceUpdate {
-	dsu.mutation.SetProvider(s)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetProvider(v string) *DiscoverySourceUpdate {
+	_u.mutation.SetProvider(v)
+	return _u
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (dsu *DiscoverySourceUpdate) SetNillableProvider(s *string) *DiscoverySourceUpdate {
-	if s != nil {
-		dsu.SetProvider(*s)
+func (_u *DiscoverySourceUpdate) SetNillableProvider(v *string) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetProvider(*v)
 	}
-	return dsu
+	return _u
 }
 
 // ClearProvider clears the value of the "provider" field.
-func (dsu *DiscoverySourceUpdate) ClearProvider() *DiscoverySourceUpdate {
-	dsu.mutation.ClearProvider()
-	return dsu
+func (_u *DiscoverySourceUpdate) ClearProvider() *DiscoverySourceUpdate {
+	_u.mutation.ClearProvider()
+	return _u
 }
 
 // SetEnabled sets the "enabled" field.
-func (dsu *DiscoverySourceUpdate) SetEnabled(b bool) *DiscoverySourceUpdate {
-	dsu.mutation.SetEnabled(b)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetEnabled(v bool) *DiscoverySourceUpdate {
+	_u.mutation.SetEnabled(v)
+	return _u
 }
 
 // SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (dsu *DiscoverySourceUpdate) SetNillableEnabled(b *bool) *DiscoverySourceUpdate {
-	if b != nil {
-		dsu.SetEnabled(*b)
+func (_u *DiscoverySourceUpdate) SetNillableEnabled(v *bool) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetEnabled(*v)
 	}
-	return dsu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (dsu *DiscoverySourceUpdate) SetDescription(s string) *DiscoverySourceUpdate {
-	dsu.mutation.SetDescription(s)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetDescription(v string) *DiscoverySourceUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (dsu *DiscoverySourceUpdate) SetNillableDescription(s *string) *DiscoverySourceUpdate {
-	if s != nil {
-		dsu.SetDescription(*s)
+func (_u *DiscoverySourceUpdate) SetNillableDescription(v *string) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return dsu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (dsu *DiscoverySourceUpdate) ClearDescription() *DiscoverySourceUpdate {
-	dsu.mutation.ClearDescription()
-	return dsu
+func (_u *DiscoverySourceUpdate) ClearDescription() *DiscoverySourceUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (dsu *DiscoverySourceUpdate) SetTenantID(i int) *DiscoverySourceUpdate {
-	dsu.mutation.ResetTenantID()
-	dsu.mutation.SetTenantID(i)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetTenantID(v int) *DiscoverySourceUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (dsu *DiscoverySourceUpdate) SetNillableTenantID(i *int) *DiscoverySourceUpdate {
-	if i != nil {
-		dsu.SetTenantID(*i)
+func (_u *DiscoverySourceUpdate) SetNillableTenantID(v *int) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return dsu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (dsu *DiscoverySourceUpdate) AddTenantID(i int) *DiscoverySourceUpdate {
-	dsu.mutation.AddTenantID(i)
-	return dsu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DiscoverySourceUpdate) AddTenantID(v int) *DiscoverySourceUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (dsu *DiscoverySourceUpdate) ClearTenantID() *DiscoverySourceUpdate {
-	dsu.mutation.ClearTenantID()
-	return dsu
+func (_u *DiscoverySourceUpdate) ClearTenantID() *DiscoverySourceUpdate {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (dsu *DiscoverySourceUpdate) SetCreatedAt(t time.Time) *DiscoverySourceUpdate {
-	dsu.mutation.SetCreatedAt(t)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetCreatedAt(v time.Time) *DiscoverySourceUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (dsu *DiscoverySourceUpdate) SetNillableCreatedAt(t *time.Time) *DiscoverySourceUpdate {
-	if t != nil {
-		dsu.SetCreatedAt(*t)
+func (_u *DiscoverySourceUpdate) SetNillableCreatedAt(v *time.Time) *DiscoverySourceUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return dsu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (dsu *DiscoverySourceUpdate) SetUpdatedAt(t time.Time) *DiscoverySourceUpdate {
-	dsu.mutation.SetUpdatedAt(t)
-	return dsu
+func (_u *DiscoverySourceUpdate) SetUpdatedAt(v time.Time) *DiscoverySourceUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddJobIDs adds the "jobs" edge to the DiscoveryJob entity by IDs.
-func (dsu *DiscoverySourceUpdate) AddJobIDs(ids ...int) *DiscoverySourceUpdate {
-	dsu.mutation.AddJobIDs(ids...)
-	return dsu
+func (_u *DiscoverySourceUpdate) AddJobIDs(ids ...int) *DiscoverySourceUpdate {
+	_u.mutation.AddJobIDs(ids...)
+	return _u
 }
 
 // AddJobs adds the "jobs" edges to the DiscoveryJob entity.
-func (dsu *DiscoverySourceUpdate) AddJobs(d ...*DiscoveryJob) *DiscoverySourceUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoverySourceUpdate) AddJobs(v ...*DiscoveryJob) *DiscoverySourceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return dsu.AddJobIDs(ids...)
+	return _u.AddJobIDs(ids...)
 }
 
 // Mutation returns the DiscoverySourceMutation object of the builder.
-func (dsu *DiscoverySourceUpdate) Mutation() *DiscoverySourceMutation {
-	return dsu.mutation
+func (_u *DiscoverySourceUpdate) Mutation() *DiscoverySourceMutation {
+	return _u.mutation
 }
 
 // ClearJobs clears all "jobs" edges to the DiscoveryJob entity.
-func (dsu *DiscoverySourceUpdate) ClearJobs() *DiscoverySourceUpdate {
-	dsu.mutation.ClearJobs()
-	return dsu
+func (_u *DiscoverySourceUpdate) ClearJobs() *DiscoverySourceUpdate {
+	_u.mutation.ClearJobs()
+	return _u
 }
 
 // RemoveJobIDs removes the "jobs" edge to DiscoveryJob entities by IDs.
-func (dsu *DiscoverySourceUpdate) RemoveJobIDs(ids ...int) *DiscoverySourceUpdate {
-	dsu.mutation.RemoveJobIDs(ids...)
-	return dsu
+func (_u *DiscoverySourceUpdate) RemoveJobIDs(ids ...int) *DiscoverySourceUpdate {
+	_u.mutation.RemoveJobIDs(ids...)
+	return _u
 }
 
 // RemoveJobs removes "jobs" edges to DiscoveryJob entities.
-func (dsu *DiscoverySourceUpdate) RemoveJobs(d ...*DiscoveryJob) *DiscoverySourceUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoverySourceUpdate) RemoveJobs(v ...*DiscoveryJob) *DiscoverySourceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return dsu.RemoveJobIDs(ids...)
+	return _u.RemoveJobIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (dsu *DiscoverySourceUpdate) Save(ctx context.Context) (int, error) {
-	dsu.defaults()
-	return withHooks(ctx, dsu.sqlSave, dsu.mutation, dsu.hooks)
+func (_u *DiscoverySourceUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (dsu *DiscoverySourceUpdate) SaveX(ctx context.Context) int {
-	affected, err := dsu.Save(ctx)
+func (_u *DiscoverySourceUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -215,39 +215,39 @@ func (dsu *DiscoverySourceUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (dsu *DiscoverySourceUpdate) Exec(ctx context.Context) error {
-	_, err := dsu.Save(ctx)
+func (_u *DiscoverySourceUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dsu *DiscoverySourceUpdate) ExecX(ctx context.Context) {
-	if err := dsu.Exec(ctx); err != nil {
+func (_u *DiscoverySourceUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (dsu *DiscoverySourceUpdate) defaults() {
-	if _, ok := dsu.mutation.UpdatedAt(); !ok {
+func (_u *DiscoverySourceUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := discoverysource.UpdateDefaultUpdatedAt()
-		dsu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (dsu *DiscoverySourceUpdate) check() error {
-	if v, ok := dsu.mutation.Name(); ok {
+func (_u *DiscoverySourceUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := discoverysource.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.name": %w`, err)}
 		}
 	}
-	if v, ok := dsu.mutation.SourceType(); ok {
+	if v, ok := _u.mutation.SourceType(); ok {
 		if err := discoverysource.SourceTypeValidator(v); err != nil {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.source_type": %w`, err)}
 		}
 	}
-	if v, ok := dsu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoverysource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.tenant_id": %w`, err)}
 		}
@@ -255,55 +255,55 @@ func (dsu *DiscoverySourceUpdate) check() error {
 	return nil
 }
 
-func (dsu *DiscoverySourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := dsu.check(); err != nil {
-		return n, err
+func (_u *DiscoverySourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(discoverysource.Table, discoverysource.Columns, sqlgraph.NewFieldSpec(discoverysource.FieldID, field.TypeString))
-	if ps := dsu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := dsu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(discoverysource.FieldName, field.TypeString, value)
 	}
-	if value, ok := dsu.mutation.SourceType(); ok {
+	if value, ok := _u.mutation.SourceType(); ok {
 		_spec.SetField(discoverysource.FieldSourceType, field.TypeString, value)
 	}
-	if value, ok := dsu.mutation.Provider(); ok {
+	if value, ok := _u.mutation.Provider(); ok {
 		_spec.SetField(discoverysource.FieldProvider, field.TypeString, value)
 	}
-	if dsu.mutation.ProviderCleared() {
+	if _u.mutation.ProviderCleared() {
 		_spec.ClearField(discoverysource.FieldProvider, field.TypeString)
 	}
-	if value, ok := dsu.mutation.Enabled(); ok {
+	if value, ok := _u.mutation.Enabled(); ok {
 		_spec.SetField(discoverysource.FieldEnabled, field.TypeBool, value)
 	}
-	if value, ok := dsu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(discoverysource.FieldDescription, field.TypeString, value)
 	}
-	if dsu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(discoverysource.FieldDescription, field.TypeString)
 	}
-	if value, ok := dsu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoverysource.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := dsu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoverysource.FieldTenantID, field.TypeInt, value)
 	}
-	if dsu.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(discoverysource.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := dsu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoverysource.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := dsu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoverysource.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if dsu.mutation.JobsCleared() {
+	if _u.mutation.JobsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -316,7 +316,7 @@ func (dsu *DiscoverySourceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dsu.mutation.RemovedJobsIDs(); len(nodes) > 0 && !dsu.mutation.JobsCleared() {
+	if nodes := _u.mutation.RemovedJobsIDs(); len(nodes) > 0 && !_u.mutation.JobsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -332,7 +332,7 @@ func (dsu *DiscoverySourceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dsu.mutation.JobsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.JobsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -348,7 +348,7 @@ func (dsu *DiscoverySourceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, dsu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{discoverysource.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -356,8 +356,8 @@ func (dsu *DiscoverySourceUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		return 0, err
 	}
-	dsu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // DiscoverySourceUpdateOne is the builder for updating a single DiscoverySource entity.
@@ -369,197 +369,197 @@ type DiscoverySourceUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (dsuo *DiscoverySourceUpdateOne) SetName(s string) *DiscoverySourceUpdateOne {
-	dsuo.mutation.SetName(s)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetName(v string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (dsuo *DiscoverySourceUpdateOne) SetNillableName(s *string) *DiscoverySourceUpdateOne {
-	if s != nil {
-		dsuo.SetName(*s)
+func (_u *DiscoverySourceUpdateOne) SetNillableName(v *string) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return dsuo
+	return _u
 }
 
 // SetSourceType sets the "source_type" field.
-func (dsuo *DiscoverySourceUpdateOne) SetSourceType(s string) *DiscoverySourceUpdateOne {
-	dsuo.mutation.SetSourceType(s)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetSourceType(v string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetSourceType(v)
+	return _u
 }
 
 // SetNillableSourceType sets the "source_type" field if the given value is not nil.
-func (dsuo *DiscoverySourceUpdateOne) SetNillableSourceType(s *string) *DiscoverySourceUpdateOne {
-	if s != nil {
-		dsuo.SetSourceType(*s)
+func (_u *DiscoverySourceUpdateOne) SetNillableSourceType(v *string) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetSourceType(*v)
 	}
-	return dsuo
+	return _u
 }
 
 // SetProvider sets the "provider" field.
-func (dsuo *DiscoverySourceUpdateOne) SetProvider(s string) *DiscoverySourceUpdateOne {
-	dsuo.mutation.SetProvider(s)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetProvider(v string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetProvider(v)
+	return _u
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (dsuo *DiscoverySourceUpdateOne) SetNillableProvider(s *string) *DiscoverySourceUpdateOne {
-	if s != nil {
-		dsuo.SetProvider(*s)
+func (_u *DiscoverySourceUpdateOne) SetNillableProvider(v *string) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetProvider(*v)
 	}
-	return dsuo
+	return _u
 }
 
 // ClearProvider clears the value of the "provider" field.
-func (dsuo *DiscoverySourceUpdateOne) ClearProvider() *DiscoverySourceUpdateOne {
-	dsuo.mutation.ClearProvider()
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) ClearProvider() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearProvider()
+	return _u
 }
 
 // SetEnabled sets the "enabled" field.
-func (dsuo *DiscoverySourceUpdateOne) SetEnabled(b bool) *DiscoverySourceUpdateOne {
-	dsuo.mutation.SetEnabled(b)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetEnabled(v bool) *DiscoverySourceUpdateOne {
+	_u.mutation.SetEnabled(v)
+	return _u
 }
 
 // SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (dsuo *DiscoverySourceUpdateOne) SetNillableEnabled(b *bool) *DiscoverySourceUpdateOne {
-	if b != nil {
-		dsuo.SetEnabled(*b)
+func (_u *DiscoverySourceUpdateOne) SetNillableEnabled(v *bool) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetEnabled(*v)
 	}
-	return dsuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (dsuo *DiscoverySourceUpdateOne) SetDescription(s string) *DiscoverySourceUpdateOne {
-	dsuo.mutation.SetDescription(s)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetDescription(v string) *DiscoverySourceUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (dsuo *DiscoverySourceUpdateOne) SetNillableDescription(s *string) *DiscoverySourceUpdateOne {
-	if s != nil {
-		dsuo.SetDescription(*s)
+func (_u *DiscoverySourceUpdateOne) SetNillableDescription(v *string) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return dsuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (dsuo *DiscoverySourceUpdateOne) ClearDescription() *DiscoverySourceUpdateOne {
-	dsuo.mutation.ClearDescription()
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) ClearDescription() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (dsuo *DiscoverySourceUpdateOne) SetTenantID(i int) *DiscoverySourceUpdateOne {
-	dsuo.mutation.ResetTenantID()
-	dsuo.mutation.SetTenantID(i)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetTenantID(v int) *DiscoverySourceUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (dsuo *DiscoverySourceUpdateOne) SetNillableTenantID(i *int) *DiscoverySourceUpdateOne {
-	if i != nil {
-		dsuo.SetTenantID(*i)
+func (_u *DiscoverySourceUpdateOne) SetNillableTenantID(v *int) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return dsuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (dsuo *DiscoverySourceUpdateOne) AddTenantID(i int) *DiscoverySourceUpdateOne {
-	dsuo.mutation.AddTenantID(i)
-	return dsuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DiscoverySourceUpdateOne) AddTenantID(v int) *DiscoverySourceUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (dsuo *DiscoverySourceUpdateOne) ClearTenantID() *DiscoverySourceUpdateOne {
-	dsuo.mutation.ClearTenantID()
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) ClearTenantID() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (dsuo *DiscoverySourceUpdateOne) SetCreatedAt(t time.Time) *DiscoverySourceUpdateOne {
-	dsuo.mutation.SetCreatedAt(t)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetCreatedAt(v time.Time) *DiscoverySourceUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (dsuo *DiscoverySourceUpdateOne) SetNillableCreatedAt(t *time.Time) *DiscoverySourceUpdateOne {
-	if t != nil {
-		dsuo.SetCreatedAt(*t)
+func (_u *DiscoverySourceUpdateOne) SetNillableCreatedAt(v *time.Time) *DiscoverySourceUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return dsuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (dsuo *DiscoverySourceUpdateOne) SetUpdatedAt(t time.Time) *DiscoverySourceUpdateOne {
-	dsuo.mutation.SetUpdatedAt(t)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) SetUpdatedAt(v time.Time) *DiscoverySourceUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddJobIDs adds the "jobs" edge to the DiscoveryJob entity by IDs.
-func (dsuo *DiscoverySourceUpdateOne) AddJobIDs(ids ...int) *DiscoverySourceUpdateOne {
-	dsuo.mutation.AddJobIDs(ids...)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) AddJobIDs(ids ...int) *DiscoverySourceUpdateOne {
+	_u.mutation.AddJobIDs(ids...)
+	return _u
 }
 
 // AddJobs adds the "jobs" edges to the DiscoveryJob entity.
-func (dsuo *DiscoverySourceUpdateOne) AddJobs(d ...*DiscoveryJob) *DiscoverySourceUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoverySourceUpdateOne) AddJobs(v ...*DiscoveryJob) *DiscoverySourceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return dsuo.AddJobIDs(ids...)
+	return _u.AddJobIDs(ids...)
 }
 
 // Mutation returns the DiscoverySourceMutation object of the builder.
-func (dsuo *DiscoverySourceUpdateOne) Mutation() *DiscoverySourceMutation {
-	return dsuo.mutation
+func (_u *DiscoverySourceUpdateOne) Mutation() *DiscoverySourceMutation {
+	return _u.mutation
 }
 
 // ClearJobs clears all "jobs" edges to the DiscoveryJob entity.
-func (dsuo *DiscoverySourceUpdateOne) ClearJobs() *DiscoverySourceUpdateOne {
-	dsuo.mutation.ClearJobs()
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) ClearJobs() *DiscoverySourceUpdateOne {
+	_u.mutation.ClearJobs()
+	return _u
 }
 
 // RemoveJobIDs removes the "jobs" edge to DiscoveryJob entities by IDs.
-func (dsuo *DiscoverySourceUpdateOne) RemoveJobIDs(ids ...int) *DiscoverySourceUpdateOne {
-	dsuo.mutation.RemoveJobIDs(ids...)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) RemoveJobIDs(ids ...int) *DiscoverySourceUpdateOne {
+	_u.mutation.RemoveJobIDs(ids...)
+	return _u
 }
 
 // RemoveJobs removes "jobs" edges to DiscoveryJob entities.
-func (dsuo *DiscoverySourceUpdateOne) RemoveJobs(d ...*DiscoveryJob) *DiscoverySourceUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoverySourceUpdateOne) RemoveJobs(v ...*DiscoveryJob) *DiscoverySourceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return dsuo.RemoveJobIDs(ids...)
+	return _u.RemoveJobIDs(ids...)
 }
 
 // Where appends a list predicates to the DiscoverySourceUpdate builder.
-func (dsuo *DiscoverySourceUpdateOne) Where(ps ...predicate.DiscoverySource) *DiscoverySourceUpdateOne {
-	dsuo.mutation.Where(ps...)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) Where(ps ...predicate.DiscoverySource) *DiscoverySourceUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (dsuo *DiscoverySourceUpdateOne) Select(field string, fields ...string) *DiscoverySourceUpdateOne {
-	dsuo.fields = append([]string{field}, fields...)
-	return dsuo
+func (_u *DiscoverySourceUpdateOne) Select(field string, fields ...string) *DiscoverySourceUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated DiscoverySource entity.
-func (dsuo *DiscoverySourceUpdateOne) Save(ctx context.Context) (*DiscoverySource, error) {
-	dsuo.defaults()
-	return withHooks(ctx, dsuo.sqlSave, dsuo.mutation, dsuo.hooks)
+func (_u *DiscoverySourceUpdateOne) Save(ctx context.Context) (*DiscoverySource, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (dsuo *DiscoverySourceUpdateOne) SaveX(ctx context.Context) *DiscoverySource {
-	node, err := dsuo.Save(ctx)
+func (_u *DiscoverySourceUpdateOne) SaveX(ctx context.Context) *DiscoverySource {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -567,39 +567,39 @@ func (dsuo *DiscoverySourceUpdateOne) SaveX(ctx context.Context) *DiscoverySourc
 }
 
 // Exec executes the query on the entity.
-func (dsuo *DiscoverySourceUpdateOne) Exec(ctx context.Context) error {
-	_, err := dsuo.Save(ctx)
+func (_u *DiscoverySourceUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dsuo *DiscoverySourceUpdateOne) ExecX(ctx context.Context) {
-	if err := dsuo.Exec(ctx); err != nil {
+func (_u *DiscoverySourceUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (dsuo *DiscoverySourceUpdateOne) defaults() {
-	if _, ok := dsuo.mutation.UpdatedAt(); !ok {
+func (_u *DiscoverySourceUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := discoverysource.UpdateDefaultUpdatedAt()
-		dsuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (dsuo *DiscoverySourceUpdateOne) check() error {
-	if v, ok := dsuo.mutation.Name(); ok {
+func (_u *DiscoverySourceUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := discoverysource.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.name": %w`, err)}
 		}
 	}
-	if v, ok := dsuo.mutation.SourceType(); ok {
+	if v, ok := _u.mutation.SourceType(); ok {
 		if err := discoverysource.SourceTypeValidator(v); err != nil {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.source_type": %w`, err)}
 		}
 	}
-	if v, ok := dsuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoverysource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.tenant_id": %w`, err)}
 		}
@@ -607,17 +607,17 @@ func (dsuo *DiscoverySourceUpdateOne) check() error {
 	return nil
 }
 
-func (dsuo *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *DiscoverySource, err error) {
-	if err := dsuo.check(); err != nil {
+func (_u *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *DiscoverySource, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(discoverysource.Table, discoverysource.Columns, sqlgraph.NewFieldSpec(discoverysource.FieldID, field.TypeString))
-	id, ok := dsuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "DiscoverySource.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := dsuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, discoverysource.FieldID)
 		for _, f := range fields {
@@ -629,50 +629,50 @@ func (dsuo *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 			}
 		}
 	}
-	if ps := dsuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := dsuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(discoverysource.FieldName, field.TypeString, value)
 	}
-	if value, ok := dsuo.mutation.SourceType(); ok {
+	if value, ok := _u.mutation.SourceType(); ok {
 		_spec.SetField(discoverysource.FieldSourceType, field.TypeString, value)
 	}
-	if value, ok := dsuo.mutation.Provider(); ok {
+	if value, ok := _u.mutation.Provider(); ok {
 		_spec.SetField(discoverysource.FieldProvider, field.TypeString, value)
 	}
-	if dsuo.mutation.ProviderCleared() {
+	if _u.mutation.ProviderCleared() {
 		_spec.ClearField(discoverysource.FieldProvider, field.TypeString)
 	}
-	if value, ok := dsuo.mutation.Enabled(); ok {
+	if value, ok := _u.mutation.Enabled(); ok {
 		_spec.SetField(discoverysource.FieldEnabled, field.TypeBool, value)
 	}
-	if value, ok := dsuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(discoverysource.FieldDescription, field.TypeString, value)
 	}
-	if dsuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(discoverysource.FieldDescription, field.TypeString)
 	}
-	if value, ok := dsuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoverysource.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := dsuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoverysource.FieldTenantID, field.TypeInt, value)
 	}
-	if dsuo.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(discoverysource.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := dsuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoverysource.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := dsuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoverysource.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if dsuo.mutation.JobsCleared() {
+	if _u.mutation.JobsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -685,7 +685,7 @@ func (dsuo *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dsuo.mutation.RemovedJobsIDs(); len(nodes) > 0 && !dsuo.mutation.JobsCleared() {
+	if nodes := _u.mutation.RemovedJobsIDs(); len(nodes) > 0 && !_u.mutation.JobsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -701,7 +701,7 @@ func (dsuo *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dsuo.mutation.JobsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.JobsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -717,10 +717,10 @@ func (dsuo *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &DiscoverySource{config: dsuo.config}
+	_node = &DiscoverySource{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, dsuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{discoverysource.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -728,6 +728,6 @@ func (dsuo *DiscoverySourceUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 		}
 		return nil, err
 	}
-	dsuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

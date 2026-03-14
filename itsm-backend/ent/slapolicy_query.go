@@ -33,44 +33,44 @@ type SLAPolicyQuery struct {
 }
 
 // Where adds a new predicate for the SLAPolicyQuery builder.
-func (spq *SLAPolicyQuery) Where(ps ...predicate.SLAPolicy) *SLAPolicyQuery {
-	spq.predicates = append(spq.predicates, ps...)
-	return spq
+func (_q *SLAPolicyQuery) Where(ps ...predicate.SLAPolicy) *SLAPolicyQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (spq *SLAPolicyQuery) Limit(limit int) *SLAPolicyQuery {
-	spq.ctx.Limit = &limit
-	return spq
+func (_q *SLAPolicyQuery) Limit(limit int) *SLAPolicyQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (spq *SLAPolicyQuery) Offset(offset int) *SLAPolicyQuery {
-	spq.ctx.Offset = &offset
-	return spq
+func (_q *SLAPolicyQuery) Offset(offset int) *SLAPolicyQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (spq *SLAPolicyQuery) Unique(unique bool) *SLAPolicyQuery {
-	spq.ctx.Unique = &unique
-	return spq
+func (_q *SLAPolicyQuery) Unique(unique bool) *SLAPolicyQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (spq *SLAPolicyQuery) Order(o ...slapolicy.OrderOption) *SLAPolicyQuery {
-	spq.order = append(spq.order, o...)
-	return spq
+func (_q *SLAPolicyQuery) Order(o ...slapolicy.OrderOption) *SLAPolicyQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QuerySLADefinition chains the current query on the "sla_definition" edge.
-func (spq *SLAPolicyQuery) QuerySLADefinition() *SLADefinitionQuery {
-	query := (&SLADefinitionClient{config: spq.config}).Query()
+func (_q *SLAPolicyQuery) QuerySLADefinition() *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := spq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := spq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -79,20 +79,20 @@ func (spq *SLAPolicyQuery) QuerySLADefinition() *SLADefinitionQuery {
 			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, slapolicy.SLADefinitionTable, slapolicy.SLADefinitionColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(spq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryTickets chains the current query on the "tickets" edge.
-func (spq *SLAPolicyQuery) QueryTickets() *TicketQuery {
-	query := (&TicketClient{config: spq.config}).Query()
+func (_q *SLAPolicyQuery) QueryTickets() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := spq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := spq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (spq *SLAPolicyQuery) QueryTickets() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, slapolicy.TicketsTable, slapolicy.TicketsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(spq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -109,8 +109,8 @@ func (spq *SLAPolicyQuery) QueryTickets() *TicketQuery {
 
 // First returns the first SLAPolicy entity from the query.
 // Returns a *NotFoundError when no SLAPolicy was found.
-func (spq *SLAPolicyQuery) First(ctx context.Context) (*SLAPolicy, error) {
-	nodes, err := spq.Limit(1).All(setContextOp(ctx, spq.ctx, ent.OpQueryFirst))
+func (_q *SLAPolicyQuery) First(ctx context.Context) (*SLAPolicy, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func (spq *SLAPolicyQuery) First(ctx context.Context) (*SLAPolicy, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (spq *SLAPolicyQuery) FirstX(ctx context.Context) *SLAPolicy {
-	node, err := spq.First(ctx)
+func (_q *SLAPolicyQuery) FirstX(ctx context.Context) *SLAPolicy {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,9 +131,9 @@ func (spq *SLAPolicyQuery) FirstX(ctx context.Context) *SLAPolicy {
 
 // FirstID returns the first SLAPolicy ID from the query.
 // Returns a *NotFoundError when no SLAPolicy ID was found.
-func (spq *SLAPolicyQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *SLAPolicyQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = spq.Limit(1).IDs(setContextOp(ctx, spq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -144,8 +144,8 @@ func (spq *SLAPolicyQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (spq *SLAPolicyQuery) FirstIDX(ctx context.Context) int {
-	id, err := spq.FirstID(ctx)
+func (_q *SLAPolicyQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -155,8 +155,8 @@ func (spq *SLAPolicyQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single SLAPolicy entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one SLAPolicy entity is found.
 // Returns a *NotFoundError when no SLAPolicy entities are found.
-func (spq *SLAPolicyQuery) Only(ctx context.Context) (*SLAPolicy, error) {
-	nodes, err := spq.Limit(2).All(setContextOp(ctx, spq.ctx, ent.OpQueryOnly))
+func (_q *SLAPolicyQuery) Only(ctx context.Context) (*SLAPolicy, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +171,8 @@ func (spq *SLAPolicyQuery) Only(ctx context.Context) (*SLAPolicy, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (spq *SLAPolicyQuery) OnlyX(ctx context.Context) *SLAPolicy {
-	node, err := spq.Only(ctx)
+func (_q *SLAPolicyQuery) OnlyX(ctx context.Context) *SLAPolicy {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -182,9 +182,9 @@ func (spq *SLAPolicyQuery) OnlyX(ctx context.Context) *SLAPolicy {
 // OnlyID is like Only, but returns the only SLAPolicy ID in the query.
 // Returns a *NotSingularError when more than one SLAPolicy ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (spq *SLAPolicyQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *SLAPolicyQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = spq.Limit(2).IDs(setContextOp(ctx, spq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -199,8 +199,8 @@ func (spq *SLAPolicyQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (spq *SLAPolicyQuery) OnlyIDX(ctx context.Context) int {
-	id, err := spq.OnlyID(ctx)
+func (_q *SLAPolicyQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -208,18 +208,18 @@ func (spq *SLAPolicyQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of SLAPolicies.
-func (spq *SLAPolicyQuery) All(ctx context.Context) ([]*SLAPolicy, error) {
-	ctx = setContextOp(ctx, spq.ctx, ent.OpQueryAll)
-	if err := spq.prepareQuery(ctx); err != nil {
+func (_q *SLAPolicyQuery) All(ctx context.Context) ([]*SLAPolicy, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*SLAPolicy, *SLAPolicyQuery]()
-	return withInterceptors[[]*SLAPolicy](ctx, spq, qr, spq.inters)
+	return withInterceptors[[]*SLAPolicy](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (spq *SLAPolicyQuery) AllX(ctx context.Context) []*SLAPolicy {
-	nodes, err := spq.All(ctx)
+func (_q *SLAPolicyQuery) AllX(ctx context.Context) []*SLAPolicy {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -227,20 +227,20 @@ func (spq *SLAPolicyQuery) AllX(ctx context.Context) []*SLAPolicy {
 }
 
 // IDs executes the query and returns a list of SLAPolicy IDs.
-func (spq *SLAPolicyQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if spq.ctx.Unique == nil && spq.path != nil {
-		spq.Unique(true)
+func (_q *SLAPolicyQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, spq.ctx, ent.OpQueryIDs)
-	if err = spq.Select(slapolicy.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(slapolicy.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (spq *SLAPolicyQuery) IDsX(ctx context.Context) []int {
-	ids, err := spq.IDs(ctx)
+func (_q *SLAPolicyQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -248,17 +248,17 @@ func (spq *SLAPolicyQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (spq *SLAPolicyQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, spq.ctx, ent.OpQueryCount)
-	if err := spq.prepareQuery(ctx); err != nil {
+func (_q *SLAPolicyQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, spq, querierCount[*SLAPolicyQuery](), spq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SLAPolicyQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (spq *SLAPolicyQuery) CountX(ctx context.Context) int {
-	count, err := spq.Count(ctx)
+func (_q *SLAPolicyQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,9 +266,9 @@ func (spq *SLAPolicyQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (spq *SLAPolicyQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, spq.ctx, ent.OpQueryExist)
-	switch _, err := spq.FirstID(ctx); {
+func (_q *SLAPolicyQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -279,8 +279,8 @@ func (spq *SLAPolicyQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (spq *SLAPolicyQuery) ExistX(ctx context.Context) bool {
-	exist, err := spq.Exist(ctx)
+func (_q *SLAPolicyQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -289,44 +289,44 @@ func (spq *SLAPolicyQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the SLAPolicyQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (spq *SLAPolicyQuery) Clone() *SLAPolicyQuery {
-	if spq == nil {
+func (_q *SLAPolicyQuery) Clone() *SLAPolicyQuery {
+	if _q == nil {
 		return nil
 	}
 	return &SLAPolicyQuery{
-		config:            spq.config,
-		ctx:               spq.ctx.Clone(),
-		order:             append([]slapolicy.OrderOption{}, spq.order...),
-		inters:            append([]Interceptor{}, spq.inters...),
-		predicates:        append([]predicate.SLAPolicy{}, spq.predicates...),
-		withSLADefinition: spq.withSLADefinition.Clone(),
-		withTickets:       spq.withTickets.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]slapolicy.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.SLAPolicy{}, _q.predicates...),
+		withSLADefinition: _q.withSLADefinition.Clone(),
+		withTickets:       _q.withTickets.Clone(),
 		// clone intermediate query.
-		sql:  spq.sql.Clone(),
-		path: spq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithSLADefinition tells the query-builder to eager-load the nodes that are connected to
 // the "sla_definition" edge. The optional arguments are used to configure the query builder of the edge.
-func (spq *SLAPolicyQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAPolicyQuery {
-	query := (&SLADefinitionClient{config: spq.config}).Query()
+func (_q *SLAPolicyQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAPolicyQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	spq.withSLADefinition = query
-	return spq
+	_q.withSLADefinition = query
+	return _q
 }
 
 // WithTickets tells the query-builder to eager-load the nodes that are connected to
 // the "tickets" edge. The optional arguments are used to configure the query builder of the edge.
-func (spq *SLAPolicyQuery) WithTickets(opts ...func(*TicketQuery)) *SLAPolicyQuery {
-	query := (&TicketClient{config: spq.config}).Query()
+func (_q *SLAPolicyQuery) WithTickets(opts ...func(*TicketQuery)) *SLAPolicyQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	spq.withTickets = query
-	return spq
+	_q.withTickets = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -343,10 +343,10 @@ func (spq *SLAPolicyQuery) WithTickets(opts ...func(*TicketQuery)) *SLAPolicyQue
 //		GroupBy(slapolicy.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (spq *SLAPolicyQuery) GroupBy(field string, fields ...string) *SLAPolicyGroupBy {
-	spq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &SLAPolicyGroupBy{build: spq}
-	grbuild.flds = &spq.ctx.Fields
+func (_q *SLAPolicyQuery) GroupBy(field string, fields ...string) *SLAPolicyGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &SLAPolicyGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = slapolicy.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -364,59 +364,59 @@ func (spq *SLAPolicyQuery) GroupBy(field string, fields ...string) *SLAPolicyGro
 //	client.SLAPolicy.Query().
 //		Select(slapolicy.FieldName).
 //		Scan(ctx, &v)
-func (spq *SLAPolicyQuery) Select(fields ...string) *SLAPolicySelect {
-	spq.ctx.Fields = append(spq.ctx.Fields, fields...)
-	sbuild := &SLAPolicySelect{SLAPolicyQuery: spq}
+func (_q *SLAPolicyQuery) Select(fields ...string) *SLAPolicySelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &SLAPolicySelect{SLAPolicyQuery: _q}
 	sbuild.label = slapolicy.Label
-	sbuild.flds, sbuild.scan = &spq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a SLAPolicySelect configured with the given aggregations.
-func (spq *SLAPolicyQuery) Aggregate(fns ...AggregateFunc) *SLAPolicySelect {
-	return spq.Select().Aggregate(fns...)
+func (_q *SLAPolicyQuery) Aggregate(fns ...AggregateFunc) *SLAPolicySelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (spq *SLAPolicyQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range spq.inters {
+func (_q *SLAPolicyQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, spq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range spq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !slapolicy.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if spq.path != nil {
-		prev, err := spq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		spq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (spq *SLAPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAPolicy, error) {
+func (_q *SLAPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAPolicy, error) {
 	var (
 		nodes       = []*SLAPolicy{}
-		_spec       = spq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			spq.withSLADefinition != nil,
-			spq.withTickets != nil,
+			_q.withSLADefinition != nil,
+			_q.withTickets != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAPolicy).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &SLAPolicy{config: spq.config}
+		node := &SLAPolicy{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -424,21 +424,21 @@ func (spq *SLAPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*S
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, spq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := spq.withSLADefinition; query != nil {
-		if err := spq.loadSLADefinition(ctx, query, nodes,
+	if query := _q.withSLADefinition; query != nil {
+		if err := _q.loadSLADefinition(ctx, query, nodes,
 			func(n *SLAPolicy) { n.Edges.SLADefinition = []*SLADefinition{} },
 			func(n *SLAPolicy, e *SLADefinition) { n.Edges.SLADefinition = append(n.Edges.SLADefinition, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := spq.withTickets; query != nil {
-		if err := spq.loadTickets(ctx, query, nodes,
+	if query := _q.withTickets; query != nil {
+		if err := _q.loadTickets(ctx, query, nodes,
 			func(n *SLAPolicy) { n.Edges.Tickets = []*Ticket{} },
 			func(n *SLAPolicy, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
 			return nil, err
@@ -447,7 +447,7 @@ func (spq *SLAPolicyQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*S
 	return nodes, nil
 }
 
-func (spq *SLAPolicyQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAPolicy, init func(*SLAPolicy), assign func(*SLAPolicy, *SLADefinition)) error {
+func (_q *SLAPolicyQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAPolicy, init func(*SLAPolicy), assign func(*SLAPolicy, *SLADefinition)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SLAPolicy)
 	for i := range nodes {
@@ -478,7 +478,7 @@ func (spq *SLAPolicyQuery) loadSLADefinition(ctx context.Context, query *SLADefi
 	}
 	return nil
 }
-func (spq *SLAPolicyQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*SLAPolicy, init func(*SLAPolicy), assign func(*SLAPolicy, *Ticket)) error {
+func (_q *SLAPolicyQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*SLAPolicy, init func(*SLAPolicy), assign func(*SLAPolicy, *Ticket)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SLAPolicy)
 	for i := range nodes {
@@ -510,24 +510,24 @@ func (spq *SLAPolicyQuery) loadTickets(ctx context.Context, query *TicketQuery, 
 	return nil
 }
 
-func (spq *SLAPolicyQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := spq.querySpec()
-	_spec.Node.Columns = spq.ctx.Fields
-	if len(spq.ctx.Fields) > 0 {
-		_spec.Unique = spq.ctx.Unique != nil && *spq.ctx.Unique
+func (_q *SLAPolicyQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, spq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (spq *SLAPolicyQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *SLAPolicyQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(slapolicy.Table, slapolicy.Columns, sqlgraph.NewFieldSpec(slapolicy.FieldID, field.TypeInt))
-	_spec.From = spq.sql
-	if unique := spq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if spq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := spq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slapolicy.FieldID)
 		for i := range fields {
@@ -536,20 +536,20 @@ func (spq *SLAPolicyQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := spq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := spq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := spq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := spq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -559,33 +559,33 @@ func (spq *SLAPolicyQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (spq *SLAPolicyQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(spq.driver.Dialect())
+func (_q *SLAPolicyQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(slapolicy.Table)
-	columns := spq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = slapolicy.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if spq.sql != nil {
-		selector = spq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if spq.ctx.Unique != nil && *spq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range spq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range spq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := spq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := spq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -598,41 +598,41 @@ type SLAPolicyGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (spgb *SLAPolicyGroupBy) Aggregate(fns ...AggregateFunc) *SLAPolicyGroupBy {
-	spgb.fns = append(spgb.fns, fns...)
-	return spgb
+func (_g *SLAPolicyGroupBy) Aggregate(fns ...AggregateFunc) *SLAPolicyGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (spgb *SLAPolicyGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, spgb.build.ctx, ent.OpQueryGroupBy)
-	if err := spgb.build.prepareQuery(ctx); err != nil {
+func (_g *SLAPolicyGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAPolicyQuery, *SLAPolicyGroupBy](ctx, spgb.build, spgb, spgb.build.inters, v)
+	return scanWithInterceptors[*SLAPolicyQuery, *SLAPolicyGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (spgb *SLAPolicyGroupBy) sqlScan(ctx context.Context, root *SLAPolicyQuery, v any) error {
+func (_g *SLAPolicyGroupBy) sqlScan(ctx context.Context, root *SLAPolicyQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(spgb.fns))
-	for _, fn := range spgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*spgb.flds)+len(spgb.fns))
-		for _, f := range *spgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*spgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := spgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -646,27 +646,27 @@ type SLAPolicySelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (sps *SLAPolicySelect) Aggregate(fns ...AggregateFunc) *SLAPolicySelect {
-	sps.fns = append(sps.fns, fns...)
-	return sps
+func (_s *SLAPolicySelect) Aggregate(fns ...AggregateFunc) *SLAPolicySelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sps *SLAPolicySelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sps.ctx, ent.OpQuerySelect)
-	if err := sps.prepareQuery(ctx); err != nil {
+func (_s *SLAPolicySelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAPolicyQuery, *SLAPolicySelect](ctx, sps.SLAPolicyQuery, sps, sps.inters, v)
+	return scanWithInterceptors[*SLAPolicyQuery, *SLAPolicySelect](ctx, _s.SLAPolicyQuery, _s, _s.inters, v)
 }
 
-func (sps *SLAPolicySelect) sqlScan(ctx context.Context, root *SLAPolicyQuery, v any) error {
+func (_s *SLAPolicySelect) sqlScan(ctx context.Context, root *SLAPolicyQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(sps.fns))
-	for _, fn := range sps.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*sps.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -674,7 +674,7 @@ func (sps *SLAPolicySelect) sqlScan(ctx context.Context, root *SLAPolicyQuery, v
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sps.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

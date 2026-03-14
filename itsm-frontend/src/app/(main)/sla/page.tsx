@@ -33,10 +33,8 @@ export default function SLAPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const response = await SLAApi.getSLAStats();
-      if (response.code === 0 && response.data) {
-        setStats(response.data);
-      }
+      const data = await SLAApi.getSLAStats();
+      setStats(data);
     } catch (error) {
       console.error('Failed to load SLA stats:', error);
     } finally {

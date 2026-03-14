@@ -22,182 +22,182 @@ type NotificationPreferenceCreate struct {
 }
 
 // SetUserID sets the "user_id" field.
-func (npc *NotificationPreferenceCreate) SetUserID(i int) *NotificationPreferenceCreate {
-	npc.mutation.SetUserID(i)
-	return npc
+func (_c *NotificationPreferenceCreate) SetUserID(v int) *NotificationPreferenceCreate {
+	_c.mutation.SetUserID(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (npc *NotificationPreferenceCreate) SetTenantID(i int) *NotificationPreferenceCreate {
-	npc.mutation.SetTenantID(i)
-	return npc
+func (_c *NotificationPreferenceCreate) SetTenantID(v int) *NotificationPreferenceCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetEventType sets the "event_type" field.
-func (npc *NotificationPreferenceCreate) SetEventType(s string) *NotificationPreferenceCreate {
-	npc.mutation.SetEventType(s)
-	return npc
+func (_c *NotificationPreferenceCreate) SetEventType(v string) *NotificationPreferenceCreate {
+	_c.mutation.SetEventType(v)
+	return _c
 }
 
 // SetEmailEnabled sets the "email_enabled" field.
-func (npc *NotificationPreferenceCreate) SetEmailEnabled(b bool) *NotificationPreferenceCreate {
-	npc.mutation.SetEmailEnabled(b)
-	return npc
+func (_c *NotificationPreferenceCreate) SetEmailEnabled(v bool) *NotificationPreferenceCreate {
+	_c.mutation.SetEmailEnabled(v)
+	return _c
 }
 
 // SetNillableEmailEnabled sets the "email_enabled" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableEmailEnabled(b *bool) *NotificationPreferenceCreate {
-	if b != nil {
-		npc.SetEmailEnabled(*b)
+func (_c *NotificationPreferenceCreate) SetNillableEmailEnabled(v *bool) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetEmailEnabled(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetSmsEnabled sets the "sms_enabled" field.
-func (npc *NotificationPreferenceCreate) SetSmsEnabled(b bool) *NotificationPreferenceCreate {
-	npc.mutation.SetSmsEnabled(b)
-	return npc
+func (_c *NotificationPreferenceCreate) SetSmsEnabled(v bool) *NotificationPreferenceCreate {
+	_c.mutation.SetSmsEnabled(v)
+	return _c
 }
 
 // SetNillableSmsEnabled sets the "sms_enabled" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableSmsEnabled(b *bool) *NotificationPreferenceCreate {
-	if b != nil {
-		npc.SetSmsEnabled(*b)
+func (_c *NotificationPreferenceCreate) SetNillableSmsEnabled(v *bool) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetSmsEnabled(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetInAppEnabled sets the "in_app_enabled" field.
-func (npc *NotificationPreferenceCreate) SetInAppEnabled(b bool) *NotificationPreferenceCreate {
-	npc.mutation.SetInAppEnabled(b)
-	return npc
+func (_c *NotificationPreferenceCreate) SetInAppEnabled(v bool) *NotificationPreferenceCreate {
+	_c.mutation.SetInAppEnabled(v)
+	return _c
 }
 
 // SetNillableInAppEnabled sets the "in_app_enabled" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableInAppEnabled(b *bool) *NotificationPreferenceCreate {
-	if b != nil {
-		npc.SetInAppEnabled(*b)
+func (_c *NotificationPreferenceCreate) SetNillableInAppEnabled(v *bool) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetInAppEnabled(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetPushEnabled sets the "push_enabled" field.
-func (npc *NotificationPreferenceCreate) SetPushEnabled(b bool) *NotificationPreferenceCreate {
-	npc.mutation.SetPushEnabled(b)
-	return npc
+func (_c *NotificationPreferenceCreate) SetPushEnabled(v bool) *NotificationPreferenceCreate {
+	_c.mutation.SetPushEnabled(v)
+	return _c
 }
 
 // SetNillablePushEnabled sets the "push_enabled" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillablePushEnabled(b *bool) *NotificationPreferenceCreate {
-	if b != nil {
-		npc.SetPushEnabled(*b)
+func (_c *NotificationPreferenceCreate) SetNillablePushEnabled(v *bool) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetPushEnabled(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetFrequency sets the "frequency" field.
-func (npc *NotificationPreferenceCreate) SetFrequency(s string) *NotificationPreferenceCreate {
-	npc.mutation.SetFrequency(s)
-	return npc
+func (_c *NotificationPreferenceCreate) SetFrequency(v string) *NotificationPreferenceCreate {
+	_c.mutation.SetFrequency(v)
+	return _c
 }
 
 // SetNillableFrequency sets the "frequency" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableFrequency(s *string) *NotificationPreferenceCreate {
-	if s != nil {
-		npc.SetFrequency(*s)
+func (_c *NotificationPreferenceCreate) SetNillableFrequency(v *string) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetFrequency(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetQuietHoursStart sets the "quiet_hours_start" field.
-func (npc *NotificationPreferenceCreate) SetQuietHoursStart(t time.Time) *NotificationPreferenceCreate {
-	npc.mutation.SetQuietHoursStart(t)
-	return npc
+func (_c *NotificationPreferenceCreate) SetQuietHoursStart(v time.Time) *NotificationPreferenceCreate {
+	_c.mutation.SetQuietHoursStart(v)
+	return _c
 }
 
 // SetNillableQuietHoursStart sets the "quiet_hours_start" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableQuietHoursStart(t *time.Time) *NotificationPreferenceCreate {
-	if t != nil {
-		npc.SetQuietHoursStart(*t)
+func (_c *NotificationPreferenceCreate) SetNillableQuietHoursStart(v *time.Time) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetQuietHoursStart(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetQuietHoursEnd sets the "quiet_hours_end" field.
-func (npc *NotificationPreferenceCreate) SetQuietHoursEnd(t time.Time) *NotificationPreferenceCreate {
-	npc.mutation.SetQuietHoursEnd(t)
-	return npc
+func (_c *NotificationPreferenceCreate) SetQuietHoursEnd(v time.Time) *NotificationPreferenceCreate {
+	_c.mutation.SetQuietHoursEnd(v)
+	return _c
 }
 
 // SetNillableQuietHoursEnd sets the "quiet_hours_end" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableQuietHoursEnd(t *time.Time) *NotificationPreferenceCreate {
-	if t != nil {
-		npc.SetQuietHoursEnd(*t)
+func (_c *NotificationPreferenceCreate) SetNillableQuietHoursEnd(v *time.Time) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetQuietHoursEnd(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetTimezone sets the "timezone" field.
-func (npc *NotificationPreferenceCreate) SetTimezone(s string) *NotificationPreferenceCreate {
-	npc.mutation.SetTimezone(s)
-	return npc
+func (_c *NotificationPreferenceCreate) SetTimezone(v string) *NotificationPreferenceCreate {
+	_c.mutation.SetTimezone(v)
+	return _c
 }
 
 // SetNillableTimezone sets the "timezone" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableTimezone(s *string) *NotificationPreferenceCreate {
-	if s != nil {
-		npc.SetTimezone(*s)
+func (_c *NotificationPreferenceCreate) SetNillableTimezone(v *string) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetTimezone(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (npc *NotificationPreferenceCreate) SetCreatedAt(t time.Time) *NotificationPreferenceCreate {
-	npc.mutation.SetCreatedAt(t)
-	return npc
+func (_c *NotificationPreferenceCreate) SetCreatedAt(v time.Time) *NotificationPreferenceCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableCreatedAt(t *time.Time) *NotificationPreferenceCreate {
-	if t != nil {
-		npc.SetCreatedAt(*t)
+func (_c *NotificationPreferenceCreate) SetNillableCreatedAt(v *time.Time) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (npc *NotificationPreferenceCreate) SetUpdatedAt(t time.Time) *NotificationPreferenceCreate {
-	npc.mutation.SetUpdatedAt(t)
-	return npc
+func (_c *NotificationPreferenceCreate) SetUpdatedAt(v time.Time) *NotificationPreferenceCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (npc *NotificationPreferenceCreate) SetNillableUpdatedAt(t *time.Time) *NotificationPreferenceCreate {
-	if t != nil {
-		npc.SetUpdatedAt(*t)
+func (_c *NotificationPreferenceCreate) SetNillableUpdatedAt(v *time.Time) *NotificationPreferenceCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return npc
+	return _c
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (npc *NotificationPreferenceCreate) SetUser(u *User) *NotificationPreferenceCreate {
-	return npc.SetUserID(u.ID)
+func (_c *NotificationPreferenceCreate) SetUser(v *User) *NotificationPreferenceCreate {
+	return _c.SetUserID(v.ID)
 }
 
 // Mutation returns the NotificationPreferenceMutation object of the builder.
-func (npc *NotificationPreferenceCreate) Mutation() *NotificationPreferenceMutation {
-	return npc.mutation
+func (_c *NotificationPreferenceCreate) Mutation() *NotificationPreferenceMutation {
+	return _c.mutation
 }
 
 // Save creates the NotificationPreference in the database.
-func (npc *NotificationPreferenceCreate) Save(ctx context.Context) (*NotificationPreference, error) {
-	npc.defaults()
-	return withHooks(ctx, npc.sqlSave, npc.mutation, npc.hooks)
+func (_c *NotificationPreferenceCreate) Save(ctx context.Context) (*NotificationPreference, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (npc *NotificationPreferenceCreate) SaveX(ctx context.Context) *NotificationPreference {
-	v, err := npc.Save(ctx)
+func (_c *NotificationPreferenceCreate) SaveX(ctx context.Context) *NotificationPreference {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -205,116 +205,116 @@ func (npc *NotificationPreferenceCreate) SaveX(ctx context.Context) *Notificatio
 }
 
 // Exec executes the query.
-func (npc *NotificationPreferenceCreate) Exec(ctx context.Context) error {
-	_, err := npc.Save(ctx)
+func (_c *NotificationPreferenceCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (npc *NotificationPreferenceCreate) ExecX(ctx context.Context) {
-	if err := npc.Exec(ctx); err != nil {
+func (_c *NotificationPreferenceCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (npc *NotificationPreferenceCreate) defaults() {
-	if _, ok := npc.mutation.EmailEnabled(); !ok {
+func (_c *NotificationPreferenceCreate) defaults() {
+	if _, ok := _c.mutation.EmailEnabled(); !ok {
 		v := notificationpreference.DefaultEmailEnabled
-		npc.mutation.SetEmailEnabled(v)
+		_c.mutation.SetEmailEnabled(v)
 	}
-	if _, ok := npc.mutation.SmsEnabled(); !ok {
+	if _, ok := _c.mutation.SmsEnabled(); !ok {
 		v := notificationpreference.DefaultSmsEnabled
-		npc.mutation.SetSmsEnabled(v)
+		_c.mutation.SetSmsEnabled(v)
 	}
-	if _, ok := npc.mutation.InAppEnabled(); !ok {
+	if _, ok := _c.mutation.InAppEnabled(); !ok {
 		v := notificationpreference.DefaultInAppEnabled
-		npc.mutation.SetInAppEnabled(v)
+		_c.mutation.SetInAppEnabled(v)
 	}
-	if _, ok := npc.mutation.PushEnabled(); !ok {
+	if _, ok := _c.mutation.PushEnabled(); !ok {
 		v := notificationpreference.DefaultPushEnabled
-		npc.mutation.SetPushEnabled(v)
+		_c.mutation.SetPushEnabled(v)
 	}
-	if _, ok := npc.mutation.Frequency(); !ok {
+	if _, ok := _c.mutation.Frequency(); !ok {
 		v := notificationpreference.DefaultFrequency
-		npc.mutation.SetFrequency(v)
+		_c.mutation.SetFrequency(v)
 	}
-	if _, ok := npc.mutation.Timezone(); !ok {
+	if _, ok := _c.mutation.Timezone(); !ok {
 		v := notificationpreference.DefaultTimezone
-		npc.mutation.SetTimezone(v)
+		_c.mutation.SetTimezone(v)
 	}
-	if _, ok := npc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := notificationpreference.DefaultCreatedAt()
-		npc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := npc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := notificationpreference.DefaultUpdatedAt()
-		npc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (npc *NotificationPreferenceCreate) check() error {
-	if _, ok := npc.mutation.UserID(); !ok {
+func (_c *NotificationPreferenceCreate) check() error {
+	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "NotificationPreference.user_id"`)}
 	}
-	if v, ok := npc.mutation.UserID(); ok {
+	if v, ok := _c.mutation.UserID(); ok {
 		if err := notificationpreference.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.user_id": %w`, err)}
 		}
 	}
-	if _, ok := npc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "NotificationPreference.tenant_id"`)}
 	}
-	if v, ok := npc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := notificationpreference.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := npc.mutation.EventType(); !ok {
+	if _, ok := _c.mutation.EventType(); !ok {
 		return &ValidationError{Name: "event_type", err: errors.New(`ent: missing required field "NotificationPreference.event_type"`)}
 	}
-	if v, ok := npc.mutation.EventType(); ok {
+	if v, ok := _c.mutation.EventType(); ok {
 		if err := notificationpreference.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "NotificationPreference.event_type": %w`, err)}
 		}
 	}
-	if _, ok := npc.mutation.EmailEnabled(); !ok {
+	if _, ok := _c.mutation.EmailEnabled(); !ok {
 		return &ValidationError{Name: "email_enabled", err: errors.New(`ent: missing required field "NotificationPreference.email_enabled"`)}
 	}
-	if _, ok := npc.mutation.SmsEnabled(); !ok {
+	if _, ok := _c.mutation.SmsEnabled(); !ok {
 		return &ValidationError{Name: "sms_enabled", err: errors.New(`ent: missing required field "NotificationPreference.sms_enabled"`)}
 	}
-	if _, ok := npc.mutation.InAppEnabled(); !ok {
+	if _, ok := _c.mutation.InAppEnabled(); !ok {
 		return &ValidationError{Name: "in_app_enabled", err: errors.New(`ent: missing required field "NotificationPreference.in_app_enabled"`)}
 	}
-	if _, ok := npc.mutation.PushEnabled(); !ok {
+	if _, ok := _c.mutation.PushEnabled(); !ok {
 		return &ValidationError{Name: "push_enabled", err: errors.New(`ent: missing required field "NotificationPreference.push_enabled"`)}
 	}
-	if _, ok := npc.mutation.Frequency(); !ok {
+	if _, ok := _c.mutation.Frequency(); !ok {
 		return &ValidationError{Name: "frequency", err: errors.New(`ent: missing required field "NotificationPreference.frequency"`)}
 	}
-	if _, ok := npc.mutation.Timezone(); !ok {
+	if _, ok := _c.mutation.Timezone(); !ok {
 		return &ValidationError{Name: "timezone", err: errors.New(`ent: missing required field "NotificationPreference.timezone"`)}
 	}
-	if _, ok := npc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "NotificationPreference.created_at"`)}
 	}
-	if _, ok := npc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "NotificationPreference.updated_at"`)}
 	}
-	if len(npc.mutation.UserIDs()) == 0 {
+	if len(_c.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "NotificationPreference.user"`)}
 	}
 	return nil
 }
 
-func (npc *NotificationPreferenceCreate) sqlSave(ctx context.Context) (*NotificationPreference, error) {
-	if err := npc.check(); err != nil {
+func (_c *NotificationPreferenceCreate) sqlSave(ctx context.Context) (*NotificationPreference, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := npc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, npc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -322,65 +322,65 @@ func (npc *NotificationPreferenceCreate) sqlSave(ctx context.Context) (*Notifica
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	npc.mutation.id = &_node.ID
-	npc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (npc *NotificationPreferenceCreate) createSpec() (*NotificationPreference, *sqlgraph.CreateSpec) {
+func (_c *NotificationPreferenceCreate) createSpec() (*NotificationPreference, *sqlgraph.CreateSpec) {
 	var (
-		_node = &NotificationPreference{config: npc.config}
+		_node = &NotificationPreference{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(notificationpreference.Table, sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeInt))
 	)
-	if value, ok := npc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(notificationpreference.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := npc.mutation.EventType(); ok {
+	if value, ok := _c.mutation.EventType(); ok {
 		_spec.SetField(notificationpreference.FieldEventType, field.TypeString, value)
 		_node.EventType = value
 	}
-	if value, ok := npc.mutation.EmailEnabled(); ok {
+	if value, ok := _c.mutation.EmailEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldEmailEnabled, field.TypeBool, value)
 		_node.EmailEnabled = value
 	}
-	if value, ok := npc.mutation.SmsEnabled(); ok {
+	if value, ok := _c.mutation.SmsEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldSmsEnabled, field.TypeBool, value)
 		_node.SmsEnabled = value
 	}
-	if value, ok := npc.mutation.InAppEnabled(); ok {
+	if value, ok := _c.mutation.InAppEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldInAppEnabled, field.TypeBool, value)
 		_node.InAppEnabled = value
 	}
-	if value, ok := npc.mutation.PushEnabled(); ok {
+	if value, ok := _c.mutation.PushEnabled(); ok {
 		_spec.SetField(notificationpreference.FieldPushEnabled, field.TypeBool, value)
 		_node.PushEnabled = value
 	}
-	if value, ok := npc.mutation.Frequency(); ok {
+	if value, ok := _c.mutation.Frequency(); ok {
 		_spec.SetField(notificationpreference.FieldFrequency, field.TypeString, value)
 		_node.Frequency = value
 	}
-	if value, ok := npc.mutation.QuietHoursStart(); ok {
+	if value, ok := _c.mutation.QuietHoursStart(); ok {
 		_spec.SetField(notificationpreference.FieldQuietHoursStart, field.TypeTime, value)
 		_node.QuietHoursStart = value
 	}
-	if value, ok := npc.mutation.QuietHoursEnd(); ok {
+	if value, ok := _c.mutation.QuietHoursEnd(); ok {
 		_spec.SetField(notificationpreference.FieldQuietHoursEnd, field.TypeTime, value)
 		_node.QuietHoursEnd = value
 	}
-	if value, ok := npc.mutation.Timezone(); ok {
+	if value, ok := _c.mutation.Timezone(); ok {
 		_spec.SetField(notificationpreference.FieldTimezone, field.TypeString, value)
 		_node.Timezone = value
 	}
-	if value, ok := npc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(notificationpreference.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := npc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(notificationpreference.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := npc.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -408,16 +408,16 @@ type NotificationPreferenceCreateBulk struct {
 }
 
 // Save creates the NotificationPreference entities in the database.
-func (npcb *NotificationPreferenceCreateBulk) Save(ctx context.Context) ([]*NotificationPreference, error) {
-	if npcb.err != nil {
-		return nil, npcb.err
+func (_c *NotificationPreferenceCreateBulk) Save(ctx context.Context) ([]*NotificationPreference, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(npcb.builders))
-	nodes := make([]*NotificationPreference, len(npcb.builders))
-	mutators := make([]Mutator, len(npcb.builders))
-	for i := range npcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*NotificationPreference, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := npcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*NotificationPreferenceMutation)
@@ -431,11 +431,11 @@ func (npcb *NotificationPreferenceCreateBulk) Save(ctx context.Context) ([]*Noti
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, npcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, npcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -459,7 +459,7 @@ func (npcb *NotificationPreferenceCreateBulk) Save(ctx context.Context) ([]*Noti
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, npcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -467,8 +467,8 @@ func (npcb *NotificationPreferenceCreateBulk) Save(ctx context.Context) ([]*Noti
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (npcb *NotificationPreferenceCreateBulk) SaveX(ctx context.Context) []*NotificationPreference {
-	v, err := npcb.Save(ctx)
+func (_c *NotificationPreferenceCreateBulk) SaveX(ctx context.Context) []*NotificationPreference {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -476,14 +476,14 @@ func (npcb *NotificationPreferenceCreateBulk) SaveX(ctx context.Context) []*Noti
 }
 
 // Exec executes the query.
-func (npcb *NotificationPreferenceCreateBulk) Exec(ctx context.Context) error {
-	_, err := npcb.Save(ctx)
+func (_c *NotificationPreferenceCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (npcb *NotificationPreferenceCreateBulk) ExecX(ctx context.Context) {
-	if err := npcb.Exec(ctx); err != nil {
+func (_c *NotificationPreferenceCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -20,56 +20,56 @@ type TicketNotificationDelete struct {
 }
 
 // Where appends a list predicates to the TicketNotificationDelete builder.
-func (tnd *TicketNotificationDelete) Where(ps ...predicate.TicketNotification) *TicketNotificationDelete {
-	tnd.mutation.Where(ps...)
-	return tnd
+func (_d *TicketNotificationDelete) Where(ps ...predicate.TicketNotification) *TicketNotificationDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (tnd *TicketNotificationDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, tnd.sqlExec, tnd.mutation, tnd.hooks)
+func (_d *TicketNotificationDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tnd *TicketNotificationDelete) ExecX(ctx context.Context) int {
-	n, err := tnd.Exec(ctx)
+func (_d *TicketNotificationDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (tnd *TicketNotificationDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *TicketNotificationDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(ticketnotification.Table, sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt))
-	if ps := tnd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, tnd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	tnd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // TicketNotificationDeleteOne is the builder for deleting a single TicketNotification entity.
 type TicketNotificationDeleteOne struct {
-	tnd *TicketNotificationDelete
+	_d *TicketNotificationDelete
 }
 
 // Where appends a list predicates to the TicketNotificationDelete builder.
-func (tndo *TicketNotificationDeleteOne) Where(ps ...predicate.TicketNotification) *TicketNotificationDeleteOne {
-	tndo.tnd.mutation.Where(ps...)
-	return tndo
+func (_d *TicketNotificationDeleteOne) Where(ps ...predicate.TicketNotification) *TicketNotificationDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (tndo *TicketNotificationDeleteOne) Exec(ctx context.Context) error {
-	n, err := tndo.tnd.Exec(ctx)
+func (_d *TicketNotificationDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (tndo *TicketNotificationDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tndo *TicketNotificationDeleteOne) ExecX(ctx context.Context) {
-	if err := tndo.Exec(ctx); err != nil {
+func (_d *TicketNotificationDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -94,7 +94,7 @@ func (*ToolInvocation) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ToolInvocation fields.
-func (ti *ToolInvocation) assignValues(columns []string, values []any) error {
+func (_m *ToolInvocation) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -105,95 +105,95 @@ func (ti *ToolInvocation) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ti.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case toolinvocation.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ti.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case toolinvocation.FieldConversationID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field conversation_id", values[i])
 			} else if value.Valid {
-				ti.ConversationID = int(value.Int64)
+				_m.ConversationID = int(value.Int64)
 			}
 		case toolinvocation.FieldToolName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tool_name", values[i])
 			} else if value.Valid {
-				ti.ToolName = value.String
+				_m.ToolName = value.String
 			}
 		case toolinvocation.FieldArguments:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field arguments", values[i])
 			} else if value.Valid {
-				ti.Arguments = value.String
+				_m.Arguments = value.String
 			}
 		case toolinvocation.FieldResult:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field result", values[i])
 			} else if value.Valid {
-				ti.Result = new(string)
-				*ti.Result = value.String
+				_m.Result = new(string)
+				*_m.Result = value.String
 			}
 		case toolinvocation.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				ti.Status = value.String
+				_m.Status = value.String
 			}
 		case toolinvocation.FieldRequestID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field request_id", values[i])
 			} else if value.Valid {
-				ti.RequestID = value.String
+				_m.RequestID = value.String
 			}
 		case toolinvocation.FieldNeedsApproval:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field needs_approval", values[i])
 			} else if value.Valid {
-				ti.NeedsApproval = value.Bool
+				_m.NeedsApproval = value.Bool
 			}
 		case toolinvocation.FieldApprovalState:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field approval_state", values[i])
 			} else if value.Valid {
-				ti.ApprovalState = value.String
+				_m.ApprovalState = value.String
 			}
 		case toolinvocation.FieldApprovalReason:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field approval_reason", values[i])
 			} else if value.Valid {
-				ti.ApprovalReason = value.String
+				_m.ApprovalReason = value.String
 			}
 		case toolinvocation.FieldApprovedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field approved_by", values[i])
 			} else if value.Valid {
-				ti.ApprovedBy = int(value.Int64)
+				_m.ApprovedBy = int(value.Int64)
 			}
 		case toolinvocation.FieldApprovedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field approved_at", values[i])
 			} else if value.Valid {
-				ti.ApprovedAt = value.Time
+				_m.ApprovedAt = value.Time
 			}
 		case toolinvocation.FieldDryRun:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field dry_run", values[i])
 			} else if value.Valid {
-				ti.DryRun = value.Bool
+				_m.DryRun = value.Bool
 			}
 		case toolinvocation.FieldError:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field error", values[i])
 			} else if value.Valid {
-				ti.Error = new(string)
-				*ti.Error = value.String
+				_m.Error = new(string)
+				*_m.Error = value.String
 			}
 		default:
-			ti.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -201,80 +201,80 @@ func (ti *ToolInvocation) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ToolInvocation.
 // This includes values selected through modifiers, order, etc.
-func (ti *ToolInvocation) Value(name string) (ent.Value, error) {
-	return ti.selectValues.Get(name)
+func (_m *ToolInvocation) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryConversation queries the "conversation" edge of the ToolInvocation entity.
-func (ti *ToolInvocation) QueryConversation() *ConversationQuery {
-	return NewToolInvocationClient(ti.config).QueryConversation(ti)
+func (_m *ToolInvocation) QueryConversation() *ConversationQuery {
+	return NewToolInvocationClient(_m.config).QueryConversation(_m)
 }
 
 // Update returns a builder for updating this ToolInvocation.
 // Note that you need to call ToolInvocation.Unwrap() before calling this method if this ToolInvocation
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ti *ToolInvocation) Update() *ToolInvocationUpdateOne {
-	return NewToolInvocationClient(ti.config).UpdateOne(ti)
+func (_m *ToolInvocation) Update() *ToolInvocationUpdateOne {
+	return NewToolInvocationClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ToolInvocation entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ti *ToolInvocation) Unwrap() *ToolInvocation {
-	_tx, ok := ti.config.driver.(*txDriver)
+func (_m *ToolInvocation) Unwrap() *ToolInvocation {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ToolInvocation is not a transactional entity")
 	}
-	ti.config.driver = _tx.drv
-	return ti
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ti *ToolInvocation) String() string {
+func (_m *ToolInvocation) String() string {
 	var builder strings.Builder
 	builder.WriteString("ToolInvocation(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ti.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
-	builder.WriteString(ti.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("conversation_id=")
-	builder.WriteString(fmt.Sprintf("%v", ti.ConversationID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ConversationID))
 	builder.WriteString(", ")
 	builder.WriteString("tool_name=")
-	builder.WriteString(ti.ToolName)
+	builder.WriteString(_m.ToolName)
 	builder.WriteString(", ")
 	builder.WriteString("arguments=")
-	builder.WriteString(ti.Arguments)
+	builder.WriteString(_m.Arguments)
 	builder.WriteString(", ")
-	if v := ti.Result; v != nil {
+	if v := _m.Result; v != nil {
 		builder.WriteString("result=")
 		builder.WriteString(*v)
 	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(ti.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("request_id=")
-	builder.WriteString(ti.RequestID)
+	builder.WriteString(_m.RequestID)
 	builder.WriteString(", ")
 	builder.WriteString("needs_approval=")
-	builder.WriteString(fmt.Sprintf("%v", ti.NeedsApproval))
+	builder.WriteString(fmt.Sprintf("%v", _m.NeedsApproval))
 	builder.WriteString(", ")
 	builder.WriteString("approval_state=")
-	builder.WriteString(ti.ApprovalState)
+	builder.WriteString(_m.ApprovalState)
 	builder.WriteString(", ")
 	builder.WriteString("approval_reason=")
-	builder.WriteString(ti.ApprovalReason)
+	builder.WriteString(_m.ApprovalReason)
 	builder.WriteString(", ")
 	builder.WriteString("approved_by=")
-	builder.WriteString(fmt.Sprintf("%v", ti.ApprovedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.ApprovedBy))
 	builder.WriteString(", ")
 	builder.WriteString("approved_at=")
-	builder.WriteString(ti.ApprovedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ApprovedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("dry_run=")
-	builder.WriteString(fmt.Sprintf("%v", ti.DryRun))
+	builder.WriteString(fmt.Sprintf("%v", _m.DryRun))
 	builder.WriteString(", ")
-	if v := ti.Error; v != nil {
+	if v := _m.Error; v != nil {
 		builder.WriteString("error=")
 		builder.WriteString(*v)
 	}

@@ -20,56 +20,56 @@ type NotificationPreferenceDelete struct {
 }
 
 // Where appends a list predicates to the NotificationPreferenceDelete builder.
-func (npd *NotificationPreferenceDelete) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceDelete {
-	npd.mutation.Where(ps...)
-	return npd
+func (_d *NotificationPreferenceDelete) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (npd *NotificationPreferenceDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, npd.sqlExec, npd.mutation, npd.hooks)
+func (_d *NotificationPreferenceDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (npd *NotificationPreferenceDelete) ExecX(ctx context.Context) int {
-	n, err := npd.Exec(ctx)
+func (_d *NotificationPreferenceDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (npd *NotificationPreferenceDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *NotificationPreferenceDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(notificationpreference.Table, sqlgraph.NewFieldSpec(notificationpreference.FieldID, field.TypeInt))
-	if ps := npd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, npd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	npd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // NotificationPreferenceDeleteOne is the builder for deleting a single NotificationPreference entity.
 type NotificationPreferenceDeleteOne struct {
-	npd *NotificationPreferenceDelete
+	_d *NotificationPreferenceDelete
 }
 
 // Where appends a list predicates to the NotificationPreferenceDelete builder.
-func (npdo *NotificationPreferenceDeleteOne) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceDeleteOne {
-	npdo.npd.mutation.Where(ps...)
-	return npdo
+func (_d *NotificationPreferenceDeleteOne) Where(ps ...predicate.NotificationPreference) *NotificationPreferenceDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (npdo *NotificationPreferenceDeleteOne) Exec(ctx context.Context) error {
-	n, err := npdo.npd.Exec(ctx)
+func (_d *NotificationPreferenceDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (npdo *NotificationPreferenceDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (npdo *NotificationPreferenceDeleteOne) ExecX(ctx context.Context) {
-	if err := npdo.Exec(ctx); err != nil {
+func (_d *NotificationPreferenceDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -105,7 +105,7 @@ func (*WorkflowTask) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the WorkflowTask fields.
-func (wt *WorkflowTask) assignValues(columns []string, values []any) error {
+func (_m *WorkflowTask) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -116,72 +116,72 @@ func (wt *WorkflowTask) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			wt.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case workflowtask.FieldTaskID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_id", values[i])
 			} else if value.Valid {
-				wt.TaskID = value.String
+				_m.TaskID = value.String
 			}
 		case workflowtask.FieldInstanceID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field instance_id", values[i])
 			} else if value.Valid {
-				wt.InstanceID = int(value.Int64)
+				_m.InstanceID = int(value.Int64)
 			}
 		case workflowtask.FieldActivityID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field activity_id", values[i])
 			} else if value.Valid {
-				wt.ActivityID = value.String
+				_m.ActivityID = value.String
 			}
 		case workflowtask.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				wt.Name = value.String
+				_m.Name = value.String
 			}
 		case workflowtask.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				wt.Type = value.String
+				_m.Type = value.String
 			}
 		case workflowtask.FieldAssignee:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field assignee", values[i])
 			} else if value.Valid {
-				wt.Assignee = value.String
+				_m.Assignee = value.String
 			}
 		case workflowtask.FieldCandidateUsers:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field candidate_users", values[i])
 			} else if value.Valid {
-				wt.CandidateUsers = value.String
+				_m.CandidateUsers = value.String
 			}
 		case workflowtask.FieldCandidateGroups:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field candidate_groups", values[i])
 			} else if value.Valid {
-				wt.CandidateGroups = value.String
+				_m.CandidateGroups = value.String
 			}
 		case workflowtask.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				wt.Status = value.String
+				_m.Status = value.String
 			}
 		case workflowtask.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				wt.Priority = value.String
+				_m.Priority = value.String
 			}
 		case workflowtask.FieldFormData:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field form_data", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &wt.FormData); err != nil {
+				if err := json.Unmarshal(*value, &_m.FormData); err != nil {
 					return fmt.Errorf("unmarshal field form_data: %w", err)
 				}
 			}
@@ -189,7 +189,7 @@ func (wt *WorkflowTask) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field variables", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &wt.Variables); err != nil {
+				if err := json.Unmarshal(*value, &_m.Variables); err != nil {
 					return fmt.Errorf("unmarshal field variables: %w", err)
 				}
 			}
@@ -197,46 +197,46 @@ func (wt *WorkflowTask) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field comment", values[i])
 			} else if value.Valid {
-				wt.Comment = value.String
+				_m.Comment = value.String
 			}
 		case workflowtask.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				wt.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case workflowtask.FieldDueDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field due_date", values[i])
 			} else if value.Valid {
-				wt.DueDate = value.Time
+				_m.DueDate = value.Time
 			}
 		case workflowtask.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				wt.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case workflowtask.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				wt.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case workflowtask.FieldCompletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field completed_at", values[i])
 			} else if value.Valid {
-				wt.CompletedAt = value.Time
+				_m.CompletedAt = value.Time
 			}
 		case workflowtask.FieldCompletedBy:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field completed_by", values[i])
 			} else if value.Valid {
-				wt.CompletedBy = value.String
+				_m.CompletedBy = value.String
 			}
 		default:
-			wt.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -244,94 +244,94 @@ func (wt *WorkflowTask) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the WorkflowTask.
 // This includes values selected through modifiers, order, etc.
-func (wt *WorkflowTask) Value(name string) (ent.Value, error) {
-	return wt.selectValues.Get(name)
+func (_m *WorkflowTask) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryInstance queries the "instance" edge of the WorkflowTask entity.
-func (wt *WorkflowTask) QueryInstance() *WorkflowInstanceQuery {
-	return NewWorkflowTaskClient(wt.config).QueryInstance(wt)
+func (_m *WorkflowTask) QueryInstance() *WorkflowInstanceQuery {
+	return NewWorkflowTaskClient(_m.config).QueryInstance(_m)
 }
 
 // Update returns a builder for updating this WorkflowTask.
 // Note that you need to call WorkflowTask.Unwrap() before calling this method if this WorkflowTask
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (wt *WorkflowTask) Update() *WorkflowTaskUpdateOne {
-	return NewWorkflowTaskClient(wt.config).UpdateOne(wt)
+func (_m *WorkflowTask) Update() *WorkflowTaskUpdateOne {
+	return NewWorkflowTaskClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the WorkflowTask entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (wt *WorkflowTask) Unwrap() *WorkflowTask {
-	_tx, ok := wt.config.driver.(*txDriver)
+func (_m *WorkflowTask) Unwrap() *WorkflowTask {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: WorkflowTask is not a transactional entity")
 	}
-	wt.config.driver = _tx.drv
-	return wt
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (wt *WorkflowTask) String() string {
+func (_m *WorkflowTask) String() string {
 	var builder strings.Builder
 	builder.WriteString("WorkflowTask(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", wt.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("task_id=")
-	builder.WriteString(wt.TaskID)
+	builder.WriteString(_m.TaskID)
 	builder.WriteString(", ")
 	builder.WriteString("instance_id=")
-	builder.WriteString(fmt.Sprintf("%v", wt.InstanceID))
+	builder.WriteString(fmt.Sprintf("%v", _m.InstanceID))
 	builder.WriteString(", ")
 	builder.WriteString("activity_id=")
-	builder.WriteString(wt.ActivityID)
+	builder.WriteString(_m.ActivityID)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
-	builder.WriteString(wt.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(wt.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("assignee=")
-	builder.WriteString(wt.Assignee)
+	builder.WriteString(_m.Assignee)
 	builder.WriteString(", ")
 	builder.WriteString("candidate_users=")
-	builder.WriteString(wt.CandidateUsers)
+	builder.WriteString(_m.CandidateUsers)
 	builder.WriteString(", ")
 	builder.WriteString("candidate_groups=")
-	builder.WriteString(wt.CandidateGroups)
+	builder.WriteString(_m.CandidateGroups)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(wt.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(wt.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("form_data=")
-	builder.WriteString(fmt.Sprintf("%v", wt.FormData))
+	builder.WriteString(fmt.Sprintf("%v", _m.FormData))
 	builder.WriteString(", ")
 	builder.WriteString("variables=")
-	builder.WriteString(fmt.Sprintf("%v", wt.Variables))
+	builder.WriteString(fmt.Sprintf("%v", _m.Variables))
 	builder.WriteString(", ")
 	builder.WriteString("comment=")
-	builder.WriteString(wt.Comment)
+	builder.WriteString(_m.Comment)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", wt.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("due_date=")
-	builder.WriteString(wt.DueDate.Format(time.ANSIC))
+	builder.WriteString(_m.DueDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(wt.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(wt.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("completed_at=")
-	builder.WriteString(wt.CompletedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CompletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("completed_by=")
-	builder.WriteString(wt.CompletedBy)
+	builder.WriteString(_m.CompletedBy)
 	builder.WriteByte(')')
 	return builder.String()
 }

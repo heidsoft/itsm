@@ -24,210 +24,210 @@ type CITypeUpdate struct {
 }
 
 // Where appends a list predicates to the CITypeUpdate builder.
-func (ctu *CITypeUpdate) Where(ps ...predicate.CIType) *CITypeUpdate {
-	ctu.mutation.Where(ps...)
-	return ctu
+func (_u *CITypeUpdate) Where(ps ...predicate.CIType) *CITypeUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (ctu *CITypeUpdate) SetName(s string) *CITypeUpdate {
-	ctu.mutation.SetName(s)
-	return ctu
+func (_u *CITypeUpdate) SetName(v string) *CITypeUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableName(s *string) *CITypeUpdate {
-	if s != nil {
-		ctu.SetName(*s)
+func (_u *CITypeUpdate) SetNillableName(v *string) *CITypeUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ctu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ctu *CITypeUpdate) SetDescription(s string) *CITypeUpdate {
-	ctu.mutation.SetDescription(s)
-	return ctu
+func (_u *CITypeUpdate) SetDescription(v string) *CITypeUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableDescription(s *string) *CITypeUpdate {
-	if s != nil {
-		ctu.SetDescription(*s)
+func (_u *CITypeUpdate) SetNillableDescription(v *string) *CITypeUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ctu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ctu *CITypeUpdate) ClearDescription() *CITypeUpdate {
-	ctu.mutation.ClearDescription()
-	return ctu
+func (_u *CITypeUpdate) ClearDescription() *CITypeUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetIcon sets the "icon" field.
-func (ctu *CITypeUpdate) SetIcon(s string) *CITypeUpdate {
-	ctu.mutation.SetIcon(s)
-	return ctu
+func (_u *CITypeUpdate) SetIcon(v string) *CITypeUpdate {
+	_u.mutation.SetIcon(v)
+	return _u
 }
 
 // SetNillableIcon sets the "icon" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableIcon(s *string) *CITypeUpdate {
-	if s != nil {
-		ctu.SetIcon(*s)
+func (_u *CITypeUpdate) SetNillableIcon(v *string) *CITypeUpdate {
+	if v != nil {
+		_u.SetIcon(*v)
 	}
-	return ctu
+	return _u
 }
 
 // ClearIcon clears the value of the "icon" field.
-func (ctu *CITypeUpdate) ClearIcon() *CITypeUpdate {
-	ctu.mutation.ClearIcon()
-	return ctu
+func (_u *CITypeUpdate) ClearIcon() *CITypeUpdate {
+	_u.mutation.ClearIcon()
+	return _u
 }
 
 // SetColor sets the "color" field.
-func (ctu *CITypeUpdate) SetColor(s string) *CITypeUpdate {
-	ctu.mutation.SetColor(s)
-	return ctu
+func (_u *CITypeUpdate) SetColor(v string) *CITypeUpdate {
+	_u.mutation.SetColor(v)
+	return _u
 }
 
 // SetNillableColor sets the "color" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableColor(s *string) *CITypeUpdate {
-	if s != nil {
-		ctu.SetColor(*s)
+func (_u *CITypeUpdate) SetNillableColor(v *string) *CITypeUpdate {
+	if v != nil {
+		_u.SetColor(*v)
 	}
-	return ctu
+	return _u
 }
 
 // ClearColor clears the value of the "color" field.
-func (ctu *CITypeUpdate) ClearColor() *CITypeUpdate {
-	ctu.mutation.ClearColor()
-	return ctu
+func (_u *CITypeUpdate) ClearColor() *CITypeUpdate {
+	_u.mutation.ClearColor()
+	return _u
 }
 
 // SetAttributeSchema sets the "attribute_schema" field.
-func (ctu *CITypeUpdate) SetAttributeSchema(s string) *CITypeUpdate {
-	ctu.mutation.SetAttributeSchema(s)
-	return ctu
+func (_u *CITypeUpdate) SetAttributeSchema(v string) *CITypeUpdate {
+	_u.mutation.SetAttributeSchema(v)
+	return _u
 }
 
 // SetNillableAttributeSchema sets the "attribute_schema" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableAttributeSchema(s *string) *CITypeUpdate {
-	if s != nil {
-		ctu.SetAttributeSchema(*s)
+func (_u *CITypeUpdate) SetNillableAttributeSchema(v *string) *CITypeUpdate {
+	if v != nil {
+		_u.SetAttributeSchema(*v)
 	}
-	return ctu
+	return _u
 }
 
 // ClearAttributeSchema clears the value of the "attribute_schema" field.
-func (ctu *CITypeUpdate) ClearAttributeSchema() *CITypeUpdate {
-	ctu.mutation.ClearAttributeSchema()
-	return ctu
+func (_u *CITypeUpdate) ClearAttributeSchema() *CITypeUpdate {
+	_u.mutation.ClearAttributeSchema()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ctu *CITypeUpdate) SetTenantID(i int) *CITypeUpdate {
-	ctu.mutation.ResetTenantID()
-	ctu.mutation.SetTenantID(i)
-	return ctu
+func (_u *CITypeUpdate) SetTenantID(v int) *CITypeUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableTenantID(i *int) *CITypeUpdate {
-	if i != nil {
-		ctu.SetTenantID(*i)
+func (_u *CITypeUpdate) SetNillableTenantID(v *int) *CITypeUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ctu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ctu *CITypeUpdate) AddTenantID(i int) *CITypeUpdate {
-	ctu.mutation.AddTenantID(i)
-	return ctu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CITypeUpdate) AddTenantID(v int) *CITypeUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (ctu *CITypeUpdate) SetIsActive(b bool) *CITypeUpdate {
-	ctu.mutation.SetIsActive(b)
-	return ctu
+func (_u *CITypeUpdate) SetIsActive(v bool) *CITypeUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableIsActive(b *bool) *CITypeUpdate {
-	if b != nil {
-		ctu.SetIsActive(*b)
+func (_u *CITypeUpdate) SetNillableIsActive(v *bool) *CITypeUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return ctu
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ctu *CITypeUpdate) SetCreatedAt(t time.Time) *CITypeUpdate {
-	ctu.mutation.SetCreatedAt(t)
-	return ctu
+func (_u *CITypeUpdate) SetCreatedAt(v time.Time) *CITypeUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ctu *CITypeUpdate) SetNillableCreatedAt(t *time.Time) *CITypeUpdate {
-	if t != nil {
-		ctu.SetCreatedAt(*t)
+func (_u *CITypeUpdate) SetNillableCreatedAt(v *time.Time) *CITypeUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ctu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ctu *CITypeUpdate) SetUpdatedAt(t time.Time) *CITypeUpdate {
-	ctu.mutation.SetUpdatedAt(t)
-	return ctu
+func (_u *CITypeUpdate) SetUpdatedAt(v time.Time) *CITypeUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
-func (ctu *CITypeUpdate) AddCiIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.AddCiIDs(ids...)
-	return ctu
+func (_u *CITypeUpdate) AddCiIDs(ids ...int) *CITypeUpdate {
+	_u.mutation.AddCiIDs(ids...)
+	return _u
 }
 
 // AddCis adds the "cis" edges to the ConfigurationItem entity.
-func (ctu *CITypeUpdate) AddCis(c ...*ConfigurationItem) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CITypeUpdate) AddCis(v ...*ConfigurationItem) *CITypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ctu.AddCiIDs(ids...)
+	return _u.AddCiIDs(ids...)
 }
 
 // Mutation returns the CITypeMutation object of the builder.
-func (ctu *CITypeUpdate) Mutation() *CITypeMutation {
-	return ctu.mutation
+func (_u *CITypeUpdate) Mutation() *CITypeMutation {
+	return _u.mutation
 }
 
 // ClearCis clears all "cis" edges to the ConfigurationItem entity.
-func (ctu *CITypeUpdate) ClearCis() *CITypeUpdate {
-	ctu.mutation.ClearCis()
-	return ctu
+func (_u *CITypeUpdate) ClearCis() *CITypeUpdate {
+	_u.mutation.ClearCis()
+	return _u
 }
 
 // RemoveCiIDs removes the "cis" edge to ConfigurationItem entities by IDs.
-func (ctu *CITypeUpdate) RemoveCiIDs(ids ...int) *CITypeUpdate {
-	ctu.mutation.RemoveCiIDs(ids...)
-	return ctu
+func (_u *CITypeUpdate) RemoveCiIDs(ids ...int) *CITypeUpdate {
+	_u.mutation.RemoveCiIDs(ids...)
+	return _u
 }
 
 // RemoveCis removes "cis" edges to ConfigurationItem entities.
-func (ctu *CITypeUpdate) RemoveCis(c ...*ConfigurationItem) *CITypeUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CITypeUpdate) RemoveCis(v ...*ConfigurationItem) *CITypeUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ctu.RemoveCiIDs(ids...)
+	return _u.RemoveCiIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ctu *CITypeUpdate) Save(ctx context.Context) (int, error) {
-	ctu.defaults()
-	return withHooks(ctx, ctu.sqlSave, ctu.mutation, ctu.hooks)
+func (_u *CITypeUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ctu *CITypeUpdate) SaveX(ctx context.Context) int {
-	affected, err := ctu.Save(ctx)
+func (_u *CITypeUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -235,34 +235,34 @@ func (ctu *CITypeUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ctu *CITypeUpdate) Exec(ctx context.Context) error {
-	_, err := ctu.Save(ctx)
+func (_u *CITypeUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ctu *CITypeUpdate) ExecX(ctx context.Context) {
-	if err := ctu.Exec(ctx); err != nil {
+func (_u *CITypeUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ctu *CITypeUpdate) defaults() {
-	if _, ok := ctu.mutation.UpdatedAt(); !ok {
+func (_u *CITypeUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := citype.UpdateDefaultUpdatedAt()
-		ctu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ctu *CITypeUpdate) check() error {
-	if v, ok := ctu.mutation.Name(); ok {
+func (_u *CITypeUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := citype.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIType.name": %w`, err)}
 		}
 	}
-	if v, ok := ctu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := citype.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIType.tenant_id": %w`, err)}
 		}
@@ -270,61 +270,61 @@ func (ctu *CITypeUpdate) check() error {
 	return nil
 }
 
-func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ctu.check(); err != nil {
-		return n, err
+func (_u *CITypeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(citype.Table, citype.Columns, sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt))
-	if ps := ctu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ctu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(citype.FieldName, field.TypeString, value)
 	}
-	if value, ok := ctu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(citype.FieldDescription, field.TypeString, value)
 	}
-	if ctu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(citype.FieldDescription, field.TypeString)
 	}
-	if value, ok := ctu.mutation.Icon(); ok {
+	if value, ok := _u.mutation.Icon(); ok {
 		_spec.SetField(citype.FieldIcon, field.TypeString, value)
 	}
-	if ctu.mutation.IconCleared() {
+	if _u.mutation.IconCleared() {
 		_spec.ClearField(citype.FieldIcon, field.TypeString)
 	}
-	if value, ok := ctu.mutation.Color(); ok {
+	if value, ok := _u.mutation.Color(); ok {
 		_spec.SetField(citype.FieldColor, field.TypeString, value)
 	}
-	if ctu.mutation.ColorCleared() {
+	if _u.mutation.ColorCleared() {
 		_spec.ClearField(citype.FieldColor, field.TypeString)
 	}
-	if value, ok := ctu.mutation.AttributeSchema(); ok {
+	if value, ok := _u.mutation.AttributeSchema(); ok {
 		_spec.SetField(citype.FieldAttributeSchema, field.TypeString, value)
 	}
-	if ctu.mutation.AttributeSchemaCleared() {
+	if _u.mutation.AttributeSchemaCleared() {
 		_spec.ClearField(citype.FieldAttributeSchema, field.TypeString)
 	}
-	if value, ok := ctu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(citype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ctu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(citype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ctu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(citype.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := ctu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(citype.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ctu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ctu.mutation.CisCleared() {
+	if _u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -337,7 +337,7 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ctu.mutation.RemovedCisIDs(); len(nodes) > 0 && !ctu.mutation.CisCleared() {
+	if nodes := _u.mutation.RemovedCisIDs(); len(nodes) > 0 && !_u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -353,7 +353,7 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ctu.mutation.CisIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CisIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -369,7 +369,7 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ctu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{citype.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -377,8 +377,8 @@ func (ctu *CITypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	ctu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // CITypeUpdateOne is the builder for updating a single CIType entity.
@@ -390,217 +390,217 @@ type CITypeUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (ctuo *CITypeUpdateOne) SetName(s string) *CITypeUpdateOne {
-	ctuo.mutation.SetName(s)
-	return ctuo
+func (_u *CITypeUpdateOne) SetName(v string) *CITypeUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableName(s *string) *CITypeUpdateOne {
-	if s != nil {
-		ctuo.SetName(*s)
+func (_u *CITypeUpdateOne) SetNillableName(v *string) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ctuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ctuo *CITypeUpdateOne) SetDescription(s string) *CITypeUpdateOne {
-	ctuo.mutation.SetDescription(s)
-	return ctuo
+func (_u *CITypeUpdateOne) SetDescription(v string) *CITypeUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableDescription(s *string) *CITypeUpdateOne {
-	if s != nil {
-		ctuo.SetDescription(*s)
+func (_u *CITypeUpdateOne) SetNillableDescription(v *string) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ctuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ctuo *CITypeUpdateOne) ClearDescription() *CITypeUpdateOne {
-	ctuo.mutation.ClearDescription()
-	return ctuo
+func (_u *CITypeUpdateOne) ClearDescription() *CITypeUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetIcon sets the "icon" field.
-func (ctuo *CITypeUpdateOne) SetIcon(s string) *CITypeUpdateOne {
-	ctuo.mutation.SetIcon(s)
-	return ctuo
+func (_u *CITypeUpdateOne) SetIcon(v string) *CITypeUpdateOne {
+	_u.mutation.SetIcon(v)
+	return _u
 }
 
 // SetNillableIcon sets the "icon" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableIcon(s *string) *CITypeUpdateOne {
-	if s != nil {
-		ctuo.SetIcon(*s)
+func (_u *CITypeUpdateOne) SetNillableIcon(v *string) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetIcon(*v)
 	}
-	return ctuo
+	return _u
 }
 
 // ClearIcon clears the value of the "icon" field.
-func (ctuo *CITypeUpdateOne) ClearIcon() *CITypeUpdateOne {
-	ctuo.mutation.ClearIcon()
-	return ctuo
+func (_u *CITypeUpdateOne) ClearIcon() *CITypeUpdateOne {
+	_u.mutation.ClearIcon()
+	return _u
 }
 
 // SetColor sets the "color" field.
-func (ctuo *CITypeUpdateOne) SetColor(s string) *CITypeUpdateOne {
-	ctuo.mutation.SetColor(s)
-	return ctuo
+func (_u *CITypeUpdateOne) SetColor(v string) *CITypeUpdateOne {
+	_u.mutation.SetColor(v)
+	return _u
 }
 
 // SetNillableColor sets the "color" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableColor(s *string) *CITypeUpdateOne {
-	if s != nil {
-		ctuo.SetColor(*s)
+func (_u *CITypeUpdateOne) SetNillableColor(v *string) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetColor(*v)
 	}
-	return ctuo
+	return _u
 }
 
 // ClearColor clears the value of the "color" field.
-func (ctuo *CITypeUpdateOne) ClearColor() *CITypeUpdateOne {
-	ctuo.mutation.ClearColor()
-	return ctuo
+func (_u *CITypeUpdateOne) ClearColor() *CITypeUpdateOne {
+	_u.mutation.ClearColor()
+	return _u
 }
 
 // SetAttributeSchema sets the "attribute_schema" field.
-func (ctuo *CITypeUpdateOne) SetAttributeSchema(s string) *CITypeUpdateOne {
-	ctuo.mutation.SetAttributeSchema(s)
-	return ctuo
+func (_u *CITypeUpdateOne) SetAttributeSchema(v string) *CITypeUpdateOne {
+	_u.mutation.SetAttributeSchema(v)
+	return _u
 }
 
 // SetNillableAttributeSchema sets the "attribute_schema" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableAttributeSchema(s *string) *CITypeUpdateOne {
-	if s != nil {
-		ctuo.SetAttributeSchema(*s)
+func (_u *CITypeUpdateOne) SetNillableAttributeSchema(v *string) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetAttributeSchema(*v)
 	}
-	return ctuo
+	return _u
 }
 
 // ClearAttributeSchema clears the value of the "attribute_schema" field.
-func (ctuo *CITypeUpdateOne) ClearAttributeSchema() *CITypeUpdateOne {
-	ctuo.mutation.ClearAttributeSchema()
-	return ctuo
+func (_u *CITypeUpdateOne) ClearAttributeSchema() *CITypeUpdateOne {
+	_u.mutation.ClearAttributeSchema()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ctuo *CITypeUpdateOne) SetTenantID(i int) *CITypeUpdateOne {
-	ctuo.mutation.ResetTenantID()
-	ctuo.mutation.SetTenantID(i)
-	return ctuo
+func (_u *CITypeUpdateOne) SetTenantID(v int) *CITypeUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableTenantID(i *int) *CITypeUpdateOne {
-	if i != nil {
-		ctuo.SetTenantID(*i)
+func (_u *CITypeUpdateOne) SetNillableTenantID(v *int) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ctuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ctuo *CITypeUpdateOne) AddTenantID(i int) *CITypeUpdateOne {
-	ctuo.mutation.AddTenantID(i)
-	return ctuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CITypeUpdateOne) AddTenantID(v int) *CITypeUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (ctuo *CITypeUpdateOne) SetIsActive(b bool) *CITypeUpdateOne {
-	ctuo.mutation.SetIsActive(b)
-	return ctuo
+func (_u *CITypeUpdateOne) SetIsActive(v bool) *CITypeUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableIsActive(b *bool) *CITypeUpdateOne {
-	if b != nil {
-		ctuo.SetIsActive(*b)
+func (_u *CITypeUpdateOne) SetNillableIsActive(v *bool) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return ctuo
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ctuo *CITypeUpdateOne) SetCreatedAt(t time.Time) *CITypeUpdateOne {
-	ctuo.mutation.SetCreatedAt(t)
-	return ctuo
+func (_u *CITypeUpdateOne) SetCreatedAt(v time.Time) *CITypeUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ctuo *CITypeUpdateOne) SetNillableCreatedAt(t *time.Time) *CITypeUpdateOne {
-	if t != nil {
-		ctuo.SetCreatedAt(*t)
+func (_u *CITypeUpdateOne) SetNillableCreatedAt(v *time.Time) *CITypeUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ctuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ctuo *CITypeUpdateOne) SetUpdatedAt(t time.Time) *CITypeUpdateOne {
-	ctuo.mutation.SetUpdatedAt(t)
-	return ctuo
+func (_u *CITypeUpdateOne) SetUpdatedAt(v time.Time) *CITypeUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
-func (ctuo *CITypeUpdateOne) AddCiIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.AddCiIDs(ids...)
-	return ctuo
+func (_u *CITypeUpdateOne) AddCiIDs(ids ...int) *CITypeUpdateOne {
+	_u.mutation.AddCiIDs(ids...)
+	return _u
 }
 
 // AddCis adds the "cis" edges to the ConfigurationItem entity.
-func (ctuo *CITypeUpdateOne) AddCis(c ...*ConfigurationItem) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CITypeUpdateOne) AddCis(v ...*ConfigurationItem) *CITypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ctuo.AddCiIDs(ids...)
+	return _u.AddCiIDs(ids...)
 }
 
 // Mutation returns the CITypeMutation object of the builder.
-func (ctuo *CITypeUpdateOne) Mutation() *CITypeMutation {
-	return ctuo.mutation
+func (_u *CITypeUpdateOne) Mutation() *CITypeMutation {
+	return _u.mutation
 }
 
 // ClearCis clears all "cis" edges to the ConfigurationItem entity.
-func (ctuo *CITypeUpdateOne) ClearCis() *CITypeUpdateOne {
-	ctuo.mutation.ClearCis()
-	return ctuo
+func (_u *CITypeUpdateOne) ClearCis() *CITypeUpdateOne {
+	_u.mutation.ClearCis()
+	return _u
 }
 
 // RemoveCiIDs removes the "cis" edge to ConfigurationItem entities by IDs.
-func (ctuo *CITypeUpdateOne) RemoveCiIDs(ids ...int) *CITypeUpdateOne {
-	ctuo.mutation.RemoveCiIDs(ids...)
-	return ctuo
+func (_u *CITypeUpdateOne) RemoveCiIDs(ids ...int) *CITypeUpdateOne {
+	_u.mutation.RemoveCiIDs(ids...)
+	return _u
 }
 
 // RemoveCis removes "cis" edges to ConfigurationItem entities.
-func (ctuo *CITypeUpdateOne) RemoveCis(c ...*ConfigurationItem) *CITypeUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CITypeUpdateOne) RemoveCis(v ...*ConfigurationItem) *CITypeUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ctuo.RemoveCiIDs(ids...)
+	return _u.RemoveCiIDs(ids...)
 }
 
 // Where appends a list predicates to the CITypeUpdate builder.
-func (ctuo *CITypeUpdateOne) Where(ps ...predicate.CIType) *CITypeUpdateOne {
-	ctuo.mutation.Where(ps...)
-	return ctuo
+func (_u *CITypeUpdateOne) Where(ps ...predicate.CIType) *CITypeUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ctuo *CITypeUpdateOne) Select(field string, fields ...string) *CITypeUpdateOne {
-	ctuo.fields = append([]string{field}, fields...)
-	return ctuo
+func (_u *CITypeUpdateOne) Select(field string, fields ...string) *CITypeUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated CIType entity.
-func (ctuo *CITypeUpdateOne) Save(ctx context.Context) (*CIType, error) {
-	ctuo.defaults()
-	return withHooks(ctx, ctuo.sqlSave, ctuo.mutation, ctuo.hooks)
+func (_u *CITypeUpdateOne) Save(ctx context.Context) (*CIType, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ctuo *CITypeUpdateOne) SaveX(ctx context.Context) *CIType {
-	node, err := ctuo.Save(ctx)
+func (_u *CITypeUpdateOne) SaveX(ctx context.Context) *CIType {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -608,34 +608,34 @@ func (ctuo *CITypeUpdateOne) SaveX(ctx context.Context) *CIType {
 }
 
 // Exec executes the query on the entity.
-func (ctuo *CITypeUpdateOne) Exec(ctx context.Context) error {
-	_, err := ctuo.Save(ctx)
+func (_u *CITypeUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ctuo *CITypeUpdateOne) ExecX(ctx context.Context) {
-	if err := ctuo.Exec(ctx); err != nil {
+func (_u *CITypeUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ctuo *CITypeUpdateOne) defaults() {
-	if _, ok := ctuo.mutation.UpdatedAt(); !ok {
+func (_u *CITypeUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := citype.UpdateDefaultUpdatedAt()
-		ctuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ctuo *CITypeUpdateOne) check() error {
-	if v, ok := ctuo.mutation.Name(); ok {
+func (_u *CITypeUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := citype.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIType.name": %w`, err)}
 		}
 	}
-	if v, ok := ctuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := citype.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIType.tenant_id": %w`, err)}
 		}
@@ -643,17 +643,17 @@ func (ctuo *CITypeUpdateOne) check() error {
 	return nil
 }
 
-func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err error) {
-	if err := ctuo.check(); err != nil {
+func (_u *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(citype.Table, citype.Columns, sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt))
-	id, ok := ctuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "CIType.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ctuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, citype.FieldID)
 		for _, f := range fields {
@@ -665,56 +665,56 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 			}
 		}
 	}
-	if ps := ctuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ctuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(citype.FieldName, field.TypeString, value)
 	}
-	if value, ok := ctuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(citype.FieldDescription, field.TypeString, value)
 	}
-	if ctuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(citype.FieldDescription, field.TypeString)
 	}
-	if value, ok := ctuo.mutation.Icon(); ok {
+	if value, ok := _u.mutation.Icon(); ok {
 		_spec.SetField(citype.FieldIcon, field.TypeString, value)
 	}
-	if ctuo.mutation.IconCleared() {
+	if _u.mutation.IconCleared() {
 		_spec.ClearField(citype.FieldIcon, field.TypeString)
 	}
-	if value, ok := ctuo.mutation.Color(); ok {
+	if value, ok := _u.mutation.Color(); ok {
 		_spec.SetField(citype.FieldColor, field.TypeString, value)
 	}
-	if ctuo.mutation.ColorCleared() {
+	if _u.mutation.ColorCleared() {
 		_spec.ClearField(citype.FieldColor, field.TypeString)
 	}
-	if value, ok := ctuo.mutation.AttributeSchema(); ok {
+	if value, ok := _u.mutation.AttributeSchema(); ok {
 		_spec.SetField(citype.FieldAttributeSchema, field.TypeString, value)
 	}
-	if ctuo.mutation.AttributeSchemaCleared() {
+	if _u.mutation.AttributeSchemaCleared() {
 		_spec.ClearField(citype.FieldAttributeSchema, field.TypeString)
 	}
-	if value, ok := ctuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(citype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ctuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(citype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ctuo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(citype.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := ctuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(citype.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ctuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ctuo.mutation.CisCleared() {
+	if _u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -727,7 +727,7 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ctuo.mutation.RemovedCisIDs(); len(nodes) > 0 && !ctuo.mutation.CisCleared() {
+	if nodes := _u.mutation.RemovedCisIDs(); len(nodes) > 0 && !_u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -743,7 +743,7 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ctuo.mutation.CisIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CisIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -759,10 +759,10 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &CIType{config: ctuo.config}
+	_node = &CIType{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ctuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{citype.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -770,6 +770,6 @@ func (ctuo *CITypeUpdateOne) sqlSave(ctx context.Context) (_node *CIType, err er
 		}
 		return nil, err
 	}
-	ctuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -91,7 +91,7 @@ func (*IncidentMetric) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the IncidentMetric fields.
-func (im *IncidentMetric) assignValues(columns []string, values []any) error {
+func (_m *IncidentMetric) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -102,48 +102,48 @@ func (im *IncidentMetric) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			im.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case incidentmetric.FieldIncidentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field incident_id", values[i])
 			} else if value.Valid {
-				im.IncidentID = int(value.Int64)
+				_m.IncidentID = int(value.Int64)
 			}
 		case incidentmetric.FieldMetricType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field metric_type", values[i])
 			} else if value.Valid {
-				im.MetricType = value.String
+				_m.MetricType = value.String
 			}
 		case incidentmetric.FieldMetricName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field metric_name", values[i])
 			} else if value.Valid {
-				im.MetricName = value.String
+				_m.MetricName = value.String
 			}
 		case incidentmetric.FieldMetricValue:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field metric_value", values[i])
 			} else if value.Valid {
-				im.MetricValue = value.Float64
+				_m.MetricValue = value.Float64
 			}
 		case incidentmetric.FieldUnit:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field unit", values[i])
 			} else if value.Valid {
-				im.Unit = value.String
+				_m.Unit = value.String
 			}
 		case incidentmetric.FieldMeasuredAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field measured_at", values[i])
 			} else if value.Valid {
-				im.MeasuredAt = value.Time
+				_m.MeasuredAt = value.Time
 			}
 		case incidentmetric.FieldTags:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &im.Tags); err != nil {
+				if err := json.Unmarshal(*value, &_m.Tags); err != nil {
 					return fmt.Errorf("unmarshal field tags: %w", err)
 				}
 			}
@@ -151,7 +151,7 @@ func (im *IncidentMetric) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &im.Metadata); err != nil {
+				if err := json.Unmarshal(*value, &_m.Metadata); err != nil {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
 				}
 			}
@@ -159,22 +159,22 @@ func (im *IncidentMetric) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				im.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case incidentmetric.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				im.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case incidentmetric.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				im.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			im.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -182,70 +182,70 @@ func (im *IncidentMetric) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the IncidentMetric.
 // This includes values selected through modifiers, order, etc.
-func (im *IncidentMetric) Value(name string) (ent.Value, error) {
-	return im.selectValues.Get(name)
+func (_m *IncidentMetric) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryIncident queries the "incident" edge of the IncidentMetric entity.
-func (im *IncidentMetric) QueryIncident() *IncidentQuery {
-	return NewIncidentMetricClient(im.config).QueryIncident(im)
+func (_m *IncidentMetric) QueryIncident() *IncidentQuery {
+	return NewIncidentMetricClient(_m.config).QueryIncident(_m)
 }
 
 // Update returns a builder for updating this IncidentMetric.
 // Note that you need to call IncidentMetric.Unwrap() before calling this method if this IncidentMetric
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (im *IncidentMetric) Update() *IncidentMetricUpdateOne {
-	return NewIncidentMetricClient(im.config).UpdateOne(im)
+func (_m *IncidentMetric) Update() *IncidentMetricUpdateOne {
+	return NewIncidentMetricClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the IncidentMetric entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (im *IncidentMetric) Unwrap() *IncidentMetric {
-	_tx, ok := im.config.driver.(*txDriver)
+func (_m *IncidentMetric) Unwrap() *IncidentMetric {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: IncidentMetric is not a transactional entity")
 	}
-	im.config.driver = _tx.drv
-	return im
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (im *IncidentMetric) String() string {
+func (_m *IncidentMetric) String() string {
 	var builder strings.Builder
 	builder.WriteString("IncidentMetric(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", im.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("incident_id=")
-	builder.WriteString(fmt.Sprintf("%v", im.IncidentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.IncidentID))
 	builder.WriteString(", ")
 	builder.WriteString("metric_type=")
-	builder.WriteString(im.MetricType)
+	builder.WriteString(_m.MetricType)
 	builder.WriteString(", ")
 	builder.WriteString("metric_name=")
-	builder.WriteString(im.MetricName)
+	builder.WriteString(_m.MetricName)
 	builder.WriteString(", ")
 	builder.WriteString("metric_value=")
-	builder.WriteString(fmt.Sprintf("%v", im.MetricValue))
+	builder.WriteString(fmt.Sprintf("%v", _m.MetricValue))
 	builder.WriteString(", ")
 	builder.WriteString("unit=")
-	builder.WriteString(im.Unit)
+	builder.WriteString(_m.Unit)
 	builder.WriteString(", ")
 	builder.WriteString("measured_at=")
-	builder.WriteString(im.MeasuredAt.Format(time.ANSIC))
+	builder.WriteString(_m.MeasuredAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("tags=")
-	builder.WriteString(fmt.Sprintf("%v", im.Tags))
+	builder.WriteString(fmt.Sprintf("%v", _m.Tags))
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
-	builder.WriteString(fmt.Sprintf("%v", im.Metadata))
+	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", im.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(im.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(im.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

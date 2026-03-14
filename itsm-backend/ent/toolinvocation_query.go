@@ -30,44 +30,44 @@ type ToolInvocationQuery struct {
 }
 
 // Where adds a new predicate for the ToolInvocationQuery builder.
-func (tiq *ToolInvocationQuery) Where(ps ...predicate.ToolInvocation) *ToolInvocationQuery {
-	tiq.predicates = append(tiq.predicates, ps...)
-	return tiq
+func (_q *ToolInvocationQuery) Where(ps ...predicate.ToolInvocation) *ToolInvocationQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (tiq *ToolInvocationQuery) Limit(limit int) *ToolInvocationQuery {
-	tiq.ctx.Limit = &limit
-	return tiq
+func (_q *ToolInvocationQuery) Limit(limit int) *ToolInvocationQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (tiq *ToolInvocationQuery) Offset(offset int) *ToolInvocationQuery {
-	tiq.ctx.Offset = &offset
-	return tiq
+func (_q *ToolInvocationQuery) Offset(offset int) *ToolInvocationQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (tiq *ToolInvocationQuery) Unique(unique bool) *ToolInvocationQuery {
-	tiq.ctx.Unique = &unique
-	return tiq
+func (_q *ToolInvocationQuery) Unique(unique bool) *ToolInvocationQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (tiq *ToolInvocationQuery) Order(o ...toolinvocation.OrderOption) *ToolInvocationQuery {
-	tiq.order = append(tiq.order, o...)
-	return tiq
+func (_q *ToolInvocationQuery) Order(o ...toolinvocation.OrderOption) *ToolInvocationQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryConversation chains the current query on the "conversation" edge.
-func (tiq *ToolInvocationQuery) QueryConversation() *ConversationQuery {
-	query := (&ConversationClient{config: tiq.config}).Query()
+func (_q *ToolInvocationQuery) QueryConversation() *ConversationQuery {
+	query := (&ConversationClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tiq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tiq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (tiq *ToolInvocationQuery) QueryConversation() *ConversationQuery {
 			sqlgraph.To(conversation.Table, conversation.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, toolinvocation.ConversationTable, toolinvocation.ConversationColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tiq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (tiq *ToolInvocationQuery) QueryConversation() *ConversationQuery {
 
 // First returns the first ToolInvocation entity from the query.
 // Returns a *NotFoundError when no ToolInvocation was found.
-func (tiq *ToolInvocationQuery) First(ctx context.Context) (*ToolInvocation, error) {
-	nodes, err := tiq.Limit(1).All(setContextOp(ctx, tiq.ctx, ent.OpQueryFirst))
+func (_q *ToolInvocationQuery) First(ctx context.Context) (*ToolInvocation, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (tiq *ToolInvocationQuery) First(ctx context.Context) (*ToolInvocation, err
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) FirstX(ctx context.Context) *ToolInvocation {
-	node, err := tiq.First(ctx)
+func (_q *ToolInvocationQuery) FirstX(ctx context.Context) *ToolInvocation {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (tiq *ToolInvocationQuery) FirstX(ctx context.Context) *ToolInvocation {
 
 // FirstID returns the first ToolInvocation ID from the query.
 // Returns a *NotFoundError when no ToolInvocation ID was found.
-func (tiq *ToolInvocationQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ToolInvocationQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tiq.Limit(1).IDs(setContextOp(ctx, tiq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (tiq *ToolInvocationQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) FirstIDX(ctx context.Context) int {
-	id, err := tiq.FirstID(ctx)
+func (_q *ToolInvocationQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (tiq *ToolInvocationQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ToolInvocation entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ToolInvocation entity is found.
 // Returns a *NotFoundError when no ToolInvocation entities are found.
-func (tiq *ToolInvocationQuery) Only(ctx context.Context) (*ToolInvocation, error) {
-	nodes, err := tiq.Limit(2).All(setContextOp(ctx, tiq.ctx, ent.OpQueryOnly))
+func (_q *ToolInvocationQuery) Only(ctx context.Context) (*ToolInvocation, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (tiq *ToolInvocationQuery) Only(ctx context.Context) (*ToolInvocation, erro
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) OnlyX(ctx context.Context) *ToolInvocation {
-	node, err := tiq.Only(ctx)
+func (_q *ToolInvocationQuery) OnlyX(ctx context.Context) *ToolInvocation {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (tiq *ToolInvocationQuery) OnlyX(ctx context.Context) *ToolInvocation {
 // OnlyID is like Only, but returns the only ToolInvocation ID in the query.
 // Returns a *NotSingularError when more than one ToolInvocation ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tiq *ToolInvocationQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ToolInvocationQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tiq.Limit(2).IDs(setContextOp(ctx, tiq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (tiq *ToolInvocationQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) OnlyIDX(ctx context.Context) int {
-	id, err := tiq.OnlyID(ctx)
+func (_q *ToolInvocationQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (tiq *ToolInvocationQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ToolInvocations.
-func (tiq *ToolInvocationQuery) All(ctx context.Context) ([]*ToolInvocation, error) {
-	ctx = setContextOp(ctx, tiq.ctx, ent.OpQueryAll)
-	if err := tiq.prepareQuery(ctx); err != nil {
+func (_q *ToolInvocationQuery) All(ctx context.Context) ([]*ToolInvocation, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ToolInvocation, *ToolInvocationQuery]()
-	return withInterceptors[[]*ToolInvocation](ctx, tiq, qr, tiq.inters)
+	return withInterceptors[[]*ToolInvocation](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) AllX(ctx context.Context) []*ToolInvocation {
-	nodes, err := tiq.All(ctx)
+func (_q *ToolInvocationQuery) AllX(ctx context.Context) []*ToolInvocation {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (tiq *ToolInvocationQuery) AllX(ctx context.Context) []*ToolInvocation {
 }
 
 // IDs executes the query and returns a list of ToolInvocation IDs.
-func (tiq *ToolInvocationQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if tiq.ctx.Unique == nil && tiq.path != nil {
-		tiq.Unique(true)
+func (_q *ToolInvocationQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, tiq.ctx, ent.OpQueryIDs)
-	if err = tiq.Select(toolinvocation.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(toolinvocation.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) IDsX(ctx context.Context) []int {
-	ids, err := tiq.IDs(ctx)
+func (_q *ToolInvocationQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (tiq *ToolInvocationQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (tiq *ToolInvocationQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, tiq.ctx, ent.OpQueryCount)
-	if err := tiq.prepareQuery(ctx); err != nil {
+func (_q *ToolInvocationQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, tiq, querierCount[*ToolInvocationQuery](), tiq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ToolInvocationQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) CountX(ctx context.Context) int {
-	count, err := tiq.Count(ctx)
+func (_q *ToolInvocationQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (tiq *ToolInvocationQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (tiq *ToolInvocationQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, tiq.ctx, ent.OpQueryExist)
-	switch _, err := tiq.FirstID(ctx); {
+func (_q *ToolInvocationQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (tiq *ToolInvocationQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (tiq *ToolInvocationQuery) ExistX(ctx context.Context) bool {
-	exist, err := tiq.Exist(ctx)
+func (_q *ToolInvocationQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (tiq *ToolInvocationQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ToolInvocationQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (tiq *ToolInvocationQuery) Clone() *ToolInvocationQuery {
-	if tiq == nil {
+func (_q *ToolInvocationQuery) Clone() *ToolInvocationQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ToolInvocationQuery{
-		config:           tiq.config,
-		ctx:              tiq.ctx.Clone(),
-		order:            append([]toolinvocation.OrderOption{}, tiq.order...),
-		inters:           append([]Interceptor{}, tiq.inters...),
-		predicates:       append([]predicate.ToolInvocation{}, tiq.predicates...),
-		withConversation: tiq.withConversation.Clone(),
+		config:           _q.config,
+		ctx:              _q.ctx.Clone(),
+		order:            append([]toolinvocation.OrderOption{}, _q.order...),
+		inters:           append([]Interceptor{}, _q.inters...),
+		predicates:       append([]predicate.ToolInvocation{}, _q.predicates...),
+		withConversation: _q.withConversation.Clone(),
 		// clone intermediate query.
-		sql:  tiq.sql.Clone(),
-		path: tiq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithConversation tells the query-builder to eager-load the nodes that are connected to
 // the "conversation" edge. The optional arguments are used to configure the query builder of the edge.
-func (tiq *ToolInvocationQuery) WithConversation(opts ...func(*ConversationQuery)) *ToolInvocationQuery {
-	query := (&ConversationClient{config: tiq.config}).Query()
+func (_q *ToolInvocationQuery) WithConversation(opts ...func(*ConversationQuery)) *ToolInvocationQuery {
+	query := (&ConversationClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tiq.withConversation = query
-	return tiq
+	_q.withConversation = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (tiq *ToolInvocationQuery) WithConversation(opts ...func(*ConversationQuery
 //		GroupBy(toolinvocation.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (tiq *ToolInvocationQuery) GroupBy(field string, fields ...string) *ToolInvocationGroupBy {
-	tiq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ToolInvocationGroupBy{build: tiq}
-	grbuild.flds = &tiq.ctx.Fields
+func (_q *ToolInvocationQuery) GroupBy(field string, fields ...string) *ToolInvocationGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ToolInvocationGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = toolinvocation.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (tiq *ToolInvocationQuery) GroupBy(field string, fields ...string) *ToolInv
 //	client.ToolInvocation.Query().
 //		Select(toolinvocation.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (tiq *ToolInvocationQuery) Select(fields ...string) *ToolInvocationSelect {
-	tiq.ctx.Fields = append(tiq.ctx.Fields, fields...)
-	sbuild := &ToolInvocationSelect{ToolInvocationQuery: tiq}
+func (_q *ToolInvocationQuery) Select(fields ...string) *ToolInvocationSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ToolInvocationSelect{ToolInvocationQuery: _q}
 	sbuild.label = toolinvocation.Label
-	sbuild.flds, sbuild.scan = &tiq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ToolInvocationSelect configured with the given aggregations.
-func (tiq *ToolInvocationQuery) Aggregate(fns ...AggregateFunc) *ToolInvocationSelect {
-	return tiq.Select().Aggregate(fns...)
+func (_q *ToolInvocationQuery) Aggregate(fns ...AggregateFunc) *ToolInvocationSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (tiq *ToolInvocationQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range tiq.inters {
+func (_q *ToolInvocationQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, tiq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range tiq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !toolinvocation.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if tiq.path != nil {
-		prev, err := tiq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		tiq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (tiq *ToolInvocationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ToolInvocation, error) {
+func (_q *ToolInvocationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ToolInvocation, error) {
 	var (
 		nodes       = []*ToolInvocation{}
-		_spec       = tiq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			tiq.withConversation != nil,
+			_q.withConversation != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ToolInvocation).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ToolInvocation{config: tiq.config}
+		node := &ToolInvocation{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (tiq *ToolInvocationQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, tiq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tiq.withConversation; query != nil {
-		if err := tiq.loadConversation(ctx, query, nodes, nil,
+	if query := _q.withConversation; query != nil {
+		if err := _q.loadConversation(ctx, query, nodes, nil,
 			func(n *ToolInvocation, e *Conversation) { n.Edges.Conversation = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (tiq *ToolInvocationQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
-func (tiq *ToolInvocationQuery) loadConversation(ctx context.Context, query *ConversationQuery, nodes []*ToolInvocation, init func(*ToolInvocation), assign func(*ToolInvocation, *Conversation)) error {
+func (_q *ToolInvocationQuery) loadConversation(ctx context.Context, query *ConversationQuery, nodes []*ToolInvocation, init func(*ToolInvocation), assign func(*ToolInvocation, *Conversation)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ToolInvocation)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (tiq *ToolInvocationQuery) loadConversation(ctx context.Context, query *Con
 	return nil
 }
 
-func (tiq *ToolInvocationQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := tiq.querySpec()
-	_spec.Node.Columns = tiq.ctx.Fields
-	if len(tiq.ctx.Fields) > 0 {
-		_spec.Unique = tiq.ctx.Unique != nil && *tiq.ctx.Unique
+func (_q *ToolInvocationQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, tiq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (tiq *ToolInvocationQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ToolInvocationQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(toolinvocation.Table, toolinvocation.Columns, sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt))
-	_spec.From = tiq.sql
-	if unique := tiq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if tiq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := tiq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, toolinvocation.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (tiq *ToolInvocationQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if tiq.withConversation != nil {
+		if _q.withConversation != nil {
 			_spec.Node.AddColumnOnce(toolinvocation.FieldConversationID)
 		}
 	}
-	if ps := tiq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := tiq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := tiq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := tiq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (tiq *ToolInvocationQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (tiq *ToolInvocationQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(tiq.driver.Dialect())
+func (_q *ToolInvocationQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(toolinvocation.Table)
-	columns := tiq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = toolinvocation.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if tiq.sql != nil {
-		selector = tiq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if tiq.ctx.Unique != nil && *tiq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range tiq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range tiq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := tiq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := tiq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type ToolInvocationGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (tigb *ToolInvocationGroupBy) Aggregate(fns ...AggregateFunc) *ToolInvocationGroupBy {
-	tigb.fns = append(tigb.fns, fns...)
-	return tigb
+func (_g *ToolInvocationGroupBy) Aggregate(fns ...AggregateFunc) *ToolInvocationGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tigb *ToolInvocationGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tigb.build.ctx, ent.OpQueryGroupBy)
-	if err := tigb.build.prepareQuery(ctx); err != nil {
+func (_g *ToolInvocationGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ToolInvocationQuery, *ToolInvocationGroupBy](ctx, tigb.build, tigb, tigb.build.inters, v)
+	return scanWithInterceptors[*ToolInvocationQuery, *ToolInvocationGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (tigb *ToolInvocationGroupBy) sqlScan(ctx context.Context, root *ToolInvocationQuery, v any) error {
+func (_g *ToolInvocationGroupBy) sqlScan(ctx context.Context, root *ToolInvocationQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(tigb.fns))
-	for _, fn := range tigb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*tigb.flds)+len(tigb.fns))
-		for _, f := range *tigb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*tigb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tigb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type ToolInvocationSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (tis *ToolInvocationSelect) Aggregate(fns ...AggregateFunc) *ToolInvocationSelect {
-	tis.fns = append(tis.fns, fns...)
-	return tis
+func (_s *ToolInvocationSelect) Aggregate(fns ...AggregateFunc) *ToolInvocationSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tis *ToolInvocationSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tis.ctx, ent.OpQuerySelect)
-	if err := tis.prepareQuery(ctx); err != nil {
+func (_s *ToolInvocationSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ToolInvocationQuery, *ToolInvocationSelect](ctx, tis.ToolInvocationQuery, tis, tis.inters, v)
+	return scanWithInterceptors[*ToolInvocationQuery, *ToolInvocationSelect](ctx, _s.ToolInvocationQuery, _s, _s.inters, v)
 }
 
-func (tis *ToolInvocationSelect) sqlScan(ctx context.Context, root *ToolInvocationQuery, v any) error {
+func (_s *ToolInvocationSelect) sqlScan(ctx context.Context, root *ToolInvocationQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(tis.fns))
-	for _, fn := range tis.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*tis.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (tis *ToolInvocationSelect) sqlScan(ctx context.Context, root *ToolInvocati
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tis.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

@@ -20,56 +20,56 @@ type DiscoverySourceDelete struct {
 }
 
 // Where appends a list predicates to the DiscoverySourceDelete builder.
-func (dsd *DiscoverySourceDelete) Where(ps ...predicate.DiscoverySource) *DiscoverySourceDelete {
-	dsd.mutation.Where(ps...)
-	return dsd
+func (_d *DiscoverySourceDelete) Where(ps ...predicate.DiscoverySource) *DiscoverySourceDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (dsd *DiscoverySourceDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, dsd.sqlExec, dsd.mutation, dsd.hooks)
+func (_d *DiscoverySourceDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dsd *DiscoverySourceDelete) ExecX(ctx context.Context) int {
-	n, err := dsd.Exec(ctx)
+func (_d *DiscoverySourceDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (dsd *DiscoverySourceDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *DiscoverySourceDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(discoverysource.Table, sqlgraph.NewFieldSpec(discoverysource.FieldID, field.TypeString))
-	if ps := dsd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, dsd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	dsd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // DiscoverySourceDeleteOne is the builder for deleting a single DiscoverySource entity.
 type DiscoverySourceDeleteOne struct {
-	dsd *DiscoverySourceDelete
+	_d *DiscoverySourceDelete
 }
 
 // Where appends a list predicates to the DiscoverySourceDelete builder.
-func (dsdo *DiscoverySourceDeleteOne) Where(ps ...predicate.DiscoverySource) *DiscoverySourceDeleteOne {
-	dsdo.dsd.mutation.Where(ps...)
-	return dsdo
+func (_d *DiscoverySourceDeleteOne) Where(ps ...predicate.DiscoverySource) *DiscoverySourceDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (dsdo *DiscoverySourceDeleteOne) Exec(ctx context.Context) error {
-	n, err := dsdo.dsd.Exec(ctx)
+func (_d *DiscoverySourceDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (dsdo *DiscoverySourceDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dsdo *DiscoverySourceDeleteOne) ExecX(ctx context.Context) {
-	if err := dsdo.Exec(ctx); err != nil {
+func (_d *DiscoverySourceDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

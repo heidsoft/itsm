@@ -111,7 +111,7 @@ func (*Workflow) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Workflow fields.
-func (w *Workflow) assignValues(columns []string, values []any) error {
+func (_m *Workflow) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -122,30 +122,30 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			w.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case workflow.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				w.Name = value.String
+				_m.Name = value.String
 			}
 		case workflow.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				w.Description = value.String
+				_m.Description = value.String
 			}
 		case workflow.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				w.Type = value.String
+				_m.Type = value.String
 			}
 		case workflow.FieldDefinition:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field definition", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &w.Definition); err != nil {
+				if err := json.Unmarshal(*value, &_m.Definition); err != nil {
 					return fmt.Errorf("unmarshal field definition: %w", err)
 				}
 			}
@@ -153,40 +153,40 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field version", values[i])
 			} else if value.Valid {
-				w.Version = value.String
+				_m.Version = value.String
 			}
 		case workflow.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				w.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case workflow.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				w.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case workflow.FieldDepartmentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field department_id", values[i])
 			} else if value.Valid {
-				w.DepartmentID = int(value.Int64)
+				_m.DepartmentID = int(value.Int64)
 			}
 		case workflow.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				w.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case workflow.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				w.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			w.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -194,77 +194,77 @@ func (w *Workflow) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Workflow.
 // This includes values selected through modifiers, order, etc.
-func (w *Workflow) Value(name string) (ent.Value, error) {
-	return w.selectValues.Get(name)
+func (_m *Workflow) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryWorkflowInstances queries the "workflow_instances" edge of the Workflow entity.
-func (w *Workflow) QueryWorkflowInstances() *WorkflowInstanceQuery {
-	return NewWorkflowClient(w.config).QueryWorkflowInstances(w)
+func (_m *Workflow) QueryWorkflowInstances() *WorkflowInstanceQuery {
+	return NewWorkflowClient(_m.config).QueryWorkflowInstances(_m)
 }
 
 // QueryWorkflowVersions queries the "workflow_versions" edge of the Workflow entity.
-func (w *Workflow) QueryWorkflowVersions() *WorkflowVersionQuery {
-	return NewWorkflowClient(w.config).QueryWorkflowVersions(w)
+func (_m *Workflow) QueryWorkflowVersions() *WorkflowVersionQuery {
+	return NewWorkflowClient(_m.config).QueryWorkflowVersions(_m)
 }
 
 // QueryDepartment queries the "department" edge of the Workflow entity.
-func (w *Workflow) QueryDepartment() *DepartmentQuery {
-	return NewWorkflowClient(w.config).QueryDepartment(w)
+func (_m *Workflow) QueryDepartment() *DepartmentQuery {
+	return NewWorkflowClient(_m.config).QueryDepartment(_m)
 }
 
 // Update returns a builder for updating this Workflow.
 // Note that you need to call Workflow.Unwrap() before calling this method if this Workflow
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (w *Workflow) Update() *WorkflowUpdateOne {
-	return NewWorkflowClient(w.config).UpdateOne(w)
+func (_m *Workflow) Update() *WorkflowUpdateOne {
+	return NewWorkflowClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Workflow entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (w *Workflow) Unwrap() *Workflow {
-	_tx, ok := w.config.driver.(*txDriver)
+func (_m *Workflow) Unwrap() *Workflow {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Workflow is not a transactional entity")
 	}
-	w.config.driver = _tx.drv
-	return w
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (w *Workflow) String() string {
+func (_m *Workflow) String() string {
 	var builder strings.Builder
 	builder.WriteString("Workflow(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", w.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(w.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(w.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(w.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("definition=")
-	builder.WriteString(fmt.Sprintf("%v", w.Definition))
+	builder.WriteString(fmt.Sprintf("%v", _m.Definition))
 	builder.WriteString(", ")
 	builder.WriteString("version=")
-	builder.WriteString(w.Version)
+	builder.WriteString(_m.Version)
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", w.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", w.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("department_id=")
-	builder.WriteString(fmt.Sprintf("%v", w.DepartmentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(w.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(w.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

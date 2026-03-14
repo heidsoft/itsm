@@ -30,44 +30,44 @@ type SLAMetricQuery struct {
 }
 
 // Where adds a new predicate for the SLAMetricQuery builder.
-func (smq *SLAMetricQuery) Where(ps ...predicate.SLAMetric) *SLAMetricQuery {
-	smq.predicates = append(smq.predicates, ps...)
-	return smq
+func (_q *SLAMetricQuery) Where(ps ...predicate.SLAMetric) *SLAMetricQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (smq *SLAMetricQuery) Limit(limit int) *SLAMetricQuery {
-	smq.ctx.Limit = &limit
-	return smq
+func (_q *SLAMetricQuery) Limit(limit int) *SLAMetricQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (smq *SLAMetricQuery) Offset(offset int) *SLAMetricQuery {
-	smq.ctx.Offset = &offset
-	return smq
+func (_q *SLAMetricQuery) Offset(offset int) *SLAMetricQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (smq *SLAMetricQuery) Unique(unique bool) *SLAMetricQuery {
-	smq.ctx.Unique = &unique
-	return smq
+func (_q *SLAMetricQuery) Unique(unique bool) *SLAMetricQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (smq *SLAMetricQuery) Order(o ...slametric.OrderOption) *SLAMetricQuery {
-	smq.order = append(smq.order, o...)
-	return smq
+func (_q *SLAMetricQuery) Order(o ...slametric.OrderOption) *SLAMetricQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QuerySLADefinition chains the current query on the "sla_definition" edge.
-func (smq *SLAMetricQuery) QuerySLADefinition() *SLADefinitionQuery {
-	query := (&SLADefinitionClient{config: smq.config}).Query()
+func (_q *SLAMetricQuery) QuerySLADefinition() *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := smq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := smq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (smq *SLAMetricQuery) QuerySLADefinition() *SLADefinitionQuery {
 			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, slametric.SLADefinitionTable, slametric.SLADefinitionColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(smq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (smq *SLAMetricQuery) QuerySLADefinition() *SLADefinitionQuery {
 
 // First returns the first SLAMetric entity from the query.
 // Returns a *NotFoundError when no SLAMetric was found.
-func (smq *SLAMetricQuery) First(ctx context.Context) (*SLAMetric, error) {
-	nodes, err := smq.Limit(1).All(setContextOp(ctx, smq.ctx, ent.OpQueryFirst))
+func (_q *SLAMetricQuery) First(ctx context.Context) (*SLAMetric, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (smq *SLAMetricQuery) First(ctx context.Context) (*SLAMetric, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (smq *SLAMetricQuery) FirstX(ctx context.Context) *SLAMetric {
-	node, err := smq.First(ctx)
+func (_q *SLAMetricQuery) FirstX(ctx context.Context) *SLAMetric {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (smq *SLAMetricQuery) FirstX(ctx context.Context) *SLAMetric {
 
 // FirstID returns the first SLAMetric ID from the query.
 // Returns a *NotFoundError when no SLAMetric ID was found.
-func (smq *SLAMetricQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *SLAMetricQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = smq.Limit(1).IDs(setContextOp(ctx, smq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (smq *SLAMetricQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (smq *SLAMetricQuery) FirstIDX(ctx context.Context) int {
-	id, err := smq.FirstID(ctx)
+func (_q *SLAMetricQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (smq *SLAMetricQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single SLAMetric entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one SLAMetric entity is found.
 // Returns a *NotFoundError when no SLAMetric entities are found.
-func (smq *SLAMetricQuery) Only(ctx context.Context) (*SLAMetric, error) {
-	nodes, err := smq.Limit(2).All(setContextOp(ctx, smq.ctx, ent.OpQueryOnly))
+func (_q *SLAMetricQuery) Only(ctx context.Context) (*SLAMetric, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (smq *SLAMetricQuery) Only(ctx context.Context) (*SLAMetric, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (smq *SLAMetricQuery) OnlyX(ctx context.Context) *SLAMetric {
-	node, err := smq.Only(ctx)
+func (_q *SLAMetricQuery) OnlyX(ctx context.Context) *SLAMetric {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (smq *SLAMetricQuery) OnlyX(ctx context.Context) *SLAMetric {
 // OnlyID is like Only, but returns the only SLAMetric ID in the query.
 // Returns a *NotSingularError when more than one SLAMetric ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (smq *SLAMetricQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *SLAMetricQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = smq.Limit(2).IDs(setContextOp(ctx, smq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (smq *SLAMetricQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (smq *SLAMetricQuery) OnlyIDX(ctx context.Context) int {
-	id, err := smq.OnlyID(ctx)
+func (_q *SLAMetricQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (smq *SLAMetricQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of SLAMetrics.
-func (smq *SLAMetricQuery) All(ctx context.Context) ([]*SLAMetric, error) {
-	ctx = setContextOp(ctx, smq.ctx, ent.OpQueryAll)
-	if err := smq.prepareQuery(ctx); err != nil {
+func (_q *SLAMetricQuery) All(ctx context.Context) ([]*SLAMetric, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*SLAMetric, *SLAMetricQuery]()
-	return withInterceptors[[]*SLAMetric](ctx, smq, qr, smq.inters)
+	return withInterceptors[[]*SLAMetric](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (smq *SLAMetricQuery) AllX(ctx context.Context) []*SLAMetric {
-	nodes, err := smq.All(ctx)
+func (_q *SLAMetricQuery) AllX(ctx context.Context) []*SLAMetric {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (smq *SLAMetricQuery) AllX(ctx context.Context) []*SLAMetric {
 }
 
 // IDs executes the query and returns a list of SLAMetric IDs.
-func (smq *SLAMetricQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if smq.ctx.Unique == nil && smq.path != nil {
-		smq.Unique(true)
+func (_q *SLAMetricQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, smq.ctx, ent.OpQueryIDs)
-	if err = smq.Select(slametric.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(slametric.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (smq *SLAMetricQuery) IDsX(ctx context.Context) []int {
-	ids, err := smq.IDs(ctx)
+func (_q *SLAMetricQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (smq *SLAMetricQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (smq *SLAMetricQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, smq.ctx, ent.OpQueryCount)
-	if err := smq.prepareQuery(ctx); err != nil {
+func (_q *SLAMetricQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, smq, querierCount[*SLAMetricQuery](), smq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SLAMetricQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (smq *SLAMetricQuery) CountX(ctx context.Context) int {
-	count, err := smq.Count(ctx)
+func (_q *SLAMetricQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (smq *SLAMetricQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (smq *SLAMetricQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, smq.ctx, ent.OpQueryExist)
-	switch _, err := smq.FirstID(ctx); {
+func (_q *SLAMetricQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (smq *SLAMetricQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (smq *SLAMetricQuery) ExistX(ctx context.Context) bool {
-	exist, err := smq.Exist(ctx)
+func (_q *SLAMetricQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (smq *SLAMetricQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the SLAMetricQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (smq *SLAMetricQuery) Clone() *SLAMetricQuery {
-	if smq == nil {
+func (_q *SLAMetricQuery) Clone() *SLAMetricQuery {
+	if _q == nil {
 		return nil
 	}
 	return &SLAMetricQuery{
-		config:            smq.config,
-		ctx:               smq.ctx.Clone(),
-		order:             append([]slametric.OrderOption{}, smq.order...),
-		inters:            append([]Interceptor{}, smq.inters...),
-		predicates:        append([]predicate.SLAMetric{}, smq.predicates...),
-		withSLADefinition: smq.withSLADefinition.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]slametric.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.SLAMetric{}, _q.predicates...),
+		withSLADefinition: _q.withSLADefinition.Clone(),
 		// clone intermediate query.
-		sql:  smq.sql.Clone(),
-		path: smq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithSLADefinition tells the query-builder to eager-load the nodes that are connected to
 // the "sla_definition" edge. The optional arguments are used to configure the query builder of the edge.
-func (smq *SLAMetricQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAMetricQuery {
-	query := (&SLADefinitionClient{config: smq.config}).Query()
+func (_q *SLAMetricQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAMetricQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	smq.withSLADefinition = query
-	return smq
+	_q.withSLADefinition = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (smq *SLAMetricQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) 
 //		GroupBy(slametric.FieldSLADefinitionID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (smq *SLAMetricQuery) GroupBy(field string, fields ...string) *SLAMetricGroupBy {
-	smq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &SLAMetricGroupBy{build: smq}
-	grbuild.flds = &smq.ctx.Fields
+func (_q *SLAMetricQuery) GroupBy(field string, fields ...string) *SLAMetricGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &SLAMetricGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = slametric.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (smq *SLAMetricQuery) GroupBy(field string, fields ...string) *SLAMetricGro
 //	client.SLAMetric.Query().
 //		Select(slametric.FieldSLADefinitionID).
 //		Scan(ctx, &v)
-func (smq *SLAMetricQuery) Select(fields ...string) *SLAMetricSelect {
-	smq.ctx.Fields = append(smq.ctx.Fields, fields...)
-	sbuild := &SLAMetricSelect{SLAMetricQuery: smq}
+func (_q *SLAMetricQuery) Select(fields ...string) *SLAMetricSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &SLAMetricSelect{SLAMetricQuery: _q}
 	sbuild.label = slametric.Label
-	sbuild.flds, sbuild.scan = &smq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a SLAMetricSelect configured with the given aggregations.
-func (smq *SLAMetricQuery) Aggregate(fns ...AggregateFunc) *SLAMetricSelect {
-	return smq.Select().Aggregate(fns...)
+func (_q *SLAMetricQuery) Aggregate(fns ...AggregateFunc) *SLAMetricSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (smq *SLAMetricQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range smq.inters {
+func (_q *SLAMetricQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, smq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range smq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !slametric.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if smq.path != nil {
-		prev, err := smq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		smq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (smq *SLAMetricQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAMetric, error) {
+func (_q *SLAMetricQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAMetric, error) {
 	var (
 		nodes       = []*SLAMetric{}
-		_spec       = smq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			smq.withSLADefinition != nil,
+			_q.withSLADefinition != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAMetric).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &SLAMetric{config: smq.config}
+		node := &SLAMetric{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (smq *SLAMetricQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*S
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, smq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := smq.withSLADefinition; query != nil {
-		if err := smq.loadSLADefinition(ctx, query, nodes, nil,
+	if query := _q.withSLADefinition; query != nil {
+		if err := _q.loadSLADefinition(ctx, query, nodes, nil,
 			func(n *SLAMetric, e *SLADefinition) { n.Edges.SLADefinition = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (smq *SLAMetricQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*S
 	return nodes, nil
 }
 
-func (smq *SLAMetricQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAMetric, init func(*SLAMetric), assign func(*SLAMetric, *SLADefinition)) error {
+func (_q *SLAMetricQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAMetric, init func(*SLAMetric), assign func(*SLAMetric, *SLADefinition)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*SLAMetric)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (smq *SLAMetricQuery) loadSLADefinition(ctx context.Context, query *SLADefi
 	return nil
 }
 
-func (smq *SLAMetricQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := smq.querySpec()
-	_spec.Node.Columns = smq.ctx.Fields
-	if len(smq.ctx.Fields) > 0 {
-		_spec.Unique = smq.ctx.Unique != nil && *smq.ctx.Unique
+func (_q *SLAMetricQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, smq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (smq *SLAMetricQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *SLAMetricQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(slametric.Table, slametric.Columns, sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt))
-	_spec.From = smq.sql
-	if unique := smq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if smq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := smq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slametric.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (smq *SLAMetricQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if smq.withSLADefinition != nil {
+		if _q.withSLADefinition != nil {
 			_spec.Node.AddColumnOnce(slametric.FieldSLADefinitionID)
 		}
 	}
-	if ps := smq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := smq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := smq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := smq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (smq *SLAMetricQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (smq *SLAMetricQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(smq.driver.Dialect())
+func (_q *SLAMetricQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(slametric.Table)
-	columns := smq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = slametric.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if smq.sql != nil {
-		selector = smq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if smq.ctx.Unique != nil && *smq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range smq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range smq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := smq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := smq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type SLAMetricGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (smgb *SLAMetricGroupBy) Aggregate(fns ...AggregateFunc) *SLAMetricGroupBy {
-	smgb.fns = append(smgb.fns, fns...)
-	return smgb
+func (_g *SLAMetricGroupBy) Aggregate(fns ...AggregateFunc) *SLAMetricGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (smgb *SLAMetricGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, smgb.build.ctx, ent.OpQueryGroupBy)
-	if err := smgb.build.prepareQuery(ctx); err != nil {
+func (_g *SLAMetricGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAMetricQuery, *SLAMetricGroupBy](ctx, smgb.build, smgb, smgb.build.inters, v)
+	return scanWithInterceptors[*SLAMetricQuery, *SLAMetricGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (smgb *SLAMetricGroupBy) sqlScan(ctx context.Context, root *SLAMetricQuery, v any) error {
+func (_g *SLAMetricGroupBy) sqlScan(ctx context.Context, root *SLAMetricQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(smgb.fns))
-	for _, fn := range smgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*smgb.flds)+len(smgb.fns))
-		for _, f := range *smgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*smgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := smgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type SLAMetricSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (sms *SLAMetricSelect) Aggregate(fns ...AggregateFunc) *SLAMetricSelect {
-	sms.fns = append(sms.fns, fns...)
-	return sms
+func (_s *SLAMetricSelect) Aggregate(fns ...AggregateFunc) *SLAMetricSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sms *SLAMetricSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sms.ctx, ent.OpQuerySelect)
-	if err := sms.prepareQuery(ctx); err != nil {
+func (_s *SLAMetricSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAMetricQuery, *SLAMetricSelect](ctx, sms.SLAMetricQuery, sms, sms.inters, v)
+	return scanWithInterceptors[*SLAMetricQuery, *SLAMetricSelect](ctx, _s.SLAMetricQuery, _s, _s.inters, v)
 }
 
-func (sms *SLAMetricSelect) sqlScan(ctx context.Context, root *SLAMetricQuery, v any) error {
+func (_s *SLAMetricSelect) sqlScan(ctx context.Context, root *SLAMetricQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(sms.fns))
-	for _, fn := range sms.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*sms.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (sms *SLAMetricSelect) sqlScan(ctx context.Context, root *SLAMetricQuery, v
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sms.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

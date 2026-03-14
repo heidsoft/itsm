@@ -25,293 +25,293 @@ type ProcessInstanceCreate struct {
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pic *ProcessInstanceCreate) SetProcessInstanceID(s string) *ProcessInstanceCreate {
-	pic.mutation.SetProcessInstanceID(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetProcessInstanceID(v string) *ProcessInstanceCreate {
+	_c.mutation.SetProcessInstanceID(v)
+	return _c
 }
 
 // SetBusinessKey sets the "business_key" field.
-func (pic *ProcessInstanceCreate) SetBusinessKey(s string) *ProcessInstanceCreate {
-	pic.mutation.SetBusinessKey(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetBusinessKey(v string) *ProcessInstanceCreate {
+	_c.mutation.SetBusinessKey(v)
+	return _c
 }
 
 // SetNillableBusinessKey sets the "business_key" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableBusinessKey(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetBusinessKey(*s)
+func (_c *ProcessInstanceCreate) SetNillableBusinessKey(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetBusinessKey(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (pic *ProcessInstanceCreate) SetProcessDefinitionKey(s string) *ProcessInstanceCreate {
-	pic.mutation.SetProcessDefinitionKey(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetProcessDefinitionKey(v string) *ProcessInstanceCreate {
+	_c.mutation.SetProcessDefinitionKey(v)
+	return _c
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (pic *ProcessInstanceCreate) SetProcessDefinitionID(i int) *ProcessInstanceCreate {
-	pic.mutation.SetProcessDefinitionID(i)
-	return pic
+func (_c *ProcessInstanceCreate) SetProcessDefinitionID(v int) *ProcessInstanceCreate {
+	_c.mutation.SetProcessDefinitionID(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (pic *ProcessInstanceCreate) SetStatus(s string) *ProcessInstanceCreate {
-	pic.mutation.SetStatus(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetStatus(v string) *ProcessInstanceCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableStatus(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetStatus(*s)
+func (_c *ProcessInstanceCreate) SetNillableStatus(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetCurrentActivityID sets the "current_activity_id" field.
-func (pic *ProcessInstanceCreate) SetCurrentActivityID(s string) *ProcessInstanceCreate {
-	pic.mutation.SetCurrentActivityID(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetCurrentActivityID(v string) *ProcessInstanceCreate {
+	_c.mutation.SetCurrentActivityID(v)
+	return _c
 }
 
 // SetNillableCurrentActivityID sets the "current_activity_id" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableCurrentActivityID(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetCurrentActivityID(*s)
+func (_c *ProcessInstanceCreate) SetNillableCurrentActivityID(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetCurrentActivityID(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetCurrentActivityName sets the "current_activity_name" field.
-func (pic *ProcessInstanceCreate) SetCurrentActivityName(s string) *ProcessInstanceCreate {
-	pic.mutation.SetCurrentActivityName(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetCurrentActivityName(v string) *ProcessInstanceCreate {
+	_c.mutation.SetCurrentActivityName(v)
+	return _c
 }
 
 // SetNillableCurrentActivityName sets the "current_activity_name" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableCurrentActivityName(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetCurrentActivityName(*s)
+func (_c *ProcessInstanceCreate) SetNillableCurrentActivityName(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetCurrentActivityName(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetVariables sets the "variables" field.
-func (pic *ProcessInstanceCreate) SetVariables(m map[string]interface{}) *ProcessInstanceCreate {
-	pic.mutation.SetVariables(m)
-	return pic
+func (_c *ProcessInstanceCreate) SetVariables(v map[string]interface{}) *ProcessInstanceCreate {
+	_c.mutation.SetVariables(v)
+	return _c
 }
 
 // SetStartTime sets the "start_time" field.
-func (pic *ProcessInstanceCreate) SetStartTime(t time.Time) *ProcessInstanceCreate {
-	pic.mutation.SetStartTime(t)
-	return pic
+func (_c *ProcessInstanceCreate) SetStartTime(v time.Time) *ProcessInstanceCreate {
+	_c.mutation.SetStartTime(v)
+	return _c
 }
 
 // SetNillableStartTime sets the "start_time" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableStartTime(t *time.Time) *ProcessInstanceCreate {
-	if t != nil {
-		pic.SetStartTime(*t)
+func (_c *ProcessInstanceCreate) SetNillableStartTime(v *time.Time) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetStartTime(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetEndTime sets the "end_time" field.
-func (pic *ProcessInstanceCreate) SetEndTime(t time.Time) *ProcessInstanceCreate {
-	pic.mutation.SetEndTime(t)
-	return pic
+func (_c *ProcessInstanceCreate) SetEndTime(v time.Time) *ProcessInstanceCreate {
+	_c.mutation.SetEndTime(v)
+	return _c
 }
 
 // SetNillableEndTime sets the "end_time" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableEndTime(t *time.Time) *ProcessInstanceCreate {
-	if t != nil {
-		pic.SetEndTime(*t)
+func (_c *ProcessInstanceCreate) SetNillableEndTime(v *time.Time) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetEndTime(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetSuspendedTime sets the "suspended_time" field.
-func (pic *ProcessInstanceCreate) SetSuspendedTime(t time.Time) *ProcessInstanceCreate {
-	pic.mutation.SetSuspendedTime(t)
-	return pic
+func (_c *ProcessInstanceCreate) SetSuspendedTime(v time.Time) *ProcessInstanceCreate {
+	_c.mutation.SetSuspendedTime(v)
+	return _c
 }
 
 // SetNillableSuspendedTime sets the "suspended_time" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableSuspendedTime(t *time.Time) *ProcessInstanceCreate {
-	if t != nil {
-		pic.SetSuspendedTime(*t)
+func (_c *ProcessInstanceCreate) SetNillableSuspendedTime(v *time.Time) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetSuspendedTime(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetSuspendedReason sets the "suspended_reason" field.
-func (pic *ProcessInstanceCreate) SetSuspendedReason(s string) *ProcessInstanceCreate {
-	pic.mutation.SetSuspendedReason(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetSuspendedReason(v string) *ProcessInstanceCreate {
+	_c.mutation.SetSuspendedReason(v)
+	return _c
 }
 
 // SetNillableSuspendedReason sets the "suspended_reason" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableSuspendedReason(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetSuspendedReason(*s)
+func (_c *ProcessInstanceCreate) SetNillableSuspendedReason(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetSuspendedReason(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pic *ProcessInstanceCreate) SetTenantID(i int) *ProcessInstanceCreate {
-	pic.mutation.SetTenantID(i)
-	return pic
+func (_c *ProcessInstanceCreate) SetTenantID(v int) *ProcessInstanceCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetInitiator sets the "initiator" field.
-func (pic *ProcessInstanceCreate) SetInitiator(s string) *ProcessInstanceCreate {
-	pic.mutation.SetInitiator(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetInitiator(v string) *ProcessInstanceCreate {
+	_c.mutation.SetInitiator(v)
+	return _c
 }
 
 // SetNillableInitiator sets the "initiator" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableInitiator(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetInitiator(*s)
+func (_c *ProcessInstanceCreate) SetNillableInitiator(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetInitiator(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetParentProcessInstanceID sets the "parent_process_instance_id" field.
-func (pic *ProcessInstanceCreate) SetParentProcessInstanceID(s string) *ProcessInstanceCreate {
-	pic.mutation.SetParentProcessInstanceID(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetParentProcessInstanceID(v string) *ProcessInstanceCreate {
+	_c.mutation.SetParentProcessInstanceID(v)
+	return _c
 }
 
 // SetNillableParentProcessInstanceID sets the "parent_process_instance_id" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableParentProcessInstanceID(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetParentProcessInstanceID(*s)
+func (_c *ProcessInstanceCreate) SetNillableParentProcessInstanceID(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetParentProcessInstanceID(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetRootProcessInstanceID sets the "root_process_instance_id" field.
-func (pic *ProcessInstanceCreate) SetRootProcessInstanceID(s string) *ProcessInstanceCreate {
-	pic.mutation.SetRootProcessInstanceID(s)
-	return pic
+func (_c *ProcessInstanceCreate) SetRootProcessInstanceID(v string) *ProcessInstanceCreate {
+	_c.mutation.SetRootProcessInstanceID(v)
+	return _c
 }
 
 // SetNillableRootProcessInstanceID sets the "root_process_instance_id" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableRootProcessInstanceID(s *string) *ProcessInstanceCreate {
-	if s != nil {
-		pic.SetRootProcessInstanceID(*s)
+func (_c *ProcessInstanceCreate) SetNillableRootProcessInstanceID(v *string) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetRootProcessInstanceID(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetStateSnapshot sets the "state_snapshot" field.
-func (pic *ProcessInstanceCreate) SetStateSnapshot(u []uint8) *ProcessInstanceCreate {
-	pic.mutation.SetStateSnapshot(u)
-	return pic
+func (_c *ProcessInstanceCreate) SetStateSnapshot(v []uint8) *ProcessInstanceCreate {
+	_c.mutation.SetStateSnapshot(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pic *ProcessInstanceCreate) SetCreatedAt(t time.Time) *ProcessInstanceCreate {
-	pic.mutation.SetCreatedAt(t)
-	return pic
+func (_c *ProcessInstanceCreate) SetCreatedAt(v time.Time) *ProcessInstanceCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableCreatedAt(t *time.Time) *ProcessInstanceCreate {
-	if t != nil {
-		pic.SetCreatedAt(*t)
+func (_c *ProcessInstanceCreate) SetNillableCreatedAt(v *time.Time) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pic
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pic *ProcessInstanceCreate) SetUpdatedAt(t time.Time) *ProcessInstanceCreate {
-	pic.mutation.SetUpdatedAt(t)
-	return pic
+func (_c *ProcessInstanceCreate) SetUpdatedAt(v time.Time) *ProcessInstanceCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (pic *ProcessInstanceCreate) SetNillableUpdatedAt(t *time.Time) *ProcessInstanceCreate {
-	if t != nil {
-		pic.SetUpdatedAt(*t)
+func (_c *ProcessInstanceCreate) SetNillableUpdatedAt(v *time.Time) *ProcessInstanceCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return pic
+	return _c
 }
 
 // AddProcessTaskIDs adds the "process_tasks" edge to the ProcessTask entity by IDs.
-func (pic *ProcessInstanceCreate) AddProcessTaskIDs(ids ...int) *ProcessInstanceCreate {
-	pic.mutation.AddProcessTaskIDs(ids...)
-	return pic
+func (_c *ProcessInstanceCreate) AddProcessTaskIDs(ids ...int) *ProcessInstanceCreate {
+	_c.mutation.AddProcessTaskIDs(ids...)
+	return _c
 }
 
 // AddProcessTasks adds the "process_tasks" edges to the ProcessTask entity.
-func (pic *ProcessInstanceCreate) AddProcessTasks(p ...*ProcessTask) *ProcessInstanceCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *ProcessInstanceCreate) AddProcessTasks(v ...*ProcessTask) *ProcessInstanceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pic.AddProcessTaskIDs(ids...)
+	return _c.AddProcessTaskIDs(ids...)
 }
 
 // AddProcessVariableIDs adds the "process_variables" edge to the ProcessVariable entity by IDs.
-func (pic *ProcessInstanceCreate) AddProcessVariableIDs(ids ...int) *ProcessInstanceCreate {
-	pic.mutation.AddProcessVariableIDs(ids...)
-	return pic
+func (_c *ProcessInstanceCreate) AddProcessVariableIDs(ids ...int) *ProcessInstanceCreate {
+	_c.mutation.AddProcessVariableIDs(ids...)
+	return _c
 }
 
 // AddProcessVariables adds the "process_variables" edges to the ProcessVariable entity.
-func (pic *ProcessInstanceCreate) AddProcessVariables(p ...*ProcessVariable) *ProcessInstanceCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *ProcessInstanceCreate) AddProcessVariables(v ...*ProcessVariable) *ProcessInstanceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pic.AddProcessVariableIDs(ids...)
+	return _c.AddProcessVariableIDs(ids...)
 }
 
 // AddExecutionHistoryIDs adds the "execution_history" edge to the ProcessExecutionHistory entity by IDs.
-func (pic *ProcessInstanceCreate) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceCreate {
-	pic.mutation.AddExecutionHistoryIDs(ids...)
-	return pic
+func (_c *ProcessInstanceCreate) AddExecutionHistoryIDs(ids ...int) *ProcessInstanceCreate {
+	_c.mutation.AddExecutionHistoryIDs(ids...)
+	return _c
 }
 
 // AddExecutionHistory adds the "execution_history" edges to the ProcessExecutionHistory entity.
-func (pic *ProcessInstanceCreate) AddExecutionHistory(p ...*ProcessExecutionHistory) *ProcessInstanceCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *ProcessInstanceCreate) AddExecutionHistory(v ...*ProcessExecutionHistory) *ProcessInstanceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pic.AddExecutionHistoryIDs(ids...)
+	return _c.AddExecutionHistoryIDs(ids...)
 }
 
 // SetDefinitionID sets the "definition" edge to the ProcessDefinition entity by ID.
-func (pic *ProcessInstanceCreate) SetDefinitionID(id int) *ProcessInstanceCreate {
-	pic.mutation.SetDefinitionID(id)
-	return pic
+func (_c *ProcessInstanceCreate) SetDefinitionID(id int) *ProcessInstanceCreate {
+	_c.mutation.SetDefinitionID(id)
+	return _c
 }
 
 // SetDefinition sets the "definition" edge to the ProcessDefinition entity.
-func (pic *ProcessInstanceCreate) SetDefinition(p *ProcessDefinition) *ProcessInstanceCreate {
-	return pic.SetDefinitionID(p.ID)
+func (_c *ProcessInstanceCreate) SetDefinition(v *ProcessDefinition) *ProcessInstanceCreate {
+	return _c.SetDefinitionID(v.ID)
 }
 
 // Mutation returns the ProcessInstanceMutation object of the builder.
-func (pic *ProcessInstanceCreate) Mutation() *ProcessInstanceMutation {
-	return pic.mutation
+func (_c *ProcessInstanceCreate) Mutation() *ProcessInstanceMutation {
+	return _c.mutation
 }
 
 // Save creates the ProcessInstance in the database.
-func (pic *ProcessInstanceCreate) Save(ctx context.Context) (*ProcessInstance, error) {
-	pic.defaults()
-	return withHooks(ctx, pic.sqlSave, pic.mutation, pic.hooks)
+func (_c *ProcessInstanceCreate) Save(ctx context.Context) (*ProcessInstance, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pic *ProcessInstanceCreate) SaveX(ctx context.Context) *ProcessInstance {
-	v, err := pic.Save(ctx)
+func (_c *ProcessInstanceCreate) SaveX(ctx context.Context) *ProcessInstance {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -319,96 +319,96 @@ func (pic *ProcessInstanceCreate) SaveX(ctx context.Context) *ProcessInstance {
 }
 
 // Exec executes the query.
-func (pic *ProcessInstanceCreate) Exec(ctx context.Context) error {
-	_, err := pic.Save(ctx)
+func (_c *ProcessInstanceCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pic *ProcessInstanceCreate) ExecX(ctx context.Context) {
-	if err := pic.Exec(ctx); err != nil {
+func (_c *ProcessInstanceCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pic *ProcessInstanceCreate) defaults() {
-	if _, ok := pic.mutation.Status(); !ok {
+func (_c *ProcessInstanceCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := processinstance.DefaultStatus
-		pic.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := pic.mutation.StartTime(); !ok {
+	if _, ok := _c.mutation.StartTime(); !ok {
 		v := processinstance.DefaultStartTime()
-		pic.mutation.SetStartTime(v)
+		_c.mutation.SetStartTime(v)
 	}
-	if _, ok := pic.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processinstance.DefaultCreatedAt()
-		pic.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := pic.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := processinstance.DefaultUpdatedAt()
-		pic.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pic *ProcessInstanceCreate) check() error {
-	if _, ok := pic.mutation.ProcessInstanceID(); !ok {
+func (_c *ProcessInstanceCreate) check() error {
+	if _, ok := _c.mutation.ProcessInstanceID(); !ok {
 		return &ValidationError{Name: "process_instance_id", err: errors.New(`ent: missing required field "ProcessInstance.process_instance_id"`)}
 	}
-	if v, ok := pic.mutation.ProcessInstanceID(); ok {
+	if v, ok := _c.mutation.ProcessInstanceID(); ok {
 		if err := processinstance.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_instance_id": %w`, err)}
 		}
 	}
-	if _, ok := pic.mutation.ProcessDefinitionKey(); !ok {
+	if _, ok := _c.mutation.ProcessDefinitionKey(); !ok {
 		return &ValidationError{Name: "process_definition_key", err: errors.New(`ent: missing required field "ProcessInstance.process_definition_key"`)}
 	}
-	if v, ok := pic.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		if err := processinstance.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_definition_key": %w`, err)}
 		}
 	}
-	if _, ok := pic.mutation.ProcessDefinitionID(); !ok {
+	if _, ok := _c.mutation.ProcessDefinitionID(); !ok {
 		return &ValidationError{Name: "process_definition_id", err: errors.New(`ent: missing required field "ProcessInstance.process_definition_id"`)}
 	}
-	if v, ok := pic.mutation.ProcessDefinitionID(); ok {
+	if v, ok := _c.mutation.ProcessDefinitionID(); ok {
 		if err := processinstance.ProcessDefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.process_definition_id": %w`, err)}
 		}
 	}
-	if _, ok := pic.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ProcessInstance.status"`)}
 	}
-	if _, ok := pic.mutation.StartTime(); !ok {
+	if _, ok := _c.mutation.StartTime(); !ok {
 		return &ValidationError{Name: "start_time", err: errors.New(`ent: missing required field "ProcessInstance.start_time"`)}
 	}
-	if _, ok := pic.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProcessInstance.tenant_id"`)}
 	}
-	if v, ok := pic.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := processinstance.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessInstance.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := pic.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessInstance.created_at"`)}
 	}
-	if _, ok := pic.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessInstance.updated_at"`)}
 	}
-	if len(pic.mutation.DefinitionIDs()) == 0 {
+	if len(_c.mutation.DefinitionIDs()) == 0 {
 		return &ValidationError{Name: "definition", err: errors.New(`ent: missing required edge "ProcessInstance.definition"`)}
 	}
 	return nil
 }
 
-func (pic *ProcessInstanceCreate) sqlSave(ctx context.Context) (*ProcessInstance, error) {
-	if err := pic.check(); err != nil {
+func (_c *ProcessInstanceCreate) sqlSave(ctx context.Context) (*ProcessInstance, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pic.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pic.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -416,89 +416,89 @@ func (pic *ProcessInstanceCreate) sqlSave(ctx context.Context) (*ProcessInstance
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	pic.mutation.id = &_node.ID
-	pic.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pic *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.CreateSpec) {
+func (_c *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProcessInstance{config: pic.config}
+		_node = &ProcessInstance{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(processinstance.Table, sqlgraph.NewFieldSpec(processinstance.FieldID, field.TypeInt))
 	)
-	if value, ok := pic.mutation.ProcessInstanceID(); ok {
+	if value, ok := _c.mutation.ProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldProcessInstanceID, field.TypeString, value)
 		_node.ProcessInstanceID = value
 	}
-	if value, ok := pic.mutation.BusinessKey(); ok {
+	if value, ok := _c.mutation.BusinessKey(); ok {
 		_spec.SetField(processinstance.FieldBusinessKey, field.TypeString, value)
 		_node.BusinessKey = value
 	}
-	if value, ok := pic.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processinstance.FieldProcessDefinitionKey, field.TypeString, value)
 		_node.ProcessDefinitionKey = value
 	}
-	if value, ok := pic.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(processinstance.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := pic.mutation.CurrentActivityID(); ok {
+	if value, ok := _c.mutation.CurrentActivityID(); ok {
 		_spec.SetField(processinstance.FieldCurrentActivityID, field.TypeString, value)
 		_node.CurrentActivityID = value
 	}
-	if value, ok := pic.mutation.CurrentActivityName(); ok {
+	if value, ok := _c.mutation.CurrentActivityName(); ok {
 		_spec.SetField(processinstance.FieldCurrentActivityName, field.TypeString, value)
 		_node.CurrentActivityName = value
 	}
-	if value, ok := pic.mutation.Variables(); ok {
+	if value, ok := _c.mutation.Variables(); ok {
 		_spec.SetField(processinstance.FieldVariables, field.TypeJSON, value)
 		_node.Variables = value
 	}
-	if value, ok := pic.mutation.StartTime(); ok {
+	if value, ok := _c.mutation.StartTime(); ok {
 		_spec.SetField(processinstance.FieldStartTime, field.TypeTime, value)
 		_node.StartTime = value
 	}
-	if value, ok := pic.mutation.EndTime(); ok {
+	if value, ok := _c.mutation.EndTime(); ok {
 		_spec.SetField(processinstance.FieldEndTime, field.TypeTime, value)
 		_node.EndTime = value
 	}
-	if value, ok := pic.mutation.SuspendedTime(); ok {
+	if value, ok := _c.mutation.SuspendedTime(); ok {
 		_spec.SetField(processinstance.FieldSuspendedTime, field.TypeTime, value)
 		_node.SuspendedTime = value
 	}
-	if value, ok := pic.mutation.SuspendedReason(); ok {
+	if value, ok := _c.mutation.SuspendedReason(); ok {
 		_spec.SetField(processinstance.FieldSuspendedReason, field.TypeString, value)
 		_node.SuspendedReason = value
 	}
-	if value, ok := pic.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processinstance.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := pic.mutation.Initiator(); ok {
+	if value, ok := _c.mutation.Initiator(); ok {
 		_spec.SetField(processinstance.FieldInitiator, field.TypeString, value)
 		_node.Initiator = value
 	}
-	if value, ok := pic.mutation.ParentProcessInstanceID(); ok {
+	if value, ok := _c.mutation.ParentProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldParentProcessInstanceID, field.TypeString, value)
 		_node.ParentProcessInstanceID = value
 	}
-	if value, ok := pic.mutation.RootProcessInstanceID(); ok {
+	if value, ok := _c.mutation.RootProcessInstanceID(); ok {
 		_spec.SetField(processinstance.FieldRootProcessInstanceID, field.TypeString, value)
 		_node.RootProcessInstanceID = value
 	}
-	if value, ok := pic.mutation.StateSnapshot(); ok {
+	if value, ok := _c.mutation.StateSnapshot(); ok {
 		_spec.SetField(processinstance.FieldStateSnapshot, field.TypeJSON, value)
 		_node.StateSnapshot = value
 	}
-	if value, ok := pic.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(processinstance.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := pic.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(processinstance.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := pic.mutation.ProcessTasksIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProcessTasksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -514,7 +514,7 @@ func (pic *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Crea
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pic.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProcessVariablesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -530,7 +530,7 @@ func (pic *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Crea
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pic.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ExecutionHistoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -546,7 +546,7 @@ func (pic *ProcessInstanceCreate) createSpec() (*ProcessInstance, *sqlgraph.Crea
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pic.mutation.DefinitionIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.DefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -574,16 +574,16 @@ type ProcessInstanceCreateBulk struct {
 }
 
 // Save creates the ProcessInstance entities in the database.
-func (picb *ProcessInstanceCreateBulk) Save(ctx context.Context) ([]*ProcessInstance, error) {
-	if picb.err != nil {
-		return nil, picb.err
+func (_c *ProcessInstanceCreateBulk) Save(ctx context.Context) ([]*ProcessInstance, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(picb.builders))
-	nodes := make([]*ProcessInstance, len(picb.builders))
-	mutators := make([]Mutator, len(picb.builders))
-	for i := range picb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProcessInstance, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := picb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProcessInstanceMutation)
@@ -597,11 +597,11 @@ func (picb *ProcessInstanceCreateBulk) Save(ctx context.Context) ([]*ProcessInst
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, picb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, picb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -625,7 +625,7 @@ func (picb *ProcessInstanceCreateBulk) Save(ctx context.Context) ([]*ProcessInst
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, picb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -633,8 +633,8 @@ func (picb *ProcessInstanceCreateBulk) Save(ctx context.Context) ([]*ProcessInst
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (picb *ProcessInstanceCreateBulk) SaveX(ctx context.Context) []*ProcessInstance {
-	v, err := picb.Save(ctx)
+func (_c *ProcessInstanceCreateBulk) SaveX(ctx context.Context) []*ProcessInstance {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -642,14 +642,14 @@ func (picb *ProcessInstanceCreateBulk) SaveX(ctx context.Context) []*ProcessInst
 }
 
 // Exec executes the query.
-func (picb *ProcessInstanceCreateBulk) Exec(ctx context.Context) error {
-	_, err := picb.Save(ctx)
+func (_c *ProcessInstanceCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (picb *ProcessInstanceCreateBulk) ExecX(ctx context.Context) {
-	if err := picb.Exec(ctx); err != nil {
+func (_c *ProcessInstanceCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

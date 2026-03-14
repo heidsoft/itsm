@@ -62,7 +62,7 @@ func (*ApprovalChain) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ApprovalChain fields.
-func (ac *ApprovalChain) assignValues(columns []string, values []any) error {
+func (_m *ApprovalChain) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -73,30 +73,30 @@ func (ac *ApprovalChain) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ac.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case approvalchain.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ac.Name = value.String
+				_m.Name = value.String
 			}
 		case approvalchain.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				ac.Description = value.String
+				_m.Description = value.String
 			}
 		case approvalchain.FieldEntityType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field entity_type", values[i])
 			} else if value.Valid {
-				ac.EntityType = value.String
+				_m.EntityType = value.String
 			}
 		case approvalchain.FieldChain:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field chain", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ac.Chain); err != nil {
+				if err := json.Unmarshal(*value, &_m.Chain); err != nil {
 					return fmt.Errorf("unmarshal field chain: %w", err)
 				}
 			}
@@ -104,34 +104,34 @@ func (ac *ApprovalChain) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				ac.Status = value.String
+				_m.Status = value.String
 			}
 		case approvalchain.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				ac.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case approvalchain.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ac.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case approvalchain.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ac.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case approvalchain.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ac.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ac.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -139,59 +139,59 @@ func (ac *ApprovalChain) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ApprovalChain.
 // This includes values selected through modifiers, order, etc.
-func (ac *ApprovalChain) Value(name string) (ent.Value, error) {
-	return ac.selectValues.Get(name)
+func (_m *ApprovalChain) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this ApprovalChain.
 // Note that you need to call ApprovalChain.Unwrap() before calling this method if this ApprovalChain
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ac *ApprovalChain) Update() *ApprovalChainUpdateOne {
-	return NewApprovalChainClient(ac.config).UpdateOne(ac)
+func (_m *ApprovalChain) Update() *ApprovalChainUpdateOne {
+	return NewApprovalChainClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ApprovalChain entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ac *ApprovalChain) Unwrap() *ApprovalChain {
-	_tx, ok := ac.config.driver.(*txDriver)
+func (_m *ApprovalChain) Unwrap() *ApprovalChain {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ApprovalChain is not a transactional entity")
 	}
-	ac.config.driver = _tx.drv
-	return ac
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ac *ApprovalChain) String() string {
+func (_m *ApprovalChain) String() string {
 	var builder strings.Builder
 	builder.WriteString("ApprovalChain(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ac.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(ac.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(ac.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("entity_type=")
-	builder.WriteString(ac.EntityType)
+	builder.WriteString(_m.EntityType)
 	builder.WriteString(", ")
 	builder.WriteString("chain=")
-	builder.WriteString(fmt.Sprintf("%v", ac.Chain))
+	builder.WriteString(fmt.Sprintf("%v", _m.Chain))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(ac.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", ac.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ac.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ac.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ac.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

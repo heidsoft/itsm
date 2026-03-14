@@ -20,56 +20,56 @@ type CIRelationshipDelete struct {
 }
 
 // Where appends a list predicates to the CIRelationshipDelete builder.
-func (crd *CIRelationshipDelete) Where(ps ...predicate.CIRelationship) *CIRelationshipDelete {
-	crd.mutation.Where(ps...)
-	return crd
+func (_d *CIRelationshipDelete) Where(ps ...predicate.CIRelationship) *CIRelationshipDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (crd *CIRelationshipDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, crd.sqlExec, crd.mutation, crd.hooks)
+func (_d *CIRelationshipDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (crd *CIRelationshipDelete) ExecX(ctx context.Context) int {
-	n, err := crd.Exec(ctx)
+func (_d *CIRelationshipDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (crd *CIRelationshipDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *CIRelationshipDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(cirelationship.Table, sqlgraph.NewFieldSpec(cirelationship.FieldID, field.TypeInt))
-	if ps := crd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, crd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	crd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // CIRelationshipDeleteOne is the builder for deleting a single CIRelationship entity.
 type CIRelationshipDeleteOne struct {
-	crd *CIRelationshipDelete
+	_d *CIRelationshipDelete
 }
 
 // Where appends a list predicates to the CIRelationshipDelete builder.
-func (crdo *CIRelationshipDeleteOne) Where(ps ...predicate.CIRelationship) *CIRelationshipDeleteOne {
-	crdo.crd.mutation.Where(ps...)
-	return crdo
+func (_d *CIRelationshipDeleteOne) Where(ps ...predicate.CIRelationship) *CIRelationshipDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (crdo *CIRelationshipDeleteOne) Exec(ctx context.Context) error {
-	n, err := crdo.crd.Exec(ctx)
+func (_d *CIRelationshipDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (crdo *CIRelationshipDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (crdo *CIRelationshipDeleteOne) ExecX(ctx context.Context) {
-	if err := crdo.Exec(ctx); err != nil {
+func (_d *CIRelationshipDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

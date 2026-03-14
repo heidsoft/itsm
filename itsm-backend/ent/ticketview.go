@@ -91,7 +91,7 @@ func (*TicketView) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketView fields.
-func (tv *TicketView) assignValues(columns []string, values []any) error {
+func (_m *TicketView) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -102,24 +102,24 @@ func (tv *TicketView) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			tv.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ticketview.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				tv.Name = value.String
+				_m.Name = value.String
 			}
 		case ticketview.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				tv.Description = value.String
+				_m.Description = value.String
 			}
 		case ticketview.FieldFilters:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field filters", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tv.Filters); err != nil {
+				if err := json.Unmarshal(*value, &_m.Filters); err != nil {
 					return fmt.Errorf("unmarshal field filters: %w", err)
 				}
 			}
@@ -127,7 +127,7 @@ func (tv *TicketView) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field columns", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tv.Columns); err != nil {
+				if err := json.Unmarshal(*value, &_m.Columns); err != nil {
 					return fmt.Errorf("unmarshal field columns: %w", err)
 				}
 			}
@@ -135,7 +135,7 @@ func (tv *TicketView) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field sort_config", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tv.SortConfig); err != nil {
+				if err := json.Unmarshal(*value, &_m.SortConfig); err != nil {
 					return fmt.Errorf("unmarshal field sort_config: %w", err)
 				}
 			}
@@ -143,7 +143,7 @@ func (tv *TicketView) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field group_config", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tv.GroupConfig); err != nil {
+				if err := json.Unmarshal(*value, &_m.GroupConfig); err != nil {
 					return fmt.Errorf("unmarshal field group_config: %w", err)
 				}
 			}
@@ -151,34 +151,34 @@ func (tv *TicketView) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_shared", values[i])
 			} else if value.Valid {
-				tv.IsShared = value.Bool
+				_m.IsShared = value.Bool
 			}
 		case ticketview.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				tv.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case ticketview.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				tv.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ticketview.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tv.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case ticketview.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				tv.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			tv.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -186,70 +186,70 @@ func (tv *TicketView) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketView.
 // This includes values selected through modifiers, order, etc.
-func (tv *TicketView) Value(name string) (ent.Value, error) {
-	return tv.selectValues.Get(name)
+func (_m *TicketView) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryCreator queries the "creator" edge of the TicketView entity.
-func (tv *TicketView) QueryCreator() *UserQuery {
-	return NewTicketViewClient(tv.config).QueryCreator(tv)
+func (_m *TicketView) QueryCreator() *UserQuery {
+	return NewTicketViewClient(_m.config).QueryCreator(_m)
 }
 
 // Update returns a builder for updating this TicketView.
 // Note that you need to call TicketView.Unwrap() before calling this method if this TicketView
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tv *TicketView) Update() *TicketViewUpdateOne {
-	return NewTicketViewClient(tv.config).UpdateOne(tv)
+func (_m *TicketView) Update() *TicketViewUpdateOne {
+	return NewTicketViewClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketView entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tv *TicketView) Unwrap() *TicketView {
-	_tx, ok := tv.config.driver.(*txDriver)
+func (_m *TicketView) Unwrap() *TicketView {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketView is not a transactional entity")
 	}
-	tv.config.driver = _tx.drv
-	return tv
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tv *TicketView) String() string {
+func (_m *TicketView) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketView(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tv.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(tv.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(tv.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("filters=")
-	builder.WriteString(fmt.Sprintf("%v", tv.Filters))
+	builder.WriteString(fmt.Sprintf("%v", _m.Filters))
 	builder.WriteString(", ")
 	builder.WriteString("columns=")
-	builder.WriteString(fmt.Sprintf("%v", tv.Columns))
+	builder.WriteString(fmt.Sprintf("%v", _m.Columns))
 	builder.WriteString(", ")
 	builder.WriteString("sort_config=")
-	builder.WriteString(fmt.Sprintf("%v", tv.SortConfig))
+	builder.WriteString(fmt.Sprintf("%v", _m.SortConfig))
 	builder.WriteString(", ")
 	builder.WriteString("group_config=")
-	builder.WriteString(fmt.Sprintf("%v", tv.GroupConfig))
+	builder.WriteString(fmt.Sprintf("%v", _m.GroupConfig))
 	builder.WriteString(", ")
 	builder.WriteString("is_shared=")
-	builder.WriteString(fmt.Sprintf("%v", tv.IsShared))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsShared))
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", tv.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", tv.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tv.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(tv.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -98,7 +98,7 @@ func (*TicketAttachment) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketAttachment fields.
-func (ta *TicketAttachment) assignValues(columns []string, values []any) error {
+func (_m *TicketAttachment) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -109,69 +109,69 @@ func (ta *TicketAttachment) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ta.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ticketattachment.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
 			} else if value.Valid {
-				ta.TicketID = int(value.Int64)
+				_m.TicketID = int(value.Int64)
 			}
 		case ticketattachment.FieldFileName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field file_name", values[i])
 			} else if value.Valid {
-				ta.FileName = value.String
+				_m.FileName = value.String
 			}
 		case ticketattachment.FieldFilePath:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field file_path", values[i])
 			} else if value.Valid {
-				ta.FilePath = value.String
+				_m.FilePath = value.String
 			}
 		case ticketattachment.FieldFileURL:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field file_url", values[i])
 			} else if value.Valid {
-				ta.FileURL = value.String
+				_m.FileURL = value.String
 			}
 		case ticketattachment.FieldFileSize:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field file_size", values[i])
 			} else if value.Valid {
-				ta.FileSize = int(value.Int64)
+				_m.FileSize = int(value.Int64)
 			}
 		case ticketattachment.FieldFileType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field file_type", values[i])
 			} else if value.Valid {
-				ta.FileType = value.String
+				_m.FileType = value.String
 			}
 		case ticketattachment.FieldMimeType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field mime_type", values[i])
 			} else if value.Valid {
-				ta.MimeType = value.String
+				_m.MimeType = value.String
 			}
 		case ticketattachment.FieldUploadedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field uploaded_by", values[i])
 			} else if value.Valid {
-				ta.UploadedBy = int(value.Int64)
+				_m.UploadedBy = int(value.Int64)
 			}
 		case ticketattachment.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ta.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ticketattachment.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ta.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			ta.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -179,72 +179,72 @@ func (ta *TicketAttachment) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketAttachment.
 // This includes values selected through modifiers, order, etc.
-func (ta *TicketAttachment) Value(name string) (ent.Value, error) {
-	return ta.selectValues.Get(name)
+func (_m *TicketAttachment) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTicket queries the "ticket" edge of the TicketAttachment entity.
-func (ta *TicketAttachment) QueryTicket() *TicketQuery {
-	return NewTicketAttachmentClient(ta.config).QueryTicket(ta)
+func (_m *TicketAttachment) QueryTicket() *TicketQuery {
+	return NewTicketAttachmentClient(_m.config).QueryTicket(_m)
 }
 
 // QueryUploader queries the "uploader" edge of the TicketAttachment entity.
-func (ta *TicketAttachment) QueryUploader() *UserQuery {
-	return NewTicketAttachmentClient(ta.config).QueryUploader(ta)
+func (_m *TicketAttachment) QueryUploader() *UserQuery {
+	return NewTicketAttachmentClient(_m.config).QueryUploader(_m)
 }
 
 // Update returns a builder for updating this TicketAttachment.
 // Note that you need to call TicketAttachment.Unwrap() before calling this method if this TicketAttachment
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ta *TicketAttachment) Update() *TicketAttachmentUpdateOne {
-	return NewTicketAttachmentClient(ta.config).UpdateOne(ta)
+func (_m *TicketAttachment) Update() *TicketAttachmentUpdateOne {
+	return NewTicketAttachmentClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketAttachment entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ta *TicketAttachment) Unwrap() *TicketAttachment {
-	_tx, ok := ta.config.driver.(*txDriver)
+func (_m *TicketAttachment) Unwrap() *TicketAttachment {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketAttachment is not a transactional entity")
 	}
-	ta.config.driver = _tx.drv
-	return ta
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ta *TicketAttachment) String() string {
+func (_m *TicketAttachment) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketAttachment(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ta.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", ta.TicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
 	builder.WriteString("file_name=")
-	builder.WriteString(ta.FileName)
+	builder.WriteString(_m.FileName)
 	builder.WriteString(", ")
 	builder.WriteString("file_path=")
-	builder.WriteString(ta.FilePath)
+	builder.WriteString(_m.FilePath)
 	builder.WriteString(", ")
 	builder.WriteString("file_url=")
-	builder.WriteString(ta.FileURL)
+	builder.WriteString(_m.FileURL)
 	builder.WriteString(", ")
 	builder.WriteString("file_size=")
-	builder.WriteString(fmt.Sprintf("%v", ta.FileSize))
+	builder.WriteString(fmt.Sprintf("%v", _m.FileSize))
 	builder.WriteString(", ")
 	builder.WriteString("file_type=")
-	builder.WriteString(ta.FileType)
+	builder.WriteString(_m.FileType)
 	builder.WriteString(", ")
 	builder.WriteString("mime_type=")
-	builder.WriteString(ta.MimeType)
+	builder.WriteString(_m.MimeType)
 	builder.WriteString(", ")
 	builder.WriteString("uploaded_by=")
-	builder.WriteString(fmt.Sprintf("%v", ta.UploadedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.UploadedBy))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ta.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ta.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

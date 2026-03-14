@@ -30,44 +30,44 @@ type DiscoveryResultQuery struct {
 }
 
 // Where adds a new predicate for the DiscoveryResultQuery builder.
-func (drq *DiscoveryResultQuery) Where(ps ...predicate.DiscoveryResult) *DiscoveryResultQuery {
-	drq.predicates = append(drq.predicates, ps...)
-	return drq
+func (_q *DiscoveryResultQuery) Where(ps ...predicate.DiscoveryResult) *DiscoveryResultQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (drq *DiscoveryResultQuery) Limit(limit int) *DiscoveryResultQuery {
-	drq.ctx.Limit = &limit
-	return drq
+func (_q *DiscoveryResultQuery) Limit(limit int) *DiscoveryResultQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (drq *DiscoveryResultQuery) Offset(offset int) *DiscoveryResultQuery {
-	drq.ctx.Offset = &offset
-	return drq
+func (_q *DiscoveryResultQuery) Offset(offset int) *DiscoveryResultQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (drq *DiscoveryResultQuery) Unique(unique bool) *DiscoveryResultQuery {
-	drq.ctx.Unique = &unique
-	return drq
+func (_q *DiscoveryResultQuery) Unique(unique bool) *DiscoveryResultQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (drq *DiscoveryResultQuery) Order(o ...discoveryresult.OrderOption) *DiscoveryResultQuery {
-	drq.order = append(drq.order, o...)
-	return drq
+func (_q *DiscoveryResultQuery) Order(o ...discoveryresult.OrderOption) *DiscoveryResultQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryJob chains the current query on the "job" edge.
-func (drq *DiscoveryResultQuery) QueryJob() *DiscoveryJobQuery {
-	query := (&DiscoveryJobClient{config: drq.config}).Query()
+func (_q *DiscoveryResultQuery) QueryJob() *DiscoveryJobQuery {
+	query := (&DiscoveryJobClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := drq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := drq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (drq *DiscoveryResultQuery) QueryJob() *DiscoveryJobQuery {
 			sqlgraph.To(discoveryjob.Table, discoveryjob.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, discoveryresult.JobTable, discoveryresult.JobColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(drq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (drq *DiscoveryResultQuery) QueryJob() *DiscoveryJobQuery {
 
 // First returns the first DiscoveryResult entity from the query.
 // Returns a *NotFoundError when no DiscoveryResult was found.
-func (drq *DiscoveryResultQuery) First(ctx context.Context) (*DiscoveryResult, error) {
-	nodes, err := drq.Limit(1).All(setContextOp(ctx, drq.ctx, ent.OpQueryFirst))
+func (_q *DiscoveryResultQuery) First(ctx context.Context) (*DiscoveryResult, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (drq *DiscoveryResultQuery) First(ctx context.Context) (*DiscoveryResult, e
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) FirstX(ctx context.Context) *DiscoveryResult {
-	node, err := drq.First(ctx)
+func (_q *DiscoveryResultQuery) FirstX(ctx context.Context) *DiscoveryResult {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (drq *DiscoveryResultQuery) FirstX(ctx context.Context) *DiscoveryResult {
 
 // FirstID returns the first DiscoveryResult ID from the query.
 // Returns a *NotFoundError when no DiscoveryResult ID was found.
-func (drq *DiscoveryResultQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *DiscoveryResultQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = drq.Limit(1).IDs(setContextOp(ctx, drq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (drq *DiscoveryResultQuery) FirstID(ctx context.Context) (id int, err error
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) FirstIDX(ctx context.Context) int {
-	id, err := drq.FirstID(ctx)
+func (_q *DiscoveryResultQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (drq *DiscoveryResultQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single DiscoveryResult entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one DiscoveryResult entity is found.
 // Returns a *NotFoundError when no DiscoveryResult entities are found.
-func (drq *DiscoveryResultQuery) Only(ctx context.Context) (*DiscoveryResult, error) {
-	nodes, err := drq.Limit(2).All(setContextOp(ctx, drq.ctx, ent.OpQueryOnly))
+func (_q *DiscoveryResultQuery) Only(ctx context.Context) (*DiscoveryResult, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (drq *DiscoveryResultQuery) Only(ctx context.Context) (*DiscoveryResult, er
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) OnlyX(ctx context.Context) *DiscoveryResult {
-	node, err := drq.Only(ctx)
+func (_q *DiscoveryResultQuery) OnlyX(ctx context.Context) *DiscoveryResult {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (drq *DiscoveryResultQuery) OnlyX(ctx context.Context) *DiscoveryResult {
 // OnlyID is like Only, but returns the only DiscoveryResult ID in the query.
 // Returns a *NotSingularError when more than one DiscoveryResult ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (drq *DiscoveryResultQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *DiscoveryResultQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = drq.Limit(2).IDs(setContextOp(ctx, drq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (drq *DiscoveryResultQuery) OnlyID(ctx context.Context) (id int, err error)
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) OnlyIDX(ctx context.Context) int {
-	id, err := drq.OnlyID(ctx)
+func (_q *DiscoveryResultQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (drq *DiscoveryResultQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of DiscoveryResults.
-func (drq *DiscoveryResultQuery) All(ctx context.Context) ([]*DiscoveryResult, error) {
-	ctx = setContextOp(ctx, drq.ctx, ent.OpQueryAll)
-	if err := drq.prepareQuery(ctx); err != nil {
+func (_q *DiscoveryResultQuery) All(ctx context.Context) ([]*DiscoveryResult, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*DiscoveryResult, *DiscoveryResultQuery]()
-	return withInterceptors[[]*DiscoveryResult](ctx, drq, qr, drq.inters)
+	return withInterceptors[[]*DiscoveryResult](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) AllX(ctx context.Context) []*DiscoveryResult {
-	nodes, err := drq.All(ctx)
+func (_q *DiscoveryResultQuery) AllX(ctx context.Context) []*DiscoveryResult {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (drq *DiscoveryResultQuery) AllX(ctx context.Context) []*DiscoveryResult {
 }
 
 // IDs executes the query and returns a list of DiscoveryResult IDs.
-func (drq *DiscoveryResultQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if drq.ctx.Unique == nil && drq.path != nil {
-		drq.Unique(true)
+func (_q *DiscoveryResultQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, drq.ctx, ent.OpQueryIDs)
-	if err = drq.Select(discoveryresult.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(discoveryresult.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) IDsX(ctx context.Context) []int {
-	ids, err := drq.IDs(ctx)
+func (_q *DiscoveryResultQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (drq *DiscoveryResultQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (drq *DiscoveryResultQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, drq.ctx, ent.OpQueryCount)
-	if err := drq.prepareQuery(ctx); err != nil {
+func (_q *DiscoveryResultQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, drq, querierCount[*DiscoveryResultQuery](), drq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*DiscoveryResultQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) CountX(ctx context.Context) int {
-	count, err := drq.Count(ctx)
+func (_q *DiscoveryResultQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (drq *DiscoveryResultQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (drq *DiscoveryResultQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, drq.ctx, ent.OpQueryExist)
-	switch _, err := drq.FirstID(ctx); {
+func (_q *DiscoveryResultQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (drq *DiscoveryResultQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (drq *DiscoveryResultQuery) ExistX(ctx context.Context) bool {
-	exist, err := drq.Exist(ctx)
+func (_q *DiscoveryResultQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (drq *DiscoveryResultQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the DiscoveryResultQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (drq *DiscoveryResultQuery) Clone() *DiscoveryResultQuery {
-	if drq == nil {
+func (_q *DiscoveryResultQuery) Clone() *DiscoveryResultQuery {
+	if _q == nil {
 		return nil
 	}
 	return &DiscoveryResultQuery{
-		config:     drq.config,
-		ctx:        drq.ctx.Clone(),
-		order:      append([]discoveryresult.OrderOption{}, drq.order...),
-		inters:     append([]Interceptor{}, drq.inters...),
-		predicates: append([]predicate.DiscoveryResult{}, drq.predicates...),
-		withJob:    drq.withJob.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]discoveryresult.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.DiscoveryResult{}, _q.predicates...),
+		withJob:    _q.withJob.Clone(),
 		// clone intermediate query.
-		sql:  drq.sql.Clone(),
-		path: drq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithJob tells the query-builder to eager-load the nodes that are connected to
 // the "job" edge. The optional arguments are used to configure the query builder of the edge.
-func (drq *DiscoveryResultQuery) WithJob(opts ...func(*DiscoveryJobQuery)) *DiscoveryResultQuery {
-	query := (&DiscoveryJobClient{config: drq.config}).Query()
+func (_q *DiscoveryResultQuery) WithJob(opts ...func(*DiscoveryJobQuery)) *DiscoveryResultQuery {
+	query := (&DiscoveryJobClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	drq.withJob = query
-	return drq
+	_q.withJob = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (drq *DiscoveryResultQuery) WithJob(opts ...func(*DiscoveryJobQuery)) *Disc
 //		GroupBy(discoveryresult.FieldJobID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (drq *DiscoveryResultQuery) GroupBy(field string, fields ...string) *DiscoveryResultGroupBy {
-	drq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &DiscoveryResultGroupBy{build: drq}
-	grbuild.flds = &drq.ctx.Fields
+func (_q *DiscoveryResultQuery) GroupBy(field string, fields ...string) *DiscoveryResultGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &DiscoveryResultGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = discoveryresult.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (drq *DiscoveryResultQuery) GroupBy(field string, fields ...string) *Discov
 //	client.DiscoveryResult.Query().
 //		Select(discoveryresult.FieldJobID).
 //		Scan(ctx, &v)
-func (drq *DiscoveryResultQuery) Select(fields ...string) *DiscoveryResultSelect {
-	drq.ctx.Fields = append(drq.ctx.Fields, fields...)
-	sbuild := &DiscoveryResultSelect{DiscoveryResultQuery: drq}
+func (_q *DiscoveryResultQuery) Select(fields ...string) *DiscoveryResultSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &DiscoveryResultSelect{DiscoveryResultQuery: _q}
 	sbuild.label = discoveryresult.Label
-	sbuild.flds, sbuild.scan = &drq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a DiscoveryResultSelect configured with the given aggregations.
-func (drq *DiscoveryResultQuery) Aggregate(fns ...AggregateFunc) *DiscoveryResultSelect {
-	return drq.Select().Aggregate(fns...)
+func (_q *DiscoveryResultQuery) Aggregate(fns ...AggregateFunc) *DiscoveryResultSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (drq *DiscoveryResultQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range drq.inters {
+func (_q *DiscoveryResultQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, drq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range drq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !discoveryresult.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if drq.path != nil {
-		prev, err := drq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		drq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (drq *DiscoveryResultQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DiscoveryResult, error) {
+func (_q *DiscoveryResultQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DiscoveryResult, error) {
 	var (
 		nodes       = []*DiscoveryResult{}
-		_spec       = drq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			drq.withJob != nil,
+			_q.withJob != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*DiscoveryResult).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &DiscoveryResult{config: drq.config}
+		node := &DiscoveryResult{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (drq *DiscoveryResultQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, drq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := drq.withJob; query != nil {
-		if err := drq.loadJob(ctx, query, nodes, nil,
+	if query := _q.withJob; query != nil {
+		if err := _q.loadJob(ctx, query, nodes, nil,
 			func(n *DiscoveryResult, e *DiscoveryJob) { n.Edges.Job = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (drq *DiscoveryResultQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	return nodes, nil
 }
 
-func (drq *DiscoveryResultQuery) loadJob(ctx context.Context, query *DiscoveryJobQuery, nodes []*DiscoveryResult, init func(*DiscoveryResult), assign func(*DiscoveryResult, *DiscoveryJob)) error {
+func (_q *DiscoveryResultQuery) loadJob(ctx context.Context, query *DiscoveryJobQuery, nodes []*DiscoveryResult, init func(*DiscoveryResult), assign func(*DiscoveryResult, *DiscoveryJob)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*DiscoveryResult)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (drq *DiscoveryResultQuery) loadJob(ctx context.Context, query *DiscoveryJo
 	return nil
 }
 
-func (drq *DiscoveryResultQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := drq.querySpec()
-	_spec.Node.Columns = drq.ctx.Fields
-	if len(drq.ctx.Fields) > 0 {
-		_spec.Unique = drq.ctx.Unique != nil && *drq.ctx.Unique
+func (_q *DiscoveryResultQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, drq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (drq *DiscoveryResultQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *DiscoveryResultQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(discoveryresult.Table, discoveryresult.Columns, sqlgraph.NewFieldSpec(discoveryresult.FieldID, field.TypeInt))
-	_spec.From = drq.sql
-	if unique := drq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if drq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := drq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, discoveryresult.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (drq *DiscoveryResultQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if drq.withJob != nil {
+		if _q.withJob != nil {
 			_spec.Node.AddColumnOnce(discoveryresult.FieldJobID)
 		}
 	}
-	if ps := drq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := drq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := drq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := drq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (drq *DiscoveryResultQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (drq *DiscoveryResultQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(drq.driver.Dialect())
+func (_q *DiscoveryResultQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(discoveryresult.Table)
-	columns := drq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = discoveryresult.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if drq.sql != nil {
-		selector = drq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if drq.ctx.Unique != nil && *drq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range drq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range drq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := drq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := drq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type DiscoveryResultGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (drgb *DiscoveryResultGroupBy) Aggregate(fns ...AggregateFunc) *DiscoveryResultGroupBy {
-	drgb.fns = append(drgb.fns, fns...)
-	return drgb
+func (_g *DiscoveryResultGroupBy) Aggregate(fns ...AggregateFunc) *DiscoveryResultGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (drgb *DiscoveryResultGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, drgb.build.ctx, ent.OpQueryGroupBy)
-	if err := drgb.build.prepareQuery(ctx); err != nil {
+func (_g *DiscoveryResultGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*DiscoveryResultQuery, *DiscoveryResultGroupBy](ctx, drgb.build, drgb, drgb.build.inters, v)
+	return scanWithInterceptors[*DiscoveryResultQuery, *DiscoveryResultGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (drgb *DiscoveryResultGroupBy) sqlScan(ctx context.Context, root *DiscoveryResultQuery, v any) error {
+func (_g *DiscoveryResultGroupBy) sqlScan(ctx context.Context, root *DiscoveryResultQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(drgb.fns))
-	for _, fn := range drgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*drgb.flds)+len(drgb.fns))
-		for _, f := range *drgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*drgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := drgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type DiscoveryResultSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (drs *DiscoveryResultSelect) Aggregate(fns ...AggregateFunc) *DiscoveryResultSelect {
-	drs.fns = append(drs.fns, fns...)
-	return drs
+func (_s *DiscoveryResultSelect) Aggregate(fns ...AggregateFunc) *DiscoveryResultSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (drs *DiscoveryResultSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, drs.ctx, ent.OpQuerySelect)
-	if err := drs.prepareQuery(ctx); err != nil {
+func (_s *DiscoveryResultSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*DiscoveryResultQuery, *DiscoveryResultSelect](ctx, drs.DiscoveryResultQuery, drs, drs.inters, v)
+	return scanWithInterceptors[*DiscoveryResultQuery, *DiscoveryResultSelect](ctx, _s.DiscoveryResultQuery, _s, _s.inters, v)
 }
 
-func (drs *DiscoveryResultSelect) sqlScan(ctx context.Context, root *DiscoveryResultQuery, v any) error {
+func (_s *DiscoveryResultSelect) sqlScan(ctx context.Context, root *DiscoveryResultQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(drs.fns))
-	for _, fn := range drs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*drs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (drs *DiscoveryResultSelect) sqlScan(ctx context.Context, root *DiscoveryRe
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := drs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

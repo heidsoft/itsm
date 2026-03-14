@@ -23,356 +23,356 @@ type ServiceRequestApprovalUpdate struct {
 }
 
 // Where appends a list predicates to the ServiceRequestApprovalUpdate builder.
-func (srau *ServiceRequestApprovalUpdate) Where(ps ...predicate.ServiceRequestApproval) *ServiceRequestApprovalUpdate {
-	srau.mutation.Where(ps...)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) Where(ps ...predicate.ServiceRequestApproval) *ServiceRequestApprovalUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (srau *ServiceRequestApprovalUpdate) SetTenantID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.ResetTenantID()
-	srau.mutation.SetTenantID(i)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetTenantID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableTenantID(i *int) *ServiceRequestApprovalUpdate {
-	if i != nil {
-		srau.SetTenantID(*i)
+func (_u *ServiceRequestApprovalUpdate) SetNillableTenantID(v *int) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return srau
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (srau *ServiceRequestApprovalUpdate) AddTenantID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.AddTenantID(i)
-	return srau
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ServiceRequestApprovalUpdate) AddTenantID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetServiceRequestID sets the "service_request_id" field.
-func (srau *ServiceRequestApprovalUpdate) SetServiceRequestID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.ResetServiceRequestID()
-	srau.mutation.SetServiceRequestID(i)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetServiceRequestID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.ResetServiceRequestID()
+	_u.mutation.SetServiceRequestID(v)
+	return _u
 }
 
 // SetNillableServiceRequestID sets the "service_request_id" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableServiceRequestID(i *int) *ServiceRequestApprovalUpdate {
-	if i != nil {
-		srau.SetServiceRequestID(*i)
+func (_u *ServiceRequestApprovalUpdate) SetNillableServiceRequestID(v *int) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetServiceRequestID(*v)
 	}
-	return srau
+	return _u
 }
 
-// AddServiceRequestID adds i to the "service_request_id" field.
-func (srau *ServiceRequestApprovalUpdate) AddServiceRequestID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.AddServiceRequestID(i)
-	return srau
+// AddServiceRequestID adds value to the "service_request_id" field.
+func (_u *ServiceRequestApprovalUpdate) AddServiceRequestID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.AddServiceRequestID(v)
+	return _u
 }
 
 // SetLevel sets the "level" field.
-func (srau *ServiceRequestApprovalUpdate) SetLevel(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.ResetLevel()
-	srau.mutation.SetLevel(i)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetLevel(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.ResetLevel()
+	_u.mutation.SetLevel(v)
+	return _u
 }
 
 // SetNillableLevel sets the "level" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableLevel(i *int) *ServiceRequestApprovalUpdate {
-	if i != nil {
-		srau.SetLevel(*i)
+func (_u *ServiceRequestApprovalUpdate) SetNillableLevel(v *int) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetLevel(*v)
 	}
-	return srau
+	return _u
 }
 
-// AddLevel adds i to the "level" field.
-func (srau *ServiceRequestApprovalUpdate) AddLevel(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.AddLevel(i)
-	return srau
+// AddLevel adds value to the "level" field.
+func (_u *ServiceRequestApprovalUpdate) AddLevel(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.AddLevel(v)
+	return _u
 }
 
 // SetStep sets the "step" field.
-func (srau *ServiceRequestApprovalUpdate) SetStep(s string) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetStep(s)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetStep(v string) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetStep(v)
+	return _u
 }
 
 // SetNillableStep sets the "step" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableStep(s *string) *ServiceRequestApprovalUpdate {
-	if s != nil {
-		srau.SetStep(*s)
+func (_u *ServiceRequestApprovalUpdate) SetNillableStep(v *string) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetStep(*v)
 	}
-	return srau
+	return _u
 }
 
 // ClearStep clears the value of the "step" field.
-func (srau *ServiceRequestApprovalUpdate) ClearStep() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearStep()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearStep() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearStep()
+	return _u
 }
 
 // SetNode sets the "node" field.
-func (srau *ServiceRequestApprovalUpdate) SetNode(m map[string]interface{}) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetNode(m)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetNode(v map[string]interface{}) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetNode(v)
+	return _u
 }
 
 // ClearNode clears the value of the "node" field.
-func (srau *ServiceRequestApprovalUpdate) ClearNode() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearNode()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearNode() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearNode()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (srau *ServiceRequestApprovalUpdate) SetStatus(s string) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetStatus(s)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetStatus(v string) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableStatus(s *string) *ServiceRequestApprovalUpdate {
-	if s != nil {
-		srau.SetStatus(*s)
+func (_u *ServiceRequestApprovalUpdate) SetNillableStatus(v *string) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return srau
+	return _u
 }
 
 // SetApproverID sets the "approver_id" field.
-func (srau *ServiceRequestApprovalUpdate) SetApproverID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.ResetApproverID()
-	srau.mutation.SetApproverID(i)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetApproverID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.ResetApproverID()
+	_u.mutation.SetApproverID(v)
+	return _u
 }
 
 // SetNillableApproverID sets the "approver_id" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableApproverID(i *int) *ServiceRequestApprovalUpdate {
-	if i != nil {
-		srau.SetApproverID(*i)
+func (_u *ServiceRequestApprovalUpdate) SetNillableApproverID(v *int) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetApproverID(*v)
 	}
-	return srau
+	return _u
 }
 
-// AddApproverID adds i to the "approver_id" field.
-func (srau *ServiceRequestApprovalUpdate) AddApproverID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.AddApproverID(i)
-	return srau
+// AddApproverID adds value to the "approver_id" field.
+func (_u *ServiceRequestApprovalUpdate) AddApproverID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.AddApproverID(v)
+	return _u
 }
 
 // ClearApproverID clears the value of the "approver_id" field.
-func (srau *ServiceRequestApprovalUpdate) ClearApproverID() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearApproverID()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearApproverID() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearApproverID()
+	return _u
 }
 
 // SetApproverName sets the "approver_name" field.
-func (srau *ServiceRequestApprovalUpdate) SetApproverName(s string) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetApproverName(s)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetApproverName(v string) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetApproverName(v)
+	return _u
 }
 
 // SetNillableApproverName sets the "approver_name" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableApproverName(s *string) *ServiceRequestApprovalUpdate {
-	if s != nil {
-		srau.SetApproverName(*s)
+func (_u *ServiceRequestApprovalUpdate) SetNillableApproverName(v *string) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetApproverName(*v)
 	}
-	return srau
+	return _u
 }
 
 // ClearApproverName clears the value of the "approver_name" field.
-func (srau *ServiceRequestApprovalUpdate) ClearApproverName() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearApproverName()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearApproverName() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearApproverName()
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (srau *ServiceRequestApprovalUpdate) SetAction(s string) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetAction(s)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetAction(v string) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableAction(s *string) *ServiceRequestApprovalUpdate {
-	if s != nil {
-		srau.SetAction(*s)
+func (_u *ServiceRequestApprovalUpdate) SetNillableAction(v *string) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return srau
+	return _u
 }
 
 // ClearAction clears the value of the "action" field.
-func (srau *ServiceRequestApprovalUpdate) ClearAction() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearAction()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearAction() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearAction()
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (srau *ServiceRequestApprovalUpdate) SetComment(s string) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetComment(s)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetComment(v string) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableComment(s *string) *ServiceRequestApprovalUpdate {
-	if s != nil {
-		srau.SetComment(*s)
+func (_u *ServiceRequestApprovalUpdate) SetNillableComment(v *string) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return srau
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (srau *ServiceRequestApprovalUpdate) ClearComment() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearComment()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearComment() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetTimeoutHours sets the "timeout_hours" field.
-func (srau *ServiceRequestApprovalUpdate) SetTimeoutHours(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.ResetTimeoutHours()
-	srau.mutation.SetTimeoutHours(i)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetTimeoutHours(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.ResetTimeoutHours()
+	_u.mutation.SetTimeoutHours(v)
+	return _u
 }
 
 // SetNillableTimeoutHours sets the "timeout_hours" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableTimeoutHours(i *int) *ServiceRequestApprovalUpdate {
-	if i != nil {
-		srau.SetTimeoutHours(*i)
+func (_u *ServiceRequestApprovalUpdate) SetNillableTimeoutHours(v *int) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetTimeoutHours(*v)
 	}
-	return srau
+	return _u
 }
 
-// AddTimeoutHours adds i to the "timeout_hours" field.
-func (srau *ServiceRequestApprovalUpdate) AddTimeoutHours(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.AddTimeoutHours(i)
-	return srau
+// AddTimeoutHours adds value to the "timeout_hours" field.
+func (_u *ServiceRequestApprovalUpdate) AddTimeoutHours(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.AddTimeoutHours(v)
+	return _u
 }
 
 // SetDueAt sets the "due_at" field.
-func (srau *ServiceRequestApprovalUpdate) SetDueAt(t time.Time) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetDueAt(t)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetDueAt(v time.Time) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetDueAt(v)
+	return _u
 }
 
 // SetNillableDueAt sets the "due_at" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableDueAt(t *time.Time) *ServiceRequestApprovalUpdate {
-	if t != nil {
-		srau.SetDueAt(*t)
+func (_u *ServiceRequestApprovalUpdate) SetNillableDueAt(v *time.Time) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetDueAt(*v)
 	}
-	return srau
+	return _u
 }
 
 // ClearDueAt clears the value of the "due_at" field.
-func (srau *ServiceRequestApprovalUpdate) ClearDueAt() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearDueAt()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearDueAt() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearDueAt()
+	return _u
 }
 
 // SetIsEscalated sets the "is_escalated" field.
-func (srau *ServiceRequestApprovalUpdate) SetIsEscalated(b bool) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetIsEscalated(b)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetIsEscalated(v bool) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetIsEscalated(v)
+	return _u
 }
 
 // SetNillableIsEscalated sets the "is_escalated" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableIsEscalated(b *bool) *ServiceRequestApprovalUpdate {
-	if b != nil {
-		srau.SetIsEscalated(*b)
+func (_u *ServiceRequestApprovalUpdate) SetNillableIsEscalated(v *bool) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetIsEscalated(*v)
 	}
-	return srau
+	return _u
 }
 
 // SetDelegatedToID sets the "delegated_to_id" field.
-func (srau *ServiceRequestApprovalUpdate) SetDelegatedToID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.ResetDelegatedToID()
-	srau.mutation.SetDelegatedToID(i)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetDelegatedToID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.ResetDelegatedToID()
+	_u.mutation.SetDelegatedToID(v)
+	return _u
 }
 
 // SetNillableDelegatedToID sets the "delegated_to_id" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableDelegatedToID(i *int) *ServiceRequestApprovalUpdate {
-	if i != nil {
-		srau.SetDelegatedToID(*i)
+func (_u *ServiceRequestApprovalUpdate) SetNillableDelegatedToID(v *int) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetDelegatedToID(*v)
 	}
-	return srau
+	return _u
 }
 
-// AddDelegatedToID adds i to the "delegated_to_id" field.
-func (srau *ServiceRequestApprovalUpdate) AddDelegatedToID(i int) *ServiceRequestApprovalUpdate {
-	srau.mutation.AddDelegatedToID(i)
-	return srau
+// AddDelegatedToID adds value to the "delegated_to_id" field.
+func (_u *ServiceRequestApprovalUpdate) AddDelegatedToID(v int) *ServiceRequestApprovalUpdate {
+	_u.mutation.AddDelegatedToID(v)
+	return _u
 }
 
 // ClearDelegatedToID clears the value of the "delegated_to_id" field.
-func (srau *ServiceRequestApprovalUpdate) ClearDelegatedToID() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearDelegatedToID()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearDelegatedToID() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearDelegatedToID()
+	return _u
 }
 
 // SetEscalationReason sets the "escalation_reason" field.
-func (srau *ServiceRequestApprovalUpdate) SetEscalationReason(s string) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetEscalationReason(s)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetEscalationReason(v string) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetEscalationReason(v)
+	return _u
 }
 
 // SetNillableEscalationReason sets the "escalation_reason" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableEscalationReason(s *string) *ServiceRequestApprovalUpdate {
-	if s != nil {
-		srau.SetEscalationReason(*s)
+func (_u *ServiceRequestApprovalUpdate) SetNillableEscalationReason(v *string) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetEscalationReason(*v)
 	}
-	return srau
+	return _u
 }
 
 // ClearEscalationReason clears the value of the "escalation_reason" field.
-func (srau *ServiceRequestApprovalUpdate) ClearEscalationReason() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearEscalationReason()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearEscalationReason() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearEscalationReason()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (srau *ServiceRequestApprovalUpdate) SetCreatedAt(t time.Time) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetCreatedAt(t)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetCreatedAt(v time.Time) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableCreatedAt(t *time.Time) *ServiceRequestApprovalUpdate {
-	if t != nil {
-		srau.SetCreatedAt(*t)
+func (_u *ServiceRequestApprovalUpdate) SetNillableCreatedAt(v *time.Time) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return srau
+	return _u
 }
 
 // SetProcessedAt sets the "processed_at" field.
-func (srau *ServiceRequestApprovalUpdate) SetProcessedAt(t time.Time) *ServiceRequestApprovalUpdate {
-	srau.mutation.SetProcessedAt(t)
-	return srau
+func (_u *ServiceRequestApprovalUpdate) SetProcessedAt(v time.Time) *ServiceRequestApprovalUpdate {
+	_u.mutation.SetProcessedAt(v)
+	return _u
 }
 
 // SetNillableProcessedAt sets the "processed_at" field if the given value is not nil.
-func (srau *ServiceRequestApprovalUpdate) SetNillableProcessedAt(t *time.Time) *ServiceRequestApprovalUpdate {
-	if t != nil {
-		srau.SetProcessedAt(*t)
+func (_u *ServiceRequestApprovalUpdate) SetNillableProcessedAt(v *time.Time) *ServiceRequestApprovalUpdate {
+	if v != nil {
+		_u.SetProcessedAt(*v)
 	}
-	return srau
+	return _u
 }
 
 // ClearProcessedAt clears the value of the "processed_at" field.
-func (srau *ServiceRequestApprovalUpdate) ClearProcessedAt() *ServiceRequestApprovalUpdate {
-	srau.mutation.ClearProcessedAt()
-	return srau
+func (_u *ServiceRequestApprovalUpdate) ClearProcessedAt() *ServiceRequestApprovalUpdate {
+	_u.mutation.ClearProcessedAt()
+	return _u
 }
 
 // Mutation returns the ServiceRequestApprovalMutation object of the builder.
-func (srau *ServiceRequestApprovalUpdate) Mutation() *ServiceRequestApprovalMutation {
-	return srau.mutation
+func (_u *ServiceRequestApprovalUpdate) Mutation() *ServiceRequestApprovalMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (srau *ServiceRequestApprovalUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, srau.sqlSave, srau.mutation, srau.hooks)
+func (_u *ServiceRequestApprovalUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (srau *ServiceRequestApprovalUpdate) SaveX(ctx context.Context) int {
-	affected, err := srau.Save(ctx)
+func (_u *ServiceRequestApprovalUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -380,31 +380,31 @@ func (srau *ServiceRequestApprovalUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (srau *ServiceRequestApprovalUpdate) Exec(ctx context.Context) error {
-	_, err := srau.Save(ctx)
+func (_u *ServiceRequestApprovalUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (srau *ServiceRequestApprovalUpdate) ExecX(ctx context.Context) {
-	if err := srau.Exec(ctx); err != nil {
+func (_u *ServiceRequestApprovalUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (srau *ServiceRequestApprovalUpdate) check() error {
-	if v, ok := srau.mutation.TenantID(); ok {
+func (_u *ServiceRequestApprovalUpdate) check() error {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := servicerequestapproval.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.tenant_id": %w`, err)}
 		}
 	}
-	if v, ok := srau.mutation.ServiceRequestID(); ok {
+	if v, ok := _u.mutation.ServiceRequestID(); ok {
 		if err := servicerequestapproval.ServiceRequestIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.service_request_id": %w`, err)}
 		}
 	}
-	if v, ok := srau.mutation.Level(); ok {
+	if v, ok := _u.mutation.Level(); ok {
 		if err := servicerequestapproval.LevelValidator(v); err != nil {
 			return &ValidationError{Name: "level", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.level": %w`, err)}
 		}
@@ -412,118 +412,118 @@ func (srau *ServiceRequestApprovalUpdate) check() error {
 	return nil
 }
 
-func (srau *ServiceRequestApprovalUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := srau.check(); err != nil {
-		return n, err
+func (_u *ServiceRequestApprovalUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(servicerequestapproval.Table, servicerequestapproval.Columns, sqlgraph.NewFieldSpec(servicerequestapproval.FieldID, field.TypeInt))
-	if ps := srau.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := srau.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(servicerequestapproval.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(servicerequestapproval.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.ServiceRequestID(); ok {
+	if value, ok := _u.mutation.ServiceRequestID(); ok {
 		_spec.SetField(servicerequestapproval.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.AddedServiceRequestID(); ok {
+	if value, ok := _u.mutation.AddedServiceRequestID(); ok {
 		_spec.AddField(servicerequestapproval.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.Level(); ok {
+	if value, ok := _u.mutation.Level(); ok {
 		_spec.SetField(servicerequestapproval.FieldLevel, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.AddedLevel(); ok {
+	if value, ok := _u.mutation.AddedLevel(); ok {
 		_spec.AddField(servicerequestapproval.FieldLevel, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.Step(); ok {
+	if value, ok := _u.mutation.Step(); ok {
 		_spec.SetField(servicerequestapproval.FieldStep, field.TypeString, value)
 	}
-	if srau.mutation.StepCleared() {
+	if _u.mutation.StepCleared() {
 		_spec.ClearField(servicerequestapproval.FieldStep, field.TypeString)
 	}
-	if value, ok := srau.mutation.Node(); ok {
+	if value, ok := _u.mutation.Node(); ok {
 		_spec.SetField(servicerequestapproval.FieldNode, field.TypeJSON, value)
 	}
-	if srau.mutation.NodeCleared() {
+	if _u.mutation.NodeCleared() {
 		_spec.ClearField(servicerequestapproval.FieldNode, field.TypeJSON)
 	}
-	if value, ok := srau.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(servicerequestapproval.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := srau.mutation.ApproverID(); ok {
+	if value, ok := _u.mutation.ApproverID(); ok {
 		_spec.SetField(servicerequestapproval.FieldApproverID, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.AddedApproverID(); ok {
+	if value, ok := _u.mutation.AddedApproverID(); ok {
 		_spec.AddField(servicerequestapproval.FieldApproverID, field.TypeInt, value)
 	}
-	if srau.mutation.ApproverIDCleared() {
+	if _u.mutation.ApproverIDCleared() {
 		_spec.ClearField(servicerequestapproval.FieldApproverID, field.TypeInt)
 	}
-	if value, ok := srau.mutation.ApproverName(); ok {
+	if value, ok := _u.mutation.ApproverName(); ok {
 		_spec.SetField(servicerequestapproval.FieldApproverName, field.TypeString, value)
 	}
-	if srau.mutation.ApproverNameCleared() {
+	if _u.mutation.ApproverNameCleared() {
 		_spec.ClearField(servicerequestapproval.FieldApproverName, field.TypeString)
 	}
-	if value, ok := srau.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(servicerequestapproval.FieldAction, field.TypeString, value)
 	}
-	if srau.mutation.ActionCleared() {
+	if _u.mutation.ActionCleared() {
 		_spec.ClearField(servicerequestapproval.FieldAction, field.TypeString)
 	}
-	if value, ok := srau.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(servicerequestapproval.FieldComment, field.TypeString, value)
 	}
-	if srau.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(servicerequestapproval.FieldComment, field.TypeString)
 	}
-	if value, ok := srau.mutation.TimeoutHours(); ok {
+	if value, ok := _u.mutation.TimeoutHours(); ok {
 		_spec.SetField(servicerequestapproval.FieldTimeoutHours, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.AddedTimeoutHours(); ok {
+	if value, ok := _u.mutation.AddedTimeoutHours(); ok {
 		_spec.AddField(servicerequestapproval.FieldTimeoutHours, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.DueAt(); ok {
+	if value, ok := _u.mutation.DueAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldDueAt, field.TypeTime, value)
 	}
-	if srau.mutation.DueAtCleared() {
+	if _u.mutation.DueAtCleared() {
 		_spec.ClearField(servicerequestapproval.FieldDueAt, field.TypeTime)
 	}
-	if value, ok := srau.mutation.IsEscalated(); ok {
+	if value, ok := _u.mutation.IsEscalated(); ok {
 		_spec.SetField(servicerequestapproval.FieldIsEscalated, field.TypeBool, value)
 	}
-	if value, ok := srau.mutation.DelegatedToID(); ok {
+	if value, ok := _u.mutation.DelegatedToID(); ok {
 		_spec.SetField(servicerequestapproval.FieldDelegatedToID, field.TypeInt, value)
 	}
-	if value, ok := srau.mutation.AddedDelegatedToID(); ok {
+	if value, ok := _u.mutation.AddedDelegatedToID(); ok {
 		_spec.AddField(servicerequestapproval.FieldDelegatedToID, field.TypeInt, value)
 	}
-	if srau.mutation.DelegatedToIDCleared() {
+	if _u.mutation.DelegatedToIDCleared() {
 		_spec.ClearField(servicerequestapproval.FieldDelegatedToID, field.TypeInt)
 	}
-	if value, ok := srau.mutation.EscalationReason(); ok {
+	if value, ok := _u.mutation.EscalationReason(); ok {
 		_spec.SetField(servicerequestapproval.FieldEscalationReason, field.TypeString, value)
 	}
-	if srau.mutation.EscalationReasonCleared() {
+	if _u.mutation.EscalationReasonCleared() {
 		_spec.ClearField(servicerequestapproval.FieldEscalationReason, field.TypeString)
 	}
-	if value, ok := srau.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := srau.mutation.ProcessedAt(); ok {
+	if value, ok := _u.mutation.ProcessedAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldProcessedAt, field.TypeTime, value)
 	}
-	if srau.mutation.ProcessedAtCleared() {
+	if _u.mutation.ProcessedAtCleared() {
 		_spec.ClearField(servicerequestapproval.FieldProcessedAt, field.TypeTime)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, srau.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{servicerequestapproval.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -531,8 +531,8 @@ func (srau *ServiceRequestApprovalUpdate) sqlSave(ctx context.Context) (n int, e
 		}
 		return 0, err
 	}
-	srau.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ServiceRequestApprovalUpdateOne is the builder for updating a single ServiceRequestApproval entity.
@@ -544,363 +544,363 @@ type ServiceRequestApprovalUpdateOne struct {
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetTenantID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ResetTenantID()
-	srauo.mutation.SetTenantID(i)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetTenantID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableTenantID(i *int) *ServiceRequestApprovalUpdateOne {
-	if i != nil {
-		srauo.SetTenantID(*i)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableTenantID(v *int) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return srauo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) AddTenantID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.AddTenantID(i)
-	return srauo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ServiceRequestApprovalUpdateOne) AddTenantID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetServiceRequestID sets the "service_request_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetServiceRequestID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ResetServiceRequestID()
-	srauo.mutation.SetServiceRequestID(i)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetServiceRequestID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ResetServiceRequestID()
+	_u.mutation.SetServiceRequestID(v)
+	return _u
 }
 
 // SetNillableServiceRequestID sets the "service_request_id" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableServiceRequestID(i *int) *ServiceRequestApprovalUpdateOne {
-	if i != nil {
-		srauo.SetServiceRequestID(*i)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableServiceRequestID(v *int) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetServiceRequestID(*v)
 	}
-	return srauo
+	return _u
 }
 
-// AddServiceRequestID adds i to the "service_request_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) AddServiceRequestID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.AddServiceRequestID(i)
-	return srauo
+// AddServiceRequestID adds value to the "service_request_id" field.
+func (_u *ServiceRequestApprovalUpdateOne) AddServiceRequestID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.AddServiceRequestID(v)
+	return _u
 }
 
 // SetLevel sets the "level" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetLevel(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ResetLevel()
-	srauo.mutation.SetLevel(i)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetLevel(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ResetLevel()
+	_u.mutation.SetLevel(v)
+	return _u
 }
 
 // SetNillableLevel sets the "level" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableLevel(i *int) *ServiceRequestApprovalUpdateOne {
-	if i != nil {
-		srauo.SetLevel(*i)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableLevel(v *int) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetLevel(*v)
 	}
-	return srauo
+	return _u
 }
 
-// AddLevel adds i to the "level" field.
-func (srauo *ServiceRequestApprovalUpdateOne) AddLevel(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.AddLevel(i)
-	return srauo
+// AddLevel adds value to the "level" field.
+func (_u *ServiceRequestApprovalUpdateOne) AddLevel(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.AddLevel(v)
+	return _u
 }
 
 // SetStep sets the "step" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetStep(s string) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetStep(s)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetStep(v string) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetStep(v)
+	return _u
 }
 
 // SetNillableStep sets the "step" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableStep(s *string) *ServiceRequestApprovalUpdateOne {
-	if s != nil {
-		srauo.SetStep(*s)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableStep(v *string) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetStep(*v)
 	}
-	return srauo
+	return _u
 }
 
 // ClearStep clears the value of the "step" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearStep() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearStep()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearStep() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearStep()
+	return _u
 }
 
 // SetNode sets the "node" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNode(m map[string]interface{}) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetNode(m)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetNode(v map[string]interface{}) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetNode(v)
+	return _u
 }
 
 // ClearNode clears the value of the "node" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearNode() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearNode()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearNode() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearNode()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetStatus(s string) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetStatus(s)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetStatus(v string) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableStatus(s *string) *ServiceRequestApprovalUpdateOne {
-	if s != nil {
-		srauo.SetStatus(*s)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableStatus(v *string) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return srauo
+	return _u
 }
 
 // SetApproverID sets the "approver_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetApproverID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ResetApproverID()
-	srauo.mutation.SetApproverID(i)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetApproverID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ResetApproverID()
+	_u.mutation.SetApproverID(v)
+	return _u
 }
 
 // SetNillableApproverID sets the "approver_id" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableApproverID(i *int) *ServiceRequestApprovalUpdateOne {
-	if i != nil {
-		srauo.SetApproverID(*i)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableApproverID(v *int) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetApproverID(*v)
 	}
-	return srauo
+	return _u
 }
 
-// AddApproverID adds i to the "approver_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) AddApproverID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.AddApproverID(i)
-	return srauo
+// AddApproverID adds value to the "approver_id" field.
+func (_u *ServiceRequestApprovalUpdateOne) AddApproverID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.AddApproverID(v)
+	return _u
 }
 
 // ClearApproverID clears the value of the "approver_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearApproverID() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearApproverID()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearApproverID() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearApproverID()
+	return _u
 }
 
 // SetApproverName sets the "approver_name" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetApproverName(s string) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetApproverName(s)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetApproverName(v string) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetApproverName(v)
+	return _u
 }
 
 // SetNillableApproverName sets the "approver_name" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableApproverName(s *string) *ServiceRequestApprovalUpdateOne {
-	if s != nil {
-		srauo.SetApproverName(*s)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableApproverName(v *string) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetApproverName(*v)
 	}
-	return srauo
+	return _u
 }
 
 // ClearApproverName clears the value of the "approver_name" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearApproverName() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearApproverName()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearApproverName() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearApproverName()
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetAction(s string) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetAction(s)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetAction(v string) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableAction(s *string) *ServiceRequestApprovalUpdateOne {
-	if s != nil {
-		srauo.SetAction(*s)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableAction(v *string) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return srauo
+	return _u
 }
 
 // ClearAction clears the value of the "action" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearAction() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearAction()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearAction() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearAction()
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetComment(s string) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetComment(s)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetComment(v string) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableComment(s *string) *ServiceRequestApprovalUpdateOne {
-	if s != nil {
-		srauo.SetComment(*s)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableComment(v *string) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return srauo
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearComment() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearComment()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearComment() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetTimeoutHours sets the "timeout_hours" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetTimeoutHours(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ResetTimeoutHours()
-	srauo.mutation.SetTimeoutHours(i)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetTimeoutHours(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ResetTimeoutHours()
+	_u.mutation.SetTimeoutHours(v)
+	return _u
 }
 
 // SetNillableTimeoutHours sets the "timeout_hours" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableTimeoutHours(i *int) *ServiceRequestApprovalUpdateOne {
-	if i != nil {
-		srauo.SetTimeoutHours(*i)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableTimeoutHours(v *int) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetTimeoutHours(*v)
 	}
-	return srauo
+	return _u
 }
 
-// AddTimeoutHours adds i to the "timeout_hours" field.
-func (srauo *ServiceRequestApprovalUpdateOne) AddTimeoutHours(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.AddTimeoutHours(i)
-	return srauo
+// AddTimeoutHours adds value to the "timeout_hours" field.
+func (_u *ServiceRequestApprovalUpdateOne) AddTimeoutHours(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.AddTimeoutHours(v)
+	return _u
 }
 
 // SetDueAt sets the "due_at" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetDueAt(t time.Time) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetDueAt(t)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetDueAt(v time.Time) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetDueAt(v)
+	return _u
 }
 
 // SetNillableDueAt sets the "due_at" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableDueAt(t *time.Time) *ServiceRequestApprovalUpdateOne {
-	if t != nil {
-		srauo.SetDueAt(*t)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableDueAt(v *time.Time) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetDueAt(*v)
 	}
-	return srauo
+	return _u
 }
 
 // ClearDueAt clears the value of the "due_at" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearDueAt() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearDueAt()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearDueAt() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearDueAt()
+	return _u
 }
 
 // SetIsEscalated sets the "is_escalated" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetIsEscalated(b bool) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetIsEscalated(b)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetIsEscalated(v bool) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetIsEscalated(v)
+	return _u
 }
 
 // SetNillableIsEscalated sets the "is_escalated" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableIsEscalated(b *bool) *ServiceRequestApprovalUpdateOne {
-	if b != nil {
-		srauo.SetIsEscalated(*b)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableIsEscalated(v *bool) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetIsEscalated(*v)
 	}
-	return srauo
+	return _u
 }
 
 // SetDelegatedToID sets the "delegated_to_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetDelegatedToID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ResetDelegatedToID()
-	srauo.mutation.SetDelegatedToID(i)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetDelegatedToID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ResetDelegatedToID()
+	_u.mutation.SetDelegatedToID(v)
+	return _u
 }
 
 // SetNillableDelegatedToID sets the "delegated_to_id" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableDelegatedToID(i *int) *ServiceRequestApprovalUpdateOne {
-	if i != nil {
-		srauo.SetDelegatedToID(*i)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableDelegatedToID(v *int) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetDelegatedToID(*v)
 	}
-	return srauo
+	return _u
 }
 
-// AddDelegatedToID adds i to the "delegated_to_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) AddDelegatedToID(i int) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.AddDelegatedToID(i)
-	return srauo
+// AddDelegatedToID adds value to the "delegated_to_id" field.
+func (_u *ServiceRequestApprovalUpdateOne) AddDelegatedToID(v int) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.AddDelegatedToID(v)
+	return _u
 }
 
 // ClearDelegatedToID clears the value of the "delegated_to_id" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearDelegatedToID() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearDelegatedToID()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearDelegatedToID() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearDelegatedToID()
+	return _u
 }
 
 // SetEscalationReason sets the "escalation_reason" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetEscalationReason(s string) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetEscalationReason(s)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetEscalationReason(v string) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetEscalationReason(v)
+	return _u
 }
 
 // SetNillableEscalationReason sets the "escalation_reason" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableEscalationReason(s *string) *ServiceRequestApprovalUpdateOne {
-	if s != nil {
-		srauo.SetEscalationReason(*s)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableEscalationReason(v *string) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetEscalationReason(*v)
 	}
-	return srauo
+	return _u
 }
 
 // ClearEscalationReason clears the value of the "escalation_reason" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearEscalationReason() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearEscalationReason()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearEscalationReason() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearEscalationReason()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetCreatedAt(t time.Time) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetCreatedAt(t)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetCreatedAt(v time.Time) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableCreatedAt(t *time.Time) *ServiceRequestApprovalUpdateOne {
-	if t != nil {
-		srauo.SetCreatedAt(*t)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableCreatedAt(v *time.Time) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return srauo
+	return _u
 }
 
 // SetProcessedAt sets the "processed_at" field.
-func (srauo *ServiceRequestApprovalUpdateOne) SetProcessedAt(t time.Time) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.SetProcessedAt(t)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) SetProcessedAt(v time.Time) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.SetProcessedAt(v)
+	return _u
 }
 
 // SetNillableProcessedAt sets the "processed_at" field if the given value is not nil.
-func (srauo *ServiceRequestApprovalUpdateOne) SetNillableProcessedAt(t *time.Time) *ServiceRequestApprovalUpdateOne {
-	if t != nil {
-		srauo.SetProcessedAt(*t)
+func (_u *ServiceRequestApprovalUpdateOne) SetNillableProcessedAt(v *time.Time) *ServiceRequestApprovalUpdateOne {
+	if v != nil {
+		_u.SetProcessedAt(*v)
 	}
-	return srauo
+	return _u
 }
 
 // ClearProcessedAt clears the value of the "processed_at" field.
-func (srauo *ServiceRequestApprovalUpdateOne) ClearProcessedAt() *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.ClearProcessedAt()
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) ClearProcessedAt() *ServiceRequestApprovalUpdateOne {
+	_u.mutation.ClearProcessedAt()
+	return _u
 }
 
 // Mutation returns the ServiceRequestApprovalMutation object of the builder.
-func (srauo *ServiceRequestApprovalUpdateOne) Mutation() *ServiceRequestApprovalMutation {
-	return srauo.mutation
+func (_u *ServiceRequestApprovalUpdateOne) Mutation() *ServiceRequestApprovalMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the ServiceRequestApprovalUpdate builder.
-func (srauo *ServiceRequestApprovalUpdateOne) Where(ps ...predicate.ServiceRequestApproval) *ServiceRequestApprovalUpdateOne {
-	srauo.mutation.Where(ps...)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) Where(ps ...predicate.ServiceRequestApproval) *ServiceRequestApprovalUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (srauo *ServiceRequestApprovalUpdateOne) Select(field string, fields ...string) *ServiceRequestApprovalUpdateOne {
-	srauo.fields = append([]string{field}, fields...)
-	return srauo
+func (_u *ServiceRequestApprovalUpdateOne) Select(field string, fields ...string) *ServiceRequestApprovalUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ServiceRequestApproval entity.
-func (srauo *ServiceRequestApprovalUpdateOne) Save(ctx context.Context) (*ServiceRequestApproval, error) {
-	return withHooks(ctx, srauo.sqlSave, srauo.mutation, srauo.hooks)
+func (_u *ServiceRequestApprovalUpdateOne) Save(ctx context.Context) (*ServiceRequestApproval, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (srauo *ServiceRequestApprovalUpdateOne) SaveX(ctx context.Context) *ServiceRequestApproval {
-	node, err := srauo.Save(ctx)
+func (_u *ServiceRequestApprovalUpdateOne) SaveX(ctx context.Context) *ServiceRequestApproval {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -908,31 +908,31 @@ func (srauo *ServiceRequestApprovalUpdateOne) SaveX(ctx context.Context) *Servic
 }
 
 // Exec executes the query on the entity.
-func (srauo *ServiceRequestApprovalUpdateOne) Exec(ctx context.Context) error {
-	_, err := srauo.Save(ctx)
+func (_u *ServiceRequestApprovalUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (srauo *ServiceRequestApprovalUpdateOne) ExecX(ctx context.Context) {
-	if err := srauo.Exec(ctx); err != nil {
+func (_u *ServiceRequestApprovalUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (srauo *ServiceRequestApprovalUpdateOne) check() error {
-	if v, ok := srauo.mutation.TenantID(); ok {
+func (_u *ServiceRequestApprovalUpdateOne) check() error {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := servicerequestapproval.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.tenant_id": %w`, err)}
 		}
 	}
-	if v, ok := srauo.mutation.ServiceRequestID(); ok {
+	if v, ok := _u.mutation.ServiceRequestID(); ok {
 		if err := servicerequestapproval.ServiceRequestIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.service_request_id": %w`, err)}
 		}
 	}
-	if v, ok := srauo.mutation.Level(); ok {
+	if v, ok := _u.mutation.Level(); ok {
 		if err := servicerequestapproval.LevelValidator(v); err != nil {
 			return &ValidationError{Name: "level", err: fmt.Errorf(`ent: validator failed for field "ServiceRequestApproval.level": %w`, err)}
 		}
@@ -940,17 +940,17 @@ func (srauo *ServiceRequestApprovalUpdateOne) check() error {
 	return nil
 }
 
-func (srauo *ServiceRequestApprovalUpdateOne) sqlSave(ctx context.Context) (_node *ServiceRequestApproval, err error) {
-	if err := srauo.check(); err != nil {
+func (_u *ServiceRequestApprovalUpdateOne) sqlSave(ctx context.Context) (_node *ServiceRequestApproval, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(servicerequestapproval.Table, servicerequestapproval.Columns, sqlgraph.NewFieldSpec(servicerequestapproval.FieldID, field.TypeInt))
-	id, ok := srauo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ServiceRequestApproval.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := srauo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, servicerequestapproval.FieldID)
 		for _, f := range fields {
@@ -962,116 +962,116 @@ func (srauo *ServiceRequestApprovalUpdateOne) sqlSave(ctx context.Context) (_nod
 			}
 		}
 	}
-	if ps := srauo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := srauo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(servicerequestapproval.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(servicerequestapproval.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.ServiceRequestID(); ok {
+	if value, ok := _u.mutation.ServiceRequestID(); ok {
 		_spec.SetField(servicerequestapproval.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.AddedServiceRequestID(); ok {
+	if value, ok := _u.mutation.AddedServiceRequestID(); ok {
 		_spec.AddField(servicerequestapproval.FieldServiceRequestID, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.Level(); ok {
+	if value, ok := _u.mutation.Level(); ok {
 		_spec.SetField(servicerequestapproval.FieldLevel, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.AddedLevel(); ok {
+	if value, ok := _u.mutation.AddedLevel(); ok {
 		_spec.AddField(servicerequestapproval.FieldLevel, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.Step(); ok {
+	if value, ok := _u.mutation.Step(); ok {
 		_spec.SetField(servicerequestapproval.FieldStep, field.TypeString, value)
 	}
-	if srauo.mutation.StepCleared() {
+	if _u.mutation.StepCleared() {
 		_spec.ClearField(servicerequestapproval.FieldStep, field.TypeString)
 	}
-	if value, ok := srauo.mutation.Node(); ok {
+	if value, ok := _u.mutation.Node(); ok {
 		_spec.SetField(servicerequestapproval.FieldNode, field.TypeJSON, value)
 	}
-	if srauo.mutation.NodeCleared() {
+	if _u.mutation.NodeCleared() {
 		_spec.ClearField(servicerequestapproval.FieldNode, field.TypeJSON)
 	}
-	if value, ok := srauo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(servicerequestapproval.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := srauo.mutation.ApproverID(); ok {
+	if value, ok := _u.mutation.ApproverID(); ok {
 		_spec.SetField(servicerequestapproval.FieldApproverID, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.AddedApproverID(); ok {
+	if value, ok := _u.mutation.AddedApproverID(); ok {
 		_spec.AddField(servicerequestapproval.FieldApproverID, field.TypeInt, value)
 	}
-	if srauo.mutation.ApproverIDCleared() {
+	if _u.mutation.ApproverIDCleared() {
 		_spec.ClearField(servicerequestapproval.FieldApproverID, field.TypeInt)
 	}
-	if value, ok := srauo.mutation.ApproverName(); ok {
+	if value, ok := _u.mutation.ApproverName(); ok {
 		_spec.SetField(servicerequestapproval.FieldApproverName, field.TypeString, value)
 	}
-	if srauo.mutation.ApproverNameCleared() {
+	if _u.mutation.ApproverNameCleared() {
 		_spec.ClearField(servicerequestapproval.FieldApproverName, field.TypeString)
 	}
-	if value, ok := srauo.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(servicerequestapproval.FieldAction, field.TypeString, value)
 	}
-	if srauo.mutation.ActionCleared() {
+	if _u.mutation.ActionCleared() {
 		_spec.ClearField(servicerequestapproval.FieldAction, field.TypeString)
 	}
-	if value, ok := srauo.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(servicerequestapproval.FieldComment, field.TypeString, value)
 	}
-	if srauo.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(servicerequestapproval.FieldComment, field.TypeString)
 	}
-	if value, ok := srauo.mutation.TimeoutHours(); ok {
+	if value, ok := _u.mutation.TimeoutHours(); ok {
 		_spec.SetField(servicerequestapproval.FieldTimeoutHours, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.AddedTimeoutHours(); ok {
+	if value, ok := _u.mutation.AddedTimeoutHours(); ok {
 		_spec.AddField(servicerequestapproval.FieldTimeoutHours, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.DueAt(); ok {
+	if value, ok := _u.mutation.DueAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldDueAt, field.TypeTime, value)
 	}
-	if srauo.mutation.DueAtCleared() {
+	if _u.mutation.DueAtCleared() {
 		_spec.ClearField(servicerequestapproval.FieldDueAt, field.TypeTime)
 	}
-	if value, ok := srauo.mutation.IsEscalated(); ok {
+	if value, ok := _u.mutation.IsEscalated(); ok {
 		_spec.SetField(servicerequestapproval.FieldIsEscalated, field.TypeBool, value)
 	}
-	if value, ok := srauo.mutation.DelegatedToID(); ok {
+	if value, ok := _u.mutation.DelegatedToID(); ok {
 		_spec.SetField(servicerequestapproval.FieldDelegatedToID, field.TypeInt, value)
 	}
-	if value, ok := srauo.mutation.AddedDelegatedToID(); ok {
+	if value, ok := _u.mutation.AddedDelegatedToID(); ok {
 		_spec.AddField(servicerequestapproval.FieldDelegatedToID, field.TypeInt, value)
 	}
-	if srauo.mutation.DelegatedToIDCleared() {
+	if _u.mutation.DelegatedToIDCleared() {
 		_spec.ClearField(servicerequestapproval.FieldDelegatedToID, field.TypeInt)
 	}
-	if value, ok := srauo.mutation.EscalationReason(); ok {
+	if value, ok := _u.mutation.EscalationReason(); ok {
 		_spec.SetField(servicerequestapproval.FieldEscalationReason, field.TypeString, value)
 	}
-	if srauo.mutation.EscalationReasonCleared() {
+	if _u.mutation.EscalationReasonCleared() {
 		_spec.ClearField(servicerequestapproval.FieldEscalationReason, field.TypeString)
 	}
-	if value, ok := srauo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := srauo.mutation.ProcessedAt(); ok {
+	if value, ok := _u.mutation.ProcessedAt(); ok {
 		_spec.SetField(servicerequestapproval.FieldProcessedAt, field.TypeTime, value)
 	}
-	if srauo.mutation.ProcessedAtCleared() {
+	if _u.mutation.ProcessedAtCleared() {
 		_spec.ClearField(servicerequestapproval.FieldProcessedAt, field.TypeTime)
 	}
-	_node = &ServiceRequestApproval{config: srauo.config}
+	_node = &ServiceRequestApproval{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, srauo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{servicerequestapproval.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1079,6 +1079,6 @@ func (srauo *ServiceRequestApprovalUpdateOne) sqlSave(ctx context.Context) (_nod
 		}
 		return nil, err
 	}
-	srauo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -101,7 +101,7 @@ func (*TicketComment) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketComment fields.
-func (tc *TicketComment) assignValues(columns []string, values []any) error {
+func (_m *TicketComment) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -112,36 +112,36 @@ func (tc *TicketComment) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			tc.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ticketcomment.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
 			} else if value.Valid {
-				tc.TicketID = int(value.Int64)
+				_m.TicketID = int(value.Int64)
 			}
 		case ticketcomment.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				tc.UserID = int(value.Int64)
+				_m.UserID = int(value.Int64)
 			}
 		case ticketcomment.FieldContent:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value.Valid {
-				tc.Content = value.String
+				_m.Content = value.String
 			}
 		case ticketcomment.FieldIsInternal:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_internal", values[i])
 			} else if value.Valid {
-				tc.IsInternal = value.Bool
+				_m.IsInternal = value.Bool
 			}
 		case ticketcomment.FieldMentions:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field mentions", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tc.Mentions); err != nil {
+				if err := json.Unmarshal(*value, &_m.Mentions); err != nil {
 					return fmt.Errorf("unmarshal field mentions: %w", err)
 				}
 			}
@@ -149,7 +149,7 @@ func (tc *TicketComment) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field attachments", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tc.Attachments); err != nil {
+				if err := json.Unmarshal(*value, &_m.Attachments); err != nil {
 					return fmt.Errorf("unmarshal field attachments: %w", err)
 				}
 			}
@@ -157,22 +157,22 @@ func (tc *TicketComment) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				tc.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ticketcomment.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tc.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case ticketcomment.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				tc.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			tc.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -180,69 +180,69 @@ func (tc *TicketComment) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketComment.
 // This includes values selected through modifiers, order, etc.
-func (tc *TicketComment) Value(name string) (ent.Value, error) {
-	return tc.selectValues.Get(name)
+func (_m *TicketComment) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTicket queries the "ticket" edge of the TicketComment entity.
-func (tc *TicketComment) QueryTicket() *TicketQuery {
-	return NewTicketCommentClient(tc.config).QueryTicket(tc)
+func (_m *TicketComment) QueryTicket() *TicketQuery {
+	return NewTicketCommentClient(_m.config).QueryTicket(_m)
 }
 
 // QueryUser queries the "user" edge of the TicketComment entity.
-func (tc *TicketComment) QueryUser() *UserQuery {
-	return NewTicketCommentClient(tc.config).QueryUser(tc)
+func (_m *TicketComment) QueryUser() *UserQuery {
+	return NewTicketCommentClient(_m.config).QueryUser(_m)
 }
 
 // Update returns a builder for updating this TicketComment.
 // Note that you need to call TicketComment.Unwrap() before calling this method if this TicketComment
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tc *TicketComment) Update() *TicketCommentUpdateOne {
-	return NewTicketCommentClient(tc.config).UpdateOne(tc)
+func (_m *TicketComment) Update() *TicketCommentUpdateOne {
+	return NewTicketCommentClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketComment entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tc *TicketComment) Unwrap() *TicketComment {
-	_tx, ok := tc.config.driver.(*txDriver)
+func (_m *TicketComment) Unwrap() *TicketComment {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketComment is not a transactional entity")
 	}
-	tc.config.driver = _tx.drv
-	return tc
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tc *TicketComment) String() string {
+func (_m *TicketComment) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketComment(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tc.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", tc.TicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", tc.UserID))
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("content=")
-	builder.WriteString(tc.Content)
+	builder.WriteString(_m.Content)
 	builder.WriteString(", ")
 	builder.WriteString("is_internal=")
-	builder.WriteString(fmt.Sprintf("%v", tc.IsInternal))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsInternal))
 	builder.WriteString(", ")
 	builder.WriteString("mentions=")
-	builder.WriteString(fmt.Sprintf("%v", tc.Mentions))
+	builder.WriteString(fmt.Sprintf("%v", _m.Mentions))
 	builder.WriteString(", ")
 	builder.WriteString("attachments=")
-	builder.WriteString(fmt.Sprintf("%v", tc.Attachments))
+	builder.WriteString(fmt.Sprintf("%v", _m.Attachments))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", tc.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tc.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(tc.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

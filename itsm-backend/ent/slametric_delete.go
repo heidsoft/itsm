@@ -20,56 +20,56 @@ type SLAMetricDelete struct {
 }
 
 // Where appends a list predicates to the SLAMetricDelete builder.
-func (smd *SLAMetricDelete) Where(ps ...predicate.SLAMetric) *SLAMetricDelete {
-	smd.mutation.Where(ps...)
-	return smd
+func (_d *SLAMetricDelete) Where(ps ...predicate.SLAMetric) *SLAMetricDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (smd *SLAMetricDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, smd.sqlExec, smd.mutation, smd.hooks)
+func (_d *SLAMetricDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (smd *SLAMetricDelete) ExecX(ctx context.Context) int {
-	n, err := smd.Exec(ctx)
+func (_d *SLAMetricDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (smd *SLAMetricDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *SLAMetricDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(slametric.Table, sqlgraph.NewFieldSpec(slametric.FieldID, field.TypeInt))
-	if ps := smd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, smd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	smd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // SLAMetricDeleteOne is the builder for deleting a single SLAMetric entity.
 type SLAMetricDeleteOne struct {
-	smd *SLAMetricDelete
+	_d *SLAMetricDelete
 }
 
 // Where appends a list predicates to the SLAMetricDelete builder.
-func (smdo *SLAMetricDeleteOne) Where(ps ...predicate.SLAMetric) *SLAMetricDeleteOne {
-	smdo.smd.mutation.Where(ps...)
-	return smdo
+func (_d *SLAMetricDeleteOne) Where(ps ...predicate.SLAMetric) *SLAMetricDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (smdo *SLAMetricDeleteOne) Exec(ctx context.Context) error {
-	n, err := smdo.smd.Exec(ctx)
+func (_d *SLAMetricDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (smdo *SLAMetricDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (smdo *SLAMetricDeleteOne) ExecX(ctx context.Context) {
-	if err := smdo.Exec(ctx); err != nil {
+func (_d *SLAMetricDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

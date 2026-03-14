@@ -20,56 +20,56 @@ type KnownErrorDelete struct {
 }
 
 // Where appends a list predicates to the KnownErrorDelete builder.
-func (ked *KnownErrorDelete) Where(ps ...predicate.KnownError) *KnownErrorDelete {
-	ked.mutation.Where(ps...)
-	return ked
+func (_d *KnownErrorDelete) Where(ps ...predicate.KnownError) *KnownErrorDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ked *KnownErrorDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ked.sqlExec, ked.mutation, ked.hooks)
+func (_d *KnownErrorDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ked *KnownErrorDelete) ExecX(ctx context.Context) int {
-	n, err := ked.Exec(ctx)
+func (_d *KnownErrorDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ked *KnownErrorDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *KnownErrorDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(knownerror.Table, sqlgraph.NewFieldSpec(knownerror.FieldID, field.TypeInt))
-	if ps := ked.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ked.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ked.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // KnownErrorDeleteOne is the builder for deleting a single KnownError entity.
 type KnownErrorDeleteOne struct {
-	ked *KnownErrorDelete
+	_d *KnownErrorDelete
 }
 
 // Where appends a list predicates to the KnownErrorDelete builder.
-func (kedo *KnownErrorDeleteOne) Where(ps ...predicate.KnownError) *KnownErrorDeleteOne {
-	kedo.ked.mutation.Where(ps...)
-	return kedo
+func (_d *KnownErrorDeleteOne) Where(ps ...predicate.KnownError) *KnownErrorDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (kedo *KnownErrorDeleteOne) Exec(ctx context.Context) error {
-	n, err := kedo.ked.Exec(ctx)
+func (_d *KnownErrorDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (kedo *KnownErrorDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kedo *KnownErrorDeleteOne) ExecX(ctx context.Context) {
-	if err := kedo.Exec(ctx); err != nil {
+func (_d *KnownErrorDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

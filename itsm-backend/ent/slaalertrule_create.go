@@ -23,153 +23,153 @@ type SLAAlertRuleCreate struct {
 }
 
 // SetName sets the "name" field.
-func (sarc *SLAAlertRuleCreate) SetName(s string) *SLAAlertRuleCreate {
-	sarc.mutation.SetName(s)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetName(v string) *SLAAlertRuleCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
-func (sarc *SLAAlertRuleCreate) SetSLADefinitionID(i int) *SLAAlertRuleCreate {
-	sarc.mutation.SetSLADefinitionID(i)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetSLADefinitionID(v int) *SLAAlertRuleCreate {
+	_c.mutation.SetSLADefinitionID(v)
+	return _c
 }
 
 // SetAlertLevel sets the "alert_level" field.
-func (sarc *SLAAlertRuleCreate) SetAlertLevel(s string) *SLAAlertRuleCreate {
-	sarc.mutation.SetAlertLevel(s)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetAlertLevel(v string) *SLAAlertRuleCreate {
+	_c.mutation.SetAlertLevel(v)
+	return _c
 }
 
 // SetNillableAlertLevel sets the "alert_level" field if the given value is not nil.
-func (sarc *SLAAlertRuleCreate) SetNillableAlertLevel(s *string) *SLAAlertRuleCreate {
-	if s != nil {
-		sarc.SetAlertLevel(*s)
+func (_c *SLAAlertRuleCreate) SetNillableAlertLevel(v *string) *SLAAlertRuleCreate {
+	if v != nil {
+		_c.SetAlertLevel(*v)
 	}
-	return sarc
+	return _c
 }
 
 // SetThresholdPercentage sets the "threshold_percentage" field.
-func (sarc *SLAAlertRuleCreate) SetThresholdPercentage(i int) *SLAAlertRuleCreate {
-	sarc.mutation.SetThresholdPercentage(i)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetThresholdPercentage(v int) *SLAAlertRuleCreate {
+	_c.mutation.SetThresholdPercentage(v)
+	return _c
 }
 
 // SetNillableThresholdPercentage sets the "threshold_percentage" field if the given value is not nil.
-func (sarc *SLAAlertRuleCreate) SetNillableThresholdPercentage(i *int) *SLAAlertRuleCreate {
-	if i != nil {
-		sarc.SetThresholdPercentage(*i)
+func (_c *SLAAlertRuleCreate) SetNillableThresholdPercentage(v *int) *SLAAlertRuleCreate {
+	if v != nil {
+		_c.SetThresholdPercentage(*v)
 	}
-	return sarc
+	return _c
 }
 
 // SetNotificationChannels sets the "notification_channels" field.
-func (sarc *SLAAlertRuleCreate) SetNotificationChannels(s []string) *SLAAlertRuleCreate {
-	sarc.mutation.SetNotificationChannels(s)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetNotificationChannels(v []string) *SLAAlertRuleCreate {
+	_c.mutation.SetNotificationChannels(v)
+	return _c
 }
 
 // SetEscalationEnabled sets the "escalation_enabled" field.
-func (sarc *SLAAlertRuleCreate) SetEscalationEnabled(b bool) *SLAAlertRuleCreate {
-	sarc.mutation.SetEscalationEnabled(b)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetEscalationEnabled(v bool) *SLAAlertRuleCreate {
+	_c.mutation.SetEscalationEnabled(v)
+	return _c
 }
 
 // SetNillableEscalationEnabled sets the "escalation_enabled" field if the given value is not nil.
-func (sarc *SLAAlertRuleCreate) SetNillableEscalationEnabled(b *bool) *SLAAlertRuleCreate {
-	if b != nil {
-		sarc.SetEscalationEnabled(*b)
+func (_c *SLAAlertRuleCreate) SetNillableEscalationEnabled(v *bool) *SLAAlertRuleCreate {
+	if v != nil {
+		_c.SetEscalationEnabled(*v)
 	}
-	return sarc
+	return _c
 }
 
 // SetEscalationLevels sets the "escalation_levels" field.
-func (sarc *SLAAlertRuleCreate) SetEscalationLevels(m []map[string]interface{}) *SLAAlertRuleCreate {
-	sarc.mutation.SetEscalationLevels(m)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetEscalationLevels(v []map[string]interface{}) *SLAAlertRuleCreate {
+	_c.mutation.SetEscalationLevels(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (sarc *SLAAlertRuleCreate) SetIsActive(b bool) *SLAAlertRuleCreate {
-	sarc.mutation.SetIsActive(b)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetIsActive(v bool) *SLAAlertRuleCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (sarc *SLAAlertRuleCreate) SetNillableIsActive(b *bool) *SLAAlertRuleCreate {
-	if b != nil {
-		sarc.SetIsActive(*b)
+func (_c *SLAAlertRuleCreate) SetNillableIsActive(v *bool) *SLAAlertRuleCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return sarc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (sarc *SLAAlertRuleCreate) SetTenantID(i int) *SLAAlertRuleCreate {
-	sarc.mutation.SetTenantID(i)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetTenantID(v int) *SLAAlertRuleCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (sarc *SLAAlertRuleCreate) SetCreatedAt(t time.Time) *SLAAlertRuleCreate {
-	sarc.mutation.SetCreatedAt(t)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetCreatedAt(v time.Time) *SLAAlertRuleCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (sarc *SLAAlertRuleCreate) SetNillableCreatedAt(t *time.Time) *SLAAlertRuleCreate {
-	if t != nil {
-		sarc.SetCreatedAt(*t)
+func (_c *SLAAlertRuleCreate) SetNillableCreatedAt(v *time.Time) *SLAAlertRuleCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return sarc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (sarc *SLAAlertRuleCreate) SetUpdatedAt(t time.Time) *SLAAlertRuleCreate {
-	sarc.mutation.SetUpdatedAt(t)
-	return sarc
+func (_c *SLAAlertRuleCreate) SetUpdatedAt(v time.Time) *SLAAlertRuleCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (sarc *SLAAlertRuleCreate) SetNillableUpdatedAt(t *time.Time) *SLAAlertRuleCreate {
-	if t != nil {
-		sarc.SetUpdatedAt(*t)
+func (_c *SLAAlertRuleCreate) SetNillableUpdatedAt(v *time.Time) *SLAAlertRuleCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return sarc
+	return _c
 }
 
 // SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
-func (sarc *SLAAlertRuleCreate) SetSLADefinition(s *SLADefinition) *SLAAlertRuleCreate {
-	return sarc.SetSLADefinitionID(s.ID)
+func (_c *SLAAlertRuleCreate) SetSLADefinition(v *SLADefinition) *SLAAlertRuleCreate {
+	return _c.SetSLADefinitionID(v.ID)
 }
 
 // AddAlertHistoryIDs adds the "alert_history" edge to the SLAAlertHistory entity by IDs.
-func (sarc *SLAAlertRuleCreate) AddAlertHistoryIDs(ids ...int) *SLAAlertRuleCreate {
-	sarc.mutation.AddAlertHistoryIDs(ids...)
-	return sarc
+func (_c *SLAAlertRuleCreate) AddAlertHistoryIDs(ids ...int) *SLAAlertRuleCreate {
+	_c.mutation.AddAlertHistoryIDs(ids...)
+	return _c
 }
 
 // AddAlertHistory adds the "alert_history" edges to the SLAAlertHistory entity.
-func (sarc *SLAAlertRuleCreate) AddAlertHistory(s ...*SLAAlertHistory) *SLAAlertRuleCreate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_c *SLAAlertRuleCreate) AddAlertHistory(v ...*SLAAlertHistory) *SLAAlertRuleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return sarc.AddAlertHistoryIDs(ids...)
+	return _c.AddAlertHistoryIDs(ids...)
 }
 
 // Mutation returns the SLAAlertRuleMutation object of the builder.
-func (sarc *SLAAlertRuleCreate) Mutation() *SLAAlertRuleMutation {
-	return sarc.mutation
+func (_c *SLAAlertRuleCreate) Mutation() *SLAAlertRuleMutation {
+	return _c.mutation
 }
 
 // Save creates the SLAAlertRule in the database.
-func (sarc *SLAAlertRuleCreate) Save(ctx context.Context) (*SLAAlertRule, error) {
-	sarc.defaults()
-	return withHooks(ctx, sarc.sqlSave, sarc.mutation, sarc.hooks)
+func (_c *SLAAlertRuleCreate) Save(ctx context.Context) (*SLAAlertRule, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (sarc *SLAAlertRuleCreate) SaveX(ctx context.Context) *SLAAlertRule {
-	v, err := sarc.Save(ctx)
+func (_c *SLAAlertRuleCreate) SaveX(ctx context.Context) *SLAAlertRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -177,114 +177,114 @@ func (sarc *SLAAlertRuleCreate) SaveX(ctx context.Context) *SLAAlertRule {
 }
 
 // Exec executes the query.
-func (sarc *SLAAlertRuleCreate) Exec(ctx context.Context) error {
-	_, err := sarc.Save(ctx)
+func (_c *SLAAlertRuleCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sarc *SLAAlertRuleCreate) ExecX(ctx context.Context) {
-	if err := sarc.Exec(ctx); err != nil {
+func (_c *SLAAlertRuleCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (sarc *SLAAlertRuleCreate) defaults() {
-	if _, ok := sarc.mutation.AlertLevel(); !ok {
+func (_c *SLAAlertRuleCreate) defaults() {
+	if _, ok := _c.mutation.AlertLevel(); !ok {
 		v := slaalertrule.DefaultAlertLevel
-		sarc.mutation.SetAlertLevel(v)
+		_c.mutation.SetAlertLevel(v)
 	}
-	if _, ok := sarc.mutation.ThresholdPercentage(); !ok {
+	if _, ok := _c.mutation.ThresholdPercentage(); !ok {
 		v := slaalertrule.DefaultThresholdPercentage
-		sarc.mutation.SetThresholdPercentage(v)
+		_c.mutation.SetThresholdPercentage(v)
 	}
-	if _, ok := sarc.mutation.NotificationChannels(); !ok {
+	if _, ok := _c.mutation.NotificationChannels(); !ok {
 		v := slaalertrule.DefaultNotificationChannels
-		sarc.mutation.SetNotificationChannels(v)
+		_c.mutation.SetNotificationChannels(v)
 	}
-	if _, ok := sarc.mutation.EscalationEnabled(); !ok {
+	if _, ok := _c.mutation.EscalationEnabled(); !ok {
 		v := slaalertrule.DefaultEscalationEnabled
-		sarc.mutation.SetEscalationEnabled(v)
+		_c.mutation.SetEscalationEnabled(v)
 	}
-	if _, ok := sarc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := slaalertrule.DefaultIsActive
-		sarc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := sarc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := slaalertrule.DefaultCreatedAt()
-		sarc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := sarc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := slaalertrule.DefaultUpdatedAt()
-		sarc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (sarc *SLAAlertRuleCreate) check() error {
-	if _, ok := sarc.mutation.Name(); !ok {
+func (_c *SLAAlertRuleCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "SLAAlertRule.name"`)}
 	}
-	if v, ok := sarc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := slaalertrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.name": %w`, err)}
 		}
 	}
-	if _, ok := sarc.mutation.SLADefinitionID(); !ok {
+	if _, ok := _c.mutation.SLADefinitionID(); !ok {
 		return &ValidationError{Name: "sla_definition_id", err: errors.New(`ent: missing required field "SLAAlertRule.sla_definition_id"`)}
 	}
-	if v, ok := sarc.mutation.SLADefinitionID(); ok {
+	if v, ok := _c.mutation.SLADefinitionID(); ok {
 		if err := slaalertrule.SLADefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "sla_definition_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.sla_definition_id": %w`, err)}
 		}
 	}
-	if _, ok := sarc.mutation.AlertLevel(); !ok {
+	if _, ok := _c.mutation.AlertLevel(); !ok {
 		return &ValidationError{Name: "alert_level", err: errors.New(`ent: missing required field "SLAAlertRule.alert_level"`)}
 	}
-	if _, ok := sarc.mutation.ThresholdPercentage(); !ok {
+	if _, ok := _c.mutation.ThresholdPercentage(); !ok {
 		return &ValidationError{Name: "threshold_percentage", err: errors.New(`ent: missing required field "SLAAlertRule.threshold_percentage"`)}
 	}
-	if v, ok := sarc.mutation.ThresholdPercentage(); ok {
+	if v, ok := _c.mutation.ThresholdPercentage(); ok {
 		if err := slaalertrule.ThresholdPercentageValidator(v); err != nil {
 			return &ValidationError{Name: "threshold_percentage", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.threshold_percentage": %w`, err)}
 		}
 	}
-	if _, ok := sarc.mutation.NotificationChannels(); !ok {
+	if _, ok := _c.mutation.NotificationChannels(); !ok {
 		return &ValidationError{Name: "notification_channels", err: errors.New(`ent: missing required field "SLAAlertRule.notification_channels"`)}
 	}
-	if _, ok := sarc.mutation.EscalationEnabled(); !ok {
+	if _, ok := _c.mutation.EscalationEnabled(); !ok {
 		return &ValidationError{Name: "escalation_enabled", err: errors.New(`ent: missing required field "SLAAlertRule.escalation_enabled"`)}
 	}
-	if _, ok := sarc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "SLAAlertRule.is_active"`)}
 	}
-	if _, ok := sarc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "SLAAlertRule.tenant_id"`)}
 	}
-	if v, ok := sarc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := slaalertrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertRule.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := sarc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "SLAAlertRule.created_at"`)}
 	}
-	if _, ok := sarc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "SLAAlertRule.updated_at"`)}
 	}
-	if len(sarc.mutation.SLADefinitionIDs()) == 0 {
+	if len(_c.mutation.SLADefinitionIDs()) == 0 {
 		return &ValidationError{Name: "sla_definition", err: errors.New(`ent: missing required edge "SLAAlertRule.sla_definition"`)}
 	}
 	return nil
 }
 
-func (sarc *SLAAlertRuleCreate) sqlSave(ctx context.Context) (*SLAAlertRule, error) {
-	if err := sarc.check(); err != nil {
+func (_c *SLAAlertRuleCreate) sqlSave(ctx context.Context) (*SLAAlertRule, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := sarc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, sarc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -292,57 +292,57 @@ func (sarc *SLAAlertRuleCreate) sqlSave(ctx context.Context) (*SLAAlertRule, err
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	sarc.mutation.id = &_node.ID
-	sarc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (sarc *SLAAlertRuleCreate) createSpec() (*SLAAlertRule, *sqlgraph.CreateSpec) {
+func (_c *SLAAlertRuleCreate) createSpec() (*SLAAlertRule, *sqlgraph.CreateSpec) {
 	var (
-		_node = &SLAAlertRule{config: sarc.config}
+		_node = &SLAAlertRule{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(slaalertrule.Table, sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt))
 	)
-	if value, ok := sarc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(slaalertrule.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := sarc.mutation.AlertLevel(); ok {
+	if value, ok := _c.mutation.AlertLevel(); ok {
 		_spec.SetField(slaalertrule.FieldAlertLevel, field.TypeString, value)
 		_node.AlertLevel = value
 	}
-	if value, ok := sarc.mutation.ThresholdPercentage(); ok {
+	if value, ok := _c.mutation.ThresholdPercentage(); ok {
 		_spec.SetField(slaalertrule.FieldThresholdPercentage, field.TypeInt, value)
 		_node.ThresholdPercentage = value
 	}
-	if value, ok := sarc.mutation.NotificationChannels(); ok {
+	if value, ok := _c.mutation.NotificationChannels(); ok {
 		_spec.SetField(slaalertrule.FieldNotificationChannels, field.TypeJSON, value)
 		_node.NotificationChannels = value
 	}
-	if value, ok := sarc.mutation.EscalationEnabled(); ok {
+	if value, ok := _c.mutation.EscalationEnabled(); ok {
 		_spec.SetField(slaalertrule.FieldEscalationEnabled, field.TypeBool, value)
 		_node.EscalationEnabled = value
 	}
-	if value, ok := sarc.mutation.EscalationLevels(); ok {
+	if value, ok := _c.mutation.EscalationLevels(); ok {
 		_spec.SetField(slaalertrule.FieldEscalationLevels, field.TypeJSON, value)
 		_node.EscalationLevels = value
 	}
-	if value, ok := sarc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(slaalertrule.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := sarc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(slaalertrule.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := sarc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(slaalertrule.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := sarc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaalertrule.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := sarc.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -359,7 +359,7 @@ func (sarc *SLAAlertRuleCreate) createSpec() (*SLAAlertRule, *sqlgraph.CreateSpe
 		_node.SLADefinitionID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := sarc.mutation.AlertHistoryIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.AlertHistoryIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -386,16 +386,16 @@ type SLAAlertRuleCreateBulk struct {
 }
 
 // Save creates the SLAAlertRule entities in the database.
-func (sarcb *SLAAlertRuleCreateBulk) Save(ctx context.Context) ([]*SLAAlertRule, error) {
-	if sarcb.err != nil {
-		return nil, sarcb.err
+func (_c *SLAAlertRuleCreateBulk) Save(ctx context.Context) ([]*SLAAlertRule, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(sarcb.builders))
-	nodes := make([]*SLAAlertRule, len(sarcb.builders))
-	mutators := make([]Mutator, len(sarcb.builders))
-	for i := range sarcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*SLAAlertRule, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := sarcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SLAAlertRuleMutation)
@@ -409,11 +409,11 @@ func (sarcb *SLAAlertRuleCreateBulk) Save(ctx context.Context) ([]*SLAAlertRule,
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, sarcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, sarcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -437,7 +437,7 @@ func (sarcb *SLAAlertRuleCreateBulk) Save(ctx context.Context) ([]*SLAAlertRule,
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, sarcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -445,8 +445,8 @@ func (sarcb *SLAAlertRuleCreateBulk) Save(ctx context.Context) ([]*SLAAlertRule,
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (sarcb *SLAAlertRuleCreateBulk) SaveX(ctx context.Context) []*SLAAlertRule {
-	v, err := sarcb.Save(ctx)
+func (_c *SLAAlertRuleCreateBulk) SaveX(ctx context.Context) []*SLAAlertRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -454,14 +454,14 @@ func (sarcb *SLAAlertRuleCreateBulk) SaveX(ctx context.Context) []*SLAAlertRule 
 }
 
 // Exec executes the query.
-func (sarcb *SLAAlertRuleCreateBulk) Exec(ctx context.Context) error {
-	_, err := sarcb.Save(ctx)
+func (_c *SLAAlertRuleCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sarcb *SLAAlertRuleCreateBulk) ExecX(ctx context.Context) {
-	if err := sarcb.Exec(ctx); err != nil {
+func (_c *SLAAlertRuleCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

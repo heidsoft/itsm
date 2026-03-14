@@ -24,215 +24,215 @@ type ProcessVariableUpdate struct {
 }
 
 // Where appends a list predicates to the ProcessVariableUpdate builder.
-func (pvu *ProcessVariableUpdate) Where(ps ...predicate.ProcessVariable) *ProcessVariableUpdate {
-	pvu.mutation.Where(ps...)
-	return pvu
+func (_u *ProcessVariableUpdate) Where(ps ...predicate.ProcessVariable) *ProcessVariableUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetVariableID sets the "variable_id" field.
-func (pvu *ProcessVariableUpdate) SetVariableID(s string) *ProcessVariableUpdate {
-	pvu.mutation.SetVariableID(s)
-	return pvu
+func (_u *ProcessVariableUpdate) SetVariableID(v string) *ProcessVariableUpdate {
+	_u.mutation.SetVariableID(v)
+	return _u
 }
 
 // SetNillableVariableID sets the "variable_id" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableVariableID(s *string) *ProcessVariableUpdate {
-	if s != nil {
-		pvu.SetVariableID(*s)
+func (_u *ProcessVariableUpdate) SetNillableVariableID(v *string) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetVariableID(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pvu *ProcessVariableUpdate) SetProcessInstanceID(i int) *ProcessVariableUpdate {
-	pvu.mutation.SetProcessInstanceID(i)
-	return pvu
+func (_u *ProcessVariableUpdate) SetProcessInstanceID(v int) *ProcessVariableUpdate {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableProcessInstanceID(i *int) *ProcessVariableUpdate {
-	if i != nil {
-		pvu.SetProcessInstanceID(*i)
+func (_u *ProcessVariableUpdate) SetNillableProcessInstanceID(v *int) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetTaskID sets the "task_id" field.
-func (pvu *ProcessVariableUpdate) SetTaskID(s string) *ProcessVariableUpdate {
-	pvu.mutation.SetTaskID(s)
-	return pvu
+func (_u *ProcessVariableUpdate) SetTaskID(v string) *ProcessVariableUpdate {
+	_u.mutation.SetTaskID(v)
+	return _u
 }
 
 // SetNillableTaskID sets the "task_id" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableTaskID(s *string) *ProcessVariableUpdate {
-	if s != nil {
-		pvu.SetTaskID(*s)
+func (_u *ProcessVariableUpdate) SetNillableTaskID(v *string) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetTaskID(*v)
 	}
-	return pvu
+	return _u
 }
 
 // ClearTaskID clears the value of the "task_id" field.
-func (pvu *ProcessVariableUpdate) ClearTaskID() *ProcessVariableUpdate {
-	pvu.mutation.ClearTaskID()
-	return pvu
+func (_u *ProcessVariableUpdate) ClearTaskID() *ProcessVariableUpdate {
+	_u.mutation.ClearTaskID()
+	return _u
 }
 
 // SetVariableName sets the "variable_name" field.
-func (pvu *ProcessVariableUpdate) SetVariableName(s string) *ProcessVariableUpdate {
-	pvu.mutation.SetVariableName(s)
-	return pvu
+func (_u *ProcessVariableUpdate) SetVariableName(v string) *ProcessVariableUpdate {
+	_u.mutation.SetVariableName(v)
+	return _u
 }
 
 // SetNillableVariableName sets the "variable_name" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableVariableName(s *string) *ProcessVariableUpdate {
-	if s != nil {
-		pvu.SetVariableName(*s)
+func (_u *ProcessVariableUpdate) SetNillableVariableName(v *string) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetVariableName(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetVariableType sets the "variable_type" field.
-func (pvu *ProcessVariableUpdate) SetVariableType(s string) *ProcessVariableUpdate {
-	pvu.mutation.SetVariableType(s)
-	return pvu
+func (_u *ProcessVariableUpdate) SetVariableType(v string) *ProcessVariableUpdate {
+	_u.mutation.SetVariableType(v)
+	return _u
 }
 
 // SetNillableVariableType sets the "variable_type" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableVariableType(s *string) *ProcessVariableUpdate {
-	if s != nil {
-		pvu.SetVariableType(*s)
+func (_u *ProcessVariableUpdate) SetNillableVariableType(v *string) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetVariableType(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetVariableValue sets the "variable_value" field.
-func (pvu *ProcessVariableUpdate) SetVariableValue(s string) *ProcessVariableUpdate {
-	pvu.mutation.SetVariableValue(s)
-	return pvu
+func (_u *ProcessVariableUpdate) SetVariableValue(v string) *ProcessVariableUpdate {
+	_u.mutation.SetVariableValue(v)
+	return _u
 }
 
 // SetNillableVariableValue sets the "variable_value" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableVariableValue(s *string) *ProcessVariableUpdate {
-	if s != nil {
-		pvu.SetVariableValue(*s)
+func (_u *ProcessVariableUpdate) SetNillableVariableValue(v *string) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetVariableValue(*v)
 	}
-	return pvu
+	return _u
 }
 
 // ClearVariableValue clears the value of the "variable_value" field.
-func (pvu *ProcessVariableUpdate) ClearVariableValue() *ProcessVariableUpdate {
-	pvu.mutation.ClearVariableValue()
-	return pvu
+func (_u *ProcessVariableUpdate) ClearVariableValue() *ProcessVariableUpdate {
+	_u.mutation.ClearVariableValue()
+	return _u
 }
 
 // SetScope sets the "scope" field.
-func (pvu *ProcessVariableUpdate) SetScope(s string) *ProcessVariableUpdate {
-	pvu.mutation.SetScope(s)
-	return pvu
+func (_u *ProcessVariableUpdate) SetScope(v string) *ProcessVariableUpdate {
+	_u.mutation.SetScope(v)
+	return _u
 }
 
 // SetNillableScope sets the "scope" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableScope(s *string) *ProcessVariableUpdate {
-	if s != nil {
-		pvu.SetScope(*s)
+func (_u *ProcessVariableUpdate) SetNillableScope(v *string) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetScope(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetIsTransient sets the "is_transient" field.
-func (pvu *ProcessVariableUpdate) SetIsTransient(b bool) *ProcessVariableUpdate {
-	pvu.mutation.SetIsTransient(b)
-	return pvu
+func (_u *ProcessVariableUpdate) SetIsTransient(v bool) *ProcessVariableUpdate {
+	_u.mutation.SetIsTransient(v)
+	return _u
 }
 
 // SetNillableIsTransient sets the "is_transient" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableIsTransient(b *bool) *ProcessVariableUpdate {
-	if b != nil {
-		pvu.SetIsTransient(*b)
+func (_u *ProcessVariableUpdate) SetNillableIsTransient(v *bool) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetIsTransient(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetSerializationFormat sets the "serialization_format" field.
-func (pvu *ProcessVariableUpdate) SetSerializationFormat(s string) *ProcessVariableUpdate {
-	pvu.mutation.SetSerializationFormat(s)
-	return pvu
+func (_u *ProcessVariableUpdate) SetSerializationFormat(v string) *ProcessVariableUpdate {
+	_u.mutation.SetSerializationFormat(v)
+	return _u
 }
 
 // SetNillableSerializationFormat sets the "serialization_format" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableSerializationFormat(s *string) *ProcessVariableUpdate {
-	if s != nil {
-		pvu.SetSerializationFormat(*s)
+func (_u *ProcessVariableUpdate) SetNillableSerializationFormat(v *string) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetSerializationFormat(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pvu *ProcessVariableUpdate) SetTenantID(i int) *ProcessVariableUpdate {
-	pvu.mutation.ResetTenantID()
-	pvu.mutation.SetTenantID(i)
-	return pvu
+func (_u *ProcessVariableUpdate) SetTenantID(v int) *ProcessVariableUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableTenantID(i *int) *ProcessVariableUpdate {
-	if i != nil {
-		pvu.SetTenantID(*i)
+func (_u *ProcessVariableUpdate) SetNillableTenantID(v *int) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pvu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pvu *ProcessVariableUpdate) AddTenantID(i int) *ProcessVariableUpdate {
-	pvu.mutation.AddTenantID(i)
-	return pvu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessVariableUpdate) AddTenantID(v int) *ProcessVariableUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pvu *ProcessVariableUpdate) SetCreatedAt(t time.Time) *ProcessVariableUpdate {
-	pvu.mutation.SetCreatedAt(t)
-	return pvu
+func (_u *ProcessVariableUpdate) SetCreatedAt(v time.Time) *ProcessVariableUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pvu *ProcessVariableUpdate) SetNillableCreatedAt(t *time.Time) *ProcessVariableUpdate {
-	if t != nil {
-		pvu.SetCreatedAt(*t)
+func (_u *ProcessVariableUpdate) SetNillableCreatedAt(v *time.Time) *ProcessVariableUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pvu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pvu *ProcessVariableUpdate) SetUpdatedAt(t time.Time) *ProcessVariableUpdate {
-	pvu.mutation.SetUpdatedAt(t)
-	return pvu
+func (_u *ProcessVariableUpdate) SetUpdatedAt(v time.Time) *ProcessVariableUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (pvu *ProcessVariableUpdate) SetProcessInstance(p *ProcessInstance) *ProcessVariableUpdate {
-	return pvu.SetProcessInstanceID(p.ID)
+func (_u *ProcessVariableUpdate) SetProcessInstance(v *ProcessInstance) *ProcessVariableUpdate {
+	return _u.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessVariableMutation object of the builder.
-func (pvu *ProcessVariableUpdate) Mutation() *ProcessVariableMutation {
-	return pvu.mutation
+func (_u *ProcessVariableUpdate) Mutation() *ProcessVariableMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
-func (pvu *ProcessVariableUpdate) ClearProcessInstance() *ProcessVariableUpdate {
-	pvu.mutation.ClearProcessInstance()
-	return pvu
+func (_u *ProcessVariableUpdate) ClearProcessInstance() *ProcessVariableUpdate {
+	_u.mutation.ClearProcessInstance()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pvu *ProcessVariableUpdate) Save(ctx context.Context) (int, error) {
-	pvu.defaults()
-	return withHooks(ctx, pvu.sqlSave, pvu.mutation, pvu.hooks)
+func (_u *ProcessVariableUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pvu *ProcessVariableUpdate) SaveX(ctx context.Context) int {
-	affected, err := pvu.Save(ctx)
+func (_u *ProcessVariableUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,109 +240,109 @@ func (pvu *ProcessVariableUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pvu *ProcessVariableUpdate) Exec(ctx context.Context) error {
-	_, err := pvu.Save(ctx)
+func (_u *ProcessVariableUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvu *ProcessVariableUpdate) ExecX(ctx context.Context) {
-	if err := pvu.Exec(ctx); err != nil {
+func (_u *ProcessVariableUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pvu *ProcessVariableUpdate) defaults() {
-	if _, ok := pvu.mutation.UpdatedAt(); !ok {
+func (_u *ProcessVariableUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processvariable.UpdateDefaultUpdatedAt()
-		pvu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pvu *ProcessVariableUpdate) check() error {
-	if v, ok := pvu.mutation.VariableID(); ok {
+func (_u *ProcessVariableUpdate) check() error {
+	if v, ok := _u.mutation.VariableID(); ok {
 		if err := processvariable.VariableIDValidator(v); err != nil {
 			return &ValidationError{Name: "variable_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.variable_id": %w`, err)}
 		}
 	}
-	if v, ok := pvu.mutation.ProcessInstanceID(); ok {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processvariable.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := pvu.mutation.VariableName(); ok {
+	if v, ok := _u.mutation.VariableName(); ok {
 		if err := processvariable.VariableNameValidator(v); err != nil {
 			return &ValidationError{Name: "variable_name", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.variable_name": %w`, err)}
 		}
 	}
-	if v, ok := pvu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processvariable.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.tenant_id": %w`, err)}
 		}
 	}
-	if pvu.mutation.ProcessInstanceCleared() && len(pvu.mutation.ProcessInstanceIDs()) > 0 {
+	if _u.mutation.ProcessInstanceCleared() && len(_u.mutation.ProcessInstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessVariable.process_instance"`)
 	}
 	return nil
 }
 
-func (pvu *ProcessVariableUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pvu.check(); err != nil {
-		return n, err
+func (_u *ProcessVariableUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processvariable.Table, processvariable.Columns, sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt))
-	if ps := pvu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pvu.mutation.VariableID(); ok {
+	if value, ok := _u.mutation.VariableID(); ok {
 		_spec.SetField(processvariable.FieldVariableID, field.TypeString, value)
 	}
-	if value, ok := pvu.mutation.TaskID(); ok {
+	if value, ok := _u.mutation.TaskID(); ok {
 		_spec.SetField(processvariable.FieldTaskID, field.TypeString, value)
 	}
-	if pvu.mutation.TaskIDCleared() {
+	if _u.mutation.TaskIDCleared() {
 		_spec.ClearField(processvariable.FieldTaskID, field.TypeString)
 	}
-	if value, ok := pvu.mutation.VariableName(); ok {
+	if value, ok := _u.mutation.VariableName(); ok {
 		_spec.SetField(processvariable.FieldVariableName, field.TypeString, value)
 	}
-	if value, ok := pvu.mutation.VariableType(); ok {
+	if value, ok := _u.mutation.VariableType(); ok {
 		_spec.SetField(processvariable.FieldVariableType, field.TypeString, value)
 	}
-	if value, ok := pvu.mutation.VariableValue(); ok {
+	if value, ok := _u.mutation.VariableValue(); ok {
 		_spec.SetField(processvariable.FieldVariableValue, field.TypeString, value)
 	}
-	if pvu.mutation.VariableValueCleared() {
+	if _u.mutation.VariableValueCleared() {
 		_spec.ClearField(processvariable.FieldVariableValue, field.TypeString)
 	}
-	if value, ok := pvu.mutation.Scope(); ok {
+	if value, ok := _u.mutation.Scope(); ok {
 		_spec.SetField(processvariable.FieldScope, field.TypeString, value)
 	}
-	if value, ok := pvu.mutation.IsTransient(); ok {
+	if value, ok := _u.mutation.IsTransient(); ok {
 		_spec.SetField(processvariable.FieldIsTransient, field.TypeBool, value)
 	}
-	if value, ok := pvu.mutation.SerializationFormat(); ok {
+	if value, ok := _u.mutation.SerializationFormat(); ok {
 		_spec.SetField(processvariable.FieldSerializationFormat, field.TypeString, value)
 	}
-	if value, ok := pvu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processvariable.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processvariable.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processvariable.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pvu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processvariable.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pvu.mutation.ProcessInstanceCleared() {
+	if _u.mutation.ProcessInstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -355,7 +355,7 @@ func (pvu *ProcessVariableUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pvu.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -371,7 +371,7 @@ func (pvu *ProcessVariableUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pvu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processvariable.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -379,8 +379,8 @@ func (pvu *ProcessVariableUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		return 0, err
 	}
-	pvu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProcessVariableUpdateOne is the builder for updating a single ProcessVariable entity.
@@ -392,222 +392,222 @@ type ProcessVariableUpdateOne struct {
 }
 
 // SetVariableID sets the "variable_id" field.
-func (pvuo *ProcessVariableUpdateOne) SetVariableID(s string) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetVariableID(s)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetVariableID(v string) *ProcessVariableUpdateOne {
+	_u.mutation.SetVariableID(v)
+	return _u
 }
 
 // SetNillableVariableID sets the "variable_id" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableVariableID(s *string) *ProcessVariableUpdateOne {
-	if s != nil {
-		pvuo.SetVariableID(*s)
+func (_u *ProcessVariableUpdateOne) SetNillableVariableID(v *string) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetVariableID(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pvuo *ProcessVariableUpdateOne) SetProcessInstanceID(i int) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetProcessInstanceID(i)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetProcessInstanceID(v int) *ProcessVariableUpdateOne {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableProcessInstanceID(i *int) *ProcessVariableUpdateOne {
-	if i != nil {
-		pvuo.SetProcessInstanceID(*i)
+func (_u *ProcessVariableUpdateOne) SetNillableProcessInstanceID(v *int) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetTaskID sets the "task_id" field.
-func (pvuo *ProcessVariableUpdateOne) SetTaskID(s string) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetTaskID(s)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetTaskID(v string) *ProcessVariableUpdateOne {
+	_u.mutation.SetTaskID(v)
+	return _u
 }
 
 // SetNillableTaskID sets the "task_id" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableTaskID(s *string) *ProcessVariableUpdateOne {
-	if s != nil {
-		pvuo.SetTaskID(*s)
+func (_u *ProcessVariableUpdateOne) SetNillableTaskID(v *string) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetTaskID(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // ClearTaskID clears the value of the "task_id" field.
-func (pvuo *ProcessVariableUpdateOne) ClearTaskID() *ProcessVariableUpdateOne {
-	pvuo.mutation.ClearTaskID()
-	return pvuo
+func (_u *ProcessVariableUpdateOne) ClearTaskID() *ProcessVariableUpdateOne {
+	_u.mutation.ClearTaskID()
+	return _u
 }
 
 // SetVariableName sets the "variable_name" field.
-func (pvuo *ProcessVariableUpdateOne) SetVariableName(s string) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetVariableName(s)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetVariableName(v string) *ProcessVariableUpdateOne {
+	_u.mutation.SetVariableName(v)
+	return _u
 }
 
 // SetNillableVariableName sets the "variable_name" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableVariableName(s *string) *ProcessVariableUpdateOne {
-	if s != nil {
-		pvuo.SetVariableName(*s)
+func (_u *ProcessVariableUpdateOne) SetNillableVariableName(v *string) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetVariableName(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetVariableType sets the "variable_type" field.
-func (pvuo *ProcessVariableUpdateOne) SetVariableType(s string) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetVariableType(s)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetVariableType(v string) *ProcessVariableUpdateOne {
+	_u.mutation.SetVariableType(v)
+	return _u
 }
 
 // SetNillableVariableType sets the "variable_type" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableVariableType(s *string) *ProcessVariableUpdateOne {
-	if s != nil {
-		pvuo.SetVariableType(*s)
+func (_u *ProcessVariableUpdateOne) SetNillableVariableType(v *string) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetVariableType(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetVariableValue sets the "variable_value" field.
-func (pvuo *ProcessVariableUpdateOne) SetVariableValue(s string) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetVariableValue(s)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetVariableValue(v string) *ProcessVariableUpdateOne {
+	_u.mutation.SetVariableValue(v)
+	return _u
 }
 
 // SetNillableVariableValue sets the "variable_value" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableVariableValue(s *string) *ProcessVariableUpdateOne {
-	if s != nil {
-		pvuo.SetVariableValue(*s)
+func (_u *ProcessVariableUpdateOne) SetNillableVariableValue(v *string) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetVariableValue(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // ClearVariableValue clears the value of the "variable_value" field.
-func (pvuo *ProcessVariableUpdateOne) ClearVariableValue() *ProcessVariableUpdateOne {
-	pvuo.mutation.ClearVariableValue()
-	return pvuo
+func (_u *ProcessVariableUpdateOne) ClearVariableValue() *ProcessVariableUpdateOne {
+	_u.mutation.ClearVariableValue()
+	return _u
 }
 
 // SetScope sets the "scope" field.
-func (pvuo *ProcessVariableUpdateOne) SetScope(s string) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetScope(s)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetScope(v string) *ProcessVariableUpdateOne {
+	_u.mutation.SetScope(v)
+	return _u
 }
 
 // SetNillableScope sets the "scope" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableScope(s *string) *ProcessVariableUpdateOne {
-	if s != nil {
-		pvuo.SetScope(*s)
+func (_u *ProcessVariableUpdateOne) SetNillableScope(v *string) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetScope(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetIsTransient sets the "is_transient" field.
-func (pvuo *ProcessVariableUpdateOne) SetIsTransient(b bool) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetIsTransient(b)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetIsTransient(v bool) *ProcessVariableUpdateOne {
+	_u.mutation.SetIsTransient(v)
+	return _u
 }
 
 // SetNillableIsTransient sets the "is_transient" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableIsTransient(b *bool) *ProcessVariableUpdateOne {
-	if b != nil {
-		pvuo.SetIsTransient(*b)
+func (_u *ProcessVariableUpdateOne) SetNillableIsTransient(v *bool) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetIsTransient(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetSerializationFormat sets the "serialization_format" field.
-func (pvuo *ProcessVariableUpdateOne) SetSerializationFormat(s string) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetSerializationFormat(s)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetSerializationFormat(v string) *ProcessVariableUpdateOne {
+	_u.mutation.SetSerializationFormat(v)
+	return _u
 }
 
 // SetNillableSerializationFormat sets the "serialization_format" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableSerializationFormat(s *string) *ProcessVariableUpdateOne {
-	if s != nil {
-		pvuo.SetSerializationFormat(*s)
+func (_u *ProcessVariableUpdateOne) SetNillableSerializationFormat(v *string) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetSerializationFormat(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pvuo *ProcessVariableUpdateOne) SetTenantID(i int) *ProcessVariableUpdateOne {
-	pvuo.mutation.ResetTenantID()
-	pvuo.mutation.SetTenantID(i)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetTenantID(v int) *ProcessVariableUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableTenantID(i *int) *ProcessVariableUpdateOne {
-	if i != nil {
-		pvuo.SetTenantID(*i)
+func (_u *ProcessVariableUpdateOne) SetNillableTenantID(v *int) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pvuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pvuo *ProcessVariableUpdateOne) AddTenantID(i int) *ProcessVariableUpdateOne {
-	pvuo.mutation.AddTenantID(i)
-	return pvuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessVariableUpdateOne) AddTenantID(v int) *ProcessVariableUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pvuo *ProcessVariableUpdateOne) SetCreatedAt(t time.Time) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetCreatedAt(t)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetCreatedAt(v time.Time) *ProcessVariableUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pvuo *ProcessVariableUpdateOne) SetNillableCreatedAt(t *time.Time) *ProcessVariableUpdateOne {
-	if t != nil {
-		pvuo.SetCreatedAt(*t)
+func (_u *ProcessVariableUpdateOne) SetNillableCreatedAt(v *time.Time) *ProcessVariableUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pvuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pvuo *ProcessVariableUpdateOne) SetUpdatedAt(t time.Time) *ProcessVariableUpdateOne {
-	pvuo.mutation.SetUpdatedAt(t)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) SetUpdatedAt(v time.Time) *ProcessVariableUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (pvuo *ProcessVariableUpdateOne) SetProcessInstance(p *ProcessInstance) *ProcessVariableUpdateOne {
-	return pvuo.SetProcessInstanceID(p.ID)
+func (_u *ProcessVariableUpdateOne) SetProcessInstance(v *ProcessInstance) *ProcessVariableUpdateOne {
+	return _u.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessVariableMutation object of the builder.
-func (pvuo *ProcessVariableUpdateOne) Mutation() *ProcessVariableMutation {
-	return pvuo.mutation
+func (_u *ProcessVariableUpdateOne) Mutation() *ProcessVariableMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
-func (pvuo *ProcessVariableUpdateOne) ClearProcessInstance() *ProcessVariableUpdateOne {
-	pvuo.mutation.ClearProcessInstance()
-	return pvuo
+func (_u *ProcessVariableUpdateOne) ClearProcessInstance() *ProcessVariableUpdateOne {
+	_u.mutation.ClearProcessInstance()
+	return _u
 }
 
 // Where appends a list predicates to the ProcessVariableUpdate builder.
-func (pvuo *ProcessVariableUpdateOne) Where(ps ...predicate.ProcessVariable) *ProcessVariableUpdateOne {
-	pvuo.mutation.Where(ps...)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) Where(ps ...predicate.ProcessVariable) *ProcessVariableUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (pvuo *ProcessVariableUpdateOne) Select(field string, fields ...string) *ProcessVariableUpdateOne {
-	pvuo.fields = append([]string{field}, fields...)
-	return pvuo
+func (_u *ProcessVariableUpdateOne) Select(field string, fields ...string) *ProcessVariableUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProcessVariable entity.
-func (pvuo *ProcessVariableUpdateOne) Save(ctx context.Context) (*ProcessVariable, error) {
-	pvuo.defaults()
-	return withHooks(ctx, pvuo.sqlSave, pvuo.mutation, pvuo.hooks)
+func (_u *ProcessVariableUpdateOne) Save(ctx context.Context) (*ProcessVariable, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pvuo *ProcessVariableUpdateOne) SaveX(ctx context.Context) *ProcessVariable {
-	node, err := pvuo.Save(ctx)
+func (_u *ProcessVariableUpdateOne) SaveX(ctx context.Context) *ProcessVariable {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -615,65 +615,65 @@ func (pvuo *ProcessVariableUpdateOne) SaveX(ctx context.Context) *ProcessVariabl
 }
 
 // Exec executes the query on the entity.
-func (pvuo *ProcessVariableUpdateOne) Exec(ctx context.Context) error {
-	_, err := pvuo.Save(ctx)
+func (_u *ProcessVariableUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvuo *ProcessVariableUpdateOne) ExecX(ctx context.Context) {
-	if err := pvuo.Exec(ctx); err != nil {
+func (_u *ProcessVariableUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pvuo *ProcessVariableUpdateOne) defaults() {
-	if _, ok := pvuo.mutation.UpdatedAt(); !ok {
+func (_u *ProcessVariableUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processvariable.UpdateDefaultUpdatedAt()
-		pvuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pvuo *ProcessVariableUpdateOne) check() error {
-	if v, ok := pvuo.mutation.VariableID(); ok {
+func (_u *ProcessVariableUpdateOne) check() error {
+	if v, ok := _u.mutation.VariableID(); ok {
 		if err := processvariable.VariableIDValidator(v); err != nil {
 			return &ValidationError{Name: "variable_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.variable_id": %w`, err)}
 		}
 	}
-	if v, ok := pvuo.mutation.ProcessInstanceID(); ok {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processvariable.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := pvuo.mutation.VariableName(); ok {
+	if v, ok := _u.mutation.VariableName(); ok {
 		if err := processvariable.VariableNameValidator(v); err != nil {
 			return &ValidationError{Name: "variable_name", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.variable_name": %w`, err)}
 		}
 	}
-	if v, ok := pvuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processvariable.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVariable.tenant_id": %w`, err)}
 		}
 	}
-	if pvuo.mutation.ProcessInstanceCleared() && len(pvuo.mutation.ProcessInstanceIDs()) > 0 {
+	if _u.mutation.ProcessInstanceCleared() && len(_u.mutation.ProcessInstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessVariable.process_instance"`)
 	}
 	return nil
 }
 
-func (pvuo *ProcessVariableUpdateOne) sqlSave(ctx context.Context) (_node *ProcessVariable, err error) {
-	if err := pvuo.check(); err != nil {
+func (_u *ProcessVariableUpdateOne) sqlSave(ctx context.Context) (_node *ProcessVariable, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processvariable.Table, processvariable.Columns, sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt))
-	id, ok := pvuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProcessVariable.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := pvuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processvariable.FieldID)
 		for _, f := range fields {
@@ -685,56 +685,56 @@ func (pvuo *ProcessVariableUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 			}
 		}
 	}
-	if ps := pvuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pvuo.mutation.VariableID(); ok {
+	if value, ok := _u.mutation.VariableID(); ok {
 		_spec.SetField(processvariable.FieldVariableID, field.TypeString, value)
 	}
-	if value, ok := pvuo.mutation.TaskID(); ok {
+	if value, ok := _u.mutation.TaskID(); ok {
 		_spec.SetField(processvariable.FieldTaskID, field.TypeString, value)
 	}
-	if pvuo.mutation.TaskIDCleared() {
+	if _u.mutation.TaskIDCleared() {
 		_spec.ClearField(processvariable.FieldTaskID, field.TypeString)
 	}
-	if value, ok := pvuo.mutation.VariableName(); ok {
+	if value, ok := _u.mutation.VariableName(); ok {
 		_spec.SetField(processvariable.FieldVariableName, field.TypeString, value)
 	}
-	if value, ok := pvuo.mutation.VariableType(); ok {
+	if value, ok := _u.mutation.VariableType(); ok {
 		_spec.SetField(processvariable.FieldVariableType, field.TypeString, value)
 	}
-	if value, ok := pvuo.mutation.VariableValue(); ok {
+	if value, ok := _u.mutation.VariableValue(); ok {
 		_spec.SetField(processvariable.FieldVariableValue, field.TypeString, value)
 	}
-	if pvuo.mutation.VariableValueCleared() {
+	if _u.mutation.VariableValueCleared() {
 		_spec.ClearField(processvariable.FieldVariableValue, field.TypeString)
 	}
-	if value, ok := pvuo.mutation.Scope(); ok {
+	if value, ok := _u.mutation.Scope(); ok {
 		_spec.SetField(processvariable.FieldScope, field.TypeString, value)
 	}
-	if value, ok := pvuo.mutation.IsTransient(); ok {
+	if value, ok := _u.mutation.IsTransient(); ok {
 		_spec.SetField(processvariable.FieldIsTransient, field.TypeBool, value)
 	}
-	if value, ok := pvuo.mutation.SerializationFormat(); ok {
+	if value, ok := _u.mutation.SerializationFormat(); ok {
 		_spec.SetField(processvariable.FieldSerializationFormat, field.TypeString, value)
 	}
-	if value, ok := pvuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processvariable.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processvariable.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pvuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processvariable.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pvuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processvariable.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pvuo.mutation.ProcessInstanceCleared() {
+	if _u.mutation.ProcessInstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -747,7 +747,7 @@ func (pvuo *ProcessVariableUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pvuo.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -763,10 +763,10 @@ func (pvuo *ProcessVariableUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ProcessVariable{config: pvuo.config}
+	_node = &ProcessVariable{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, pvuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processvariable.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -774,6 +774,6 @@ func (pvuo *ProcessVariableUpdateOne) sqlSave(ctx context.Context) (_node *Proce
 		}
 		return nil, err
 	}
-	pvuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

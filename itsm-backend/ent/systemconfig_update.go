@@ -23,174 +23,174 @@ type SystemConfigUpdate struct {
 }
 
 // Where appends a list predicates to the SystemConfigUpdate builder.
-func (scu *SystemConfigUpdate) Where(ps ...predicate.SystemConfig) *SystemConfigUpdate {
-	scu.mutation.Where(ps...)
-	return scu
+func (_u *SystemConfigUpdate) Where(ps ...predicate.SystemConfig) *SystemConfigUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetKey sets the "key" field.
-func (scu *SystemConfigUpdate) SetKey(s string) *SystemConfigUpdate {
-	scu.mutation.SetKey(s)
-	return scu
+func (_u *SystemConfigUpdate) SetKey(v string) *SystemConfigUpdate {
+	_u.mutation.SetKey(v)
+	return _u
 }
 
 // SetNillableKey sets the "key" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableKey(s *string) *SystemConfigUpdate {
-	if s != nil {
-		scu.SetKey(*s)
+func (_u *SystemConfigUpdate) SetNillableKey(v *string) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetKey(*v)
 	}
-	return scu
+	return _u
 }
 
 // SetValue sets the "value" field.
-func (scu *SystemConfigUpdate) SetValue(s string) *SystemConfigUpdate {
-	scu.mutation.SetValue(s)
-	return scu
+func (_u *SystemConfigUpdate) SetValue(v string) *SystemConfigUpdate {
+	_u.mutation.SetValue(v)
+	return _u
 }
 
 // SetNillableValue sets the "value" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableValue(s *string) *SystemConfigUpdate {
-	if s != nil {
-		scu.SetValue(*s)
+func (_u *SystemConfigUpdate) SetNillableValue(v *string) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetValue(*v)
 	}
-	return scu
+	return _u
 }
 
 // ClearValue clears the value of the "value" field.
-func (scu *SystemConfigUpdate) ClearValue() *SystemConfigUpdate {
-	scu.mutation.ClearValue()
-	return scu
+func (_u *SystemConfigUpdate) ClearValue() *SystemConfigUpdate {
+	_u.mutation.ClearValue()
+	return _u
 }
 
 // SetValueType sets the "value_type" field.
-func (scu *SystemConfigUpdate) SetValueType(s string) *SystemConfigUpdate {
-	scu.mutation.SetValueType(s)
-	return scu
+func (_u *SystemConfigUpdate) SetValueType(v string) *SystemConfigUpdate {
+	_u.mutation.SetValueType(v)
+	return _u
 }
 
 // SetNillableValueType sets the "value_type" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableValueType(s *string) *SystemConfigUpdate {
-	if s != nil {
-		scu.SetValueType(*s)
+func (_u *SystemConfigUpdate) SetNillableValueType(v *string) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetValueType(*v)
 	}
-	return scu
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (scu *SystemConfigUpdate) SetCategory(s string) *SystemConfigUpdate {
-	scu.mutation.SetCategory(s)
-	return scu
+func (_u *SystemConfigUpdate) SetCategory(v string) *SystemConfigUpdate {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableCategory(s *string) *SystemConfigUpdate {
-	if s != nil {
-		scu.SetCategory(*s)
+func (_u *SystemConfigUpdate) SetNillableCategory(v *string) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return scu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (scu *SystemConfigUpdate) SetDescription(s string) *SystemConfigUpdate {
-	scu.mutation.SetDescription(s)
-	return scu
+func (_u *SystemConfigUpdate) SetDescription(v string) *SystemConfigUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableDescription(s *string) *SystemConfigUpdate {
-	if s != nil {
-		scu.SetDescription(*s)
+func (_u *SystemConfigUpdate) SetNillableDescription(v *string) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return scu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (scu *SystemConfigUpdate) ClearDescription() *SystemConfigUpdate {
-	scu.mutation.ClearDescription()
-	return scu
+func (_u *SystemConfigUpdate) ClearDescription() *SystemConfigUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (scu *SystemConfigUpdate) SetCreatedBy(s string) *SystemConfigUpdate {
-	scu.mutation.SetCreatedBy(s)
-	return scu
+func (_u *SystemConfigUpdate) SetCreatedBy(v string) *SystemConfigUpdate {
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableCreatedBy(s *string) *SystemConfigUpdate {
-	if s != nil {
-		scu.SetCreatedBy(*s)
+func (_u *SystemConfigUpdate) SetNillableCreatedBy(v *string) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return scu
+	return _u
 }
 
 // ClearCreatedBy clears the value of the "created_by" field.
-func (scu *SystemConfigUpdate) ClearCreatedBy() *SystemConfigUpdate {
-	scu.mutation.ClearCreatedBy()
-	return scu
+func (_u *SystemConfigUpdate) ClearCreatedBy() *SystemConfigUpdate {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (scu *SystemConfigUpdate) SetTenantID(i int) *SystemConfigUpdate {
-	scu.mutation.ResetTenantID()
-	scu.mutation.SetTenantID(i)
-	return scu
+func (_u *SystemConfigUpdate) SetTenantID(v int) *SystemConfigUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableTenantID(i *int) *SystemConfigUpdate {
-	if i != nil {
-		scu.SetTenantID(*i)
+func (_u *SystemConfigUpdate) SetNillableTenantID(v *int) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return scu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (scu *SystemConfigUpdate) AddTenantID(i int) *SystemConfigUpdate {
-	scu.mutation.AddTenantID(i)
-	return scu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SystemConfigUpdate) AddTenantID(v int) *SystemConfigUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (scu *SystemConfigUpdate) ClearTenantID() *SystemConfigUpdate {
-	scu.mutation.ClearTenantID()
-	return scu
+func (_u *SystemConfigUpdate) ClearTenantID() *SystemConfigUpdate {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (scu *SystemConfigUpdate) SetCreatedAt(t time.Time) *SystemConfigUpdate {
-	scu.mutation.SetCreatedAt(t)
-	return scu
+func (_u *SystemConfigUpdate) SetCreatedAt(v time.Time) *SystemConfigUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (scu *SystemConfigUpdate) SetNillableCreatedAt(t *time.Time) *SystemConfigUpdate {
-	if t != nil {
-		scu.SetCreatedAt(*t)
+func (_u *SystemConfigUpdate) SetNillableCreatedAt(v *time.Time) *SystemConfigUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return scu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (scu *SystemConfigUpdate) SetUpdatedAt(t time.Time) *SystemConfigUpdate {
-	scu.mutation.SetUpdatedAt(t)
-	return scu
+func (_u *SystemConfigUpdate) SetUpdatedAt(v time.Time) *SystemConfigUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the SystemConfigMutation object of the builder.
-func (scu *SystemConfigUpdate) Mutation() *SystemConfigMutation {
-	return scu.mutation
+func (_u *SystemConfigUpdate) Mutation() *SystemConfigMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (scu *SystemConfigUpdate) Save(ctx context.Context) (int, error) {
-	scu.defaults()
-	return withHooks(ctx, scu.sqlSave, scu.mutation, scu.hooks)
+func (_u *SystemConfigUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (scu *SystemConfigUpdate) SaveX(ctx context.Context) int {
-	affected, err := scu.Save(ctx)
+func (_u *SystemConfigUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -198,29 +198,29 @@ func (scu *SystemConfigUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (scu *SystemConfigUpdate) Exec(ctx context.Context) error {
-	_, err := scu.Save(ctx)
+func (_u *SystemConfigUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (scu *SystemConfigUpdate) ExecX(ctx context.Context) {
-	if err := scu.Exec(ctx); err != nil {
+func (_u *SystemConfigUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (scu *SystemConfigUpdate) defaults() {
-	if _, ok := scu.mutation.UpdatedAt(); !ok {
+func (_u *SystemConfigUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := systemconfig.UpdateDefaultUpdatedAt()
-		scu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (scu *SystemConfigUpdate) check() error {
-	if v, ok := scu.mutation.Key(); ok {
+func (_u *SystemConfigUpdate) check() error {
+	if v, ok := _u.mutation.Key(); ok {
 		if err := systemconfig.KeyValidator(v); err != nil {
 			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "SystemConfig.key": %w`, err)}
 		}
@@ -228,61 +228,61 @@ func (scu *SystemConfigUpdate) check() error {
 	return nil
 }
 
-func (scu *SystemConfigUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := scu.check(); err != nil {
-		return n, err
+func (_u *SystemConfigUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(systemconfig.Table, systemconfig.Columns, sqlgraph.NewFieldSpec(systemconfig.FieldID, field.TypeInt))
-	if ps := scu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := scu.mutation.Key(); ok {
+	if value, ok := _u.mutation.Key(); ok {
 		_spec.SetField(systemconfig.FieldKey, field.TypeString, value)
 	}
-	if value, ok := scu.mutation.Value(); ok {
+	if value, ok := _u.mutation.Value(); ok {
 		_spec.SetField(systemconfig.FieldValue, field.TypeString, value)
 	}
-	if scu.mutation.ValueCleared() {
+	if _u.mutation.ValueCleared() {
 		_spec.ClearField(systemconfig.FieldValue, field.TypeString)
 	}
-	if value, ok := scu.mutation.ValueType(); ok {
+	if value, ok := _u.mutation.ValueType(); ok {
 		_spec.SetField(systemconfig.FieldValueType, field.TypeString, value)
 	}
-	if value, ok := scu.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(systemconfig.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := scu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(systemconfig.FieldDescription, field.TypeString, value)
 	}
-	if scu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(systemconfig.FieldDescription, field.TypeString)
 	}
-	if value, ok := scu.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(systemconfig.FieldCreatedBy, field.TypeString, value)
 	}
-	if scu.mutation.CreatedByCleared() {
+	if _u.mutation.CreatedByCleared() {
 		_spec.ClearField(systemconfig.FieldCreatedBy, field.TypeString)
 	}
-	if value, ok := scu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(systemconfig.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := scu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(systemconfig.FieldTenantID, field.TypeInt, value)
 	}
-	if scu.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(systemconfig.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := scu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(systemconfig.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := scu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(systemconfig.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, scu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{systemconfig.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -290,8 +290,8 @@ func (scu *SystemConfigUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	scu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // SystemConfigUpdateOne is the builder for updating a single SystemConfig entity.
@@ -303,181 +303,181 @@ type SystemConfigUpdateOne struct {
 }
 
 // SetKey sets the "key" field.
-func (scuo *SystemConfigUpdateOne) SetKey(s string) *SystemConfigUpdateOne {
-	scuo.mutation.SetKey(s)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetKey(v string) *SystemConfigUpdateOne {
+	_u.mutation.SetKey(v)
+	return _u
 }
 
 // SetNillableKey sets the "key" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableKey(s *string) *SystemConfigUpdateOne {
-	if s != nil {
-		scuo.SetKey(*s)
+func (_u *SystemConfigUpdateOne) SetNillableKey(v *string) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetKey(*v)
 	}
-	return scuo
+	return _u
 }
 
 // SetValue sets the "value" field.
-func (scuo *SystemConfigUpdateOne) SetValue(s string) *SystemConfigUpdateOne {
-	scuo.mutation.SetValue(s)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetValue(v string) *SystemConfigUpdateOne {
+	_u.mutation.SetValue(v)
+	return _u
 }
 
 // SetNillableValue sets the "value" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableValue(s *string) *SystemConfigUpdateOne {
-	if s != nil {
-		scuo.SetValue(*s)
+func (_u *SystemConfigUpdateOne) SetNillableValue(v *string) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetValue(*v)
 	}
-	return scuo
+	return _u
 }
 
 // ClearValue clears the value of the "value" field.
-func (scuo *SystemConfigUpdateOne) ClearValue() *SystemConfigUpdateOne {
-	scuo.mutation.ClearValue()
-	return scuo
+func (_u *SystemConfigUpdateOne) ClearValue() *SystemConfigUpdateOne {
+	_u.mutation.ClearValue()
+	return _u
 }
 
 // SetValueType sets the "value_type" field.
-func (scuo *SystemConfigUpdateOne) SetValueType(s string) *SystemConfigUpdateOne {
-	scuo.mutation.SetValueType(s)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetValueType(v string) *SystemConfigUpdateOne {
+	_u.mutation.SetValueType(v)
+	return _u
 }
 
 // SetNillableValueType sets the "value_type" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableValueType(s *string) *SystemConfigUpdateOne {
-	if s != nil {
-		scuo.SetValueType(*s)
+func (_u *SystemConfigUpdateOne) SetNillableValueType(v *string) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetValueType(*v)
 	}
-	return scuo
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (scuo *SystemConfigUpdateOne) SetCategory(s string) *SystemConfigUpdateOne {
-	scuo.mutation.SetCategory(s)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetCategory(v string) *SystemConfigUpdateOne {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableCategory(s *string) *SystemConfigUpdateOne {
-	if s != nil {
-		scuo.SetCategory(*s)
+func (_u *SystemConfigUpdateOne) SetNillableCategory(v *string) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return scuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (scuo *SystemConfigUpdateOne) SetDescription(s string) *SystemConfigUpdateOne {
-	scuo.mutation.SetDescription(s)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetDescription(v string) *SystemConfigUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableDescription(s *string) *SystemConfigUpdateOne {
-	if s != nil {
-		scuo.SetDescription(*s)
+func (_u *SystemConfigUpdateOne) SetNillableDescription(v *string) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return scuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (scuo *SystemConfigUpdateOne) ClearDescription() *SystemConfigUpdateOne {
-	scuo.mutation.ClearDescription()
-	return scuo
+func (_u *SystemConfigUpdateOne) ClearDescription() *SystemConfigUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (scuo *SystemConfigUpdateOne) SetCreatedBy(s string) *SystemConfigUpdateOne {
-	scuo.mutation.SetCreatedBy(s)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetCreatedBy(v string) *SystemConfigUpdateOne {
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableCreatedBy(s *string) *SystemConfigUpdateOne {
-	if s != nil {
-		scuo.SetCreatedBy(*s)
+func (_u *SystemConfigUpdateOne) SetNillableCreatedBy(v *string) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return scuo
+	return _u
 }
 
 // ClearCreatedBy clears the value of the "created_by" field.
-func (scuo *SystemConfigUpdateOne) ClearCreatedBy() *SystemConfigUpdateOne {
-	scuo.mutation.ClearCreatedBy()
-	return scuo
+func (_u *SystemConfigUpdateOne) ClearCreatedBy() *SystemConfigUpdateOne {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (scuo *SystemConfigUpdateOne) SetTenantID(i int) *SystemConfigUpdateOne {
-	scuo.mutation.ResetTenantID()
-	scuo.mutation.SetTenantID(i)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetTenantID(v int) *SystemConfigUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableTenantID(i *int) *SystemConfigUpdateOne {
-	if i != nil {
-		scuo.SetTenantID(*i)
+func (_u *SystemConfigUpdateOne) SetNillableTenantID(v *int) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return scuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (scuo *SystemConfigUpdateOne) AddTenantID(i int) *SystemConfigUpdateOne {
-	scuo.mutation.AddTenantID(i)
-	return scuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SystemConfigUpdateOne) AddTenantID(v int) *SystemConfigUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (scuo *SystemConfigUpdateOne) ClearTenantID() *SystemConfigUpdateOne {
-	scuo.mutation.ClearTenantID()
-	return scuo
+func (_u *SystemConfigUpdateOne) ClearTenantID() *SystemConfigUpdateOne {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (scuo *SystemConfigUpdateOne) SetCreatedAt(t time.Time) *SystemConfigUpdateOne {
-	scuo.mutation.SetCreatedAt(t)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetCreatedAt(v time.Time) *SystemConfigUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (scuo *SystemConfigUpdateOne) SetNillableCreatedAt(t *time.Time) *SystemConfigUpdateOne {
-	if t != nil {
-		scuo.SetCreatedAt(*t)
+func (_u *SystemConfigUpdateOne) SetNillableCreatedAt(v *time.Time) *SystemConfigUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return scuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (scuo *SystemConfigUpdateOne) SetUpdatedAt(t time.Time) *SystemConfigUpdateOne {
-	scuo.mutation.SetUpdatedAt(t)
-	return scuo
+func (_u *SystemConfigUpdateOne) SetUpdatedAt(v time.Time) *SystemConfigUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the SystemConfigMutation object of the builder.
-func (scuo *SystemConfigUpdateOne) Mutation() *SystemConfigMutation {
-	return scuo.mutation
+func (_u *SystemConfigUpdateOne) Mutation() *SystemConfigMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the SystemConfigUpdate builder.
-func (scuo *SystemConfigUpdateOne) Where(ps ...predicate.SystemConfig) *SystemConfigUpdateOne {
-	scuo.mutation.Where(ps...)
-	return scuo
+func (_u *SystemConfigUpdateOne) Where(ps ...predicate.SystemConfig) *SystemConfigUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (scuo *SystemConfigUpdateOne) Select(field string, fields ...string) *SystemConfigUpdateOne {
-	scuo.fields = append([]string{field}, fields...)
-	return scuo
+func (_u *SystemConfigUpdateOne) Select(field string, fields ...string) *SystemConfigUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated SystemConfig entity.
-func (scuo *SystemConfigUpdateOne) Save(ctx context.Context) (*SystemConfig, error) {
-	scuo.defaults()
-	return withHooks(ctx, scuo.sqlSave, scuo.mutation, scuo.hooks)
+func (_u *SystemConfigUpdateOne) Save(ctx context.Context) (*SystemConfig, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (scuo *SystemConfigUpdateOne) SaveX(ctx context.Context) *SystemConfig {
-	node, err := scuo.Save(ctx)
+func (_u *SystemConfigUpdateOne) SaveX(ctx context.Context) *SystemConfig {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -485,29 +485,29 @@ func (scuo *SystemConfigUpdateOne) SaveX(ctx context.Context) *SystemConfig {
 }
 
 // Exec executes the query on the entity.
-func (scuo *SystemConfigUpdateOne) Exec(ctx context.Context) error {
-	_, err := scuo.Save(ctx)
+func (_u *SystemConfigUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (scuo *SystemConfigUpdateOne) ExecX(ctx context.Context) {
-	if err := scuo.Exec(ctx); err != nil {
+func (_u *SystemConfigUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (scuo *SystemConfigUpdateOne) defaults() {
-	if _, ok := scuo.mutation.UpdatedAt(); !ok {
+func (_u *SystemConfigUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := systemconfig.UpdateDefaultUpdatedAt()
-		scuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (scuo *SystemConfigUpdateOne) check() error {
-	if v, ok := scuo.mutation.Key(); ok {
+func (_u *SystemConfigUpdateOne) check() error {
+	if v, ok := _u.mutation.Key(); ok {
 		if err := systemconfig.KeyValidator(v); err != nil {
 			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "SystemConfig.key": %w`, err)}
 		}
@@ -515,17 +515,17 @@ func (scuo *SystemConfigUpdateOne) check() error {
 	return nil
 }
 
-func (scuo *SystemConfigUpdateOne) sqlSave(ctx context.Context) (_node *SystemConfig, err error) {
-	if err := scuo.check(); err != nil {
+func (_u *SystemConfigUpdateOne) sqlSave(ctx context.Context) (_node *SystemConfig, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(systemconfig.Table, systemconfig.Columns, sqlgraph.NewFieldSpec(systemconfig.FieldID, field.TypeInt))
-	id, ok := scuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "SystemConfig.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := scuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, systemconfig.FieldID)
 		for _, f := range fields {
@@ -537,59 +537,59 @@ func (scuo *SystemConfigUpdateOne) sqlSave(ctx context.Context) (_node *SystemCo
 			}
 		}
 	}
-	if ps := scuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := scuo.mutation.Key(); ok {
+	if value, ok := _u.mutation.Key(); ok {
 		_spec.SetField(systemconfig.FieldKey, field.TypeString, value)
 	}
-	if value, ok := scuo.mutation.Value(); ok {
+	if value, ok := _u.mutation.Value(); ok {
 		_spec.SetField(systemconfig.FieldValue, field.TypeString, value)
 	}
-	if scuo.mutation.ValueCleared() {
+	if _u.mutation.ValueCleared() {
 		_spec.ClearField(systemconfig.FieldValue, field.TypeString)
 	}
-	if value, ok := scuo.mutation.ValueType(); ok {
+	if value, ok := _u.mutation.ValueType(); ok {
 		_spec.SetField(systemconfig.FieldValueType, field.TypeString, value)
 	}
-	if value, ok := scuo.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(systemconfig.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := scuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(systemconfig.FieldDescription, field.TypeString, value)
 	}
-	if scuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(systemconfig.FieldDescription, field.TypeString)
 	}
-	if value, ok := scuo.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(systemconfig.FieldCreatedBy, field.TypeString, value)
 	}
-	if scuo.mutation.CreatedByCleared() {
+	if _u.mutation.CreatedByCleared() {
 		_spec.ClearField(systemconfig.FieldCreatedBy, field.TypeString)
 	}
-	if value, ok := scuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(systemconfig.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := scuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(systemconfig.FieldTenantID, field.TypeInt, value)
 	}
-	if scuo.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(systemconfig.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := scuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(systemconfig.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := scuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(systemconfig.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &SystemConfig{config: scuo.config}
+	_node = &SystemConfig{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, scuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{systemconfig.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -597,6 +597,6 @@ func (scuo *SystemConfigUpdateOne) sqlSave(ctx context.Context) (_node *SystemCo
 		}
 		return nil, err
 	}
-	scuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

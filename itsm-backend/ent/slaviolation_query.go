@@ -32,44 +32,44 @@ type SLAViolationQuery struct {
 }
 
 // Where adds a new predicate for the SLAViolationQuery builder.
-func (svq *SLAViolationQuery) Where(ps ...predicate.SLAViolation) *SLAViolationQuery {
-	svq.predicates = append(svq.predicates, ps...)
-	return svq
+func (_q *SLAViolationQuery) Where(ps ...predicate.SLAViolation) *SLAViolationQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (svq *SLAViolationQuery) Limit(limit int) *SLAViolationQuery {
-	svq.ctx.Limit = &limit
-	return svq
+func (_q *SLAViolationQuery) Limit(limit int) *SLAViolationQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (svq *SLAViolationQuery) Offset(offset int) *SLAViolationQuery {
-	svq.ctx.Offset = &offset
-	return svq
+func (_q *SLAViolationQuery) Offset(offset int) *SLAViolationQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (svq *SLAViolationQuery) Unique(unique bool) *SLAViolationQuery {
-	svq.ctx.Unique = &unique
-	return svq
+func (_q *SLAViolationQuery) Unique(unique bool) *SLAViolationQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (svq *SLAViolationQuery) Order(o ...slaviolation.OrderOption) *SLAViolationQuery {
-	svq.order = append(svq.order, o...)
-	return svq
+func (_q *SLAViolationQuery) Order(o ...slaviolation.OrderOption) *SLAViolationQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QuerySLADefinition chains the current query on the "sla_definition" edge.
-func (svq *SLAViolationQuery) QuerySLADefinition() *SLADefinitionQuery {
-	query := (&SLADefinitionClient{config: svq.config}).Query()
+func (_q *SLAViolationQuery) QuerySLADefinition() *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := svq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := svq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,20 +78,20 @@ func (svq *SLAViolationQuery) QuerySLADefinition() *SLADefinitionQuery {
 			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, slaviolation.SLADefinitionTable, slaviolation.SLADefinitionColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(svq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryTicket chains the current query on the "ticket" edge.
-func (svq *SLAViolationQuery) QueryTicket() *TicketQuery {
-	query := (&TicketClient{config: svq.config}).Query()
+func (_q *SLAViolationQuery) QueryTicket() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := svq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := svq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (svq *SLAViolationQuery) QueryTicket() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, slaviolation.TicketTable, slaviolation.TicketColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(svq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -108,8 +108,8 @@ func (svq *SLAViolationQuery) QueryTicket() *TicketQuery {
 
 // First returns the first SLAViolation entity from the query.
 // Returns a *NotFoundError when no SLAViolation was found.
-func (svq *SLAViolationQuery) First(ctx context.Context) (*SLAViolation, error) {
-	nodes, err := svq.Limit(1).All(setContextOp(ctx, svq.ctx, ent.OpQueryFirst))
+func (_q *SLAViolationQuery) First(ctx context.Context) (*SLAViolation, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +120,8 @@ func (svq *SLAViolationQuery) First(ctx context.Context) (*SLAViolation, error) 
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (svq *SLAViolationQuery) FirstX(ctx context.Context) *SLAViolation {
-	node, err := svq.First(ctx)
+func (_q *SLAViolationQuery) FirstX(ctx context.Context) *SLAViolation {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,9 +130,9 @@ func (svq *SLAViolationQuery) FirstX(ctx context.Context) *SLAViolation {
 
 // FirstID returns the first SLAViolation ID from the query.
 // Returns a *NotFoundError when no SLAViolation ID was found.
-func (svq *SLAViolationQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *SLAViolationQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = svq.Limit(1).IDs(setContextOp(ctx, svq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -143,8 +143,8 @@ func (svq *SLAViolationQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (svq *SLAViolationQuery) FirstIDX(ctx context.Context) int {
-	id, err := svq.FirstID(ctx)
+func (_q *SLAViolationQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -154,8 +154,8 @@ func (svq *SLAViolationQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single SLAViolation entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one SLAViolation entity is found.
 // Returns a *NotFoundError when no SLAViolation entities are found.
-func (svq *SLAViolationQuery) Only(ctx context.Context) (*SLAViolation, error) {
-	nodes, err := svq.Limit(2).All(setContextOp(ctx, svq.ctx, ent.OpQueryOnly))
+func (_q *SLAViolationQuery) Only(ctx context.Context) (*SLAViolation, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +170,8 @@ func (svq *SLAViolationQuery) Only(ctx context.Context) (*SLAViolation, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (svq *SLAViolationQuery) OnlyX(ctx context.Context) *SLAViolation {
-	node, err := svq.Only(ctx)
+func (_q *SLAViolationQuery) OnlyX(ctx context.Context) *SLAViolation {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -181,9 +181,9 @@ func (svq *SLAViolationQuery) OnlyX(ctx context.Context) *SLAViolation {
 // OnlyID is like Only, but returns the only SLAViolation ID in the query.
 // Returns a *NotSingularError when more than one SLAViolation ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (svq *SLAViolationQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *SLAViolationQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = svq.Limit(2).IDs(setContextOp(ctx, svq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -198,8 +198,8 @@ func (svq *SLAViolationQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (svq *SLAViolationQuery) OnlyIDX(ctx context.Context) int {
-	id, err := svq.OnlyID(ctx)
+func (_q *SLAViolationQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,18 +207,18 @@ func (svq *SLAViolationQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of SLAViolations.
-func (svq *SLAViolationQuery) All(ctx context.Context) ([]*SLAViolation, error) {
-	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryAll)
-	if err := svq.prepareQuery(ctx); err != nil {
+func (_q *SLAViolationQuery) All(ctx context.Context) ([]*SLAViolation, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*SLAViolation, *SLAViolationQuery]()
-	return withInterceptors[[]*SLAViolation](ctx, svq, qr, svq.inters)
+	return withInterceptors[[]*SLAViolation](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (svq *SLAViolationQuery) AllX(ctx context.Context) []*SLAViolation {
-	nodes, err := svq.All(ctx)
+func (_q *SLAViolationQuery) AllX(ctx context.Context) []*SLAViolation {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -226,20 +226,20 @@ func (svq *SLAViolationQuery) AllX(ctx context.Context) []*SLAViolation {
 }
 
 // IDs executes the query and returns a list of SLAViolation IDs.
-func (svq *SLAViolationQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if svq.ctx.Unique == nil && svq.path != nil {
-		svq.Unique(true)
+func (_q *SLAViolationQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryIDs)
-	if err = svq.Select(slaviolation.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(slaviolation.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (svq *SLAViolationQuery) IDsX(ctx context.Context) []int {
-	ids, err := svq.IDs(ctx)
+func (_q *SLAViolationQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -247,17 +247,17 @@ func (svq *SLAViolationQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (svq *SLAViolationQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryCount)
-	if err := svq.prepareQuery(ctx); err != nil {
+func (_q *SLAViolationQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, svq, querierCount[*SLAViolationQuery](), svq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SLAViolationQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (svq *SLAViolationQuery) CountX(ctx context.Context) int {
-	count, err := svq.Count(ctx)
+func (_q *SLAViolationQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,9 +265,9 @@ func (svq *SLAViolationQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (svq *SLAViolationQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, svq.ctx, ent.OpQueryExist)
-	switch _, err := svq.FirstID(ctx); {
+func (_q *SLAViolationQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -278,8 +278,8 @@ func (svq *SLAViolationQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (svq *SLAViolationQuery) ExistX(ctx context.Context) bool {
-	exist, err := svq.Exist(ctx)
+func (_q *SLAViolationQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -288,44 +288,44 @@ func (svq *SLAViolationQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the SLAViolationQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (svq *SLAViolationQuery) Clone() *SLAViolationQuery {
-	if svq == nil {
+func (_q *SLAViolationQuery) Clone() *SLAViolationQuery {
+	if _q == nil {
 		return nil
 	}
 	return &SLAViolationQuery{
-		config:            svq.config,
-		ctx:               svq.ctx.Clone(),
-		order:             append([]slaviolation.OrderOption{}, svq.order...),
-		inters:            append([]Interceptor{}, svq.inters...),
-		predicates:        append([]predicate.SLAViolation{}, svq.predicates...),
-		withSLADefinition: svq.withSLADefinition.Clone(),
-		withTicket:        svq.withTicket.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]slaviolation.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.SLAViolation{}, _q.predicates...),
+		withSLADefinition: _q.withSLADefinition.Clone(),
+		withTicket:        _q.withTicket.Clone(),
 		// clone intermediate query.
-		sql:  svq.sql.Clone(),
-		path: svq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithSLADefinition tells the query-builder to eager-load the nodes that are connected to
 // the "sla_definition" edge. The optional arguments are used to configure the query builder of the edge.
-func (svq *SLAViolationQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAViolationQuery {
-	query := (&SLADefinitionClient{config: svq.config}).Query()
+func (_q *SLAViolationQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAViolationQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	svq.withSLADefinition = query
-	return svq
+	_q.withSLADefinition = query
+	return _q
 }
 
 // WithTicket tells the query-builder to eager-load the nodes that are connected to
 // the "ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (svq *SLAViolationQuery) WithTicket(opts ...func(*TicketQuery)) *SLAViolationQuery {
-	query := (&TicketClient{config: svq.config}).Query()
+func (_q *SLAViolationQuery) WithTicket(opts ...func(*TicketQuery)) *SLAViolationQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	svq.withTicket = query
-	return svq
+	_q.withTicket = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -342,10 +342,10 @@ func (svq *SLAViolationQuery) WithTicket(opts ...func(*TicketQuery)) *SLAViolati
 //		GroupBy(slaviolation.FieldCreatedBy).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (svq *SLAViolationQuery) GroupBy(field string, fields ...string) *SLAViolationGroupBy {
-	svq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &SLAViolationGroupBy{build: svq}
-	grbuild.flds = &svq.ctx.Fields
+func (_q *SLAViolationQuery) GroupBy(field string, fields ...string) *SLAViolationGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &SLAViolationGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = slaviolation.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -363,59 +363,59 @@ func (svq *SLAViolationQuery) GroupBy(field string, fields ...string) *SLAViolat
 //	client.SLAViolation.Query().
 //		Select(slaviolation.FieldCreatedBy).
 //		Scan(ctx, &v)
-func (svq *SLAViolationQuery) Select(fields ...string) *SLAViolationSelect {
-	svq.ctx.Fields = append(svq.ctx.Fields, fields...)
-	sbuild := &SLAViolationSelect{SLAViolationQuery: svq}
+func (_q *SLAViolationQuery) Select(fields ...string) *SLAViolationSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &SLAViolationSelect{SLAViolationQuery: _q}
 	sbuild.label = slaviolation.Label
-	sbuild.flds, sbuild.scan = &svq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a SLAViolationSelect configured with the given aggregations.
-func (svq *SLAViolationQuery) Aggregate(fns ...AggregateFunc) *SLAViolationSelect {
-	return svq.Select().Aggregate(fns...)
+func (_q *SLAViolationQuery) Aggregate(fns ...AggregateFunc) *SLAViolationSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (svq *SLAViolationQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range svq.inters {
+func (_q *SLAViolationQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, svq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range svq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !slaviolation.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if svq.path != nil {
-		prev, err := svq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		svq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (svq *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAViolation, error) {
+func (_q *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAViolation, error) {
 	var (
 		nodes       = []*SLAViolation{}
-		_spec       = svq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			svq.withSLADefinition != nil,
-			svq.withTicket != nil,
+			_q.withSLADefinition != nil,
+			_q.withTicket != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAViolation).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &SLAViolation{config: svq.config}
+		node := &SLAViolation{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -423,20 +423,20 @@ func (svq *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, svq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := svq.withSLADefinition; query != nil {
-		if err := svq.loadSLADefinition(ctx, query, nodes, nil,
+	if query := _q.withSLADefinition; query != nil {
+		if err := _q.loadSLADefinition(ctx, query, nodes, nil,
 			func(n *SLAViolation, e *SLADefinition) { n.Edges.SLADefinition = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := svq.withTicket; query != nil {
-		if err := svq.loadTicket(ctx, query, nodes, nil,
+	if query := _q.withTicket; query != nil {
+		if err := _q.loadTicket(ctx, query, nodes, nil,
 			func(n *SLAViolation, e *Ticket) { n.Edges.Ticket = e }); err != nil {
 			return nil, err
 		}
@@ -444,7 +444,7 @@ func (svq *SLAViolationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	return nodes, nil
 }
 
-func (svq *SLAViolationQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAViolation, init func(*SLAViolation), assign func(*SLAViolation, *SLADefinition)) error {
+func (_q *SLAViolationQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAViolation, init func(*SLAViolation), assign func(*SLAViolation, *SLADefinition)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*SLAViolation)
 	for i := range nodes {
@@ -473,7 +473,7 @@ func (svq *SLAViolationQuery) loadSLADefinition(ctx context.Context, query *SLAD
 	}
 	return nil
 }
-func (svq *SLAViolationQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*SLAViolation, init func(*SLAViolation), assign func(*SLAViolation, *Ticket)) error {
+func (_q *SLAViolationQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*SLAViolation, init func(*SLAViolation), assign func(*SLAViolation, *Ticket)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*SLAViolation)
 	for i := range nodes {
@@ -503,24 +503,24 @@ func (svq *SLAViolationQuery) loadTicket(ctx context.Context, query *TicketQuery
 	return nil
 }
 
-func (svq *SLAViolationQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := svq.querySpec()
-	_spec.Node.Columns = svq.ctx.Fields
-	if len(svq.ctx.Fields) > 0 {
-		_spec.Unique = svq.ctx.Unique != nil && *svq.ctx.Unique
+func (_q *SLAViolationQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, svq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (svq *SLAViolationQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *SLAViolationQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(slaviolation.Table, slaviolation.Columns, sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt))
-	_spec.From = svq.sql
-	if unique := svq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if svq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := svq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slaviolation.FieldID)
 		for i := range fields {
@@ -528,27 +528,27 @@ func (svq *SLAViolationQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if svq.withSLADefinition != nil {
+		if _q.withSLADefinition != nil {
 			_spec.Node.AddColumnOnce(slaviolation.FieldSLADefinitionID)
 		}
-		if svq.withTicket != nil {
+		if _q.withTicket != nil {
 			_spec.Node.AddColumnOnce(slaviolation.FieldTicketID)
 		}
 	}
-	if ps := svq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := svq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := svq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := svq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -558,33 +558,33 @@ func (svq *SLAViolationQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (svq *SLAViolationQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(svq.driver.Dialect())
+func (_q *SLAViolationQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(slaviolation.Table)
-	columns := svq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = slaviolation.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if svq.sql != nil {
-		selector = svq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if svq.ctx.Unique != nil && *svq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range svq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range svq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := svq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := svq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -597,41 +597,41 @@ type SLAViolationGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (svgb *SLAViolationGroupBy) Aggregate(fns ...AggregateFunc) *SLAViolationGroupBy {
-	svgb.fns = append(svgb.fns, fns...)
-	return svgb
+func (_g *SLAViolationGroupBy) Aggregate(fns ...AggregateFunc) *SLAViolationGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (svgb *SLAViolationGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, svgb.build.ctx, ent.OpQueryGroupBy)
-	if err := svgb.build.prepareQuery(ctx); err != nil {
+func (_g *SLAViolationGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAViolationQuery, *SLAViolationGroupBy](ctx, svgb.build, svgb, svgb.build.inters, v)
+	return scanWithInterceptors[*SLAViolationQuery, *SLAViolationGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (svgb *SLAViolationGroupBy) sqlScan(ctx context.Context, root *SLAViolationQuery, v any) error {
+func (_g *SLAViolationGroupBy) sqlScan(ctx context.Context, root *SLAViolationQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(svgb.fns))
-	for _, fn := range svgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*svgb.flds)+len(svgb.fns))
-		for _, f := range *svgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*svgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := svgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -645,27 +645,27 @@ type SLAViolationSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (svs *SLAViolationSelect) Aggregate(fns ...AggregateFunc) *SLAViolationSelect {
-	svs.fns = append(svs.fns, fns...)
-	return svs
+func (_s *SLAViolationSelect) Aggregate(fns ...AggregateFunc) *SLAViolationSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (svs *SLAViolationSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, svs.ctx, ent.OpQuerySelect)
-	if err := svs.prepareQuery(ctx); err != nil {
+func (_s *SLAViolationSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAViolationQuery, *SLAViolationSelect](ctx, svs.SLAViolationQuery, svs, svs.inters, v)
+	return scanWithInterceptors[*SLAViolationQuery, *SLAViolationSelect](ctx, _s.SLAViolationQuery, _s, _s.inters, v)
 }
 
-func (svs *SLAViolationSelect) sqlScan(ctx context.Context, root *SLAViolationQuery, v any) error {
+func (_s *SLAViolationSelect) sqlScan(ctx context.Context, root *SLAViolationQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(svs.fns))
-	for _, fn := range svs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*svs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -673,7 +673,7 @@ func (svs *SLAViolationSelect) sqlScan(ctx context.Context, root *SLAViolationQu
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := svs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

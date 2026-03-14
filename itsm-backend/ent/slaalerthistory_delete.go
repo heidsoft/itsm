@@ -20,56 +20,56 @@ type SLAAlertHistoryDelete struct {
 }
 
 // Where appends a list predicates to the SLAAlertHistoryDelete builder.
-func (sahd *SLAAlertHistoryDelete) Where(ps ...predicate.SLAAlertHistory) *SLAAlertHistoryDelete {
-	sahd.mutation.Where(ps...)
-	return sahd
+func (_d *SLAAlertHistoryDelete) Where(ps ...predicate.SLAAlertHistory) *SLAAlertHistoryDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (sahd *SLAAlertHistoryDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, sahd.sqlExec, sahd.mutation, sahd.hooks)
+func (_d *SLAAlertHistoryDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sahd *SLAAlertHistoryDelete) ExecX(ctx context.Context) int {
-	n, err := sahd.Exec(ctx)
+func (_d *SLAAlertHistoryDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (sahd *SLAAlertHistoryDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *SLAAlertHistoryDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(slaalerthistory.Table, sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt))
-	if ps := sahd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, sahd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	sahd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // SLAAlertHistoryDeleteOne is the builder for deleting a single SLAAlertHistory entity.
 type SLAAlertHistoryDeleteOne struct {
-	sahd *SLAAlertHistoryDelete
+	_d *SLAAlertHistoryDelete
 }
 
 // Where appends a list predicates to the SLAAlertHistoryDelete builder.
-func (sahdo *SLAAlertHistoryDeleteOne) Where(ps ...predicate.SLAAlertHistory) *SLAAlertHistoryDeleteOne {
-	sahdo.sahd.mutation.Where(ps...)
-	return sahdo
+func (_d *SLAAlertHistoryDeleteOne) Where(ps ...predicate.SLAAlertHistory) *SLAAlertHistoryDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (sahdo *SLAAlertHistoryDeleteOne) Exec(ctx context.Context) error {
-	n, err := sahdo.sahd.Exec(ctx)
+func (_d *SLAAlertHistoryDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (sahdo *SLAAlertHistoryDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sahdo *SLAAlertHistoryDeleteOne) ExecX(ctx context.Context) {
-	if err := sahdo.Exec(ctx); err != nil {
+func (_d *SLAAlertHistoryDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

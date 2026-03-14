@@ -21,205 +21,205 @@ type ProblemCreate struct {
 }
 
 // SetTitle sets the "title" field.
-func (pc *ProblemCreate) SetTitle(s string) *ProblemCreate {
-	pc.mutation.SetTitle(s)
-	return pc
+func (_c *ProblemCreate) SetTitle(v string) *ProblemCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (pc *ProblemCreate) SetDescription(s string) *ProblemCreate {
-	pc.mutation.SetDescription(s)
-	return pc
+func (_c *ProblemCreate) SetDescription(v string) *ProblemCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableDescription(s *string) *ProblemCreate {
-	if s != nil {
-		pc.SetDescription(*s)
+func (_c *ProblemCreate) SetNillableDescription(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (pc *ProblemCreate) SetStatus(s string) *ProblemCreate {
-	pc.mutation.SetStatus(s)
-	return pc
+func (_c *ProblemCreate) SetStatus(v string) *ProblemCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableStatus(s *string) *ProblemCreate {
-	if s != nil {
-		pc.SetStatus(*s)
+func (_c *ProblemCreate) SetNillableStatus(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (pc *ProblemCreate) SetPriority(s string) *ProblemCreate {
-	pc.mutation.SetPriority(s)
-	return pc
+func (_c *ProblemCreate) SetPriority(v string) *ProblemCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillablePriority(s *string) *ProblemCreate {
-	if s != nil {
-		pc.SetPriority(*s)
+func (_c *ProblemCreate) SetNillablePriority(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (pc *ProblemCreate) SetCategory(s string) *ProblemCreate {
-	pc.mutation.SetCategory(s)
-	return pc
+func (_c *ProblemCreate) SetCategory(v string) *ProblemCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableCategory(s *string) *ProblemCreate {
-	if s != nil {
-		pc.SetCategory(*s)
+func (_c *ProblemCreate) SetNillableCategory(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetCategory(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetRootCause sets the "root_cause" field.
-func (pc *ProblemCreate) SetRootCause(s string) *ProblemCreate {
-	pc.mutation.SetRootCause(s)
-	return pc
+func (_c *ProblemCreate) SetRootCause(v string) *ProblemCreate {
+	_c.mutation.SetRootCause(v)
+	return _c
 }
 
 // SetNillableRootCause sets the "root_cause" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableRootCause(s *string) *ProblemCreate {
-	if s != nil {
-		pc.SetRootCause(*s)
+func (_c *ProblemCreate) SetNillableRootCause(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetRootCause(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetImpact sets the "impact" field.
-func (pc *ProblemCreate) SetImpact(s string) *ProblemCreate {
-	pc.mutation.SetImpact(s)
-	return pc
+func (_c *ProblemCreate) SetImpact(v string) *ProblemCreate {
+	_c.mutation.SetImpact(v)
+	return _c
 }
 
 // SetNillableImpact sets the "impact" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableImpact(s *string) *ProblemCreate {
-	if s != nil {
-		pc.SetImpact(*s)
+func (_c *ProblemCreate) SetNillableImpact(v *string) *ProblemCreate {
+	if v != nil {
+		_c.SetImpact(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (pc *ProblemCreate) SetAssigneeID(i int) *ProblemCreate {
-	pc.mutation.SetAssigneeID(i)
-	return pc
+func (_c *ProblemCreate) SetAssigneeID(v int) *ProblemCreate {
+	_c.mutation.SetAssigneeID(v)
+	return _c
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableAssigneeID(i *int) *ProblemCreate {
-	if i != nil {
-		pc.SetAssigneeID(*i)
+func (_c *ProblemCreate) SetNillableAssigneeID(v *int) *ProblemCreate {
+	if v != nil {
+		_c.SetAssigneeID(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (pc *ProblemCreate) SetCreatedBy(i int) *ProblemCreate {
-	pc.mutation.SetCreatedBy(i)
-	return pc
+func (_c *ProblemCreate) SetCreatedBy(v int) *ProblemCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pc *ProblemCreate) SetTenantID(i int) *ProblemCreate {
-	pc.mutation.SetTenantID(i)
-	return pc
+func (_c *ProblemCreate) SetTenantID(v int) *ProblemCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pc *ProblemCreate) SetCreatedAt(t time.Time) *ProblemCreate {
-	pc.mutation.SetCreatedAt(t)
-	return pc
+func (_c *ProblemCreate) SetCreatedAt(v time.Time) *ProblemCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableCreatedAt(t *time.Time) *ProblemCreate {
-	if t != nil {
-		pc.SetCreatedAt(*t)
+func (_c *ProblemCreate) SetNillableCreatedAt(v *time.Time) *ProblemCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pc *ProblemCreate) SetUpdatedAt(t time.Time) *ProblemCreate {
-	pc.mutation.SetUpdatedAt(t)
-	return pc
+func (_c *ProblemCreate) SetUpdatedAt(v time.Time) *ProblemCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableUpdatedAt(t *time.Time) *ProblemCreate {
-	if t != nil {
-		pc.SetUpdatedAt(*t)
+func (_c *ProblemCreate) SetNillableUpdatedAt(v *time.Time) *ProblemCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (pc *ProblemCreate) SetResolvedAt(t time.Time) *ProblemCreate {
-	pc.mutation.SetResolvedAt(t)
-	return pc
+func (_c *ProblemCreate) SetResolvedAt(v time.Time) *ProblemCreate {
+	_c.mutation.SetResolvedAt(v)
+	return _c
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableResolvedAt(t *time.Time) *ProblemCreate {
-	if t != nil {
-		pc.SetResolvedAt(*t)
+func (_c *ProblemCreate) SetNillableResolvedAt(v *time.Time) *ProblemCreate {
+	if v != nil {
+		_c.SetResolvedAt(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (pc *ProblemCreate) SetClosedAt(t time.Time) *ProblemCreate {
-	pc.mutation.SetClosedAt(t)
-	return pc
+func (_c *ProblemCreate) SetClosedAt(v time.Time) *ProblemCreate {
+	_c.mutation.SetClosedAt(v)
+	return _c
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableClosedAt(t *time.Time) *ProblemCreate {
-	if t != nil {
-		pc.SetClosedAt(*t)
+func (_c *ProblemCreate) SetNillableClosedAt(v *time.Time) *ProblemCreate {
+	if v != nil {
+		_c.SetClosedAt(*v)
 	}
-	return pc
+	return _c
 }
 
 // SetDeletedAt sets the "deleted_at" field.
-func (pc *ProblemCreate) SetDeletedAt(t time.Time) *ProblemCreate {
-	pc.mutation.SetDeletedAt(t)
-	return pc
+func (_c *ProblemCreate) SetDeletedAt(v time.Time) *ProblemCreate {
+	_c.mutation.SetDeletedAt(v)
+	return _c
 }
 
 // SetNillableDeletedAt sets the "deleted_at" field if the given value is not nil.
-func (pc *ProblemCreate) SetNillableDeletedAt(t *time.Time) *ProblemCreate {
-	if t != nil {
-		pc.SetDeletedAt(*t)
+func (_c *ProblemCreate) SetNillableDeletedAt(v *time.Time) *ProblemCreate {
+	if v != nil {
+		_c.SetDeletedAt(*v)
 	}
-	return pc
+	return _c
 }
 
 // Mutation returns the ProblemMutation object of the builder.
-func (pc *ProblemCreate) Mutation() *ProblemMutation {
-	return pc.mutation
+func (_c *ProblemCreate) Mutation() *ProblemMutation {
+	return _c.mutation
 }
 
 // Save creates the Problem in the database.
-func (pc *ProblemCreate) Save(ctx context.Context) (*Problem, error) {
-	pc.defaults()
-	return withHooks(ctx, pc.sqlSave, pc.mutation, pc.hooks)
+func (_c *ProblemCreate) Save(ctx context.Context) (*Problem, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pc *ProblemCreate) SaveX(ctx context.Context) *Problem {
-	v, err := pc.Save(ctx)
+func (_c *ProblemCreate) SaveX(ctx context.Context) *Problem {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -227,85 +227,85 @@ func (pc *ProblemCreate) SaveX(ctx context.Context) *Problem {
 }
 
 // Exec executes the query.
-func (pc *ProblemCreate) Exec(ctx context.Context) error {
-	_, err := pc.Save(ctx)
+func (_c *ProblemCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pc *ProblemCreate) ExecX(ctx context.Context) {
-	if err := pc.Exec(ctx); err != nil {
+func (_c *ProblemCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pc *ProblemCreate) defaults() {
-	if _, ok := pc.mutation.Status(); !ok {
+func (_c *ProblemCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := problem.DefaultStatus
-		pc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := pc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := problem.DefaultPriority
-		pc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := pc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := problem.DefaultCreatedAt()
-		pc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := pc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := problem.DefaultUpdatedAt()
-		pc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pc *ProblemCreate) check() error {
-	if _, ok := pc.mutation.Title(); !ok {
+func (_c *ProblemCreate) check() error {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Problem.title"`)}
 	}
-	if v, ok := pc.mutation.Title(); ok {
+	if v, ok := _c.mutation.Title(); ok {
 		if err := problem.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Problem.title": %w`, err)}
 		}
 	}
-	if _, ok := pc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Problem.status"`)}
 	}
-	if _, ok := pc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "Problem.priority"`)}
 	}
-	if _, ok := pc.mutation.CreatedBy(); !ok {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "Problem.created_by"`)}
 	}
-	if v, ok := pc.mutation.CreatedBy(); ok {
+	if v, ok := _c.mutation.CreatedBy(); ok {
 		if err := problem.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Problem.created_by": %w`, err)}
 		}
 	}
-	if _, ok := pc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Problem.tenant_id"`)}
 	}
-	if v, ok := pc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := problem.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Problem.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := pc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Problem.created_at"`)}
 	}
-	if _, ok := pc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Problem.updated_at"`)}
 	}
 	return nil
 }
 
-func (pc *ProblemCreate) sqlSave(ctx context.Context) (*Problem, error) {
-	if err := pc.check(); err != nil {
+func (_c *ProblemCreate) sqlSave(ctx context.Context) (*Problem, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -313,73 +313,73 @@ func (pc *ProblemCreate) sqlSave(ctx context.Context) (*Problem, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	pc.mutation.id = &_node.ID
-	pc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pc *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
+func (_c *ProblemCreate) createSpec() (*Problem, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Problem{config: pc.config}
+		_node = &Problem{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(problem.Table, sqlgraph.NewFieldSpec(problem.FieldID, field.TypeInt))
 	)
-	if value, ok := pc.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(problem.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := pc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(problem.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := pc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(problem.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := pc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(problem.FieldPriority, field.TypeString, value)
 		_node.Priority = value
 	}
-	if value, ok := pc.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(problem.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := pc.mutation.RootCause(); ok {
+	if value, ok := _c.mutation.RootCause(); ok {
 		_spec.SetField(problem.FieldRootCause, field.TypeString, value)
 		_node.RootCause = value
 	}
-	if value, ok := pc.mutation.Impact(); ok {
+	if value, ok := _c.mutation.Impact(); ok {
 		_spec.SetField(problem.FieldImpact, field.TypeString, value)
 		_node.Impact = value
 	}
-	if value, ok := pc.mutation.AssigneeID(); ok {
+	if value, ok := _c.mutation.AssigneeID(); ok {
 		_spec.SetField(problem.FieldAssigneeID, field.TypeInt, value)
 		_node.AssigneeID = value
 	}
-	if value, ok := pc.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(problem.FieldCreatedBy, field.TypeInt, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := pc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(problem.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := pc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(problem.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := pc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(problem.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := pc.mutation.ResolvedAt(); ok {
+	if value, ok := _c.mutation.ResolvedAt(); ok {
 		_spec.SetField(problem.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = &value
 	}
-	if value, ok := pc.mutation.ClosedAt(); ok {
+	if value, ok := _c.mutation.ClosedAt(); ok {
 		_spec.SetField(problem.FieldClosedAt, field.TypeTime, value)
 		_node.ClosedAt = &value
 	}
-	if value, ok := pc.mutation.DeletedAt(); ok {
+	if value, ok := _c.mutation.DeletedAt(); ok {
 		_spec.SetField(problem.FieldDeletedAt, field.TypeTime, value)
 		_node.DeletedAt = &value
 	}
@@ -394,16 +394,16 @@ type ProblemCreateBulk struct {
 }
 
 // Save creates the Problem entities in the database.
-func (pcb *ProblemCreateBulk) Save(ctx context.Context) ([]*Problem, error) {
-	if pcb.err != nil {
-		return nil, pcb.err
+func (_c *ProblemCreateBulk) Save(ctx context.Context) ([]*Problem, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(pcb.builders))
-	nodes := make([]*Problem, len(pcb.builders))
-	mutators := make([]Mutator, len(pcb.builders))
-	for i := range pcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Problem, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := pcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProblemMutation)
@@ -417,11 +417,11 @@ func (pcb *ProblemCreateBulk) Save(ctx context.Context) ([]*Problem, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, pcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, pcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -445,7 +445,7 @@ func (pcb *ProblemCreateBulk) Save(ctx context.Context) ([]*Problem, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, pcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -453,8 +453,8 @@ func (pcb *ProblemCreateBulk) Save(ctx context.Context) ([]*Problem, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pcb *ProblemCreateBulk) SaveX(ctx context.Context) []*Problem {
-	v, err := pcb.Save(ctx)
+func (_c *ProblemCreateBulk) SaveX(ctx context.Context) []*Problem {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -462,14 +462,14 @@ func (pcb *ProblemCreateBulk) SaveX(ctx context.Context) []*Problem {
 }
 
 // Exec executes the query.
-func (pcb *ProblemCreateBulk) Exec(ctx context.Context) error {
-	_, err := pcb.Save(ctx)
+func (_c *ProblemCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pcb *ProblemCreateBulk) ExecX(ctx context.Context) {
-	if err := pcb.Exec(ctx); err != nil {
+func (_c *ProblemCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

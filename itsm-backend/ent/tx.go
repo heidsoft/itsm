@@ -26,6 +26,8 @@ type Tx struct {
 	AssetLicense *AssetLicenseClient
 	// AuditLog is the client for interacting with the AuditLog builders.
 	AuditLog *AuditLogClient
+	// BPMNPermission is the client for interacting with the BPMNPermission builders.
+	BPMNPermission *BPMNPermissionClient
 	// CIAttributeDefinition is the client for interacting with the CIAttributeDefinition builders.
 	CIAttributeDefinition *CIAttributeDefinitionClient
 	// CIRelationship is the client for interacting with the CIRelationship builders.
@@ -76,6 +78,8 @@ type Tx struct {
 	KnowledgeArticleLike *KnowledgeArticleLikeClient
 	// KnownError is the client for interacting with the KnownError builders.
 	KnownError *KnownErrorClient
+	// MSPAllocation is the client for interacting with the MSPAllocation builders.
+	MSPAllocation *MSPAllocationClient
 	// Message is the client for interacting with the Message builders.
 	Message *MessageClient
 	// Microservice is the client for interacting with the Microservice builders.
@@ -90,6 +94,8 @@ type Tx struct {
 	Permission *PermissionClient
 	// Problem is the client for interacting with the Problem builders.
 	Problem *ProblemClient
+	// ProcessAuditLog is the client for interacting with the ProcessAuditLog builders.
+	ProcessAuditLog *ProcessAuditLogClient
 	// ProcessBinding is the client for interacting with the ProcessBinding builders.
 	ProcessBinding *ProcessBindingClient
 	// ProcessDefinition is the client for interacting with the ProcessDefinition builders.
@@ -316,6 +322,7 @@ func (tx *Tx) init() {
 	tx.Asset = NewAssetClient(tx.config)
 	tx.AssetLicense = NewAssetLicenseClient(tx.config)
 	tx.AuditLog = NewAuditLogClient(tx.config)
+	tx.BPMNPermission = NewBPMNPermissionClient(tx.config)
 	tx.CIAttributeDefinition = NewCIAttributeDefinitionClient(tx.config)
 	tx.CIRelationship = NewCIRelationshipClient(tx.config)
 	tx.CIType = NewCITypeClient(tx.config)
@@ -341,6 +348,7 @@ func (tx *Tx) init() {
 	tx.KnowledgeArticle = NewKnowledgeArticleClient(tx.config)
 	tx.KnowledgeArticleLike = NewKnowledgeArticleLikeClient(tx.config)
 	tx.KnownError = NewKnownErrorClient(tx.config)
+	tx.MSPAllocation = NewMSPAllocationClient(tx.config)
 	tx.Message = NewMessageClient(tx.config)
 	tx.Microservice = NewMicroserviceClient(tx.config)
 	tx.Notification = NewNotificationClient(tx.config)
@@ -348,6 +356,7 @@ func (tx *Tx) init() {
 	tx.PasswordResetToken = NewPasswordResetTokenClient(tx.config)
 	tx.Permission = NewPermissionClient(tx.config)
 	tx.Problem = NewProblemClient(tx.config)
+	tx.ProcessAuditLog = NewProcessAuditLogClient(tx.config)
 	tx.ProcessBinding = NewProcessBindingClient(tx.config)
 	tx.ProcessDefinition = NewProcessDefinitionClient(tx.config)
 	tx.ProcessDeployment = NewProcessDeploymentClient(tx.config)

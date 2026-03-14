@@ -28,308 +28,308 @@ type TagUpdate struct {
 }
 
 // Where appends a list predicates to the TagUpdate builder.
-func (tu *TagUpdate) Where(ps ...predicate.Tag) *TagUpdate {
-	tu.mutation.Where(ps...)
-	return tu
+func (_u *TagUpdate) Where(ps ...predicate.Tag) *TagUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (tu *TagUpdate) SetName(s string) *TagUpdate {
-	tu.mutation.SetName(s)
-	return tu
+func (_u *TagUpdate) SetName(v string) *TagUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (tu *TagUpdate) SetNillableName(s *string) *TagUpdate {
-	if s != nil {
-		tu.SetName(*s)
+func (_u *TagUpdate) SetNillableName(v *string) *TagUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return tu
+	return _u
 }
 
 // SetCode sets the "code" field.
-func (tu *TagUpdate) SetCode(s string) *TagUpdate {
-	tu.mutation.SetCode(s)
-	return tu
+func (_u *TagUpdate) SetCode(v string) *TagUpdate {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (tu *TagUpdate) SetNillableCode(s *string) *TagUpdate {
-	if s != nil {
-		tu.SetCode(*s)
+func (_u *TagUpdate) SetNillableCode(v *string) *TagUpdate {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return tu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (tu *TagUpdate) SetDescription(s string) *TagUpdate {
-	tu.mutation.SetDescription(s)
-	return tu
+func (_u *TagUpdate) SetDescription(v string) *TagUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tu *TagUpdate) SetNillableDescription(s *string) *TagUpdate {
-	if s != nil {
-		tu.SetDescription(*s)
+func (_u *TagUpdate) SetNillableDescription(v *string) *TagUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return tu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (tu *TagUpdate) ClearDescription() *TagUpdate {
-	tu.mutation.ClearDescription()
-	return tu
+func (_u *TagUpdate) ClearDescription() *TagUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetColor sets the "color" field.
-func (tu *TagUpdate) SetColor(s string) *TagUpdate {
-	tu.mutation.SetColor(s)
-	return tu
+func (_u *TagUpdate) SetColor(v string) *TagUpdate {
+	_u.mutation.SetColor(v)
+	return _u
 }
 
 // SetNillableColor sets the "color" field if the given value is not nil.
-func (tu *TagUpdate) SetNillableColor(s *string) *TagUpdate {
-	if s != nil {
-		tu.SetColor(*s)
+func (_u *TagUpdate) SetNillableColor(v *string) *TagUpdate {
+	if v != nil {
+		_u.SetColor(*v)
 	}
-	return tu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tu *TagUpdate) SetTenantID(i int) *TagUpdate {
-	tu.mutation.ResetTenantID()
-	tu.mutation.SetTenantID(i)
-	return tu
+func (_u *TagUpdate) SetTenantID(v int) *TagUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tu *TagUpdate) SetNillableTenantID(i *int) *TagUpdate {
-	if i != nil {
-		tu.SetTenantID(*i)
+func (_u *TagUpdate) SetNillableTenantID(v *int) *TagUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tu *TagUpdate) AddTenantID(i int) *TagUpdate {
-	tu.mutation.AddTenantID(i)
-	return tu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TagUpdate) AddTenantID(v int) *TagUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tu *TagUpdate) SetCreatedAt(t time.Time) *TagUpdate {
-	tu.mutation.SetCreatedAt(t)
-	return tu
+func (_u *TagUpdate) SetCreatedAt(v time.Time) *TagUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tu *TagUpdate) SetNillableCreatedAt(t *time.Time) *TagUpdate {
-	if t != nil {
-		tu.SetCreatedAt(*t)
+func (_u *TagUpdate) SetNillableCreatedAt(v *time.Time) *TagUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tu *TagUpdate) SetUpdatedAt(t time.Time) *TagUpdate {
-	tu.mutation.SetUpdatedAt(t)
-	return tu
+func (_u *TagUpdate) SetUpdatedAt(v time.Time) *TagUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
-func (tu *TagUpdate) AddProjectIDs(ids ...int) *TagUpdate {
-	tu.mutation.AddProjectIDs(ids...)
-	return tu
+func (_u *TagUpdate) AddProjectIDs(ids ...int) *TagUpdate {
+	_u.mutation.AddProjectIDs(ids...)
+	return _u
 }
 
 // AddProjects adds the "projects" edges to the Project entity.
-func (tu *TagUpdate) AddProjects(p ...*Project) *TagUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *TagUpdate) AddProjects(v ...*Project) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.AddProjectIDs(ids...)
+	return _u.AddProjectIDs(ids...)
 }
 
 // AddApplicationIDs adds the "applications" edge to the Application entity by IDs.
-func (tu *TagUpdate) AddApplicationIDs(ids ...int) *TagUpdate {
-	tu.mutation.AddApplicationIDs(ids...)
-	return tu
+func (_u *TagUpdate) AddApplicationIDs(ids ...int) *TagUpdate {
+	_u.mutation.AddApplicationIDs(ids...)
+	return _u
 }
 
 // AddApplications adds the "applications" edges to the Application entity.
-func (tu *TagUpdate) AddApplications(a ...*Application) *TagUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *TagUpdate) AddApplications(v ...*Application) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.AddApplicationIDs(ids...)
+	return _u.AddApplicationIDs(ids...)
 }
 
 // AddMicroserviceIDs adds the "microservices" edge to the Microservice entity by IDs.
-func (tu *TagUpdate) AddMicroserviceIDs(ids ...int) *TagUpdate {
-	tu.mutation.AddMicroserviceIDs(ids...)
-	return tu
+func (_u *TagUpdate) AddMicroserviceIDs(ids ...int) *TagUpdate {
+	_u.mutation.AddMicroserviceIDs(ids...)
+	return _u
 }
 
 // AddMicroservices adds the "microservices" edges to the Microservice entity.
-func (tu *TagUpdate) AddMicroservices(m ...*Microservice) *TagUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *TagUpdate) AddMicroservices(v ...*Microservice) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.AddMicroserviceIDs(ids...)
+	return _u.AddMicroserviceIDs(ids...)
 }
 
 // AddDepartmentIDs adds the "departments" edge to the Department entity by IDs.
-func (tu *TagUpdate) AddDepartmentIDs(ids ...int) *TagUpdate {
-	tu.mutation.AddDepartmentIDs(ids...)
-	return tu
+func (_u *TagUpdate) AddDepartmentIDs(ids ...int) *TagUpdate {
+	_u.mutation.AddDepartmentIDs(ids...)
+	return _u
 }
 
 // AddDepartments adds the "departments" edges to the Department entity.
-func (tu *TagUpdate) AddDepartments(d ...*Department) *TagUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *TagUpdate) AddDepartments(v ...*Department) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.AddDepartmentIDs(ids...)
+	return _u.AddDepartmentIDs(ids...)
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
-func (tu *TagUpdate) AddTeamIDs(ids ...int) *TagUpdate {
-	tu.mutation.AddTeamIDs(ids...)
-	return tu
+func (_u *TagUpdate) AddTeamIDs(ids ...int) *TagUpdate {
+	_u.mutation.AddTeamIDs(ids...)
+	return _u
 }
 
 // AddTeams adds the "teams" edges to the Team entity.
-func (tu *TagUpdate) AddTeams(t ...*Team) *TagUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TagUpdate) AddTeams(v ...*Team) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.AddTeamIDs(ids...)
+	return _u.AddTeamIDs(ids...)
 }
 
 // Mutation returns the TagMutation object of the builder.
-func (tu *TagUpdate) Mutation() *TagMutation {
-	return tu.mutation
+func (_u *TagUpdate) Mutation() *TagMutation {
+	return _u.mutation
 }
 
 // ClearProjects clears all "projects" edges to the Project entity.
-func (tu *TagUpdate) ClearProjects() *TagUpdate {
-	tu.mutation.ClearProjects()
-	return tu
+func (_u *TagUpdate) ClearProjects() *TagUpdate {
+	_u.mutation.ClearProjects()
+	return _u
 }
 
 // RemoveProjectIDs removes the "projects" edge to Project entities by IDs.
-func (tu *TagUpdate) RemoveProjectIDs(ids ...int) *TagUpdate {
-	tu.mutation.RemoveProjectIDs(ids...)
-	return tu
+func (_u *TagUpdate) RemoveProjectIDs(ids ...int) *TagUpdate {
+	_u.mutation.RemoveProjectIDs(ids...)
+	return _u
 }
 
 // RemoveProjects removes "projects" edges to Project entities.
-func (tu *TagUpdate) RemoveProjects(p ...*Project) *TagUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *TagUpdate) RemoveProjects(v ...*Project) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.RemoveProjectIDs(ids...)
+	return _u.RemoveProjectIDs(ids...)
 }
 
 // ClearApplications clears all "applications" edges to the Application entity.
-func (tu *TagUpdate) ClearApplications() *TagUpdate {
-	tu.mutation.ClearApplications()
-	return tu
+func (_u *TagUpdate) ClearApplications() *TagUpdate {
+	_u.mutation.ClearApplications()
+	return _u
 }
 
 // RemoveApplicationIDs removes the "applications" edge to Application entities by IDs.
-func (tu *TagUpdate) RemoveApplicationIDs(ids ...int) *TagUpdate {
-	tu.mutation.RemoveApplicationIDs(ids...)
-	return tu
+func (_u *TagUpdate) RemoveApplicationIDs(ids ...int) *TagUpdate {
+	_u.mutation.RemoveApplicationIDs(ids...)
+	return _u
 }
 
 // RemoveApplications removes "applications" edges to Application entities.
-func (tu *TagUpdate) RemoveApplications(a ...*Application) *TagUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *TagUpdate) RemoveApplications(v ...*Application) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.RemoveApplicationIDs(ids...)
+	return _u.RemoveApplicationIDs(ids...)
 }
 
 // ClearMicroservices clears all "microservices" edges to the Microservice entity.
-func (tu *TagUpdate) ClearMicroservices() *TagUpdate {
-	tu.mutation.ClearMicroservices()
-	return tu
+func (_u *TagUpdate) ClearMicroservices() *TagUpdate {
+	_u.mutation.ClearMicroservices()
+	return _u
 }
 
 // RemoveMicroserviceIDs removes the "microservices" edge to Microservice entities by IDs.
-func (tu *TagUpdate) RemoveMicroserviceIDs(ids ...int) *TagUpdate {
-	tu.mutation.RemoveMicroserviceIDs(ids...)
-	return tu
+func (_u *TagUpdate) RemoveMicroserviceIDs(ids ...int) *TagUpdate {
+	_u.mutation.RemoveMicroserviceIDs(ids...)
+	return _u
 }
 
 // RemoveMicroservices removes "microservices" edges to Microservice entities.
-func (tu *TagUpdate) RemoveMicroservices(m ...*Microservice) *TagUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *TagUpdate) RemoveMicroservices(v ...*Microservice) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.RemoveMicroserviceIDs(ids...)
+	return _u.RemoveMicroserviceIDs(ids...)
 }
 
 // ClearDepartments clears all "departments" edges to the Department entity.
-func (tu *TagUpdate) ClearDepartments() *TagUpdate {
-	tu.mutation.ClearDepartments()
-	return tu
+func (_u *TagUpdate) ClearDepartments() *TagUpdate {
+	_u.mutation.ClearDepartments()
+	return _u
 }
 
 // RemoveDepartmentIDs removes the "departments" edge to Department entities by IDs.
-func (tu *TagUpdate) RemoveDepartmentIDs(ids ...int) *TagUpdate {
-	tu.mutation.RemoveDepartmentIDs(ids...)
-	return tu
+func (_u *TagUpdate) RemoveDepartmentIDs(ids ...int) *TagUpdate {
+	_u.mutation.RemoveDepartmentIDs(ids...)
+	return _u
 }
 
 // RemoveDepartments removes "departments" edges to Department entities.
-func (tu *TagUpdate) RemoveDepartments(d ...*Department) *TagUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *TagUpdate) RemoveDepartments(v ...*Department) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.RemoveDepartmentIDs(ids...)
+	return _u.RemoveDepartmentIDs(ids...)
 }
 
 // ClearTeams clears all "teams" edges to the Team entity.
-func (tu *TagUpdate) ClearTeams() *TagUpdate {
-	tu.mutation.ClearTeams()
-	return tu
+func (_u *TagUpdate) ClearTeams() *TagUpdate {
+	_u.mutation.ClearTeams()
+	return _u
 }
 
 // RemoveTeamIDs removes the "teams" edge to Team entities by IDs.
-func (tu *TagUpdate) RemoveTeamIDs(ids ...int) *TagUpdate {
-	tu.mutation.RemoveTeamIDs(ids...)
-	return tu
+func (_u *TagUpdate) RemoveTeamIDs(ids ...int) *TagUpdate {
+	_u.mutation.RemoveTeamIDs(ids...)
+	return _u
 }
 
 // RemoveTeams removes "teams" edges to Team entities.
-func (tu *TagUpdate) RemoveTeams(t ...*Team) *TagUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TagUpdate) RemoveTeams(v ...*Team) *TagUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tu.RemoveTeamIDs(ids...)
+	return _u.RemoveTeamIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (tu *TagUpdate) Save(ctx context.Context) (int, error) {
-	tu.defaults()
-	return withHooks(ctx, tu.sqlSave, tu.mutation, tu.hooks)
+func (_u *TagUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tu *TagUpdate) SaveX(ctx context.Context) int {
-	affected, err := tu.Save(ctx)
+func (_u *TagUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -337,39 +337,39 @@ func (tu *TagUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (tu *TagUpdate) Exec(ctx context.Context) error {
-	_, err := tu.Save(ctx)
+func (_u *TagUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tu *TagUpdate) ExecX(ctx context.Context) {
-	if err := tu.Exec(ctx); err != nil {
+func (_u *TagUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tu *TagUpdate) defaults() {
-	if _, ok := tu.mutation.UpdatedAt(); !ok {
+func (_u *TagUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := tag.UpdateDefaultUpdatedAt()
-		tu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tu *TagUpdate) check() error {
-	if v, ok := tu.mutation.Name(); ok {
+func (_u *TagUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := tag.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
-	if v, ok := tu.mutation.Code(); ok {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := tag.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Tag.code": %w`, err)}
 		}
 	}
-	if v, ok := tu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := tag.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Tag.tenant_id": %w`, err)}
 		}
@@ -377,46 +377,46 @@ func (tu *TagUpdate) check() error {
 	return nil
 }
 
-func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := tu.check(); err != nil {
-		return n, err
+func (_u *TagUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(tag.Table, tag.Columns, sqlgraph.NewFieldSpec(tag.FieldID, field.TypeInt))
-	if ps := tu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 	}
-	if value, ok := tu.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(tag.FieldCode, field.TypeString, value)
 	}
-	if value, ok := tu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(tag.FieldDescription, field.TypeString, value)
 	}
-	if tu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(tag.FieldDescription, field.TypeString)
 	}
-	if value, ok := tu.mutation.Color(); ok {
+	if value, ok := _u.mutation.Color(); ok {
 		_spec.SetField(tag.FieldColor, field.TypeString, value)
 	}
-	if value, ok := tu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(tag.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(tag.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tag.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(tag.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if tu.mutation.ProjectsCleared() {
+	if _u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -429,23 +429,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !tu.mutation.ProjectsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.ProjectsTable,
-			Columns: tag.ProjectsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tu.mutation.ProjectsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !_u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -459,9 +443,25 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.ProjectsTable,
+			Columns: tag.ProjectsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tu.mutation.ApplicationsCleared() {
+	if _u.mutation.ApplicationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -474,7 +474,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.RemovedApplicationsIDs(); len(nodes) > 0 && !tu.mutation.ApplicationsCleared() {
+	if nodes := _u.mutation.RemovedApplicationsIDs(); len(nodes) > 0 && !_u.mutation.ApplicationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -490,7 +490,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.ApplicationsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ApplicationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -506,7 +506,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tu.mutation.MicroservicesCleared() {
+	if _u.mutation.MicroservicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -519,7 +519,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.RemovedMicroservicesIDs(); len(nodes) > 0 && !tu.mutation.MicroservicesCleared() {
+	if nodes := _u.mutation.RemovedMicroservicesIDs(); len(nodes) > 0 && !_u.mutation.MicroservicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -535,7 +535,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.MicroservicesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MicroservicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -551,7 +551,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tu.mutation.DepartmentsCleared() {
+	if _u.mutation.DepartmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -564,7 +564,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.RemovedDepartmentsIDs(); len(nodes) > 0 && !tu.mutation.DepartmentsCleared() {
+	if nodes := _u.mutation.RemovedDepartmentsIDs(); len(nodes) > 0 && !_u.mutation.DepartmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -580,7 +580,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.DepartmentsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DepartmentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -596,7 +596,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tu.mutation.TeamsCleared() {
+	if _u.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -609,7 +609,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.RemovedTeamsIDs(); len(nodes) > 0 && !tu.mutation.TeamsCleared() {
+	if nodes := _u.mutation.RemovedTeamsIDs(); len(nodes) > 0 && !_u.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -625,7 +625,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tu.mutation.TeamsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TeamsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -641,7 +641,7 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tag.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -649,8 +649,8 @@ func (tu *TagUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	tu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // TagUpdateOne is the builder for updating a single Tag entity.
@@ -662,315 +662,315 @@ type TagUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (tuo *TagUpdateOne) SetName(s string) *TagUpdateOne {
-	tuo.mutation.SetName(s)
-	return tuo
+func (_u *TagUpdateOne) SetName(v string) *TagUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (tuo *TagUpdateOne) SetNillableName(s *string) *TagUpdateOne {
-	if s != nil {
-		tuo.SetName(*s)
+func (_u *TagUpdateOne) SetNillableName(v *string) *TagUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return tuo
+	return _u
 }
 
 // SetCode sets the "code" field.
-func (tuo *TagUpdateOne) SetCode(s string) *TagUpdateOne {
-	tuo.mutation.SetCode(s)
-	return tuo
+func (_u *TagUpdateOne) SetCode(v string) *TagUpdateOne {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (tuo *TagUpdateOne) SetNillableCode(s *string) *TagUpdateOne {
-	if s != nil {
-		tuo.SetCode(*s)
+func (_u *TagUpdateOne) SetNillableCode(v *string) *TagUpdateOne {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return tuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (tuo *TagUpdateOne) SetDescription(s string) *TagUpdateOne {
-	tuo.mutation.SetDescription(s)
-	return tuo
+func (_u *TagUpdateOne) SetDescription(v string) *TagUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tuo *TagUpdateOne) SetNillableDescription(s *string) *TagUpdateOne {
-	if s != nil {
-		tuo.SetDescription(*s)
+func (_u *TagUpdateOne) SetNillableDescription(v *string) *TagUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return tuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (tuo *TagUpdateOne) ClearDescription() *TagUpdateOne {
-	tuo.mutation.ClearDescription()
-	return tuo
+func (_u *TagUpdateOne) ClearDescription() *TagUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetColor sets the "color" field.
-func (tuo *TagUpdateOne) SetColor(s string) *TagUpdateOne {
-	tuo.mutation.SetColor(s)
-	return tuo
+func (_u *TagUpdateOne) SetColor(v string) *TagUpdateOne {
+	_u.mutation.SetColor(v)
+	return _u
 }
 
 // SetNillableColor sets the "color" field if the given value is not nil.
-func (tuo *TagUpdateOne) SetNillableColor(s *string) *TagUpdateOne {
-	if s != nil {
-		tuo.SetColor(*s)
+func (_u *TagUpdateOne) SetNillableColor(v *string) *TagUpdateOne {
+	if v != nil {
+		_u.SetColor(*v)
 	}
-	return tuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tuo *TagUpdateOne) SetTenantID(i int) *TagUpdateOne {
-	tuo.mutation.ResetTenantID()
-	tuo.mutation.SetTenantID(i)
-	return tuo
+func (_u *TagUpdateOne) SetTenantID(v int) *TagUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tuo *TagUpdateOne) SetNillableTenantID(i *int) *TagUpdateOne {
-	if i != nil {
-		tuo.SetTenantID(*i)
+func (_u *TagUpdateOne) SetNillableTenantID(v *int) *TagUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tuo *TagUpdateOne) AddTenantID(i int) *TagUpdateOne {
-	tuo.mutation.AddTenantID(i)
-	return tuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TagUpdateOne) AddTenantID(v int) *TagUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tuo *TagUpdateOne) SetCreatedAt(t time.Time) *TagUpdateOne {
-	tuo.mutation.SetCreatedAt(t)
-	return tuo
+func (_u *TagUpdateOne) SetCreatedAt(v time.Time) *TagUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tuo *TagUpdateOne) SetNillableCreatedAt(t *time.Time) *TagUpdateOne {
-	if t != nil {
-		tuo.SetCreatedAt(*t)
+func (_u *TagUpdateOne) SetNillableCreatedAt(v *time.Time) *TagUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tuo *TagUpdateOne) SetUpdatedAt(t time.Time) *TagUpdateOne {
-	tuo.mutation.SetUpdatedAt(t)
-	return tuo
+func (_u *TagUpdateOne) SetUpdatedAt(v time.Time) *TagUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
-func (tuo *TagUpdateOne) AddProjectIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.AddProjectIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) AddProjectIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.AddProjectIDs(ids...)
+	return _u
 }
 
 // AddProjects adds the "projects" edges to the Project entity.
-func (tuo *TagUpdateOne) AddProjects(p ...*Project) *TagUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *TagUpdateOne) AddProjects(v ...*Project) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.AddProjectIDs(ids...)
+	return _u.AddProjectIDs(ids...)
 }
 
 // AddApplicationIDs adds the "applications" edge to the Application entity by IDs.
-func (tuo *TagUpdateOne) AddApplicationIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.AddApplicationIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) AddApplicationIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.AddApplicationIDs(ids...)
+	return _u
 }
 
 // AddApplications adds the "applications" edges to the Application entity.
-func (tuo *TagUpdateOne) AddApplications(a ...*Application) *TagUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *TagUpdateOne) AddApplications(v ...*Application) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.AddApplicationIDs(ids...)
+	return _u.AddApplicationIDs(ids...)
 }
 
 // AddMicroserviceIDs adds the "microservices" edge to the Microservice entity by IDs.
-func (tuo *TagUpdateOne) AddMicroserviceIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.AddMicroserviceIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) AddMicroserviceIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.AddMicroserviceIDs(ids...)
+	return _u
 }
 
 // AddMicroservices adds the "microservices" edges to the Microservice entity.
-func (tuo *TagUpdateOne) AddMicroservices(m ...*Microservice) *TagUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *TagUpdateOne) AddMicroservices(v ...*Microservice) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.AddMicroserviceIDs(ids...)
+	return _u.AddMicroserviceIDs(ids...)
 }
 
 // AddDepartmentIDs adds the "departments" edge to the Department entity by IDs.
-func (tuo *TagUpdateOne) AddDepartmentIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.AddDepartmentIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) AddDepartmentIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.AddDepartmentIDs(ids...)
+	return _u
 }
 
 // AddDepartments adds the "departments" edges to the Department entity.
-func (tuo *TagUpdateOne) AddDepartments(d ...*Department) *TagUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *TagUpdateOne) AddDepartments(v ...*Department) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.AddDepartmentIDs(ids...)
+	return _u.AddDepartmentIDs(ids...)
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
-func (tuo *TagUpdateOne) AddTeamIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.AddTeamIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) AddTeamIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.AddTeamIDs(ids...)
+	return _u
 }
 
 // AddTeams adds the "teams" edges to the Team entity.
-func (tuo *TagUpdateOne) AddTeams(t ...*Team) *TagUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TagUpdateOne) AddTeams(v ...*Team) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.AddTeamIDs(ids...)
+	return _u.AddTeamIDs(ids...)
 }
 
 // Mutation returns the TagMutation object of the builder.
-func (tuo *TagUpdateOne) Mutation() *TagMutation {
-	return tuo.mutation
+func (_u *TagUpdateOne) Mutation() *TagMutation {
+	return _u.mutation
 }
 
 // ClearProjects clears all "projects" edges to the Project entity.
-func (tuo *TagUpdateOne) ClearProjects() *TagUpdateOne {
-	tuo.mutation.ClearProjects()
-	return tuo
+func (_u *TagUpdateOne) ClearProjects() *TagUpdateOne {
+	_u.mutation.ClearProjects()
+	return _u
 }
 
 // RemoveProjectIDs removes the "projects" edge to Project entities by IDs.
-func (tuo *TagUpdateOne) RemoveProjectIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.RemoveProjectIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) RemoveProjectIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.RemoveProjectIDs(ids...)
+	return _u
 }
 
 // RemoveProjects removes "projects" edges to Project entities.
-func (tuo *TagUpdateOne) RemoveProjects(p ...*Project) *TagUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *TagUpdateOne) RemoveProjects(v ...*Project) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.RemoveProjectIDs(ids...)
+	return _u.RemoveProjectIDs(ids...)
 }
 
 // ClearApplications clears all "applications" edges to the Application entity.
-func (tuo *TagUpdateOne) ClearApplications() *TagUpdateOne {
-	tuo.mutation.ClearApplications()
-	return tuo
+func (_u *TagUpdateOne) ClearApplications() *TagUpdateOne {
+	_u.mutation.ClearApplications()
+	return _u
 }
 
 // RemoveApplicationIDs removes the "applications" edge to Application entities by IDs.
-func (tuo *TagUpdateOne) RemoveApplicationIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.RemoveApplicationIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) RemoveApplicationIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.RemoveApplicationIDs(ids...)
+	return _u
 }
 
 // RemoveApplications removes "applications" edges to Application entities.
-func (tuo *TagUpdateOne) RemoveApplications(a ...*Application) *TagUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *TagUpdateOne) RemoveApplications(v ...*Application) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.RemoveApplicationIDs(ids...)
+	return _u.RemoveApplicationIDs(ids...)
 }
 
 // ClearMicroservices clears all "microservices" edges to the Microservice entity.
-func (tuo *TagUpdateOne) ClearMicroservices() *TagUpdateOne {
-	tuo.mutation.ClearMicroservices()
-	return tuo
+func (_u *TagUpdateOne) ClearMicroservices() *TagUpdateOne {
+	_u.mutation.ClearMicroservices()
+	return _u
 }
 
 // RemoveMicroserviceIDs removes the "microservices" edge to Microservice entities by IDs.
-func (tuo *TagUpdateOne) RemoveMicroserviceIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.RemoveMicroserviceIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) RemoveMicroserviceIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.RemoveMicroserviceIDs(ids...)
+	return _u
 }
 
 // RemoveMicroservices removes "microservices" edges to Microservice entities.
-func (tuo *TagUpdateOne) RemoveMicroservices(m ...*Microservice) *TagUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *TagUpdateOne) RemoveMicroservices(v ...*Microservice) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.RemoveMicroserviceIDs(ids...)
+	return _u.RemoveMicroserviceIDs(ids...)
 }
 
 // ClearDepartments clears all "departments" edges to the Department entity.
-func (tuo *TagUpdateOne) ClearDepartments() *TagUpdateOne {
-	tuo.mutation.ClearDepartments()
-	return tuo
+func (_u *TagUpdateOne) ClearDepartments() *TagUpdateOne {
+	_u.mutation.ClearDepartments()
+	return _u
 }
 
 // RemoveDepartmentIDs removes the "departments" edge to Department entities by IDs.
-func (tuo *TagUpdateOne) RemoveDepartmentIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.RemoveDepartmentIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) RemoveDepartmentIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.RemoveDepartmentIDs(ids...)
+	return _u
 }
 
 // RemoveDepartments removes "departments" edges to Department entities.
-func (tuo *TagUpdateOne) RemoveDepartments(d ...*Department) *TagUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *TagUpdateOne) RemoveDepartments(v ...*Department) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.RemoveDepartmentIDs(ids...)
+	return _u.RemoveDepartmentIDs(ids...)
 }
 
 // ClearTeams clears all "teams" edges to the Team entity.
-func (tuo *TagUpdateOne) ClearTeams() *TagUpdateOne {
-	tuo.mutation.ClearTeams()
-	return tuo
+func (_u *TagUpdateOne) ClearTeams() *TagUpdateOne {
+	_u.mutation.ClearTeams()
+	return _u
 }
 
 // RemoveTeamIDs removes the "teams" edge to Team entities by IDs.
-func (tuo *TagUpdateOne) RemoveTeamIDs(ids ...int) *TagUpdateOne {
-	tuo.mutation.RemoveTeamIDs(ids...)
-	return tuo
+func (_u *TagUpdateOne) RemoveTeamIDs(ids ...int) *TagUpdateOne {
+	_u.mutation.RemoveTeamIDs(ids...)
+	return _u
 }
 
 // RemoveTeams removes "teams" edges to Team entities.
-func (tuo *TagUpdateOne) RemoveTeams(t ...*Team) *TagUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TagUpdateOne) RemoveTeams(v ...*Team) *TagUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tuo.RemoveTeamIDs(ids...)
+	return _u.RemoveTeamIDs(ids...)
 }
 
 // Where appends a list predicates to the TagUpdate builder.
-func (tuo *TagUpdateOne) Where(ps ...predicate.Tag) *TagUpdateOne {
-	tuo.mutation.Where(ps...)
-	return tuo
+func (_u *TagUpdateOne) Where(ps ...predicate.Tag) *TagUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (tuo *TagUpdateOne) Select(field string, fields ...string) *TagUpdateOne {
-	tuo.fields = append([]string{field}, fields...)
-	return tuo
+func (_u *TagUpdateOne) Select(field string, fields ...string) *TagUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Tag entity.
-func (tuo *TagUpdateOne) Save(ctx context.Context) (*Tag, error) {
-	tuo.defaults()
-	return withHooks(ctx, tuo.sqlSave, tuo.mutation, tuo.hooks)
+func (_u *TagUpdateOne) Save(ctx context.Context) (*Tag, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tuo *TagUpdateOne) SaveX(ctx context.Context) *Tag {
-	node, err := tuo.Save(ctx)
+func (_u *TagUpdateOne) SaveX(ctx context.Context) *Tag {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -978,39 +978,39 @@ func (tuo *TagUpdateOne) SaveX(ctx context.Context) *Tag {
 }
 
 // Exec executes the query on the entity.
-func (tuo *TagUpdateOne) Exec(ctx context.Context) error {
-	_, err := tuo.Save(ctx)
+func (_u *TagUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tuo *TagUpdateOne) ExecX(ctx context.Context) {
-	if err := tuo.Exec(ctx); err != nil {
+func (_u *TagUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tuo *TagUpdateOne) defaults() {
-	if _, ok := tuo.mutation.UpdatedAt(); !ok {
+func (_u *TagUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := tag.UpdateDefaultUpdatedAt()
-		tuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tuo *TagUpdateOne) check() error {
-	if v, ok := tuo.mutation.Name(); ok {
+func (_u *TagUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := tag.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
-	if v, ok := tuo.mutation.Code(); ok {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := tag.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Tag.code": %w`, err)}
 		}
 	}
-	if v, ok := tuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := tag.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Tag.tenant_id": %w`, err)}
 		}
@@ -1018,17 +1018,17 @@ func (tuo *TagUpdateOne) check() error {
 	return nil
 }
 
-func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
-	if err := tuo.check(); err != nil {
+func (_u *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(tag.Table, tag.Columns, sqlgraph.NewFieldSpec(tag.FieldID, field.TypeInt))
-	id, ok := tuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Tag.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := tuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, tag.FieldID)
 		for _, f := range fields {
@@ -1040,41 +1040,41 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 			}
 		}
 	}
-	if ps := tuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 	}
-	if value, ok := tuo.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(tag.FieldCode, field.TypeString, value)
 	}
-	if value, ok := tuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(tag.FieldDescription, field.TypeString, value)
 	}
-	if tuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(tag.FieldDescription, field.TypeString)
 	}
-	if value, ok := tuo.mutation.Color(); ok {
+	if value, ok := _u.mutation.Color(); ok {
 		_spec.SetField(tag.FieldColor, field.TypeString, value)
 	}
-	if value, ok := tuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(tag.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(tag.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tag.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(tag.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if tuo.mutation.ProjectsCleared() {
+	if _u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1087,23 +1087,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !tuo.mutation.ProjectsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: true,
-			Table:   tag.ProjectsTable,
-			Columns: tag.ProjectsPrimaryKey,
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := tuo.mutation.ProjectsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !_u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1117,9 +1101,25 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ProjectsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   tag.ProjectsTable,
+			Columns: tag.ProjectsPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(project.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tuo.mutation.ApplicationsCleared() {
+	if _u.mutation.ApplicationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1132,7 +1132,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.RemovedApplicationsIDs(); len(nodes) > 0 && !tuo.mutation.ApplicationsCleared() {
+	if nodes := _u.mutation.RemovedApplicationsIDs(); len(nodes) > 0 && !_u.mutation.ApplicationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1148,7 +1148,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.ApplicationsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ApplicationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1164,7 +1164,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tuo.mutation.MicroservicesCleared() {
+	if _u.mutation.MicroservicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1177,7 +1177,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.RemovedMicroservicesIDs(); len(nodes) > 0 && !tuo.mutation.MicroservicesCleared() {
+	if nodes := _u.mutation.RemovedMicroservicesIDs(); len(nodes) > 0 && !_u.mutation.MicroservicesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1193,7 +1193,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.MicroservicesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MicroservicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1209,7 +1209,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tuo.mutation.DepartmentsCleared() {
+	if _u.mutation.DepartmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1222,7 +1222,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.RemovedDepartmentsIDs(); len(nodes) > 0 && !tuo.mutation.DepartmentsCleared() {
+	if nodes := _u.mutation.RemovedDepartmentsIDs(); len(nodes) > 0 && !_u.mutation.DepartmentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1238,7 +1238,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.DepartmentsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DepartmentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1254,7 +1254,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tuo.mutation.TeamsCleared() {
+	if _u.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1267,7 +1267,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.RemovedTeamsIDs(); len(nodes) > 0 && !tuo.mutation.TeamsCleared() {
+	if nodes := _u.mutation.RemovedTeamsIDs(); len(nodes) > 0 && !_u.mutation.TeamsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1283,7 +1283,7 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tuo.mutation.TeamsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TeamsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1299,10 +1299,10 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Tag{config: tuo.config}
+	_node = &Tag{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, tuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tag.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1310,6 +1310,6 @@ func (tuo *TagUpdateOne) sqlSave(ctx context.Context) (_node *Tag, err error) {
 		}
 		return nil, err
 	}
-	tuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

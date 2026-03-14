@@ -25,231 +25,231 @@ type ProcessDefinitionCreate struct {
 }
 
 // SetKey sets the "key" field.
-func (pdc *ProcessDefinitionCreate) SetKey(s string) *ProcessDefinitionCreate {
-	pdc.mutation.SetKey(s)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetKey(v string) *ProcessDefinitionCreate {
+	_c.mutation.SetKey(v)
+	return _c
 }
 
 // SetName sets the "name" field.
-func (pdc *ProcessDefinitionCreate) SetName(s string) *ProcessDefinitionCreate {
-	pdc.mutation.SetName(s)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetName(v string) *ProcessDefinitionCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (pdc *ProcessDefinitionCreate) SetDescription(s string) *ProcessDefinitionCreate {
-	pdc.mutation.SetDescription(s)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetDescription(v string) *ProcessDefinitionCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableDescription(s *string) *ProcessDefinitionCreate {
-	if s != nil {
-		pdc.SetDescription(*s)
+func (_c *ProcessDefinitionCreate) SetNillableDescription(v *string) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetVersion sets the "version" field.
-func (pdc *ProcessDefinitionCreate) SetVersion(s string) *ProcessDefinitionCreate {
-	pdc.mutation.SetVersion(s)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetVersion(v string) *ProcessDefinitionCreate {
+	_c.mutation.SetVersion(v)
+	return _c
 }
 
 // SetNillableVersion sets the "version" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableVersion(s *string) *ProcessDefinitionCreate {
-	if s != nil {
-		pdc.SetVersion(*s)
+func (_c *ProcessDefinitionCreate) SetNillableVersion(v *string) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetVersion(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (pdc *ProcessDefinitionCreate) SetCategory(s string) *ProcessDefinitionCreate {
-	pdc.mutation.SetCategory(s)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetCategory(v string) *ProcessDefinitionCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableCategory(s *string) *ProcessDefinitionCreate {
-	if s != nil {
-		pdc.SetCategory(*s)
+func (_c *ProcessDefinitionCreate) SetNillableCategory(v *string) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetCategory(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetBpmnXML sets the "bpmn_xml" field.
-func (pdc *ProcessDefinitionCreate) SetBpmnXML(u []uint8) *ProcessDefinitionCreate {
-	pdc.mutation.SetBpmnXML(u)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetBpmnXML(v []uint8) *ProcessDefinitionCreate {
+	_c.mutation.SetBpmnXML(v)
+	return _c
 }
 
 // SetProcessVariables sets the "process_variables" field.
-func (pdc *ProcessDefinitionCreate) SetProcessVariables(m map[string]interface{}) *ProcessDefinitionCreate {
-	pdc.mutation.SetProcessVariables(m)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetProcessVariables(v map[string]interface{}) *ProcessDefinitionCreate {
+	_c.mutation.SetProcessVariables(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (pdc *ProcessDefinitionCreate) SetIsActive(b bool) *ProcessDefinitionCreate {
-	pdc.mutation.SetIsActive(b)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetIsActive(v bool) *ProcessDefinitionCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableIsActive(b *bool) *ProcessDefinitionCreate {
-	if b != nil {
-		pdc.SetIsActive(*b)
+func (_c *ProcessDefinitionCreate) SetNillableIsActive(v *bool) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetIsLatest sets the "is_latest" field.
-func (pdc *ProcessDefinitionCreate) SetIsLatest(b bool) *ProcessDefinitionCreate {
-	pdc.mutation.SetIsLatest(b)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetIsLatest(v bool) *ProcessDefinitionCreate {
+	_c.mutation.SetIsLatest(v)
+	return _c
 }
 
 // SetNillableIsLatest sets the "is_latest" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableIsLatest(b *bool) *ProcessDefinitionCreate {
-	if b != nil {
-		pdc.SetIsLatest(*b)
+func (_c *ProcessDefinitionCreate) SetNillableIsLatest(v *bool) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetIsLatest(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetDeploymentID sets the "deployment_id" field.
-func (pdc *ProcessDefinitionCreate) SetDeploymentID(i int) *ProcessDefinitionCreate {
-	pdc.mutation.SetDeploymentID(i)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetDeploymentID(v int) *ProcessDefinitionCreate {
+	_c.mutation.SetDeploymentID(v)
+	return _c
 }
 
 // SetDeploymentName sets the "deployment_name" field.
-func (pdc *ProcessDefinitionCreate) SetDeploymentName(s string) *ProcessDefinitionCreate {
-	pdc.mutation.SetDeploymentName(s)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetDeploymentName(v string) *ProcessDefinitionCreate {
+	_c.mutation.SetDeploymentName(v)
+	return _c
 }
 
 // SetNillableDeploymentName sets the "deployment_name" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableDeploymentName(s *string) *ProcessDefinitionCreate {
-	if s != nil {
-		pdc.SetDeploymentName(*s)
+func (_c *ProcessDefinitionCreate) SetNillableDeploymentName(v *string) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetDeploymentName(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetDeployedAt sets the "deployed_at" field.
-func (pdc *ProcessDefinitionCreate) SetDeployedAt(t time.Time) *ProcessDefinitionCreate {
-	pdc.mutation.SetDeployedAt(t)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetDeployedAt(v time.Time) *ProcessDefinitionCreate {
+	_c.mutation.SetDeployedAt(v)
+	return _c
 }
 
 // SetNillableDeployedAt sets the "deployed_at" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableDeployedAt(t *time.Time) *ProcessDefinitionCreate {
-	if t != nil {
-		pdc.SetDeployedAt(*t)
+func (_c *ProcessDefinitionCreate) SetNillableDeployedAt(v *time.Time) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetDeployedAt(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pdc *ProcessDefinitionCreate) SetTenantID(i int) *ProcessDefinitionCreate {
-	pdc.mutation.SetTenantID(i)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetTenantID(v int) *ProcessDefinitionCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pdc *ProcessDefinitionCreate) SetCreatedAt(t time.Time) *ProcessDefinitionCreate {
-	pdc.mutation.SetCreatedAt(t)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetCreatedAt(v time.Time) *ProcessDefinitionCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableCreatedAt(t *time.Time) *ProcessDefinitionCreate {
-	if t != nil {
-		pdc.SetCreatedAt(*t)
+func (_c *ProcessDefinitionCreate) SetNillableCreatedAt(v *time.Time) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pdc *ProcessDefinitionCreate) SetUpdatedAt(t time.Time) *ProcessDefinitionCreate {
-	pdc.mutation.SetUpdatedAt(t)
-	return pdc
+func (_c *ProcessDefinitionCreate) SetUpdatedAt(v time.Time) *ProcessDefinitionCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (pdc *ProcessDefinitionCreate) SetNillableUpdatedAt(t *time.Time) *ProcessDefinitionCreate {
-	if t != nil {
-		pdc.SetUpdatedAt(*t)
+func (_c *ProcessDefinitionCreate) SetNillableUpdatedAt(v *time.Time) *ProcessDefinitionCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return pdc
+	return _c
 }
 
 // AddProcessInstanceIDs adds the "process_instances" edge to the ProcessInstance entity by IDs.
-func (pdc *ProcessDefinitionCreate) AddProcessInstanceIDs(ids ...int) *ProcessDefinitionCreate {
-	pdc.mutation.AddProcessInstanceIDs(ids...)
-	return pdc
+func (_c *ProcessDefinitionCreate) AddProcessInstanceIDs(ids ...int) *ProcessDefinitionCreate {
+	_c.mutation.AddProcessInstanceIDs(ids...)
+	return _c
 }
 
 // AddProcessInstances adds the "process_instances" edges to the ProcessInstance entity.
-func (pdc *ProcessDefinitionCreate) AddProcessInstances(p ...*ProcessInstance) *ProcessDefinitionCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *ProcessDefinitionCreate) AddProcessInstances(v ...*ProcessInstance) *ProcessDefinitionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdc.AddProcessInstanceIDs(ids...)
+	return _c.AddProcessInstanceIDs(ids...)
 }
 
 // AddBindingIDs adds the "bindings" edge to the ProcessBinding entity by IDs.
-func (pdc *ProcessDefinitionCreate) AddBindingIDs(ids ...int) *ProcessDefinitionCreate {
-	pdc.mutation.AddBindingIDs(ids...)
-	return pdc
+func (_c *ProcessDefinitionCreate) AddBindingIDs(ids ...int) *ProcessDefinitionCreate {
+	_c.mutation.AddBindingIDs(ids...)
+	return _c
 }
 
 // AddBindings adds the "bindings" edges to the ProcessBinding entity.
-func (pdc *ProcessDefinitionCreate) AddBindings(p ...*ProcessBinding) *ProcessDefinitionCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *ProcessDefinitionCreate) AddBindings(v ...*ProcessBinding) *ProcessDefinitionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdc.AddBindingIDs(ids...)
+	return _c.AddBindingIDs(ids...)
 }
 
 // AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
-func (pdc *ProcessDefinitionCreate) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionCreate {
-	pdc.mutation.AddVersionChangelogIDs(ids...)
-	return pdc
+func (_c *ProcessDefinitionCreate) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionCreate {
+	_c.mutation.AddVersionChangelogIDs(ids...)
+	return _c
 }
 
 // AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
-func (pdc *ProcessDefinitionCreate) AddVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *ProcessDefinitionCreate) AddVersionChangelogs(v ...*ProcessVersionChangelog) *ProcessDefinitionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdc.AddVersionChangelogIDs(ids...)
+	return _c.AddVersionChangelogIDs(ids...)
 }
 
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
-func (pdc *ProcessDefinitionCreate) SetDeployment(p *ProcessDeployment) *ProcessDefinitionCreate {
-	return pdc.SetDeploymentID(p.ID)
+func (_c *ProcessDefinitionCreate) SetDeployment(v *ProcessDeployment) *ProcessDefinitionCreate {
+	return _c.SetDeploymentID(v.ID)
 }
 
 // Mutation returns the ProcessDefinitionMutation object of the builder.
-func (pdc *ProcessDefinitionCreate) Mutation() *ProcessDefinitionMutation {
-	return pdc.mutation
+func (_c *ProcessDefinitionCreate) Mutation() *ProcessDefinitionMutation {
+	return _c.mutation
 }
 
 // Save creates the ProcessDefinition in the database.
-func (pdc *ProcessDefinitionCreate) Save(ctx context.Context) (*ProcessDefinition, error) {
-	pdc.defaults()
-	return withHooks(ctx, pdc.sqlSave, pdc.mutation, pdc.hooks)
+func (_c *ProcessDefinitionCreate) Save(ctx context.Context) (*ProcessDefinition, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pdc *ProcessDefinitionCreate) SaveX(ctx context.Context) *ProcessDefinition {
-	v, err := pdc.Save(ctx)
+func (_c *ProcessDefinitionCreate) SaveX(ctx context.Context) *ProcessDefinition {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -257,120 +257,120 @@ func (pdc *ProcessDefinitionCreate) SaveX(ctx context.Context) *ProcessDefinitio
 }
 
 // Exec executes the query.
-func (pdc *ProcessDefinitionCreate) Exec(ctx context.Context) error {
-	_, err := pdc.Save(ctx)
+func (_c *ProcessDefinitionCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pdc *ProcessDefinitionCreate) ExecX(ctx context.Context) {
-	if err := pdc.Exec(ctx); err != nil {
+func (_c *ProcessDefinitionCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pdc *ProcessDefinitionCreate) defaults() {
-	if _, ok := pdc.mutation.Version(); !ok {
+func (_c *ProcessDefinitionCreate) defaults() {
+	if _, ok := _c.mutation.Version(); !ok {
 		v := processdefinition.DefaultVersion
-		pdc.mutation.SetVersion(v)
+		_c.mutation.SetVersion(v)
 	}
-	if _, ok := pdc.mutation.Category(); !ok {
+	if _, ok := _c.mutation.Category(); !ok {
 		v := processdefinition.DefaultCategory
-		pdc.mutation.SetCategory(v)
+		_c.mutation.SetCategory(v)
 	}
-	if _, ok := pdc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := processdefinition.DefaultIsActive
-		pdc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := pdc.mutation.IsLatest(); !ok {
+	if _, ok := _c.mutation.IsLatest(); !ok {
 		v := processdefinition.DefaultIsLatest
-		pdc.mutation.SetIsLatest(v)
+		_c.mutation.SetIsLatest(v)
 	}
-	if _, ok := pdc.mutation.DeployedAt(); !ok {
+	if _, ok := _c.mutation.DeployedAt(); !ok {
 		v := processdefinition.DefaultDeployedAt()
-		pdc.mutation.SetDeployedAt(v)
+		_c.mutation.SetDeployedAt(v)
 	}
-	if _, ok := pdc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processdefinition.DefaultCreatedAt()
-		pdc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := pdc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := processdefinition.DefaultUpdatedAt()
-		pdc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pdc *ProcessDefinitionCreate) check() error {
-	if _, ok := pdc.mutation.Key(); !ok {
+func (_c *ProcessDefinitionCreate) check() error {
+	if _, ok := _c.mutation.Key(); !ok {
 		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "ProcessDefinition.key"`)}
 	}
-	if v, ok := pdc.mutation.Key(); ok {
+	if v, ok := _c.mutation.Key(); ok {
 		if err := processdefinition.KeyValidator(v); err != nil {
 			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.key": %w`, err)}
 		}
 	}
-	if _, ok := pdc.mutation.Name(); !ok {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "ProcessDefinition.name"`)}
 	}
-	if v, ok := pdc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := processdefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.name": %w`, err)}
 		}
 	}
-	if _, ok := pdc.mutation.Version(); !ok {
+	if _, ok := _c.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "ProcessDefinition.version"`)}
 	}
-	if _, ok := pdc.mutation.Category(); !ok {
+	if _, ok := _c.mutation.Category(); !ok {
 		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "ProcessDefinition.category"`)}
 	}
-	if _, ok := pdc.mutation.BpmnXML(); !ok {
+	if _, ok := _c.mutation.BpmnXML(); !ok {
 		return &ValidationError{Name: "bpmn_xml", err: errors.New(`ent: missing required field "ProcessDefinition.bpmn_xml"`)}
 	}
-	if _, ok := pdc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ProcessDefinition.is_active"`)}
 	}
-	if _, ok := pdc.mutation.IsLatest(); !ok {
+	if _, ok := _c.mutation.IsLatest(); !ok {
 		return &ValidationError{Name: "is_latest", err: errors.New(`ent: missing required field "ProcessDefinition.is_latest"`)}
 	}
-	if _, ok := pdc.mutation.DeploymentID(); !ok {
+	if _, ok := _c.mutation.DeploymentID(); !ok {
 		return &ValidationError{Name: "deployment_id", err: errors.New(`ent: missing required field "ProcessDefinition.deployment_id"`)}
 	}
-	if v, ok := pdc.mutation.DeploymentID(); ok {
+	if v, ok := _c.mutation.DeploymentID(); ok {
 		if err := processdefinition.DeploymentIDValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.deployment_id": %w`, err)}
 		}
 	}
-	if _, ok := pdc.mutation.DeployedAt(); !ok {
+	if _, ok := _c.mutation.DeployedAt(); !ok {
 		return &ValidationError{Name: "deployed_at", err: errors.New(`ent: missing required field "ProcessDefinition.deployed_at"`)}
 	}
-	if _, ok := pdc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProcessDefinition.tenant_id"`)}
 	}
-	if v, ok := pdc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := processdefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := pdc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessDefinition.created_at"`)}
 	}
-	if _, ok := pdc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessDefinition.updated_at"`)}
 	}
-	if len(pdc.mutation.DeploymentIDs()) == 0 {
+	if len(_c.mutation.DeploymentIDs()) == 0 {
 		return &ValidationError{Name: "deployment", err: errors.New(`ent: missing required edge "ProcessDefinition.deployment"`)}
 	}
 	return nil
 }
 
-func (pdc *ProcessDefinitionCreate) sqlSave(ctx context.Context) (*ProcessDefinition, error) {
-	if err := pdc.check(); err != nil {
+func (_c *ProcessDefinitionCreate) sqlSave(ctx context.Context) (*ProcessDefinition, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pdc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pdc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -378,73 +378,73 @@ func (pdc *ProcessDefinitionCreate) sqlSave(ctx context.Context) (*ProcessDefini
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	pdc.mutation.id = &_node.ID
-	pdc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.CreateSpec) {
+func (_c *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProcessDefinition{config: pdc.config}
+		_node = &ProcessDefinition{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(processdefinition.Table, sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt))
 	)
-	if value, ok := pdc.mutation.Key(); ok {
+	if value, ok := _c.mutation.Key(); ok {
 		_spec.SetField(processdefinition.FieldKey, field.TypeString, value)
 		_node.Key = value
 	}
-	if value, ok := pdc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(processdefinition.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := pdc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(processdefinition.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := pdc.mutation.Version(); ok {
+	if value, ok := _c.mutation.Version(); ok {
 		_spec.SetField(processdefinition.FieldVersion, field.TypeString, value)
 		_node.Version = value
 	}
-	if value, ok := pdc.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(processdefinition.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := pdc.mutation.BpmnXML(); ok {
+	if value, ok := _c.mutation.BpmnXML(); ok {
 		_spec.SetField(processdefinition.FieldBpmnXML, field.TypeJSON, value)
 		_node.BpmnXML = value
 	}
-	if value, ok := pdc.mutation.ProcessVariables(); ok {
+	if value, ok := _c.mutation.ProcessVariables(); ok {
 		_spec.SetField(processdefinition.FieldProcessVariables, field.TypeJSON, value)
 		_node.ProcessVariables = value
 	}
-	if value, ok := pdc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(processdefinition.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := pdc.mutation.IsLatest(); ok {
+	if value, ok := _c.mutation.IsLatest(); ok {
 		_spec.SetField(processdefinition.FieldIsLatest, field.TypeBool, value)
 		_node.IsLatest = value
 	}
-	if value, ok := pdc.mutation.DeploymentName(); ok {
+	if value, ok := _c.mutation.DeploymentName(); ok {
 		_spec.SetField(processdefinition.FieldDeploymentName, field.TypeString, value)
 		_node.DeploymentName = value
 	}
-	if value, ok := pdc.mutation.DeployedAt(); ok {
+	if value, ok := _c.mutation.DeployedAt(); ok {
 		_spec.SetField(processdefinition.FieldDeployedAt, field.TypeTime, value)
 		_node.DeployedAt = value
 	}
-	if value, ok := pdc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processdefinition.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := pdc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(processdefinition.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := pdc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdefinition.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := pdc.mutation.ProcessInstancesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProcessInstancesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -460,7 +460,7 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pdc.mutation.BindingsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.BindingsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -476,7 +476,7 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pdc.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -492,7 +492,7 @@ func (pdc *ProcessDefinitionCreate) createSpec() (*ProcessDefinition, *sqlgraph.
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pdc.mutation.DeploymentIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.DeploymentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -520,16 +520,16 @@ type ProcessDefinitionCreateBulk struct {
 }
 
 // Save creates the ProcessDefinition entities in the database.
-func (pdcb *ProcessDefinitionCreateBulk) Save(ctx context.Context) ([]*ProcessDefinition, error) {
-	if pdcb.err != nil {
-		return nil, pdcb.err
+func (_c *ProcessDefinitionCreateBulk) Save(ctx context.Context) ([]*ProcessDefinition, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(pdcb.builders))
-	nodes := make([]*ProcessDefinition, len(pdcb.builders))
-	mutators := make([]Mutator, len(pdcb.builders))
-	for i := range pdcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProcessDefinition, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := pdcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProcessDefinitionMutation)
@@ -543,11 +543,11 @@ func (pdcb *ProcessDefinitionCreateBulk) Save(ctx context.Context) ([]*ProcessDe
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, pdcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, pdcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -571,7 +571,7 @@ func (pdcb *ProcessDefinitionCreateBulk) Save(ctx context.Context) ([]*ProcessDe
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, pdcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -579,8 +579,8 @@ func (pdcb *ProcessDefinitionCreateBulk) Save(ctx context.Context) ([]*ProcessDe
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pdcb *ProcessDefinitionCreateBulk) SaveX(ctx context.Context) []*ProcessDefinition {
-	v, err := pdcb.Save(ctx)
+func (_c *ProcessDefinitionCreateBulk) SaveX(ctx context.Context) []*ProcessDefinition {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -588,14 +588,14 @@ func (pdcb *ProcessDefinitionCreateBulk) SaveX(ctx context.Context) []*ProcessDe
 }
 
 // Exec executes the query.
-func (pdcb *ProcessDefinitionCreateBulk) Exec(ctx context.Context) error {
-	_, err := pdcb.Save(ctx)
+func (_c *ProcessDefinitionCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pdcb *ProcessDefinitionCreateBulk) ExecX(ctx context.Context) {
-	if err := pdcb.Exec(ctx); err != nil {
+func (_c *ProcessDefinitionCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

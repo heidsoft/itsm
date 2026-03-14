@@ -20,56 +20,56 @@ type WorkflowTaskDelete struct {
 }
 
 // Where appends a list predicates to the WorkflowTaskDelete builder.
-func (wtd *WorkflowTaskDelete) Where(ps ...predicate.WorkflowTask) *WorkflowTaskDelete {
-	wtd.mutation.Where(ps...)
-	return wtd
+func (_d *WorkflowTaskDelete) Where(ps ...predicate.WorkflowTask) *WorkflowTaskDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (wtd *WorkflowTaskDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, wtd.sqlExec, wtd.mutation, wtd.hooks)
+func (_d *WorkflowTaskDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wtd *WorkflowTaskDelete) ExecX(ctx context.Context) int {
-	n, err := wtd.Exec(ctx)
+func (_d *WorkflowTaskDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (wtd *WorkflowTaskDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *WorkflowTaskDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(workflowtask.Table, sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt))
-	if ps := wtd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, wtd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	wtd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // WorkflowTaskDeleteOne is the builder for deleting a single WorkflowTask entity.
 type WorkflowTaskDeleteOne struct {
-	wtd *WorkflowTaskDelete
+	_d *WorkflowTaskDelete
 }
 
 // Where appends a list predicates to the WorkflowTaskDelete builder.
-func (wtdo *WorkflowTaskDeleteOne) Where(ps ...predicate.WorkflowTask) *WorkflowTaskDeleteOne {
-	wtdo.wtd.mutation.Where(ps...)
-	return wtdo
+func (_d *WorkflowTaskDeleteOne) Where(ps ...predicate.WorkflowTask) *WorkflowTaskDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (wtdo *WorkflowTaskDeleteOne) Exec(ctx context.Context) error {
-	n, err := wtdo.wtd.Exec(ctx)
+func (_d *WorkflowTaskDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (wtdo *WorkflowTaskDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wtdo *WorkflowTaskDeleteOne) ExecX(ctx context.Context) {
-	if err := wtdo.Exec(ctx); err != nil {
+func (_d *WorkflowTaskDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

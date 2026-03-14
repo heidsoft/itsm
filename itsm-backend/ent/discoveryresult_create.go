@@ -22,132 +22,132 @@ type DiscoveryResultCreate struct {
 }
 
 // SetJobID sets the "job_id" field.
-func (drc *DiscoveryResultCreate) SetJobID(i int) *DiscoveryResultCreate {
-	drc.mutation.SetJobID(i)
-	return drc
+func (_c *DiscoveryResultCreate) SetJobID(v int) *DiscoveryResultCreate {
+	_c.mutation.SetJobID(v)
+	return _c
 }
 
 // SetCiID sets the "ci_id" field.
-func (drc *DiscoveryResultCreate) SetCiID(i int) *DiscoveryResultCreate {
-	drc.mutation.SetCiID(i)
-	return drc
+func (_c *DiscoveryResultCreate) SetCiID(v int) *DiscoveryResultCreate {
+	_c.mutation.SetCiID(v)
+	return _c
 }
 
 // SetNillableCiID sets the "ci_id" field if the given value is not nil.
-func (drc *DiscoveryResultCreate) SetNillableCiID(i *int) *DiscoveryResultCreate {
-	if i != nil {
-		drc.SetCiID(*i)
+func (_c *DiscoveryResultCreate) SetNillableCiID(v *int) *DiscoveryResultCreate {
+	if v != nil {
+		_c.SetCiID(*v)
 	}
-	return drc
+	return _c
 }
 
 // SetAction sets the "action" field.
-func (drc *DiscoveryResultCreate) SetAction(s string) *DiscoveryResultCreate {
-	drc.mutation.SetAction(s)
-	return drc
+func (_c *DiscoveryResultCreate) SetAction(v string) *DiscoveryResultCreate {
+	_c.mutation.SetAction(v)
+	return _c
 }
 
 // SetResourceType sets the "resource_type" field.
-func (drc *DiscoveryResultCreate) SetResourceType(s string) *DiscoveryResultCreate {
-	drc.mutation.SetResourceType(s)
-	return drc
+func (_c *DiscoveryResultCreate) SetResourceType(v string) *DiscoveryResultCreate {
+	_c.mutation.SetResourceType(v)
+	return _c
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (drc *DiscoveryResultCreate) SetNillableResourceType(s *string) *DiscoveryResultCreate {
-	if s != nil {
-		drc.SetResourceType(*s)
+func (_c *DiscoveryResultCreate) SetNillableResourceType(v *string) *DiscoveryResultCreate {
+	if v != nil {
+		_c.SetResourceType(*v)
 	}
-	return drc
+	return _c
 }
 
 // SetResourceID sets the "resource_id" field.
-func (drc *DiscoveryResultCreate) SetResourceID(s string) *DiscoveryResultCreate {
-	drc.mutation.SetResourceID(s)
-	return drc
+func (_c *DiscoveryResultCreate) SetResourceID(v string) *DiscoveryResultCreate {
+	_c.mutation.SetResourceID(v)
+	return _c
 }
 
 // SetNillableResourceID sets the "resource_id" field if the given value is not nil.
-func (drc *DiscoveryResultCreate) SetNillableResourceID(s *string) *DiscoveryResultCreate {
-	if s != nil {
-		drc.SetResourceID(*s)
+func (_c *DiscoveryResultCreate) SetNillableResourceID(v *string) *DiscoveryResultCreate {
+	if v != nil {
+		_c.SetResourceID(*v)
 	}
-	return drc
+	return _c
 }
 
 // SetDiff sets the "diff" field.
-func (drc *DiscoveryResultCreate) SetDiff(m map[string]interface{}) *DiscoveryResultCreate {
-	drc.mutation.SetDiff(m)
-	return drc
+func (_c *DiscoveryResultCreate) SetDiff(v map[string]interface{}) *DiscoveryResultCreate {
+	_c.mutation.SetDiff(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (drc *DiscoveryResultCreate) SetStatus(s string) *DiscoveryResultCreate {
-	drc.mutation.SetStatus(s)
-	return drc
+func (_c *DiscoveryResultCreate) SetStatus(v string) *DiscoveryResultCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (drc *DiscoveryResultCreate) SetNillableStatus(s *string) *DiscoveryResultCreate {
-	if s != nil {
-		drc.SetStatus(*s)
+func (_c *DiscoveryResultCreate) SetNillableStatus(v *string) *DiscoveryResultCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return drc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (drc *DiscoveryResultCreate) SetTenantID(i int) *DiscoveryResultCreate {
-	drc.mutation.SetTenantID(i)
-	return drc
+func (_c *DiscoveryResultCreate) SetTenantID(v int) *DiscoveryResultCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (drc *DiscoveryResultCreate) SetCreatedAt(t time.Time) *DiscoveryResultCreate {
-	drc.mutation.SetCreatedAt(t)
-	return drc
+func (_c *DiscoveryResultCreate) SetCreatedAt(v time.Time) *DiscoveryResultCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (drc *DiscoveryResultCreate) SetNillableCreatedAt(t *time.Time) *DiscoveryResultCreate {
-	if t != nil {
-		drc.SetCreatedAt(*t)
+func (_c *DiscoveryResultCreate) SetNillableCreatedAt(v *time.Time) *DiscoveryResultCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return drc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (drc *DiscoveryResultCreate) SetUpdatedAt(t time.Time) *DiscoveryResultCreate {
-	drc.mutation.SetUpdatedAt(t)
-	return drc
+func (_c *DiscoveryResultCreate) SetUpdatedAt(v time.Time) *DiscoveryResultCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (drc *DiscoveryResultCreate) SetNillableUpdatedAt(t *time.Time) *DiscoveryResultCreate {
-	if t != nil {
-		drc.SetUpdatedAt(*t)
+func (_c *DiscoveryResultCreate) SetNillableUpdatedAt(v *time.Time) *DiscoveryResultCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return drc
+	return _c
 }
 
 // SetJob sets the "job" edge to the DiscoveryJob entity.
-func (drc *DiscoveryResultCreate) SetJob(d *DiscoveryJob) *DiscoveryResultCreate {
-	return drc.SetJobID(d.ID)
+func (_c *DiscoveryResultCreate) SetJob(v *DiscoveryJob) *DiscoveryResultCreate {
+	return _c.SetJobID(v.ID)
 }
 
 // Mutation returns the DiscoveryResultMutation object of the builder.
-func (drc *DiscoveryResultCreate) Mutation() *DiscoveryResultMutation {
-	return drc.mutation
+func (_c *DiscoveryResultCreate) Mutation() *DiscoveryResultMutation {
+	return _c.mutation
 }
 
 // Save creates the DiscoveryResult in the database.
-func (drc *DiscoveryResultCreate) Save(ctx context.Context) (*DiscoveryResult, error) {
-	drc.defaults()
-	return withHooks(ctx, drc.sqlSave, drc.mutation, drc.hooks)
+func (_c *DiscoveryResultCreate) Save(ctx context.Context) (*DiscoveryResult, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (drc *DiscoveryResultCreate) SaveX(ctx context.Context) *DiscoveryResult {
-	v, err := drc.Save(ctx)
+func (_c *DiscoveryResultCreate) SaveX(ctx context.Context) *DiscoveryResult {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -155,81 +155,81 @@ func (drc *DiscoveryResultCreate) SaveX(ctx context.Context) *DiscoveryResult {
 }
 
 // Exec executes the query.
-func (drc *DiscoveryResultCreate) Exec(ctx context.Context) error {
-	_, err := drc.Save(ctx)
+func (_c *DiscoveryResultCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (drc *DiscoveryResultCreate) ExecX(ctx context.Context) {
-	if err := drc.Exec(ctx); err != nil {
+func (_c *DiscoveryResultCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (drc *DiscoveryResultCreate) defaults() {
-	if _, ok := drc.mutation.Status(); !ok {
+func (_c *DiscoveryResultCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := discoveryresult.DefaultStatus
-		drc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := drc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := discoveryresult.DefaultCreatedAt()
-		drc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := drc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := discoveryresult.DefaultUpdatedAt()
-		drc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (drc *DiscoveryResultCreate) check() error {
-	if _, ok := drc.mutation.JobID(); !ok {
+func (_c *DiscoveryResultCreate) check() error {
+	if _, ok := _c.mutation.JobID(); !ok {
 		return &ValidationError{Name: "job_id", err: errors.New(`ent: missing required field "DiscoveryResult.job_id"`)}
 	}
-	if v, ok := drc.mutation.JobID(); ok {
+	if v, ok := _c.mutation.JobID(); ok {
 		if err := discoveryresult.JobIDValidator(v); err != nil {
 			return &ValidationError{Name: "job_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.job_id": %w`, err)}
 		}
 	}
-	if _, ok := drc.mutation.Action(); !ok {
+	if _, ok := _c.mutation.Action(); !ok {
 		return &ValidationError{Name: "action", err: errors.New(`ent: missing required field "DiscoveryResult.action"`)}
 	}
-	if v, ok := drc.mutation.Action(); ok {
+	if v, ok := _c.mutation.Action(); ok {
 		if err := discoveryresult.ActionValidator(v); err != nil {
 			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.action": %w`, err)}
 		}
 	}
-	if _, ok := drc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "DiscoveryResult.status"`)}
 	}
-	if _, ok := drc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "DiscoveryResult.tenant_id"`)}
 	}
-	if v, ok := drc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := discoveryresult.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := drc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "DiscoveryResult.created_at"`)}
 	}
-	if _, ok := drc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "DiscoveryResult.updated_at"`)}
 	}
-	if len(drc.mutation.JobIDs()) == 0 {
+	if len(_c.mutation.JobIDs()) == 0 {
 		return &ValidationError{Name: "job", err: errors.New(`ent: missing required edge "DiscoveryResult.job"`)}
 	}
 	return nil
 }
 
-func (drc *DiscoveryResultCreate) sqlSave(ctx context.Context) (*DiscoveryResult, error) {
-	if err := drc.check(); err != nil {
+func (_c *DiscoveryResultCreate) sqlSave(ctx context.Context) (*DiscoveryResult, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := drc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, drc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -237,53 +237,53 @@ func (drc *DiscoveryResultCreate) sqlSave(ctx context.Context) (*DiscoveryResult
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	drc.mutation.id = &_node.ID
-	drc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (drc *DiscoveryResultCreate) createSpec() (*DiscoveryResult, *sqlgraph.CreateSpec) {
+func (_c *DiscoveryResultCreate) createSpec() (*DiscoveryResult, *sqlgraph.CreateSpec) {
 	var (
-		_node = &DiscoveryResult{config: drc.config}
+		_node = &DiscoveryResult{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(discoveryresult.Table, sqlgraph.NewFieldSpec(discoveryresult.FieldID, field.TypeInt))
 	)
-	if value, ok := drc.mutation.CiID(); ok {
+	if value, ok := _c.mutation.CiID(); ok {
 		_spec.SetField(discoveryresult.FieldCiID, field.TypeInt, value)
 		_node.CiID = value
 	}
-	if value, ok := drc.mutation.Action(); ok {
+	if value, ok := _c.mutation.Action(); ok {
 		_spec.SetField(discoveryresult.FieldAction, field.TypeString, value)
 		_node.Action = value
 	}
-	if value, ok := drc.mutation.ResourceType(); ok {
+	if value, ok := _c.mutation.ResourceType(); ok {
 		_spec.SetField(discoveryresult.FieldResourceType, field.TypeString, value)
 		_node.ResourceType = value
 	}
-	if value, ok := drc.mutation.ResourceID(); ok {
+	if value, ok := _c.mutation.ResourceID(); ok {
 		_spec.SetField(discoveryresult.FieldResourceID, field.TypeString, value)
 		_node.ResourceID = value
 	}
-	if value, ok := drc.mutation.Diff(); ok {
+	if value, ok := _c.mutation.Diff(); ok {
 		_spec.SetField(discoveryresult.FieldDiff, field.TypeJSON, value)
 		_node.Diff = value
 	}
-	if value, ok := drc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(discoveryresult.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := drc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(discoveryresult.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := drc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(discoveryresult.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := drc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoveryresult.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := drc.mutation.JobIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -311,16 +311,16 @@ type DiscoveryResultCreateBulk struct {
 }
 
 // Save creates the DiscoveryResult entities in the database.
-func (drcb *DiscoveryResultCreateBulk) Save(ctx context.Context) ([]*DiscoveryResult, error) {
-	if drcb.err != nil {
-		return nil, drcb.err
+func (_c *DiscoveryResultCreateBulk) Save(ctx context.Context) ([]*DiscoveryResult, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(drcb.builders))
-	nodes := make([]*DiscoveryResult, len(drcb.builders))
-	mutators := make([]Mutator, len(drcb.builders))
-	for i := range drcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*DiscoveryResult, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := drcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*DiscoveryResultMutation)
@@ -334,11 +334,11 @@ func (drcb *DiscoveryResultCreateBulk) Save(ctx context.Context) ([]*DiscoveryRe
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, drcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, drcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -362,7 +362,7 @@ func (drcb *DiscoveryResultCreateBulk) Save(ctx context.Context) ([]*DiscoveryRe
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, drcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -370,8 +370,8 @@ func (drcb *DiscoveryResultCreateBulk) Save(ctx context.Context) ([]*DiscoveryRe
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (drcb *DiscoveryResultCreateBulk) SaveX(ctx context.Context) []*DiscoveryResult {
-	v, err := drcb.Save(ctx)
+func (_c *DiscoveryResultCreateBulk) SaveX(ctx context.Context) []*DiscoveryResult {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -379,14 +379,14 @@ func (drcb *DiscoveryResultCreateBulk) SaveX(ctx context.Context) []*DiscoveryRe
 }
 
 // Exec executes the query.
-func (drcb *DiscoveryResultCreateBulk) Exec(ctx context.Context) error {
-	_, err := drcb.Save(ctx)
+func (_c *DiscoveryResultCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (drcb *DiscoveryResultCreateBulk) ExecX(ctx context.Context) {
-	if err := drcb.Exec(ctx); err != nil {
+func (_c *DiscoveryResultCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -20,56 +20,56 @@ type IncidentEscalationRuleDelete struct {
 }
 
 // Where appends a list predicates to the IncidentEscalationRuleDelete builder.
-func (ierd *IncidentEscalationRuleDelete) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleDelete {
-	ierd.mutation.Where(ps...)
-	return ierd
+func (_d *IncidentEscalationRuleDelete) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ierd *IncidentEscalationRuleDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ierd.sqlExec, ierd.mutation, ierd.hooks)
+func (_d *IncidentEscalationRuleDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ierd *IncidentEscalationRuleDelete) ExecX(ctx context.Context) int {
-	n, err := ierd.Exec(ctx)
+func (_d *IncidentEscalationRuleDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ierd *IncidentEscalationRuleDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *IncidentEscalationRuleDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(incidentescalationrule.Table, sqlgraph.NewFieldSpec(incidentescalationrule.FieldID, field.TypeInt))
-	if ps := ierd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ierd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ierd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // IncidentEscalationRuleDeleteOne is the builder for deleting a single IncidentEscalationRule entity.
 type IncidentEscalationRuleDeleteOne struct {
-	ierd *IncidentEscalationRuleDelete
+	_d *IncidentEscalationRuleDelete
 }
 
 // Where appends a list predicates to the IncidentEscalationRuleDelete builder.
-func (ierdo *IncidentEscalationRuleDeleteOne) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleDeleteOne {
-	ierdo.ierd.mutation.Where(ps...)
-	return ierdo
+func (_d *IncidentEscalationRuleDeleteOne) Where(ps ...predicate.IncidentEscalationRule) *IncidentEscalationRuleDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (ierdo *IncidentEscalationRuleDeleteOne) Exec(ctx context.Context) error {
-	n, err := ierdo.ierd.Exec(ctx)
+func (_d *IncidentEscalationRuleDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (ierdo *IncidentEscalationRuleDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ierdo *IncidentEscalationRuleDeleteOne) ExecX(ctx context.Context) {
-	if err := ierdo.Exec(ctx); err != nil {
+func (_d *IncidentEscalationRuleDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

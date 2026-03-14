@@ -31,44 +31,44 @@ type DiscoverySourceQuery struct {
 }
 
 // Where adds a new predicate for the DiscoverySourceQuery builder.
-func (dsq *DiscoverySourceQuery) Where(ps ...predicate.DiscoverySource) *DiscoverySourceQuery {
-	dsq.predicates = append(dsq.predicates, ps...)
-	return dsq
+func (_q *DiscoverySourceQuery) Where(ps ...predicate.DiscoverySource) *DiscoverySourceQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (dsq *DiscoverySourceQuery) Limit(limit int) *DiscoverySourceQuery {
-	dsq.ctx.Limit = &limit
-	return dsq
+func (_q *DiscoverySourceQuery) Limit(limit int) *DiscoverySourceQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (dsq *DiscoverySourceQuery) Offset(offset int) *DiscoverySourceQuery {
-	dsq.ctx.Offset = &offset
-	return dsq
+func (_q *DiscoverySourceQuery) Offset(offset int) *DiscoverySourceQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (dsq *DiscoverySourceQuery) Unique(unique bool) *DiscoverySourceQuery {
-	dsq.ctx.Unique = &unique
-	return dsq
+func (_q *DiscoverySourceQuery) Unique(unique bool) *DiscoverySourceQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (dsq *DiscoverySourceQuery) Order(o ...discoverysource.OrderOption) *DiscoverySourceQuery {
-	dsq.order = append(dsq.order, o...)
-	return dsq
+func (_q *DiscoverySourceQuery) Order(o ...discoverysource.OrderOption) *DiscoverySourceQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryJobs chains the current query on the "jobs" edge.
-func (dsq *DiscoverySourceQuery) QueryJobs() *DiscoveryJobQuery {
-	query := (&DiscoveryJobClient{config: dsq.config}).Query()
+func (_q *DiscoverySourceQuery) QueryJobs() *DiscoveryJobQuery {
+	query := (&DiscoveryJobClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := dsq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := dsq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (dsq *DiscoverySourceQuery) QueryJobs() *DiscoveryJobQuery {
 			sqlgraph.To(discoveryjob.Table, discoveryjob.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, discoverysource.JobsTable, discoverysource.JobsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(dsq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -85,8 +85,8 @@ func (dsq *DiscoverySourceQuery) QueryJobs() *DiscoveryJobQuery {
 
 // First returns the first DiscoverySource entity from the query.
 // Returns a *NotFoundError when no DiscoverySource was found.
-func (dsq *DiscoverySourceQuery) First(ctx context.Context) (*DiscoverySource, error) {
-	nodes, err := dsq.Limit(1).All(setContextOp(ctx, dsq.ctx, ent.OpQueryFirst))
+func (_q *DiscoverySourceQuery) First(ctx context.Context) (*DiscoverySource, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func (dsq *DiscoverySourceQuery) First(ctx context.Context) (*DiscoverySource, e
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) FirstX(ctx context.Context) *DiscoverySource {
-	node, err := dsq.First(ctx)
+func (_q *DiscoverySourceQuery) FirstX(ctx context.Context) *DiscoverySource {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -107,9 +107,9 @@ func (dsq *DiscoverySourceQuery) FirstX(ctx context.Context) *DiscoverySource {
 
 // FirstID returns the first DiscoverySource ID from the query.
 // Returns a *NotFoundError when no DiscoverySource ID was found.
-func (dsq *DiscoverySourceQuery) FirstID(ctx context.Context) (id string, err error) {
+func (_q *DiscoverySourceQuery) FirstID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = dsq.Limit(1).IDs(setContextOp(ctx, dsq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -120,8 +120,8 @@ func (dsq *DiscoverySourceQuery) FirstID(ctx context.Context) (id string, err er
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) FirstIDX(ctx context.Context) string {
-	id, err := dsq.FirstID(ctx)
+func (_q *DiscoverySourceQuery) FirstIDX(ctx context.Context) string {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,8 +131,8 @@ func (dsq *DiscoverySourceQuery) FirstIDX(ctx context.Context) string {
 // Only returns a single DiscoverySource entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one DiscoverySource entity is found.
 // Returns a *NotFoundError when no DiscoverySource entities are found.
-func (dsq *DiscoverySourceQuery) Only(ctx context.Context) (*DiscoverySource, error) {
-	nodes, err := dsq.Limit(2).All(setContextOp(ctx, dsq.ctx, ent.OpQueryOnly))
+func (_q *DiscoverySourceQuery) Only(ctx context.Context) (*DiscoverySource, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,8 @@ func (dsq *DiscoverySourceQuery) Only(ctx context.Context) (*DiscoverySource, er
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) OnlyX(ctx context.Context) *DiscoverySource {
-	node, err := dsq.Only(ctx)
+func (_q *DiscoverySourceQuery) OnlyX(ctx context.Context) *DiscoverySource {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -158,9 +158,9 @@ func (dsq *DiscoverySourceQuery) OnlyX(ctx context.Context) *DiscoverySource {
 // OnlyID is like Only, but returns the only DiscoverySource ID in the query.
 // Returns a *NotSingularError when more than one DiscoverySource ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (dsq *DiscoverySourceQuery) OnlyID(ctx context.Context) (id string, err error) {
+func (_q *DiscoverySourceQuery) OnlyID(ctx context.Context) (id string, err error) {
 	var ids []string
-	if ids, err = dsq.Limit(2).IDs(setContextOp(ctx, dsq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -175,8 +175,8 @@ func (dsq *DiscoverySourceQuery) OnlyID(ctx context.Context) (id string, err err
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) OnlyIDX(ctx context.Context) string {
-	id, err := dsq.OnlyID(ctx)
+func (_q *DiscoverySourceQuery) OnlyIDX(ctx context.Context) string {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,18 +184,18 @@ func (dsq *DiscoverySourceQuery) OnlyIDX(ctx context.Context) string {
 }
 
 // All executes the query and returns a list of DiscoverySources.
-func (dsq *DiscoverySourceQuery) All(ctx context.Context) ([]*DiscoverySource, error) {
-	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryAll)
-	if err := dsq.prepareQuery(ctx); err != nil {
+func (_q *DiscoverySourceQuery) All(ctx context.Context) ([]*DiscoverySource, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*DiscoverySource, *DiscoverySourceQuery]()
-	return withInterceptors[[]*DiscoverySource](ctx, dsq, qr, dsq.inters)
+	return withInterceptors[[]*DiscoverySource](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) AllX(ctx context.Context) []*DiscoverySource {
-	nodes, err := dsq.All(ctx)
+func (_q *DiscoverySourceQuery) AllX(ctx context.Context) []*DiscoverySource {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -203,20 +203,20 @@ func (dsq *DiscoverySourceQuery) AllX(ctx context.Context) []*DiscoverySource {
 }
 
 // IDs executes the query and returns a list of DiscoverySource IDs.
-func (dsq *DiscoverySourceQuery) IDs(ctx context.Context) (ids []string, err error) {
-	if dsq.ctx.Unique == nil && dsq.path != nil {
-		dsq.Unique(true)
+func (_q *DiscoverySourceQuery) IDs(ctx context.Context) (ids []string, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryIDs)
-	if err = dsq.Select(discoverysource.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(discoverysource.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) IDsX(ctx context.Context) []string {
-	ids, err := dsq.IDs(ctx)
+func (_q *DiscoverySourceQuery) IDsX(ctx context.Context) []string {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -224,17 +224,17 @@ func (dsq *DiscoverySourceQuery) IDsX(ctx context.Context) []string {
 }
 
 // Count returns the count of the given query.
-func (dsq *DiscoverySourceQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryCount)
-	if err := dsq.prepareQuery(ctx); err != nil {
+func (_q *DiscoverySourceQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, dsq, querierCount[*DiscoverySourceQuery](), dsq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*DiscoverySourceQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) CountX(ctx context.Context) int {
-	count, err := dsq.Count(ctx)
+func (_q *DiscoverySourceQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -242,9 +242,9 @@ func (dsq *DiscoverySourceQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (dsq *DiscoverySourceQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, dsq.ctx, ent.OpQueryExist)
-	switch _, err := dsq.FirstID(ctx); {
+func (_q *DiscoverySourceQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -255,8 +255,8 @@ func (dsq *DiscoverySourceQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (dsq *DiscoverySourceQuery) ExistX(ctx context.Context) bool {
-	exist, err := dsq.Exist(ctx)
+func (_q *DiscoverySourceQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,32 +265,32 @@ func (dsq *DiscoverySourceQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the DiscoverySourceQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (dsq *DiscoverySourceQuery) Clone() *DiscoverySourceQuery {
-	if dsq == nil {
+func (_q *DiscoverySourceQuery) Clone() *DiscoverySourceQuery {
+	if _q == nil {
 		return nil
 	}
 	return &DiscoverySourceQuery{
-		config:     dsq.config,
-		ctx:        dsq.ctx.Clone(),
-		order:      append([]discoverysource.OrderOption{}, dsq.order...),
-		inters:     append([]Interceptor{}, dsq.inters...),
-		predicates: append([]predicate.DiscoverySource{}, dsq.predicates...),
-		withJobs:   dsq.withJobs.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]discoverysource.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.DiscoverySource{}, _q.predicates...),
+		withJobs:   _q.withJobs.Clone(),
 		// clone intermediate query.
-		sql:  dsq.sql.Clone(),
-		path: dsq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithJobs tells the query-builder to eager-load the nodes that are connected to
 // the "jobs" edge. The optional arguments are used to configure the query builder of the edge.
-func (dsq *DiscoverySourceQuery) WithJobs(opts ...func(*DiscoveryJobQuery)) *DiscoverySourceQuery {
-	query := (&DiscoveryJobClient{config: dsq.config}).Query()
+func (_q *DiscoverySourceQuery) WithJobs(opts ...func(*DiscoveryJobQuery)) *DiscoverySourceQuery {
+	query := (&DiscoveryJobClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	dsq.withJobs = query
-	return dsq
+	_q.withJobs = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -307,10 +307,10 @@ func (dsq *DiscoverySourceQuery) WithJobs(opts ...func(*DiscoveryJobQuery)) *Dis
 //		GroupBy(discoverysource.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (dsq *DiscoverySourceQuery) GroupBy(field string, fields ...string) *DiscoverySourceGroupBy {
-	dsq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &DiscoverySourceGroupBy{build: dsq}
-	grbuild.flds = &dsq.ctx.Fields
+func (_q *DiscoverySourceQuery) GroupBy(field string, fields ...string) *DiscoverySourceGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &DiscoverySourceGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = discoverysource.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -328,58 +328,58 @@ func (dsq *DiscoverySourceQuery) GroupBy(field string, fields ...string) *Discov
 //	client.DiscoverySource.Query().
 //		Select(discoverysource.FieldName).
 //		Scan(ctx, &v)
-func (dsq *DiscoverySourceQuery) Select(fields ...string) *DiscoverySourceSelect {
-	dsq.ctx.Fields = append(dsq.ctx.Fields, fields...)
-	sbuild := &DiscoverySourceSelect{DiscoverySourceQuery: dsq}
+func (_q *DiscoverySourceQuery) Select(fields ...string) *DiscoverySourceSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &DiscoverySourceSelect{DiscoverySourceQuery: _q}
 	sbuild.label = discoverysource.Label
-	sbuild.flds, sbuild.scan = &dsq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a DiscoverySourceSelect configured with the given aggregations.
-func (dsq *DiscoverySourceQuery) Aggregate(fns ...AggregateFunc) *DiscoverySourceSelect {
-	return dsq.Select().Aggregate(fns...)
+func (_q *DiscoverySourceQuery) Aggregate(fns ...AggregateFunc) *DiscoverySourceSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (dsq *DiscoverySourceQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range dsq.inters {
+func (_q *DiscoverySourceQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, dsq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range dsq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !discoverysource.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if dsq.path != nil {
-		prev, err := dsq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		dsq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (dsq *DiscoverySourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DiscoverySource, error) {
+func (_q *DiscoverySourceQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*DiscoverySource, error) {
 	var (
 		nodes       = []*DiscoverySource{}
-		_spec       = dsq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			dsq.withJobs != nil,
+			_q.withJobs != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*DiscoverySource).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &DiscoverySource{config: dsq.config}
+		node := &DiscoverySource{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -387,14 +387,14 @@ func (dsq *DiscoverySourceQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, dsq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := dsq.withJobs; query != nil {
-		if err := dsq.loadJobs(ctx, query, nodes,
+	if query := _q.withJobs; query != nil {
+		if err := _q.loadJobs(ctx, query, nodes,
 			func(n *DiscoverySource) { n.Edges.Jobs = []*DiscoveryJob{} },
 			func(n *DiscoverySource, e *DiscoveryJob) { n.Edges.Jobs = append(n.Edges.Jobs, e) }); err != nil {
 			return nil, err
@@ -403,7 +403,7 @@ func (dsq *DiscoverySourceQuery) sqlAll(ctx context.Context, hooks ...queryHook)
 	return nodes, nil
 }
 
-func (dsq *DiscoverySourceQuery) loadJobs(ctx context.Context, query *DiscoveryJobQuery, nodes []*DiscoverySource, init func(*DiscoverySource), assign func(*DiscoverySource, *DiscoveryJob)) error {
+func (_q *DiscoverySourceQuery) loadJobs(ctx context.Context, query *DiscoveryJobQuery, nodes []*DiscoverySource, init func(*DiscoverySource), assign func(*DiscoverySource, *DiscoveryJob)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[string]*DiscoverySource)
 	for i := range nodes {
@@ -434,24 +434,24 @@ func (dsq *DiscoverySourceQuery) loadJobs(ctx context.Context, query *DiscoveryJ
 	return nil
 }
 
-func (dsq *DiscoverySourceQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := dsq.querySpec()
-	_spec.Node.Columns = dsq.ctx.Fields
-	if len(dsq.ctx.Fields) > 0 {
-		_spec.Unique = dsq.ctx.Unique != nil && *dsq.ctx.Unique
+func (_q *DiscoverySourceQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, dsq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (dsq *DiscoverySourceQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *DiscoverySourceQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(discoverysource.Table, discoverysource.Columns, sqlgraph.NewFieldSpec(discoverysource.FieldID, field.TypeString))
-	_spec.From = dsq.sql
-	if unique := dsq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if dsq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := dsq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, discoverysource.FieldID)
 		for i := range fields {
@@ -460,20 +460,20 @@ func (dsq *DiscoverySourceQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := dsq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := dsq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := dsq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := dsq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (dsq *DiscoverySourceQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (dsq *DiscoverySourceQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(dsq.driver.Dialect())
+func (_q *DiscoverySourceQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(discoverysource.Table)
-	columns := dsq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = discoverysource.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if dsq.sql != nil {
-		selector = dsq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if dsq.ctx.Unique != nil && *dsq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range dsq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range dsq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := dsq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := dsq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type DiscoverySourceGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (dsgb *DiscoverySourceGroupBy) Aggregate(fns ...AggregateFunc) *DiscoverySourceGroupBy {
-	dsgb.fns = append(dsgb.fns, fns...)
-	return dsgb
+func (_g *DiscoverySourceGroupBy) Aggregate(fns ...AggregateFunc) *DiscoverySourceGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (dsgb *DiscoverySourceGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, dsgb.build.ctx, ent.OpQueryGroupBy)
-	if err := dsgb.build.prepareQuery(ctx); err != nil {
+func (_g *DiscoverySourceGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*DiscoverySourceQuery, *DiscoverySourceGroupBy](ctx, dsgb.build, dsgb, dsgb.build.inters, v)
+	return scanWithInterceptors[*DiscoverySourceQuery, *DiscoverySourceGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (dsgb *DiscoverySourceGroupBy) sqlScan(ctx context.Context, root *DiscoverySourceQuery, v any) error {
+func (_g *DiscoverySourceGroupBy) sqlScan(ctx context.Context, root *DiscoverySourceQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(dsgb.fns))
-	for _, fn := range dsgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*dsgb.flds)+len(dsgb.fns))
-		for _, f := range *dsgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*dsgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := dsgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type DiscoverySourceSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (dss *DiscoverySourceSelect) Aggregate(fns ...AggregateFunc) *DiscoverySourceSelect {
-	dss.fns = append(dss.fns, fns...)
-	return dss
+func (_s *DiscoverySourceSelect) Aggregate(fns ...AggregateFunc) *DiscoverySourceSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (dss *DiscoverySourceSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, dss.ctx, ent.OpQuerySelect)
-	if err := dss.prepareQuery(ctx); err != nil {
+func (_s *DiscoverySourceSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*DiscoverySourceQuery, *DiscoverySourceSelect](ctx, dss.DiscoverySourceQuery, dss, dss.inters, v)
+	return scanWithInterceptors[*DiscoverySourceQuery, *DiscoverySourceSelect](ctx, _s.DiscoverySourceQuery, _s, _s.inters, v)
 }
 
-func (dss *DiscoverySourceSelect) sqlScan(ctx context.Context, root *DiscoverySourceQuery, v any) error {
+func (_s *DiscoverySourceSelect) sqlScan(ctx context.Context, root *DiscoverySourceQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(dss.fns))
-	for _, fn := range dss.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*dss.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (dss *DiscoverySourceSelect) sqlScan(ctx context.Context, root *DiscoverySo
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := dss.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
