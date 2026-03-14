@@ -28,678 +28,678 @@ type IncidentUpdate struct {
 }
 
 // Where appends a list predicates to the IncidentUpdate builder.
-func (iu *IncidentUpdate) Where(ps ...predicate.Incident) *IncidentUpdate {
-	iu.mutation.Where(ps...)
-	return iu
+func (_u *IncidentUpdate) Where(ps ...predicate.Incident) *IncidentUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (iu *IncidentUpdate) SetTitle(s string) *IncidentUpdate {
-	iu.mutation.SetTitle(s)
-	return iu
+func (_u *IncidentUpdate) SetTitle(v string) *IncidentUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableTitle(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetTitle(*s)
+func (_u *IncidentUpdate) SetNillableTitle(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (iu *IncidentUpdate) SetDescription(s string) *IncidentUpdate {
-	iu.mutation.SetDescription(s)
-	return iu
+func (_u *IncidentUpdate) SetDescription(v string) *IncidentUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableDescription(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetDescription(*s)
+func (_u *IncidentUpdate) SetNillableDescription(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return iu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (iu *IncidentUpdate) ClearDescription() *IncidentUpdate {
-	iu.mutation.ClearDescription()
-	return iu
+func (_u *IncidentUpdate) ClearDescription() *IncidentUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (iu *IncidentUpdate) SetStatus(s string) *IncidentUpdate {
-	iu.mutation.SetStatus(s)
-	return iu
+func (_u *IncidentUpdate) SetStatus(v string) *IncidentUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableStatus(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetStatus(*s)
+func (_u *IncidentUpdate) SetNillableStatus(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetType sets the "type" field.
-func (iu *IncidentUpdate) SetType(s string) *IncidentUpdate {
-	iu.mutation.SetType(s)
-	return iu
+func (_u *IncidentUpdate) SetType(v string) *IncidentUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableType(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetType(*s)
+func (_u *IncidentUpdate) SetNillableType(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (iu *IncidentUpdate) SetPriority(s string) *IncidentUpdate {
-	iu.mutation.SetPriority(s)
-	return iu
+func (_u *IncidentUpdate) SetPriority(v string) *IncidentUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillablePriority(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetPriority(*s)
+func (_u *IncidentUpdate) SetNillablePriority(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (iu *IncidentUpdate) SetSeverity(s string) *IncidentUpdate {
-	iu.mutation.SetSeverity(s)
-	return iu
+func (_u *IncidentUpdate) SetSeverity(v string) *IncidentUpdate {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableSeverity(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetSeverity(*s)
+func (_u *IncidentUpdate) SetNillableSeverity(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetIncidentNumber sets the "incident_number" field.
-func (iu *IncidentUpdate) SetIncidentNumber(s string) *IncidentUpdate {
-	iu.mutation.SetIncidentNumber(s)
-	return iu
+func (_u *IncidentUpdate) SetIncidentNumber(v string) *IncidentUpdate {
+	_u.mutation.SetIncidentNumber(v)
+	return _u
 }
 
 // SetNillableIncidentNumber sets the "incident_number" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableIncidentNumber(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetIncidentNumber(*s)
+func (_u *IncidentUpdate) SetNillableIncidentNumber(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetIncidentNumber(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetReporterID sets the "reporter_id" field.
-func (iu *IncidentUpdate) SetReporterID(i int) *IncidentUpdate {
-	iu.mutation.ResetReporterID()
-	iu.mutation.SetReporterID(i)
-	return iu
+func (_u *IncidentUpdate) SetReporterID(v int) *IncidentUpdate {
+	_u.mutation.ResetReporterID()
+	_u.mutation.SetReporterID(v)
+	return _u
 }
 
 // SetNillableReporterID sets the "reporter_id" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableReporterID(i *int) *IncidentUpdate {
-	if i != nil {
-		iu.SetReporterID(*i)
+func (_u *IncidentUpdate) SetNillableReporterID(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetReporterID(*v)
 	}
-	return iu
+	return _u
 }
 
-// AddReporterID adds i to the "reporter_id" field.
-func (iu *IncidentUpdate) AddReporterID(i int) *IncidentUpdate {
-	iu.mutation.AddReporterID(i)
-	return iu
+// AddReporterID adds value to the "reporter_id" field.
+func (_u *IncidentUpdate) AddReporterID(v int) *IncidentUpdate {
+	_u.mutation.AddReporterID(v)
+	return _u
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (iu *IncidentUpdate) SetAssigneeID(i int) *IncidentUpdate {
-	iu.mutation.ResetAssigneeID()
-	iu.mutation.SetAssigneeID(i)
-	return iu
+func (_u *IncidentUpdate) SetAssigneeID(v int) *IncidentUpdate {
+	_u.mutation.ResetAssigneeID()
+	_u.mutation.SetAssigneeID(v)
+	return _u
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableAssigneeID(i *int) *IncidentUpdate {
-	if i != nil {
-		iu.SetAssigneeID(*i)
+func (_u *IncidentUpdate) SetNillableAssigneeID(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetAssigneeID(*v)
 	}
-	return iu
+	return _u
 }
 
-// AddAssigneeID adds i to the "assignee_id" field.
-func (iu *IncidentUpdate) AddAssigneeID(i int) *IncidentUpdate {
-	iu.mutation.AddAssigneeID(i)
-	return iu
+// AddAssigneeID adds value to the "assignee_id" field.
+func (_u *IncidentUpdate) AddAssigneeID(v int) *IncidentUpdate {
+	_u.mutation.AddAssigneeID(v)
+	return _u
 }
 
 // ClearAssigneeID clears the value of the "assignee_id" field.
-func (iu *IncidentUpdate) ClearAssigneeID() *IncidentUpdate {
-	iu.mutation.ClearAssigneeID()
-	return iu
+func (_u *IncidentUpdate) ClearAssigneeID() *IncidentUpdate {
+	_u.mutation.ClearAssigneeID()
+	return _u
 }
 
 // SetConfigurationItemID sets the "configuration_item_id" field.
-func (iu *IncidentUpdate) SetConfigurationItemID(i int) *IncidentUpdate {
-	iu.mutation.ResetConfigurationItemID()
-	iu.mutation.SetConfigurationItemID(i)
-	return iu
+func (_u *IncidentUpdate) SetConfigurationItemID(v int) *IncidentUpdate {
+	_u.mutation.ResetConfigurationItemID()
+	_u.mutation.SetConfigurationItemID(v)
+	return _u
 }
 
 // SetNillableConfigurationItemID sets the "configuration_item_id" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableConfigurationItemID(i *int) *IncidentUpdate {
-	if i != nil {
-		iu.SetConfigurationItemID(*i)
+func (_u *IncidentUpdate) SetNillableConfigurationItemID(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetConfigurationItemID(*v)
 	}
-	return iu
+	return _u
 }
 
-// AddConfigurationItemID adds i to the "configuration_item_id" field.
-func (iu *IncidentUpdate) AddConfigurationItemID(i int) *IncidentUpdate {
-	iu.mutation.AddConfigurationItemID(i)
-	return iu
+// AddConfigurationItemID adds value to the "configuration_item_id" field.
+func (_u *IncidentUpdate) AddConfigurationItemID(v int) *IncidentUpdate {
+	_u.mutation.AddConfigurationItemID(v)
+	return _u
 }
 
 // ClearConfigurationItemID clears the value of the "configuration_item_id" field.
-func (iu *IncidentUpdate) ClearConfigurationItemID() *IncidentUpdate {
-	iu.mutation.ClearConfigurationItemID()
-	return iu
+func (_u *IncidentUpdate) ClearConfigurationItemID() *IncidentUpdate {
+	_u.mutation.ClearConfigurationItemID()
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (iu *IncidentUpdate) SetCategory(s string) *IncidentUpdate {
-	iu.mutation.SetCategory(s)
-	return iu
+func (_u *IncidentUpdate) SetCategory(v string) *IncidentUpdate {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableCategory(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetCategory(*s)
+func (_u *IncidentUpdate) SetNillableCategory(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return iu
+	return _u
 }
 
 // ClearCategory clears the value of the "category" field.
-func (iu *IncidentUpdate) ClearCategory() *IncidentUpdate {
-	iu.mutation.ClearCategory()
-	return iu
+func (_u *IncidentUpdate) ClearCategory() *IncidentUpdate {
+	_u.mutation.ClearCategory()
+	return _u
 }
 
 // SetSubcategory sets the "subcategory" field.
-func (iu *IncidentUpdate) SetSubcategory(s string) *IncidentUpdate {
-	iu.mutation.SetSubcategory(s)
-	return iu
+func (_u *IncidentUpdate) SetSubcategory(v string) *IncidentUpdate {
+	_u.mutation.SetSubcategory(v)
+	return _u
 }
 
 // SetNillableSubcategory sets the "subcategory" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableSubcategory(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetSubcategory(*s)
+func (_u *IncidentUpdate) SetNillableSubcategory(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetSubcategory(*v)
 	}
-	return iu
+	return _u
 }
 
 // ClearSubcategory clears the value of the "subcategory" field.
-func (iu *IncidentUpdate) ClearSubcategory() *IncidentUpdate {
-	iu.mutation.ClearSubcategory()
-	return iu
+func (_u *IncidentUpdate) ClearSubcategory() *IncidentUpdate {
+	_u.mutation.ClearSubcategory()
+	return _u
 }
 
 // SetImpactAnalysis sets the "impact_analysis" field.
-func (iu *IncidentUpdate) SetImpactAnalysis(m map[string]interface{}) *IncidentUpdate {
-	iu.mutation.SetImpactAnalysis(m)
-	return iu
+func (_u *IncidentUpdate) SetImpactAnalysis(v map[string]interface{}) *IncidentUpdate {
+	_u.mutation.SetImpactAnalysis(v)
+	return _u
 }
 
 // ClearImpactAnalysis clears the value of the "impact_analysis" field.
-func (iu *IncidentUpdate) ClearImpactAnalysis() *IncidentUpdate {
-	iu.mutation.ClearImpactAnalysis()
-	return iu
+func (_u *IncidentUpdate) ClearImpactAnalysis() *IncidentUpdate {
+	_u.mutation.ClearImpactAnalysis()
+	return _u
 }
 
 // SetRootCause sets the "root_cause" field.
-func (iu *IncidentUpdate) SetRootCause(m map[string]interface{}) *IncidentUpdate {
-	iu.mutation.SetRootCause(m)
-	return iu
+func (_u *IncidentUpdate) SetRootCause(v map[string]interface{}) *IncidentUpdate {
+	_u.mutation.SetRootCause(v)
+	return _u
 }
 
 // ClearRootCause clears the value of the "root_cause" field.
-func (iu *IncidentUpdate) ClearRootCause() *IncidentUpdate {
-	iu.mutation.ClearRootCause()
-	return iu
+func (_u *IncidentUpdate) ClearRootCause() *IncidentUpdate {
+	_u.mutation.ClearRootCause()
+	return _u
 }
 
 // SetResolutionSteps sets the "resolution_steps" field.
-func (iu *IncidentUpdate) SetResolutionSteps(m []map[string]interface{}) *IncidentUpdate {
-	iu.mutation.SetResolutionSteps(m)
-	return iu
+func (_u *IncidentUpdate) SetResolutionSteps(v []map[string]interface{}) *IncidentUpdate {
+	_u.mutation.SetResolutionSteps(v)
+	return _u
 }
 
-// AppendResolutionSteps appends m to the "resolution_steps" field.
-func (iu *IncidentUpdate) AppendResolutionSteps(m []map[string]interface{}) *IncidentUpdate {
-	iu.mutation.AppendResolutionSteps(m)
-	return iu
+// AppendResolutionSteps appends value to the "resolution_steps" field.
+func (_u *IncidentUpdate) AppendResolutionSteps(v []map[string]interface{}) *IncidentUpdate {
+	_u.mutation.AppendResolutionSteps(v)
+	return _u
 }
 
 // ClearResolutionSteps clears the value of the "resolution_steps" field.
-func (iu *IncidentUpdate) ClearResolutionSteps() *IncidentUpdate {
-	iu.mutation.ClearResolutionSteps()
-	return iu
+func (_u *IncidentUpdate) ClearResolutionSteps() *IncidentUpdate {
+	_u.mutation.ClearResolutionSteps()
+	return _u
 }
 
 // SetDetectedAt sets the "detected_at" field.
-func (iu *IncidentUpdate) SetDetectedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetDetectedAt(t)
-	return iu
+func (_u *IncidentUpdate) SetDetectedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetDetectedAt(v)
+	return _u
 }
 
 // SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableDetectedAt(t *time.Time) *IncidentUpdate {
-	if t != nil {
-		iu.SetDetectedAt(*t)
+func (_u *IncidentUpdate) SetNillableDetectedAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetDetectedAt(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (iu *IncidentUpdate) SetResolvedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetResolvedAt(t)
-	return iu
+func (_u *IncidentUpdate) SetResolvedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableResolvedAt(t *time.Time) *IncidentUpdate {
-	if t != nil {
-		iu.SetResolvedAt(*t)
+func (_u *IncidentUpdate) SetNillableResolvedAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return iu
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (iu *IncidentUpdate) ClearResolvedAt() *IncidentUpdate {
-	iu.mutation.ClearResolvedAt()
-	return iu
+func (_u *IncidentUpdate) ClearResolvedAt() *IncidentUpdate {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (iu *IncidentUpdate) SetClosedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetClosedAt(t)
-	return iu
+func (_u *IncidentUpdate) SetClosedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetClosedAt(v)
+	return _u
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableClosedAt(t *time.Time) *IncidentUpdate {
-	if t != nil {
-		iu.SetClosedAt(*t)
+func (_u *IncidentUpdate) SetNillableClosedAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetClosedAt(*v)
 	}
-	return iu
+	return _u
 }
 
 // ClearClosedAt clears the value of the "closed_at" field.
-func (iu *IncidentUpdate) ClearClosedAt() *IncidentUpdate {
-	iu.mutation.ClearClosedAt()
-	return iu
+func (_u *IncidentUpdate) ClearClosedAt() *IncidentUpdate {
+	_u.mutation.ClearClosedAt()
+	return _u
 }
 
 // SetEscalatedAt sets the "escalated_at" field.
-func (iu *IncidentUpdate) SetEscalatedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetEscalatedAt(t)
-	return iu
+func (_u *IncidentUpdate) SetEscalatedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetEscalatedAt(v)
+	return _u
 }
 
 // SetNillableEscalatedAt sets the "escalated_at" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableEscalatedAt(t *time.Time) *IncidentUpdate {
-	if t != nil {
-		iu.SetEscalatedAt(*t)
+func (_u *IncidentUpdate) SetNillableEscalatedAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetEscalatedAt(*v)
 	}
-	return iu
+	return _u
 }
 
 // ClearEscalatedAt clears the value of the "escalated_at" field.
-func (iu *IncidentUpdate) ClearEscalatedAt() *IncidentUpdate {
-	iu.mutation.ClearEscalatedAt()
-	return iu
+func (_u *IncidentUpdate) ClearEscalatedAt() *IncidentUpdate {
+	_u.mutation.ClearEscalatedAt()
+	return _u
 }
 
 // SetEscalationLevel sets the "escalation_level" field.
-func (iu *IncidentUpdate) SetEscalationLevel(i int) *IncidentUpdate {
-	iu.mutation.ResetEscalationLevel()
-	iu.mutation.SetEscalationLevel(i)
-	return iu
+func (_u *IncidentUpdate) SetEscalationLevel(v int) *IncidentUpdate {
+	_u.mutation.ResetEscalationLevel()
+	_u.mutation.SetEscalationLevel(v)
+	return _u
 }
 
 // SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableEscalationLevel(i *int) *IncidentUpdate {
-	if i != nil {
-		iu.SetEscalationLevel(*i)
+func (_u *IncidentUpdate) SetNillableEscalationLevel(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetEscalationLevel(*v)
 	}
-	return iu
+	return _u
 }
 
-// AddEscalationLevel adds i to the "escalation_level" field.
-func (iu *IncidentUpdate) AddEscalationLevel(i int) *IncidentUpdate {
-	iu.mutation.AddEscalationLevel(i)
-	return iu
+// AddEscalationLevel adds value to the "escalation_level" field.
+func (_u *IncidentUpdate) AddEscalationLevel(v int) *IncidentUpdate {
+	_u.mutation.AddEscalationLevel(v)
+	return _u
 }
 
 // SetIsAutomated sets the "is_automated" field.
-func (iu *IncidentUpdate) SetIsAutomated(b bool) *IncidentUpdate {
-	iu.mutation.SetIsAutomated(b)
-	return iu
+func (_u *IncidentUpdate) SetIsAutomated(v bool) *IncidentUpdate {
+	_u.mutation.SetIsAutomated(v)
+	return _u
 }
 
 // SetNillableIsAutomated sets the "is_automated" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableIsAutomated(b *bool) *IncidentUpdate {
-	if b != nil {
-		iu.SetIsAutomated(*b)
+func (_u *IncidentUpdate) SetNillableIsAutomated(v *bool) *IncidentUpdate {
+	if v != nil {
+		_u.SetIsAutomated(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetSource sets the "source" field.
-func (iu *IncidentUpdate) SetSource(s string) *IncidentUpdate {
-	iu.mutation.SetSource(s)
-	return iu
+func (_u *IncidentUpdate) SetSource(v string) *IncidentUpdate {
+	_u.mutation.SetSource(v)
+	return _u
 }
 
 // SetNillableSource sets the "source" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableSource(s *string) *IncidentUpdate {
-	if s != nil {
-		iu.SetSource(*s)
+func (_u *IncidentUpdate) SetNillableSource(v *string) *IncidentUpdate {
+	if v != nil {
+		_u.SetSource(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (iu *IncidentUpdate) SetMetadata(m map[string]interface{}) *IncidentUpdate {
-	iu.mutation.SetMetadata(m)
-	return iu
+func (_u *IncidentUpdate) SetMetadata(v map[string]interface{}) *IncidentUpdate {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (iu *IncidentUpdate) ClearMetadata() *IncidentUpdate {
-	iu.mutation.ClearMetadata()
-	return iu
+func (_u *IncidentUpdate) ClearMetadata() *IncidentUpdate {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (iu *IncidentUpdate) SetTenantID(i int) *IncidentUpdate {
-	iu.mutation.ResetTenantID()
-	iu.mutation.SetTenantID(i)
-	return iu
+func (_u *IncidentUpdate) SetTenantID(v int) *IncidentUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableTenantID(i *int) *IncidentUpdate {
-	if i != nil {
-		iu.SetTenantID(*i)
+func (_u *IncidentUpdate) SetNillableTenantID(v *int) *IncidentUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return iu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (iu *IncidentUpdate) AddTenantID(i int) *IncidentUpdate {
-	iu.mutation.AddTenantID(i)
-	return iu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentUpdate) AddTenantID(v int) *IncidentUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (iu *IncidentUpdate) SetCreatedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetCreatedAt(t)
-	return iu
+func (_u *IncidentUpdate) SetCreatedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (iu *IncidentUpdate) SetNillableCreatedAt(t *time.Time) *IncidentUpdate {
-	if t != nil {
-		iu.SetCreatedAt(*t)
+func (_u *IncidentUpdate) SetNillableCreatedAt(v *time.Time) *IncidentUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return iu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (iu *IncidentUpdate) SetUpdatedAt(t time.Time) *IncidentUpdate {
-	iu.mutation.SetUpdatedAt(t)
-	return iu
+func (_u *IncidentUpdate) SetUpdatedAt(v time.Time) *IncidentUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddRelatedIncidentIDs adds the "related_incidents" edge to the Incident entity by IDs.
-func (iu *IncidentUpdate) AddRelatedIncidentIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddRelatedIncidentIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) AddRelatedIncidentIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddRelatedIncidentIDs(ids...)
+	return _u
 }
 
 // AddRelatedIncidents adds the "related_incidents" edges to the Incident entity.
-func (iu *IncidentUpdate) AddRelatedIncidents(i ...*Incident) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) AddRelatedIncidents(v ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.AddRelatedIncidentIDs(ids...)
+	return _u.AddRelatedIncidentIDs(ids...)
 }
 
 // AddIncidentEventIDs adds the "incident_events" edge to the IncidentEvent entity by IDs.
-func (iu *IncidentUpdate) AddIncidentEventIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddIncidentEventIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) AddIncidentEventIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddIncidentEventIDs(ids...)
+	return _u
 }
 
 // AddIncidentEvents adds the "incident_events" edges to the IncidentEvent entity.
-func (iu *IncidentUpdate) AddIncidentEvents(i ...*IncidentEvent) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) AddIncidentEvents(v ...*IncidentEvent) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.AddIncidentEventIDs(ids...)
+	return _u.AddIncidentEventIDs(ids...)
 }
 
 // AddIncidentAlertIDs adds the "incident_alerts" edge to the IncidentAlert entity by IDs.
-func (iu *IncidentUpdate) AddIncidentAlertIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddIncidentAlertIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) AddIncidentAlertIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddIncidentAlertIDs(ids...)
+	return _u
 }
 
 // AddIncidentAlerts adds the "incident_alerts" edges to the IncidentAlert entity.
-func (iu *IncidentUpdate) AddIncidentAlerts(i ...*IncidentAlert) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) AddIncidentAlerts(v ...*IncidentAlert) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.AddIncidentAlertIDs(ids...)
+	return _u.AddIncidentAlertIDs(ids...)
 }
 
 // AddIncidentMetricIDs adds the "incident_metrics" edge to the IncidentMetric entity by IDs.
-func (iu *IncidentUpdate) AddIncidentMetricIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddIncidentMetricIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) AddIncidentMetricIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddIncidentMetricIDs(ids...)
+	return _u
 }
 
 // AddIncidentMetrics adds the "incident_metrics" edges to the IncidentMetric entity.
-func (iu *IncidentUpdate) AddIncidentMetrics(i ...*IncidentMetric) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) AddIncidentMetrics(v ...*IncidentMetric) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.AddIncidentMetricIDs(ids...)
+	return _u.AddIncidentMetricIDs(ids...)
 }
 
 // AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
-func (iu *IncidentUpdate) AddParentIncidentIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddParentIncidentIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) AddParentIncidentIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddParentIncidentIDs(ids...)
+	return _u
 }
 
 // AddParentIncident adds the "parent_incident" edges to the Incident entity.
-func (iu *IncidentUpdate) AddParentIncident(i ...*Incident) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) AddParentIncident(v ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.AddParentIncidentIDs(ids...)
+	return _u.AddParentIncidentIDs(ids...)
 }
 
 // AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
-func (iu *IncidentUpdate) AddConfigurationItemIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.AddConfigurationItemIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) AddConfigurationItemIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.AddConfigurationItemIDs(ids...)
+	return _u
 }
 
 // AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
-func (iu *IncidentUpdate) AddConfigurationItems(c ...*ConfigurationItem) *IncidentUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *IncidentUpdate) AddConfigurationItems(v ...*ConfigurationItem) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.AddConfigurationItemIDs(ids...)
+	return _u.AddConfigurationItemIDs(ids...)
 }
 
 // Mutation returns the IncidentMutation object of the builder.
-func (iu *IncidentUpdate) Mutation() *IncidentMutation {
-	return iu.mutation
+func (_u *IncidentUpdate) Mutation() *IncidentMutation {
+	return _u.mutation
 }
 
 // ClearRelatedIncidents clears all "related_incidents" edges to the Incident entity.
-func (iu *IncidentUpdate) ClearRelatedIncidents() *IncidentUpdate {
-	iu.mutation.ClearRelatedIncidents()
-	return iu
+func (_u *IncidentUpdate) ClearRelatedIncidents() *IncidentUpdate {
+	_u.mutation.ClearRelatedIncidents()
+	return _u
 }
 
 // RemoveRelatedIncidentIDs removes the "related_incidents" edge to Incident entities by IDs.
-func (iu *IncidentUpdate) RemoveRelatedIncidentIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveRelatedIncidentIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) RemoveRelatedIncidentIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveRelatedIncidentIDs(ids...)
+	return _u
 }
 
 // RemoveRelatedIncidents removes "related_incidents" edges to Incident entities.
-func (iu *IncidentUpdate) RemoveRelatedIncidents(i ...*Incident) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) RemoveRelatedIncidents(v ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.RemoveRelatedIncidentIDs(ids...)
+	return _u.RemoveRelatedIncidentIDs(ids...)
 }
 
 // ClearIncidentEvents clears all "incident_events" edges to the IncidentEvent entity.
-func (iu *IncidentUpdate) ClearIncidentEvents() *IncidentUpdate {
-	iu.mutation.ClearIncidentEvents()
-	return iu
+func (_u *IncidentUpdate) ClearIncidentEvents() *IncidentUpdate {
+	_u.mutation.ClearIncidentEvents()
+	return _u
 }
 
 // RemoveIncidentEventIDs removes the "incident_events" edge to IncidentEvent entities by IDs.
-func (iu *IncidentUpdate) RemoveIncidentEventIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveIncidentEventIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) RemoveIncidentEventIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveIncidentEventIDs(ids...)
+	return _u
 }
 
 // RemoveIncidentEvents removes "incident_events" edges to IncidentEvent entities.
-func (iu *IncidentUpdate) RemoveIncidentEvents(i ...*IncidentEvent) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) RemoveIncidentEvents(v ...*IncidentEvent) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.RemoveIncidentEventIDs(ids...)
+	return _u.RemoveIncidentEventIDs(ids...)
 }
 
 // ClearIncidentAlerts clears all "incident_alerts" edges to the IncidentAlert entity.
-func (iu *IncidentUpdate) ClearIncidentAlerts() *IncidentUpdate {
-	iu.mutation.ClearIncidentAlerts()
-	return iu
+func (_u *IncidentUpdate) ClearIncidentAlerts() *IncidentUpdate {
+	_u.mutation.ClearIncidentAlerts()
+	return _u
 }
 
 // RemoveIncidentAlertIDs removes the "incident_alerts" edge to IncidentAlert entities by IDs.
-func (iu *IncidentUpdate) RemoveIncidentAlertIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveIncidentAlertIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) RemoveIncidentAlertIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveIncidentAlertIDs(ids...)
+	return _u
 }
 
 // RemoveIncidentAlerts removes "incident_alerts" edges to IncidentAlert entities.
-func (iu *IncidentUpdate) RemoveIncidentAlerts(i ...*IncidentAlert) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) RemoveIncidentAlerts(v ...*IncidentAlert) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.RemoveIncidentAlertIDs(ids...)
+	return _u.RemoveIncidentAlertIDs(ids...)
 }
 
 // ClearIncidentMetrics clears all "incident_metrics" edges to the IncidentMetric entity.
-func (iu *IncidentUpdate) ClearIncidentMetrics() *IncidentUpdate {
-	iu.mutation.ClearIncidentMetrics()
-	return iu
+func (_u *IncidentUpdate) ClearIncidentMetrics() *IncidentUpdate {
+	_u.mutation.ClearIncidentMetrics()
+	return _u
 }
 
 // RemoveIncidentMetricIDs removes the "incident_metrics" edge to IncidentMetric entities by IDs.
-func (iu *IncidentUpdate) RemoveIncidentMetricIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveIncidentMetricIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) RemoveIncidentMetricIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveIncidentMetricIDs(ids...)
+	return _u
 }
 
 // RemoveIncidentMetrics removes "incident_metrics" edges to IncidentMetric entities.
-func (iu *IncidentUpdate) RemoveIncidentMetrics(i ...*IncidentMetric) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) RemoveIncidentMetrics(v ...*IncidentMetric) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.RemoveIncidentMetricIDs(ids...)
+	return _u.RemoveIncidentMetricIDs(ids...)
 }
 
 // ClearParentIncident clears all "parent_incident" edges to the Incident entity.
-func (iu *IncidentUpdate) ClearParentIncident() *IncidentUpdate {
-	iu.mutation.ClearParentIncident()
-	return iu
+func (_u *IncidentUpdate) ClearParentIncident() *IncidentUpdate {
+	_u.mutation.ClearParentIncident()
+	return _u
 }
 
 // RemoveParentIncidentIDs removes the "parent_incident" edge to Incident entities by IDs.
-func (iu *IncidentUpdate) RemoveParentIncidentIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveParentIncidentIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) RemoveParentIncidentIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveParentIncidentIDs(ids...)
+	return _u
 }
 
 // RemoveParentIncident removes "parent_incident" edges to Incident entities.
-func (iu *IncidentUpdate) RemoveParentIncident(i ...*Incident) *IncidentUpdate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdate) RemoveParentIncident(v ...*Incident) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.RemoveParentIncidentIDs(ids...)
+	return _u.RemoveParentIncidentIDs(ids...)
 }
 
 // ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
-func (iu *IncidentUpdate) ClearConfigurationItems() *IncidentUpdate {
-	iu.mutation.ClearConfigurationItems()
-	return iu
+func (_u *IncidentUpdate) ClearConfigurationItems() *IncidentUpdate {
+	_u.mutation.ClearConfigurationItems()
+	return _u
 }
 
 // RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
-func (iu *IncidentUpdate) RemoveConfigurationItemIDs(ids ...int) *IncidentUpdate {
-	iu.mutation.RemoveConfigurationItemIDs(ids...)
-	return iu
+func (_u *IncidentUpdate) RemoveConfigurationItemIDs(ids ...int) *IncidentUpdate {
+	_u.mutation.RemoveConfigurationItemIDs(ids...)
+	return _u
 }
 
 // RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
-func (iu *IncidentUpdate) RemoveConfigurationItems(c ...*ConfigurationItem) *IncidentUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *IncidentUpdate) RemoveConfigurationItems(v ...*ConfigurationItem) *IncidentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iu.RemoveConfigurationItemIDs(ids...)
+	return _u.RemoveConfigurationItemIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (iu *IncidentUpdate) Save(ctx context.Context) (int, error) {
-	iu.defaults()
-	return withHooks(ctx, iu.sqlSave, iu.mutation, iu.hooks)
+func (_u *IncidentUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (iu *IncidentUpdate) SaveX(ctx context.Context) int {
-	affected, err := iu.Save(ctx)
+func (_u *IncidentUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -707,44 +707,44 @@ func (iu *IncidentUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (iu *IncidentUpdate) Exec(ctx context.Context) error {
-	_, err := iu.Save(ctx)
+func (_u *IncidentUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iu *IncidentUpdate) ExecX(ctx context.Context) {
-	if err := iu.Exec(ctx); err != nil {
+func (_u *IncidentUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (iu *IncidentUpdate) defaults() {
-	if _, ok := iu.mutation.UpdatedAt(); !ok {
+func (_u *IncidentUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incident.UpdateDefaultUpdatedAt()
-		iu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (iu *IncidentUpdate) check() error {
-	if v, ok := iu.mutation.Title(); ok {
+func (_u *IncidentUpdate) check() error {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := incident.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Incident.title": %w`, err)}
 		}
 	}
-	if v, ok := iu.mutation.IncidentNumber(); ok {
+	if v, ok := _u.mutation.IncidentNumber(); ok {
 		if err := incident.IncidentNumberValidator(v); err != nil {
 			return &ValidationError{Name: "incident_number", err: fmt.Errorf(`ent: validator failed for field "Incident.incident_number": %w`, err)}
 		}
 	}
-	if v, ok := iu.mutation.ReporterID(); ok {
+	if v, ok := _u.mutation.ReporterID(); ok {
 		if err := incident.ReporterIDValidator(v); err != nil {
 			return &ValidationError{Name: "reporter_id", err: fmt.Errorf(`ent: validator failed for field "Incident.reporter_id": %w`, err)}
 		}
 	}
-	if v, ok := iu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incident.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
 		}
@@ -752,153 +752,153 @@ func (iu *IncidentUpdate) check() error {
 	return nil
 }
 
-func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := iu.check(); err != nil {
-		return n, err
+func (_u *IncidentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incident.Table, incident.Columns, sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt))
-	if ps := iu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := iu.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(incident.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(incident.FieldDescription, field.TypeString, value)
 	}
-	if iu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(incident.FieldDescription, field.TypeString)
 	}
-	if value, ok := iu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incident.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(incident.FieldType, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.IncidentNumber(); ok {
+	if value, ok := _u.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.ReporterID(); ok {
+	if value, ok := _u.mutation.ReporterID(); ok {
 		_spec.SetField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AddedReporterID(); ok {
+	if value, ok := _u.mutation.AddedReporterID(); ok {
 		_spec.AddField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AssigneeID(); ok {
+	if value, ok := _u.mutation.AssigneeID(); ok {
 		_spec.SetField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AddedAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedAssigneeID(); ok {
 		_spec.AddField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if iu.mutation.AssigneeIDCleared() {
+	if _u.mutation.AssigneeIDCleared() {
 		_spec.ClearField(incident.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := iu.mutation.ConfigurationItemID(); ok {
+	if value, ok := _u.mutation.ConfigurationItemID(); ok {
 		_spec.SetField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AddedConfigurationItemID(); ok {
+	if value, ok := _u.mutation.AddedConfigurationItemID(); ok {
 		_spec.AddField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if iu.mutation.ConfigurationItemIDCleared() {
+	if _u.mutation.ConfigurationItemIDCleared() {
 		_spec.ClearField(incident.FieldConfigurationItemID, field.TypeInt)
 	}
-	if value, ok := iu.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(incident.FieldCategory, field.TypeString, value)
 	}
-	if iu.mutation.CategoryCleared() {
+	if _u.mutation.CategoryCleared() {
 		_spec.ClearField(incident.FieldCategory, field.TypeString)
 	}
-	if value, ok := iu.mutation.Subcategory(); ok {
+	if value, ok := _u.mutation.Subcategory(); ok {
 		_spec.SetField(incident.FieldSubcategory, field.TypeString, value)
 	}
-	if iu.mutation.SubcategoryCleared() {
+	if _u.mutation.SubcategoryCleared() {
 		_spec.ClearField(incident.FieldSubcategory, field.TypeString)
 	}
-	if value, ok := iu.mutation.ImpactAnalysis(); ok {
+	if value, ok := _u.mutation.ImpactAnalysis(); ok {
 		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)
 	}
-	if iu.mutation.ImpactAnalysisCleared() {
+	if _u.mutation.ImpactAnalysisCleared() {
 		_spec.ClearField(incident.FieldImpactAnalysis, field.TypeJSON)
 	}
-	if value, ok := iu.mutation.RootCause(); ok {
+	if value, ok := _u.mutation.RootCause(); ok {
 		_spec.SetField(incident.FieldRootCause, field.TypeJSON, value)
 	}
-	if iu.mutation.RootCauseCleared() {
+	if _u.mutation.RootCauseCleared() {
 		_spec.ClearField(incident.FieldRootCause, field.TypeJSON)
 	}
-	if value, ok := iu.mutation.ResolutionSteps(); ok {
+	if value, ok := _u.mutation.ResolutionSteps(); ok {
 		_spec.SetField(incident.FieldResolutionSteps, field.TypeJSON, value)
 	}
-	if value, ok := iu.mutation.AppendedResolutionSteps(); ok {
+	if value, ok := _u.mutation.AppendedResolutionSteps(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, incident.FieldResolutionSteps, value)
 		})
 	}
-	if iu.mutation.ResolutionStepsCleared() {
+	if _u.mutation.ResolutionStepsCleared() {
 		_spec.ClearField(incident.FieldResolutionSteps, field.TypeJSON)
 	}
-	if value, ok := iu.mutation.DetectedAt(); ok {
+	if value, ok := _u.mutation.DetectedAt(); ok {
 		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
 	}
-	if value, ok := iu.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
 	}
-	if iu.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(incident.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := iu.mutation.ClosedAt(); ok {
+	if value, ok := _u.mutation.ClosedAt(); ok {
 		_spec.SetField(incident.FieldClosedAt, field.TypeTime, value)
 	}
-	if iu.mutation.ClosedAtCleared() {
+	if _u.mutation.ClosedAtCleared() {
 		_spec.ClearField(incident.FieldClosedAt, field.TypeTime)
 	}
-	if value, ok := iu.mutation.EscalatedAt(); ok {
+	if value, ok := _u.mutation.EscalatedAt(); ok {
 		_spec.SetField(incident.FieldEscalatedAt, field.TypeTime, value)
 	}
-	if iu.mutation.EscalatedAtCleared() {
+	if _u.mutation.EscalatedAtCleared() {
 		_spec.ClearField(incident.FieldEscalatedAt, field.TypeTime)
 	}
-	if value, ok := iu.mutation.EscalationLevel(); ok {
+	if value, ok := _u.mutation.EscalationLevel(); ok {
 		_spec.SetField(incident.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AddedEscalationLevel(); ok {
+	if value, ok := _u.mutation.AddedEscalationLevel(); ok {
 		_spec.AddField(incident.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.IsAutomated(); ok {
+	if value, ok := _u.mutation.IsAutomated(); ok {
 		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
 	}
-	if value, ok := iu.mutation.Source(); ok {
+	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(incident.FieldSource, field.TypeString, value)
 	}
-	if value, ok := iu.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incident.FieldMetadata, field.TypeJSON, value)
 	}
-	if iu.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incident.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := iu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incident.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := iu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if iu.mutation.RelatedIncidentsCleared() {
+	if _u.mutation.RelatedIncidentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -911,23 +911,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.RemovedRelatedIncidentsIDs(); len(nodes) > 0 && !iu.mutation.RelatedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   incident.RelatedIncidentsTable,
-			Columns: incident.RelatedIncidentsPrimaryKey,
-			Bidi:    true,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedRelatedIncidentsIDs(); len(nodes) > 0 && !_u.mutation.RelatedIncidentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -941,9 +925,25 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iu.mutation.IncidentEventsCleared() {
+	if _u.mutation.IncidentEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -956,7 +956,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.RemovedIncidentEventsIDs(); len(nodes) > 0 && !iu.mutation.IncidentEventsCleared() {
+	if nodes := _u.mutation.RemovedIncidentEventsIDs(); len(nodes) > 0 && !_u.mutation.IncidentEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -972,7 +972,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.IncidentEventsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentEventsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -988,7 +988,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iu.mutation.IncidentAlertsCleared() {
+	if _u.mutation.IncidentAlertsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1001,23 +1001,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.RemovedIncidentAlertsIDs(); len(nodes) > 0 && !iu.mutation.IncidentAlertsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.IncidentAlertsTable,
-			Columns: []string{incident.IncidentAlertsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iu.mutation.IncidentAlertsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedIncidentAlertsIDs(); len(nodes) > 0 && !_u.mutation.IncidentAlertsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1031,9 +1015,25 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.IncidentAlertsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iu.mutation.IncidentMetricsCleared() {
+	if _u.mutation.IncidentMetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1046,7 +1046,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.RemovedIncidentMetricsIDs(); len(nodes) > 0 && !iu.mutation.IncidentMetricsCleared() {
+	if nodes := _u.mutation.RemovedIncidentMetricsIDs(); len(nodes) > 0 && !_u.mutation.IncidentMetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1062,7 +1062,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.IncidentMetricsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentMetricsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1078,7 +1078,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iu.mutation.ParentIncidentCleared() {
+	if _u.mutation.ParentIncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1091,7 +1091,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.RemovedParentIncidentIDs(); len(nodes) > 0 && !iu.mutation.ParentIncidentCleared() {
+	if nodes := _u.mutation.RemovedParentIncidentIDs(); len(nodes) > 0 && !_u.mutation.ParentIncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1107,7 +1107,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.ParentIncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParentIncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1123,7 +1123,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iu.mutation.ConfigurationItemsCleared() {
+	if _u.mutation.ConfigurationItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1136,7 +1136,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !iu.mutation.ConfigurationItemsCleared() {
+	if nodes := _u.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !_u.mutation.ConfigurationItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1152,7 +1152,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iu.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -1168,7 +1168,7 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, iu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incident.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1176,8 +1176,8 @@ func (iu *IncidentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	iu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // IncidentUpdateOne is the builder for updating a single Incident entity.
@@ -1189,685 +1189,685 @@ type IncidentUpdateOne struct {
 }
 
 // SetTitle sets the "title" field.
-func (iuo *IncidentUpdateOne) SetTitle(s string) *IncidentUpdateOne {
-	iuo.mutation.SetTitle(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetTitle(v string) *IncidentUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableTitle(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetTitle(*s)
+func (_u *IncidentUpdateOne) SetNillableTitle(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (iuo *IncidentUpdateOne) SetDescription(s string) *IncidentUpdateOne {
-	iuo.mutation.SetDescription(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetDescription(v string) *IncidentUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableDescription(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetDescription(*s)
+func (_u *IncidentUpdateOne) SetNillableDescription(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return iuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (iuo *IncidentUpdateOne) ClearDescription() *IncidentUpdateOne {
-	iuo.mutation.ClearDescription()
-	return iuo
+func (_u *IncidentUpdateOne) ClearDescription() *IncidentUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (iuo *IncidentUpdateOne) SetStatus(s string) *IncidentUpdateOne {
-	iuo.mutation.SetStatus(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetStatus(v string) *IncidentUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableStatus(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetStatus(*s)
+func (_u *IncidentUpdateOne) SetNillableStatus(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetType sets the "type" field.
-func (iuo *IncidentUpdateOne) SetType(s string) *IncidentUpdateOne {
-	iuo.mutation.SetType(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetType(v string) *IncidentUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableType(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetType(*s)
+func (_u *IncidentUpdateOne) SetNillableType(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (iuo *IncidentUpdateOne) SetPriority(s string) *IncidentUpdateOne {
-	iuo.mutation.SetPriority(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetPriority(v string) *IncidentUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillablePriority(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetPriority(*s)
+func (_u *IncidentUpdateOne) SetNillablePriority(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (iuo *IncidentUpdateOne) SetSeverity(s string) *IncidentUpdateOne {
-	iuo.mutation.SetSeverity(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetSeverity(v string) *IncidentUpdateOne {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableSeverity(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetSeverity(*s)
+func (_u *IncidentUpdateOne) SetNillableSeverity(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetIncidentNumber sets the "incident_number" field.
-func (iuo *IncidentUpdateOne) SetIncidentNumber(s string) *IncidentUpdateOne {
-	iuo.mutation.SetIncidentNumber(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetIncidentNumber(v string) *IncidentUpdateOne {
+	_u.mutation.SetIncidentNumber(v)
+	return _u
 }
 
 // SetNillableIncidentNumber sets the "incident_number" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableIncidentNumber(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetIncidentNumber(*s)
+func (_u *IncidentUpdateOne) SetNillableIncidentNumber(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetIncidentNumber(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetReporterID sets the "reporter_id" field.
-func (iuo *IncidentUpdateOne) SetReporterID(i int) *IncidentUpdateOne {
-	iuo.mutation.ResetReporterID()
-	iuo.mutation.SetReporterID(i)
-	return iuo
+func (_u *IncidentUpdateOne) SetReporterID(v int) *IncidentUpdateOne {
+	_u.mutation.ResetReporterID()
+	_u.mutation.SetReporterID(v)
+	return _u
 }
 
 // SetNillableReporterID sets the "reporter_id" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableReporterID(i *int) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetReporterID(*i)
+func (_u *IncidentUpdateOne) SetNillableReporterID(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetReporterID(*v)
 	}
-	return iuo
+	return _u
 }
 
-// AddReporterID adds i to the "reporter_id" field.
-func (iuo *IncidentUpdateOne) AddReporterID(i int) *IncidentUpdateOne {
-	iuo.mutation.AddReporterID(i)
-	return iuo
+// AddReporterID adds value to the "reporter_id" field.
+func (_u *IncidentUpdateOne) AddReporterID(v int) *IncidentUpdateOne {
+	_u.mutation.AddReporterID(v)
+	return _u
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (iuo *IncidentUpdateOne) SetAssigneeID(i int) *IncidentUpdateOne {
-	iuo.mutation.ResetAssigneeID()
-	iuo.mutation.SetAssigneeID(i)
-	return iuo
+func (_u *IncidentUpdateOne) SetAssigneeID(v int) *IncidentUpdateOne {
+	_u.mutation.ResetAssigneeID()
+	_u.mutation.SetAssigneeID(v)
+	return _u
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableAssigneeID(i *int) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetAssigneeID(*i)
+func (_u *IncidentUpdateOne) SetNillableAssigneeID(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetAssigneeID(*v)
 	}
-	return iuo
+	return _u
 }
 
-// AddAssigneeID adds i to the "assignee_id" field.
-func (iuo *IncidentUpdateOne) AddAssigneeID(i int) *IncidentUpdateOne {
-	iuo.mutation.AddAssigneeID(i)
-	return iuo
+// AddAssigneeID adds value to the "assignee_id" field.
+func (_u *IncidentUpdateOne) AddAssigneeID(v int) *IncidentUpdateOne {
+	_u.mutation.AddAssigneeID(v)
+	return _u
 }
 
 // ClearAssigneeID clears the value of the "assignee_id" field.
-func (iuo *IncidentUpdateOne) ClearAssigneeID() *IncidentUpdateOne {
-	iuo.mutation.ClearAssigneeID()
-	return iuo
+func (_u *IncidentUpdateOne) ClearAssigneeID() *IncidentUpdateOne {
+	_u.mutation.ClearAssigneeID()
+	return _u
 }
 
 // SetConfigurationItemID sets the "configuration_item_id" field.
-func (iuo *IncidentUpdateOne) SetConfigurationItemID(i int) *IncidentUpdateOne {
-	iuo.mutation.ResetConfigurationItemID()
-	iuo.mutation.SetConfigurationItemID(i)
-	return iuo
+func (_u *IncidentUpdateOne) SetConfigurationItemID(v int) *IncidentUpdateOne {
+	_u.mutation.ResetConfigurationItemID()
+	_u.mutation.SetConfigurationItemID(v)
+	return _u
 }
 
 // SetNillableConfigurationItemID sets the "configuration_item_id" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableConfigurationItemID(i *int) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetConfigurationItemID(*i)
+func (_u *IncidentUpdateOne) SetNillableConfigurationItemID(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetConfigurationItemID(*v)
 	}
-	return iuo
+	return _u
 }
 
-// AddConfigurationItemID adds i to the "configuration_item_id" field.
-func (iuo *IncidentUpdateOne) AddConfigurationItemID(i int) *IncidentUpdateOne {
-	iuo.mutation.AddConfigurationItemID(i)
-	return iuo
+// AddConfigurationItemID adds value to the "configuration_item_id" field.
+func (_u *IncidentUpdateOne) AddConfigurationItemID(v int) *IncidentUpdateOne {
+	_u.mutation.AddConfigurationItemID(v)
+	return _u
 }
 
 // ClearConfigurationItemID clears the value of the "configuration_item_id" field.
-func (iuo *IncidentUpdateOne) ClearConfigurationItemID() *IncidentUpdateOne {
-	iuo.mutation.ClearConfigurationItemID()
-	return iuo
+func (_u *IncidentUpdateOne) ClearConfigurationItemID() *IncidentUpdateOne {
+	_u.mutation.ClearConfigurationItemID()
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (iuo *IncidentUpdateOne) SetCategory(s string) *IncidentUpdateOne {
-	iuo.mutation.SetCategory(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetCategory(v string) *IncidentUpdateOne {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableCategory(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetCategory(*s)
+func (_u *IncidentUpdateOne) SetNillableCategory(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return iuo
+	return _u
 }
 
 // ClearCategory clears the value of the "category" field.
-func (iuo *IncidentUpdateOne) ClearCategory() *IncidentUpdateOne {
-	iuo.mutation.ClearCategory()
-	return iuo
+func (_u *IncidentUpdateOne) ClearCategory() *IncidentUpdateOne {
+	_u.mutation.ClearCategory()
+	return _u
 }
 
 // SetSubcategory sets the "subcategory" field.
-func (iuo *IncidentUpdateOne) SetSubcategory(s string) *IncidentUpdateOne {
-	iuo.mutation.SetSubcategory(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetSubcategory(v string) *IncidentUpdateOne {
+	_u.mutation.SetSubcategory(v)
+	return _u
 }
 
 // SetNillableSubcategory sets the "subcategory" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableSubcategory(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetSubcategory(*s)
+func (_u *IncidentUpdateOne) SetNillableSubcategory(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSubcategory(*v)
 	}
-	return iuo
+	return _u
 }
 
 // ClearSubcategory clears the value of the "subcategory" field.
-func (iuo *IncidentUpdateOne) ClearSubcategory() *IncidentUpdateOne {
-	iuo.mutation.ClearSubcategory()
-	return iuo
+func (_u *IncidentUpdateOne) ClearSubcategory() *IncidentUpdateOne {
+	_u.mutation.ClearSubcategory()
+	return _u
 }
 
 // SetImpactAnalysis sets the "impact_analysis" field.
-func (iuo *IncidentUpdateOne) SetImpactAnalysis(m map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.SetImpactAnalysis(m)
-	return iuo
+func (_u *IncidentUpdateOne) SetImpactAnalysis(v map[string]interface{}) *IncidentUpdateOne {
+	_u.mutation.SetImpactAnalysis(v)
+	return _u
 }
 
 // ClearImpactAnalysis clears the value of the "impact_analysis" field.
-func (iuo *IncidentUpdateOne) ClearImpactAnalysis() *IncidentUpdateOne {
-	iuo.mutation.ClearImpactAnalysis()
-	return iuo
+func (_u *IncidentUpdateOne) ClearImpactAnalysis() *IncidentUpdateOne {
+	_u.mutation.ClearImpactAnalysis()
+	return _u
 }
 
 // SetRootCause sets the "root_cause" field.
-func (iuo *IncidentUpdateOne) SetRootCause(m map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.SetRootCause(m)
-	return iuo
+func (_u *IncidentUpdateOne) SetRootCause(v map[string]interface{}) *IncidentUpdateOne {
+	_u.mutation.SetRootCause(v)
+	return _u
 }
 
 // ClearRootCause clears the value of the "root_cause" field.
-func (iuo *IncidentUpdateOne) ClearRootCause() *IncidentUpdateOne {
-	iuo.mutation.ClearRootCause()
-	return iuo
+func (_u *IncidentUpdateOne) ClearRootCause() *IncidentUpdateOne {
+	_u.mutation.ClearRootCause()
+	return _u
 }
 
 // SetResolutionSteps sets the "resolution_steps" field.
-func (iuo *IncidentUpdateOne) SetResolutionSteps(m []map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.SetResolutionSteps(m)
-	return iuo
+func (_u *IncidentUpdateOne) SetResolutionSteps(v []map[string]interface{}) *IncidentUpdateOne {
+	_u.mutation.SetResolutionSteps(v)
+	return _u
 }
 
-// AppendResolutionSteps appends m to the "resolution_steps" field.
-func (iuo *IncidentUpdateOne) AppendResolutionSteps(m []map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.AppendResolutionSteps(m)
-	return iuo
+// AppendResolutionSteps appends value to the "resolution_steps" field.
+func (_u *IncidentUpdateOne) AppendResolutionSteps(v []map[string]interface{}) *IncidentUpdateOne {
+	_u.mutation.AppendResolutionSteps(v)
+	return _u
 }
 
 // ClearResolutionSteps clears the value of the "resolution_steps" field.
-func (iuo *IncidentUpdateOne) ClearResolutionSteps() *IncidentUpdateOne {
-	iuo.mutation.ClearResolutionSteps()
-	return iuo
+func (_u *IncidentUpdateOne) ClearResolutionSteps() *IncidentUpdateOne {
+	_u.mutation.ClearResolutionSteps()
+	return _u
 }
 
 // SetDetectedAt sets the "detected_at" field.
-func (iuo *IncidentUpdateOne) SetDetectedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetDetectedAt(t)
-	return iuo
+func (_u *IncidentUpdateOne) SetDetectedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetDetectedAt(v)
+	return _u
 }
 
 // SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableDetectedAt(t *time.Time) *IncidentUpdateOne {
-	if t != nil {
-		iuo.SetDetectedAt(*t)
+func (_u *IncidentUpdateOne) SetNillableDetectedAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetDetectedAt(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (iuo *IncidentUpdateOne) SetResolvedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetResolvedAt(t)
-	return iuo
+func (_u *IncidentUpdateOne) SetResolvedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableResolvedAt(t *time.Time) *IncidentUpdateOne {
-	if t != nil {
-		iuo.SetResolvedAt(*t)
+func (_u *IncidentUpdateOne) SetNillableResolvedAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return iuo
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (iuo *IncidentUpdateOne) ClearResolvedAt() *IncidentUpdateOne {
-	iuo.mutation.ClearResolvedAt()
-	return iuo
+func (_u *IncidentUpdateOne) ClearResolvedAt() *IncidentUpdateOne {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (iuo *IncidentUpdateOne) SetClosedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetClosedAt(t)
-	return iuo
+func (_u *IncidentUpdateOne) SetClosedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetClosedAt(v)
+	return _u
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableClosedAt(t *time.Time) *IncidentUpdateOne {
-	if t != nil {
-		iuo.SetClosedAt(*t)
+func (_u *IncidentUpdateOne) SetNillableClosedAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetClosedAt(*v)
 	}
-	return iuo
+	return _u
 }
 
 // ClearClosedAt clears the value of the "closed_at" field.
-func (iuo *IncidentUpdateOne) ClearClosedAt() *IncidentUpdateOne {
-	iuo.mutation.ClearClosedAt()
-	return iuo
+func (_u *IncidentUpdateOne) ClearClosedAt() *IncidentUpdateOne {
+	_u.mutation.ClearClosedAt()
+	return _u
 }
 
 // SetEscalatedAt sets the "escalated_at" field.
-func (iuo *IncidentUpdateOne) SetEscalatedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetEscalatedAt(t)
-	return iuo
+func (_u *IncidentUpdateOne) SetEscalatedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetEscalatedAt(v)
+	return _u
 }
 
 // SetNillableEscalatedAt sets the "escalated_at" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableEscalatedAt(t *time.Time) *IncidentUpdateOne {
-	if t != nil {
-		iuo.SetEscalatedAt(*t)
+func (_u *IncidentUpdateOne) SetNillableEscalatedAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetEscalatedAt(*v)
 	}
-	return iuo
+	return _u
 }
 
 // ClearEscalatedAt clears the value of the "escalated_at" field.
-func (iuo *IncidentUpdateOne) ClearEscalatedAt() *IncidentUpdateOne {
-	iuo.mutation.ClearEscalatedAt()
-	return iuo
+func (_u *IncidentUpdateOne) ClearEscalatedAt() *IncidentUpdateOne {
+	_u.mutation.ClearEscalatedAt()
+	return _u
 }
 
 // SetEscalationLevel sets the "escalation_level" field.
-func (iuo *IncidentUpdateOne) SetEscalationLevel(i int) *IncidentUpdateOne {
-	iuo.mutation.ResetEscalationLevel()
-	iuo.mutation.SetEscalationLevel(i)
-	return iuo
+func (_u *IncidentUpdateOne) SetEscalationLevel(v int) *IncidentUpdateOne {
+	_u.mutation.ResetEscalationLevel()
+	_u.mutation.SetEscalationLevel(v)
+	return _u
 }
 
 // SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableEscalationLevel(i *int) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetEscalationLevel(*i)
+func (_u *IncidentUpdateOne) SetNillableEscalationLevel(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetEscalationLevel(*v)
 	}
-	return iuo
+	return _u
 }
 
-// AddEscalationLevel adds i to the "escalation_level" field.
-func (iuo *IncidentUpdateOne) AddEscalationLevel(i int) *IncidentUpdateOne {
-	iuo.mutation.AddEscalationLevel(i)
-	return iuo
+// AddEscalationLevel adds value to the "escalation_level" field.
+func (_u *IncidentUpdateOne) AddEscalationLevel(v int) *IncidentUpdateOne {
+	_u.mutation.AddEscalationLevel(v)
+	return _u
 }
 
 // SetIsAutomated sets the "is_automated" field.
-func (iuo *IncidentUpdateOne) SetIsAutomated(b bool) *IncidentUpdateOne {
-	iuo.mutation.SetIsAutomated(b)
-	return iuo
+func (_u *IncidentUpdateOne) SetIsAutomated(v bool) *IncidentUpdateOne {
+	_u.mutation.SetIsAutomated(v)
+	return _u
 }
 
 // SetNillableIsAutomated sets the "is_automated" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableIsAutomated(b *bool) *IncidentUpdateOne {
-	if b != nil {
-		iuo.SetIsAutomated(*b)
+func (_u *IncidentUpdateOne) SetNillableIsAutomated(v *bool) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetIsAutomated(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetSource sets the "source" field.
-func (iuo *IncidentUpdateOne) SetSource(s string) *IncidentUpdateOne {
-	iuo.mutation.SetSource(s)
-	return iuo
+func (_u *IncidentUpdateOne) SetSource(v string) *IncidentUpdateOne {
+	_u.mutation.SetSource(v)
+	return _u
 }
 
 // SetNillableSource sets the "source" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableSource(s *string) *IncidentUpdateOne {
-	if s != nil {
-		iuo.SetSource(*s)
+func (_u *IncidentUpdateOne) SetNillableSource(v *string) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetSource(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (iuo *IncidentUpdateOne) SetMetadata(m map[string]interface{}) *IncidentUpdateOne {
-	iuo.mutation.SetMetadata(m)
-	return iuo
+func (_u *IncidentUpdateOne) SetMetadata(v map[string]interface{}) *IncidentUpdateOne {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (iuo *IncidentUpdateOne) ClearMetadata() *IncidentUpdateOne {
-	iuo.mutation.ClearMetadata()
-	return iuo
+func (_u *IncidentUpdateOne) ClearMetadata() *IncidentUpdateOne {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (iuo *IncidentUpdateOne) SetTenantID(i int) *IncidentUpdateOne {
-	iuo.mutation.ResetTenantID()
-	iuo.mutation.SetTenantID(i)
-	return iuo
+func (_u *IncidentUpdateOne) SetTenantID(v int) *IncidentUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableTenantID(i *int) *IncidentUpdateOne {
-	if i != nil {
-		iuo.SetTenantID(*i)
+func (_u *IncidentUpdateOne) SetNillableTenantID(v *int) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return iuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (iuo *IncidentUpdateOne) AddTenantID(i int) *IncidentUpdateOne {
-	iuo.mutation.AddTenantID(i)
-	return iuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentUpdateOne) AddTenantID(v int) *IncidentUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (iuo *IncidentUpdateOne) SetCreatedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetCreatedAt(t)
-	return iuo
+func (_u *IncidentUpdateOne) SetCreatedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (iuo *IncidentUpdateOne) SetNillableCreatedAt(t *time.Time) *IncidentUpdateOne {
-	if t != nil {
-		iuo.SetCreatedAt(*t)
+func (_u *IncidentUpdateOne) SetNillableCreatedAt(v *time.Time) *IncidentUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return iuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (iuo *IncidentUpdateOne) SetUpdatedAt(t time.Time) *IncidentUpdateOne {
-	iuo.mutation.SetUpdatedAt(t)
-	return iuo
+func (_u *IncidentUpdateOne) SetUpdatedAt(v time.Time) *IncidentUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddRelatedIncidentIDs adds the "related_incidents" edge to the Incident entity by IDs.
-func (iuo *IncidentUpdateOne) AddRelatedIncidentIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddRelatedIncidentIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) AddRelatedIncidentIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddRelatedIncidentIDs(ids...)
+	return _u
 }
 
 // AddRelatedIncidents adds the "related_incidents" edges to the Incident entity.
-func (iuo *IncidentUpdateOne) AddRelatedIncidents(i ...*Incident) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) AddRelatedIncidents(v ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.AddRelatedIncidentIDs(ids...)
+	return _u.AddRelatedIncidentIDs(ids...)
 }
 
 // AddIncidentEventIDs adds the "incident_events" edge to the IncidentEvent entity by IDs.
-func (iuo *IncidentUpdateOne) AddIncidentEventIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddIncidentEventIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) AddIncidentEventIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddIncidentEventIDs(ids...)
+	return _u
 }
 
 // AddIncidentEvents adds the "incident_events" edges to the IncidentEvent entity.
-func (iuo *IncidentUpdateOne) AddIncidentEvents(i ...*IncidentEvent) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) AddIncidentEvents(v ...*IncidentEvent) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.AddIncidentEventIDs(ids...)
+	return _u.AddIncidentEventIDs(ids...)
 }
 
 // AddIncidentAlertIDs adds the "incident_alerts" edge to the IncidentAlert entity by IDs.
-func (iuo *IncidentUpdateOne) AddIncidentAlertIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddIncidentAlertIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) AddIncidentAlertIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddIncidentAlertIDs(ids...)
+	return _u
 }
 
 // AddIncidentAlerts adds the "incident_alerts" edges to the IncidentAlert entity.
-func (iuo *IncidentUpdateOne) AddIncidentAlerts(i ...*IncidentAlert) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) AddIncidentAlerts(v ...*IncidentAlert) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.AddIncidentAlertIDs(ids...)
+	return _u.AddIncidentAlertIDs(ids...)
 }
 
 // AddIncidentMetricIDs adds the "incident_metrics" edge to the IncidentMetric entity by IDs.
-func (iuo *IncidentUpdateOne) AddIncidentMetricIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddIncidentMetricIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) AddIncidentMetricIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddIncidentMetricIDs(ids...)
+	return _u
 }
 
 // AddIncidentMetrics adds the "incident_metrics" edges to the IncidentMetric entity.
-func (iuo *IncidentUpdateOne) AddIncidentMetrics(i ...*IncidentMetric) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) AddIncidentMetrics(v ...*IncidentMetric) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.AddIncidentMetricIDs(ids...)
+	return _u.AddIncidentMetricIDs(ids...)
 }
 
 // AddParentIncidentIDs adds the "parent_incident" edge to the Incident entity by IDs.
-func (iuo *IncidentUpdateOne) AddParentIncidentIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddParentIncidentIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) AddParentIncidentIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddParentIncidentIDs(ids...)
+	return _u
 }
 
 // AddParentIncident adds the "parent_incident" edges to the Incident entity.
-func (iuo *IncidentUpdateOne) AddParentIncident(i ...*Incident) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) AddParentIncident(v ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.AddParentIncidentIDs(ids...)
+	return _u.AddParentIncidentIDs(ids...)
 }
 
 // AddConfigurationItemIDs adds the "configuration_items" edge to the ConfigurationItem entity by IDs.
-func (iuo *IncidentUpdateOne) AddConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.AddConfigurationItemIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) AddConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.AddConfigurationItemIDs(ids...)
+	return _u
 }
 
 // AddConfigurationItems adds the "configuration_items" edges to the ConfigurationItem entity.
-func (iuo *IncidentUpdateOne) AddConfigurationItems(c ...*ConfigurationItem) *IncidentUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *IncidentUpdateOne) AddConfigurationItems(v ...*ConfigurationItem) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.AddConfigurationItemIDs(ids...)
+	return _u.AddConfigurationItemIDs(ids...)
 }
 
 // Mutation returns the IncidentMutation object of the builder.
-func (iuo *IncidentUpdateOne) Mutation() *IncidentMutation {
-	return iuo.mutation
+func (_u *IncidentUpdateOne) Mutation() *IncidentMutation {
+	return _u.mutation
 }
 
 // ClearRelatedIncidents clears all "related_incidents" edges to the Incident entity.
-func (iuo *IncidentUpdateOne) ClearRelatedIncidents() *IncidentUpdateOne {
-	iuo.mutation.ClearRelatedIncidents()
-	return iuo
+func (_u *IncidentUpdateOne) ClearRelatedIncidents() *IncidentUpdateOne {
+	_u.mutation.ClearRelatedIncidents()
+	return _u
 }
 
 // RemoveRelatedIncidentIDs removes the "related_incidents" edge to Incident entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveRelatedIncidentIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveRelatedIncidentIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) RemoveRelatedIncidentIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveRelatedIncidentIDs(ids...)
+	return _u
 }
 
 // RemoveRelatedIncidents removes "related_incidents" edges to Incident entities.
-func (iuo *IncidentUpdateOne) RemoveRelatedIncidents(i ...*Incident) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) RemoveRelatedIncidents(v ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.RemoveRelatedIncidentIDs(ids...)
+	return _u.RemoveRelatedIncidentIDs(ids...)
 }
 
 // ClearIncidentEvents clears all "incident_events" edges to the IncidentEvent entity.
-func (iuo *IncidentUpdateOne) ClearIncidentEvents() *IncidentUpdateOne {
-	iuo.mutation.ClearIncidentEvents()
-	return iuo
+func (_u *IncidentUpdateOne) ClearIncidentEvents() *IncidentUpdateOne {
+	_u.mutation.ClearIncidentEvents()
+	return _u
 }
 
 // RemoveIncidentEventIDs removes the "incident_events" edge to IncidentEvent entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveIncidentEventIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveIncidentEventIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) RemoveIncidentEventIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveIncidentEventIDs(ids...)
+	return _u
 }
 
 // RemoveIncidentEvents removes "incident_events" edges to IncidentEvent entities.
-func (iuo *IncidentUpdateOne) RemoveIncidentEvents(i ...*IncidentEvent) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) RemoveIncidentEvents(v ...*IncidentEvent) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.RemoveIncidentEventIDs(ids...)
+	return _u.RemoveIncidentEventIDs(ids...)
 }
 
 // ClearIncidentAlerts clears all "incident_alerts" edges to the IncidentAlert entity.
-func (iuo *IncidentUpdateOne) ClearIncidentAlerts() *IncidentUpdateOne {
-	iuo.mutation.ClearIncidentAlerts()
-	return iuo
+func (_u *IncidentUpdateOne) ClearIncidentAlerts() *IncidentUpdateOne {
+	_u.mutation.ClearIncidentAlerts()
+	return _u
 }
 
 // RemoveIncidentAlertIDs removes the "incident_alerts" edge to IncidentAlert entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveIncidentAlertIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveIncidentAlertIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) RemoveIncidentAlertIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveIncidentAlertIDs(ids...)
+	return _u
 }
 
 // RemoveIncidentAlerts removes "incident_alerts" edges to IncidentAlert entities.
-func (iuo *IncidentUpdateOne) RemoveIncidentAlerts(i ...*IncidentAlert) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) RemoveIncidentAlerts(v ...*IncidentAlert) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.RemoveIncidentAlertIDs(ids...)
+	return _u.RemoveIncidentAlertIDs(ids...)
 }
 
 // ClearIncidentMetrics clears all "incident_metrics" edges to the IncidentMetric entity.
-func (iuo *IncidentUpdateOne) ClearIncidentMetrics() *IncidentUpdateOne {
-	iuo.mutation.ClearIncidentMetrics()
-	return iuo
+func (_u *IncidentUpdateOne) ClearIncidentMetrics() *IncidentUpdateOne {
+	_u.mutation.ClearIncidentMetrics()
+	return _u
 }
 
 // RemoveIncidentMetricIDs removes the "incident_metrics" edge to IncidentMetric entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveIncidentMetricIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveIncidentMetricIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) RemoveIncidentMetricIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveIncidentMetricIDs(ids...)
+	return _u
 }
 
 // RemoveIncidentMetrics removes "incident_metrics" edges to IncidentMetric entities.
-func (iuo *IncidentUpdateOne) RemoveIncidentMetrics(i ...*IncidentMetric) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) RemoveIncidentMetrics(v ...*IncidentMetric) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.RemoveIncidentMetricIDs(ids...)
+	return _u.RemoveIncidentMetricIDs(ids...)
 }
 
 // ClearParentIncident clears all "parent_incident" edges to the Incident entity.
-func (iuo *IncidentUpdateOne) ClearParentIncident() *IncidentUpdateOne {
-	iuo.mutation.ClearParentIncident()
-	return iuo
+func (_u *IncidentUpdateOne) ClearParentIncident() *IncidentUpdateOne {
+	_u.mutation.ClearParentIncident()
+	return _u
 }
 
 // RemoveParentIncidentIDs removes the "parent_incident" edge to Incident entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveParentIncidentIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveParentIncidentIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) RemoveParentIncidentIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveParentIncidentIDs(ids...)
+	return _u
 }
 
 // RemoveParentIncident removes "parent_incident" edges to Incident entities.
-func (iuo *IncidentUpdateOne) RemoveParentIncident(i ...*Incident) *IncidentUpdateOne {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_u *IncidentUpdateOne) RemoveParentIncident(v ...*Incident) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.RemoveParentIncidentIDs(ids...)
+	return _u.RemoveParentIncidentIDs(ids...)
 }
 
 // ClearConfigurationItems clears all "configuration_items" edges to the ConfigurationItem entity.
-func (iuo *IncidentUpdateOne) ClearConfigurationItems() *IncidentUpdateOne {
-	iuo.mutation.ClearConfigurationItems()
-	return iuo
+func (_u *IncidentUpdateOne) ClearConfigurationItems() *IncidentUpdateOne {
+	_u.mutation.ClearConfigurationItems()
+	return _u
 }
 
 // RemoveConfigurationItemIDs removes the "configuration_items" edge to ConfigurationItem entities by IDs.
-func (iuo *IncidentUpdateOne) RemoveConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
-	iuo.mutation.RemoveConfigurationItemIDs(ids...)
-	return iuo
+func (_u *IncidentUpdateOne) RemoveConfigurationItemIDs(ids ...int) *IncidentUpdateOne {
+	_u.mutation.RemoveConfigurationItemIDs(ids...)
+	return _u
 }
 
 // RemoveConfigurationItems removes "configuration_items" edges to ConfigurationItem entities.
-func (iuo *IncidentUpdateOne) RemoveConfigurationItems(c ...*ConfigurationItem) *IncidentUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *IncidentUpdateOne) RemoveConfigurationItems(v ...*ConfigurationItem) *IncidentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return iuo.RemoveConfigurationItemIDs(ids...)
+	return _u.RemoveConfigurationItemIDs(ids...)
 }
 
 // Where appends a list predicates to the IncidentUpdate builder.
-func (iuo *IncidentUpdateOne) Where(ps ...predicate.Incident) *IncidentUpdateOne {
-	iuo.mutation.Where(ps...)
-	return iuo
+func (_u *IncidentUpdateOne) Where(ps ...predicate.Incident) *IncidentUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (iuo *IncidentUpdateOne) Select(field string, fields ...string) *IncidentUpdateOne {
-	iuo.fields = append([]string{field}, fields...)
-	return iuo
+func (_u *IncidentUpdateOne) Select(field string, fields ...string) *IncidentUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Incident entity.
-func (iuo *IncidentUpdateOne) Save(ctx context.Context) (*Incident, error) {
-	iuo.defaults()
-	return withHooks(ctx, iuo.sqlSave, iuo.mutation, iuo.hooks)
+func (_u *IncidentUpdateOne) Save(ctx context.Context) (*Incident, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (iuo *IncidentUpdateOne) SaveX(ctx context.Context) *Incident {
-	node, err := iuo.Save(ctx)
+func (_u *IncidentUpdateOne) SaveX(ctx context.Context) *Incident {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1875,44 +1875,44 @@ func (iuo *IncidentUpdateOne) SaveX(ctx context.Context) *Incident {
 }
 
 // Exec executes the query on the entity.
-func (iuo *IncidentUpdateOne) Exec(ctx context.Context) error {
-	_, err := iuo.Save(ctx)
+func (_u *IncidentUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iuo *IncidentUpdateOne) ExecX(ctx context.Context) {
-	if err := iuo.Exec(ctx); err != nil {
+func (_u *IncidentUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (iuo *IncidentUpdateOne) defaults() {
-	if _, ok := iuo.mutation.UpdatedAt(); !ok {
+func (_u *IncidentUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incident.UpdateDefaultUpdatedAt()
-		iuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (iuo *IncidentUpdateOne) check() error {
-	if v, ok := iuo.mutation.Title(); ok {
+func (_u *IncidentUpdateOne) check() error {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := incident.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Incident.title": %w`, err)}
 		}
 	}
-	if v, ok := iuo.mutation.IncidentNumber(); ok {
+	if v, ok := _u.mutation.IncidentNumber(); ok {
 		if err := incident.IncidentNumberValidator(v); err != nil {
 			return &ValidationError{Name: "incident_number", err: fmt.Errorf(`ent: validator failed for field "Incident.incident_number": %w`, err)}
 		}
 	}
-	if v, ok := iuo.mutation.ReporterID(); ok {
+	if v, ok := _u.mutation.ReporterID(); ok {
 		if err := incident.ReporterIDValidator(v); err != nil {
 			return &ValidationError{Name: "reporter_id", err: fmt.Errorf(`ent: validator failed for field "Incident.reporter_id": %w`, err)}
 		}
 	}
-	if v, ok := iuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incident.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Incident.tenant_id": %w`, err)}
 		}
@@ -1920,17 +1920,17 @@ func (iuo *IncidentUpdateOne) check() error {
 	return nil
 }
 
-func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err error) {
-	if err := iuo.check(); err != nil {
+func (_u *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incident.Table, incident.Columns, sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt))
-	id, ok := iuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Incident.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := iuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incident.FieldID)
 		for _, f := range fields {
@@ -1942,148 +1942,148 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 			}
 		}
 	}
-	if ps := iuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := iuo.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(incident.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(incident.FieldDescription, field.TypeString, value)
 	}
-	if iuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(incident.FieldDescription, field.TypeString)
 	}
-	if value, ok := iuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incident.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(incident.FieldType, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(incident.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incident.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.IncidentNumber(); ok {
+	if value, ok := _u.mutation.IncidentNumber(); ok {
 		_spec.SetField(incident.FieldIncidentNumber, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.ReporterID(); ok {
+	if value, ok := _u.mutation.ReporterID(); ok {
 		_spec.SetField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AddedReporterID(); ok {
+	if value, ok := _u.mutation.AddedReporterID(); ok {
 		_spec.AddField(incident.FieldReporterID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AssigneeID(); ok {
+	if value, ok := _u.mutation.AssigneeID(); ok {
 		_spec.SetField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AddedAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedAssigneeID(); ok {
 		_spec.AddField(incident.FieldAssigneeID, field.TypeInt, value)
 	}
-	if iuo.mutation.AssigneeIDCleared() {
+	if _u.mutation.AssigneeIDCleared() {
 		_spec.ClearField(incident.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := iuo.mutation.ConfigurationItemID(); ok {
+	if value, ok := _u.mutation.ConfigurationItemID(); ok {
 		_spec.SetField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AddedConfigurationItemID(); ok {
+	if value, ok := _u.mutation.AddedConfigurationItemID(); ok {
 		_spec.AddField(incident.FieldConfigurationItemID, field.TypeInt, value)
 	}
-	if iuo.mutation.ConfigurationItemIDCleared() {
+	if _u.mutation.ConfigurationItemIDCleared() {
 		_spec.ClearField(incident.FieldConfigurationItemID, field.TypeInt)
 	}
-	if value, ok := iuo.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(incident.FieldCategory, field.TypeString, value)
 	}
-	if iuo.mutation.CategoryCleared() {
+	if _u.mutation.CategoryCleared() {
 		_spec.ClearField(incident.FieldCategory, field.TypeString)
 	}
-	if value, ok := iuo.mutation.Subcategory(); ok {
+	if value, ok := _u.mutation.Subcategory(); ok {
 		_spec.SetField(incident.FieldSubcategory, field.TypeString, value)
 	}
-	if iuo.mutation.SubcategoryCleared() {
+	if _u.mutation.SubcategoryCleared() {
 		_spec.ClearField(incident.FieldSubcategory, field.TypeString)
 	}
-	if value, ok := iuo.mutation.ImpactAnalysis(); ok {
+	if value, ok := _u.mutation.ImpactAnalysis(); ok {
 		_spec.SetField(incident.FieldImpactAnalysis, field.TypeJSON, value)
 	}
-	if iuo.mutation.ImpactAnalysisCleared() {
+	if _u.mutation.ImpactAnalysisCleared() {
 		_spec.ClearField(incident.FieldImpactAnalysis, field.TypeJSON)
 	}
-	if value, ok := iuo.mutation.RootCause(); ok {
+	if value, ok := _u.mutation.RootCause(); ok {
 		_spec.SetField(incident.FieldRootCause, field.TypeJSON, value)
 	}
-	if iuo.mutation.RootCauseCleared() {
+	if _u.mutation.RootCauseCleared() {
 		_spec.ClearField(incident.FieldRootCause, field.TypeJSON)
 	}
-	if value, ok := iuo.mutation.ResolutionSteps(); ok {
+	if value, ok := _u.mutation.ResolutionSteps(); ok {
 		_spec.SetField(incident.FieldResolutionSteps, field.TypeJSON, value)
 	}
-	if value, ok := iuo.mutation.AppendedResolutionSteps(); ok {
+	if value, ok := _u.mutation.AppendedResolutionSteps(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, incident.FieldResolutionSteps, value)
 		})
 	}
-	if iuo.mutation.ResolutionStepsCleared() {
+	if _u.mutation.ResolutionStepsCleared() {
 		_spec.ClearField(incident.FieldResolutionSteps, field.TypeJSON)
 	}
-	if value, ok := iuo.mutation.DetectedAt(); ok {
+	if value, ok := _u.mutation.DetectedAt(); ok {
 		_spec.SetField(incident.FieldDetectedAt, field.TypeTime, value)
 	}
-	if value, ok := iuo.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(incident.FieldResolvedAt, field.TypeTime, value)
 	}
-	if iuo.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(incident.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := iuo.mutation.ClosedAt(); ok {
+	if value, ok := _u.mutation.ClosedAt(); ok {
 		_spec.SetField(incident.FieldClosedAt, field.TypeTime, value)
 	}
-	if iuo.mutation.ClosedAtCleared() {
+	if _u.mutation.ClosedAtCleared() {
 		_spec.ClearField(incident.FieldClosedAt, field.TypeTime)
 	}
-	if value, ok := iuo.mutation.EscalatedAt(); ok {
+	if value, ok := _u.mutation.EscalatedAt(); ok {
 		_spec.SetField(incident.FieldEscalatedAt, field.TypeTime, value)
 	}
-	if iuo.mutation.EscalatedAtCleared() {
+	if _u.mutation.EscalatedAtCleared() {
 		_spec.ClearField(incident.FieldEscalatedAt, field.TypeTime)
 	}
-	if value, ok := iuo.mutation.EscalationLevel(); ok {
+	if value, ok := _u.mutation.EscalationLevel(); ok {
 		_spec.SetField(incident.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AddedEscalationLevel(); ok {
+	if value, ok := _u.mutation.AddedEscalationLevel(); ok {
 		_spec.AddField(incident.FieldEscalationLevel, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.IsAutomated(); ok {
+	if value, ok := _u.mutation.IsAutomated(); ok {
 		_spec.SetField(incident.FieldIsAutomated, field.TypeBool, value)
 	}
-	if value, ok := iuo.mutation.Source(); ok {
+	if value, ok := _u.mutation.Source(); ok {
 		_spec.SetField(incident.FieldSource, field.TypeString, value)
 	}
-	if value, ok := iuo.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incident.FieldMetadata, field.TypeJSON, value)
 	}
-	if iuo.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incident.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := iuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incident.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incident.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incident.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := iuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incident.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if iuo.mutation.RelatedIncidentsCleared() {
+	if _u.mutation.RelatedIncidentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -2096,23 +2096,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.RemovedRelatedIncidentsIDs(); len(nodes) > 0 && !iuo.mutation.RelatedIncidentsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.M2M,
-			Inverse: false,
-			Table:   incident.RelatedIncidentsTable,
-			Columns: incident.RelatedIncidentsPrimaryKey,
-			Bidi:    true,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedRelatedIncidentsIDs(); len(nodes) > 0 && !_u.mutation.RelatedIncidentsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -2126,9 +2110,25 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RelatedIncidentsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   incident.RelatedIncidentsTable,
+			Columns: incident.RelatedIncidentsPrimaryKey,
+			Bidi:    true,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incident.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iuo.mutation.IncidentEventsCleared() {
+	if _u.mutation.IncidentEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2141,7 +2141,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.RemovedIncidentEventsIDs(); len(nodes) > 0 && !iuo.mutation.IncidentEventsCleared() {
+	if nodes := _u.mutation.RemovedIncidentEventsIDs(); len(nodes) > 0 && !_u.mutation.IncidentEventsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2157,7 +2157,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.IncidentEventsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentEventsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2173,7 +2173,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iuo.mutation.IncidentAlertsCleared() {
+	if _u.mutation.IncidentAlertsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2186,23 +2186,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.RemovedIncidentAlertsIDs(); len(nodes) > 0 && !iuo.mutation.IncidentAlertsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   incident.IncidentAlertsTable,
-			Columns: []string{incident.IncidentAlertsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := iuo.mutation.IncidentAlertsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedIncidentAlertsIDs(); len(nodes) > 0 && !_u.mutation.IncidentAlertsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2216,9 +2200,25 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.IncidentAlertsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   incident.IncidentAlertsTable,
+			Columns: []string{incident.IncidentAlertsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iuo.mutation.IncidentMetricsCleared() {
+	if _u.mutation.IncidentMetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2231,7 +2231,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.RemovedIncidentMetricsIDs(); len(nodes) > 0 && !iuo.mutation.IncidentMetricsCleared() {
+	if nodes := _u.mutation.RemovedIncidentMetricsIDs(); len(nodes) > 0 && !_u.mutation.IncidentMetricsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2247,7 +2247,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.IncidentMetricsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentMetricsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -2263,7 +2263,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iuo.mutation.ParentIncidentCleared() {
+	if _u.mutation.ParentIncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -2276,7 +2276,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.RemovedParentIncidentIDs(); len(nodes) > 0 && !iuo.mutation.ParentIncidentCleared() {
+	if nodes := _u.mutation.RemovedParentIncidentIDs(); len(nodes) > 0 && !_u.mutation.ParentIncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -2292,7 +2292,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.ParentIncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParentIncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -2308,7 +2308,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if iuo.mutation.ConfigurationItemsCleared() {
+	if _u.mutation.ConfigurationItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -2321,7 +2321,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !iuo.mutation.ConfigurationItemsCleared() {
+	if nodes := _u.mutation.RemovedConfigurationItemsIDs(); len(nodes) > 0 && !_u.mutation.ConfigurationItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -2337,7 +2337,7 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iuo.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ConfigurationItemsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -2353,10 +2353,10 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Incident{config: iuo.config}
+	_node = &Incident{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, iuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incident.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -2364,6 +2364,6 @@ func (iuo *IncidentUpdateOne) sqlSave(ctx context.Context) (_node *Incident, err
 		}
 		return nil, err
 	}
-	iuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

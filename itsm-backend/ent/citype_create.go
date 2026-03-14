@@ -22,144 +22,144 @@ type CITypeCreate struct {
 }
 
 // SetName sets the "name" field.
-func (ctc *CITypeCreate) SetName(s string) *CITypeCreate {
-	ctc.mutation.SetName(s)
-	return ctc
+func (_c *CITypeCreate) SetName(v string) *CITypeCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (ctc *CITypeCreate) SetDescription(s string) *CITypeCreate {
-	ctc.mutation.SetDescription(s)
-	return ctc
+func (_c *CITypeCreate) SetDescription(v string) *CITypeCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableDescription(s *string) *CITypeCreate {
-	if s != nil {
-		ctc.SetDescription(*s)
+func (_c *CITypeCreate) SetNillableDescription(v *string) *CITypeCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return ctc
+	return _c
 }
 
 // SetIcon sets the "icon" field.
-func (ctc *CITypeCreate) SetIcon(s string) *CITypeCreate {
-	ctc.mutation.SetIcon(s)
-	return ctc
+func (_c *CITypeCreate) SetIcon(v string) *CITypeCreate {
+	_c.mutation.SetIcon(v)
+	return _c
 }
 
 // SetNillableIcon sets the "icon" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableIcon(s *string) *CITypeCreate {
-	if s != nil {
-		ctc.SetIcon(*s)
+func (_c *CITypeCreate) SetNillableIcon(v *string) *CITypeCreate {
+	if v != nil {
+		_c.SetIcon(*v)
 	}
-	return ctc
+	return _c
 }
 
 // SetColor sets the "color" field.
-func (ctc *CITypeCreate) SetColor(s string) *CITypeCreate {
-	ctc.mutation.SetColor(s)
-	return ctc
+func (_c *CITypeCreate) SetColor(v string) *CITypeCreate {
+	_c.mutation.SetColor(v)
+	return _c
 }
 
 // SetNillableColor sets the "color" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableColor(s *string) *CITypeCreate {
-	if s != nil {
-		ctc.SetColor(*s)
+func (_c *CITypeCreate) SetNillableColor(v *string) *CITypeCreate {
+	if v != nil {
+		_c.SetColor(*v)
 	}
-	return ctc
+	return _c
 }
 
 // SetAttributeSchema sets the "attribute_schema" field.
-func (ctc *CITypeCreate) SetAttributeSchema(s string) *CITypeCreate {
-	ctc.mutation.SetAttributeSchema(s)
-	return ctc
+func (_c *CITypeCreate) SetAttributeSchema(v string) *CITypeCreate {
+	_c.mutation.SetAttributeSchema(v)
+	return _c
 }
 
 // SetNillableAttributeSchema sets the "attribute_schema" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableAttributeSchema(s *string) *CITypeCreate {
-	if s != nil {
-		ctc.SetAttributeSchema(*s)
+func (_c *CITypeCreate) SetNillableAttributeSchema(v *string) *CITypeCreate {
+	if v != nil {
+		_c.SetAttributeSchema(*v)
 	}
-	return ctc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ctc *CITypeCreate) SetTenantID(i int) *CITypeCreate {
-	ctc.mutation.SetTenantID(i)
-	return ctc
+func (_c *CITypeCreate) SetTenantID(v int) *CITypeCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (ctc *CITypeCreate) SetIsActive(b bool) *CITypeCreate {
-	ctc.mutation.SetIsActive(b)
-	return ctc
+func (_c *CITypeCreate) SetIsActive(v bool) *CITypeCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableIsActive(b *bool) *CITypeCreate {
-	if b != nil {
-		ctc.SetIsActive(*b)
+func (_c *CITypeCreate) SetNillableIsActive(v *bool) *CITypeCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return ctc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ctc *CITypeCreate) SetCreatedAt(t time.Time) *CITypeCreate {
-	ctc.mutation.SetCreatedAt(t)
-	return ctc
+func (_c *CITypeCreate) SetCreatedAt(v time.Time) *CITypeCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableCreatedAt(t *time.Time) *CITypeCreate {
-	if t != nil {
-		ctc.SetCreatedAt(*t)
+func (_c *CITypeCreate) SetNillableCreatedAt(v *time.Time) *CITypeCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ctc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ctc *CITypeCreate) SetUpdatedAt(t time.Time) *CITypeCreate {
-	ctc.mutation.SetUpdatedAt(t)
-	return ctc
+func (_c *CITypeCreate) SetUpdatedAt(v time.Time) *CITypeCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ctc *CITypeCreate) SetNillableUpdatedAt(t *time.Time) *CITypeCreate {
-	if t != nil {
-		ctc.SetUpdatedAt(*t)
+func (_c *CITypeCreate) SetNillableUpdatedAt(v *time.Time) *CITypeCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ctc
+	return _c
 }
 
 // AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
-func (ctc *CITypeCreate) AddCiIDs(ids ...int) *CITypeCreate {
-	ctc.mutation.AddCiIDs(ids...)
-	return ctc
+func (_c *CITypeCreate) AddCiIDs(ids ...int) *CITypeCreate {
+	_c.mutation.AddCiIDs(ids...)
+	return _c
 }
 
 // AddCis adds the "cis" edges to the ConfigurationItem entity.
-func (ctc *CITypeCreate) AddCis(c ...*ConfigurationItem) *CITypeCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_c *CITypeCreate) AddCis(v ...*ConfigurationItem) *CITypeCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ctc.AddCiIDs(ids...)
+	return _c.AddCiIDs(ids...)
 }
 
 // Mutation returns the CITypeMutation object of the builder.
-func (ctc *CITypeCreate) Mutation() *CITypeMutation {
-	return ctc.mutation
+func (_c *CITypeCreate) Mutation() *CITypeMutation {
+	return _c.mutation
 }
 
 // Save creates the CIType in the database.
-func (ctc *CITypeCreate) Save(ctx context.Context) (*CIType, error) {
-	ctc.defaults()
-	return withHooks(ctx, ctc.sqlSave, ctc.mutation, ctc.hooks)
+func (_c *CITypeCreate) Save(ctx context.Context) (*CIType, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ctc *CITypeCreate) SaveX(ctx context.Context) *CIType {
-	v, err := ctc.Save(ctx)
+func (_c *CITypeCreate) SaveX(ctx context.Context) *CIType {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -167,70 +167,70 @@ func (ctc *CITypeCreate) SaveX(ctx context.Context) *CIType {
 }
 
 // Exec executes the query.
-func (ctc *CITypeCreate) Exec(ctx context.Context) error {
-	_, err := ctc.Save(ctx)
+func (_c *CITypeCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ctc *CITypeCreate) ExecX(ctx context.Context) {
-	if err := ctc.Exec(ctx); err != nil {
+func (_c *CITypeCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ctc *CITypeCreate) defaults() {
-	if _, ok := ctc.mutation.IsActive(); !ok {
+func (_c *CITypeCreate) defaults() {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := citype.DefaultIsActive
-		ctc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := ctc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := citype.DefaultCreatedAt()
-		ctc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ctc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := citype.DefaultUpdatedAt()
-		ctc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ctc *CITypeCreate) check() error {
-	if _, ok := ctc.mutation.Name(); !ok {
+func (_c *CITypeCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "CIType.name"`)}
 	}
-	if v, ok := ctc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := citype.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIType.name": %w`, err)}
 		}
 	}
-	if _, ok := ctc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CIType.tenant_id"`)}
 	}
-	if v, ok := ctc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := citype.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIType.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := ctc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "CIType.is_active"`)}
 	}
-	if _, ok := ctc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CIType.created_at"`)}
 	}
-	if _, ok := ctc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CIType.updated_at"`)}
 	}
 	return nil
 }
 
-func (ctc *CITypeCreate) sqlSave(ctx context.Context) (*CIType, error) {
-	if err := ctc.check(); err != nil {
+func (_c *CITypeCreate) sqlSave(ctx context.Context) (*CIType, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ctc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ctc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -238,53 +238,53 @@ func (ctc *CITypeCreate) sqlSave(ctx context.Context) (*CIType, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ctc.mutation.id = &_node.ID
-	ctc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ctc *CITypeCreate) createSpec() (*CIType, *sqlgraph.CreateSpec) {
+func (_c *CITypeCreate) createSpec() (*CIType, *sqlgraph.CreateSpec) {
 	var (
-		_node = &CIType{config: ctc.config}
+		_node = &CIType{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(citype.Table, sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt))
 	)
-	if value, ok := ctc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(citype.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := ctc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(citype.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := ctc.mutation.Icon(); ok {
+	if value, ok := _c.mutation.Icon(); ok {
 		_spec.SetField(citype.FieldIcon, field.TypeString, value)
 		_node.Icon = value
 	}
-	if value, ok := ctc.mutation.Color(); ok {
+	if value, ok := _c.mutation.Color(); ok {
 		_spec.SetField(citype.FieldColor, field.TypeString, value)
 		_node.Color = value
 	}
-	if value, ok := ctc.mutation.AttributeSchema(); ok {
+	if value, ok := _c.mutation.AttributeSchema(); ok {
 		_spec.SetField(citype.FieldAttributeSchema, field.TypeString, value)
 		_node.AttributeSchema = value
 	}
-	if value, ok := ctc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(citype.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := ctc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(citype.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := ctc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(citype.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ctc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(citype.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := ctc.mutation.CisIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.CisIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -311,16 +311,16 @@ type CITypeCreateBulk struct {
 }
 
 // Save creates the CIType entities in the database.
-func (ctcb *CITypeCreateBulk) Save(ctx context.Context) ([]*CIType, error) {
-	if ctcb.err != nil {
-		return nil, ctcb.err
+func (_c *CITypeCreateBulk) Save(ctx context.Context) ([]*CIType, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ctcb.builders))
-	nodes := make([]*CIType, len(ctcb.builders))
-	mutators := make([]Mutator, len(ctcb.builders))
-	for i := range ctcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*CIType, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ctcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CITypeMutation)
@@ -334,11 +334,11 @@ func (ctcb *CITypeCreateBulk) Save(ctx context.Context) ([]*CIType, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ctcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ctcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -362,7 +362,7 @@ func (ctcb *CITypeCreateBulk) Save(ctx context.Context) ([]*CIType, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ctcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -370,8 +370,8 @@ func (ctcb *CITypeCreateBulk) Save(ctx context.Context) ([]*CIType, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ctcb *CITypeCreateBulk) SaveX(ctx context.Context) []*CIType {
-	v, err := ctcb.Save(ctx)
+func (_c *CITypeCreateBulk) SaveX(ctx context.Context) []*CIType {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -379,14 +379,14 @@ func (ctcb *CITypeCreateBulk) SaveX(ctx context.Context) []*CIType {
 }
 
 // Exec executes the query.
-func (ctcb *CITypeCreateBulk) Exec(ctx context.Context) error {
-	_, err := ctcb.Save(ctx)
+func (_c *CITypeCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ctcb *CITypeCreateBulk) ExecX(ctx context.Context) {
-	if err := ctcb.Exec(ctx); err != nil {
+func (_c *CITypeCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

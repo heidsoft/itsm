@@ -13,6 +13,7 @@ import (
 	"itsm-backend/ent/asset"
 	"itsm-backend/ent/assetlicense"
 	"itsm-backend/ent/auditlog"
+	"itsm-backend/ent/bpmnpermission"
 	"itsm-backend/ent/change"
 	"itsm-backend/ent/ciattributedefinition"
 	"itsm-backend/ent/cirelationship"
@@ -40,11 +41,13 @@ import (
 	"itsm-backend/ent/knownerror"
 	"itsm-backend/ent/message"
 	"itsm-backend/ent/microservice"
+	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/notification"
 	"itsm-backend/ent/notificationpreference"
 	"itsm-backend/ent/passwordresettoken"
 	"itsm-backend/ent/permission"
 	"itsm-backend/ent/problem"
+	"itsm-backend/ent/processauditlog"
 	"itsm-backend/ent/processbinding"
 	"itsm-backend/ent/processdefinition"
 	"itsm-backend/ent/processdeployment"
@@ -152,7 +155,7 @@ var (
 )
 
 // checkColumn checks if the column exists in the given table.
-func checkColumn(table, column string) error {
+func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			application.Table:             application.ValidColumn,
@@ -162,6 +165,7 @@ func checkColumn(table, column string) error {
 			asset.Table:                   asset.ValidColumn,
 			assetlicense.Table:            assetlicense.ValidColumn,
 			auditlog.Table:                auditlog.ValidColumn,
+			bpmnpermission.Table:          bpmnpermission.ValidColumn,
 			ciattributedefinition.Table:   ciattributedefinition.ValidColumn,
 			cirelationship.Table:          cirelationship.ValidColumn,
 			citype.Table:                  citype.ValidColumn,
@@ -187,6 +191,7 @@ func checkColumn(table, column string) error {
 			knowledgearticle.Table:        knowledgearticle.ValidColumn,
 			knowledgearticlelike.Table:    knowledgearticlelike.ValidColumn,
 			knownerror.Table:              knownerror.ValidColumn,
+			mspallocation.Table:           mspallocation.ValidColumn,
 			message.Table:                 message.ValidColumn,
 			microservice.Table:            microservice.ValidColumn,
 			notification.Table:            notification.ValidColumn,
@@ -194,6 +199,7 @@ func checkColumn(table, column string) error {
 			passwordresettoken.Table:      passwordresettoken.ValidColumn,
 			permission.Table:              permission.ValidColumn,
 			problem.Table:                 problem.ValidColumn,
+			processauditlog.Table:         processauditlog.ValidColumn,
 			processbinding.Table:          processbinding.ValidColumn,
 			processdefinition.Table:       processdefinition.ValidColumn,
 			processdeployment.Table:       processdeployment.ValidColumn,
@@ -240,7 +246,7 @@ func checkColumn(table, column string) error {
 			workflowversion.Table:         workflowversion.ValidColumn,
 		})
 	})
-	return columnCheck(table, column)
+	return columnCheck(t, c)
 }
 
 // Asc applies the given fields in ASC order.

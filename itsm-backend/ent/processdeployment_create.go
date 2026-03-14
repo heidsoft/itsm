@@ -22,170 +22,170 @@ type ProcessDeploymentCreate struct {
 }
 
 // SetDeploymentID sets the "deployment_id" field.
-func (pdc *ProcessDeploymentCreate) SetDeploymentID(s string) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeploymentID(s)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeploymentID(v string) *ProcessDeploymentCreate {
+	_c.mutation.SetDeploymentID(v)
+	return _c
 }
 
 // SetDeploymentName sets the "deployment_name" field.
-func (pdc *ProcessDeploymentCreate) SetDeploymentName(s string) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeploymentName(s)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeploymentName(v string) *ProcessDeploymentCreate {
+	_c.mutation.SetDeploymentName(v)
+	return _c
 }
 
 // SetDeploymentSource sets the "deployment_source" field.
-func (pdc *ProcessDeploymentCreate) SetDeploymentSource(s string) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeploymentSource(s)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeploymentSource(v string) *ProcessDeploymentCreate {
+	_c.mutation.SetDeploymentSource(v)
+	return _c
 }
 
 // SetNillableDeploymentSource sets the "deployment_source" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableDeploymentSource(s *string) *ProcessDeploymentCreate {
-	if s != nil {
-		pdc.SetDeploymentSource(*s)
+func (_c *ProcessDeploymentCreate) SetNillableDeploymentSource(v *string) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetDeploymentSource(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetDeploymentTime sets the "deployment_time" field.
-func (pdc *ProcessDeploymentCreate) SetDeploymentTime(t time.Time) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeploymentTime(t)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeploymentTime(v time.Time) *ProcessDeploymentCreate {
+	_c.mutation.SetDeploymentTime(v)
+	return _c
 }
 
 // SetNillableDeploymentTime sets the "deployment_time" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableDeploymentTime(t *time.Time) *ProcessDeploymentCreate {
-	if t != nil {
-		pdc.SetDeploymentTime(*t)
+func (_c *ProcessDeploymentCreate) SetNillableDeploymentTime(v *time.Time) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetDeploymentTime(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetDeployedBy sets the "deployed_by" field.
-func (pdc *ProcessDeploymentCreate) SetDeployedBy(s string) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeployedBy(s)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeployedBy(v string) *ProcessDeploymentCreate {
+	_c.mutation.SetDeployedBy(v)
+	return _c
 }
 
 // SetNillableDeployedBy sets the "deployed_by" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableDeployedBy(s *string) *ProcessDeploymentCreate {
-	if s != nil {
-		pdc.SetDeployedBy(*s)
+func (_c *ProcessDeploymentCreate) SetNillableDeployedBy(v *string) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetDeployedBy(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetDeploymentComment sets the "deployment_comment" field.
-func (pdc *ProcessDeploymentCreate) SetDeploymentComment(s string) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeploymentComment(s)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeploymentComment(v string) *ProcessDeploymentCreate {
+	_c.mutation.SetDeploymentComment(v)
+	return _c
 }
 
 // SetNillableDeploymentComment sets the "deployment_comment" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableDeploymentComment(s *string) *ProcessDeploymentCreate {
-	if s != nil {
-		pdc.SetDeploymentComment(*s)
+func (_c *ProcessDeploymentCreate) SetNillableDeploymentComment(v *string) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetDeploymentComment(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (pdc *ProcessDeploymentCreate) SetIsActive(b bool) *ProcessDeploymentCreate {
-	pdc.mutation.SetIsActive(b)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetIsActive(v bool) *ProcessDeploymentCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableIsActive(b *bool) *ProcessDeploymentCreate {
-	if b != nil {
-		pdc.SetIsActive(*b)
+func (_c *ProcessDeploymentCreate) SetNillableIsActive(v *bool) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetDeploymentCategory sets the "deployment_category" field.
-func (pdc *ProcessDeploymentCreate) SetDeploymentCategory(s string) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeploymentCategory(s)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeploymentCategory(v string) *ProcessDeploymentCreate {
+	_c.mutation.SetDeploymentCategory(v)
+	return _c
 }
 
 // SetNillableDeploymentCategory sets the "deployment_category" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableDeploymentCategory(s *string) *ProcessDeploymentCreate {
-	if s != nil {
-		pdc.SetDeploymentCategory(*s)
+func (_c *ProcessDeploymentCreate) SetNillableDeploymentCategory(v *string) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetDeploymentCategory(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetDeploymentMetadata sets the "deployment_metadata" field.
-func (pdc *ProcessDeploymentCreate) SetDeploymentMetadata(m map[string]interface{}) *ProcessDeploymentCreate {
-	pdc.mutation.SetDeploymentMetadata(m)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetDeploymentMetadata(v map[string]interface{}) *ProcessDeploymentCreate {
+	_c.mutation.SetDeploymentMetadata(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pdc *ProcessDeploymentCreate) SetTenantID(i int) *ProcessDeploymentCreate {
-	pdc.mutation.SetTenantID(i)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetTenantID(v int) *ProcessDeploymentCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pdc *ProcessDeploymentCreate) SetCreatedAt(t time.Time) *ProcessDeploymentCreate {
-	pdc.mutation.SetCreatedAt(t)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetCreatedAt(v time.Time) *ProcessDeploymentCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableCreatedAt(t *time.Time) *ProcessDeploymentCreate {
-	if t != nil {
-		pdc.SetCreatedAt(*t)
+func (_c *ProcessDeploymentCreate) SetNillableCreatedAt(v *time.Time) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pdc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pdc *ProcessDeploymentCreate) SetUpdatedAt(t time.Time) *ProcessDeploymentCreate {
-	pdc.mutation.SetUpdatedAt(t)
-	return pdc
+func (_c *ProcessDeploymentCreate) SetUpdatedAt(v time.Time) *ProcessDeploymentCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (pdc *ProcessDeploymentCreate) SetNillableUpdatedAt(t *time.Time) *ProcessDeploymentCreate {
-	if t != nil {
-		pdc.SetUpdatedAt(*t)
+func (_c *ProcessDeploymentCreate) SetNillableUpdatedAt(v *time.Time) *ProcessDeploymentCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return pdc
+	return _c
 }
 
 // AddDefinitionIDs adds the "definitions" edge to the ProcessDefinition entity by IDs.
-func (pdc *ProcessDeploymentCreate) AddDefinitionIDs(ids ...int) *ProcessDeploymentCreate {
-	pdc.mutation.AddDefinitionIDs(ids...)
-	return pdc
+func (_c *ProcessDeploymentCreate) AddDefinitionIDs(ids ...int) *ProcessDeploymentCreate {
+	_c.mutation.AddDefinitionIDs(ids...)
+	return _c
 }
 
 // AddDefinitions adds the "definitions" edges to the ProcessDefinition entity.
-func (pdc *ProcessDeploymentCreate) AddDefinitions(p ...*ProcessDefinition) *ProcessDeploymentCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *ProcessDeploymentCreate) AddDefinitions(v ...*ProcessDefinition) *ProcessDeploymentCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdc.AddDefinitionIDs(ids...)
+	return _c.AddDefinitionIDs(ids...)
 }
 
 // Mutation returns the ProcessDeploymentMutation object of the builder.
-func (pdc *ProcessDeploymentCreate) Mutation() *ProcessDeploymentMutation {
-	return pdc.mutation
+func (_c *ProcessDeploymentCreate) Mutation() *ProcessDeploymentMutation {
+	return _c.mutation
 }
 
 // Save creates the ProcessDeployment in the database.
-func (pdc *ProcessDeploymentCreate) Save(ctx context.Context) (*ProcessDeployment, error) {
-	pdc.defaults()
-	return withHooks(ctx, pdc.sqlSave, pdc.mutation, pdc.hooks)
+func (_c *ProcessDeploymentCreate) Save(ctx context.Context) (*ProcessDeployment, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pdc *ProcessDeploymentCreate) SaveX(ctx context.Context) *ProcessDeployment {
-	v, err := pdc.Save(ctx)
+func (_c *ProcessDeploymentCreate) SaveX(ctx context.Context) *ProcessDeployment {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -193,92 +193,92 @@ func (pdc *ProcessDeploymentCreate) SaveX(ctx context.Context) *ProcessDeploymen
 }
 
 // Exec executes the query.
-func (pdc *ProcessDeploymentCreate) Exec(ctx context.Context) error {
-	_, err := pdc.Save(ctx)
+func (_c *ProcessDeploymentCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pdc *ProcessDeploymentCreate) ExecX(ctx context.Context) {
-	if err := pdc.Exec(ctx); err != nil {
+func (_c *ProcessDeploymentCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pdc *ProcessDeploymentCreate) defaults() {
-	if _, ok := pdc.mutation.DeploymentTime(); !ok {
+func (_c *ProcessDeploymentCreate) defaults() {
+	if _, ok := _c.mutation.DeploymentTime(); !ok {
 		v := processdeployment.DefaultDeploymentTime()
-		pdc.mutation.SetDeploymentTime(v)
+		_c.mutation.SetDeploymentTime(v)
 	}
-	if _, ok := pdc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := processdeployment.DefaultIsActive
-		pdc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := pdc.mutation.DeploymentCategory(); !ok {
+	if _, ok := _c.mutation.DeploymentCategory(); !ok {
 		v := processdeployment.DefaultDeploymentCategory
-		pdc.mutation.SetDeploymentCategory(v)
+		_c.mutation.SetDeploymentCategory(v)
 	}
-	if _, ok := pdc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processdeployment.DefaultCreatedAt()
-		pdc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := pdc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := processdeployment.DefaultUpdatedAt()
-		pdc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pdc *ProcessDeploymentCreate) check() error {
-	if _, ok := pdc.mutation.DeploymentID(); !ok {
+func (_c *ProcessDeploymentCreate) check() error {
+	if _, ok := _c.mutation.DeploymentID(); !ok {
 		return &ValidationError{Name: "deployment_id", err: errors.New(`ent: missing required field "ProcessDeployment.deployment_id"`)}
 	}
-	if v, ok := pdc.mutation.DeploymentID(); ok {
+	if v, ok := _c.mutation.DeploymentID(); ok {
 		if err := processdeployment.DeploymentIDValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.deployment_id": %w`, err)}
 		}
 	}
-	if _, ok := pdc.mutation.DeploymentName(); !ok {
+	if _, ok := _c.mutation.DeploymentName(); !ok {
 		return &ValidationError{Name: "deployment_name", err: errors.New(`ent: missing required field "ProcessDeployment.deployment_name"`)}
 	}
-	if v, ok := pdc.mutation.DeploymentName(); ok {
+	if v, ok := _c.mutation.DeploymentName(); ok {
 		if err := processdeployment.DeploymentNameValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_name", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.deployment_name": %w`, err)}
 		}
 	}
-	if _, ok := pdc.mutation.DeploymentTime(); !ok {
+	if _, ok := _c.mutation.DeploymentTime(); !ok {
 		return &ValidationError{Name: "deployment_time", err: errors.New(`ent: missing required field "ProcessDeployment.deployment_time"`)}
 	}
-	if _, ok := pdc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ProcessDeployment.is_active"`)}
 	}
-	if _, ok := pdc.mutation.DeploymentCategory(); !ok {
+	if _, ok := _c.mutation.DeploymentCategory(); !ok {
 		return &ValidationError{Name: "deployment_category", err: errors.New(`ent: missing required field "ProcessDeployment.deployment_category"`)}
 	}
-	if _, ok := pdc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProcessDeployment.tenant_id"`)}
 	}
-	if v, ok := pdc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := processdeployment.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := pdc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessDeployment.created_at"`)}
 	}
-	if _, ok := pdc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessDeployment.updated_at"`)}
 	}
 	return nil
 }
 
-func (pdc *ProcessDeploymentCreate) sqlSave(ctx context.Context) (*ProcessDeployment, error) {
-	if err := pdc.check(); err != nil {
+func (_c *ProcessDeploymentCreate) sqlSave(ctx context.Context) (*ProcessDeployment, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pdc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pdc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -286,65 +286,65 @@ func (pdc *ProcessDeploymentCreate) sqlSave(ctx context.Context) (*ProcessDeploy
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	pdc.mutation.id = &_node.ID
-	pdc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pdc *ProcessDeploymentCreate) createSpec() (*ProcessDeployment, *sqlgraph.CreateSpec) {
+func (_c *ProcessDeploymentCreate) createSpec() (*ProcessDeployment, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProcessDeployment{config: pdc.config}
+		_node = &ProcessDeployment{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(processdeployment.Table, sqlgraph.NewFieldSpec(processdeployment.FieldID, field.TypeInt))
 	)
-	if value, ok := pdc.mutation.DeploymentID(); ok {
+	if value, ok := _c.mutation.DeploymentID(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentID, field.TypeString, value)
 		_node.DeploymentID = value
 	}
-	if value, ok := pdc.mutation.DeploymentName(); ok {
+	if value, ok := _c.mutation.DeploymentName(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentName, field.TypeString, value)
 		_node.DeploymentName = value
 	}
-	if value, ok := pdc.mutation.DeploymentSource(); ok {
+	if value, ok := _c.mutation.DeploymentSource(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentSource, field.TypeString, value)
 		_node.DeploymentSource = value
 	}
-	if value, ok := pdc.mutation.DeploymentTime(); ok {
+	if value, ok := _c.mutation.DeploymentTime(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentTime, field.TypeTime, value)
 		_node.DeploymentTime = value
 	}
-	if value, ok := pdc.mutation.DeployedBy(); ok {
+	if value, ok := _c.mutation.DeployedBy(); ok {
 		_spec.SetField(processdeployment.FieldDeployedBy, field.TypeString, value)
 		_node.DeployedBy = value
 	}
-	if value, ok := pdc.mutation.DeploymentComment(); ok {
+	if value, ok := _c.mutation.DeploymentComment(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentComment, field.TypeString, value)
 		_node.DeploymentComment = value
 	}
-	if value, ok := pdc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(processdeployment.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := pdc.mutation.DeploymentCategory(); ok {
+	if value, ok := _c.mutation.DeploymentCategory(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentCategory, field.TypeString, value)
 		_node.DeploymentCategory = value
 	}
-	if value, ok := pdc.mutation.DeploymentMetadata(); ok {
+	if value, ok := _c.mutation.DeploymentMetadata(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentMetadata, field.TypeJSON, value)
 		_node.DeploymentMetadata = value
 	}
-	if value, ok := pdc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processdeployment.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := pdc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(processdeployment.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := pdc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdeployment.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := pdc.mutation.DefinitionsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.DefinitionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -371,16 +371,16 @@ type ProcessDeploymentCreateBulk struct {
 }
 
 // Save creates the ProcessDeployment entities in the database.
-func (pdcb *ProcessDeploymentCreateBulk) Save(ctx context.Context) ([]*ProcessDeployment, error) {
-	if pdcb.err != nil {
-		return nil, pdcb.err
+func (_c *ProcessDeploymentCreateBulk) Save(ctx context.Context) ([]*ProcessDeployment, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(pdcb.builders))
-	nodes := make([]*ProcessDeployment, len(pdcb.builders))
-	mutators := make([]Mutator, len(pdcb.builders))
-	for i := range pdcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProcessDeployment, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := pdcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProcessDeploymentMutation)
@@ -394,11 +394,11 @@ func (pdcb *ProcessDeploymentCreateBulk) Save(ctx context.Context) ([]*ProcessDe
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, pdcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, pdcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -422,7 +422,7 @@ func (pdcb *ProcessDeploymentCreateBulk) Save(ctx context.Context) ([]*ProcessDe
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, pdcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -430,8 +430,8 @@ func (pdcb *ProcessDeploymentCreateBulk) Save(ctx context.Context) ([]*ProcessDe
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pdcb *ProcessDeploymentCreateBulk) SaveX(ctx context.Context) []*ProcessDeployment {
-	v, err := pdcb.Save(ctx)
+func (_c *ProcessDeploymentCreateBulk) SaveX(ctx context.Context) []*ProcessDeployment {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -439,14 +439,14 @@ func (pdcb *ProcessDeploymentCreateBulk) SaveX(ctx context.Context) []*ProcessDe
 }
 
 // Exec executes the query.
-func (pdcb *ProcessDeploymentCreateBulk) Exec(ctx context.Context) error {
-	_, err := pdcb.Save(ctx)
+func (_c *ProcessDeploymentCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pdcb *ProcessDeploymentCreateBulk) ExecX(ctx context.Context) {
-	if err := pdcb.Exec(ctx); err != nil {
+func (_c *ProcessDeploymentCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

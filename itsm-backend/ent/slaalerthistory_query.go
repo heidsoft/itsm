@@ -32,44 +32,44 @@ type SLAAlertHistoryQuery struct {
 }
 
 // Where adds a new predicate for the SLAAlertHistoryQuery builder.
-func (sahq *SLAAlertHistoryQuery) Where(ps ...predicate.SLAAlertHistory) *SLAAlertHistoryQuery {
-	sahq.predicates = append(sahq.predicates, ps...)
-	return sahq
+func (_q *SLAAlertHistoryQuery) Where(ps ...predicate.SLAAlertHistory) *SLAAlertHistoryQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (sahq *SLAAlertHistoryQuery) Limit(limit int) *SLAAlertHistoryQuery {
-	sahq.ctx.Limit = &limit
-	return sahq
+func (_q *SLAAlertHistoryQuery) Limit(limit int) *SLAAlertHistoryQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (sahq *SLAAlertHistoryQuery) Offset(offset int) *SLAAlertHistoryQuery {
-	sahq.ctx.Offset = &offset
-	return sahq
+func (_q *SLAAlertHistoryQuery) Offset(offset int) *SLAAlertHistoryQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (sahq *SLAAlertHistoryQuery) Unique(unique bool) *SLAAlertHistoryQuery {
-	sahq.ctx.Unique = &unique
-	return sahq
+func (_q *SLAAlertHistoryQuery) Unique(unique bool) *SLAAlertHistoryQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (sahq *SLAAlertHistoryQuery) Order(o ...slaalerthistory.OrderOption) *SLAAlertHistoryQuery {
-	sahq.order = append(sahq.order, o...)
-	return sahq
+func (_q *SLAAlertHistoryQuery) Order(o ...slaalerthistory.OrderOption) *SLAAlertHistoryQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryTicket chains the current query on the "ticket" edge.
-func (sahq *SLAAlertHistoryQuery) QueryTicket() *TicketQuery {
-	query := (&TicketClient{config: sahq.config}).Query()
+func (_q *SLAAlertHistoryQuery) QueryTicket() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sahq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sahq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,20 +78,20 @@ func (sahq *SLAAlertHistoryQuery) QueryTicket() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, slaalerthistory.TicketTable, slaalerthistory.TicketColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sahq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryAlertRule chains the current query on the "alert_rule" edge.
-func (sahq *SLAAlertHistoryQuery) QueryAlertRule() *SLAAlertRuleQuery {
-	query := (&SLAAlertRuleClient{config: sahq.config}).Query()
+func (_q *SLAAlertHistoryQuery) QueryAlertRule() *SLAAlertRuleQuery {
+	query := (&SLAAlertRuleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sahq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sahq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (sahq *SLAAlertHistoryQuery) QueryAlertRule() *SLAAlertRuleQuery {
 			sqlgraph.To(slaalertrule.Table, slaalertrule.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, slaalerthistory.AlertRuleTable, slaalerthistory.AlertRuleColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sahq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -108,8 +108,8 @@ func (sahq *SLAAlertHistoryQuery) QueryAlertRule() *SLAAlertRuleQuery {
 
 // First returns the first SLAAlertHistory entity from the query.
 // Returns a *NotFoundError when no SLAAlertHistory was found.
-func (sahq *SLAAlertHistoryQuery) First(ctx context.Context) (*SLAAlertHistory, error) {
-	nodes, err := sahq.Limit(1).All(setContextOp(ctx, sahq.ctx, ent.OpQueryFirst))
+func (_q *SLAAlertHistoryQuery) First(ctx context.Context) (*SLAAlertHistory, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +120,8 @@ func (sahq *SLAAlertHistoryQuery) First(ctx context.Context) (*SLAAlertHistory, 
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) FirstX(ctx context.Context) *SLAAlertHistory {
-	node, err := sahq.First(ctx)
+func (_q *SLAAlertHistoryQuery) FirstX(ctx context.Context) *SLAAlertHistory {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,9 +130,9 @@ func (sahq *SLAAlertHistoryQuery) FirstX(ctx context.Context) *SLAAlertHistory {
 
 // FirstID returns the first SLAAlertHistory ID from the query.
 // Returns a *NotFoundError when no SLAAlertHistory ID was found.
-func (sahq *SLAAlertHistoryQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *SLAAlertHistoryQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sahq.Limit(1).IDs(setContextOp(ctx, sahq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -143,8 +143,8 @@ func (sahq *SLAAlertHistoryQuery) FirstID(ctx context.Context) (id int, err erro
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) FirstIDX(ctx context.Context) int {
-	id, err := sahq.FirstID(ctx)
+func (_q *SLAAlertHistoryQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -154,8 +154,8 @@ func (sahq *SLAAlertHistoryQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single SLAAlertHistory entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one SLAAlertHistory entity is found.
 // Returns a *NotFoundError when no SLAAlertHistory entities are found.
-func (sahq *SLAAlertHistoryQuery) Only(ctx context.Context) (*SLAAlertHistory, error) {
-	nodes, err := sahq.Limit(2).All(setContextOp(ctx, sahq.ctx, ent.OpQueryOnly))
+func (_q *SLAAlertHistoryQuery) Only(ctx context.Context) (*SLAAlertHistory, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +170,8 @@ func (sahq *SLAAlertHistoryQuery) Only(ctx context.Context) (*SLAAlertHistory, e
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) OnlyX(ctx context.Context) *SLAAlertHistory {
-	node, err := sahq.Only(ctx)
+func (_q *SLAAlertHistoryQuery) OnlyX(ctx context.Context) *SLAAlertHistory {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -181,9 +181,9 @@ func (sahq *SLAAlertHistoryQuery) OnlyX(ctx context.Context) *SLAAlertHistory {
 // OnlyID is like Only, but returns the only SLAAlertHistory ID in the query.
 // Returns a *NotSingularError when more than one SLAAlertHistory ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (sahq *SLAAlertHistoryQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *SLAAlertHistoryQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sahq.Limit(2).IDs(setContextOp(ctx, sahq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -198,8 +198,8 @@ func (sahq *SLAAlertHistoryQuery) OnlyID(ctx context.Context) (id int, err error
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) OnlyIDX(ctx context.Context) int {
-	id, err := sahq.OnlyID(ctx)
+func (_q *SLAAlertHistoryQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,18 +207,18 @@ func (sahq *SLAAlertHistoryQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of SLAAlertHistories.
-func (sahq *SLAAlertHistoryQuery) All(ctx context.Context) ([]*SLAAlertHistory, error) {
-	ctx = setContextOp(ctx, sahq.ctx, ent.OpQueryAll)
-	if err := sahq.prepareQuery(ctx); err != nil {
+func (_q *SLAAlertHistoryQuery) All(ctx context.Context) ([]*SLAAlertHistory, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*SLAAlertHistory, *SLAAlertHistoryQuery]()
-	return withInterceptors[[]*SLAAlertHistory](ctx, sahq, qr, sahq.inters)
+	return withInterceptors[[]*SLAAlertHistory](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) AllX(ctx context.Context) []*SLAAlertHistory {
-	nodes, err := sahq.All(ctx)
+func (_q *SLAAlertHistoryQuery) AllX(ctx context.Context) []*SLAAlertHistory {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -226,20 +226,20 @@ func (sahq *SLAAlertHistoryQuery) AllX(ctx context.Context) []*SLAAlertHistory {
 }
 
 // IDs executes the query and returns a list of SLAAlertHistory IDs.
-func (sahq *SLAAlertHistoryQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if sahq.ctx.Unique == nil && sahq.path != nil {
-		sahq.Unique(true)
+func (_q *SLAAlertHistoryQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, sahq.ctx, ent.OpQueryIDs)
-	if err = sahq.Select(slaalerthistory.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(slaalerthistory.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) IDsX(ctx context.Context) []int {
-	ids, err := sahq.IDs(ctx)
+func (_q *SLAAlertHistoryQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -247,17 +247,17 @@ func (sahq *SLAAlertHistoryQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (sahq *SLAAlertHistoryQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, sahq.ctx, ent.OpQueryCount)
-	if err := sahq.prepareQuery(ctx); err != nil {
+func (_q *SLAAlertHistoryQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, sahq, querierCount[*SLAAlertHistoryQuery](), sahq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SLAAlertHistoryQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) CountX(ctx context.Context) int {
-	count, err := sahq.Count(ctx)
+func (_q *SLAAlertHistoryQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,9 +265,9 @@ func (sahq *SLAAlertHistoryQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (sahq *SLAAlertHistoryQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, sahq.ctx, ent.OpQueryExist)
-	switch _, err := sahq.FirstID(ctx); {
+func (_q *SLAAlertHistoryQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -278,8 +278,8 @@ func (sahq *SLAAlertHistoryQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (sahq *SLAAlertHistoryQuery) ExistX(ctx context.Context) bool {
-	exist, err := sahq.Exist(ctx)
+func (_q *SLAAlertHistoryQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -288,44 +288,44 @@ func (sahq *SLAAlertHistoryQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the SLAAlertHistoryQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (sahq *SLAAlertHistoryQuery) Clone() *SLAAlertHistoryQuery {
-	if sahq == nil {
+func (_q *SLAAlertHistoryQuery) Clone() *SLAAlertHistoryQuery {
+	if _q == nil {
 		return nil
 	}
 	return &SLAAlertHistoryQuery{
-		config:        sahq.config,
-		ctx:           sahq.ctx.Clone(),
-		order:         append([]slaalerthistory.OrderOption{}, sahq.order...),
-		inters:        append([]Interceptor{}, sahq.inters...),
-		predicates:    append([]predicate.SLAAlertHistory{}, sahq.predicates...),
-		withTicket:    sahq.withTicket.Clone(),
-		withAlertRule: sahq.withAlertRule.Clone(),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]slaalerthistory.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.SLAAlertHistory{}, _q.predicates...),
+		withTicket:    _q.withTicket.Clone(),
+		withAlertRule: _q.withAlertRule.Clone(),
 		// clone intermediate query.
-		sql:  sahq.sql.Clone(),
-		path: sahq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithTicket tells the query-builder to eager-load the nodes that are connected to
 // the "ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (sahq *SLAAlertHistoryQuery) WithTicket(opts ...func(*TicketQuery)) *SLAAlertHistoryQuery {
-	query := (&TicketClient{config: sahq.config}).Query()
+func (_q *SLAAlertHistoryQuery) WithTicket(opts ...func(*TicketQuery)) *SLAAlertHistoryQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sahq.withTicket = query
-	return sahq
+	_q.withTicket = query
+	return _q
 }
 
 // WithAlertRule tells the query-builder to eager-load the nodes that are connected to
 // the "alert_rule" edge. The optional arguments are used to configure the query builder of the edge.
-func (sahq *SLAAlertHistoryQuery) WithAlertRule(opts ...func(*SLAAlertRuleQuery)) *SLAAlertHistoryQuery {
-	query := (&SLAAlertRuleClient{config: sahq.config}).Query()
+func (_q *SLAAlertHistoryQuery) WithAlertRule(opts ...func(*SLAAlertRuleQuery)) *SLAAlertHistoryQuery {
+	query := (&SLAAlertRuleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sahq.withAlertRule = query
-	return sahq
+	_q.withAlertRule = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -342,10 +342,10 @@ func (sahq *SLAAlertHistoryQuery) WithAlertRule(opts ...func(*SLAAlertRuleQuery)
 //		GroupBy(slaalerthistory.FieldTicketID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (sahq *SLAAlertHistoryQuery) GroupBy(field string, fields ...string) *SLAAlertHistoryGroupBy {
-	sahq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &SLAAlertHistoryGroupBy{build: sahq}
-	grbuild.flds = &sahq.ctx.Fields
+func (_q *SLAAlertHistoryQuery) GroupBy(field string, fields ...string) *SLAAlertHistoryGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &SLAAlertHistoryGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = slaalerthistory.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -363,59 +363,59 @@ func (sahq *SLAAlertHistoryQuery) GroupBy(field string, fields ...string) *SLAAl
 //	client.SLAAlertHistory.Query().
 //		Select(slaalerthistory.FieldTicketID).
 //		Scan(ctx, &v)
-func (sahq *SLAAlertHistoryQuery) Select(fields ...string) *SLAAlertHistorySelect {
-	sahq.ctx.Fields = append(sahq.ctx.Fields, fields...)
-	sbuild := &SLAAlertHistorySelect{SLAAlertHistoryQuery: sahq}
+func (_q *SLAAlertHistoryQuery) Select(fields ...string) *SLAAlertHistorySelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &SLAAlertHistorySelect{SLAAlertHistoryQuery: _q}
 	sbuild.label = slaalerthistory.Label
-	sbuild.flds, sbuild.scan = &sahq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a SLAAlertHistorySelect configured with the given aggregations.
-func (sahq *SLAAlertHistoryQuery) Aggregate(fns ...AggregateFunc) *SLAAlertHistorySelect {
-	return sahq.Select().Aggregate(fns...)
+func (_q *SLAAlertHistoryQuery) Aggregate(fns ...AggregateFunc) *SLAAlertHistorySelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (sahq *SLAAlertHistoryQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range sahq.inters {
+func (_q *SLAAlertHistoryQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, sahq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range sahq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !slaalerthistory.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if sahq.path != nil {
-		prev, err := sahq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		sahq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (sahq *SLAAlertHistoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAAlertHistory, error) {
+func (_q *SLAAlertHistoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAAlertHistory, error) {
 	var (
 		nodes       = []*SLAAlertHistory{}
-		_spec       = sahq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			sahq.withTicket != nil,
-			sahq.withAlertRule != nil,
+			_q.withTicket != nil,
+			_q.withAlertRule != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAAlertHistory).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &SLAAlertHistory{config: sahq.config}
+		node := &SLAAlertHistory{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -423,20 +423,20 @@ func (sahq *SLAAlertHistoryQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, sahq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := sahq.withTicket; query != nil {
-		if err := sahq.loadTicket(ctx, query, nodes, nil,
+	if query := _q.withTicket; query != nil {
+		if err := _q.loadTicket(ctx, query, nodes, nil,
 			func(n *SLAAlertHistory, e *Ticket) { n.Edges.Ticket = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := sahq.withAlertRule; query != nil {
-		if err := sahq.loadAlertRule(ctx, query, nodes, nil,
+	if query := _q.withAlertRule; query != nil {
+		if err := _q.loadAlertRule(ctx, query, nodes, nil,
 			func(n *SLAAlertHistory, e *SLAAlertRule) { n.Edges.AlertRule = e }); err != nil {
 			return nil, err
 		}
@@ -444,7 +444,7 @@ func (sahq *SLAAlertHistoryQuery) sqlAll(ctx context.Context, hooks ...queryHook
 	return nodes, nil
 }
 
-func (sahq *SLAAlertHistoryQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*SLAAlertHistory, init func(*SLAAlertHistory), assign func(*SLAAlertHistory, *Ticket)) error {
+func (_q *SLAAlertHistoryQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*SLAAlertHistory, init func(*SLAAlertHistory), assign func(*SLAAlertHistory, *Ticket)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*SLAAlertHistory)
 	for i := range nodes {
@@ -473,7 +473,7 @@ func (sahq *SLAAlertHistoryQuery) loadTicket(ctx context.Context, query *TicketQ
 	}
 	return nil
 }
-func (sahq *SLAAlertHistoryQuery) loadAlertRule(ctx context.Context, query *SLAAlertRuleQuery, nodes []*SLAAlertHistory, init func(*SLAAlertHistory), assign func(*SLAAlertHistory, *SLAAlertRule)) error {
+func (_q *SLAAlertHistoryQuery) loadAlertRule(ctx context.Context, query *SLAAlertRuleQuery, nodes []*SLAAlertHistory, init func(*SLAAlertHistory), assign func(*SLAAlertHistory, *SLAAlertRule)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*SLAAlertHistory)
 	for i := range nodes {
@@ -503,24 +503,24 @@ func (sahq *SLAAlertHistoryQuery) loadAlertRule(ctx context.Context, query *SLAA
 	return nil
 }
 
-func (sahq *SLAAlertHistoryQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := sahq.querySpec()
-	_spec.Node.Columns = sahq.ctx.Fields
-	if len(sahq.ctx.Fields) > 0 {
-		_spec.Unique = sahq.ctx.Unique != nil && *sahq.ctx.Unique
+func (_q *SLAAlertHistoryQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, sahq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (sahq *SLAAlertHistoryQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *SLAAlertHistoryQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(slaalerthistory.Table, slaalerthistory.Columns, sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt))
-	_spec.From = sahq.sql
-	if unique := sahq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if sahq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := sahq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slaalerthistory.FieldID)
 		for i := range fields {
@@ -528,27 +528,27 @@ func (sahq *SLAAlertHistoryQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if sahq.withTicket != nil {
+		if _q.withTicket != nil {
 			_spec.Node.AddColumnOnce(slaalerthistory.FieldTicketID)
 		}
-		if sahq.withAlertRule != nil {
+		if _q.withAlertRule != nil {
 			_spec.Node.AddColumnOnce(slaalerthistory.FieldAlertRuleID)
 		}
 	}
-	if ps := sahq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := sahq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := sahq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := sahq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -558,33 +558,33 @@ func (sahq *SLAAlertHistoryQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (sahq *SLAAlertHistoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(sahq.driver.Dialect())
+func (_q *SLAAlertHistoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(slaalerthistory.Table)
-	columns := sahq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = slaalerthistory.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if sahq.sql != nil {
-		selector = sahq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if sahq.ctx.Unique != nil && *sahq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range sahq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range sahq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := sahq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := sahq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -597,41 +597,41 @@ type SLAAlertHistoryGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (sahgb *SLAAlertHistoryGroupBy) Aggregate(fns ...AggregateFunc) *SLAAlertHistoryGroupBy {
-	sahgb.fns = append(sahgb.fns, fns...)
-	return sahgb
+func (_g *SLAAlertHistoryGroupBy) Aggregate(fns ...AggregateFunc) *SLAAlertHistoryGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sahgb *SLAAlertHistoryGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sahgb.build.ctx, ent.OpQueryGroupBy)
-	if err := sahgb.build.prepareQuery(ctx); err != nil {
+func (_g *SLAAlertHistoryGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAAlertHistoryQuery, *SLAAlertHistoryGroupBy](ctx, sahgb.build, sahgb, sahgb.build.inters, v)
+	return scanWithInterceptors[*SLAAlertHistoryQuery, *SLAAlertHistoryGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (sahgb *SLAAlertHistoryGroupBy) sqlScan(ctx context.Context, root *SLAAlertHistoryQuery, v any) error {
+func (_g *SLAAlertHistoryGroupBy) sqlScan(ctx context.Context, root *SLAAlertHistoryQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(sahgb.fns))
-	for _, fn := range sahgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*sahgb.flds)+len(sahgb.fns))
-		for _, f := range *sahgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*sahgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sahgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -645,27 +645,27 @@ type SLAAlertHistorySelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (sahs *SLAAlertHistorySelect) Aggregate(fns ...AggregateFunc) *SLAAlertHistorySelect {
-	sahs.fns = append(sahs.fns, fns...)
-	return sahs
+func (_s *SLAAlertHistorySelect) Aggregate(fns ...AggregateFunc) *SLAAlertHistorySelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sahs *SLAAlertHistorySelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sahs.ctx, ent.OpQuerySelect)
-	if err := sahs.prepareQuery(ctx); err != nil {
+func (_s *SLAAlertHistorySelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAAlertHistoryQuery, *SLAAlertHistorySelect](ctx, sahs.SLAAlertHistoryQuery, sahs, sahs.inters, v)
+	return scanWithInterceptors[*SLAAlertHistoryQuery, *SLAAlertHistorySelect](ctx, _s.SLAAlertHistoryQuery, _s, _s.inters, v)
 }
 
-func (sahs *SLAAlertHistorySelect) sqlScan(ctx context.Context, root *SLAAlertHistoryQuery, v any) error {
+func (_s *SLAAlertHistorySelect) sqlScan(ctx context.Context, root *SLAAlertHistoryQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(sahs.fns))
-	for _, fn := range sahs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*sahs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -673,7 +673,7 @@ func (sahs *SLAAlertHistorySelect) sqlScan(ctx context.Context, root *SLAAlertHi
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sahs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

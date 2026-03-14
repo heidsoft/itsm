@@ -21,127 +21,127 @@ type NotificationCreate struct {
 }
 
 // SetTitle sets the "title" field.
-func (nc *NotificationCreate) SetTitle(s string) *NotificationCreate {
-	nc.mutation.SetTitle(s)
-	return nc
+func (_c *NotificationCreate) SetTitle(v string) *NotificationCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetMessage sets the "message" field.
-func (nc *NotificationCreate) SetMessage(s string) *NotificationCreate {
-	nc.mutation.SetMessage(s)
-	return nc
+func (_c *NotificationCreate) SetMessage(v string) *NotificationCreate {
+	_c.mutation.SetMessage(v)
+	return _c
 }
 
 // SetType sets the "type" field.
-func (nc *NotificationCreate) SetType(s string) *NotificationCreate {
-	nc.mutation.SetType(s)
-	return nc
+func (_c *NotificationCreate) SetType(v string) *NotificationCreate {
+	_c.mutation.SetType(v)
+	return _c
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableType(s *string) *NotificationCreate {
-	if s != nil {
-		nc.SetType(*s)
+func (_c *NotificationCreate) SetNillableType(v *string) *NotificationCreate {
+	if v != nil {
+		_c.SetType(*v)
 	}
-	return nc
+	return _c
 }
 
 // SetRead sets the "read" field.
-func (nc *NotificationCreate) SetRead(b bool) *NotificationCreate {
-	nc.mutation.SetRead(b)
-	return nc
+func (_c *NotificationCreate) SetRead(v bool) *NotificationCreate {
+	_c.mutation.SetRead(v)
+	return _c
 }
 
 // SetNillableRead sets the "read" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableRead(b *bool) *NotificationCreate {
-	if b != nil {
-		nc.SetRead(*b)
+func (_c *NotificationCreate) SetNillableRead(v *bool) *NotificationCreate {
+	if v != nil {
+		_c.SetRead(*v)
 	}
-	return nc
+	return _c
 }
 
 // SetActionURL sets the "action_url" field.
-func (nc *NotificationCreate) SetActionURL(s string) *NotificationCreate {
-	nc.mutation.SetActionURL(s)
-	return nc
+func (_c *NotificationCreate) SetActionURL(v string) *NotificationCreate {
+	_c.mutation.SetActionURL(v)
+	return _c
 }
 
 // SetNillableActionURL sets the "action_url" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableActionURL(s *string) *NotificationCreate {
-	if s != nil {
-		nc.SetActionURL(*s)
+func (_c *NotificationCreate) SetNillableActionURL(v *string) *NotificationCreate {
+	if v != nil {
+		_c.SetActionURL(*v)
 	}
-	return nc
+	return _c
 }
 
 // SetActionText sets the "action_text" field.
-func (nc *NotificationCreate) SetActionText(s string) *NotificationCreate {
-	nc.mutation.SetActionText(s)
-	return nc
+func (_c *NotificationCreate) SetActionText(v string) *NotificationCreate {
+	_c.mutation.SetActionText(v)
+	return _c
 }
 
 // SetNillableActionText sets the "action_text" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableActionText(s *string) *NotificationCreate {
-	if s != nil {
-		nc.SetActionText(*s)
+func (_c *NotificationCreate) SetNillableActionText(v *string) *NotificationCreate {
+	if v != nil {
+		_c.SetActionText(*v)
 	}
-	return nc
+	return _c
 }
 
 // SetUserID sets the "user_id" field.
-func (nc *NotificationCreate) SetUserID(i int) *NotificationCreate {
-	nc.mutation.SetUserID(i)
-	return nc
+func (_c *NotificationCreate) SetUserID(v int) *NotificationCreate {
+	_c.mutation.SetUserID(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (nc *NotificationCreate) SetTenantID(i int) *NotificationCreate {
-	nc.mutation.SetTenantID(i)
-	return nc
+func (_c *NotificationCreate) SetTenantID(v int) *NotificationCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (nc *NotificationCreate) SetCreatedAt(t time.Time) *NotificationCreate {
-	nc.mutation.SetCreatedAt(t)
-	return nc
+func (_c *NotificationCreate) SetCreatedAt(v time.Time) *NotificationCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableCreatedAt(t *time.Time) *NotificationCreate {
-	if t != nil {
-		nc.SetCreatedAt(*t)
+func (_c *NotificationCreate) SetNillableCreatedAt(v *time.Time) *NotificationCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return nc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (nc *NotificationCreate) SetUpdatedAt(t time.Time) *NotificationCreate {
-	nc.mutation.SetUpdatedAt(t)
-	return nc
+func (_c *NotificationCreate) SetUpdatedAt(v time.Time) *NotificationCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (nc *NotificationCreate) SetNillableUpdatedAt(t *time.Time) *NotificationCreate {
-	if t != nil {
-		nc.SetUpdatedAt(*t)
+func (_c *NotificationCreate) SetNillableUpdatedAt(v *time.Time) *NotificationCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return nc
+	return _c
 }
 
 // Mutation returns the NotificationMutation object of the builder.
-func (nc *NotificationCreate) Mutation() *NotificationMutation {
-	return nc.mutation
+func (_c *NotificationCreate) Mutation() *NotificationMutation {
+	return _c.mutation
 }
 
 // Save creates the Notification in the database.
-func (nc *NotificationCreate) Save(ctx context.Context) (*Notification, error) {
-	nc.defaults()
-	return withHooks(ctx, nc.sqlSave, nc.mutation, nc.hooks)
+func (_c *NotificationCreate) Save(ctx context.Context) (*Notification, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (nc *NotificationCreate) SaveX(ctx context.Context) *Notification {
-	v, err := nc.Save(ctx)
+func (_c *NotificationCreate) SaveX(ctx context.Context) *Notification {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -149,93 +149,93 @@ func (nc *NotificationCreate) SaveX(ctx context.Context) *Notification {
 }
 
 // Exec executes the query.
-func (nc *NotificationCreate) Exec(ctx context.Context) error {
-	_, err := nc.Save(ctx)
+func (_c *NotificationCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (nc *NotificationCreate) ExecX(ctx context.Context) {
-	if err := nc.Exec(ctx); err != nil {
+func (_c *NotificationCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (nc *NotificationCreate) defaults() {
-	if _, ok := nc.mutation.GetType(); !ok {
+func (_c *NotificationCreate) defaults() {
+	if _, ok := _c.mutation.GetType(); !ok {
 		v := notification.DefaultType
-		nc.mutation.SetType(v)
+		_c.mutation.SetType(v)
 	}
-	if _, ok := nc.mutation.Read(); !ok {
+	if _, ok := _c.mutation.Read(); !ok {
 		v := notification.DefaultRead
-		nc.mutation.SetRead(v)
+		_c.mutation.SetRead(v)
 	}
-	if _, ok := nc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := notification.DefaultCreatedAt()
-		nc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := nc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := notification.DefaultUpdatedAt()
-		nc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (nc *NotificationCreate) check() error {
-	if _, ok := nc.mutation.Title(); !ok {
+func (_c *NotificationCreate) check() error {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Notification.title"`)}
 	}
-	if v, ok := nc.mutation.Title(); ok {
+	if v, ok := _c.mutation.Title(); ok {
 		if err := notification.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Notification.title": %w`, err)}
 		}
 	}
-	if _, ok := nc.mutation.Message(); !ok {
+	if _, ok := _c.mutation.Message(); !ok {
 		return &ValidationError{Name: "message", err: errors.New(`ent: missing required field "Notification.message"`)}
 	}
-	if v, ok := nc.mutation.Message(); ok {
+	if v, ok := _c.mutation.Message(); ok {
 		if err := notification.MessageValidator(v); err != nil {
 			return &ValidationError{Name: "message", err: fmt.Errorf(`ent: validator failed for field "Notification.message": %w`, err)}
 		}
 	}
-	if _, ok := nc.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Notification.type"`)}
 	}
-	if _, ok := nc.mutation.Read(); !ok {
+	if _, ok := _c.mutation.Read(); !ok {
 		return &ValidationError{Name: "read", err: errors.New(`ent: missing required field "Notification.read"`)}
 	}
-	if _, ok := nc.mutation.UserID(); !ok {
+	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Notification.user_id"`)}
 	}
-	if v, ok := nc.mutation.UserID(); ok {
+	if v, ok := _c.mutation.UserID(); ok {
 		if err := notification.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "Notification.user_id": %w`, err)}
 		}
 	}
-	if _, ok := nc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Notification.tenant_id"`)}
 	}
-	if v, ok := nc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := notification.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Notification.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := nc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Notification.created_at"`)}
 	}
-	if _, ok := nc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Notification.updated_at"`)}
 	}
 	return nil
 }
 
-func (nc *NotificationCreate) sqlSave(ctx context.Context) (*Notification, error) {
-	if err := nc.check(); err != nil {
+func (_c *NotificationCreate) sqlSave(ctx context.Context) (*Notification, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := nc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, nc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -243,53 +243,53 @@ func (nc *NotificationCreate) sqlSave(ctx context.Context) (*Notification, error
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	nc.mutation.id = &_node.ID
-	nc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (nc *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec) {
+func (_c *NotificationCreate) createSpec() (*Notification, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Notification{config: nc.config}
+		_node = &Notification{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(notification.Table, sqlgraph.NewFieldSpec(notification.FieldID, field.TypeInt))
 	)
-	if value, ok := nc.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(notification.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := nc.mutation.Message(); ok {
+	if value, ok := _c.mutation.Message(); ok {
 		_spec.SetField(notification.FieldMessage, field.TypeString, value)
 		_node.Message = value
 	}
-	if value, ok := nc.mutation.GetType(); ok {
+	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(notification.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := nc.mutation.Read(); ok {
+	if value, ok := _c.mutation.Read(); ok {
 		_spec.SetField(notification.FieldRead, field.TypeBool, value)
 		_node.Read = value
 	}
-	if value, ok := nc.mutation.ActionURL(); ok {
+	if value, ok := _c.mutation.ActionURL(); ok {
 		_spec.SetField(notification.FieldActionURL, field.TypeString, value)
 		_node.ActionURL = value
 	}
-	if value, ok := nc.mutation.ActionText(); ok {
+	if value, ok := _c.mutation.ActionText(); ok {
 		_spec.SetField(notification.FieldActionText, field.TypeString, value)
 		_node.ActionText = value
 	}
-	if value, ok := nc.mutation.UserID(); ok {
+	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(notification.FieldUserID, field.TypeInt, value)
 		_node.UserID = value
 	}
-	if value, ok := nc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(notification.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := nc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(notification.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := nc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(notification.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -304,16 +304,16 @@ type NotificationCreateBulk struct {
 }
 
 // Save creates the Notification entities in the database.
-func (ncb *NotificationCreateBulk) Save(ctx context.Context) ([]*Notification, error) {
-	if ncb.err != nil {
-		return nil, ncb.err
+func (_c *NotificationCreateBulk) Save(ctx context.Context) ([]*Notification, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ncb.builders))
-	nodes := make([]*Notification, len(ncb.builders))
-	mutators := make([]Mutator, len(ncb.builders))
-	for i := range ncb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Notification, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ncb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*NotificationMutation)
@@ -327,11 +327,11 @@ func (ncb *NotificationCreateBulk) Save(ctx context.Context) ([]*Notification, e
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ncb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ncb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -355,7 +355,7 @@ func (ncb *NotificationCreateBulk) Save(ctx context.Context) ([]*Notification, e
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ncb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -363,8 +363,8 @@ func (ncb *NotificationCreateBulk) Save(ctx context.Context) ([]*Notification, e
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ncb *NotificationCreateBulk) SaveX(ctx context.Context) []*Notification {
-	v, err := ncb.Save(ctx)
+func (_c *NotificationCreateBulk) SaveX(ctx context.Context) []*Notification {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -372,14 +372,14 @@ func (ncb *NotificationCreateBulk) SaveX(ctx context.Context) []*Notification {
 }
 
 // Exec executes the query.
-func (ncb *NotificationCreateBulk) Exec(ctx context.Context) error {
-	_, err := ncb.Save(ctx)
+func (_c *NotificationCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ncb *NotificationCreateBulk) ExecX(ctx context.Context) {
-	if err := ncb.Exec(ctx); err != nil {
+func (_c *NotificationCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

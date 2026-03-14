@@ -91,7 +91,7 @@ func (*WorkflowVersion) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the WorkflowVersion fields.
-func (wv *WorkflowVersion) assignValues(columns []string, values []any) error {
+func (_m *WorkflowVersion) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -102,30 +102,30 @@ func (wv *WorkflowVersion) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			wv.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case workflowversion.FieldWorkflowID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
 			} else if value.Valid {
-				wv.WorkflowID = int(value.Int64)
+				_m.WorkflowID = int(value.Int64)
 			}
 		case workflowversion.FieldVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field version", values[i])
 			} else if value.Valid {
-				wv.Version = value.String
+				_m.Version = value.String
 			}
 		case workflowversion.FieldBpmnXML:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field bpmn_xml", values[i])
 			} else if value.Valid {
-				wv.BpmnXML = value.String
+				_m.BpmnXML = value.String
 			}
 		case workflowversion.FieldProcessVariables:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field process_variables", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &wv.ProcessVariables); err != nil {
+				if err := json.Unmarshal(*value, &_m.ProcessVariables); err != nil {
 					return fmt.Errorf("unmarshal field process_variables: %w", err)
 				}
 			}
@@ -133,46 +133,46 @@ func (wv *WorkflowVersion) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				wv.Status = value.String
+				_m.Status = value.String
 			}
 		case workflowversion.FieldChangeLog:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field change_log", values[i])
 			} else if value.Valid {
-				wv.ChangeLog = value.String
+				_m.ChangeLog = value.String
 			}
 		case workflowversion.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				wv.CreatedBy = value.String
+				_m.CreatedBy = value.String
 			}
 		case workflowversion.FieldIsCurrent:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_current", values[i])
 			} else if value.Valid {
-				wv.IsCurrent = value.Bool
+				_m.IsCurrent = value.Bool
 			}
 		case workflowversion.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				wv.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case workflowversion.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				wv.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case workflowversion.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				wv.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			wv.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -180,70 +180,70 @@ func (wv *WorkflowVersion) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the WorkflowVersion.
 // This includes values selected through modifiers, order, etc.
-func (wv *WorkflowVersion) Value(name string) (ent.Value, error) {
-	return wv.selectValues.Get(name)
+func (_m *WorkflowVersion) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryWorkflow queries the "workflow" edge of the WorkflowVersion entity.
-func (wv *WorkflowVersion) QueryWorkflow() *WorkflowQuery {
-	return NewWorkflowVersionClient(wv.config).QueryWorkflow(wv)
+func (_m *WorkflowVersion) QueryWorkflow() *WorkflowQuery {
+	return NewWorkflowVersionClient(_m.config).QueryWorkflow(_m)
 }
 
 // Update returns a builder for updating this WorkflowVersion.
 // Note that you need to call WorkflowVersion.Unwrap() before calling this method if this WorkflowVersion
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (wv *WorkflowVersion) Update() *WorkflowVersionUpdateOne {
-	return NewWorkflowVersionClient(wv.config).UpdateOne(wv)
+func (_m *WorkflowVersion) Update() *WorkflowVersionUpdateOne {
+	return NewWorkflowVersionClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the WorkflowVersion entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (wv *WorkflowVersion) Unwrap() *WorkflowVersion {
-	_tx, ok := wv.config.driver.(*txDriver)
+func (_m *WorkflowVersion) Unwrap() *WorkflowVersion {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: WorkflowVersion is not a transactional entity")
 	}
-	wv.config.driver = _tx.drv
-	return wv
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (wv *WorkflowVersion) String() string {
+func (_m *WorkflowVersion) String() string {
 	var builder strings.Builder
 	builder.WriteString("WorkflowVersion(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", wv.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("workflow_id=")
-	builder.WriteString(fmt.Sprintf("%v", wv.WorkflowID))
+	builder.WriteString(fmt.Sprintf("%v", _m.WorkflowID))
 	builder.WriteString(", ")
 	builder.WriteString("version=")
-	builder.WriteString(wv.Version)
+	builder.WriteString(_m.Version)
 	builder.WriteString(", ")
 	builder.WriteString("bpmn_xml=")
-	builder.WriteString(wv.BpmnXML)
+	builder.WriteString(_m.BpmnXML)
 	builder.WriteString(", ")
 	builder.WriteString("process_variables=")
-	builder.WriteString(fmt.Sprintf("%v", wv.ProcessVariables))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessVariables))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(wv.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("change_log=")
-	builder.WriteString(wv.ChangeLog)
+	builder.WriteString(_m.ChangeLog)
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(wv.CreatedBy)
+	builder.WriteString(_m.CreatedBy)
 	builder.WriteString(", ")
 	builder.WriteString("is_current=")
-	builder.WriteString(fmt.Sprintf("%v", wv.IsCurrent))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsCurrent))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", wv.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(wv.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(wv.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

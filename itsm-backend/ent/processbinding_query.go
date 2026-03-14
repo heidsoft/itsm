@@ -31,44 +31,44 @@ type ProcessBindingQuery struct {
 }
 
 // Where adds a new predicate for the ProcessBindingQuery builder.
-func (pbq *ProcessBindingQuery) Where(ps ...predicate.ProcessBinding) *ProcessBindingQuery {
-	pbq.predicates = append(pbq.predicates, ps...)
-	return pbq
+func (_q *ProcessBindingQuery) Where(ps ...predicate.ProcessBinding) *ProcessBindingQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (pbq *ProcessBindingQuery) Limit(limit int) *ProcessBindingQuery {
-	pbq.ctx.Limit = &limit
-	return pbq
+func (_q *ProcessBindingQuery) Limit(limit int) *ProcessBindingQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (pbq *ProcessBindingQuery) Offset(offset int) *ProcessBindingQuery {
-	pbq.ctx.Offset = &offset
-	return pbq
+func (_q *ProcessBindingQuery) Offset(offset int) *ProcessBindingQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (pbq *ProcessBindingQuery) Unique(unique bool) *ProcessBindingQuery {
-	pbq.ctx.Unique = &unique
-	return pbq
+func (_q *ProcessBindingQuery) Unique(unique bool) *ProcessBindingQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (pbq *ProcessBindingQuery) Order(o ...processbinding.OrderOption) *ProcessBindingQuery {
-	pbq.order = append(pbq.order, o...)
-	return pbq
+func (_q *ProcessBindingQuery) Order(o ...processbinding.OrderOption) *ProcessBindingQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryProcessDefinition chains the current query on the "process_definition" edge.
-func (pbq *ProcessBindingQuery) QueryProcessDefinition() *ProcessDefinitionQuery {
-	query := (&ProcessDefinitionClient{config: pbq.config}).Query()
+func (_q *ProcessBindingQuery) QueryProcessDefinition() *ProcessDefinitionQuery {
+	query := (&ProcessDefinitionClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pbq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := pbq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (pbq *ProcessBindingQuery) QueryProcessDefinition() *ProcessDefinitionQuery
 			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, processbinding.ProcessDefinitionTable, processbinding.ProcessDefinitionColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(pbq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -85,8 +85,8 @@ func (pbq *ProcessBindingQuery) QueryProcessDefinition() *ProcessDefinitionQuery
 
 // First returns the first ProcessBinding entity from the query.
 // Returns a *NotFoundError when no ProcessBinding was found.
-func (pbq *ProcessBindingQuery) First(ctx context.Context) (*ProcessBinding, error) {
-	nodes, err := pbq.Limit(1).All(setContextOp(ctx, pbq.ctx, ent.OpQueryFirst))
+func (_q *ProcessBindingQuery) First(ctx context.Context) (*ProcessBinding, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func (pbq *ProcessBindingQuery) First(ctx context.Context) (*ProcessBinding, err
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) FirstX(ctx context.Context) *ProcessBinding {
-	node, err := pbq.First(ctx)
+func (_q *ProcessBindingQuery) FirstX(ctx context.Context) *ProcessBinding {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -107,9 +107,9 @@ func (pbq *ProcessBindingQuery) FirstX(ctx context.Context) *ProcessBinding {
 
 // FirstID returns the first ProcessBinding ID from the query.
 // Returns a *NotFoundError when no ProcessBinding ID was found.
-func (pbq *ProcessBindingQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ProcessBindingQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = pbq.Limit(1).IDs(setContextOp(ctx, pbq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -120,8 +120,8 @@ func (pbq *ProcessBindingQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) FirstIDX(ctx context.Context) int {
-	id, err := pbq.FirstID(ctx)
+func (_q *ProcessBindingQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,8 +131,8 @@ func (pbq *ProcessBindingQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ProcessBinding entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ProcessBinding entity is found.
 // Returns a *NotFoundError when no ProcessBinding entities are found.
-func (pbq *ProcessBindingQuery) Only(ctx context.Context) (*ProcessBinding, error) {
-	nodes, err := pbq.Limit(2).All(setContextOp(ctx, pbq.ctx, ent.OpQueryOnly))
+func (_q *ProcessBindingQuery) Only(ctx context.Context) (*ProcessBinding, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,8 @@ func (pbq *ProcessBindingQuery) Only(ctx context.Context) (*ProcessBinding, erro
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) OnlyX(ctx context.Context) *ProcessBinding {
-	node, err := pbq.Only(ctx)
+func (_q *ProcessBindingQuery) OnlyX(ctx context.Context) *ProcessBinding {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -158,9 +158,9 @@ func (pbq *ProcessBindingQuery) OnlyX(ctx context.Context) *ProcessBinding {
 // OnlyID is like Only, but returns the only ProcessBinding ID in the query.
 // Returns a *NotSingularError when more than one ProcessBinding ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (pbq *ProcessBindingQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ProcessBindingQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = pbq.Limit(2).IDs(setContextOp(ctx, pbq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -175,8 +175,8 @@ func (pbq *ProcessBindingQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) OnlyIDX(ctx context.Context) int {
-	id, err := pbq.OnlyID(ctx)
+func (_q *ProcessBindingQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,18 +184,18 @@ func (pbq *ProcessBindingQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ProcessBindings.
-func (pbq *ProcessBindingQuery) All(ctx context.Context) ([]*ProcessBinding, error) {
-	ctx = setContextOp(ctx, pbq.ctx, ent.OpQueryAll)
-	if err := pbq.prepareQuery(ctx); err != nil {
+func (_q *ProcessBindingQuery) All(ctx context.Context) ([]*ProcessBinding, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ProcessBinding, *ProcessBindingQuery]()
-	return withInterceptors[[]*ProcessBinding](ctx, pbq, qr, pbq.inters)
+	return withInterceptors[[]*ProcessBinding](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) AllX(ctx context.Context) []*ProcessBinding {
-	nodes, err := pbq.All(ctx)
+func (_q *ProcessBindingQuery) AllX(ctx context.Context) []*ProcessBinding {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -203,20 +203,20 @@ func (pbq *ProcessBindingQuery) AllX(ctx context.Context) []*ProcessBinding {
 }
 
 // IDs executes the query and returns a list of ProcessBinding IDs.
-func (pbq *ProcessBindingQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if pbq.ctx.Unique == nil && pbq.path != nil {
-		pbq.Unique(true)
+func (_q *ProcessBindingQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, pbq.ctx, ent.OpQueryIDs)
-	if err = pbq.Select(processbinding.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(processbinding.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) IDsX(ctx context.Context) []int {
-	ids, err := pbq.IDs(ctx)
+func (_q *ProcessBindingQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -224,17 +224,17 @@ func (pbq *ProcessBindingQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (pbq *ProcessBindingQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, pbq.ctx, ent.OpQueryCount)
-	if err := pbq.prepareQuery(ctx); err != nil {
+func (_q *ProcessBindingQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, pbq, querierCount[*ProcessBindingQuery](), pbq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ProcessBindingQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) CountX(ctx context.Context) int {
-	count, err := pbq.Count(ctx)
+func (_q *ProcessBindingQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -242,9 +242,9 @@ func (pbq *ProcessBindingQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (pbq *ProcessBindingQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, pbq.ctx, ent.OpQueryExist)
-	switch _, err := pbq.FirstID(ctx); {
+func (_q *ProcessBindingQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -255,8 +255,8 @@ func (pbq *ProcessBindingQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (pbq *ProcessBindingQuery) ExistX(ctx context.Context) bool {
-	exist, err := pbq.Exist(ctx)
+func (_q *ProcessBindingQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,32 +265,32 @@ func (pbq *ProcessBindingQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ProcessBindingQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (pbq *ProcessBindingQuery) Clone() *ProcessBindingQuery {
-	if pbq == nil {
+func (_q *ProcessBindingQuery) Clone() *ProcessBindingQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ProcessBindingQuery{
-		config:                pbq.config,
-		ctx:                   pbq.ctx.Clone(),
-		order:                 append([]processbinding.OrderOption{}, pbq.order...),
-		inters:                append([]Interceptor{}, pbq.inters...),
-		predicates:            append([]predicate.ProcessBinding{}, pbq.predicates...),
-		withProcessDefinition: pbq.withProcessDefinition.Clone(),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]processbinding.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.ProcessBinding{}, _q.predicates...),
+		withProcessDefinition: _q.withProcessDefinition.Clone(),
 		// clone intermediate query.
-		sql:  pbq.sql.Clone(),
-		path: pbq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithProcessDefinition tells the query-builder to eager-load the nodes that are connected to
 // the "process_definition" edge. The optional arguments are used to configure the query builder of the edge.
-func (pbq *ProcessBindingQuery) WithProcessDefinition(opts ...func(*ProcessDefinitionQuery)) *ProcessBindingQuery {
-	query := (&ProcessDefinitionClient{config: pbq.config}).Query()
+func (_q *ProcessBindingQuery) WithProcessDefinition(opts ...func(*ProcessDefinitionQuery)) *ProcessBindingQuery {
+	query := (&ProcessDefinitionClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pbq.withProcessDefinition = query
-	return pbq
+	_q.withProcessDefinition = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -307,10 +307,10 @@ func (pbq *ProcessBindingQuery) WithProcessDefinition(opts ...func(*ProcessDefin
 //		GroupBy(processbinding.FieldBusinessType).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (pbq *ProcessBindingQuery) GroupBy(field string, fields ...string) *ProcessBindingGroupBy {
-	pbq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ProcessBindingGroupBy{build: pbq}
-	grbuild.flds = &pbq.ctx.Fields
+func (_q *ProcessBindingQuery) GroupBy(field string, fields ...string) *ProcessBindingGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ProcessBindingGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = processbinding.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -328,55 +328,55 @@ func (pbq *ProcessBindingQuery) GroupBy(field string, fields ...string) *Process
 //	client.ProcessBinding.Query().
 //		Select(processbinding.FieldBusinessType).
 //		Scan(ctx, &v)
-func (pbq *ProcessBindingQuery) Select(fields ...string) *ProcessBindingSelect {
-	pbq.ctx.Fields = append(pbq.ctx.Fields, fields...)
-	sbuild := &ProcessBindingSelect{ProcessBindingQuery: pbq}
+func (_q *ProcessBindingQuery) Select(fields ...string) *ProcessBindingSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ProcessBindingSelect{ProcessBindingQuery: _q}
 	sbuild.label = processbinding.Label
-	sbuild.flds, sbuild.scan = &pbq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ProcessBindingSelect configured with the given aggregations.
-func (pbq *ProcessBindingQuery) Aggregate(fns ...AggregateFunc) *ProcessBindingSelect {
-	return pbq.Select().Aggregate(fns...)
+func (_q *ProcessBindingQuery) Aggregate(fns ...AggregateFunc) *ProcessBindingSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (pbq *ProcessBindingQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range pbq.inters {
+func (_q *ProcessBindingQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, pbq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range pbq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !processbinding.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if pbq.path != nil {
-		prev, err := pbq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		pbq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (pbq *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessBinding, error) {
+func (_q *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessBinding, error) {
 	var (
 		nodes       = []*ProcessBinding{}
-		withFKs     = pbq.withFKs
-		_spec       = pbq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			pbq.withProcessDefinition != nil,
+			_q.withProcessDefinition != nil,
 		}
 	)
-	if pbq.withProcessDefinition != nil {
+	if _q.withProcessDefinition != nil {
 		withFKs = true
 	}
 	if withFKs {
@@ -386,7 +386,7 @@ func (pbq *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 		return (*ProcessBinding).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ProcessBinding{config: pbq.config}
+		node := &ProcessBinding{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -394,14 +394,14 @@ func (pbq *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, pbq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := pbq.withProcessDefinition; query != nil {
-		if err := pbq.loadProcessDefinition(ctx, query, nodes, nil,
+	if query := _q.withProcessDefinition; query != nil {
+		if err := _q.loadProcessDefinition(ctx, query, nodes, nil,
 			func(n *ProcessBinding, e *ProcessDefinition) { n.Edges.ProcessDefinition = e }); err != nil {
 			return nil, err
 		}
@@ -409,7 +409,7 @@ func (pbq *ProcessBindingQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
-func (pbq *ProcessBindingQuery) loadProcessDefinition(ctx context.Context, query *ProcessDefinitionQuery, nodes []*ProcessBinding, init func(*ProcessBinding), assign func(*ProcessBinding, *ProcessDefinition)) error {
+func (_q *ProcessBindingQuery) loadProcessDefinition(ctx context.Context, query *ProcessDefinitionQuery, nodes []*ProcessBinding, init func(*ProcessBinding), assign func(*ProcessBinding, *ProcessDefinition)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ProcessBinding)
 	for i := range nodes {
@@ -442,24 +442,24 @@ func (pbq *ProcessBindingQuery) loadProcessDefinition(ctx context.Context, query
 	return nil
 }
 
-func (pbq *ProcessBindingQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := pbq.querySpec()
-	_spec.Node.Columns = pbq.ctx.Fields
-	if len(pbq.ctx.Fields) > 0 {
-		_spec.Unique = pbq.ctx.Unique != nil && *pbq.ctx.Unique
+func (_q *ProcessBindingQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, pbq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (pbq *ProcessBindingQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ProcessBindingQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(processbinding.Table, processbinding.Columns, sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt))
-	_spec.From = pbq.sql
-	if unique := pbq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if pbq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := pbq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processbinding.FieldID)
 		for i := range fields {
@@ -468,20 +468,20 @@ func (pbq *ProcessBindingQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := pbq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := pbq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := pbq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := pbq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -491,33 +491,33 @@ func (pbq *ProcessBindingQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (pbq *ProcessBindingQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(pbq.driver.Dialect())
+func (_q *ProcessBindingQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(processbinding.Table)
-	columns := pbq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = processbinding.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if pbq.sql != nil {
-		selector = pbq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if pbq.ctx.Unique != nil && *pbq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range pbq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range pbq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := pbq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := pbq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -530,41 +530,41 @@ type ProcessBindingGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (pbgb *ProcessBindingGroupBy) Aggregate(fns ...AggregateFunc) *ProcessBindingGroupBy {
-	pbgb.fns = append(pbgb.fns, fns...)
-	return pbgb
+func (_g *ProcessBindingGroupBy) Aggregate(fns ...AggregateFunc) *ProcessBindingGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (pbgb *ProcessBindingGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, pbgb.build.ctx, ent.OpQueryGroupBy)
-	if err := pbgb.build.prepareQuery(ctx); err != nil {
+func (_g *ProcessBindingGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ProcessBindingQuery, *ProcessBindingGroupBy](ctx, pbgb.build, pbgb, pbgb.build.inters, v)
+	return scanWithInterceptors[*ProcessBindingQuery, *ProcessBindingGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (pbgb *ProcessBindingGroupBy) sqlScan(ctx context.Context, root *ProcessBindingQuery, v any) error {
+func (_g *ProcessBindingGroupBy) sqlScan(ctx context.Context, root *ProcessBindingQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(pbgb.fns))
-	for _, fn := range pbgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*pbgb.flds)+len(pbgb.fns))
-		for _, f := range *pbgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*pbgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pbgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -578,27 +578,27 @@ type ProcessBindingSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (pbs *ProcessBindingSelect) Aggregate(fns ...AggregateFunc) *ProcessBindingSelect {
-	pbs.fns = append(pbs.fns, fns...)
-	return pbs
+func (_s *ProcessBindingSelect) Aggregate(fns ...AggregateFunc) *ProcessBindingSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (pbs *ProcessBindingSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, pbs.ctx, ent.OpQuerySelect)
-	if err := pbs.prepareQuery(ctx); err != nil {
+func (_s *ProcessBindingSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ProcessBindingQuery, *ProcessBindingSelect](ctx, pbs.ProcessBindingQuery, pbs, pbs.inters, v)
+	return scanWithInterceptors[*ProcessBindingQuery, *ProcessBindingSelect](ctx, _s.ProcessBindingQuery, _s, _s.inters, v)
 }
 
-func (pbs *ProcessBindingSelect) sqlScan(ctx context.Context, root *ProcessBindingQuery, v any) error {
+func (_s *ProcessBindingSelect) sqlScan(ctx context.Context, root *ProcessBindingQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(pbs.fns))
-	for _, fn := range pbs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*pbs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -606,7 +606,7 @@ func (pbs *ProcessBindingSelect) sqlScan(ctx context.Context, root *ProcessBindi
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pbs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

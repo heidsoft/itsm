@@ -30,44 +30,44 @@ type TicketViewQuery struct {
 }
 
 // Where adds a new predicate for the TicketViewQuery builder.
-func (tvq *TicketViewQuery) Where(ps ...predicate.TicketView) *TicketViewQuery {
-	tvq.predicates = append(tvq.predicates, ps...)
-	return tvq
+func (_q *TicketViewQuery) Where(ps ...predicate.TicketView) *TicketViewQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (tvq *TicketViewQuery) Limit(limit int) *TicketViewQuery {
-	tvq.ctx.Limit = &limit
-	return tvq
+func (_q *TicketViewQuery) Limit(limit int) *TicketViewQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (tvq *TicketViewQuery) Offset(offset int) *TicketViewQuery {
-	tvq.ctx.Offset = &offset
-	return tvq
+func (_q *TicketViewQuery) Offset(offset int) *TicketViewQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (tvq *TicketViewQuery) Unique(unique bool) *TicketViewQuery {
-	tvq.ctx.Unique = &unique
-	return tvq
+func (_q *TicketViewQuery) Unique(unique bool) *TicketViewQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (tvq *TicketViewQuery) Order(o ...ticketview.OrderOption) *TicketViewQuery {
-	tvq.order = append(tvq.order, o...)
-	return tvq
+func (_q *TicketViewQuery) Order(o ...ticketview.OrderOption) *TicketViewQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryCreator chains the current query on the "creator" edge.
-func (tvq *TicketViewQuery) QueryCreator() *UserQuery {
-	query := (&UserClient{config: tvq.config}).Query()
+func (_q *TicketViewQuery) QueryCreator() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tvq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tvq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (tvq *TicketViewQuery) QueryCreator() *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, ticketview.CreatorTable, ticketview.CreatorColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tvq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (tvq *TicketViewQuery) QueryCreator() *UserQuery {
 
 // First returns the first TicketView entity from the query.
 // Returns a *NotFoundError when no TicketView was found.
-func (tvq *TicketViewQuery) First(ctx context.Context) (*TicketView, error) {
-	nodes, err := tvq.Limit(1).All(setContextOp(ctx, tvq.ctx, ent.OpQueryFirst))
+func (_q *TicketViewQuery) First(ctx context.Context) (*TicketView, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (tvq *TicketViewQuery) First(ctx context.Context) (*TicketView, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (tvq *TicketViewQuery) FirstX(ctx context.Context) *TicketView {
-	node, err := tvq.First(ctx)
+func (_q *TicketViewQuery) FirstX(ctx context.Context) *TicketView {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (tvq *TicketViewQuery) FirstX(ctx context.Context) *TicketView {
 
 // FirstID returns the first TicketView ID from the query.
 // Returns a *NotFoundError when no TicketView ID was found.
-func (tvq *TicketViewQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *TicketViewQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tvq.Limit(1).IDs(setContextOp(ctx, tvq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (tvq *TicketViewQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tvq *TicketViewQuery) FirstIDX(ctx context.Context) int {
-	id, err := tvq.FirstID(ctx)
+func (_q *TicketViewQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (tvq *TicketViewQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single TicketView entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one TicketView entity is found.
 // Returns a *NotFoundError when no TicketView entities are found.
-func (tvq *TicketViewQuery) Only(ctx context.Context) (*TicketView, error) {
-	nodes, err := tvq.Limit(2).All(setContextOp(ctx, tvq.ctx, ent.OpQueryOnly))
+func (_q *TicketViewQuery) Only(ctx context.Context) (*TicketView, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (tvq *TicketViewQuery) Only(ctx context.Context) (*TicketView, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (tvq *TicketViewQuery) OnlyX(ctx context.Context) *TicketView {
-	node, err := tvq.Only(ctx)
+func (_q *TicketViewQuery) OnlyX(ctx context.Context) *TicketView {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (tvq *TicketViewQuery) OnlyX(ctx context.Context) *TicketView {
 // OnlyID is like Only, but returns the only TicketView ID in the query.
 // Returns a *NotSingularError when more than one TicketView ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tvq *TicketViewQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *TicketViewQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tvq.Limit(2).IDs(setContextOp(ctx, tvq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (tvq *TicketViewQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tvq *TicketViewQuery) OnlyIDX(ctx context.Context) int {
-	id, err := tvq.OnlyID(ctx)
+func (_q *TicketViewQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (tvq *TicketViewQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of TicketViews.
-func (tvq *TicketViewQuery) All(ctx context.Context) ([]*TicketView, error) {
-	ctx = setContextOp(ctx, tvq.ctx, ent.OpQueryAll)
-	if err := tvq.prepareQuery(ctx); err != nil {
+func (_q *TicketViewQuery) All(ctx context.Context) ([]*TicketView, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*TicketView, *TicketViewQuery]()
-	return withInterceptors[[]*TicketView](ctx, tvq, qr, tvq.inters)
+	return withInterceptors[[]*TicketView](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (tvq *TicketViewQuery) AllX(ctx context.Context) []*TicketView {
-	nodes, err := tvq.All(ctx)
+func (_q *TicketViewQuery) AllX(ctx context.Context) []*TicketView {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (tvq *TicketViewQuery) AllX(ctx context.Context) []*TicketView {
 }
 
 // IDs executes the query and returns a list of TicketView IDs.
-func (tvq *TicketViewQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if tvq.ctx.Unique == nil && tvq.path != nil {
-		tvq.Unique(true)
+func (_q *TicketViewQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, tvq.ctx, ent.OpQueryIDs)
-	if err = tvq.Select(ticketview.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(ticketview.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tvq *TicketViewQuery) IDsX(ctx context.Context) []int {
-	ids, err := tvq.IDs(ctx)
+func (_q *TicketViewQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (tvq *TicketViewQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (tvq *TicketViewQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, tvq.ctx, ent.OpQueryCount)
-	if err := tvq.prepareQuery(ctx); err != nil {
+func (_q *TicketViewQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, tvq, querierCount[*TicketViewQuery](), tvq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*TicketViewQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (tvq *TicketViewQuery) CountX(ctx context.Context) int {
-	count, err := tvq.Count(ctx)
+func (_q *TicketViewQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (tvq *TicketViewQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (tvq *TicketViewQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, tvq.ctx, ent.OpQueryExist)
-	switch _, err := tvq.FirstID(ctx); {
+func (_q *TicketViewQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (tvq *TicketViewQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (tvq *TicketViewQuery) ExistX(ctx context.Context) bool {
-	exist, err := tvq.Exist(ctx)
+func (_q *TicketViewQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (tvq *TicketViewQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the TicketViewQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (tvq *TicketViewQuery) Clone() *TicketViewQuery {
-	if tvq == nil {
+func (_q *TicketViewQuery) Clone() *TicketViewQuery {
+	if _q == nil {
 		return nil
 	}
 	return &TicketViewQuery{
-		config:      tvq.config,
-		ctx:         tvq.ctx.Clone(),
-		order:       append([]ticketview.OrderOption{}, tvq.order...),
-		inters:      append([]Interceptor{}, tvq.inters...),
-		predicates:  append([]predicate.TicketView{}, tvq.predicates...),
-		withCreator: tvq.withCreator.Clone(),
+		config:      _q.config,
+		ctx:         _q.ctx.Clone(),
+		order:       append([]ticketview.OrderOption{}, _q.order...),
+		inters:      append([]Interceptor{}, _q.inters...),
+		predicates:  append([]predicate.TicketView{}, _q.predicates...),
+		withCreator: _q.withCreator.Clone(),
 		// clone intermediate query.
-		sql:  tvq.sql.Clone(),
-		path: tvq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithCreator tells the query-builder to eager-load the nodes that are connected to
 // the "creator" edge. The optional arguments are used to configure the query builder of the edge.
-func (tvq *TicketViewQuery) WithCreator(opts ...func(*UserQuery)) *TicketViewQuery {
-	query := (&UserClient{config: tvq.config}).Query()
+func (_q *TicketViewQuery) WithCreator(opts ...func(*UserQuery)) *TicketViewQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tvq.withCreator = query
-	return tvq
+	_q.withCreator = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (tvq *TicketViewQuery) WithCreator(opts ...func(*UserQuery)) *TicketViewQue
 //		GroupBy(ticketview.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (tvq *TicketViewQuery) GroupBy(field string, fields ...string) *TicketViewGroupBy {
-	tvq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &TicketViewGroupBy{build: tvq}
-	grbuild.flds = &tvq.ctx.Fields
+func (_q *TicketViewQuery) GroupBy(field string, fields ...string) *TicketViewGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &TicketViewGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = ticketview.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (tvq *TicketViewQuery) GroupBy(field string, fields ...string) *TicketViewG
 //	client.TicketView.Query().
 //		Select(ticketview.FieldName).
 //		Scan(ctx, &v)
-func (tvq *TicketViewQuery) Select(fields ...string) *TicketViewSelect {
-	tvq.ctx.Fields = append(tvq.ctx.Fields, fields...)
-	sbuild := &TicketViewSelect{TicketViewQuery: tvq}
+func (_q *TicketViewQuery) Select(fields ...string) *TicketViewSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &TicketViewSelect{TicketViewQuery: _q}
 	sbuild.label = ticketview.Label
-	sbuild.flds, sbuild.scan = &tvq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a TicketViewSelect configured with the given aggregations.
-func (tvq *TicketViewQuery) Aggregate(fns ...AggregateFunc) *TicketViewSelect {
-	return tvq.Select().Aggregate(fns...)
+func (_q *TicketViewQuery) Aggregate(fns ...AggregateFunc) *TicketViewSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (tvq *TicketViewQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range tvq.inters {
+func (_q *TicketViewQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, tvq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range tvq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !ticketview.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if tvq.path != nil {
-		prev, err := tvq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		tvq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (tvq *TicketViewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketView, error) {
+func (_q *TicketViewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketView, error) {
 	var (
 		nodes       = []*TicketView{}
-		_spec       = tvq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			tvq.withCreator != nil,
+			_q.withCreator != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*TicketView).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &TicketView{config: tvq.config}
+		node := &TicketView{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (tvq *TicketViewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, tvq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tvq.withCreator; query != nil {
-		if err := tvq.loadCreator(ctx, query, nodes, nil,
+	if query := _q.withCreator; query != nil {
+		if err := _q.loadCreator(ctx, query, nodes, nil,
 			func(n *TicketView, e *User) { n.Edges.Creator = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (tvq *TicketViewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	return nodes, nil
 }
 
-func (tvq *TicketViewQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*TicketView, init func(*TicketView), assign func(*TicketView, *User)) error {
+func (_q *TicketViewQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*TicketView, init func(*TicketView), assign func(*TicketView, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*TicketView)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (tvq *TicketViewQuery) loadCreator(ctx context.Context, query *UserQuery, n
 	return nil
 }
 
-func (tvq *TicketViewQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := tvq.querySpec()
-	_spec.Node.Columns = tvq.ctx.Fields
-	if len(tvq.ctx.Fields) > 0 {
-		_spec.Unique = tvq.ctx.Unique != nil && *tvq.ctx.Unique
+func (_q *TicketViewQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, tvq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (tvq *TicketViewQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *TicketViewQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(ticketview.Table, ticketview.Columns, sqlgraph.NewFieldSpec(ticketview.FieldID, field.TypeInt))
-	_spec.From = tvq.sql
-	if unique := tvq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if tvq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := tvq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketview.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (tvq *TicketViewQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if tvq.withCreator != nil {
+		if _q.withCreator != nil {
 			_spec.Node.AddColumnOnce(ticketview.FieldCreatedBy)
 		}
 	}
-	if ps := tvq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := tvq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := tvq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := tvq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (tvq *TicketViewQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (tvq *TicketViewQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(tvq.driver.Dialect())
+func (_q *TicketViewQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(ticketview.Table)
-	columns := tvq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = ticketview.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if tvq.sql != nil {
-		selector = tvq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if tvq.ctx.Unique != nil && *tvq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range tvq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range tvq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := tvq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := tvq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type TicketViewGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (tvgb *TicketViewGroupBy) Aggregate(fns ...AggregateFunc) *TicketViewGroupBy {
-	tvgb.fns = append(tvgb.fns, fns...)
-	return tvgb
+func (_g *TicketViewGroupBy) Aggregate(fns ...AggregateFunc) *TicketViewGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tvgb *TicketViewGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tvgb.build.ctx, ent.OpQueryGroupBy)
-	if err := tvgb.build.prepareQuery(ctx); err != nil {
+func (_g *TicketViewGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketViewQuery, *TicketViewGroupBy](ctx, tvgb.build, tvgb, tvgb.build.inters, v)
+	return scanWithInterceptors[*TicketViewQuery, *TicketViewGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (tvgb *TicketViewGroupBy) sqlScan(ctx context.Context, root *TicketViewQuery, v any) error {
+func (_g *TicketViewGroupBy) sqlScan(ctx context.Context, root *TicketViewQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(tvgb.fns))
-	for _, fn := range tvgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*tvgb.flds)+len(tvgb.fns))
-		for _, f := range *tvgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*tvgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tvgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type TicketViewSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (tvs *TicketViewSelect) Aggregate(fns ...AggregateFunc) *TicketViewSelect {
-	tvs.fns = append(tvs.fns, fns...)
-	return tvs
+func (_s *TicketViewSelect) Aggregate(fns ...AggregateFunc) *TicketViewSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tvs *TicketViewSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tvs.ctx, ent.OpQuerySelect)
-	if err := tvs.prepareQuery(ctx); err != nil {
+func (_s *TicketViewSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketViewQuery, *TicketViewSelect](ctx, tvs.TicketViewQuery, tvs, tvs.inters, v)
+	return scanWithInterceptors[*TicketViewQuery, *TicketViewSelect](ctx, _s.TicketViewQuery, _s, _s.inters, v)
 }
 
-func (tvs *TicketViewSelect) sqlScan(ctx context.Context, root *TicketViewQuery, v any) error {
+func (_s *TicketViewSelect) sqlScan(ctx context.Context, root *TicketViewQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(tvs.fns))
-	for _, fn := range tvs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*tvs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (tvs *TicketViewSelect) sqlScan(ctx context.Context, root *TicketViewQuery,
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tvs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

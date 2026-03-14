@@ -39,8 +39,14 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldMspRole holds the string denoting the msp_role field in the database.
+	FieldMspRole = "msp_role"
+	// FieldAssignedByMspID holds the string denoting the assigned_by_msp_id field in the database.
+	FieldAssignedByMspID = "assigned_by_msp_id"
 	// EdgeDepartmentRef holds the string denoting the department_ref edge name in mutations.
 	EdgeDepartmentRef = "department_ref"
+	// EdgeTenant holds the string denoting the tenant edge name in mutations.
+	EdgeTenant = "tenant"
 	// EdgeTicketComments holds the string denoting the ticket_comments edge name in mutations.
 	EdgeTicketComments = "ticket_comments"
 	// EdgeTicketAttachments holds the string denoting the ticket_attachments edge name in mutations.
@@ -55,6 +61,8 @@ const (
 	EdgeVersionChangelogs = "version_changelogs"
 	// EdgeGroups holds the string denoting the groups edge name in mutations.
 	EdgeGroups = "groups"
+	// EdgeMspAllocations holds the string denoting the msp_allocations edge name in mutations.
+	EdgeMspAllocations = "msp_allocations"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// DepartmentRefTable is the table that holds the department_ref relation/edge.
@@ -64,6 +72,13 @@ const (
 	DepartmentRefInverseTable = "departments"
 	// DepartmentRefColumn is the table column denoting the department_ref relation/edge.
 	DepartmentRefColumn = "department_id"
+	// TenantTable is the table that holds the tenant relation/edge.
+	TenantTable = "users"
+	// TenantInverseTable is the table name for the Tenant entity.
+	// It exists in this package in order to avoid circular dependency with the "tenant" package.
+	TenantInverseTable = "tenants"
+	// TenantColumn is the table column denoting the tenant relation/edge.
+	TenantColumn = "tenant_id"
 	// TicketCommentsTable is the table that holds the ticket_comments relation/edge.
 	TicketCommentsTable = "ticket_comments"
 	// TicketCommentsInverseTable is the table name for the TicketComment entity.
@@ -111,6 +126,13 @@ const (
 	GroupsInverseTable = "groups"
 	// GroupsColumn is the table column denoting the groups relation/edge.
 	GroupsColumn = "user_groups"
+	// MspAllocationsTable is the table that holds the msp_allocations relation/edge.
+	MspAllocationsTable = "msp_allocations"
+	// MspAllocationsInverseTable is the table name for the MSPAllocation entity.
+	// It exists in this package in order to avoid circular dependency with the "mspallocation" package.
+	MspAllocationsInverseTable = "msp_allocations"
+	// MspAllocationsColumn is the table column denoting the msp_allocations relation/edge.
+	MspAllocationsColumn = "msp_user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -128,6 +150,8 @@ var Columns = []string{
 	FieldTenantID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldMspRole,
+	FieldAssignedByMspID,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "users"
@@ -210,6 +234,30 @@ func RoleValidator(r Role) error {
 	}
 }
 
+// MspRole defines the type for the "msp_role" enum field.
+type MspRole string
+
+// MspRole values.
+const (
+	MspRoleProviderAdmin MspRole = "provider_admin"
+	MspRoleProviderAgent MspRole = "provider_agent"
+	MspRoleCustomerUser  MspRole = "customer_user"
+)
+
+func (mr MspRole) String() string {
+	return string(mr)
+}
+
+// MspRoleValidator is a validator for the "msp_role" field enum values. It is called by the builders before save.
+func MspRoleValidator(mr MspRole) error {
+	switch mr {
+	case MspRoleProviderAdmin, MspRoleProviderAgent, MspRoleCustomerUser:
+		return nil
+	default:
+		return fmt.Errorf("user: invalid enum value for msp_role field: %q", mr)
+	}
+}
+
 // OrderOption defines the ordering options for the User queries.
 type OrderOption func(*sql.Selector)
 
@@ -278,10 +326,27 @@ func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
 }
 
+// ByMspRole orders the results by the msp_role field.
+func ByMspRole(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMspRole, opts...).ToFunc()
+}
+
+// ByAssignedByMspID orders the results by the assigned_by_msp_id field.
+func ByAssignedByMspID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAssignedByMspID, opts...).ToFunc()
+}
+
 // ByDepartmentRefField orders the results by department_ref field.
 func ByDepartmentRefField(field string, opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newDepartmentRefStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByTenantField orders the results by tenant field.
+func ByTenantField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newTenantStep(), sql.OrderByField(field, opts...))
 	}
 }
 
@@ -382,11 +447,32 @@ func ByGroups(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newGroupsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMspAllocationsCount orders the results by msp_allocations count.
+func ByMspAllocationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMspAllocationsStep(), opts...)
+	}
+}
+
+// ByMspAllocations orders the results by msp_allocations terms.
+func ByMspAllocations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMspAllocationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newDepartmentRefStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(DepartmentRefInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, DepartmentRefTable, DepartmentRefColumn),
+	)
+}
+func newTenantStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(TenantInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
 	)
 }
 func newTicketCommentsStep() *sqlgraph.Step {
@@ -436,5 +522,12 @@ func newGroupsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(GroupsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, GroupsTable, GroupsColumn),
+	)
+}
+func newMspAllocationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MspAllocationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MspAllocationsTable, MspAllocationsColumn),
 	)
 }

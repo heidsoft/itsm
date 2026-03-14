@@ -156,7 +156,7 @@ func (*Department) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Department fields.
-func (d *Department) assignValues(columns []string, values []any) error {
+func (_m *Department) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -167,57 +167,57 @@ func (d *Department) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			d.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case department.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				d.Name = value.String
+				_m.Name = value.String
 			}
 		case department.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				d.Code = value.String
+				_m.Code = value.String
 			}
 		case department.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				d.Description = value.String
+				_m.Description = value.String
 			}
 		case department.FieldManagerID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field manager_id", values[i])
 			} else if value.Valid {
-				d.ManagerID = int(value.Int64)
+				_m.ManagerID = int(value.Int64)
 			}
 		case department.FieldParentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_id", values[i])
 			} else if value.Valid {
-				d.ParentID = int(value.Int64)
+				_m.ParentID = int(value.Int64)
 			}
 		case department.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				d.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case department.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				d.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case department.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				d.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			d.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -225,96 +225,96 @@ func (d *Department) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Department.
 // This includes values selected through modifiers, order, etc.
-func (d *Department) Value(name string) (ent.Value, error) {
-	return d.selectValues.Get(name)
+func (_m *Department) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryParent queries the "parent" edge of the Department entity.
-func (d *Department) QueryParent() *DepartmentQuery {
-	return NewDepartmentClient(d.config).QueryParent(d)
+func (_m *Department) QueryParent() *DepartmentQuery {
+	return NewDepartmentClient(_m.config).QueryParent(_m)
 }
 
 // QueryChildren queries the "children" edge of the Department entity.
-func (d *Department) QueryChildren() *DepartmentQuery {
-	return NewDepartmentClient(d.config).QueryChildren(d)
+func (_m *Department) QueryChildren() *DepartmentQuery {
+	return NewDepartmentClient(_m.config).QueryChildren(_m)
 }
 
 // QueryUsers queries the "users" edge of the Department entity.
-func (d *Department) QueryUsers() *UserQuery {
-	return NewDepartmentClient(d.config).QueryUsers(d)
+func (_m *Department) QueryUsers() *UserQuery {
+	return NewDepartmentClient(_m.config).QueryUsers(_m)
 }
 
 // QueryTickets queries the "tickets" edge of the Department entity.
-func (d *Department) QueryTickets() *TicketQuery {
-	return NewDepartmentClient(d.config).QueryTickets(d)
+func (_m *Department) QueryTickets() *TicketQuery {
+	return NewDepartmentClient(_m.config).QueryTickets(_m)
 }
 
 // QueryWorkflows queries the "workflows" edge of the Department entity.
-func (d *Department) QueryWorkflows() *WorkflowQuery {
-	return NewDepartmentClient(d.config).QueryWorkflows(d)
+func (_m *Department) QueryWorkflows() *WorkflowQuery {
+	return NewDepartmentClient(_m.config).QueryWorkflows(_m)
 }
 
 // QueryCategories queries the "categories" edge of the Department entity.
-func (d *Department) QueryCategories() *TicketCategoryQuery {
-	return NewDepartmentClient(d.config).QueryCategories(d)
+func (_m *Department) QueryCategories() *TicketCategoryQuery {
+	return NewDepartmentClient(_m.config).QueryCategories(_m)
 }
 
 // QueryProjects queries the "projects" edge of the Department entity.
-func (d *Department) QueryProjects() *ProjectQuery {
-	return NewDepartmentClient(d.config).QueryProjects(d)
+func (_m *Department) QueryProjects() *ProjectQuery {
+	return NewDepartmentClient(_m.config).QueryProjects(_m)
 }
 
 // QueryTags queries the "tags" edge of the Department entity.
-func (d *Department) QueryTags() *TagQuery {
-	return NewDepartmentClient(d.config).QueryTags(d)
+func (_m *Department) QueryTags() *TagQuery {
+	return NewDepartmentClient(_m.config).QueryTags(_m)
 }
 
 // Update returns a builder for updating this Department.
 // Note that you need to call Department.Unwrap() before calling this method if this Department
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (d *Department) Update() *DepartmentUpdateOne {
-	return NewDepartmentClient(d.config).UpdateOne(d)
+func (_m *Department) Update() *DepartmentUpdateOne {
+	return NewDepartmentClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Department entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (d *Department) Unwrap() *Department {
-	_tx, ok := d.config.driver.(*txDriver)
+func (_m *Department) Unwrap() *Department {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Department is not a transactional entity")
 	}
-	d.config.driver = _tx.drv
-	return d
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (d *Department) String() string {
+func (_m *Department) String() string {
 	var builder strings.Builder
 	builder.WriteString("Department(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", d.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(d.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("code=")
-	builder.WriteString(d.Code)
+	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(d.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("manager_id=")
-	builder.WriteString(fmt.Sprintf("%v", d.ManagerID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ManagerID))
 	builder.WriteString(", ")
 	builder.WriteString("parent_id=")
-	builder.WriteString(fmt.Sprintf("%v", d.ParentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ParentID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", d.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(d.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(d.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

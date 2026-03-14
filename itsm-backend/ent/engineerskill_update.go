@@ -24,263 +24,263 @@ type EngineerSkillUpdate struct {
 }
 
 // Where appends a list predicates to the EngineerSkillUpdate builder.
-func (esu *EngineerSkillUpdate) Where(ps ...predicate.EngineerSkill) *EngineerSkillUpdate {
-	esu.mutation.Where(ps...)
-	return esu
+func (_u *EngineerSkillUpdate) Where(ps ...predicate.EngineerSkill) *EngineerSkillUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (esu *EngineerSkillUpdate) SetUserID(i int) *EngineerSkillUpdate {
-	esu.mutation.ResetUserID()
-	esu.mutation.SetUserID(i)
-	return esu
+func (_u *EngineerSkillUpdate) SetUserID(v int) *EngineerSkillUpdate {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableUserID(i *int) *EngineerSkillUpdate {
-	if i != nil {
-		esu.SetUserID(*i)
+func (_u *EngineerSkillUpdate) SetNillableUserID(v *int) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return esu
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (esu *EngineerSkillUpdate) AddUserID(i int) *EngineerSkillUpdate {
-	esu.mutation.AddUserID(i)
-	return esu
+// AddUserID adds value to the "user_id" field.
+func (_u *EngineerSkillUpdate) AddUserID(v int) *EngineerSkillUpdate {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (esu *EngineerSkillUpdate) SetCategory(s string) *EngineerSkillUpdate {
-	esu.mutation.SetCategory(s)
-	return esu
+func (_u *EngineerSkillUpdate) SetCategory(v string) *EngineerSkillUpdate {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableCategory(s *string) *EngineerSkillUpdate {
-	if s != nil {
-		esu.SetCategory(*s)
+func (_u *EngineerSkillUpdate) SetNillableCategory(v *string) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return esu
+	return _u
 }
 
 // SetSkillName sets the "skill_name" field.
-func (esu *EngineerSkillUpdate) SetSkillName(s string) *EngineerSkillUpdate {
-	esu.mutation.SetSkillName(s)
-	return esu
+func (_u *EngineerSkillUpdate) SetSkillName(v string) *EngineerSkillUpdate {
+	_u.mutation.SetSkillName(v)
+	return _u
 }
 
 // SetNillableSkillName sets the "skill_name" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableSkillName(s *string) *EngineerSkillUpdate {
-	if s != nil {
-		esu.SetSkillName(*s)
+func (_u *EngineerSkillUpdate) SetNillableSkillName(v *string) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetSkillName(*v)
 	}
-	return esu
+	return _u
 }
 
 // SetProficiencyLevel sets the "proficiency_level" field.
-func (esu *EngineerSkillUpdate) SetProficiencyLevel(i int) *EngineerSkillUpdate {
-	esu.mutation.ResetProficiencyLevel()
-	esu.mutation.SetProficiencyLevel(i)
-	return esu
+func (_u *EngineerSkillUpdate) SetProficiencyLevel(v int) *EngineerSkillUpdate {
+	_u.mutation.ResetProficiencyLevel()
+	_u.mutation.SetProficiencyLevel(v)
+	return _u
 }
 
 // SetNillableProficiencyLevel sets the "proficiency_level" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableProficiencyLevel(i *int) *EngineerSkillUpdate {
-	if i != nil {
-		esu.SetProficiencyLevel(*i)
+func (_u *EngineerSkillUpdate) SetNillableProficiencyLevel(v *int) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetProficiencyLevel(*v)
 	}
-	return esu
+	return _u
 }
 
-// AddProficiencyLevel adds i to the "proficiency_level" field.
-func (esu *EngineerSkillUpdate) AddProficiencyLevel(i int) *EngineerSkillUpdate {
-	esu.mutation.AddProficiencyLevel(i)
-	return esu
+// AddProficiencyLevel adds value to the "proficiency_level" field.
+func (_u *EngineerSkillUpdate) AddProficiencyLevel(v int) *EngineerSkillUpdate {
+	_u.mutation.AddProficiencyLevel(v)
+	return _u
 }
 
 // SetExperienceYears sets the "experience_years" field.
-func (esu *EngineerSkillUpdate) SetExperienceYears(i int) *EngineerSkillUpdate {
-	esu.mutation.ResetExperienceYears()
-	esu.mutation.SetExperienceYears(i)
-	return esu
+func (_u *EngineerSkillUpdate) SetExperienceYears(v int) *EngineerSkillUpdate {
+	_u.mutation.ResetExperienceYears()
+	_u.mutation.SetExperienceYears(v)
+	return _u
 }
 
 // SetNillableExperienceYears sets the "experience_years" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableExperienceYears(i *int) *EngineerSkillUpdate {
-	if i != nil {
-		esu.SetExperienceYears(*i)
+func (_u *EngineerSkillUpdate) SetNillableExperienceYears(v *int) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetExperienceYears(*v)
 	}
-	return esu
+	return _u
 }
 
-// AddExperienceYears adds i to the "experience_years" field.
-func (esu *EngineerSkillUpdate) AddExperienceYears(i int) *EngineerSkillUpdate {
-	esu.mutation.AddExperienceYears(i)
-	return esu
+// AddExperienceYears adds value to the "experience_years" field.
+func (_u *EngineerSkillUpdate) AddExperienceYears(v int) *EngineerSkillUpdate {
+	_u.mutation.AddExperienceYears(v)
+	return _u
 }
 
 // SetCertifications sets the "certifications" field.
-func (esu *EngineerSkillUpdate) SetCertifications(s []string) *EngineerSkillUpdate {
-	esu.mutation.SetCertifications(s)
-	return esu
+func (_u *EngineerSkillUpdate) SetCertifications(v []string) *EngineerSkillUpdate {
+	_u.mutation.SetCertifications(v)
+	return _u
 }
 
-// AppendCertifications appends s to the "certifications" field.
-func (esu *EngineerSkillUpdate) AppendCertifications(s []string) *EngineerSkillUpdate {
-	esu.mutation.AppendCertifications(s)
-	return esu
+// AppendCertifications appends value to the "certifications" field.
+func (_u *EngineerSkillUpdate) AppendCertifications(v []string) *EngineerSkillUpdate {
+	_u.mutation.AppendCertifications(v)
+	return _u
 }
 
 // ClearCertifications clears the value of the "certifications" field.
-func (esu *EngineerSkillUpdate) ClearCertifications() *EngineerSkillUpdate {
-	esu.mutation.ClearCertifications()
-	return esu
+func (_u *EngineerSkillUpdate) ClearCertifications() *EngineerSkillUpdate {
+	_u.mutation.ClearCertifications()
+	return _u
 }
 
 // SetIsAvailable sets the "is_available" field.
-func (esu *EngineerSkillUpdate) SetIsAvailable(b bool) *EngineerSkillUpdate {
-	esu.mutation.SetIsAvailable(b)
-	return esu
+func (_u *EngineerSkillUpdate) SetIsAvailable(v bool) *EngineerSkillUpdate {
+	_u.mutation.SetIsAvailable(v)
+	return _u
 }
 
 // SetNillableIsAvailable sets the "is_available" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableIsAvailable(b *bool) *EngineerSkillUpdate {
-	if b != nil {
-		esu.SetIsAvailable(*b)
+func (_u *EngineerSkillUpdate) SetNillableIsAvailable(v *bool) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetIsAvailable(*v)
 	}
-	return esu
+	return _u
 }
 
 // SetCurrentLoad sets the "current_load" field.
-func (esu *EngineerSkillUpdate) SetCurrentLoad(i int) *EngineerSkillUpdate {
-	esu.mutation.ResetCurrentLoad()
-	esu.mutation.SetCurrentLoad(i)
-	return esu
+func (_u *EngineerSkillUpdate) SetCurrentLoad(v int) *EngineerSkillUpdate {
+	_u.mutation.ResetCurrentLoad()
+	_u.mutation.SetCurrentLoad(v)
+	return _u
 }
 
 // SetNillableCurrentLoad sets the "current_load" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableCurrentLoad(i *int) *EngineerSkillUpdate {
-	if i != nil {
-		esu.SetCurrentLoad(*i)
+func (_u *EngineerSkillUpdate) SetNillableCurrentLoad(v *int) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetCurrentLoad(*v)
 	}
-	return esu
+	return _u
 }
 
-// AddCurrentLoad adds i to the "current_load" field.
-func (esu *EngineerSkillUpdate) AddCurrentLoad(i int) *EngineerSkillUpdate {
-	esu.mutation.AddCurrentLoad(i)
-	return esu
+// AddCurrentLoad adds value to the "current_load" field.
+func (_u *EngineerSkillUpdate) AddCurrentLoad(v int) *EngineerSkillUpdate {
+	_u.mutation.AddCurrentLoad(v)
+	return _u
 }
 
 // SetMaxLoad sets the "max_load" field.
-func (esu *EngineerSkillUpdate) SetMaxLoad(i int) *EngineerSkillUpdate {
-	esu.mutation.ResetMaxLoad()
-	esu.mutation.SetMaxLoad(i)
-	return esu
+func (_u *EngineerSkillUpdate) SetMaxLoad(v int) *EngineerSkillUpdate {
+	_u.mutation.ResetMaxLoad()
+	_u.mutation.SetMaxLoad(v)
+	return _u
 }
 
 // SetNillableMaxLoad sets the "max_load" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableMaxLoad(i *int) *EngineerSkillUpdate {
-	if i != nil {
-		esu.SetMaxLoad(*i)
+func (_u *EngineerSkillUpdate) SetNillableMaxLoad(v *int) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetMaxLoad(*v)
 	}
-	return esu
+	return _u
 }
 
-// AddMaxLoad adds i to the "max_load" field.
-func (esu *EngineerSkillUpdate) AddMaxLoad(i int) *EngineerSkillUpdate {
-	esu.mutation.AddMaxLoad(i)
-	return esu
+// AddMaxLoad adds value to the "max_load" field.
+func (_u *EngineerSkillUpdate) AddMaxLoad(v int) *EngineerSkillUpdate {
+	_u.mutation.AddMaxLoad(v)
+	return _u
 }
 
 // SetPreferredShift sets the "preferred_shift" field.
-func (esu *EngineerSkillUpdate) SetPreferredShift(s string) *EngineerSkillUpdate {
-	esu.mutation.SetPreferredShift(s)
-	return esu
+func (_u *EngineerSkillUpdate) SetPreferredShift(v string) *EngineerSkillUpdate {
+	_u.mutation.SetPreferredShift(v)
+	return _u
 }
 
 // SetNillablePreferredShift sets the "preferred_shift" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillablePreferredShift(s *string) *EngineerSkillUpdate {
-	if s != nil {
-		esu.SetPreferredShift(*s)
+func (_u *EngineerSkillUpdate) SetNillablePreferredShift(v *string) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetPreferredShift(*v)
 	}
-	return esu
+	return _u
 }
 
 // ClearPreferredShift clears the value of the "preferred_shift" field.
-func (esu *EngineerSkillUpdate) ClearPreferredShift() *EngineerSkillUpdate {
-	esu.mutation.ClearPreferredShift()
-	return esu
+func (_u *EngineerSkillUpdate) ClearPreferredShift() *EngineerSkillUpdate {
+	_u.mutation.ClearPreferredShift()
+	return _u
 }
 
 // SetWorkingHours sets the "working_hours" field.
-func (esu *EngineerSkillUpdate) SetWorkingHours(m map[string]interface{}) *EngineerSkillUpdate {
-	esu.mutation.SetWorkingHours(m)
-	return esu
+func (_u *EngineerSkillUpdate) SetWorkingHours(v map[string]interface{}) *EngineerSkillUpdate {
+	_u.mutation.SetWorkingHours(v)
+	return _u
 }
 
 // ClearWorkingHours clears the value of the "working_hours" field.
-func (esu *EngineerSkillUpdate) ClearWorkingHours() *EngineerSkillUpdate {
-	esu.mutation.ClearWorkingHours()
-	return esu
+func (_u *EngineerSkillUpdate) ClearWorkingHours() *EngineerSkillUpdate {
+	_u.mutation.ClearWorkingHours()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (esu *EngineerSkillUpdate) SetTenantID(i int) *EngineerSkillUpdate {
-	esu.mutation.ResetTenantID()
-	esu.mutation.SetTenantID(i)
-	return esu
+func (_u *EngineerSkillUpdate) SetTenantID(v int) *EngineerSkillUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableTenantID(i *int) *EngineerSkillUpdate {
-	if i != nil {
-		esu.SetTenantID(*i)
+func (_u *EngineerSkillUpdate) SetNillableTenantID(v *int) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return esu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (esu *EngineerSkillUpdate) AddTenantID(i int) *EngineerSkillUpdate {
-	esu.mutation.AddTenantID(i)
-	return esu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *EngineerSkillUpdate) AddTenantID(v int) *EngineerSkillUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (esu *EngineerSkillUpdate) SetCreatedAt(t time.Time) *EngineerSkillUpdate {
-	esu.mutation.SetCreatedAt(t)
-	return esu
+func (_u *EngineerSkillUpdate) SetCreatedAt(v time.Time) *EngineerSkillUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (esu *EngineerSkillUpdate) SetNillableCreatedAt(t *time.Time) *EngineerSkillUpdate {
-	if t != nil {
-		esu.SetCreatedAt(*t)
+func (_u *EngineerSkillUpdate) SetNillableCreatedAt(v *time.Time) *EngineerSkillUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return esu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (esu *EngineerSkillUpdate) SetUpdatedAt(t time.Time) *EngineerSkillUpdate {
-	esu.mutation.SetUpdatedAt(t)
-	return esu
+func (_u *EngineerSkillUpdate) SetUpdatedAt(v time.Time) *EngineerSkillUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the EngineerSkillMutation object of the builder.
-func (esu *EngineerSkillUpdate) Mutation() *EngineerSkillMutation {
-	return esu.mutation
+func (_u *EngineerSkillUpdate) Mutation() *EngineerSkillMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (esu *EngineerSkillUpdate) Save(ctx context.Context) (int, error) {
-	esu.defaults()
-	return withHooks(ctx, esu.sqlSave, esu.mutation, esu.hooks)
+func (_u *EngineerSkillUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (esu *EngineerSkillUpdate) SaveX(ctx context.Context) int {
-	affected, err := esu.Save(ctx)
+func (_u *EngineerSkillUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -288,44 +288,44 @@ func (esu *EngineerSkillUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (esu *EngineerSkillUpdate) Exec(ctx context.Context) error {
-	_, err := esu.Save(ctx)
+func (_u *EngineerSkillUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (esu *EngineerSkillUpdate) ExecX(ctx context.Context) {
-	if err := esu.Exec(ctx); err != nil {
+func (_u *EngineerSkillUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (esu *EngineerSkillUpdate) defaults() {
-	if _, ok := esu.mutation.UpdatedAt(); !ok {
+func (_u *EngineerSkillUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := engineerskill.UpdateDefaultUpdatedAt()
-		esu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (esu *EngineerSkillUpdate) check() error {
-	if v, ok := esu.mutation.UserID(); ok {
+func (_u *EngineerSkillUpdate) check() error {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := engineerskill.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.user_id": %w`, err)}
 		}
 	}
-	if v, ok := esu.mutation.Category(); ok {
+	if v, ok := _u.mutation.Category(); ok {
 		if err := engineerskill.CategoryValidator(v); err != nil {
 			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.category": %w`, err)}
 		}
 	}
-	if v, ok := esu.mutation.SkillName(); ok {
+	if v, ok := _u.mutation.SkillName(); ok {
 		if err := engineerskill.SkillNameValidator(v); err != nil {
 			return &ValidationError{Name: "skill_name", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.skill_name": %w`, err)}
 		}
 	}
-	if v, ok := esu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := engineerskill.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.tenant_id": %w`, err)}
 		}
@@ -333,93 +333,93 @@ func (esu *EngineerSkillUpdate) check() error {
 	return nil
 }
 
-func (esu *EngineerSkillUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := esu.check(); err != nil {
-		return n, err
+func (_u *EngineerSkillUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(engineerskill.Table, engineerskill.Columns, sqlgraph.NewFieldSpec(engineerskill.FieldID, field.TypeInt))
-	if ps := esu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := esu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(engineerskill.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(engineerskill.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(engineerskill.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := esu.mutation.SkillName(); ok {
+	if value, ok := _u.mutation.SkillName(); ok {
 		_spec.SetField(engineerskill.FieldSkillName, field.TypeString, value)
 	}
-	if value, ok := esu.mutation.ProficiencyLevel(); ok {
+	if value, ok := _u.mutation.ProficiencyLevel(); ok {
 		_spec.SetField(engineerskill.FieldProficiencyLevel, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.AddedProficiencyLevel(); ok {
+	if value, ok := _u.mutation.AddedProficiencyLevel(); ok {
 		_spec.AddField(engineerskill.FieldProficiencyLevel, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.ExperienceYears(); ok {
+	if value, ok := _u.mutation.ExperienceYears(); ok {
 		_spec.SetField(engineerskill.FieldExperienceYears, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.AddedExperienceYears(); ok {
+	if value, ok := _u.mutation.AddedExperienceYears(); ok {
 		_spec.AddField(engineerskill.FieldExperienceYears, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.Certifications(); ok {
+	if value, ok := _u.mutation.Certifications(); ok {
 		_spec.SetField(engineerskill.FieldCertifications, field.TypeJSON, value)
 	}
-	if value, ok := esu.mutation.AppendedCertifications(); ok {
+	if value, ok := _u.mutation.AppendedCertifications(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, engineerskill.FieldCertifications, value)
 		})
 	}
-	if esu.mutation.CertificationsCleared() {
+	if _u.mutation.CertificationsCleared() {
 		_spec.ClearField(engineerskill.FieldCertifications, field.TypeJSON)
 	}
-	if value, ok := esu.mutation.IsAvailable(); ok {
+	if value, ok := _u.mutation.IsAvailable(); ok {
 		_spec.SetField(engineerskill.FieldIsAvailable, field.TypeBool, value)
 	}
-	if value, ok := esu.mutation.CurrentLoad(); ok {
+	if value, ok := _u.mutation.CurrentLoad(); ok {
 		_spec.SetField(engineerskill.FieldCurrentLoad, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.AddedCurrentLoad(); ok {
+	if value, ok := _u.mutation.AddedCurrentLoad(); ok {
 		_spec.AddField(engineerskill.FieldCurrentLoad, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.MaxLoad(); ok {
+	if value, ok := _u.mutation.MaxLoad(); ok {
 		_spec.SetField(engineerskill.FieldMaxLoad, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.AddedMaxLoad(); ok {
+	if value, ok := _u.mutation.AddedMaxLoad(); ok {
 		_spec.AddField(engineerskill.FieldMaxLoad, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.PreferredShift(); ok {
+	if value, ok := _u.mutation.PreferredShift(); ok {
 		_spec.SetField(engineerskill.FieldPreferredShift, field.TypeString, value)
 	}
-	if esu.mutation.PreferredShiftCleared() {
+	if _u.mutation.PreferredShiftCleared() {
 		_spec.ClearField(engineerskill.FieldPreferredShift, field.TypeString)
 	}
-	if value, ok := esu.mutation.WorkingHours(); ok {
+	if value, ok := _u.mutation.WorkingHours(); ok {
 		_spec.SetField(engineerskill.FieldWorkingHours, field.TypeJSON, value)
 	}
-	if esu.mutation.WorkingHoursCleared() {
+	if _u.mutation.WorkingHoursCleared() {
 		_spec.ClearField(engineerskill.FieldWorkingHours, field.TypeJSON)
 	}
-	if value, ok := esu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(engineerskill.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(engineerskill.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := esu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(engineerskill.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := esu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(engineerskill.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, esu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{engineerskill.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -427,8 +427,8 @@ func (esu *EngineerSkillUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	esu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // EngineerSkillUpdateOne is the builder for updating a single EngineerSkill entity.
@@ -440,270 +440,270 @@ type EngineerSkillUpdateOne struct {
 }
 
 // SetUserID sets the "user_id" field.
-func (esuo *EngineerSkillUpdateOne) SetUserID(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.ResetUserID()
-	esuo.mutation.SetUserID(i)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetUserID(v int) *EngineerSkillUpdateOne {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableUserID(i *int) *EngineerSkillUpdateOne {
-	if i != nil {
-		esuo.SetUserID(*i)
+func (_u *EngineerSkillUpdateOne) SetNillableUserID(v *int) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return esuo
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (esuo *EngineerSkillUpdateOne) AddUserID(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.AddUserID(i)
-	return esuo
+// AddUserID adds value to the "user_id" field.
+func (_u *EngineerSkillUpdateOne) AddUserID(v int) *EngineerSkillUpdateOne {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (esuo *EngineerSkillUpdateOne) SetCategory(s string) *EngineerSkillUpdateOne {
-	esuo.mutation.SetCategory(s)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetCategory(v string) *EngineerSkillUpdateOne {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableCategory(s *string) *EngineerSkillUpdateOne {
-	if s != nil {
-		esuo.SetCategory(*s)
+func (_u *EngineerSkillUpdateOne) SetNillableCategory(v *string) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return esuo
+	return _u
 }
 
 // SetSkillName sets the "skill_name" field.
-func (esuo *EngineerSkillUpdateOne) SetSkillName(s string) *EngineerSkillUpdateOne {
-	esuo.mutation.SetSkillName(s)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetSkillName(v string) *EngineerSkillUpdateOne {
+	_u.mutation.SetSkillName(v)
+	return _u
 }
 
 // SetNillableSkillName sets the "skill_name" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableSkillName(s *string) *EngineerSkillUpdateOne {
-	if s != nil {
-		esuo.SetSkillName(*s)
+func (_u *EngineerSkillUpdateOne) SetNillableSkillName(v *string) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetSkillName(*v)
 	}
-	return esuo
+	return _u
 }
 
 // SetProficiencyLevel sets the "proficiency_level" field.
-func (esuo *EngineerSkillUpdateOne) SetProficiencyLevel(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.ResetProficiencyLevel()
-	esuo.mutation.SetProficiencyLevel(i)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetProficiencyLevel(v int) *EngineerSkillUpdateOne {
+	_u.mutation.ResetProficiencyLevel()
+	_u.mutation.SetProficiencyLevel(v)
+	return _u
 }
 
 // SetNillableProficiencyLevel sets the "proficiency_level" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableProficiencyLevel(i *int) *EngineerSkillUpdateOne {
-	if i != nil {
-		esuo.SetProficiencyLevel(*i)
+func (_u *EngineerSkillUpdateOne) SetNillableProficiencyLevel(v *int) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetProficiencyLevel(*v)
 	}
-	return esuo
+	return _u
 }
 
-// AddProficiencyLevel adds i to the "proficiency_level" field.
-func (esuo *EngineerSkillUpdateOne) AddProficiencyLevel(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.AddProficiencyLevel(i)
-	return esuo
+// AddProficiencyLevel adds value to the "proficiency_level" field.
+func (_u *EngineerSkillUpdateOne) AddProficiencyLevel(v int) *EngineerSkillUpdateOne {
+	_u.mutation.AddProficiencyLevel(v)
+	return _u
 }
 
 // SetExperienceYears sets the "experience_years" field.
-func (esuo *EngineerSkillUpdateOne) SetExperienceYears(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.ResetExperienceYears()
-	esuo.mutation.SetExperienceYears(i)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetExperienceYears(v int) *EngineerSkillUpdateOne {
+	_u.mutation.ResetExperienceYears()
+	_u.mutation.SetExperienceYears(v)
+	return _u
 }
 
 // SetNillableExperienceYears sets the "experience_years" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableExperienceYears(i *int) *EngineerSkillUpdateOne {
-	if i != nil {
-		esuo.SetExperienceYears(*i)
+func (_u *EngineerSkillUpdateOne) SetNillableExperienceYears(v *int) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetExperienceYears(*v)
 	}
-	return esuo
+	return _u
 }
 
-// AddExperienceYears adds i to the "experience_years" field.
-func (esuo *EngineerSkillUpdateOne) AddExperienceYears(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.AddExperienceYears(i)
-	return esuo
+// AddExperienceYears adds value to the "experience_years" field.
+func (_u *EngineerSkillUpdateOne) AddExperienceYears(v int) *EngineerSkillUpdateOne {
+	_u.mutation.AddExperienceYears(v)
+	return _u
 }
 
 // SetCertifications sets the "certifications" field.
-func (esuo *EngineerSkillUpdateOne) SetCertifications(s []string) *EngineerSkillUpdateOne {
-	esuo.mutation.SetCertifications(s)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetCertifications(v []string) *EngineerSkillUpdateOne {
+	_u.mutation.SetCertifications(v)
+	return _u
 }
 
-// AppendCertifications appends s to the "certifications" field.
-func (esuo *EngineerSkillUpdateOne) AppendCertifications(s []string) *EngineerSkillUpdateOne {
-	esuo.mutation.AppendCertifications(s)
-	return esuo
+// AppendCertifications appends value to the "certifications" field.
+func (_u *EngineerSkillUpdateOne) AppendCertifications(v []string) *EngineerSkillUpdateOne {
+	_u.mutation.AppendCertifications(v)
+	return _u
 }
 
 // ClearCertifications clears the value of the "certifications" field.
-func (esuo *EngineerSkillUpdateOne) ClearCertifications() *EngineerSkillUpdateOne {
-	esuo.mutation.ClearCertifications()
-	return esuo
+func (_u *EngineerSkillUpdateOne) ClearCertifications() *EngineerSkillUpdateOne {
+	_u.mutation.ClearCertifications()
+	return _u
 }
 
 // SetIsAvailable sets the "is_available" field.
-func (esuo *EngineerSkillUpdateOne) SetIsAvailable(b bool) *EngineerSkillUpdateOne {
-	esuo.mutation.SetIsAvailable(b)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetIsAvailable(v bool) *EngineerSkillUpdateOne {
+	_u.mutation.SetIsAvailable(v)
+	return _u
 }
 
 // SetNillableIsAvailable sets the "is_available" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableIsAvailable(b *bool) *EngineerSkillUpdateOne {
-	if b != nil {
-		esuo.SetIsAvailable(*b)
+func (_u *EngineerSkillUpdateOne) SetNillableIsAvailable(v *bool) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetIsAvailable(*v)
 	}
-	return esuo
+	return _u
 }
 
 // SetCurrentLoad sets the "current_load" field.
-func (esuo *EngineerSkillUpdateOne) SetCurrentLoad(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.ResetCurrentLoad()
-	esuo.mutation.SetCurrentLoad(i)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetCurrentLoad(v int) *EngineerSkillUpdateOne {
+	_u.mutation.ResetCurrentLoad()
+	_u.mutation.SetCurrentLoad(v)
+	return _u
 }
 
 // SetNillableCurrentLoad sets the "current_load" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableCurrentLoad(i *int) *EngineerSkillUpdateOne {
-	if i != nil {
-		esuo.SetCurrentLoad(*i)
+func (_u *EngineerSkillUpdateOne) SetNillableCurrentLoad(v *int) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetCurrentLoad(*v)
 	}
-	return esuo
+	return _u
 }
 
-// AddCurrentLoad adds i to the "current_load" field.
-func (esuo *EngineerSkillUpdateOne) AddCurrentLoad(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.AddCurrentLoad(i)
-	return esuo
+// AddCurrentLoad adds value to the "current_load" field.
+func (_u *EngineerSkillUpdateOne) AddCurrentLoad(v int) *EngineerSkillUpdateOne {
+	_u.mutation.AddCurrentLoad(v)
+	return _u
 }
 
 // SetMaxLoad sets the "max_load" field.
-func (esuo *EngineerSkillUpdateOne) SetMaxLoad(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.ResetMaxLoad()
-	esuo.mutation.SetMaxLoad(i)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetMaxLoad(v int) *EngineerSkillUpdateOne {
+	_u.mutation.ResetMaxLoad()
+	_u.mutation.SetMaxLoad(v)
+	return _u
 }
 
 // SetNillableMaxLoad sets the "max_load" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableMaxLoad(i *int) *EngineerSkillUpdateOne {
-	if i != nil {
-		esuo.SetMaxLoad(*i)
+func (_u *EngineerSkillUpdateOne) SetNillableMaxLoad(v *int) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetMaxLoad(*v)
 	}
-	return esuo
+	return _u
 }
 
-// AddMaxLoad adds i to the "max_load" field.
-func (esuo *EngineerSkillUpdateOne) AddMaxLoad(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.AddMaxLoad(i)
-	return esuo
+// AddMaxLoad adds value to the "max_load" field.
+func (_u *EngineerSkillUpdateOne) AddMaxLoad(v int) *EngineerSkillUpdateOne {
+	_u.mutation.AddMaxLoad(v)
+	return _u
 }
 
 // SetPreferredShift sets the "preferred_shift" field.
-func (esuo *EngineerSkillUpdateOne) SetPreferredShift(s string) *EngineerSkillUpdateOne {
-	esuo.mutation.SetPreferredShift(s)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetPreferredShift(v string) *EngineerSkillUpdateOne {
+	_u.mutation.SetPreferredShift(v)
+	return _u
 }
 
 // SetNillablePreferredShift sets the "preferred_shift" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillablePreferredShift(s *string) *EngineerSkillUpdateOne {
-	if s != nil {
-		esuo.SetPreferredShift(*s)
+func (_u *EngineerSkillUpdateOne) SetNillablePreferredShift(v *string) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetPreferredShift(*v)
 	}
-	return esuo
+	return _u
 }
 
 // ClearPreferredShift clears the value of the "preferred_shift" field.
-func (esuo *EngineerSkillUpdateOne) ClearPreferredShift() *EngineerSkillUpdateOne {
-	esuo.mutation.ClearPreferredShift()
-	return esuo
+func (_u *EngineerSkillUpdateOne) ClearPreferredShift() *EngineerSkillUpdateOne {
+	_u.mutation.ClearPreferredShift()
+	return _u
 }
 
 // SetWorkingHours sets the "working_hours" field.
-func (esuo *EngineerSkillUpdateOne) SetWorkingHours(m map[string]interface{}) *EngineerSkillUpdateOne {
-	esuo.mutation.SetWorkingHours(m)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetWorkingHours(v map[string]interface{}) *EngineerSkillUpdateOne {
+	_u.mutation.SetWorkingHours(v)
+	return _u
 }
 
 // ClearWorkingHours clears the value of the "working_hours" field.
-func (esuo *EngineerSkillUpdateOne) ClearWorkingHours() *EngineerSkillUpdateOne {
-	esuo.mutation.ClearWorkingHours()
-	return esuo
+func (_u *EngineerSkillUpdateOne) ClearWorkingHours() *EngineerSkillUpdateOne {
+	_u.mutation.ClearWorkingHours()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (esuo *EngineerSkillUpdateOne) SetTenantID(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.ResetTenantID()
-	esuo.mutation.SetTenantID(i)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetTenantID(v int) *EngineerSkillUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableTenantID(i *int) *EngineerSkillUpdateOne {
-	if i != nil {
-		esuo.SetTenantID(*i)
+func (_u *EngineerSkillUpdateOne) SetNillableTenantID(v *int) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return esuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (esuo *EngineerSkillUpdateOne) AddTenantID(i int) *EngineerSkillUpdateOne {
-	esuo.mutation.AddTenantID(i)
-	return esuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *EngineerSkillUpdateOne) AddTenantID(v int) *EngineerSkillUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (esuo *EngineerSkillUpdateOne) SetCreatedAt(t time.Time) *EngineerSkillUpdateOne {
-	esuo.mutation.SetCreatedAt(t)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetCreatedAt(v time.Time) *EngineerSkillUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (esuo *EngineerSkillUpdateOne) SetNillableCreatedAt(t *time.Time) *EngineerSkillUpdateOne {
-	if t != nil {
-		esuo.SetCreatedAt(*t)
+func (_u *EngineerSkillUpdateOne) SetNillableCreatedAt(v *time.Time) *EngineerSkillUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return esuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (esuo *EngineerSkillUpdateOne) SetUpdatedAt(t time.Time) *EngineerSkillUpdateOne {
-	esuo.mutation.SetUpdatedAt(t)
-	return esuo
+func (_u *EngineerSkillUpdateOne) SetUpdatedAt(v time.Time) *EngineerSkillUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the EngineerSkillMutation object of the builder.
-func (esuo *EngineerSkillUpdateOne) Mutation() *EngineerSkillMutation {
-	return esuo.mutation
+func (_u *EngineerSkillUpdateOne) Mutation() *EngineerSkillMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the EngineerSkillUpdate builder.
-func (esuo *EngineerSkillUpdateOne) Where(ps ...predicate.EngineerSkill) *EngineerSkillUpdateOne {
-	esuo.mutation.Where(ps...)
-	return esuo
+func (_u *EngineerSkillUpdateOne) Where(ps ...predicate.EngineerSkill) *EngineerSkillUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (esuo *EngineerSkillUpdateOne) Select(field string, fields ...string) *EngineerSkillUpdateOne {
-	esuo.fields = append([]string{field}, fields...)
-	return esuo
+func (_u *EngineerSkillUpdateOne) Select(field string, fields ...string) *EngineerSkillUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated EngineerSkill entity.
-func (esuo *EngineerSkillUpdateOne) Save(ctx context.Context) (*EngineerSkill, error) {
-	esuo.defaults()
-	return withHooks(ctx, esuo.sqlSave, esuo.mutation, esuo.hooks)
+func (_u *EngineerSkillUpdateOne) Save(ctx context.Context) (*EngineerSkill, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (esuo *EngineerSkillUpdateOne) SaveX(ctx context.Context) *EngineerSkill {
-	node, err := esuo.Save(ctx)
+func (_u *EngineerSkillUpdateOne) SaveX(ctx context.Context) *EngineerSkill {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -711,44 +711,44 @@ func (esuo *EngineerSkillUpdateOne) SaveX(ctx context.Context) *EngineerSkill {
 }
 
 // Exec executes the query on the entity.
-func (esuo *EngineerSkillUpdateOne) Exec(ctx context.Context) error {
-	_, err := esuo.Save(ctx)
+func (_u *EngineerSkillUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (esuo *EngineerSkillUpdateOne) ExecX(ctx context.Context) {
-	if err := esuo.Exec(ctx); err != nil {
+func (_u *EngineerSkillUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (esuo *EngineerSkillUpdateOne) defaults() {
-	if _, ok := esuo.mutation.UpdatedAt(); !ok {
+func (_u *EngineerSkillUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := engineerskill.UpdateDefaultUpdatedAt()
-		esuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (esuo *EngineerSkillUpdateOne) check() error {
-	if v, ok := esuo.mutation.UserID(); ok {
+func (_u *EngineerSkillUpdateOne) check() error {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := engineerskill.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.user_id": %w`, err)}
 		}
 	}
-	if v, ok := esuo.mutation.Category(); ok {
+	if v, ok := _u.mutation.Category(); ok {
 		if err := engineerskill.CategoryValidator(v); err != nil {
 			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.category": %w`, err)}
 		}
 	}
-	if v, ok := esuo.mutation.SkillName(); ok {
+	if v, ok := _u.mutation.SkillName(); ok {
 		if err := engineerskill.SkillNameValidator(v); err != nil {
 			return &ValidationError{Name: "skill_name", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.skill_name": %w`, err)}
 		}
 	}
-	if v, ok := esuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := engineerskill.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "EngineerSkill.tenant_id": %w`, err)}
 		}
@@ -756,17 +756,17 @@ func (esuo *EngineerSkillUpdateOne) check() error {
 	return nil
 }
 
-func (esuo *EngineerSkillUpdateOne) sqlSave(ctx context.Context) (_node *EngineerSkill, err error) {
-	if err := esuo.check(); err != nil {
+func (_u *EngineerSkillUpdateOne) sqlSave(ctx context.Context) (_node *EngineerSkill, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(engineerskill.Table, engineerskill.Columns, sqlgraph.NewFieldSpec(engineerskill.FieldID, field.TypeInt))
-	id, ok := esuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "EngineerSkill.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := esuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, engineerskill.FieldID)
 		for _, f := range fields {
@@ -778,91 +778,91 @@ func (esuo *EngineerSkillUpdateOne) sqlSave(ctx context.Context) (_node *Enginee
 			}
 		}
 	}
-	if ps := esuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := esuo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(engineerskill.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(engineerskill.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(engineerskill.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := esuo.mutation.SkillName(); ok {
+	if value, ok := _u.mutation.SkillName(); ok {
 		_spec.SetField(engineerskill.FieldSkillName, field.TypeString, value)
 	}
-	if value, ok := esuo.mutation.ProficiencyLevel(); ok {
+	if value, ok := _u.mutation.ProficiencyLevel(); ok {
 		_spec.SetField(engineerskill.FieldProficiencyLevel, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.AddedProficiencyLevel(); ok {
+	if value, ok := _u.mutation.AddedProficiencyLevel(); ok {
 		_spec.AddField(engineerskill.FieldProficiencyLevel, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.ExperienceYears(); ok {
+	if value, ok := _u.mutation.ExperienceYears(); ok {
 		_spec.SetField(engineerskill.FieldExperienceYears, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.AddedExperienceYears(); ok {
+	if value, ok := _u.mutation.AddedExperienceYears(); ok {
 		_spec.AddField(engineerskill.FieldExperienceYears, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.Certifications(); ok {
+	if value, ok := _u.mutation.Certifications(); ok {
 		_spec.SetField(engineerskill.FieldCertifications, field.TypeJSON, value)
 	}
-	if value, ok := esuo.mutation.AppendedCertifications(); ok {
+	if value, ok := _u.mutation.AppendedCertifications(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, engineerskill.FieldCertifications, value)
 		})
 	}
-	if esuo.mutation.CertificationsCleared() {
+	if _u.mutation.CertificationsCleared() {
 		_spec.ClearField(engineerskill.FieldCertifications, field.TypeJSON)
 	}
-	if value, ok := esuo.mutation.IsAvailable(); ok {
+	if value, ok := _u.mutation.IsAvailable(); ok {
 		_spec.SetField(engineerskill.FieldIsAvailable, field.TypeBool, value)
 	}
-	if value, ok := esuo.mutation.CurrentLoad(); ok {
+	if value, ok := _u.mutation.CurrentLoad(); ok {
 		_spec.SetField(engineerskill.FieldCurrentLoad, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.AddedCurrentLoad(); ok {
+	if value, ok := _u.mutation.AddedCurrentLoad(); ok {
 		_spec.AddField(engineerskill.FieldCurrentLoad, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.MaxLoad(); ok {
+	if value, ok := _u.mutation.MaxLoad(); ok {
 		_spec.SetField(engineerskill.FieldMaxLoad, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.AddedMaxLoad(); ok {
+	if value, ok := _u.mutation.AddedMaxLoad(); ok {
 		_spec.AddField(engineerskill.FieldMaxLoad, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.PreferredShift(); ok {
+	if value, ok := _u.mutation.PreferredShift(); ok {
 		_spec.SetField(engineerskill.FieldPreferredShift, field.TypeString, value)
 	}
-	if esuo.mutation.PreferredShiftCleared() {
+	if _u.mutation.PreferredShiftCleared() {
 		_spec.ClearField(engineerskill.FieldPreferredShift, field.TypeString)
 	}
-	if value, ok := esuo.mutation.WorkingHours(); ok {
+	if value, ok := _u.mutation.WorkingHours(); ok {
 		_spec.SetField(engineerskill.FieldWorkingHours, field.TypeJSON, value)
 	}
-	if esuo.mutation.WorkingHoursCleared() {
+	if _u.mutation.WorkingHoursCleared() {
 		_spec.ClearField(engineerskill.FieldWorkingHours, field.TypeJSON)
 	}
-	if value, ok := esuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(engineerskill.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(engineerskill.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := esuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(engineerskill.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := esuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(engineerskill.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &EngineerSkill{config: esuo.config}
+	_node = &EngineerSkill{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, esuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{engineerskill.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -870,6 +870,6 @@ func (esuo *EngineerSkillUpdateOne) sqlSave(ctx context.Context) (_node *Enginee
 		}
 		return nil, err
 	}
-	esuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -33,44 +33,44 @@ type SLAAlertRuleQuery struct {
 }
 
 // Where adds a new predicate for the SLAAlertRuleQuery builder.
-func (sarq *SLAAlertRuleQuery) Where(ps ...predicate.SLAAlertRule) *SLAAlertRuleQuery {
-	sarq.predicates = append(sarq.predicates, ps...)
-	return sarq
+func (_q *SLAAlertRuleQuery) Where(ps ...predicate.SLAAlertRule) *SLAAlertRuleQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (sarq *SLAAlertRuleQuery) Limit(limit int) *SLAAlertRuleQuery {
-	sarq.ctx.Limit = &limit
-	return sarq
+func (_q *SLAAlertRuleQuery) Limit(limit int) *SLAAlertRuleQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (sarq *SLAAlertRuleQuery) Offset(offset int) *SLAAlertRuleQuery {
-	sarq.ctx.Offset = &offset
-	return sarq
+func (_q *SLAAlertRuleQuery) Offset(offset int) *SLAAlertRuleQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (sarq *SLAAlertRuleQuery) Unique(unique bool) *SLAAlertRuleQuery {
-	sarq.ctx.Unique = &unique
-	return sarq
+func (_q *SLAAlertRuleQuery) Unique(unique bool) *SLAAlertRuleQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (sarq *SLAAlertRuleQuery) Order(o ...slaalertrule.OrderOption) *SLAAlertRuleQuery {
-	sarq.order = append(sarq.order, o...)
-	return sarq
+func (_q *SLAAlertRuleQuery) Order(o ...slaalertrule.OrderOption) *SLAAlertRuleQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QuerySLADefinition chains the current query on the "sla_definition" edge.
-func (sarq *SLAAlertRuleQuery) QuerySLADefinition() *SLADefinitionQuery {
-	query := (&SLADefinitionClient{config: sarq.config}).Query()
+func (_q *SLAAlertRuleQuery) QuerySLADefinition() *SLADefinitionQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sarq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sarq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -79,20 +79,20 @@ func (sarq *SLAAlertRuleQuery) QuerySLADefinition() *SLADefinitionQuery {
 			sqlgraph.To(sladefinition.Table, sladefinition.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, slaalertrule.SLADefinitionTable, slaalertrule.SLADefinitionColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sarq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryAlertHistory chains the current query on the "alert_history" edge.
-func (sarq *SLAAlertRuleQuery) QueryAlertHistory() *SLAAlertHistoryQuery {
-	query := (&SLAAlertHistoryClient{config: sarq.config}).Query()
+func (_q *SLAAlertRuleQuery) QueryAlertHistory() *SLAAlertHistoryQuery {
+	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sarq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sarq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (sarq *SLAAlertRuleQuery) QueryAlertHistory() *SLAAlertHistoryQuery {
 			sqlgraph.To(slaalerthistory.Table, slaalerthistory.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, slaalertrule.AlertHistoryTable, slaalertrule.AlertHistoryColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sarq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -109,8 +109,8 @@ func (sarq *SLAAlertRuleQuery) QueryAlertHistory() *SLAAlertHistoryQuery {
 
 // First returns the first SLAAlertRule entity from the query.
 // Returns a *NotFoundError when no SLAAlertRule was found.
-func (sarq *SLAAlertRuleQuery) First(ctx context.Context) (*SLAAlertRule, error) {
-	nodes, err := sarq.Limit(1).All(setContextOp(ctx, sarq.ctx, ent.OpQueryFirst))
+func (_q *SLAAlertRuleQuery) First(ctx context.Context) (*SLAAlertRule, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func (sarq *SLAAlertRuleQuery) First(ctx context.Context) (*SLAAlertRule, error)
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) FirstX(ctx context.Context) *SLAAlertRule {
-	node, err := sarq.First(ctx)
+func (_q *SLAAlertRuleQuery) FirstX(ctx context.Context) *SLAAlertRule {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,9 +131,9 @@ func (sarq *SLAAlertRuleQuery) FirstX(ctx context.Context) *SLAAlertRule {
 
 // FirstID returns the first SLAAlertRule ID from the query.
 // Returns a *NotFoundError when no SLAAlertRule ID was found.
-func (sarq *SLAAlertRuleQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *SLAAlertRuleQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sarq.Limit(1).IDs(setContextOp(ctx, sarq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -144,8 +144,8 @@ func (sarq *SLAAlertRuleQuery) FirstID(ctx context.Context) (id int, err error) 
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) FirstIDX(ctx context.Context) int {
-	id, err := sarq.FirstID(ctx)
+func (_q *SLAAlertRuleQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -155,8 +155,8 @@ func (sarq *SLAAlertRuleQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single SLAAlertRule entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one SLAAlertRule entity is found.
 // Returns a *NotFoundError when no SLAAlertRule entities are found.
-func (sarq *SLAAlertRuleQuery) Only(ctx context.Context) (*SLAAlertRule, error) {
-	nodes, err := sarq.Limit(2).All(setContextOp(ctx, sarq.ctx, ent.OpQueryOnly))
+func (_q *SLAAlertRuleQuery) Only(ctx context.Context) (*SLAAlertRule, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +171,8 @@ func (sarq *SLAAlertRuleQuery) Only(ctx context.Context) (*SLAAlertRule, error) 
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) OnlyX(ctx context.Context) *SLAAlertRule {
-	node, err := sarq.Only(ctx)
+func (_q *SLAAlertRuleQuery) OnlyX(ctx context.Context) *SLAAlertRule {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -182,9 +182,9 @@ func (sarq *SLAAlertRuleQuery) OnlyX(ctx context.Context) *SLAAlertRule {
 // OnlyID is like Only, but returns the only SLAAlertRule ID in the query.
 // Returns a *NotSingularError when more than one SLAAlertRule ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (sarq *SLAAlertRuleQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *SLAAlertRuleQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sarq.Limit(2).IDs(setContextOp(ctx, sarq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -199,8 +199,8 @@ func (sarq *SLAAlertRuleQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) OnlyIDX(ctx context.Context) int {
-	id, err := sarq.OnlyID(ctx)
+func (_q *SLAAlertRuleQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -208,18 +208,18 @@ func (sarq *SLAAlertRuleQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of SLAAlertRules.
-func (sarq *SLAAlertRuleQuery) All(ctx context.Context) ([]*SLAAlertRule, error) {
-	ctx = setContextOp(ctx, sarq.ctx, ent.OpQueryAll)
-	if err := sarq.prepareQuery(ctx); err != nil {
+func (_q *SLAAlertRuleQuery) All(ctx context.Context) ([]*SLAAlertRule, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*SLAAlertRule, *SLAAlertRuleQuery]()
-	return withInterceptors[[]*SLAAlertRule](ctx, sarq, qr, sarq.inters)
+	return withInterceptors[[]*SLAAlertRule](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) AllX(ctx context.Context) []*SLAAlertRule {
-	nodes, err := sarq.All(ctx)
+func (_q *SLAAlertRuleQuery) AllX(ctx context.Context) []*SLAAlertRule {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -227,20 +227,20 @@ func (sarq *SLAAlertRuleQuery) AllX(ctx context.Context) []*SLAAlertRule {
 }
 
 // IDs executes the query and returns a list of SLAAlertRule IDs.
-func (sarq *SLAAlertRuleQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if sarq.ctx.Unique == nil && sarq.path != nil {
-		sarq.Unique(true)
+func (_q *SLAAlertRuleQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, sarq.ctx, ent.OpQueryIDs)
-	if err = sarq.Select(slaalertrule.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(slaalertrule.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) IDsX(ctx context.Context) []int {
-	ids, err := sarq.IDs(ctx)
+func (_q *SLAAlertRuleQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -248,17 +248,17 @@ func (sarq *SLAAlertRuleQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (sarq *SLAAlertRuleQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, sarq.ctx, ent.OpQueryCount)
-	if err := sarq.prepareQuery(ctx); err != nil {
+func (_q *SLAAlertRuleQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, sarq, querierCount[*SLAAlertRuleQuery](), sarq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SLAAlertRuleQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) CountX(ctx context.Context) int {
-	count, err := sarq.Count(ctx)
+func (_q *SLAAlertRuleQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,9 +266,9 @@ func (sarq *SLAAlertRuleQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (sarq *SLAAlertRuleQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, sarq.ctx, ent.OpQueryExist)
-	switch _, err := sarq.FirstID(ctx); {
+func (_q *SLAAlertRuleQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -279,8 +279,8 @@ func (sarq *SLAAlertRuleQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (sarq *SLAAlertRuleQuery) ExistX(ctx context.Context) bool {
-	exist, err := sarq.Exist(ctx)
+func (_q *SLAAlertRuleQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -289,44 +289,44 @@ func (sarq *SLAAlertRuleQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the SLAAlertRuleQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (sarq *SLAAlertRuleQuery) Clone() *SLAAlertRuleQuery {
-	if sarq == nil {
+func (_q *SLAAlertRuleQuery) Clone() *SLAAlertRuleQuery {
+	if _q == nil {
 		return nil
 	}
 	return &SLAAlertRuleQuery{
-		config:            sarq.config,
-		ctx:               sarq.ctx.Clone(),
-		order:             append([]slaalertrule.OrderOption{}, sarq.order...),
-		inters:            append([]Interceptor{}, sarq.inters...),
-		predicates:        append([]predicate.SLAAlertRule{}, sarq.predicates...),
-		withSLADefinition: sarq.withSLADefinition.Clone(),
-		withAlertHistory:  sarq.withAlertHistory.Clone(),
+		config:            _q.config,
+		ctx:               _q.ctx.Clone(),
+		order:             append([]slaalertrule.OrderOption{}, _q.order...),
+		inters:            append([]Interceptor{}, _q.inters...),
+		predicates:        append([]predicate.SLAAlertRule{}, _q.predicates...),
+		withSLADefinition: _q.withSLADefinition.Clone(),
+		withAlertHistory:  _q.withAlertHistory.Clone(),
 		// clone intermediate query.
-		sql:  sarq.sql.Clone(),
-		path: sarq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithSLADefinition tells the query-builder to eager-load the nodes that are connected to
 // the "sla_definition" edge. The optional arguments are used to configure the query builder of the edge.
-func (sarq *SLAAlertRuleQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAAlertRuleQuery {
-	query := (&SLADefinitionClient{config: sarq.config}).Query()
+func (_q *SLAAlertRuleQuery) WithSLADefinition(opts ...func(*SLADefinitionQuery)) *SLAAlertRuleQuery {
+	query := (&SLADefinitionClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sarq.withSLADefinition = query
-	return sarq
+	_q.withSLADefinition = query
+	return _q
 }
 
 // WithAlertHistory tells the query-builder to eager-load the nodes that are connected to
 // the "alert_history" edge. The optional arguments are used to configure the query builder of the edge.
-func (sarq *SLAAlertRuleQuery) WithAlertHistory(opts ...func(*SLAAlertHistoryQuery)) *SLAAlertRuleQuery {
-	query := (&SLAAlertHistoryClient{config: sarq.config}).Query()
+func (_q *SLAAlertRuleQuery) WithAlertHistory(opts ...func(*SLAAlertHistoryQuery)) *SLAAlertRuleQuery {
+	query := (&SLAAlertHistoryClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sarq.withAlertHistory = query
-	return sarq
+	_q.withAlertHistory = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -343,10 +343,10 @@ func (sarq *SLAAlertRuleQuery) WithAlertHistory(opts ...func(*SLAAlertHistoryQue
 //		GroupBy(slaalertrule.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (sarq *SLAAlertRuleQuery) GroupBy(field string, fields ...string) *SLAAlertRuleGroupBy {
-	sarq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &SLAAlertRuleGroupBy{build: sarq}
-	grbuild.flds = &sarq.ctx.Fields
+func (_q *SLAAlertRuleQuery) GroupBy(field string, fields ...string) *SLAAlertRuleGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &SLAAlertRuleGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = slaalertrule.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -364,59 +364,59 @@ func (sarq *SLAAlertRuleQuery) GroupBy(field string, fields ...string) *SLAAlert
 //	client.SLAAlertRule.Query().
 //		Select(slaalertrule.FieldName).
 //		Scan(ctx, &v)
-func (sarq *SLAAlertRuleQuery) Select(fields ...string) *SLAAlertRuleSelect {
-	sarq.ctx.Fields = append(sarq.ctx.Fields, fields...)
-	sbuild := &SLAAlertRuleSelect{SLAAlertRuleQuery: sarq}
+func (_q *SLAAlertRuleQuery) Select(fields ...string) *SLAAlertRuleSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &SLAAlertRuleSelect{SLAAlertRuleQuery: _q}
 	sbuild.label = slaalertrule.Label
-	sbuild.flds, sbuild.scan = &sarq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a SLAAlertRuleSelect configured with the given aggregations.
-func (sarq *SLAAlertRuleQuery) Aggregate(fns ...AggregateFunc) *SLAAlertRuleSelect {
-	return sarq.Select().Aggregate(fns...)
+func (_q *SLAAlertRuleQuery) Aggregate(fns ...AggregateFunc) *SLAAlertRuleSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (sarq *SLAAlertRuleQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range sarq.inters {
+func (_q *SLAAlertRuleQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, sarq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range sarq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !slaalertrule.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if sarq.path != nil {
-		prev, err := sarq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		sarq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (sarq *SLAAlertRuleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAAlertRule, error) {
+func (_q *SLAAlertRuleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLAAlertRule, error) {
 	var (
 		nodes       = []*SLAAlertRule{}
-		_spec       = sarq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			sarq.withSLADefinition != nil,
-			sarq.withAlertHistory != nil,
+			_q.withSLADefinition != nil,
+			_q.withAlertHistory != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*SLAAlertRule).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &SLAAlertRule{config: sarq.config}
+		node := &SLAAlertRule{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -424,20 +424,20 @@ func (sarq *SLAAlertRuleQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, sarq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := sarq.withSLADefinition; query != nil {
-		if err := sarq.loadSLADefinition(ctx, query, nodes, nil,
+	if query := _q.withSLADefinition; query != nil {
+		if err := _q.loadSLADefinition(ctx, query, nodes, nil,
 			func(n *SLAAlertRule, e *SLADefinition) { n.Edges.SLADefinition = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := sarq.withAlertHistory; query != nil {
-		if err := sarq.loadAlertHistory(ctx, query, nodes,
+	if query := _q.withAlertHistory; query != nil {
+		if err := _q.loadAlertHistory(ctx, query, nodes,
 			func(n *SLAAlertRule) { n.Edges.AlertHistory = []*SLAAlertHistory{} },
 			func(n *SLAAlertRule, e *SLAAlertHistory) { n.Edges.AlertHistory = append(n.Edges.AlertHistory, e) }); err != nil {
 			return nil, err
@@ -446,7 +446,7 @@ func (sarq *SLAAlertRuleQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	return nodes, nil
 }
 
-func (sarq *SLAAlertRuleQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAAlertRule, init func(*SLAAlertRule), assign func(*SLAAlertRule, *SLADefinition)) error {
+func (_q *SLAAlertRuleQuery) loadSLADefinition(ctx context.Context, query *SLADefinitionQuery, nodes []*SLAAlertRule, init func(*SLAAlertRule), assign func(*SLAAlertRule, *SLADefinition)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*SLAAlertRule)
 	for i := range nodes {
@@ -475,7 +475,7 @@ func (sarq *SLAAlertRuleQuery) loadSLADefinition(ctx context.Context, query *SLA
 	}
 	return nil
 }
-func (sarq *SLAAlertRuleQuery) loadAlertHistory(ctx context.Context, query *SLAAlertHistoryQuery, nodes []*SLAAlertRule, init func(*SLAAlertRule), assign func(*SLAAlertRule, *SLAAlertHistory)) error {
+func (_q *SLAAlertRuleQuery) loadAlertHistory(ctx context.Context, query *SLAAlertHistoryQuery, nodes []*SLAAlertRule, init func(*SLAAlertRule), assign func(*SLAAlertRule, *SLAAlertHistory)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SLAAlertRule)
 	for i := range nodes {
@@ -506,24 +506,24 @@ func (sarq *SLAAlertRuleQuery) loadAlertHistory(ctx context.Context, query *SLAA
 	return nil
 }
 
-func (sarq *SLAAlertRuleQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := sarq.querySpec()
-	_spec.Node.Columns = sarq.ctx.Fields
-	if len(sarq.ctx.Fields) > 0 {
-		_spec.Unique = sarq.ctx.Unique != nil && *sarq.ctx.Unique
+func (_q *SLAAlertRuleQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, sarq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (sarq *SLAAlertRuleQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *SLAAlertRuleQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(slaalertrule.Table, slaalertrule.Columns, sqlgraph.NewFieldSpec(slaalertrule.FieldID, field.TypeInt))
-	_spec.From = sarq.sql
-	if unique := sarq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if sarq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := sarq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slaalertrule.FieldID)
 		for i := range fields {
@@ -531,24 +531,24 @@ func (sarq *SLAAlertRuleQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if sarq.withSLADefinition != nil {
+		if _q.withSLADefinition != nil {
 			_spec.Node.AddColumnOnce(slaalertrule.FieldSLADefinitionID)
 		}
 	}
-	if ps := sarq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := sarq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := sarq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := sarq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -558,33 +558,33 @@ func (sarq *SLAAlertRuleQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (sarq *SLAAlertRuleQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(sarq.driver.Dialect())
+func (_q *SLAAlertRuleQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(slaalertrule.Table)
-	columns := sarq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = slaalertrule.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if sarq.sql != nil {
-		selector = sarq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if sarq.ctx.Unique != nil && *sarq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range sarq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range sarq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := sarq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := sarq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -597,41 +597,41 @@ type SLAAlertRuleGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (sargb *SLAAlertRuleGroupBy) Aggregate(fns ...AggregateFunc) *SLAAlertRuleGroupBy {
-	sargb.fns = append(sargb.fns, fns...)
-	return sargb
+func (_g *SLAAlertRuleGroupBy) Aggregate(fns ...AggregateFunc) *SLAAlertRuleGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sargb *SLAAlertRuleGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sargb.build.ctx, ent.OpQueryGroupBy)
-	if err := sargb.build.prepareQuery(ctx); err != nil {
+func (_g *SLAAlertRuleGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAAlertRuleQuery, *SLAAlertRuleGroupBy](ctx, sargb.build, sargb, sargb.build.inters, v)
+	return scanWithInterceptors[*SLAAlertRuleQuery, *SLAAlertRuleGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (sargb *SLAAlertRuleGroupBy) sqlScan(ctx context.Context, root *SLAAlertRuleQuery, v any) error {
+func (_g *SLAAlertRuleGroupBy) sqlScan(ctx context.Context, root *SLAAlertRuleQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(sargb.fns))
-	for _, fn := range sargb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*sargb.flds)+len(sargb.fns))
-		for _, f := range *sargb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*sargb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sargb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -645,27 +645,27 @@ type SLAAlertRuleSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (sars *SLAAlertRuleSelect) Aggregate(fns ...AggregateFunc) *SLAAlertRuleSelect {
-	sars.fns = append(sars.fns, fns...)
-	return sars
+func (_s *SLAAlertRuleSelect) Aggregate(fns ...AggregateFunc) *SLAAlertRuleSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sars *SLAAlertRuleSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sars.ctx, ent.OpQuerySelect)
-	if err := sars.prepareQuery(ctx); err != nil {
+func (_s *SLAAlertRuleSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLAAlertRuleQuery, *SLAAlertRuleSelect](ctx, sars.SLAAlertRuleQuery, sars, sars.inters, v)
+	return scanWithInterceptors[*SLAAlertRuleQuery, *SLAAlertRuleSelect](ctx, _s.SLAAlertRuleQuery, _s, _s.inters, v)
 }
 
-func (sars *SLAAlertRuleSelect) sqlScan(ctx context.Context, root *SLAAlertRuleQuery, v any) error {
+func (_s *SLAAlertRuleSelect) sqlScan(ctx context.Context, root *SLAAlertRuleQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(sars.fns))
-	for _, fn := range sars.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*sars.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -673,7 +673,7 @@ func (sars *SLAAlertRuleSelect) sqlScan(ctx context.Context, root *SLAAlertRuleQ
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sars.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

@@ -33,44 +33,44 @@ type KnownErrorQuery struct {
 }
 
 // Where adds a new predicate for the KnownErrorQuery builder.
-func (keq *KnownErrorQuery) Where(ps ...predicate.KnownError) *KnownErrorQuery {
-	keq.predicates = append(keq.predicates, ps...)
-	return keq
+func (_q *KnownErrorQuery) Where(ps ...predicate.KnownError) *KnownErrorQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (keq *KnownErrorQuery) Limit(limit int) *KnownErrorQuery {
-	keq.ctx.Limit = &limit
-	return keq
+func (_q *KnownErrorQuery) Limit(limit int) *KnownErrorQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (keq *KnownErrorQuery) Offset(offset int) *KnownErrorQuery {
-	keq.ctx.Offset = &offset
-	return keq
+func (_q *KnownErrorQuery) Offset(offset int) *KnownErrorQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (keq *KnownErrorQuery) Unique(unique bool) *KnownErrorQuery {
-	keq.ctx.Unique = &unique
-	return keq
+func (_q *KnownErrorQuery) Unique(unique bool) *KnownErrorQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (keq *KnownErrorQuery) Order(o ...knownerror.OrderOption) *KnownErrorQuery {
-	keq.order = append(keq.order, o...)
-	return keq
+func (_q *KnownErrorQuery) Order(o ...knownerror.OrderOption) *KnownErrorQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryProblem chains the current query on the "problem" edge.
-func (keq *KnownErrorQuery) QueryProblem() *ProblemQuery {
-	query := (&ProblemClient{config: keq.config}).Query()
+func (_q *KnownErrorQuery) QueryProblem() *ProblemQuery {
+	query := (&ProblemClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := keq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := keq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -79,20 +79,20 @@ func (keq *KnownErrorQuery) QueryProblem() *ProblemQuery {
 			sqlgraph.To(problem.Table, problem.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, knownerror.ProblemTable, knownerror.ProblemColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(keq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryKnowledgeArticles chains the current query on the "knowledge_articles" edge.
-func (keq *KnownErrorQuery) QueryKnowledgeArticles() *KnowledgeArticleQuery {
-	query := (&KnowledgeArticleClient{config: keq.config}).Query()
+func (_q *KnownErrorQuery) QueryKnowledgeArticles() *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := keq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := keq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (keq *KnownErrorQuery) QueryKnowledgeArticles() *KnowledgeArticleQuery {
 			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, knownerror.KnowledgeArticlesTable, knownerror.KnowledgeArticlesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(keq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -109,8 +109,8 @@ func (keq *KnownErrorQuery) QueryKnowledgeArticles() *KnowledgeArticleQuery {
 
 // First returns the first KnownError entity from the query.
 // Returns a *NotFoundError when no KnownError was found.
-func (keq *KnownErrorQuery) First(ctx context.Context) (*KnownError, error) {
-	nodes, err := keq.Limit(1).All(setContextOp(ctx, keq.ctx, ent.OpQueryFirst))
+func (_q *KnownErrorQuery) First(ctx context.Context) (*KnownError, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func (keq *KnownErrorQuery) First(ctx context.Context) (*KnownError, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (keq *KnownErrorQuery) FirstX(ctx context.Context) *KnownError {
-	node, err := keq.First(ctx)
+func (_q *KnownErrorQuery) FirstX(ctx context.Context) *KnownError {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,9 +131,9 @@ func (keq *KnownErrorQuery) FirstX(ctx context.Context) *KnownError {
 
 // FirstID returns the first KnownError ID from the query.
 // Returns a *NotFoundError when no KnownError ID was found.
-func (keq *KnownErrorQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *KnownErrorQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = keq.Limit(1).IDs(setContextOp(ctx, keq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -144,8 +144,8 @@ func (keq *KnownErrorQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (keq *KnownErrorQuery) FirstIDX(ctx context.Context) int {
-	id, err := keq.FirstID(ctx)
+func (_q *KnownErrorQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -155,8 +155,8 @@ func (keq *KnownErrorQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single KnownError entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one KnownError entity is found.
 // Returns a *NotFoundError when no KnownError entities are found.
-func (keq *KnownErrorQuery) Only(ctx context.Context) (*KnownError, error) {
-	nodes, err := keq.Limit(2).All(setContextOp(ctx, keq.ctx, ent.OpQueryOnly))
+func (_q *KnownErrorQuery) Only(ctx context.Context) (*KnownError, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +171,8 @@ func (keq *KnownErrorQuery) Only(ctx context.Context) (*KnownError, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (keq *KnownErrorQuery) OnlyX(ctx context.Context) *KnownError {
-	node, err := keq.Only(ctx)
+func (_q *KnownErrorQuery) OnlyX(ctx context.Context) *KnownError {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -182,9 +182,9 @@ func (keq *KnownErrorQuery) OnlyX(ctx context.Context) *KnownError {
 // OnlyID is like Only, but returns the only KnownError ID in the query.
 // Returns a *NotSingularError when more than one KnownError ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (keq *KnownErrorQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *KnownErrorQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = keq.Limit(2).IDs(setContextOp(ctx, keq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -199,8 +199,8 @@ func (keq *KnownErrorQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (keq *KnownErrorQuery) OnlyIDX(ctx context.Context) int {
-	id, err := keq.OnlyID(ctx)
+func (_q *KnownErrorQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -208,18 +208,18 @@ func (keq *KnownErrorQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of KnownErrors.
-func (keq *KnownErrorQuery) All(ctx context.Context) ([]*KnownError, error) {
-	ctx = setContextOp(ctx, keq.ctx, ent.OpQueryAll)
-	if err := keq.prepareQuery(ctx); err != nil {
+func (_q *KnownErrorQuery) All(ctx context.Context) ([]*KnownError, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*KnownError, *KnownErrorQuery]()
-	return withInterceptors[[]*KnownError](ctx, keq, qr, keq.inters)
+	return withInterceptors[[]*KnownError](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (keq *KnownErrorQuery) AllX(ctx context.Context) []*KnownError {
-	nodes, err := keq.All(ctx)
+func (_q *KnownErrorQuery) AllX(ctx context.Context) []*KnownError {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -227,20 +227,20 @@ func (keq *KnownErrorQuery) AllX(ctx context.Context) []*KnownError {
 }
 
 // IDs executes the query and returns a list of KnownError IDs.
-func (keq *KnownErrorQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if keq.ctx.Unique == nil && keq.path != nil {
-		keq.Unique(true)
+func (_q *KnownErrorQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, keq.ctx, ent.OpQueryIDs)
-	if err = keq.Select(knownerror.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(knownerror.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (keq *KnownErrorQuery) IDsX(ctx context.Context) []int {
-	ids, err := keq.IDs(ctx)
+func (_q *KnownErrorQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -248,17 +248,17 @@ func (keq *KnownErrorQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (keq *KnownErrorQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, keq.ctx, ent.OpQueryCount)
-	if err := keq.prepareQuery(ctx); err != nil {
+func (_q *KnownErrorQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, keq, querierCount[*KnownErrorQuery](), keq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*KnownErrorQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (keq *KnownErrorQuery) CountX(ctx context.Context) int {
-	count, err := keq.Count(ctx)
+func (_q *KnownErrorQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,9 +266,9 @@ func (keq *KnownErrorQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (keq *KnownErrorQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, keq.ctx, ent.OpQueryExist)
-	switch _, err := keq.FirstID(ctx); {
+func (_q *KnownErrorQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -279,8 +279,8 @@ func (keq *KnownErrorQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (keq *KnownErrorQuery) ExistX(ctx context.Context) bool {
-	exist, err := keq.Exist(ctx)
+func (_q *KnownErrorQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -289,44 +289,44 @@ func (keq *KnownErrorQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the KnownErrorQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (keq *KnownErrorQuery) Clone() *KnownErrorQuery {
-	if keq == nil {
+func (_q *KnownErrorQuery) Clone() *KnownErrorQuery {
+	if _q == nil {
 		return nil
 	}
 	return &KnownErrorQuery{
-		config:                keq.config,
-		ctx:                   keq.ctx.Clone(),
-		order:                 append([]knownerror.OrderOption{}, keq.order...),
-		inters:                append([]Interceptor{}, keq.inters...),
-		predicates:            append([]predicate.KnownError{}, keq.predicates...),
-		withProblem:           keq.withProblem.Clone(),
-		withKnowledgeArticles: keq.withKnowledgeArticles.Clone(),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]knownerror.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.KnownError{}, _q.predicates...),
+		withProblem:           _q.withProblem.Clone(),
+		withKnowledgeArticles: _q.withKnowledgeArticles.Clone(),
 		// clone intermediate query.
-		sql:  keq.sql.Clone(),
-		path: keq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithProblem tells the query-builder to eager-load the nodes that are connected to
 // the "problem" edge. The optional arguments are used to configure the query builder of the edge.
-func (keq *KnownErrorQuery) WithProblem(opts ...func(*ProblemQuery)) *KnownErrorQuery {
-	query := (&ProblemClient{config: keq.config}).Query()
+func (_q *KnownErrorQuery) WithProblem(opts ...func(*ProblemQuery)) *KnownErrorQuery {
+	query := (&ProblemClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	keq.withProblem = query
-	return keq
+	_q.withProblem = query
+	return _q
 }
 
 // WithKnowledgeArticles tells the query-builder to eager-load the nodes that are connected to
 // the "knowledge_articles" edge. The optional arguments are used to configure the query builder of the edge.
-func (keq *KnownErrorQuery) WithKnowledgeArticles(opts ...func(*KnowledgeArticleQuery)) *KnownErrorQuery {
-	query := (&KnowledgeArticleClient{config: keq.config}).Query()
+func (_q *KnownErrorQuery) WithKnowledgeArticles(opts ...func(*KnowledgeArticleQuery)) *KnownErrorQuery {
+	query := (&KnowledgeArticleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	keq.withKnowledgeArticles = query
-	return keq
+	_q.withKnowledgeArticles = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -343,10 +343,10 @@ func (keq *KnownErrorQuery) WithKnowledgeArticles(opts ...func(*KnowledgeArticle
 //		GroupBy(knownerror.FieldTitle).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (keq *KnownErrorQuery) GroupBy(field string, fields ...string) *KnownErrorGroupBy {
-	keq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &KnownErrorGroupBy{build: keq}
-	grbuild.flds = &keq.ctx.Fields
+func (_q *KnownErrorQuery) GroupBy(field string, fields ...string) *KnownErrorGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &KnownErrorGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = knownerror.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -364,59 +364,59 @@ func (keq *KnownErrorQuery) GroupBy(field string, fields ...string) *KnownErrorG
 //	client.KnownError.Query().
 //		Select(knownerror.FieldTitle).
 //		Scan(ctx, &v)
-func (keq *KnownErrorQuery) Select(fields ...string) *KnownErrorSelect {
-	keq.ctx.Fields = append(keq.ctx.Fields, fields...)
-	sbuild := &KnownErrorSelect{KnownErrorQuery: keq}
+func (_q *KnownErrorQuery) Select(fields ...string) *KnownErrorSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &KnownErrorSelect{KnownErrorQuery: _q}
 	sbuild.label = knownerror.Label
-	sbuild.flds, sbuild.scan = &keq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a KnownErrorSelect configured with the given aggregations.
-func (keq *KnownErrorQuery) Aggregate(fns ...AggregateFunc) *KnownErrorSelect {
-	return keq.Select().Aggregate(fns...)
+func (_q *KnownErrorQuery) Aggregate(fns ...AggregateFunc) *KnownErrorSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (keq *KnownErrorQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range keq.inters {
+func (_q *KnownErrorQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, keq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range keq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !knownerror.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if keq.path != nil {
-		prev, err := keq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		keq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (keq *KnownErrorQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*KnownError, error) {
+func (_q *KnownErrorQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*KnownError, error) {
 	var (
 		nodes       = []*KnownError{}
-		_spec       = keq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			keq.withProblem != nil,
-			keq.withKnowledgeArticles != nil,
+			_q.withProblem != nil,
+			_q.withKnowledgeArticles != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*KnownError).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &KnownError{config: keq.config}
+		node := &KnownError{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -424,21 +424,21 @@ func (keq *KnownErrorQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, keq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := keq.withProblem; query != nil {
-		if err := keq.loadProblem(ctx, query, nodes,
+	if query := _q.withProblem; query != nil {
+		if err := _q.loadProblem(ctx, query, nodes,
 			func(n *KnownError) { n.Edges.Problem = []*Problem{} },
 			func(n *KnownError, e *Problem) { n.Edges.Problem = append(n.Edges.Problem, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := keq.withKnowledgeArticles; query != nil {
-		if err := keq.loadKnowledgeArticles(ctx, query, nodes,
+	if query := _q.withKnowledgeArticles; query != nil {
+		if err := _q.loadKnowledgeArticles(ctx, query, nodes,
 			func(n *KnownError) { n.Edges.KnowledgeArticles = []*KnowledgeArticle{} },
 			func(n *KnownError, e *KnowledgeArticle) {
 				n.Edges.KnowledgeArticles = append(n.Edges.KnowledgeArticles, e)
@@ -449,7 +449,7 @@ func (keq *KnownErrorQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*
 	return nodes, nil
 }
 
-func (keq *KnownErrorQuery) loadProblem(ctx context.Context, query *ProblemQuery, nodes []*KnownError, init func(*KnownError), assign func(*KnownError, *Problem)) error {
+func (_q *KnownErrorQuery) loadProblem(ctx context.Context, query *ProblemQuery, nodes []*KnownError, init func(*KnownError), assign func(*KnownError, *Problem)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*KnownError)
 	for i := range nodes {
@@ -480,7 +480,7 @@ func (keq *KnownErrorQuery) loadProblem(ctx context.Context, query *ProblemQuery
 	}
 	return nil
 }
-func (keq *KnownErrorQuery) loadKnowledgeArticles(ctx context.Context, query *KnowledgeArticleQuery, nodes []*KnownError, init func(*KnownError), assign func(*KnownError, *KnowledgeArticle)) error {
+func (_q *KnownErrorQuery) loadKnowledgeArticles(ctx context.Context, query *KnowledgeArticleQuery, nodes []*KnownError, init func(*KnownError), assign func(*KnownError, *KnowledgeArticle)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*KnownError)
 	for i := range nodes {
@@ -512,24 +512,24 @@ func (keq *KnownErrorQuery) loadKnowledgeArticles(ctx context.Context, query *Kn
 	return nil
 }
 
-func (keq *KnownErrorQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := keq.querySpec()
-	_spec.Node.Columns = keq.ctx.Fields
-	if len(keq.ctx.Fields) > 0 {
-		_spec.Unique = keq.ctx.Unique != nil && *keq.ctx.Unique
+func (_q *KnownErrorQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, keq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (keq *KnownErrorQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *KnownErrorQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(knownerror.Table, knownerror.Columns, sqlgraph.NewFieldSpec(knownerror.FieldID, field.TypeInt))
-	_spec.From = keq.sql
-	if unique := keq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if keq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := keq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, knownerror.FieldID)
 		for i := range fields {
@@ -538,20 +538,20 @@ func (keq *KnownErrorQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := keq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := keq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := keq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := keq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -561,33 +561,33 @@ func (keq *KnownErrorQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (keq *KnownErrorQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(keq.driver.Dialect())
+func (_q *KnownErrorQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(knownerror.Table)
-	columns := keq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = knownerror.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if keq.sql != nil {
-		selector = keq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if keq.ctx.Unique != nil && *keq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range keq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range keq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := keq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := keq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -600,41 +600,41 @@ type KnownErrorGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (kegb *KnownErrorGroupBy) Aggregate(fns ...AggregateFunc) *KnownErrorGroupBy {
-	kegb.fns = append(kegb.fns, fns...)
-	return kegb
+func (_g *KnownErrorGroupBy) Aggregate(fns ...AggregateFunc) *KnownErrorGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (kegb *KnownErrorGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, kegb.build.ctx, ent.OpQueryGroupBy)
-	if err := kegb.build.prepareQuery(ctx); err != nil {
+func (_g *KnownErrorGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*KnownErrorQuery, *KnownErrorGroupBy](ctx, kegb.build, kegb, kegb.build.inters, v)
+	return scanWithInterceptors[*KnownErrorQuery, *KnownErrorGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (kegb *KnownErrorGroupBy) sqlScan(ctx context.Context, root *KnownErrorQuery, v any) error {
+func (_g *KnownErrorGroupBy) sqlScan(ctx context.Context, root *KnownErrorQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(kegb.fns))
-	for _, fn := range kegb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*kegb.flds)+len(kegb.fns))
-		for _, f := range *kegb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*kegb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := kegb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -648,27 +648,27 @@ type KnownErrorSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (kes *KnownErrorSelect) Aggregate(fns ...AggregateFunc) *KnownErrorSelect {
-	kes.fns = append(kes.fns, fns...)
-	return kes
+func (_s *KnownErrorSelect) Aggregate(fns ...AggregateFunc) *KnownErrorSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (kes *KnownErrorSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, kes.ctx, ent.OpQuerySelect)
-	if err := kes.prepareQuery(ctx); err != nil {
+func (_s *KnownErrorSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*KnownErrorQuery, *KnownErrorSelect](ctx, kes.KnownErrorQuery, kes, kes.inters, v)
+	return scanWithInterceptors[*KnownErrorQuery, *KnownErrorSelect](ctx, _s.KnownErrorQuery, _s, _s.inters, v)
 }
 
-func (kes *KnownErrorSelect) sqlScan(ctx context.Context, root *KnownErrorQuery, v any) error {
+func (_s *KnownErrorSelect) sqlScan(ctx context.Context, root *KnownErrorQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(kes.fns))
-	for _, fn := range kes.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*kes.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -676,7 +676,7 @@ func (kes *KnownErrorSelect) sqlScan(ctx context.Context, root *KnownErrorQuery,
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := kes.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

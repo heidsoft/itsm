@@ -22,168 +22,168 @@ type IncidentRuleCreate struct {
 }
 
 // SetName sets the "name" field.
-func (irc *IncidentRuleCreate) SetName(s string) *IncidentRuleCreate {
-	irc.mutation.SetName(s)
-	return irc
+func (_c *IncidentRuleCreate) SetName(v string) *IncidentRuleCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (irc *IncidentRuleCreate) SetDescription(s string) *IncidentRuleCreate {
-	irc.mutation.SetDescription(s)
-	return irc
+func (_c *IncidentRuleCreate) SetDescription(v string) *IncidentRuleCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (irc *IncidentRuleCreate) SetNillableDescription(s *string) *IncidentRuleCreate {
-	if s != nil {
-		irc.SetDescription(*s)
+func (_c *IncidentRuleCreate) SetNillableDescription(v *string) *IncidentRuleCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return irc
+	return _c
 }
 
 // SetRuleType sets the "rule_type" field.
-func (irc *IncidentRuleCreate) SetRuleType(s string) *IncidentRuleCreate {
-	irc.mutation.SetRuleType(s)
-	return irc
+func (_c *IncidentRuleCreate) SetRuleType(v string) *IncidentRuleCreate {
+	_c.mutation.SetRuleType(v)
+	return _c
 }
 
 // SetConditions sets the "conditions" field.
-func (irc *IncidentRuleCreate) SetConditions(m map[string]interface{}) *IncidentRuleCreate {
-	irc.mutation.SetConditions(m)
-	return irc
+func (_c *IncidentRuleCreate) SetConditions(v map[string]interface{}) *IncidentRuleCreate {
+	_c.mutation.SetConditions(v)
+	return _c
 }
 
 // SetActions sets the "actions" field.
-func (irc *IncidentRuleCreate) SetActions(m []map[string]interface{}) *IncidentRuleCreate {
-	irc.mutation.SetActions(m)
-	return irc
+func (_c *IncidentRuleCreate) SetActions(v []map[string]interface{}) *IncidentRuleCreate {
+	_c.mutation.SetActions(v)
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (irc *IncidentRuleCreate) SetPriority(s string) *IncidentRuleCreate {
-	irc.mutation.SetPriority(s)
-	return irc
+func (_c *IncidentRuleCreate) SetPriority(v string) *IncidentRuleCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (irc *IncidentRuleCreate) SetNillablePriority(s *string) *IncidentRuleCreate {
-	if s != nil {
-		irc.SetPriority(*s)
+func (_c *IncidentRuleCreate) SetNillablePriority(v *string) *IncidentRuleCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return irc
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (irc *IncidentRuleCreate) SetIsActive(b bool) *IncidentRuleCreate {
-	irc.mutation.SetIsActive(b)
-	return irc
+func (_c *IncidentRuleCreate) SetIsActive(v bool) *IncidentRuleCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (irc *IncidentRuleCreate) SetNillableIsActive(b *bool) *IncidentRuleCreate {
-	if b != nil {
-		irc.SetIsActive(*b)
+func (_c *IncidentRuleCreate) SetNillableIsActive(v *bool) *IncidentRuleCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return irc
+	return _c
 }
 
 // SetExecutionCount sets the "execution_count" field.
-func (irc *IncidentRuleCreate) SetExecutionCount(i int) *IncidentRuleCreate {
-	irc.mutation.SetExecutionCount(i)
-	return irc
+func (_c *IncidentRuleCreate) SetExecutionCount(v int) *IncidentRuleCreate {
+	_c.mutation.SetExecutionCount(v)
+	return _c
 }
 
 // SetNillableExecutionCount sets the "execution_count" field if the given value is not nil.
-func (irc *IncidentRuleCreate) SetNillableExecutionCount(i *int) *IncidentRuleCreate {
-	if i != nil {
-		irc.SetExecutionCount(*i)
+func (_c *IncidentRuleCreate) SetNillableExecutionCount(v *int) *IncidentRuleCreate {
+	if v != nil {
+		_c.SetExecutionCount(*v)
 	}
-	return irc
+	return _c
 }
 
 // SetLastExecutedAt sets the "last_executed_at" field.
-func (irc *IncidentRuleCreate) SetLastExecutedAt(t time.Time) *IncidentRuleCreate {
-	irc.mutation.SetLastExecutedAt(t)
-	return irc
+func (_c *IncidentRuleCreate) SetLastExecutedAt(v time.Time) *IncidentRuleCreate {
+	_c.mutation.SetLastExecutedAt(v)
+	return _c
 }
 
 // SetNillableLastExecutedAt sets the "last_executed_at" field if the given value is not nil.
-func (irc *IncidentRuleCreate) SetNillableLastExecutedAt(t *time.Time) *IncidentRuleCreate {
-	if t != nil {
-		irc.SetLastExecutedAt(*t)
+func (_c *IncidentRuleCreate) SetNillableLastExecutedAt(v *time.Time) *IncidentRuleCreate {
+	if v != nil {
+		_c.SetLastExecutedAt(*v)
 	}
-	return irc
+	return _c
 }
 
 // SetMetadata sets the "metadata" field.
-func (irc *IncidentRuleCreate) SetMetadata(m map[string]interface{}) *IncidentRuleCreate {
-	irc.mutation.SetMetadata(m)
-	return irc
+func (_c *IncidentRuleCreate) SetMetadata(v map[string]interface{}) *IncidentRuleCreate {
+	_c.mutation.SetMetadata(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (irc *IncidentRuleCreate) SetTenantID(i int) *IncidentRuleCreate {
-	irc.mutation.SetTenantID(i)
-	return irc
+func (_c *IncidentRuleCreate) SetTenantID(v int) *IncidentRuleCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (irc *IncidentRuleCreate) SetCreatedAt(t time.Time) *IncidentRuleCreate {
-	irc.mutation.SetCreatedAt(t)
-	return irc
+func (_c *IncidentRuleCreate) SetCreatedAt(v time.Time) *IncidentRuleCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (irc *IncidentRuleCreate) SetNillableCreatedAt(t *time.Time) *IncidentRuleCreate {
-	if t != nil {
-		irc.SetCreatedAt(*t)
+func (_c *IncidentRuleCreate) SetNillableCreatedAt(v *time.Time) *IncidentRuleCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return irc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (irc *IncidentRuleCreate) SetUpdatedAt(t time.Time) *IncidentRuleCreate {
-	irc.mutation.SetUpdatedAt(t)
-	return irc
+func (_c *IncidentRuleCreate) SetUpdatedAt(v time.Time) *IncidentRuleCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (irc *IncidentRuleCreate) SetNillableUpdatedAt(t *time.Time) *IncidentRuleCreate {
-	if t != nil {
-		irc.SetUpdatedAt(*t)
+func (_c *IncidentRuleCreate) SetNillableUpdatedAt(v *time.Time) *IncidentRuleCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return irc
+	return _c
 }
 
 // AddRuleExecutionIDs adds the "rule_executions" edge to the IncidentRuleExecution entity by IDs.
-func (irc *IncidentRuleCreate) AddRuleExecutionIDs(ids ...int) *IncidentRuleCreate {
-	irc.mutation.AddRuleExecutionIDs(ids...)
-	return irc
+func (_c *IncidentRuleCreate) AddRuleExecutionIDs(ids ...int) *IncidentRuleCreate {
+	_c.mutation.AddRuleExecutionIDs(ids...)
+	return _c
 }
 
 // AddRuleExecutions adds the "rule_executions" edges to the IncidentRuleExecution entity.
-func (irc *IncidentRuleCreate) AddRuleExecutions(i ...*IncidentRuleExecution) *IncidentRuleCreate {
-	ids := make([]int, len(i))
-	for j := range i {
-		ids[j] = i[j].ID
+func (_c *IncidentRuleCreate) AddRuleExecutions(v ...*IncidentRuleExecution) *IncidentRuleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return irc.AddRuleExecutionIDs(ids...)
+	return _c.AddRuleExecutionIDs(ids...)
 }
 
 // Mutation returns the IncidentRuleMutation object of the builder.
-func (irc *IncidentRuleCreate) Mutation() *IncidentRuleMutation {
-	return irc.mutation
+func (_c *IncidentRuleCreate) Mutation() *IncidentRuleMutation {
+	return _c.mutation
 }
 
 // Save creates the IncidentRule in the database.
-func (irc *IncidentRuleCreate) Save(ctx context.Context) (*IncidentRule, error) {
-	irc.defaults()
-	return withHooks(ctx, irc.sqlSave, irc.mutation, irc.hooks)
+func (_c *IncidentRuleCreate) Save(ctx context.Context) (*IncidentRule, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (irc *IncidentRuleCreate) SaveX(ctx context.Context) *IncidentRule {
-	v, err := irc.Save(ctx)
+func (_c *IncidentRuleCreate) SaveX(ctx context.Context) *IncidentRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -191,92 +191,92 @@ func (irc *IncidentRuleCreate) SaveX(ctx context.Context) *IncidentRule {
 }
 
 // Exec executes the query.
-func (irc *IncidentRuleCreate) Exec(ctx context.Context) error {
-	_, err := irc.Save(ctx)
+func (_c *IncidentRuleCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (irc *IncidentRuleCreate) ExecX(ctx context.Context) {
-	if err := irc.Exec(ctx); err != nil {
+func (_c *IncidentRuleCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (irc *IncidentRuleCreate) defaults() {
-	if _, ok := irc.mutation.Priority(); !ok {
+func (_c *IncidentRuleCreate) defaults() {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := incidentrule.DefaultPriority
-		irc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := irc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := incidentrule.DefaultIsActive
-		irc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := irc.mutation.ExecutionCount(); !ok {
+	if _, ok := _c.mutation.ExecutionCount(); !ok {
 		v := incidentrule.DefaultExecutionCount
-		irc.mutation.SetExecutionCount(v)
+		_c.mutation.SetExecutionCount(v)
 	}
-	if _, ok := irc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := incidentrule.DefaultCreatedAt()
-		irc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := irc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := incidentrule.DefaultUpdatedAt()
-		irc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (irc *IncidentRuleCreate) check() error {
-	if _, ok := irc.mutation.Name(); !ok {
+func (_c *IncidentRuleCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "IncidentRule.name"`)}
 	}
-	if v, ok := irc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := incidentrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "IncidentRule.name": %w`, err)}
 		}
 	}
-	if _, ok := irc.mutation.RuleType(); !ok {
+	if _, ok := _c.mutation.RuleType(); !ok {
 		return &ValidationError{Name: "rule_type", err: errors.New(`ent: missing required field "IncidentRule.rule_type"`)}
 	}
-	if v, ok := irc.mutation.RuleType(); ok {
+	if v, ok := _c.mutation.RuleType(); ok {
 		if err := incidentrule.RuleTypeValidator(v); err != nil {
 			return &ValidationError{Name: "rule_type", err: fmt.Errorf(`ent: validator failed for field "IncidentRule.rule_type": %w`, err)}
 		}
 	}
-	if _, ok := irc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "IncidentRule.priority"`)}
 	}
-	if _, ok := irc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "IncidentRule.is_active"`)}
 	}
-	if _, ok := irc.mutation.ExecutionCount(); !ok {
+	if _, ok := _c.mutation.ExecutionCount(); !ok {
 		return &ValidationError{Name: "execution_count", err: errors.New(`ent: missing required field "IncidentRule.execution_count"`)}
 	}
-	if _, ok := irc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "IncidentRule.tenant_id"`)}
 	}
-	if v, ok := irc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := incidentrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentRule.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := irc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "IncidentRule.created_at"`)}
 	}
-	if _, ok := irc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "IncidentRule.updated_at"`)}
 	}
 	return nil
 }
 
-func (irc *IncidentRuleCreate) sqlSave(ctx context.Context) (*IncidentRule, error) {
-	if err := irc.check(); err != nil {
+func (_c *IncidentRuleCreate) sqlSave(ctx context.Context) (*IncidentRule, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := irc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, irc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -284,69 +284,69 @@ func (irc *IncidentRuleCreate) sqlSave(ctx context.Context) (*IncidentRule, erro
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	irc.mutation.id = &_node.ID
-	irc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (irc *IncidentRuleCreate) createSpec() (*IncidentRule, *sqlgraph.CreateSpec) {
+func (_c *IncidentRuleCreate) createSpec() (*IncidentRule, *sqlgraph.CreateSpec) {
 	var (
-		_node = &IncidentRule{config: irc.config}
+		_node = &IncidentRule{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(incidentrule.Table, sqlgraph.NewFieldSpec(incidentrule.FieldID, field.TypeInt))
 	)
-	if value, ok := irc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(incidentrule.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := irc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(incidentrule.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := irc.mutation.RuleType(); ok {
+	if value, ok := _c.mutation.RuleType(); ok {
 		_spec.SetField(incidentrule.FieldRuleType, field.TypeString, value)
 		_node.RuleType = value
 	}
-	if value, ok := irc.mutation.Conditions(); ok {
+	if value, ok := _c.mutation.Conditions(); ok {
 		_spec.SetField(incidentrule.FieldConditions, field.TypeJSON, value)
 		_node.Conditions = value
 	}
-	if value, ok := irc.mutation.Actions(); ok {
+	if value, ok := _c.mutation.Actions(); ok {
 		_spec.SetField(incidentrule.FieldActions, field.TypeJSON, value)
 		_node.Actions = value
 	}
-	if value, ok := irc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(incidentrule.FieldPriority, field.TypeString, value)
 		_node.Priority = value
 	}
-	if value, ok := irc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(incidentrule.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := irc.mutation.ExecutionCount(); ok {
+	if value, ok := _c.mutation.ExecutionCount(); ok {
 		_spec.SetField(incidentrule.FieldExecutionCount, field.TypeInt, value)
 		_node.ExecutionCount = value
 	}
-	if value, ok := irc.mutation.LastExecutedAt(); ok {
+	if value, ok := _c.mutation.LastExecutedAt(); ok {
 		_spec.SetField(incidentrule.FieldLastExecutedAt, field.TypeTime, value)
 		_node.LastExecutedAt = value
 	}
-	if value, ok := irc.mutation.Metadata(); ok {
+	if value, ok := _c.mutation.Metadata(); ok {
 		_spec.SetField(incidentrule.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
 	}
-	if value, ok := irc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(incidentrule.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := irc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentrule.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := irc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentrule.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := irc.mutation.RuleExecutionsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.RuleExecutionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -373,16 +373,16 @@ type IncidentRuleCreateBulk struct {
 }
 
 // Save creates the IncidentRule entities in the database.
-func (ircb *IncidentRuleCreateBulk) Save(ctx context.Context) ([]*IncidentRule, error) {
-	if ircb.err != nil {
-		return nil, ircb.err
+func (_c *IncidentRuleCreateBulk) Save(ctx context.Context) ([]*IncidentRule, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ircb.builders))
-	nodes := make([]*IncidentRule, len(ircb.builders))
-	mutators := make([]Mutator, len(ircb.builders))
-	for i := range ircb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*IncidentRule, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ircb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*IncidentRuleMutation)
@@ -396,11 +396,11 @@ func (ircb *IncidentRuleCreateBulk) Save(ctx context.Context) ([]*IncidentRule, 
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ircb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ircb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -424,7 +424,7 @@ func (ircb *IncidentRuleCreateBulk) Save(ctx context.Context) ([]*IncidentRule, 
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ircb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -432,8 +432,8 @@ func (ircb *IncidentRuleCreateBulk) Save(ctx context.Context) ([]*IncidentRule, 
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ircb *IncidentRuleCreateBulk) SaveX(ctx context.Context) []*IncidentRule {
-	v, err := ircb.Save(ctx)
+func (_c *IncidentRuleCreateBulk) SaveX(ctx context.Context) []*IncidentRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -441,14 +441,14 @@ func (ircb *IncidentRuleCreateBulk) SaveX(ctx context.Context) []*IncidentRule {
 }
 
 // Exec executes the query.
-func (ircb *IncidentRuleCreateBulk) Exec(ctx context.Context) error {
-	_, err := ircb.Save(ctx)
+func (_c *IncidentRuleCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ircb *IncidentRuleCreateBulk) ExecX(ctx context.Context) {
-	if err := ircb.Exec(ctx); err != nil {
+func (_c *IncidentRuleCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

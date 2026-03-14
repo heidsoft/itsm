@@ -28,361 +28,361 @@ type ProcessDefinitionUpdate struct {
 }
 
 // Where appends a list predicates to the ProcessDefinitionUpdate builder.
-func (pdu *ProcessDefinitionUpdate) Where(ps ...predicate.ProcessDefinition) *ProcessDefinitionUpdate {
-	pdu.mutation.Where(ps...)
-	return pdu
+func (_u *ProcessDefinitionUpdate) Where(ps ...predicate.ProcessDefinition) *ProcessDefinitionUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetKey sets the "key" field.
-func (pdu *ProcessDefinitionUpdate) SetKey(s string) *ProcessDefinitionUpdate {
-	pdu.mutation.SetKey(s)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetKey(v string) *ProcessDefinitionUpdate {
+	_u.mutation.SetKey(v)
+	return _u
 }
 
 // SetNillableKey sets the "key" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableKey(s *string) *ProcessDefinitionUpdate {
-	if s != nil {
-		pdu.SetKey(*s)
+func (_u *ProcessDefinitionUpdate) SetNillableKey(v *string) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetKey(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetName sets the "name" field.
-func (pdu *ProcessDefinitionUpdate) SetName(s string) *ProcessDefinitionUpdate {
-	pdu.mutation.SetName(s)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetName(v string) *ProcessDefinitionUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableName(s *string) *ProcessDefinitionUpdate {
-	if s != nil {
-		pdu.SetName(*s)
+func (_u *ProcessDefinitionUpdate) SetNillableName(v *string) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (pdu *ProcessDefinitionUpdate) SetDescription(s string) *ProcessDefinitionUpdate {
-	pdu.mutation.SetDescription(s)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetDescription(v string) *ProcessDefinitionUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableDescription(s *string) *ProcessDefinitionUpdate {
-	if s != nil {
-		pdu.SetDescription(*s)
+func (_u *ProcessDefinitionUpdate) SetNillableDescription(v *string) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return pdu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (pdu *ProcessDefinitionUpdate) ClearDescription() *ProcessDefinitionUpdate {
-	pdu.mutation.ClearDescription()
-	return pdu
+func (_u *ProcessDefinitionUpdate) ClearDescription() *ProcessDefinitionUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetVersion sets the "version" field.
-func (pdu *ProcessDefinitionUpdate) SetVersion(s string) *ProcessDefinitionUpdate {
-	pdu.mutation.SetVersion(s)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetVersion(v string) *ProcessDefinitionUpdate {
+	_u.mutation.SetVersion(v)
+	return _u
 }
 
 // SetNillableVersion sets the "version" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableVersion(s *string) *ProcessDefinitionUpdate {
-	if s != nil {
-		pdu.SetVersion(*s)
+func (_u *ProcessDefinitionUpdate) SetNillableVersion(v *string) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetVersion(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (pdu *ProcessDefinitionUpdate) SetCategory(s string) *ProcessDefinitionUpdate {
-	pdu.mutation.SetCategory(s)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetCategory(v string) *ProcessDefinitionUpdate {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableCategory(s *string) *ProcessDefinitionUpdate {
-	if s != nil {
-		pdu.SetCategory(*s)
+func (_u *ProcessDefinitionUpdate) SetNillableCategory(v *string) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetBpmnXML sets the "bpmn_xml" field.
-func (pdu *ProcessDefinitionUpdate) SetBpmnXML(u []uint8) *ProcessDefinitionUpdate {
-	pdu.mutation.SetBpmnXML(u)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetBpmnXML(v []uint8) *ProcessDefinitionUpdate {
+	_u.mutation.SetBpmnXML(v)
+	return _u
 }
 
-// AppendBpmnXML appends u to the "bpmn_xml" field.
-func (pdu *ProcessDefinitionUpdate) AppendBpmnXML(u []uint8) *ProcessDefinitionUpdate {
-	pdu.mutation.AppendBpmnXML(u)
-	return pdu
+// AppendBpmnXML appends value to the "bpmn_xml" field.
+func (_u *ProcessDefinitionUpdate) AppendBpmnXML(v []uint8) *ProcessDefinitionUpdate {
+	_u.mutation.AppendBpmnXML(v)
+	return _u
 }
 
 // SetProcessVariables sets the "process_variables" field.
-func (pdu *ProcessDefinitionUpdate) SetProcessVariables(m map[string]interface{}) *ProcessDefinitionUpdate {
-	pdu.mutation.SetProcessVariables(m)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetProcessVariables(v map[string]interface{}) *ProcessDefinitionUpdate {
+	_u.mutation.SetProcessVariables(v)
+	return _u
 }
 
 // ClearProcessVariables clears the value of the "process_variables" field.
-func (pdu *ProcessDefinitionUpdate) ClearProcessVariables() *ProcessDefinitionUpdate {
-	pdu.mutation.ClearProcessVariables()
-	return pdu
+func (_u *ProcessDefinitionUpdate) ClearProcessVariables() *ProcessDefinitionUpdate {
+	_u.mutation.ClearProcessVariables()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (pdu *ProcessDefinitionUpdate) SetIsActive(b bool) *ProcessDefinitionUpdate {
-	pdu.mutation.SetIsActive(b)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetIsActive(v bool) *ProcessDefinitionUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableIsActive(b *bool) *ProcessDefinitionUpdate {
-	if b != nil {
-		pdu.SetIsActive(*b)
+func (_u *ProcessDefinitionUpdate) SetNillableIsActive(v *bool) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetIsLatest sets the "is_latest" field.
-func (pdu *ProcessDefinitionUpdate) SetIsLatest(b bool) *ProcessDefinitionUpdate {
-	pdu.mutation.SetIsLatest(b)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetIsLatest(v bool) *ProcessDefinitionUpdate {
+	_u.mutation.SetIsLatest(v)
+	return _u
 }
 
 // SetNillableIsLatest sets the "is_latest" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableIsLatest(b *bool) *ProcessDefinitionUpdate {
-	if b != nil {
-		pdu.SetIsLatest(*b)
+func (_u *ProcessDefinitionUpdate) SetNillableIsLatest(v *bool) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetIsLatest(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDeploymentID sets the "deployment_id" field.
-func (pdu *ProcessDefinitionUpdate) SetDeploymentID(i int) *ProcessDefinitionUpdate {
-	pdu.mutation.SetDeploymentID(i)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetDeploymentID(v int) *ProcessDefinitionUpdate {
+	_u.mutation.SetDeploymentID(v)
+	return _u
 }
 
 // SetNillableDeploymentID sets the "deployment_id" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableDeploymentID(i *int) *ProcessDefinitionUpdate {
-	if i != nil {
-		pdu.SetDeploymentID(*i)
+func (_u *ProcessDefinitionUpdate) SetNillableDeploymentID(v *int) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetDeploymentID(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDeploymentName sets the "deployment_name" field.
-func (pdu *ProcessDefinitionUpdate) SetDeploymentName(s string) *ProcessDefinitionUpdate {
-	pdu.mutation.SetDeploymentName(s)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetDeploymentName(v string) *ProcessDefinitionUpdate {
+	_u.mutation.SetDeploymentName(v)
+	return _u
 }
 
 // SetNillableDeploymentName sets the "deployment_name" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableDeploymentName(s *string) *ProcessDefinitionUpdate {
-	if s != nil {
-		pdu.SetDeploymentName(*s)
+func (_u *ProcessDefinitionUpdate) SetNillableDeploymentName(v *string) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetDeploymentName(*v)
 	}
-	return pdu
+	return _u
 }
 
 // ClearDeploymentName clears the value of the "deployment_name" field.
-func (pdu *ProcessDefinitionUpdate) ClearDeploymentName() *ProcessDefinitionUpdate {
-	pdu.mutation.ClearDeploymentName()
-	return pdu
+func (_u *ProcessDefinitionUpdate) ClearDeploymentName() *ProcessDefinitionUpdate {
+	_u.mutation.ClearDeploymentName()
+	return _u
 }
 
 // SetDeployedAt sets the "deployed_at" field.
-func (pdu *ProcessDefinitionUpdate) SetDeployedAt(t time.Time) *ProcessDefinitionUpdate {
-	pdu.mutation.SetDeployedAt(t)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetDeployedAt(v time.Time) *ProcessDefinitionUpdate {
+	_u.mutation.SetDeployedAt(v)
+	return _u
 }
 
 // SetNillableDeployedAt sets the "deployed_at" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableDeployedAt(t *time.Time) *ProcessDefinitionUpdate {
-	if t != nil {
-		pdu.SetDeployedAt(*t)
+func (_u *ProcessDefinitionUpdate) SetNillableDeployedAt(v *time.Time) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetDeployedAt(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pdu *ProcessDefinitionUpdate) SetTenantID(i int) *ProcessDefinitionUpdate {
-	pdu.mutation.ResetTenantID()
-	pdu.mutation.SetTenantID(i)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetTenantID(v int) *ProcessDefinitionUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableTenantID(i *int) *ProcessDefinitionUpdate {
-	if i != nil {
-		pdu.SetTenantID(*i)
+func (_u *ProcessDefinitionUpdate) SetNillableTenantID(v *int) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pdu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pdu *ProcessDefinitionUpdate) AddTenantID(i int) *ProcessDefinitionUpdate {
-	pdu.mutation.AddTenantID(i)
-	return pdu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessDefinitionUpdate) AddTenantID(v int) *ProcessDefinitionUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pdu *ProcessDefinitionUpdate) SetCreatedAt(t time.Time) *ProcessDefinitionUpdate {
-	pdu.mutation.SetCreatedAt(t)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetCreatedAt(v time.Time) *ProcessDefinitionUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pdu *ProcessDefinitionUpdate) SetNillableCreatedAt(t *time.Time) *ProcessDefinitionUpdate {
-	if t != nil {
-		pdu.SetCreatedAt(*t)
+func (_u *ProcessDefinitionUpdate) SetNillableCreatedAt(v *time.Time) *ProcessDefinitionUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pdu *ProcessDefinitionUpdate) SetUpdatedAt(t time.Time) *ProcessDefinitionUpdate {
-	pdu.mutation.SetUpdatedAt(t)
-	return pdu
+func (_u *ProcessDefinitionUpdate) SetUpdatedAt(v time.Time) *ProcessDefinitionUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddProcessInstanceIDs adds the "process_instances" edge to the ProcessInstance entity by IDs.
-func (pdu *ProcessDefinitionUpdate) AddProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdate {
-	pdu.mutation.AddProcessInstanceIDs(ids...)
-	return pdu
+func (_u *ProcessDefinitionUpdate) AddProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdate {
+	_u.mutation.AddProcessInstanceIDs(ids...)
+	return _u
 }
 
 // AddProcessInstances adds the "process_instances" edges to the ProcessInstance entity.
-func (pdu *ProcessDefinitionUpdate) AddProcessInstances(p ...*ProcessInstance) *ProcessDefinitionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdate) AddProcessInstances(v ...*ProcessInstance) *ProcessDefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.AddProcessInstanceIDs(ids...)
+	return _u.AddProcessInstanceIDs(ids...)
 }
 
 // AddBindingIDs adds the "bindings" edge to the ProcessBinding entity by IDs.
-func (pdu *ProcessDefinitionUpdate) AddBindingIDs(ids ...int) *ProcessDefinitionUpdate {
-	pdu.mutation.AddBindingIDs(ids...)
-	return pdu
+func (_u *ProcessDefinitionUpdate) AddBindingIDs(ids ...int) *ProcessDefinitionUpdate {
+	_u.mutation.AddBindingIDs(ids...)
+	return _u
 }
 
 // AddBindings adds the "bindings" edges to the ProcessBinding entity.
-func (pdu *ProcessDefinitionUpdate) AddBindings(p ...*ProcessBinding) *ProcessDefinitionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdate) AddBindings(v ...*ProcessBinding) *ProcessDefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.AddBindingIDs(ids...)
+	return _u.AddBindingIDs(ids...)
 }
 
 // AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
-func (pdu *ProcessDefinitionUpdate) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdate {
-	pdu.mutation.AddVersionChangelogIDs(ids...)
-	return pdu
+func (_u *ProcessDefinitionUpdate) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdate {
+	_u.mutation.AddVersionChangelogIDs(ids...)
+	return _u
 }
 
 // AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
-func (pdu *ProcessDefinitionUpdate) AddVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdate) AddVersionChangelogs(v ...*ProcessVersionChangelog) *ProcessDefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.AddVersionChangelogIDs(ids...)
+	return _u.AddVersionChangelogIDs(ids...)
 }
 
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
-func (pdu *ProcessDefinitionUpdate) SetDeployment(p *ProcessDeployment) *ProcessDefinitionUpdate {
-	return pdu.SetDeploymentID(p.ID)
+func (_u *ProcessDefinitionUpdate) SetDeployment(v *ProcessDeployment) *ProcessDefinitionUpdate {
+	return _u.SetDeploymentID(v.ID)
 }
 
 // Mutation returns the ProcessDefinitionMutation object of the builder.
-func (pdu *ProcessDefinitionUpdate) Mutation() *ProcessDefinitionMutation {
-	return pdu.mutation
+func (_u *ProcessDefinitionUpdate) Mutation() *ProcessDefinitionMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstances clears all "process_instances" edges to the ProcessInstance entity.
-func (pdu *ProcessDefinitionUpdate) ClearProcessInstances() *ProcessDefinitionUpdate {
-	pdu.mutation.ClearProcessInstances()
-	return pdu
+func (_u *ProcessDefinitionUpdate) ClearProcessInstances() *ProcessDefinitionUpdate {
+	_u.mutation.ClearProcessInstances()
+	return _u
 }
 
 // RemoveProcessInstanceIDs removes the "process_instances" edge to ProcessInstance entities by IDs.
-func (pdu *ProcessDefinitionUpdate) RemoveProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdate {
-	pdu.mutation.RemoveProcessInstanceIDs(ids...)
-	return pdu
+func (_u *ProcessDefinitionUpdate) RemoveProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdate {
+	_u.mutation.RemoveProcessInstanceIDs(ids...)
+	return _u
 }
 
 // RemoveProcessInstances removes "process_instances" edges to ProcessInstance entities.
-func (pdu *ProcessDefinitionUpdate) RemoveProcessInstances(p ...*ProcessInstance) *ProcessDefinitionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdate) RemoveProcessInstances(v ...*ProcessInstance) *ProcessDefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.RemoveProcessInstanceIDs(ids...)
+	return _u.RemoveProcessInstanceIDs(ids...)
 }
 
 // ClearBindings clears all "bindings" edges to the ProcessBinding entity.
-func (pdu *ProcessDefinitionUpdate) ClearBindings() *ProcessDefinitionUpdate {
-	pdu.mutation.ClearBindings()
-	return pdu
+func (_u *ProcessDefinitionUpdate) ClearBindings() *ProcessDefinitionUpdate {
+	_u.mutation.ClearBindings()
+	return _u
 }
 
 // RemoveBindingIDs removes the "bindings" edge to ProcessBinding entities by IDs.
-func (pdu *ProcessDefinitionUpdate) RemoveBindingIDs(ids ...int) *ProcessDefinitionUpdate {
-	pdu.mutation.RemoveBindingIDs(ids...)
-	return pdu
+func (_u *ProcessDefinitionUpdate) RemoveBindingIDs(ids ...int) *ProcessDefinitionUpdate {
+	_u.mutation.RemoveBindingIDs(ids...)
+	return _u
 }
 
 // RemoveBindings removes "bindings" edges to ProcessBinding entities.
-func (pdu *ProcessDefinitionUpdate) RemoveBindings(p ...*ProcessBinding) *ProcessDefinitionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdate) RemoveBindings(v ...*ProcessBinding) *ProcessDefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.RemoveBindingIDs(ids...)
+	return _u.RemoveBindingIDs(ids...)
 }
 
 // ClearVersionChangelogs clears all "version_changelogs" edges to the ProcessVersionChangelog entity.
-func (pdu *ProcessDefinitionUpdate) ClearVersionChangelogs() *ProcessDefinitionUpdate {
-	pdu.mutation.ClearVersionChangelogs()
-	return pdu
+func (_u *ProcessDefinitionUpdate) ClearVersionChangelogs() *ProcessDefinitionUpdate {
+	_u.mutation.ClearVersionChangelogs()
+	return _u
 }
 
 // RemoveVersionChangelogIDs removes the "version_changelogs" edge to ProcessVersionChangelog entities by IDs.
-func (pdu *ProcessDefinitionUpdate) RemoveVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdate {
-	pdu.mutation.RemoveVersionChangelogIDs(ids...)
-	return pdu
+func (_u *ProcessDefinitionUpdate) RemoveVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdate {
+	_u.mutation.RemoveVersionChangelogIDs(ids...)
+	return _u
 }
 
 // RemoveVersionChangelogs removes "version_changelogs" edges to ProcessVersionChangelog entities.
-func (pdu *ProcessDefinitionUpdate) RemoveVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdate) RemoveVersionChangelogs(v ...*ProcessVersionChangelog) *ProcessDefinitionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.RemoveVersionChangelogIDs(ids...)
+	return _u.RemoveVersionChangelogIDs(ids...)
 }
 
 // ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
-func (pdu *ProcessDefinitionUpdate) ClearDeployment() *ProcessDefinitionUpdate {
-	pdu.mutation.ClearDeployment()
-	return pdu
+func (_u *ProcessDefinitionUpdate) ClearDeployment() *ProcessDefinitionUpdate {
+	_u.mutation.ClearDeployment()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pdu *ProcessDefinitionUpdate) Save(ctx context.Context) (int, error) {
-	pdu.defaults()
-	return withHooks(ctx, pdu.sqlSave, pdu.mutation, pdu.hooks)
+func (_u *ProcessDefinitionUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pdu *ProcessDefinitionUpdate) SaveX(ctx context.Context) int {
-	affected, err := pdu.Save(ctx)
+func (_u *ProcessDefinitionUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -390,126 +390,126 @@ func (pdu *ProcessDefinitionUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pdu *ProcessDefinitionUpdate) Exec(ctx context.Context) error {
-	_, err := pdu.Save(ctx)
+func (_u *ProcessDefinitionUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pdu *ProcessDefinitionUpdate) ExecX(ctx context.Context) {
-	if err := pdu.Exec(ctx); err != nil {
+func (_u *ProcessDefinitionUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pdu *ProcessDefinitionUpdate) defaults() {
-	if _, ok := pdu.mutation.UpdatedAt(); !ok {
+func (_u *ProcessDefinitionUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processdefinition.UpdateDefaultUpdatedAt()
-		pdu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pdu *ProcessDefinitionUpdate) check() error {
-	if v, ok := pdu.mutation.Key(); ok {
+func (_u *ProcessDefinitionUpdate) check() error {
+	if v, ok := _u.mutation.Key(); ok {
 		if err := processdefinition.KeyValidator(v); err != nil {
 			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.key": %w`, err)}
 		}
 	}
-	if v, ok := pdu.mutation.Name(); ok {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := processdefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.name": %w`, err)}
 		}
 	}
-	if v, ok := pdu.mutation.DeploymentID(); ok {
+	if v, ok := _u.mutation.DeploymentID(); ok {
 		if err := processdefinition.DeploymentIDValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.deployment_id": %w`, err)}
 		}
 	}
-	if v, ok := pdu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processdefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.tenant_id": %w`, err)}
 		}
 	}
-	if pdu.mutation.DeploymentCleared() && len(pdu.mutation.DeploymentIDs()) > 0 {
+	if _u.mutation.DeploymentCleared() && len(_u.mutation.DeploymentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessDefinition.deployment"`)
 	}
 	return nil
 }
 
-func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pdu.check(); err != nil {
-		return n, err
+func (_u *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processdefinition.Table, processdefinition.Columns, sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt))
-	if ps := pdu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pdu.mutation.Key(); ok {
+	if value, ok := _u.mutation.Key(); ok {
 		_spec.SetField(processdefinition.FieldKey, field.TypeString, value)
 	}
-	if value, ok := pdu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(processdefinition.FieldName, field.TypeString, value)
 	}
-	if value, ok := pdu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(processdefinition.FieldDescription, field.TypeString, value)
 	}
-	if pdu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(processdefinition.FieldDescription, field.TypeString)
 	}
-	if value, ok := pdu.mutation.Version(); ok {
+	if value, ok := _u.mutation.Version(); ok {
 		_spec.SetField(processdefinition.FieldVersion, field.TypeString, value)
 	}
-	if value, ok := pdu.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(processdefinition.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := pdu.mutation.BpmnXML(); ok {
+	if value, ok := _u.mutation.BpmnXML(); ok {
 		_spec.SetField(processdefinition.FieldBpmnXML, field.TypeJSON, value)
 	}
-	if value, ok := pdu.mutation.AppendedBpmnXML(); ok {
+	if value, ok := _u.mutation.AppendedBpmnXML(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, processdefinition.FieldBpmnXML, value)
 		})
 	}
-	if value, ok := pdu.mutation.ProcessVariables(); ok {
+	if value, ok := _u.mutation.ProcessVariables(); ok {
 		_spec.SetField(processdefinition.FieldProcessVariables, field.TypeJSON, value)
 	}
-	if pdu.mutation.ProcessVariablesCleared() {
+	if _u.mutation.ProcessVariablesCleared() {
 		_spec.ClearField(processdefinition.FieldProcessVariables, field.TypeJSON)
 	}
-	if value, ok := pdu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(processdefinition.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := pdu.mutation.IsLatest(); ok {
+	if value, ok := _u.mutation.IsLatest(); ok {
 		_spec.SetField(processdefinition.FieldIsLatest, field.TypeBool, value)
 	}
-	if value, ok := pdu.mutation.DeploymentName(); ok {
+	if value, ok := _u.mutation.DeploymentName(); ok {
 		_spec.SetField(processdefinition.FieldDeploymentName, field.TypeString, value)
 	}
-	if pdu.mutation.DeploymentNameCleared() {
+	if _u.mutation.DeploymentNameCleared() {
 		_spec.ClearField(processdefinition.FieldDeploymentName, field.TypeString)
 	}
-	if value, ok := pdu.mutation.DeployedAt(); ok {
+	if value, ok := _u.mutation.DeployedAt(); ok {
 		_spec.SetField(processdefinition.FieldDeployedAt, field.TypeTime, value)
 	}
-	if value, ok := pdu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processdefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pdu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processdefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pdu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processdefinition.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pdu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdefinition.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pdu.mutation.ProcessInstancesCleared() {
+	if _u.mutation.ProcessInstancesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -522,7 +522,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.RemovedProcessInstancesIDs(); len(nodes) > 0 && !pdu.mutation.ProcessInstancesCleared() {
+	if nodes := _u.mutation.RemovedProcessInstancesIDs(); len(nodes) > 0 && !_u.mutation.ProcessInstancesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -538,7 +538,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.ProcessInstancesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstancesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -554,7 +554,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pdu.mutation.BindingsCleared() {
+	if _u.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -567,7 +567,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !pdu.mutation.BindingsCleared() {
+	if nodes := _u.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !_u.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -583,7 +583,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.BindingsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.BindingsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -599,7 +599,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pdu.mutation.VersionChangelogsCleared() {
+	if _u.mutation.VersionChangelogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -612,7 +612,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !pdu.mutation.VersionChangelogsCleared() {
+	if nodes := _u.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !_u.mutation.VersionChangelogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -628,7 +628,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -644,7 +644,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pdu.mutation.DeploymentCleared() {
+	if _u.mutation.DeploymentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -657,7 +657,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.DeploymentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DeploymentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -673,7 +673,7 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pdu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processdefinition.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -681,8 +681,8 @@ func (pdu *ProcessDefinitionUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		return 0, err
 	}
-	pdu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProcessDefinitionUpdateOne is the builder for updating a single ProcessDefinition entity.
@@ -694,368 +694,368 @@ type ProcessDefinitionUpdateOne struct {
 }
 
 // SetKey sets the "key" field.
-func (pduo *ProcessDefinitionUpdateOne) SetKey(s string) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetKey(s)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetKey(v string) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetKey(v)
+	return _u
 }
 
 // SetNillableKey sets the "key" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableKey(s *string) *ProcessDefinitionUpdateOne {
-	if s != nil {
-		pduo.SetKey(*s)
+func (_u *ProcessDefinitionUpdateOne) SetNillableKey(v *string) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetKey(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetName sets the "name" field.
-func (pduo *ProcessDefinitionUpdateOne) SetName(s string) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetName(s)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetName(v string) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableName(s *string) *ProcessDefinitionUpdateOne {
-	if s != nil {
-		pduo.SetName(*s)
+func (_u *ProcessDefinitionUpdateOne) SetNillableName(v *string) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (pduo *ProcessDefinitionUpdateOne) SetDescription(s string) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetDescription(s)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetDescription(v string) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableDescription(s *string) *ProcessDefinitionUpdateOne {
-	if s != nil {
-		pduo.SetDescription(*s)
+func (_u *ProcessDefinitionUpdateOne) SetNillableDescription(v *string) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return pduo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (pduo *ProcessDefinitionUpdateOne) ClearDescription() *ProcessDefinitionUpdateOne {
-	pduo.mutation.ClearDescription()
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) ClearDescription() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetVersion sets the "version" field.
-func (pduo *ProcessDefinitionUpdateOne) SetVersion(s string) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetVersion(s)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetVersion(v string) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetVersion(v)
+	return _u
 }
 
 // SetNillableVersion sets the "version" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableVersion(s *string) *ProcessDefinitionUpdateOne {
-	if s != nil {
-		pduo.SetVersion(*s)
+func (_u *ProcessDefinitionUpdateOne) SetNillableVersion(v *string) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetVersion(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (pduo *ProcessDefinitionUpdateOne) SetCategory(s string) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetCategory(s)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetCategory(v string) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableCategory(s *string) *ProcessDefinitionUpdateOne {
-	if s != nil {
-		pduo.SetCategory(*s)
+func (_u *ProcessDefinitionUpdateOne) SetNillableCategory(v *string) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetBpmnXML sets the "bpmn_xml" field.
-func (pduo *ProcessDefinitionUpdateOne) SetBpmnXML(u []uint8) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetBpmnXML(u)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetBpmnXML(v []uint8) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetBpmnXML(v)
+	return _u
 }
 
-// AppendBpmnXML appends u to the "bpmn_xml" field.
-func (pduo *ProcessDefinitionUpdateOne) AppendBpmnXML(u []uint8) *ProcessDefinitionUpdateOne {
-	pduo.mutation.AppendBpmnXML(u)
-	return pduo
+// AppendBpmnXML appends value to the "bpmn_xml" field.
+func (_u *ProcessDefinitionUpdateOne) AppendBpmnXML(v []uint8) *ProcessDefinitionUpdateOne {
+	_u.mutation.AppendBpmnXML(v)
+	return _u
 }
 
 // SetProcessVariables sets the "process_variables" field.
-func (pduo *ProcessDefinitionUpdateOne) SetProcessVariables(m map[string]interface{}) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetProcessVariables(m)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetProcessVariables(v map[string]interface{}) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetProcessVariables(v)
+	return _u
 }
 
 // ClearProcessVariables clears the value of the "process_variables" field.
-func (pduo *ProcessDefinitionUpdateOne) ClearProcessVariables() *ProcessDefinitionUpdateOne {
-	pduo.mutation.ClearProcessVariables()
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) ClearProcessVariables() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearProcessVariables()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (pduo *ProcessDefinitionUpdateOne) SetIsActive(b bool) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetIsActive(b)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetIsActive(v bool) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableIsActive(b *bool) *ProcessDefinitionUpdateOne {
-	if b != nil {
-		pduo.SetIsActive(*b)
+func (_u *ProcessDefinitionUpdateOne) SetNillableIsActive(v *bool) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetIsLatest sets the "is_latest" field.
-func (pduo *ProcessDefinitionUpdateOne) SetIsLatest(b bool) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetIsLatest(b)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetIsLatest(v bool) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetIsLatest(v)
+	return _u
 }
 
 // SetNillableIsLatest sets the "is_latest" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableIsLatest(b *bool) *ProcessDefinitionUpdateOne {
-	if b != nil {
-		pduo.SetIsLatest(*b)
+func (_u *ProcessDefinitionUpdateOne) SetNillableIsLatest(v *bool) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetIsLatest(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDeploymentID sets the "deployment_id" field.
-func (pduo *ProcessDefinitionUpdateOne) SetDeploymentID(i int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetDeploymentID(i)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetDeploymentID(v int) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetDeploymentID(v)
+	return _u
 }
 
 // SetNillableDeploymentID sets the "deployment_id" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableDeploymentID(i *int) *ProcessDefinitionUpdateOne {
-	if i != nil {
-		pduo.SetDeploymentID(*i)
+func (_u *ProcessDefinitionUpdateOne) SetNillableDeploymentID(v *int) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDeploymentID(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDeploymentName sets the "deployment_name" field.
-func (pduo *ProcessDefinitionUpdateOne) SetDeploymentName(s string) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetDeploymentName(s)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetDeploymentName(v string) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetDeploymentName(v)
+	return _u
 }
 
 // SetNillableDeploymentName sets the "deployment_name" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableDeploymentName(s *string) *ProcessDefinitionUpdateOne {
-	if s != nil {
-		pduo.SetDeploymentName(*s)
+func (_u *ProcessDefinitionUpdateOne) SetNillableDeploymentName(v *string) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDeploymentName(*v)
 	}
-	return pduo
+	return _u
 }
 
 // ClearDeploymentName clears the value of the "deployment_name" field.
-func (pduo *ProcessDefinitionUpdateOne) ClearDeploymentName() *ProcessDefinitionUpdateOne {
-	pduo.mutation.ClearDeploymentName()
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) ClearDeploymentName() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearDeploymentName()
+	return _u
 }
 
 // SetDeployedAt sets the "deployed_at" field.
-func (pduo *ProcessDefinitionUpdateOne) SetDeployedAt(t time.Time) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetDeployedAt(t)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetDeployedAt(v time.Time) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetDeployedAt(v)
+	return _u
 }
 
 // SetNillableDeployedAt sets the "deployed_at" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableDeployedAt(t *time.Time) *ProcessDefinitionUpdateOne {
-	if t != nil {
-		pduo.SetDeployedAt(*t)
+func (_u *ProcessDefinitionUpdateOne) SetNillableDeployedAt(v *time.Time) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDeployedAt(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pduo *ProcessDefinitionUpdateOne) SetTenantID(i int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.ResetTenantID()
-	pduo.mutation.SetTenantID(i)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetTenantID(v int) *ProcessDefinitionUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableTenantID(i *int) *ProcessDefinitionUpdateOne {
-	if i != nil {
-		pduo.SetTenantID(*i)
+func (_u *ProcessDefinitionUpdateOne) SetNillableTenantID(v *int) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pduo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pduo *ProcessDefinitionUpdateOne) AddTenantID(i int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.AddTenantID(i)
-	return pduo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessDefinitionUpdateOne) AddTenantID(v int) *ProcessDefinitionUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pduo *ProcessDefinitionUpdateOne) SetCreatedAt(t time.Time) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetCreatedAt(t)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetCreatedAt(v time.Time) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pduo *ProcessDefinitionUpdateOne) SetNillableCreatedAt(t *time.Time) *ProcessDefinitionUpdateOne {
-	if t != nil {
-		pduo.SetCreatedAt(*t)
+func (_u *ProcessDefinitionUpdateOne) SetNillableCreatedAt(v *time.Time) *ProcessDefinitionUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pduo *ProcessDefinitionUpdateOne) SetUpdatedAt(t time.Time) *ProcessDefinitionUpdateOne {
-	pduo.mutation.SetUpdatedAt(t)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) SetUpdatedAt(v time.Time) *ProcessDefinitionUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddProcessInstanceIDs adds the "process_instances" edge to the ProcessInstance entity by IDs.
-func (pduo *ProcessDefinitionUpdateOne) AddProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.AddProcessInstanceIDs(ids...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) AddProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	_u.mutation.AddProcessInstanceIDs(ids...)
+	return _u
 }
 
 // AddProcessInstances adds the "process_instances" edges to the ProcessInstance entity.
-func (pduo *ProcessDefinitionUpdateOne) AddProcessInstances(p ...*ProcessInstance) *ProcessDefinitionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdateOne) AddProcessInstances(v ...*ProcessInstance) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.AddProcessInstanceIDs(ids...)
+	return _u.AddProcessInstanceIDs(ids...)
 }
 
 // AddBindingIDs adds the "bindings" edge to the ProcessBinding entity by IDs.
-func (pduo *ProcessDefinitionUpdateOne) AddBindingIDs(ids ...int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.AddBindingIDs(ids...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) AddBindingIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	_u.mutation.AddBindingIDs(ids...)
+	return _u
 }
 
 // AddBindings adds the "bindings" edges to the ProcessBinding entity.
-func (pduo *ProcessDefinitionUpdateOne) AddBindings(p ...*ProcessBinding) *ProcessDefinitionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdateOne) AddBindings(v ...*ProcessBinding) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.AddBindingIDs(ids...)
+	return _u.AddBindingIDs(ids...)
 }
 
 // AddVersionChangelogIDs adds the "version_changelogs" edge to the ProcessVersionChangelog entity by IDs.
-func (pduo *ProcessDefinitionUpdateOne) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.AddVersionChangelogIDs(ids...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) AddVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	_u.mutation.AddVersionChangelogIDs(ids...)
+	return _u
 }
 
 // AddVersionChangelogs adds the "version_changelogs" edges to the ProcessVersionChangelog entity.
-func (pduo *ProcessDefinitionUpdateOne) AddVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdateOne) AddVersionChangelogs(v ...*ProcessVersionChangelog) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.AddVersionChangelogIDs(ids...)
+	return _u.AddVersionChangelogIDs(ids...)
 }
 
 // SetDeployment sets the "deployment" edge to the ProcessDeployment entity.
-func (pduo *ProcessDefinitionUpdateOne) SetDeployment(p *ProcessDeployment) *ProcessDefinitionUpdateOne {
-	return pduo.SetDeploymentID(p.ID)
+func (_u *ProcessDefinitionUpdateOne) SetDeployment(v *ProcessDeployment) *ProcessDefinitionUpdateOne {
+	return _u.SetDeploymentID(v.ID)
 }
 
 // Mutation returns the ProcessDefinitionMutation object of the builder.
-func (pduo *ProcessDefinitionUpdateOne) Mutation() *ProcessDefinitionMutation {
-	return pduo.mutation
+func (_u *ProcessDefinitionUpdateOne) Mutation() *ProcessDefinitionMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstances clears all "process_instances" edges to the ProcessInstance entity.
-func (pduo *ProcessDefinitionUpdateOne) ClearProcessInstances() *ProcessDefinitionUpdateOne {
-	pduo.mutation.ClearProcessInstances()
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) ClearProcessInstances() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearProcessInstances()
+	return _u
 }
 
 // RemoveProcessInstanceIDs removes the "process_instances" edge to ProcessInstance entities by IDs.
-func (pduo *ProcessDefinitionUpdateOne) RemoveProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.RemoveProcessInstanceIDs(ids...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) RemoveProcessInstanceIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	_u.mutation.RemoveProcessInstanceIDs(ids...)
+	return _u
 }
 
 // RemoveProcessInstances removes "process_instances" edges to ProcessInstance entities.
-func (pduo *ProcessDefinitionUpdateOne) RemoveProcessInstances(p ...*ProcessInstance) *ProcessDefinitionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdateOne) RemoveProcessInstances(v ...*ProcessInstance) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.RemoveProcessInstanceIDs(ids...)
+	return _u.RemoveProcessInstanceIDs(ids...)
 }
 
 // ClearBindings clears all "bindings" edges to the ProcessBinding entity.
-func (pduo *ProcessDefinitionUpdateOne) ClearBindings() *ProcessDefinitionUpdateOne {
-	pduo.mutation.ClearBindings()
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) ClearBindings() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearBindings()
+	return _u
 }
 
 // RemoveBindingIDs removes the "bindings" edge to ProcessBinding entities by IDs.
-func (pduo *ProcessDefinitionUpdateOne) RemoveBindingIDs(ids ...int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.RemoveBindingIDs(ids...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) RemoveBindingIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	_u.mutation.RemoveBindingIDs(ids...)
+	return _u
 }
 
 // RemoveBindings removes "bindings" edges to ProcessBinding entities.
-func (pduo *ProcessDefinitionUpdateOne) RemoveBindings(p ...*ProcessBinding) *ProcessDefinitionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdateOne) RemoveBindings(v ...*ProcessBinding) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.RemoveBindingIDs(ids...)
+	return _u.RemoveBindingIDs(ids...)
 }
 
 // ClearVersionChangelogs clears all "version_changelogs" edges to the ProcessVersionChangelog entity.
-func (pduo *ProcessDefinitionUpdateOne) ClearVersionChangelogs() *ProcessDefinitionUpdateOne {
-	pduo.mutation.ClearVersionChangelogs()
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) ClearVersionChangelogs() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearVersionChangelogs()
+	return _u
 }
 
 // RemoveVersionChangelogIDs removes the "version_changelogs" edge to ProcessVersionChangelog entities by IDs.
-func (pduo *ProcessDefinitionUpdateOne) RemoveVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdateOne {
-	pduo.mutation.RemoveVersionChangelogIDs(ids...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) RemoveVersionChangelogIDs(ids ...int) *ProcessDefinitionUpdateOne {
+	_u.mutation.RemoveVersionChangelogIDs(ids...)
+	return _u
 }
 
 // RemoveVersionChangelogs removes "version_changelogs" edges to ProcessVersionChangelog entities.
-func (pduo *ProcessDefinitionUpdateOne) RemoveVersionChangelogs(p ...*ProcessVersionChangelog) *ProcessDefinitionUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDefinitionUpdateOne) RemoveVersionChangelogs(v ...*ProcessVersionChangelog) *ProcessDefinitionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.RemoveVersionChangelogIDs(ids...)
+	return _u.RemoveVersionChangelogIDs(ids...)
 }
 
 // ClearDeployment clears the "deployment" edge to the ProcessDeployment entity.
-func (pduo *ProcessDefinitionUpdateOne) ClearDeployment() *ProcessDefinitionUpdateOne {
-	pduo.mutation.ClearDeployment()
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) ClearDeployment() *ProcessDefinitionUpdateOne {
+	_u.mutation.ClearDeployment()
+	return _u
 }
 
 // Where appends a list predicates to the ProcessDefinitionUpdate builder.
-func (pduo *ProcessDefinitionUpdateOne) Where(ps ...predicate.ProcessDefinition) *ProcessDefinitionUpdateOne {
-	pduo.mutation.Where(ps...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) Where(ps ...predicate.ProcessDefinition) *ProcessDefinitionUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (pduo *ProcessDefinitionUpdateOne) Select(field string, fields ...string) *ProcessDefinitionUpdateOne {
-	pduo.fields = append([]string{field}, fields...)
-	return pduo
+func (_u *ProcessDefinitionUpdateOne) Select(field string, fields ...string) *ProcessDefinitionUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProcessDefinition entity.
-func (pduo *ProcessDefinitionUpdateOne) Save(ctx context.Context) (*ProcessDefinition, error) {
-	pduo.defaults()
-	return withHooks(ctx, pduo.sqlSave, pduo.mutation, pduo.hooks)
+func (_u *ProcessDefinitionUpdateOne) Save(ctx context.Context) (*ProcessDefinition, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pduo *ProcessDefinitionUpdateOne) SaveX(ctx context.Context) *ProcessDefinition {
-	node, err := pduo.Save(ctx)
+func (_u *ProcessDefinitionUpdateOne) SaveX(ctx context.Context) *ProcessDefinition {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1063,65 +1063,65 @@ func (pduo *ProcessDefinitionUpdateOne) SaveX(ctx context.Context) *ProcessDefin
 }
 
 // Exec executes the query on the entity.
-func (pduo *ProcessDefinitionUpdateOne) Exec(ctx context.Context) error {
-	_, err := pduo.Save(ctx)
+func (_u *ProcessDefinitionUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pduo *ProcessDefinitionUpdateOne) ExecX(ctx context.Context) {
-	if err := pduo.Exec(ctx); err != nil {
+func (_u *ProcessDefinitionUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pduo *ProcessDefinitionUpdateOne) defaults() {
-	if _, ok := pduo.mutation.UpdatedAt(); !ok {
+func (_u *ProcessDefinitionUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processdefinition.UpdateDefaultUpdatedAt()
-		pduo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pduo *ProcessDefinitionUpdateOne) check() error {
-	if v, ok := pduo.mutation.Key(); ok {
+func (_u *ProcessDefinitionUpdateOne) check() error {
+	if v, ok := _u.mutation.Key(); ok {
 		if err := processdefinition.KeyValidator(v); err != nil {
 			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.key": %w`, err)}
 		}
 	}
-	if v, ok := pduo.mutation.Name(); ok {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := processdefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.name": %w`, err)}
 		}
 	}
-	if v, ok := pduo.mutation.DeploymentID(); ok {
+	if v, ok := _u.mutation.DeploymentID(); ok {
 		if err := processdefinition.DeploymentIDValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.deployment_id": %w`, err)}
 		}
 	}
-	if v, ok := pduo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processdefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDefinition.tenant_id": %w`, err)}
 		}
 	}
-	if pduo.mutation.DeploymentCleared() && len(pduo.mutation.DeploymentIDs()) > 0 {
+	if _u.mutation.DeploymentCleared() && len(_u.mutation.DeploymentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessDefinition.deployment"`)
 	}
 	return nil
 }
 
-func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *ProcessDefinition, err error) {
-	if err := pduo.check(); err != nil {
+func (_u *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *ProcessDefinition, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processdefinition.Table, processdefinition.Columns, sqlgraph.NewFieldSpec(processdefinition.FieldID, field.TypeInt))
-	id, ok := pduo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProcessDefinition.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := pduo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processdefinition.FieldID)
 		for _, f := range fields {
@@ -1133,73 +1133,73 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 			}
 		}
 	}
-	if ps := pduo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pduo.mutation.Key(); ok {
+	if value, ok := _u.mutation.Key(); ok {
 		_spec.SetField(processdefinition.FieldKey, field.TypeString, value)
 	}
-	if value, ok := pduo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(processdefinition.FieldName, field.TypeString, value)
 	}
-	if value, ok := pduo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(processdefinition.FieldDescription, field.TypeString, value)
 	}
-	if pduo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(processdefinition.FieldDescription, field.TypeString)
 	}
-	if value, ok := pduo.mutation.Version(); ok {
+	if value, ok := _u.mutation.Version(); ok {
 		_spec.SetField(processdefinition.FieldVersion, field.TypeString, value)
 	}
-	if value, ok := pduo.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(processdefinition.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := pduo.mutation.BpmnXML(); ok {
+	if value, ok := _u.mutation.BpmnXML(); ok {
 		_spec.SetField(processdefinition.FieldBpmnXML, field.TypeJSON, value)
 	}
-	if value, ok := pduo.mutation.AppendedBpmnXML(); ok {
+	if value, ok := _u.mutation.AppendedBpmnXML(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, processdefinition.FieldBpmnXML, value)
 		})
 	}
-	if value, ok := pduo.mutation.ProcessVariables(); ok {
+	if value, ok := _u.mutation.ProcessVariables(); ok {
 		_spec.SetField(processdefinition.FieldProcessVariables, field.TypeJSON, value)
 	}
-	if pduo.mutation.ProcessVariablesCleared() {
+	if _u.mutation.ProcessVariablesCleared() {
 		_spec.ClearField(processdefinition.FieldProcessVariables, field.TypeJSON)
 	}
-	if value, ok := pduo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(processdefinition.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := pduo.mutation.IsLatest(); ok {
+	if value, ok := _u.mutation.IsLatest(); ok {
 		_spec.SetField(processdefinition.FieldIsLatest, field.TypeBool, value)
 	}
-	if value, ok := pduo.mutation.DeploymentName(); ok {
+	if value, ok := _u.mutation.DeploymentName(); ok {
 		_spec.SetField(processdefinition.FieldDeploymentName, field.TypeString, value)
 	}
-	if pduo.mutation.DeploymentNameCleared() {
+	if _u.mutation.DeploymentNameCleared() {
 		_spec.ClearField(processdefinition.FieldDeploymentName, field.TypeString)
 	}
-	if value, ok := pduo.mutation.DeployedAt(); ok {
+	if value, ok := _u.mutation.DeployedAt(); ok {
 		_spec.SetField(processdefinition.FieldDeployedAt, field.TypeTime, value)
 	}
-	if value, ok := pduo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processdefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pduo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processdefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pduo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processdefinition.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pduo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdefinition.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pduo.mutation.ProcessInstancesCleared() {
+	if _u.mutation.ProcessInstancesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1212,7 +1212,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.RemovedProcessInstancesIDs(); len(nodes) > 0 && !pduo.mutation.ProcessInstancesCleared() {
+	if nodes := _u.mutation.RemovedProcessInstancesIDs(); len(nodes) > 0 && !_u.mutation.ProcessInstancesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1228,7 +1228,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.ProcessInstancesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstancesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1244,7 +1244,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pduo.mutation.BindingsCleared() {
+	if _u.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1257,7 +1257,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !pduo.mutation.BindingsCleared() {
+	if nodes := _u.mutation.RemovedBindingsIDs(); len(nodes) > 0 && !_u.mutation.BindingsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1273,7 +1273,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.BindingsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.BindingsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1289,7 +1289,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pduo.mutation.VersionChangelogsCleared() {
+	if _u.mutation.VersionChangelogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1302,7 +1302,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !pduo.mutation.VersionChangelogsCleared() {
+	if nodes := _u.mutation.RemovedVersionChangelogsIDs(); len(nodes) > 0 && !_u.mutation.VersionChangelogsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1318,7 +1318,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.VersionChangelogsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1334,7 +1334,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if pduo.mutation.DeploymentCleared() {
+	if _u.mutation.DeploymentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1347,7 +1347,7 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.DeploymentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DeploymentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1363,10 +1363,10 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ProcessDefinition{config: pduo.config}
+	_node = &ProcessDefinition{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, pduo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processdefinition.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1374,6 +1374,6 @@ func (pduo *ProcessDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		return nil, err
 	}
-	pduo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

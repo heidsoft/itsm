@@ -81,7 +81,7 @@ func (*CIType) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the CIType fields.
-func (ct *CIType) assignValues(columns []string, values []any) error {
+func (_m *CIType) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -92,63 +92,63 @@ func (ct *CIType) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ct.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case citype.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ct.Name = value.String
+				_m.Name = value.String
 			}
 		case citype.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				ct.Description = value.String
+				_m.Description = value.String
 			}
 		case citype.FieldIcon:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field icon", values[i])
 			} else if value.Valid {
-				ct.Icon = value.String
+				_m.Icon = value.String
 			}
 		case citype.FieldColor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field color", values[i])
 			} else if value.Valid {
-				ct.Color = value.String
+				_m.Color = value.String
 			}
 		case citype.FieldAttributeSchema:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field attribute_schema", values[i])
 			} else if value.Valid {
-				ct.AttributeSchema = value.String
+				_m.AttributeSchema = value.String
 			}
 		case citype.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ct.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case citype.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				ct.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case citype.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ct.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case citype.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ct.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ct.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -156,64 +156,64 @@ func (ct *CIType) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the CIType.
 // This includes values selected through modifiers, order, etc.
-func (ct *CIType) Value(name string) (ent.Value, error) {
-	return ct.selectValues.Get(name)
+func (_m *CIType) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryCis queries the "cis" edge of the CIType entity.
-func (ct *CIType) QueryCis() *ConfigurationItemQuery {
-	return NewCITypeClient(ct.config).QueryCis(ct)
+func (_m *CIType) QueryCis() *ConfigurationItemQuery {
+	return NewCITypeClient(_m.config).QueryCis(_m)
 }
 
 // Update returns a builder for updating this CIType.
 // Note that you need to call CIType.Unwrap() before calling this method if this CIType
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ct *CIType) Update() *CITypeUpdateOne {
-	return NewCITypeClient(ct.config).UpdateOne(ct)
+func (_m *CIType) Update() *CITypeUpdateOne {
+	return NewCITypeClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the CIType entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ct *CIType) Unwrap() *CIType {
-	_tx, ok := ct.config.driver.(*txDriver)
+func (_m *CIType) Unwrap() *CIType {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: CIType is not a transactional entity")
 	}
-	ct.config.driver = _tx.drv
-	return ct
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ct *CIType) String() string {
+func (_m *CIType) String() string {
 	var builder strings.Builder
 	builder.WriteString("CIType(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ct.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(ct.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(ct.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("icon=")
-	builder.WriteString(ct.Icon)
+	builder.WriteString(_m.Icon)
 	builder.WriteString(", ")
 	builder.WriteString("color=")
-	builder.WriteString(ct.Color)
+	builder.WriteString(_m.Color)
 	builder.WriteString(", ")
 	builder.WriteString("attribute_schema=")
-	builder.WriteString(ct.AttributeSchema)
+	builder.WriteString(_m.AttributeSchema)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ct.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", ct.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ct.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ct.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

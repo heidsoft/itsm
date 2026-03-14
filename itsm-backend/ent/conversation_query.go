@@ -33,44 +33,44 @@ type ConversationQuery struct {
 }
 
 // Where adds a new predicate for the ConversationQuery builder.
-func (cq *ConversationQuery) Where(ps ...predicate.Conversation) *ConversationQuery {
-	cq.predicates = append(cq.predicates, ps...)
-	return cq
+func (_q *ConversationQuery) Where(ps ...predicate.Conversation) *ConversationQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (cq *ConversationQuery) Limit(limit int) *ConversationQuery {
-	cq.ctx.Limit = &limit
-	return cq
+func (_q *ConversationQuery) Limit(limit int) *ConversationQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (cq *ConversationQuery) Offset(offset int) *ConversationQuery {
-	cq.ctx.Offset = &offset
-	return cq
+func (_q *ConversationQuery) Offset(offset int) *ConversationQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (cq *ConversationQuery) Unique(unique bool) *ConversationQuery {
-	cq.ctx.Unique = &unique
-	return cq
+func (_q *ConversationQuery) Unique(unique bool) *ConversationQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (cq *ConversationQuery) Order(o ...conversation.OrderOption) *ConversationQuery {
-	cq.order = append(cq.order, o...)
-	return cq
+func (_q *ConversationQuery) Order(o ...conversation.OrderOption) *ConversationQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryMessages chains the current query on the "messages" edge.
-func (cq *ConversationQuery) QueryMessages() *MessageQuery {
-	query := (&MessageClient{config: cq.config}).Query()
+func (_q *ConversationQuery) QueryMessages() *MessageQuery {
+	query := (&MessageClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := cq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := cq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -79,20 +79,20 @@ func (cq *ConversationQuery) QueryMessages() *MessageQuery {
 			sqlgraph.To(message.Table, message.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, conversation.MessagesTable, conversation.MessagesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryToolInvocations chains the current query on the "tool_invocations" edge.
-func (cq *ConversationQuery) QueryToolInvocations() *ToolInvocationQuery {
-	query := (&ToolInvocationClient{config: cq.config}).Query()
+func (_q *ConversationQuery) QueryToolInvocations() *ToolInvocationQuery {
+	query := (&ToolInvocationClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := cq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := cq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -101,7 +101,7 @@ func (cq *ConversationQuery) QueryToolInvocations() *ToolInvocationQuery {
 			sqlgraph.To(toolinvocation.Table, toolinvocation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, conversation.ToolInvocationsTable, conversation.ToolInvocationsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(cq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -109,8 +109,8 @@ func (cq *ConversationQuery) QueryToolInvocations() *ToolInvocationQuery {
 
 // First returns the first Conversation entity from the query.
 // Returns a *NotFoundError when no Conversation was found.
-func (cq *ConversationQuery) First(ctx context.Context) (*Conversation, error) {
-	nodes, err := cq.Limit(1).All(setContextOp(ctx, cq.ctx, ent.OpQueryFirst))
+func (_q *ConversationQuery) First(ctx context.Context) (*Conversation, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +121,8 @@ func (cq *ConversationQuery) First(ctx context.Context) (*Conversation, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (cq *ConversationQuery) FirstX(ctx context.Context) *Conversation {
-	node, err := cq.First(ctx)
+func (_q *ConversationQuery) FirstX(ctx context.Context) *Conversation {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,9 +131,9 @@ func (cq *ConversationQuery) FirstX(ctx context.Context) *Conversation {
 
 // FirstID returns the first Conversation ID from the query.
 // Returns a *NotFoundError when no Conversation ID was found.
-func (cq *ConversationQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ConversationQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = cq.Limit(1).IDs(setContextOp(ctx, cq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -144,8 +144,8 @@ func (cq *ConversationQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (cq *ConversationQuery) FirstIDX(ctx context.Context) int {
-	id, err := cq.FirstID(ctx)
+func (_q *ConversationQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -155,8 +155,8 @@ func (cq *ConversationQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single Conversation entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one Conversation entity is found.
 // Returns a *NotFoundError when no Conversation entities are found.
-func (cq *ConversationQuery) Only(ctx context.Context) (*Conversation, error) {
-	nodes, err := cq.Limit(2).All(setContextOp(ctx, cq.ctx, ent.OpQueryOnly))
+func (_q *ConversationQuery) Only(ctx context.Context) (*Conversation, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +171,8 @@ func (cq *ConversationQuery) Only(ctx context.Context) (*Conversation, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (cq *ConversationQuery) OnlyX(ctx context.Context) *Conversation {
-	node, err := cq.Only(ctx)
+func (_q *ConversationQuery) OnlyX(ctx context.Context) *Conversation {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -182,9 +182,9 @@ func (cq *ConversationQuery) OnlyX(ctx context.Context) *Conversation {
 // OnlyID is like Only, but returns the only Conversation ID in the query.
 // Returns a *NotSingularError when more than one Conversation ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (cq *ConversationQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ConversationQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = cq.Limit(2).IDs(setContextOp(ctx, cq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -199,8 +199,8 @@ func (cq *ConversationQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (cq *ConversationQuery) OnlyIDX(ctx context.Context) int {
-	id, err := cq.OnlyID(ctx)
+func (_q *ConversationQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -208,18 +208,18 @@ func (cq *ConversationQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of Conversations.
-func (cq *ConversationQuery) All(ctx context.Context) ([]*Conversation, error) {
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryAll)
-	if err := cq.prepareQuery(ctx); err != nil {
+func (_q *ConversationQuery) All(ctx context.Context) ([]*Conversation, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*Conversation, *ConversationQuery]()
-	return withInterceptors[[]*Conversation](ctx, cq, qr, cq.inters)
+	return withInterceptors[[]*Conversation](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (cq *ConversationQuery) AllX(ctx context.Context) []*Conversation {
-	nodes, err := cq.All(ctx)
+func (_q *ConversationQuery) AllX(ctx context.Context) []*Conversation {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -227,20 +227,20 @@ func (cq *ConversationQuery) AllX(ctx context.Context) []*Conversation {
 }
 
 // IDs executes the query and returns a list of Conversation IDs.
-func (cq *ConversationQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if cq.ctx.Unique == nil && cq.path != nil {
-		cq.Unique(true)
+func (_q *ConversationQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryIDs)
-	if err = cq.Select(conversation.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(conversation.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (cq *ConversationQuery) IDsX(ctx context.Context) []int {
-	ids, err := cq.IDs(ctx)
+func (_q *ConversationQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -248,17 +248,17 @@ func (cq *ConversationQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (cq *ConversationQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryCount)
-	if err := cq.prepareQuery(ctx); err != nil {
+func (_q *ConversationQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, cq, querierCount[*ConversationQuery](), cq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ConversationQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (cq *ConversationQuery) CountX(ctx context.Context) int {
-	count, err := cq.Count(ctx)
+func (_q *ConversationQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -266,9 +266,9 @@ func (cq *ConversationQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (cq *ConversationQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, cq.ctx, ent.OpQueryExist)
-	switch _, err := cq.FirstID(ctx); {
+func (_q *ConversationQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -279,8 +279,8 @@ func (cq *ConversationQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (cq *ConversationQuery) ExistX(ctx context.Context) bool {
-	exist, err := cq.Exist(ctx)
+func (_q *ConversationQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -289,44 +289,44 @@ func (cq *ConversationQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ConversationQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (cq *ConversationQuery) Clone() *ConversationQuery {
-	if cq == nil {
+func (_q *ConversationQuery) Clone() *ConversationQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ConversationQuery{
-		config:              cq.config,
-		ctx:                 cq.ctx.Clone(),
-		order:               append([]conversation.OrderOption{}, cq.order...),
-		inters:              append([]Interceptor{}, cq.inters...),
-		predicates:          append([]predicate.Conversation{}, cq.predicates...),
-		withMessages:        cq.withMessages.Clone(),
-		withToolInvocations: cq.withToolInvocations.Clone(),
+		config:              _q.config,
+		ctx:                 _q.ctx.Clone(),
+		order:               append([]conversation.OrderOption{}, _q.order...),
+		inters:              append([]Interceptor{}, _q.inters...),
+		predicates:          append([]predicate.Conversation{}, _q.predicates...),
+		withMessages:        _q.withMessages.Clone(),
+		withToolInvocations: _q.withToolInvocations.Clone(),
 		// clone intermediate query.
-		sql:  cq.sql.Clone(),
-		path: cq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithMessages tells the query-builder to eager-load the nodes that are connected to
 // the "messages" edge. The optional arguments are used to configure the query builder of the edge.
-func (cq *ConversationQuery) WithMessages(opts ...func(*MessageQuery)) *ConversationQuery {
-	query := (&MessageClient{config: cq.config}).Query()
+func (_q *ConversationQuery) WithMessages(opts ...func(*MessageQuery)) *ConversationQuery {
+	query := (&MessageClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	cq.withMessages = query
-	return cq
+	_q.withMessages = query
+	return _q
 }
 
 // WithToolInvocations tells the query-builder to eager-load the nodes that are connected to
 // the "tool_invocations" edge. The optional arguments are used to configure the query builder of the edge.
-func (cq *ConversationQuery) WithToolInvocations(opts ...func(*ToolInvocationQuery)) *ConversationQuery {
-	query := (&ToolInvocationClient{config: cq.config}).Query()
+func (_q *ConversationQuery) WithToolInvocations(opts ...func(*ToolInvocationQuery)) *ConversationQuery {
+	query := (&ToolInvocationClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	cq.withToolInvocations = query
-	return cq
+	_q.withToolInvocations = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -343,10 +343,10 @@ func (cq *ConversationQuery) WithToolInvocations(opts ...func(*ToolInvocationQue
 //		GroupBy(conversation.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (cq *ConversationQuery) GroupBy(field string, fields ...string) *ConversationGroupBy {
-	cq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ConversationGroupBy{build: cq}
-	grbuild.flds = &cq.ctx.Fields
+func (_q *ConversationQuery) GroupBy(field string, fields ...string) *ConversationGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ConversationGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = conversation.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -364,59 +364,59 @@ func (cq *ConversationQuery) GroupBy(field string, fields ...string) *Conversati
 //	client.Conversation.Query().
 //		Select(conversation.FieldCreatedAt).
 //		Scan(ctx, &v)
-func (cq *ConversationQuery) Select(fields ...string) *ConversationSelect {
-	cq.ctx.Fields = append(cq.ctx.Fields, fields...)
-	sbuild := &ConversationSelect{ConversationQuery: cq}
+func (_q *ConversationQuery) Select(fields ...string) *ConversationSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ConversationSelect{ConversationQuery: _q}
 	sbuild.label = conversation.Label
-	sbuild.flds, sbuild.scan = &cq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ConversationSelect configured with the given aggregations.
-func (cq *ConversationQuery) Aggregate(fns ...AggregateFunc) *ConversationSelect {
-	return cq.Select().Aggregate(fns...)
+func (_q *ConversationQuery) Aggregate(fns ...AggregateFunc) *ConversationSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (cq *ConversationQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range cq.inters {
+func (_q *ConversationQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, cq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range cq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !conversation.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if cq.path != nil {
-		prev, err := cq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		cq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (cq *ConversationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Conversation, error) {
+func (_q *ConversationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Conversation, error) {
 	var (
 		nodes       = []*Conversation{}
-		_spec       = cq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			cq.withMessages != nil,
-			cq.withToolInvocations != nil,
+			_q.withMessages != nil,
+			_q.withToolInvocations != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Conversation).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Conversation{config: cq.config}
+		node := &Conversation{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -424,21 +424,21 @@ func (cq *ConversationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, cq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := cq.withMessages; query != nil {
-		if err := cq.loadMessages(ctx, query, nodes,
+	if query := _q.withMessages; query != nil {
+		if err := _q.loadMessages(ctx, query, nodes,
 			func(n *Conversation) { n.Edges.Messages = []*Message{} },
 			func(n *Conversation, e *Message) { n.Edges.Messages = append(n.Edges.Messages, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := cq.withToolInvocations; query != nil {
-		if err := cq.loadToolInvocations(ctx, query, nodes,
+	if query := _q.withToolInvocations; query != nil {
+		if err := _q.loadToolInvocations(ctx, query, nodes,
 			func(n *Conversation) { n.Edges.ToolInvocations = []*ToolInvocation{} },
 			func(n *Conversation, e *ToolInvocation) { n.Edges.ToolInvocations = append(n.Edges.ToolInvocations, e) }); err != nil {
 			return nil, err
@@ -447,7 +447,7 @@ func (cq *ConversationQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]
 	return nodes, nil
 }
 
-func (cq *ConversationQuery) loadMessages(ctx context.Context, query *MessageQuery, nodes []*Conversation, init func(*Conversation), assign func(*Conversation, *Message)) error {
+func (_q *ConversationQuery) loadMessages(ctx context.Context, query *MessageQuery, nodes []*Conversation, init func(*Conversation), assign func(*Conversation, *Message)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Conversation)
 	for i := range nodes {
@@ -477,7 +477,7 @@ func (cq *ConversationQuery) loadMessages(ctx context.Context, query *MessageQue
 	}
 	return nil
 }
-func (cq *ConversationQuery) loadToolInvocations(ctx context.Context, query *ToolInvocationQuery, nodes []*Conversation, init func(*Conversation), assign func(*Conversation, *ToolInvocation)) error {
+func (_q *ConversationQuery) loadToolInvocations(ctx context.Context, query *ToolInvocationQuery, nodes []*Conversation, init func(*Conversation), assign func(*Conversation, *ToolInvocation)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*Conversation)
 	for i := range nodes {
@@ -508,24 +508,24 @@ func (cq *ConversationQuery) loadToolInvocations(ctx context.Context, query *Too
 	return nil
 }
 
-func (cq *ConversationQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := cq.querySpec()
-	_spec.Node.Columns = cq.ctx.Fields
-	if len(cq.ctx.Fields) > 0 {
-		_spec.Unique = cq.ctx.Unique != nil && *cq.ctx.Unique
+func (_q *ConversationQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, cq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (cq *ConversationQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ConversationQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(conversation.Table, conversation.Columns, sqlgraph.NewFieldSpec(conversation.FieldID, field.TypeInt))
-	_spec.From = cq.sql
-	if unique := cq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if cq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := cq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, conversation.FieldID)
 		for i := range fields {
@@ -534,20 +534,20 @@ func (cq *ConversationQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := cq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := cq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := cq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := cq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -557,33 +557,33 @@ func (cq *ConversationQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (cq *ConversationQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(cq.driver.Dialect())
+func (_q *ConversationQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(conversation.Table)
-	columns := cq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = conversation.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if cq.sql != nil {
-		selector = cq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if cq.ctx.Unique != nil && *cq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range cq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range cq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := cq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := cq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -596,41 +596,41 @@ type ConversationGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (cgb *ConversationGroupBy) Aggregate(fns ...AggregateFunc) *ConversationGroupBy {
-	cgb.fns = append(cgb.fns, fns...)
-	return cgb
+func (_g *ConversationGroupBy) Aggregate(fns ...AggregateFunc) *ConversationGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cgb *ConversationGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cgb.build.ctx, ent.OpQueryGroupBy)
-	if err := cgb.build.prepareQuery(ctx); err != nil {
+func (_g *ConversationGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ConversationQuery, *ConversationGroupBy](ctx, cgb.build, cgb, cgb.build.inters, v)
+	return scanWithInterceptors[*ConversationQuery, *ConversationGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (cgb *ConversationGroupBy) sqlScan(ctx context.Context, root *ConversationQuery, v any) error {
+func (_g *ConversationGroupBy) sqlScan(ctx context.Context, root *ConversationQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(cgb.fns))
-	for _, fn := range cgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*cgb.flds)+len(cgb.fns))
-		for _, f := range *cgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*cgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -644,27 +644,27 @@ type ConversationSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (cs *ConversationSelect) Aggregate(fns ...AggregateFunc) *ConversationSelect {
-	cs.fns = append(cs.fns, fns...)
-	return cs
+func (_s *ConversationSelect) Aggregate(fns ...AggregateFunc) *ConversationSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cs *ConversationSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cs.ctx, ent.OpQuerySelect)
-	if err := cs.prepareQuery(ctx); err != nil {
+func (_s *ConversationSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ConversationQuery, *ConversationSelect](ctx, cs.ConversationQuery, cs, cs.inters, v)
+	return scanWithInterceptors[*ConversationQuery, *ConversationSelect](ctx, _s.ConversationQuery, _s, _s.inters, v)
 }
 
-func (cs *ConversationSelect) sqlScan(ctx context.Context, root *ConversationQuery, v any) error {
+func (_s *ConversationSelect) sqlScan(ctx context.Context, root *ConversationQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(cs.fns))
-	for _, fn := range cs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*cs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -672,7 +672,7 @@ func (cs *ConversationSelect) sqlScan(ctx context.Context, root *ConversationQue
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

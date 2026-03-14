@@ -9,10 +9,14 @@ const protectedRoutes = [
   '/problems',
   '/changes',
   '/assets',
+  '/releases',
+  '/licenses',
   '/cmdb',
   '/service-catalog',
   '/knowledge-base',
+  '/knowledge',
   '/sla',
+  '/sla-dashboard',
   '/reports',
   '/workflow',
   '/users',
@@ -22,6 +26,7 @@ const protectedRoutes = [
   '/projects',
   '/applications',
   '/tags',
+  '/msp',
 ];
 
 // 公开路由（不需要认证）

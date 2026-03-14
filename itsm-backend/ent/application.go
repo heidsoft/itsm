@@ -106,7 +106,7 @@ func (*Application) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Application fields.
-func (a *Application) assignValues(columns []string, values []any) error {
+func (_m *Application) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -117,69 +117,69 @@ func (a *Application) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			a.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case application.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				a.Name = value.String
+				_m.Name = value.String
 			}
 		case application.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				a.Code = value.String
+				_m.Code = value.String
 			}
 		case application.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				a.Description = value.String
+				_m.Description = value.String
 			}
 		case application.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				a.Type = value.String
+				_m.Type = value.String
 			}
 		case application.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				a.Status = value.String
+				_m.Status = value.String
 			}
 		case application.FieldOwnerID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
 			} else if value.Valid {
-				a.OwnerID = int(value.Int64)
+				_m.OwnerID = int(value.Int64)
 			}
 		case application.FieldProjectID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field project_id", values[i])
 			} else if value.Valid {
-				a.ProjectID = int(value.Int64)
+				_m.ProjectID = int(value.Int64)
 			}
 		case application.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				a.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case application.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				a.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case application.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				a.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			a.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -187,77 +187,77 @@ func (a *Application) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Application.
 // This includes values selected through modifiers, order, etc.
-func (a *Application) Value(name string) (ent.Value, error) {
-	return a.selectValues.Get(name)
+func (_m *Application) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProject queries the "project" edge of the Application entity.
-func (a *Application) QueryProject() *ProjectQuery {
-	return NewApplicationClient(a.config).QueryProject(a)
+func (_m *Application) QueryProject() *ProjectQuery {
+	return NewApplicationClient(_m.config).QueryProject(_m)
 }
 
 // QueryMicroservices queries the "microservices" edge of the Application entity.
-func (a *Application) QueryMicroservices() *MicroserviceQuery {
-	return NewApplicationClient(a.config).QueryMicroservices(a)
+func (_m *Application) QueryMicroservices() *MicroserviceQuery {
+	return NewApplicationClient(_m.config).QueryMicroservices(_m)
 }
 
 // QueryTags queries the "tags" edge of the Application entity.
-func (a *Application) QueryTags() *TagQuery {
-	return NewApplicationClient(a.config).QueryTags(a)
+func (_m *Application) QueryTags() *TagQuery {
+	return NewApplicationClient(_m.config).QueryTags(_m)
 }
 
 // Update returns a builder for updating this Application.
 // Note that you need to call Application.Unwrap() before calling this method if this Application
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (a *Application) Update() *ApplicationUpdateOne {
-	return NewApplicationClient(a.config).UpdateOne(a)
+func (_m *Application) Update() *ApplicationUpdateOne {
+	return NewApplicationClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Application entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (a *Application) Unwrap() *Application {
-	_tx, ok := a.config.driver.(*txDriver)
+func (_m *Application) Unwrap() *Application {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Application is not a transactional entity")
 	}
-	a.config.driver = _tx.drv
-	return a
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (a *Application) String() string {
+func (_m *Application) String() string {
 	var builder strings.Builder
 	builder.WriteString("Application(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(a.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("code=")
-	builder.WriteString(a.Code)
+	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(a.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(a.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(a.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("owner_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.OwnerID))
+	builder.WriteString(fmt.Sprintf("%v", _m.OwnerID))
 	builder.WriteString(", ")
 	builder.WriteString("project_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.ProjectID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProjectID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(a.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

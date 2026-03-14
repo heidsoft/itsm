@@ -37,44 +37,44 @@ type TicketCategoryQuery struct {
 }
 
 // Where adds a new predicate for the TicketCategoryQuery builder.
-func (tcq *TicketCategoryQuery) Where(ps ...predicate.TicketCategory) *TicketCategoryQuery {
-	tcq.predicates = append(tcq.predicates, ps...)
-	return tcq
+func (_q *TicketCategoryQuery) Where(ps ...predicate.TicketCategory) *TicketCategoryQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (tcq *TicketCategoryQuery) Limit(limit int) *TicketCategoryQuery {
-	tcq.ctx.Limit = &limit
-	return tcq
+func (_q *TicketCategoryQuery) Limit(limit int) *TicketCategoryQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (tcq *TicketCategoryQuery) Offset(offset int) *TicketCategoryQuery {
-	tcq.ctx.Offset = &offset
-	return tcq
+func (_q *TicketCategoryQuery) Offset(offset int) *TicketCategoryQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (tcq *TicketCategoryQuery) Unique(unique bool) *TicketCategoryQuery {
-	tcq.ctx.Unique = &unique
-	return tcq
+func (_q *TicketCategoryQuery) Unique(unique bool) *TicketCategoryQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (tcq *TicketCategoryQuery) Order(o ...ticketcategory.OrderOption) *TicketCategoryQuery {
-	tcq.order = append(tcq.order, o...)
-	return tcq
+func (_q *TicketCategoryQuery) Order(o ...ticketcategory.OrderOption) *TicketCategoryQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryTickets chains the current query on the "tickets" edge.
-func (tcq *TicketCategoryQuery) QueryTickets() *TicketQuery {
-	query := (&TicketClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) QueryTickets() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -83,20 +83,20 @@ func (tcq *TicketCategoryQuery) QueryTickets() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticketcategory.TicketsTable, ticketcategory.TicketsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryChildren chains the current query on the "children" edge.
-func (tcq *TicketCategoryQuery) QueryChildren() *TicketCategoryQuery {
-	query := (&TicketCategoryClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) QueryChildren() *TicketCategoryQuery {
+	query := (&TicketCategoryClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -105,20 +105,20 @@ func (tcq *TicketCategoryQuery) QueryChildren() *TicketCategoryQuery {
 			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, ticketcategory.ChildrenTable, ticketcategory.ChildrenColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryParent chains the current query on the "parent" edge.
-func (tcq *TicketCategoryQuery) QueryParent() *TicketCategoryQuery {
-	query := (&TicketCategoryClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) QueryParent() *TicketCategoryQuery {
+	query := (&TicketCategoryClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -127,20 +127,20 @@ func (tcq *TicketCategoryQuery) QueryParent() *TicketCategoryQuery {
 			sqlgraph.To(ticketcategory.Table, ticketcategory.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ticketcategory.ParentTable, ticketcategory.ParentColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryDepartment chains the current query on the "department" edge.
-func (tcq *TicketCategoryQuery) QueryDepartment() *DepartmentQuery {
-	query := (&DepartmentClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) QueryDepartment() *DepartmentQuery {
+	query := (&DepartmentClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -149,20 +149,20 @@ func (tcq *TicketCategoryQuery) QueryDepartment() *DepartmentQuery {
 			sqlgraph.To(department.Table, department.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, ticketcategory.DepartmentTable, ticketcategory.DepartmentColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryWorkflow chains the current query on the "workflow" edge.
-func (tcq *TicketCategoryQuery) QueryWorkflow() *WorkflowQuery {
-	query := (&WorkflowClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) QueryWorkflow() *WorkflowQuery {
+	query := (&WorkflowClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -171,7 +171,7 @@ func (tcq *TicketCategoryQuery) QueryWorkflow() *WorkflowQuery {
 			sqlgraph.To(workflow.Table, workflow.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, ticketcategory.WorkflowTable, ticketcategory.WorkflowColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -179,8 +179,8 @@ func (tcq *TicketCategoryQuery) QueryWorkflow() *WorkflowQuery {
 
 // First returns the first TicketCategory entity from the query.
 // Returns a *NotFoundError when no TicketCategory was found.
-func (tcq *TicketCategoryQuery) First(ctx context.Context) (*TicketCategory, error) {
-	nodes, err := tcq.Limit(1).All(setContextOp(ctx, tcq.ctx, ent.OpQueryFirst))
+func (_q *TicketCategoryQuery) First(ctx context.Context) (*TicketCategory, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -191,8 +191,8 @@ func (tcq *TicketCategoryQuery) First(ctx context.Context) (*TicketCategory, err
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) FirstX(ctx context.Context) *TicketCategory {
-	node, err := tcq.First(ctx)
+func (_q *TicketCategoryQuery) FirstX(ctx context.Context) *TicketCategory {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -201,9 +201,9 @@ func (tcq *TicketCategoryQuery) FirstX(ctx context.Context) *TicketCategory {
 
 // FirstID returns the first TicketCategory ID from the query.
 // Returns a *NotFoundError when no TicketCategory ID was found.
-func (tcq *TicketCategoryQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *TicketCategoryQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tcq.Limit(1).IDs(setContextOp(ctx, tcq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -214,8 +214,8 @@ func (tcq *TicketCategoryQuery) FirstID(ctx context.Context) (id int, err error)
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) FirstIDX(ctx context.Context) int {
-	id, err := tcq.FirstID(ctx)
+func (_q *TicketCategoryQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -225,8 +225,8 @@ func (tcq *TicketCategoryQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single TicketCategory entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one TicketCategory entity is found.
 // Returns a *NotFoundError when no TicketCategory entities are found.
-func (tcq *TicketCategoryQuery) Only(ctx context.Context) (*TicketCategory, error) {
-	nodes, err := tcq.Limit(2).All(setContextOp(ctx, tcq.ctx, ent.OpQueryOnly))
+func (_q *TicketCategoryQuery) Only(ctx context.Context) (*TicketCategory, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -241,8 +241,8 @@ func (tcq *TicketCategoryQuery) Only(ctx context.Context) (*TicketCategory, erro
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) OnlyX(ctx context.Context) *TicketCategory {
-	node, err := tcq.Only(ctx)
+func (_q *TicketCategoryQuery) OnlyX(ctx context.Context) *TicketCategory {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -252,9 +252,9 @@ func (tcq *TicketCategoryQuery) OnlyX(ctx context.Context) *TicketCategory {
 // OnlyID is like Only, but returns the only TicketCategory ID in the query.
 // Returns a *NotSingularError when more than one TicketCategory ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tcq *TicketCategoryQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *TicketCategoryQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tcq.Limit(2).IDs(setContextOp(ctx, tcq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -269,8 +269,8 @@ func (tcq *TicketCategoryQuery) OnlyID(ctx context.Context) (id int, err error) 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) OnlyIDX(ctx context.Context) int {
-	id, err := tcq.OnlyID(ctx)
+func (_q *TicketCategoryQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -278,18 +278,18 @@ func (tcq *TicketCategoryQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of TicketCategories.
-func (tcq *TicketCategoryQuery) All(ctx context.Context) ([]*TicketCategory, error) {
-	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryAll)
-	if err := tcq.prepareQuery(ctx); err != nil {
+func (_q *TicketCategoryQuery) All(ctx context.Context) ([]*TicketCategory, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*TicketCategory, *TicketCategoryQuery]()
-	return withInterceptors[[]*TicketCategory](ctx, tcq, qr, tcq.inters)
+	return withInterceptors[[]*TicketCategory](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) AllX(ctx context.Context) []*TicketCategory {
-	nodes, err := tcq.All(ctx)
+func (_q *TicketCategoryQuery) AllX(ctx context.Context) []*TicketCategory {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -297,20 +297,20 @@ func (tcq *TicketCategoryQuery) AllX(ctx context.Context) []*TicketCategory {
 }
 
 // IDs executes the query and returns a list of TicketCategory IDs.
-func (tcq *TicketCategoryQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if tcq.ctx.Unique == nil && tcq.path != nil {
-		tcq.Unique(true)
+func (_q *TicketCategoryQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryIDs)
-	if err = tcq.Select(ticketcategory.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(ticketcategory.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) IDsX(ctx context.Context) []int {
-	ids, err := tcq.IDs(ctx)
+func (_q *TicketCategoryQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -318,17 +318,17 @@ func (tcq *TicketCategoryQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (tcq *TicketCategoryQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryCount)
-	if err := tcq.prepareQuery(ctx); err != nil {
+func (_q *TicketCategoryQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, tcq, querierCount[*TicketCategoryQuery](), tcq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*TicketCategoryQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) CountX(ctx context.Context) int {
-	count, err := tcq.Count(ctx)
+func (_q *TicketCategoryQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -336,9 +336,9 @@ func (tcq *TicketCategoryQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (tcq *TicketCategoryQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, tcq.ctx, ent.OpQueryExist)
-	switch _, err := tcq.FirstID(ctx); {
+func (_q *TicketCategoryQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -349,8 +349,8 @@ func (tcq *TicketCategoryQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (tcq *TicketCategoryQuery) ExistX(ctx context.Context) bool {
-	exist, err := tcq.Exist(ctx)
+func (_q *TicketCategoryQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -359,80 +359,80 @@ func (tcq *TicketCategoryQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the TicketCategoryQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (tcq *TicketCategoryQuery) Clone() *TicketCategoryQuery {
-	if tcq == nil {
+func (_q *TicketCategoryQuery) Clone() *TicketCategoryQuery {
+	if _q == nil {
 		return nil
 	}
 	return &TicketCategoryQuery{
-		config:         tcq.config,
-		ctx:            tcq.ctx.Clone(),
-		order:          append([]ticketcategory.OrderOption{}, tcq.order...),
-		inters:         append([]Interceptor{}, tcq.inters...),
-		predicates:     append([]predicate.TicketCategory{}, tcq.predicates...),
-		withTickets:    tcq.withTickets.Clone(),
-		withChildren:   tcq.withChildren.Clone(),
-		withParent:     tcq.withParent.Clone(),
-		withDepartment: tcq.withDepartment.Clone(),
-		withWorkflow:   tcq.withWorkflow.Clone(),
+		config:         _q.config,
+		ctx:            _q.ctx.Clone(),
+		order:          append([]ticketcategory.OrderOption{}, _q.order...),
+		inters:         append([]Interceptor{}, _q.inters...),
+		predicates:     append([]predicate.TicketCategory{}, _q.predicates...),
+		withTickets:    _q.withTickets.Clone(),
+		withChildren:   _q.withChildren.Clone(),
+		withParent:     _q.withParent.Clone(),
+		withDepartment: _q.withDepartment.Clone(),
+		withWorkflow:   _q.withWorkflow.Clone(),
 		// clone intermediate query.
-		sql:  tcq.sql.Clone(),
-		path: tcq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithTickets tells the query-builder to eager-load the nodes that are connected to
 // the "tickets" edge. The optional arguments are used to configure the query builder of the edge.
-func (tcq *TicketCategoryQuery) WithTickets(opts ...func(*TicketQuery)) *TicketCategoryQuery {
-	query := (&TicketClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) WithTickets(opts ...func(*TicketQuery)) *TicketCategoryQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tcq.withTickets = query
-	return tcq
+	_q.withTickets = query
+	return _q
 }
 
 // WithChildren tells the query-builder to eager-load the nodes that are connected to
 // the "children" edge. The optional arguments are used to configure the query builder of the edge.
-func (tcq *TicketCategoryQuery) WithChildren(opts ...func(*TicketCategoryQuery)) *TicketCategoryQuery {
-	query := (&TicketCategoryClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) WithChildren(opts ...func(*TicketCategoryQuery)) *TicketCategoryQuery {
+	query := (&TicketCategoryClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tcq.withChildren = query
-	return tcq
+	_q.withChildren = query
+	return _q
 }
 
 // WithParent tells the query-builder to eager-load the nodes that are connected to
 // the "parent" edge. The optional arguments are used to configure the query builder of the edge.
-func (tcq *TicketCategoryQuery) WithParent(opts ...func(*TicketCategoryQuery)) *TicketCategoryQuery {
-	query := (&TicketCategoryClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) WithParent(opts ...func(*TicketCategoryQuery)) *TicketCategoryQuery {
+	query := (&TicketCategoryClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tcq.withParent = query
-	return tcq
+	_q.withParent = query
+	return _q
 }
 
 // WithDepartment tells the query-builder to eager-load the nodes that are connected to
 // the "department" edge. The optional arguments are used to configure the query builder of the edge.
-func (tcq *TicketCategoryQuery) WithDepartment(opts ...func(*DepartmentQuery)) *TicketCategoryQuery {
-	query := (&DepartmentClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) WithDepartment(opts ...func(*DepartmentQuery)) *TicketCategoryQuery {
+	query := (&DepartmentClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tcq.withDepartment = query
-	return tcq
+	_q.withDepartment = query
+	return _q
 }
 
 // WithWorkflow tells the query-builder to eager-load the nodes that are connected to
 // the "workflow" edge. The optional arguments are used to configure the query builder of the edge.
-func (tcq *TicketCategoryQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *TicketCategoryQuery {
-	query := (&WorkflowClient{config: tcq.config}).Query()
+func (_q *TicketCategoryQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *TicketCategoryQuery {
+	query := (&WorkflowClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tcq.withWorkflow = query
-	return tcq
+	_q.withWorkflow = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -449,10 +449,10 @@ func (tcq *TicketCategoryQuery) WithWorkflow(opts ...func(*WorkflowQuery)) *Tick
 //		GroupBy(ticketcategory.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (tcq *TicketCategoryQuery) GroupBy(field string, fields ...string) *TicketCategoryGroupBy {
-	tcq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &TicketCategoryGroupBy{build: tcq}
-	grbuild.flds = &tcq.ctx.Fields
+func (_q *TicketCategoryQuery) GroupBy(field string, fields ...string) *TicketCategoryGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &TicketCategoryGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = ticketcategory.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -470,62 +470,62 @@ func (tcq *TicketCategoryQuery) GroupBy(field string, fields ...string) *TicketC
 //	client.TicketCategory.Query().
 //		Select(ticketcategory.FieldName).
 //		Scan(ctx, &v)
-func (tcq *TicketCategoryQuery) Select(fields ...string) *TicketCategorySelect {
-	tcq.ctx.Fields = append(tcq.ctx.Fields, fields...)
-	sbuild := &TicketCategorySelect{TicketCategoryQuery: tcq}
+func (_q *TicketCategoryQuery) Select(fields ...string) *TicketCategorySelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &TicketCategorySelect{TicketCategoryQuery: _q}
 	sbuild.label = ticketcategory.Label
-	sbuild.flds, sbuild.scan = &tcq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a TicketCategorySelect configured with the given aggregations.
-func (tcq *TicketCategoryQuery) Aggregate(fns ...AggregateFunc) *TicketCategorySelect {
-	return tcq.Select().Aggregate(fns...)
+func (_q *TicketCategoryQuery) Aggregate(fns ...AggregateFunc) *TicketCategorySelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (tcq *TicketCategoryQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range tcq.inters {
+func (_q *TicketCategoryQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, tcq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range tcq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !ticketcategory.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if tcq.path != nil {
-		prev, err := tcq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		tcq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (tcq *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketCategory, error) {
+func (_q *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketCategory, error) {
 	var (
 		nodes       = []*TicketCategory{}
-		_spec       = tcq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [5]bool{
-			tcq.withTickets != nil,
-			tcq.withChildren != nil,
-			tcq.withParent != nil,
-			tcq.withDepartment != nil,
-			tcq.withWorkflow != nil,
+			_q.withTickets != nil,
+			_q.withChildren != nil,
+			_q.withParent != nil,
+			_q.withDepartment != nil,
+			_q.withWorkflow != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*TicketCategory).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &TicketCategory{config: tcq.config}
+		node := &TicketCategory{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -533,40 +533,40 @@ func (tcq *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, tcq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tcq.withTickets; query != nil {
-		if err := tcq.loadTickets(ctx, query, nodes,
+	if query := _q.withTickets; query != nil {
+		if err := _q.loadTickets(ctx, query, nodes,
 			func(n *TicketCategory) { n.Edges.Tickets = []*Ticket{} },
 			func(n *TicketCategory, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := tcq.withChildren; query != nil {
-		if err := tcq.loadChildren(ctx, query, nodes,
+	if query := _q.withChildren; query != nil {
+		if err := _q.loadChildren(ctx, query, nodes,
 			func(n *TicketCategory) { n.Edges.Children = []*TicketCategory{} },
 			func(n *TicketCategory, e *TicketCategory) { n.Edges.Children = append(n.Edges.Children, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := tcq.withParent; query != nil {
-		if err := tcq.loadParent(ctx, query, nodes, nil,
+	if query := _q.withParent; query != nil {
+		if err := _q.loadParent(ctx, query, nodes, nil,
 			func(n *TicketCategory, e *TicketCategory) { n.Edges.Parent = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := tcq.withDepartment; query != nil {
-		if err := tcq.loadDepartment(ctx, query, nodes, nil,
+	if query := _q.withDepartment; query != nil {
+		if err := _q.loadDepartment(ctx, query, nodes, nil,
 			func(n *TicketCategory, e *Department) { n.Edges.Department = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := tcq.withWorkflow; query != nil {
-		if err := tcq.loadWorkflow(ctx, query, nodes, nil,
+	if query := _q.withWorkflow; query != nil {
+		if err := _q.loadWorkflow(ctx, query, nodes, nil,
 			func(n *TicketCategory, e *Workflow) { n.Edges.Workflow = e }); err != nil {
 			return nil, err
 		}
@@ -574,7 +574,7 @@ func (tcq *TicketCategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) 
 	return nodes, nil
 }
 
-func (tcq *TicketCategoryQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Ticket)) error {
+func (_q *TicketCategoryQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Ticket)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*TicketCategory)
 	for i := range nodes {
@@ -605,7 +605,7 @@ func (tcq *TicketCategoryQuery) loadTickets(ctx context.Context, query *TicketQu
 	}
 	return nil
 }
-func (tcq *TicketCategoryQuery) loadChildren(ctx context.Context, query *TicketCategoryQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *TicketCategory)) error {
+func (_q *TicketCategoryQuery) loadChildren(ctx context.Context, query *TicketCategoryQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *TicketCategory)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*TicketCategory)
 	for i := range nodes {
@@ -635,7 +635,7 @@ func (tcq *TicketCategoryQuery) loadChildren(ctx context.Context, query *TicketC
 	}
 	return nil
 }
-func (tcq *TicketCategoryQuery) loadParent(ctx context.Context, query *TicketCategoryQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *TicketCategory)) error {
+func (_q *TicketCategoryQuery) loadParent(ctx context.Context, query *TicketCategoryQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *TicketCategory)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*TicketCategory)
 	for i := range nodes {
@@ -664,7 +664,7 @@ func (tcq *TicketCategoryQuery) loadParent(ctx context.Context, query *TicketCat
 	}
 	return nil
 }
-func (tcq *TicketCategoryQuery) loadDepartment(ctx context.Context, query *DepartmentQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Department)) error {
+func (_q *TicketCategoryQuery) loadDepartment(ctx context.Context, query *DepartmentQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Department)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*TicketCategory)
 	for i := range nodes {
@@ -693,7 +693,7 @@ func (tcq *TicketCategoryQuery) loadDepartment(ctx context.Context, query *Depar
 	}
 	return nil
 }
-func (tcq *TicketCategoryQuery) loadWorkflow(ctx context.Context, query *WorkflowQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Workflow)) error {
+func (_q *TicketCategoryQuery) loadWorkflow(ctx context.Context, query *WorkflowQuery, nodes []*TicketCategory, init func(*TicketCategory), assign func(*TicketCategory, *Workflow)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*TicketCategory)
 	for i := range nodes {
@@ -723,24 +723,24 @@ func (tcq *TicketCategoryQuery) loadWorkflow(ctx context.Context, query *Workflo
 	return nil
 }
 
-func (tcq *TicketCategoryQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := tcq.querySpec()
-	_spec.Node.Columns = tcq.ctx.Fields
-	if len(tcq.ctx.Fields) > 0 {
-		_spec.Unique = tcq.ctx.Unique != nil && *tcq.ctx.Unique
+func (_q *TicketCategoryQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, tcq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (tcq *TicketCategoryQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *TicketCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(ticketcategory.Table, ticketcategory.Columns, sqlgraph.NewFieldSpec(ticketcategory.FieldID, field.TypeInt))
-	_spec.From = tcq.sql
-	if unique := tcq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if tcq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := tcq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketcategory.FieldID)
 		for i := range fields {
@@ -748,30 +748,30 @@ func (tcq *TicketCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if tcq.withParent != nil {
+		if _q.withParent != nil {
 			_spec.Node.AddColumnOnce(ticketcategory.FieldParentID)
 		}
-		if tcq.withDepartment != nil {
+		if _q.withDepartment != nil {
 			_spec.Node.AddColumnOnce(ticketcategory.FieldDepartmentID)
 		}
-		if tcq.withWorkflow != nil {
+		if _q.withWorkflow != nil {
 			_spec.Node.AddColumnOnce(ticketcategory.FieldWorkflowID)
 		}
 	}
-	if ps := tcq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := tcq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := tcq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := tcq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -781,33 +781,33 @@ func (tcq *TicketCategoryQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (tcq *TicketCategoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(tcq.driver.Dialect())
+func (_q *TicketCategoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(ticketcategory.Table)
-	columns := tcq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = ticketcategory.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if tcq.sql != nil {
-		selector = tcq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if tcq.ctx.Unique != nil && *tcq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range tcq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range tcq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := tcq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := tcq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -820,41 +820,41 @@ type TicketCategoryGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (tcgb *TicketCategoryGroupBy) Aggregate(fns ...AggregateFunc) *TicketCategoryGroupBy {
-	tcgb.fns = append(tcgb.fns, fns...)
-	return tcgb
+func (_g *TicketCategoryGroupBy) Aggregate(fns ...AggregateFunc) *TicketCategoryGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tcgb *TicketCategoryGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tcgb.build.ctx, ent.OpQueryGroupBy)
-	if err := tcgb.build.prepareQuery(ctx); err != nil {
+func (_g *TicketCategoryGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketCategoryQuery, *TicketCategoryGroupBy](ctx, tcgb.build, tcgb, tcgb.build.inters, v)
+	return scanWithInterceptors[*TicketCategoryQuery, *TicketCategoryGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (tcgb *TicketCategoryGroupBy) sqlScan(ctx context.Context, root *TicketCategoryQuery, v any) error {
+func (_g *TicketCategoryGroupBy) sqlScan(ctx context.Context, root *TicketCategoryQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(tcgb.fns))
-	for _, fn := range tcgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*tcgb.flds)+len(tcgb.fns))
-		for _, f := range *tcgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*tcgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tcgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -868,27 +868,27 @@ type TicketCategorySelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (tcs *TicketCategorySelect) Aggregate(fns ...AggregateFunc) *TicketCategorySelect {
-	tcs.fns = append(tcs.fns, fns...)
-	return tcs
+func (_s *TicketCategorySelect) Aggregate(fns ...AggregateFunc) *TicketCategorySelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tcs *TicketCategorySelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tcs.ctx, ent.OpQuerySelect)
-	if err := tcs.prepareQuery(ctx); err != nil {
+func (_s *TicketCategorySelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketCategoryQuery, *TicketCategorySelect](ctx, tcs.TicketCategoryQuery, tcs, tcs.inters, v)
+	return scanWithInterceptors[*TicketCategoryQuery, *TicketCategorySelect](ctx, _s.TicketCategoryQuery, _s, _s.inters, v)
 }
 
-func (tcs *TicketCategorySelect) sqlScan(ctx context.Context, root *TicketCategoryQuery, v any) error {
+func (_s *TicketCategorySelect) sqlScan(ctx context.Context, root *TicketCategoryQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(tcs.fns))
-	for _, fn := range tcs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*tcs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -896,7 +896,7 @@ func (tcs *TicketCategorySelect) sqlScan(ctx context.Context, root *TicketCatego
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tcs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

@@ -20,56 +20,56 @@ type RootCauseAnalysisDelete struct {
 }
 
 // Where appends a list predicates to the RootCauseAnalysisDelete builder.
-func (rcad *RootCauseAnalysisDelete) Where(ps ...predicate.RootCauseAnalysis) *RootCauseAnalysisDelete {
-	rcad.mutation.Where(ps...)
-	return rcad
+func (_d *RootCauseAnalysisDelete) Where(ps ...predicate.RootCauseAnalysis) *RootCauseAnalysisDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (rcad *RootCauseAnalysisDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, rcad.sqlExec, rcad.mutation, rcad.hooks)
+func (_d *RootCauseAnalysisDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rcad *RootCauseAnalysisDelete) ExecX(ctx context.Context) int {
-	n, err := rcad.Exec(ctx)
+func (_d *RootCauseAnalysisDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (rcad *RootCauseAnalysisDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *RootCauseAnalysisDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(rootcauseanalysis.Table, sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt))
-	if ps := rcad.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, rcad.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	rcad.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // RootCauseAnalysisDeleteOne is the builder for deleting a single RootCauseAnalysis entity.
 type RootCauseAnalysisDeleteOne struct {
-	rcad *RootCauseAnalysisDelete
+	_d *RootCauseAnalysisDelete
 }
 
 // Where appends a list predicates to the RootCauseAnalysisDelete builder.
-func (rcado *RootCauseAnalysisDeleteOne) Where(ps ...predicate.RootCauseAnalysis) *RootCauseAnalysisDeleteOne {
-	rcado.rcad.mutation.Where(ps...)
-	return rcado
+func (_d *RootCauseAnalysisDeleteOne) Where(ps ...predicate.RootCauseAnalysis) *RootCauseAnalysisDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (rcado *RootCauseAnalysisDeleteOne) Exec(ctx context.Context) error {
-	n, err := rcado.rcad.Exec(ctx)
+func (_d *RootCauseAnalysisDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (rcado *RootCauseAnalysisDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rcado *RootCauseAnalysisDeleteOne) ExecX(ctx context.Context) {
-	if err := rcado.Exec(ctx); err != nil {
+func (_d *RootCauseAnalysisDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

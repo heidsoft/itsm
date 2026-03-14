@@ -24,198 +24,198 @@ type DiscoveryResultUpdate struct {
 }
 
 // Where appends a list predicates to the DiscoveryResultUpdate builder.
-func (dru *DiscoveryResultUpdate) Where(ps ...predicate.DiscoveryResult) *DiscoveryResultUpdate {
-	dru.mutation.Where(ps...)
-	return dru
+func (_u *DiscoveryResultUpdate) Where(ps ...predicate.DiscoveryResult) *DiscoveryResultUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetJobID sets the "job_id" field.
-func (dru *DiscoveryResultUpdate) SetJobID(i int) *DiscoveryResultUpdate {
-	dru.mutation.SetJobID(i)
-	return dru
+func (_u *DiscoveryResultUpdate) SetJobID(v int) *DiscoveryResultUpdate {
+	_u.mutation.SetJobID(v)
+	return _u
 }
 
 // SetNillableJobID sets the "job_id" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableJobID(i *int) *DiscoveryResultUpdate {
-	if i != nil {
-		dru.SetJobID(*i)
+func (_u *DiscoveryResultUpdate) SetNillableJobID(v *int) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetJobID(*v)
 	}
-	return dru
+	return _u
 }
 
 // SetCiID sets the "ci_id" field.
-func (dru *DiscoveryResultUpdate) SetCiID(i int) *DiscoveryResultUpdate {
-	dru.mutation.ResetCiID()
-	dru.mutation.SetCiID(i)
-	return dru
+func (_u *DiscoveryResultUpdate) SetCiID(v int) *DiscoveryResultUpdate {
+	_u.mutation.ResetCiID()
+	_u.mutation.SetCiID(v)
+	return _u
 }
 
 // SetNillableCiID sets the "ci_id" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableCiID(i *int) *DiscoveryResultUpdate {
-	if i != nil {
-		dru.SetCiID(*i)
+func (_u *DiscoveryResultUpdate) SetNillableCiID(v *int) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetCiID(*v)
 	}
-	return dru
+	return _u
 }
 
-// AddCiID adds i to the "ci_id" field.
-func (dru *DiscoveryResultUpdate) AddCiID(i int) *DiscoveryResultUpdate {
-	dru.mutation.AddCiID(i)
-	return dru
+// AddCiID adds value to the "ci_id" field.
+func (_u *DiscoveryResultUpdate) AddCiID(v int) *DiscoveryResultUpdate {
+	_u.mutation.AddCiID(v)
+	return _u
 }
 
 // ClearCiID clears the value of the "ci_id" field.
-func (dru *DiscoveryResultUpdate) ClearCiID() *DiscoveryResultUpdate {
-	dru.mutation.ClearCiID()
-	return dru
+func (_u *DiscoveryResultUpdate) ClearCiID() *DiscoveryResultUpdate {
+	_u.mutation.ClearCiID()
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (dru *DiscoveryResultUpdate) SetAction(s string) *DiscoveryResultUpdate {
-	dru.mutation.SetAction(s)
-	return dru
+func (_u *DiscoveryResultUpdate) SetAction(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableAction(s *string) *DiscoveryResultUpdate {
-	if s != nil {
-		dru.SetAction(*s)
+func (_u *DiscoveryResultUpdate) SetNillableAction(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return dru
+	return _u
 }
 
 // SetResourceType sets the "resource_type" field.
-func (dru *DiscoveryResultUpdate) SetResourceType(s string) *DiscoveryResultUpdate {
-	dru.mutation.SetResourceType(s)
-	return dru
+func (_u *DiscoveryResultUpdate) SetResourceType(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetResourceType(v)
+	return _u
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableResourceType(s *string) *DiscoveryResultUpdate {
-	if s != nil {
-		dru.SetResourceType(*s)
+func (_u *DiscoveryResultUpdate) SetNillableResourceType(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetResourceType(*v)
 	}
-	return dru
+	return _u
 }
 
 // ClearResourceType clears the value of the "resource_type" field.
-func (dru *DiscoveryResultUpdate) ClearResourceType() *DiscoveryResultUpdate {
-	dru.mutation.ClearResourceType()
-	return dru
+func (_u *DiscoveryResultUpdate) ClearResourceType() *DiscoveryResultUpdate {
+	_u.mutation.ClearResourceType()
+	return _u
 }
 
 // SetResourceID sets the "resource_id" field.
-func (dru *DiscoveryResultUpdate) SetResourceID(s string) *DiscoveryResultUpdate {
-	dru.mutation.SetResourceID(s)
-	return dru
+func (_u *DiscoveryResultUpdate) SetResourceID(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetResourceID(v)
+	return _u
 }
 
 // SetNillableResourceID sets the "resource_id" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableResourceID(s *string) *DiscoveryResultUpdate {
-	if s != nil {
-		dru.SetResourceID(*s)
+func (_u *DiscoveryResultUpdate) SetNillableResourceID(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetResourceID(*v)
 	}
-	return dru
+	return _u
 }
 
 // ClearResourceID clears the value of the "resource_id" field.
-func (dru *DiscoveryResultUpdate) ClearResourceID() *DiscoveryResultUpdate {
-	dru.mutation.ClearResourceID()
-	return dru
+func (_u *DiscoveryResultUpdate) ClearResourceID() *DiscoveryResultUpdate {
+	_u.mutation.ClearResourceID()
+	return _u
 }
 
 // SetDiff sets the "diff" field.
-func (dru *DiscoveryResultUpdate) SetDiff(m map[string]interface{}) *DiscoveryResultUpdate {
-	dru.mutation.SetDiff(m)
-	return dru
+func (_u *DiscoveryResultUpdate) SetDiff(v map[string]interface{}) *DiscoveryResultUpdate {
+	_u.mutation.SetDiff(v)
+	return _u
 }
 
 // ClearDiff clears the value of the "diff" field.
-func (dru *DiscoveryResultUpdate) ClearDiff() *DiscoveryResultUpdate {
-	dru.mutation.ClearDiff()
-	return dru
+func (_u *DiscoveryResultUpdate) ClearDiff() *DiscoveryResultUpdate {
+	_u.mutation.ClearDiff()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (dru *DiscoveryResultUpdate) SetStatus(s string) *DiscoveryResultUpdate {
-	dru.mutation.SetStatus(s)
-	return dru
+func (_u *DiscoveryResultUpdate) SetStatus(v string) *DiscoveryResultUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableStatus(s *string) *DiscoveryResultUpdate {
-	if s != nil {
-		dru.SetStatus(*s)
+func (_u *DiscoveryResultUpdate) SetNillableStatus(v *string) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return dru
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (dru *DiscoveryResultUpdate) SetTenantID(i int) *DiscoveryResultUpdate {
-	dru.mutation.ResetTenantID()
-	dru.mutation.SetTenantID(i)
-	return dru
+func (_u *DiscoveryResultUpdate) SetTenantID(v int) *DiscoveryResultUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableTenantID(i *int) *DiscoveryResultUpdate {
-	if i != nil {
-		dru.SetTenantID(*i)
+func (_u *DiscoveryResultUpdate) SetNillableTenantID(v *int) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return dru
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (dru *DiscoveryResultUpdate) AddTenantID(i int) *DiscoveryResultUpdate {
-	dru.mutation.AddTenantID(i)
-	return dru
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DiscoveryResultUpdate) AddTenantID(v int) *DiscoveryResultUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (dru *DiscoveryResultUpdate) SetCreatedAt(t time.Time) *DiscoveryResultUpdate {
-	dru.mutation.SetCreatedAt(t)
-	return dru
+func (_u *DiscoveryResultUpdate) SetCreatedAt(v time.Time) *DiscoveryResultUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (dru *DiscoveryResultUpdate) SetNillableCreatedAt(t *time.Time) *DiscoveryResultUpdate {
-	if t != nil {
-		dru.SetCreatedAt(*t)
+func (_u *DiscoveryResultUpdate) SetNillableCreatedAt(v *time.Time) *DiscoveryResultUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return dru
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (dru *DiscoveryResultUpdate) SetUpdatedAt(t time.Time) *DiscoveryResultUpdate {
-	dru.mutation.SetUpdatedAt(t)
-	return dru
+func (_u *DiscoveryResultUpdate) SetUpdatedAt(v time.Time) *DiscoveryResultUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetJob sets the "job" edge to the DiscoveryJob entity.
-func (dru *DiscoveryResultUpdate) SetJob(d *DiscoveryJob) *DiscoveryResultUpdate {
-	return dru.SetJobID(d.ID)
+func (_u *DiscoveryResultUpdate) SetJob(v *DiscoveryJob) *DiscoveryResultUpdate {
+	return _u.SetJobID(v.ID)
 }
 
 // Mutation returns the DiscoveryResultMutation object of the builder.
-func (dru *DiscoveryResultUpdate) Mutation() *DiscoveryResultMutation {
-	return dru.mutation
+func (_u *DiscoveryResultUpdate) Mutation() *DiscoveryResultMutation {
+	return _u.mutation
 }
 
 // ClearJob clears the "job" edge to the DiscoveryJob entity.
-func (dru *DiscoveryResultUpdate) ClearJob() *DiscoveryResultUpdate {
-	dru.mutation.ClearJob()
-	return dru
+func (_u *DiscoveryResultUpdate) ClearJob() *DiscoveryResultUpdate {
+	_u.mutation.ClearJob()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (dru *DiscoveryResultUpdate) Save(ctx context.Context) (int, error) {
-	dru.defaults()
-	return withHooks(ctx, dru.sqlSave, dru.mutation, dru.hooks)
+func (_u *DiscoveryResultUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (dru *DiscoveryResultUpdate) SaveX(ctx context.Context) int {
-	affected, err := dru.Save(ctx)
+func (_u *DiscoveryResultUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,107 +223,107 @@ func (dru *DiscoveryResultUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (dru *DiscoveryResultUpdate) Exec(ctx context.Context) error {
-	_, err := dru.Save(ctx)
+func (_u *DiscoveryResultUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dru *DiscoveryResultUpdate) ExecX(ctx context.Context) {
-	if err := dru.Exec(ctx); err != nil {
+func (_u *DiscoveryResultUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (dru *DiscoveryResultUpdate) defaults() {
-	if _, ok := dru.mutation.UpdatedAt(); !ok {
+func (_u *DiscoveryResultUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := discoveryresult.UpdateDefaultUpdatedAt()
-		dru.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (dru *DiscoveryResultUpdate) check() error {
-	if v, ok := dru.mutation.JobID(); ok {
+func (_u *DiscoveryResultUpdate) check() error {
+	if v, ok := _u.mutation.JobID(); ok {
 		if err := discoveryresult.JobIDValidator(v); err != nil {
 			return &ValidationError{Name: "job_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.job_id": %w`, err)}
 		}
 	}
-	if v, ok := dru.mutation.Action(); ok {
+	if v, ok := _u.mutation.Action(); ok {
 		if err := discoveryresult.ActionValidator(v); err != nil {
 			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.action": %w`, err)}
 		}
 	}
-	if v, ok := dru.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoveryresult.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.tenant_id": %w`, err)}
 		}
 	}
-	if dru.mutation.JobCleared() && len(dru.mutation.JobIDs()) > 0 {
+	if _u.mutation.JobCleared() && len(_u.mutation.JobIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "DiscoveryResult.job"`)
 	}
 	return nil
 }
 
-func (dru *DiscoveryResultUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := dru.check(); err != nil {
-		return n, err
+func (_u *DiscoveryResultUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(discoveryresult.Table, discoveryresult.Columns, sqlgraph.NewFieldSpec(discoveryresult.FieldID, field.TypeInt))
-	if ps := dru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := dru.mutation.CiID(); ok {
+	if value, ok := _u.mutation.CiID(); ok {
 		_spec.SetField(discoveryresult.FieldCiID, field.TypeInt, value)
 	}
-	if value, ok := dru.mutation.AddedCiID(); ok {
+	if value, ok := _u.mutation.AddedCiID(); ok {
 		_spec.AddField(discoveryresult.FieldCiID, field.TypeInt, value)
 	}
-	if dru.mutation.CiIDCleared() {
+	if _u.mutation.CiIDCleared() {
 		_spec.ClearField(discoveryresult.FieldCiID, field.TypeInt)
 	}
-	if value, ok := dru.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(discoveryresult.FieldAction, field.TypeString, value)
 	}
-	if value, ok := dru.mutation.ResourceType(); ok {
+	if value, ok := _u.mutation.ResourceType(); ok {
 		_spec.SetField(discoveryresult.FieldResourceType, field.TypeString, value)
 	}
-	if dru.mutation.ResourceTypeCleared() {
+	if _u.mutation.ResourceTypeCleared() {
 		_spec.ClearField(discoveryresult.FieldResourceType, field.TypeString)
 	}
-	if value, ok := dru.mutation.ResourceID(); ok {
+	if value, ok := _u.mutation.ResourceID(); ok {
 		_spec.SetField(discoveryresult.FieldResourceID, field.TypeString, value)
 	}
-	if dru.mutation.ResourceIDCleared() {
+	if _u.mutation.ResourceIDCleared() {
 		_spec.ClearField(discoveryresult.FieldResourceID, field.TypeString)
 	}
-	if value, ok := dru.mutation.Diff(); ok {
+	if value, ok := _u.mutation.Diff(); ok {
 		_spec.SetField(discoveryresult.FieldDiff, field.TypeJSON, value)
 	}
-	if dru.mutation.DiffCleared() {
+	if _u.mutation.DiffCleared() {
 		_spec.ClearField(discoveryresult.FieldDiff, field.TypeJSON)
 	}
-	if value, ok := dru.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(discoveryresult.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := dru.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoveryresult.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := dru.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoveryresult.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := dru.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoveryresult.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := dru.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoveryresult.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if dru.mutation.JobCleared() {
+	if _u.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -336,7 +336,7 @@ func (dru *DiscoveryResultUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dru.mutation.JobIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -352,7 +352,7 @@ func (dru *DiscoveryResultUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, dru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{discoveryresult.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -360,8 +360,8 @@ func (dru *DiscoveryResultUpdate) sqlSave(ctx context.Context) (n int, err error
 		}
 		return 0, err
 	}
-	dru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // DiscoveryResultUpdateOne is the builder for updating a single DiscoveryResult entity.
@@ -373,205 +373,205 @@ type DiscoveryResultUpdateOne struct {
 }
 
 // SetJobID sets the "job_id" field.
-func (druo *DiscoveryResultUpdateOne) SetJobID(i int) *DiscoveryResultUpdateOne {
-	druo.mutation.SetJobID(i)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetJobID(v int) *DiscoveryResultUpdateOne {
+	_u.mutation.SetJobID(v)
+	return _u
 }
 
 // SetNillableJobID sets the "job_id" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableJobID(i *int) *DiscoveryResultUpdateOne {
-	if i != nil {
-		druo.SetJobID(*i)
+func (_u *DiscoveryResultUpdateOne) SetNillableJobID(v *int) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetJobID(*v)
 	}
-	return druo
+	return _u
 }
 
 // SetCiID sets the "ci_id" field.
-func (druo *DiscoveryResultUpdateOne) SetCiID(i int) *DiscoveryResultUpdateOne {
-	druo.mutation.ResetCiID()
-	druo.mutation.SetCiID(i)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetCiID(v int) *DiscoveryResultUpdateOne {
+	_u.mutation.ResetCiID()
+	_u.mutation.SetCiID(v)
+	return _u
 }
 
 // SetNillableCiID sets the "ci_id" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableCiID(i *int) *DiscoveryResultUpdateOne {
-	if i != nil {
-		druo.SetCiID(*i)
+func (_u *DiscoveryResultUpdateOne) SetNillableCiID(v *int) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetCiID(*v)
 	}
-	return druo
+	return _u
 }
 
-// AddCiID adds i to the "ci_id" field.
-func (druo *DiscoveryResultUpdateOne) AddCiID(i int) *DiscoveryResultUpdateOne {
-	druo.mutation.AddCiID(i)
-	return druo
+// AddCiID adds value to the "ci_id" field.
+func (_u *DiscoveryResultUpdateOne) AddCiID(v int) *DiscoveryResultUpdateOne {
+	_u.mutation.AddCiID(v)
+	return _u
 }
 
 // ClearCiID clears the value of the "ci_id" field.
-func (druo *DiscoveryResultUpdateOne) ClearCiID() *DiscoveryResultUpdateOne {
-	druo.mutation.ClearCiID()
-	return druo
+func (_u *DiscoveryResultUpdateOne) ClearCiID() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearCiID()
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (druo *DiscoveryResultUpdateOne) SetAction(s string) *DiscoveryResultUpdateOne {
-	druo.mutation.SetAction(s)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetAction(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableAction(s *string) *DiscoveryResultUpdateOne {
-	if s != nil {
-		druo.SetAction(*s)
+func (_u *DiscoveryResultUpdateOne) SetNillableAction(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return druo
+	return _u
 }
 
 // SetResourceType sets the "resource_type" field.
-func (druo *DiscoveryResultUpdateOne) SetResourceType(s string) *DiscoveryResultUpdateOne {
-	druo.mutation.SetResourceType(s)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetResourceType(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetResourceType(v)
+	return _u
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableResourceType(s *string) *DiscoveryResultUpdateOne {
-	if s != nil {
-		druo.SetResourceType(*s)
+func (_u *DiscoveryResultUpdateOne) SetNillableResourceType(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetResourceType(*v)
 	}
-	return druo
+	return _u
 }
 
 // ClearResourceType clears the value of the "resource_type" field.
-func (druo *DiscoveryResultUpdateOne) ClearResourceType() *DiscoveryResultUpdateOne {
-	druo.mutation.ClearResourceType()
-	return druo
+func (_u *DiscoveryResultUpdateOne) ClearResourceType() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearResourceType()
+	return _u
 }
 
 // SetResourceID sets the "resource_id" field.
-func (druo *DiscoveryResultUpdateOne) SetResourceID(s string) *DiscoveryResultUpdateOne {
-	druo.mutation.SetResourceID(s)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetResourceID(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetResourceID(v)
+	return _u
 }
 
 // SetNillableResourceID sets the "resource_id" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableResourceID(s *string) *DiscoveryResultUpdateOne {
-	if s != nil {
-		druo.SetResourceID(*s)
+func (_u *DiscoveryResultUpdateOne) SetNillableResourceID(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetResourceID(*v)
 	}
-	return druo
+	return _u
 }
 
 // ClearResourceID clears the value of the "resource_id" field.
-func (druo *DiscoveryResultUpdateOne) ClearResourceID() *DiscoveryResultUpdateOne {
-	druo.mutation.ClearResourceID()
-	return druo
+func (_u *DiscoveryResultUpdateOne) ClearResourceID() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearResourceID()
+	return _u
 }
 
 // SetDiff sets the "diff" field.
-func (druo *DiscoveryResultUpdateOne) SetDiff(m map[string]interface{}) *DiscoveryResultUpdateOne {
-	druo.mutation.SetDiff(m)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetDiff(v map[string]interface{}) *DiscoveryResultUpdateOne {
+	_u.mutation.SetDiff(v)
+	return _u
 }
 
 // ClearDiff clears the value of the "diff" field.
-func (druo *DiscoveryResultUpdateOne) ClearDiff() *DiscoveryResultUpdateOne {
-	druo.mutation.ClearDiff()
-	return druo
+func (_u *DiscoveryResultUpdateOne) ClearDiff() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearDiff()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (druo *DiscoveryResultUpdateOne) SetStatus(s string) *DiscoveryResultUpdateOne {
-	druo.mutation.SetStatus(s)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetStatus(v string) *DiscoveryResultUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableStatus(s *string) *DiscoveryResultUpdateOne {
-	if s != nil {
-		druo.SetStatus(*s)
+func (_u *DiscoveryResultUpdateOne) SetNillableStatus(v *string) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return druo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (druo *DiscoveryResultUpdateOne) SetTenantID(i int) *DiscoveryResultUpdateOne {
-	druo.mutation.ResetTenantID()
-	druo.mutation.SetTenantID(i)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetTenantID(v int) *DiscoveryResultUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableTenantID(i *int) *DiscoveryResultUpdateOne {
-	if i != nil {
-		druo.SetTenantID(*i)
+func (_u *DiscoveryResultUpdateOne) SetNillableTenantID(v *int) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return druo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (druo *DiscoveryResultUpdateOne) AddTenantID(i int) *DiscoveryResultUpdateOne {
-	druo.mutation.AddTenantID(i)
-	return druo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DiscoveryResultUpdateOne) AddTenantID(v int) *DiscoveryResultUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (druo *DiscoveryResultUpdateOne) SetCreatedAt(t time.Time) *DiscoveryResultUpdateOne {
-	druo.mutation.SetCreatedAt(t)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetCreatedAt(v time.Time) *DiscoveryResultUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (druo *DiscoveryResultUpdateOne) SetNillableCreatedAt(t *time.Time) *DiscoveryResultUpdateOne {
-	if t != nil {
-		druo.SetCreatedAt(*t)
+func (_u *DiscoveryResultUpdateOne) SetNillableCreatedAt(v *time.Time) *DiscoveryResultUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return druo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (druo *DiscoveryResultUpdateOne) SetUpdatedAt(t time.Time) *DiscoveryResultUpdateOne {
-	druo.mutation.SetUpdatedAt(t)
-	return druo
+func (_u *DiscoveryResultUpdateOne) SetUpdatedAt(v time.Time) *DiscoveryResultUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetJob sets the "job" edge to the DiscoveryJob entity.
-func (druo *DiscoveryResultUpdateOne) SetJob(d *DiscoveryJob) *DiscoveryResultUpdateOne {
-	return druo.SetJobID(d.ID)
+func (_u *DiscoveryResultUpdateOne) SetJob(v *DiscoveryJob) *DiscoveryResultUpdateOne {
+	return _u.SetJobID(v.ID)
 }
 
 // Mutation returns the DiscoveryResultMutation object of the builder.
-func (druo *DiscoveryResultUpdateOne) Mutation() *DiscoveryResultMutation {
-	return druo.mutation
+func (_u *DiscoveryResultUpdateOne) Mutation() *DiscoveryResultMutation {
+	return _u.mutation
 }
 
 // ClearJob clears the "job" edge to the DiscoveryJob entity.
-func (druo *DiscoveryResultUpdateOne) ClearJob() *DiscoveryResultUpdateOne {
-	druo.mutation.ClearJob()
-	return druo
+func (_u *DiscoveryResultUpdateOne) ClearJob() *DiscoveryResultUpdateOne {
+	_u.mutation.ClearJob()
+	return _u
 }
 
 // Where appends a list predicates to the DiscoveryResultUpdate builder.
-func (druo *DiscoveryResultUpdateOne) Where(ps ...predicate.DiscoveryResult) *DiscoveryResultUpdateOne {
-	druo.mutation.Where(ps...)
-	return druo
+func (_u *DiscoveryResultUpdateOne) Where(ps ...predicate.DiscoveryResult) *DiscoveryResultUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (druo *DiscoveryResultUpdateOne) Select(field string, fields ...string) *DiscoveryResultUpdateOne {
-	druo.fields = append([]string{field}, fields...)
-	return druo
+func (_u *DiscoveryResultUpdateOne) Select(field string, fields ...string) *DiscoveryResultUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated DiscoveryResult entity.
-func (druo *DiscoveryResultUpdateOne) Save(ctx context.Context) (*DiscoveryResult, error) {
-	druo.defaults()
-	return withHooks(ctx, druo.sqlSave, druo.mutation, druo.hooks)
+func (_u *DiscoveryResultUpdateOne) Save(ctx context.Context) (*DiscoveryResult, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (druo *DiscoveryResultUpdateOne) SaveX(ctx context.Context) *DiscoveryResult {
-	node, err := druo.Save(ctx)
+func (_u *DiscoveryResultUpdateOne) SaveX(ctx context.Context) *DiscoveryResult {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -579,60 +579,60 @@ func (druo *DiscoveryResultUpdateOne) SaveX(ctx context.Context) *DiscoveryResul
 }
 
 // Exec executes the query on the entity.
-func (druo *DiscoveryResultUpdateOne) Exec(ctx context.Context) error {
-	_, err := druo.Save(ctx)
+func (_u *DiscoveryResultUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (druo *DiscoveryResultUpdateOne) ExecX(ctx context.Context) {
-	if err := druo.Exec(ctx); err != nil {
+func (_u *DiscoveryResultUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (druo *DiscoveryResultUpdateOne) defaults() {
-	if _, ok := druo.mutation.UpdatedAt(); !ok {
+func (_u *DiscoveryResultUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := discoveryresult.UpdateDefaultUpdatedAt()
-		druo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (druo *DiscoveryResultUpdateOne) check() error {
-	if v, ok := druo.mutation.JobID(); ok {
+func (_u *DiscoveryResultUpdateOne) check() error {
+	if v, ok := _u.mutation.JobID(); ok {
 		if err := discoveryresult.JobIDValidator(v); err != nil {
 			return &ValidationError{Name: "job_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.job_id": %w`, err)}
 		}
 	}
-	if v, ok := druo.mutation.Action(); ok {
+	if v, ok := _u.mutation.Action(); ok {
 		if err := discoveryresult.ActionValidator(v); err != nil {
 			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.action": %w`, err)}
 		}
 	}
-	if v, ok := druo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoveryresult.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryResult.tenant_id": %w`, err)}
 		}
 	}
-	if druo.mutation.JobCleared() && len(druo.mutation.JobIDs()) > 0 {
+	if _u.mutation.JobCleared() && len(_u.mutation.JobIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "DiscoveryResult.job"`)
 	}
 	return nil
 }
 
-func (druo *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *DiscoveryResult, err error) {
-	if err := druo.check(); err != nil {
+func (_u *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *DiscoveryResult, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(discoveryresult.Table, discoveryresult.Columns, sqlgraph.NewFieldSpec(discoveryresult.FieldID, field.TypeInt))
-	id, ok := druo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "DiscoveryResult.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := druo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, discoveryresult.FieldID)
 		for _, f := range fields {
@@ -644,59 +644,59 @@ func (druo *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 			}
 		}
 	}
-	if ps := druo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := druo.mutation.CiID(); ok {
+	if value, ok := _u.mutation.CiID(); ok {
 		_spec.SetField(discoveryresult.FieldCiID, field.TypeInt, value)
 	}
-	if value, ok := druo.mutation.AddedCiID(); ok {
+	if value, ok := _u.mutation.AddedCiID(); ok {
 		_spec.AddField(discoveryresult.FieldCiID, field.TypeInt, value)
 	}
-	if druo.mutation.CiIDCleared() {
+	if _u.mutation.CiIDCleared() {
 		_spec.ClearField(discoveryresult.FieldCiID, field.TypeInt)
 	}
-	if value, ok := druo.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(discoveryresult.FieldAction, field.TypeString, value)
 	}
-	if value, ok := druo.mutation.ResourceType(); ok {
+	if value, ok := _u.mutation.ResourceType(); ok {
 		_spec.SetField(discoveryresult.FieldResourceType, field.TypeString, value)
 	}
-	if druo.mutation.ResourceTypeCleared() {
+	if _u.mutation.ResourceTypeCleared() {
 		_spec.ClearField(discoveryresult.FieldResourceType, field.TypeString)
 	}
-	if value, ok := druo.mutation.ResourceID(); ok {
+	if value, ok := _u.mutation.ResourceID(); ok {
 		_spec.SetField(discoveryresult.FieldResourceID, field.TypeString, value)
 	}
-	if druo.mutation.ResourceIDCleared() {
+	if _u.mutation.ResourceIDCleared() {
 		_spec.ClearField(discoveryresult.FieldResourceID, field.TypeString)
 	}
-	if value, ok := druo.mutation.Diff(); ok {
+	if value, ok := _u.mutation.Diff(); ok {
 		_spec.SetField(discoveryresult.FieldDiff, field.TypeJSON, value)
 	}
-	if druo.mutation.DiffCleared() {
+	if _u.mutation.DiffCleared() {
 		_spec.ClearField(discoveryresult.FieldDiff, field.TypeJSON)
 	}
-	if value, ok := druo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(discoveryresult.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := druo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoveryresult.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := druo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoveryresult.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := druo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoveryresult.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := druo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoveryresult.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if druo.mutation.JobCleared() {
+	if _u.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -709,7 +709,7 @@ func (druo *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := druo.mutation.JobIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -725,10 +725,10 @@ func (druo *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &DiscoveryResult{config: druo.config}
+	_node = &DiscoveryResult{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, druo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{discoveryresult.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -736,6 +736,6 @@ func (druo *DiscoveryResultUpdateOne) sqlSave(ctx context.Context) (_node *Disco
 		}
 		return nil, err
 	}
-	druo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

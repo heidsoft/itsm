@@ -22,129 +22,129 @@ type ApprovalChainCreate struct {
 }
 
 // SetName sets the "name" field.
-func (acc *ApprovalChainCreate) SetName(s string) *ApprovalChainCreate {
-	acc.mutation.SetName(s)
-	return acc
+func (_c *ApprovalChainCreate) SetName(v string) *ApprovalChainCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (acc *ApprovalChainCreate) SetDescription(s string) *ApprovalChainCreate {
-	acc.mutation.SetDescription(s)
-	return acc
+func (_c *ApprovalChainCreate) SetDescription(v string) *ApprovalChainCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (acc *ApprovalChainCreate) SetNillableDescription(s *string) *ApprovalChainCreate {
-	if s != nil {
-		acc.SetDescription(*s)
+func (_c *ApprovalChainCreate) SetNillableDescription(v *string) *ApprovalChainCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return acc
+	return _c
 }
 
 // SetEntityType sets the "entity_type" field.
-func (acc *ApprovalChainCreate) SetEntityType(s string) *ApprovalChainCreate {
-	acc.mutation.SetEntityType(s)
-	return acc
+func (_c *ApprovalChainCreate) SetEntityType(v string) *ApprovalChainCreate {
+	_c.mutation.SetEntityType(v)
+	return _c
 }
 
 // SetNillableEntityType sets the "entity_type" field if the given value is not nil.
-func (acc *ApprovalChainCreate) SetNillableEntityType(s *string) *ApprovalChainCreate {
-	if s != nil {
-		acc.SetEntityType(*s)
+func (_c *ApprovalChainCreate) SetNillableEntityType(v *string) *ApprovalChainCreate {
+	if v != nil {
+		_c.SetEntityType(*v)
 	}
-	return acc
+	return _c
 }
 
 // SetChain sets the "chain" field.
-func (acc *ApprovalChainCreate) SetChain(scs []schema.ApprovalChainStep) *ApprovalChainCreate {
-	acc.mutation.SetChain(scs)
-	return acc
+func (_c *ApprovalChainCreate) SetChain(v []schema.ApprovalChainStep) *ApprovalChainCreate {
+	_c.mutation.SetChain(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (acc *ApprovalChainCreate) SetStatus(s string) *ApprovalChainCreate {
-	acc.mutation.SetStatus(s)
-	return acc
+func (_c *ApprovalChainCreate) SetStatus(v string) *ApprovalChainCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (acc *ApprovalChainCreate) SetNillableStatus(s *string) *ApprovalChainCreate {
-	if s != nil {
-		acc.SetStatus(*s)
+func (_c *ApprovalChainCreate) SetNillableStatus(v *string) *ApprovalChainCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return acc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (acc *ApprovalChainCreate) SetCreatedBy(i int) *ApprovalChainCreate {
-	acc.mutation.SetCreatedBy(i)
-	return acc
+func (_c *ApprovalChainCreate) SetCreatedBy(v int) *ApprovalChainCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (acc *ApprovalChainCreate) SetNillableCreatedBy(i *int) *ApprovalChainCreate {
-	if i != nil {
-		acc.SetCreatedBy(*i)
+func (_c *ApprovalChainCreate) SetNillableCreatedBy(v *int) *ApprovalChainCreate {
+	if v != nil {
+		_c.SetCreatedBy(*v)
 	}
-	return acc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (acc *ApprovalChainCreate) SetTenantID(i int) *ApprovalChainCreate {
-	acc.mutation.SetTenantID(i)
-	return acc
+func (_c *ApprovalChainCreate) SetTenantID(v int) *ApprovalChainCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (acc *ApprovalChainCreate) SetNillableTenantID(i *int) *ApprovalChainCreate {
-	if i != nil {
-		acc.SetTenantID(*i)
+func (_c *ApprovalChainCreate) SetNillableTenantID(v *int) *ApprovalChainCreate {
+	if v != nil {
+		_c.SetTenantID(*v)
 	}
-	return acc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (acc *ApprovalChainCreate) SetCreatedAt(t time.Time) *ApprovalChainCreate {
-	acc.mutation.SetCreatedAt(t)
-	return acc
+func (_c *ApprovalChainCreate) SetCreatedAt(v time.Time) *ApprovalChainCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (acc *ApprovalChainCreate) SetNillableCreatedAt(t *time.Time) *ApprovalChainCreate {
-	if t != nil {
-		acc.SetCreatedAt(*t)
+func (_c *ApprovalChainCreate) SetNillableCreatedAt(v *time.Time) *ApprovalChainCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return acc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (acc *ApprovalChainCreate) SetUpdatedAt(t time.Time) *ApprovalChainCreate {
-	acc.mutation.SetUpdatedAt(t)
-	return acc
+func (_c *ApprovalChainCreate) SetUpdatedAt(v time.Time) *ApprovalChainCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (acc *ApprovalChainCreate) SetNillableUpdatedAt(t *time.Time) *ApprovalChainCreate {
-	if t != nil {
-		acc.SetUpdatedAt(*t)
+func (_c *ApprovalChainCreate) SetNillableUpdatedAt(v *time.Time) *ApprovalChainCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return acc
+	return _c
 }
 
 // Mutation returns the ApprovalChainMutation object of the builder.
-func (acc *ApprovalChainCreate) Mutation() *ApprovalChainMutation {
-	return acc.mutation
+func (_c *ApprovalChainCreate) Mutation() *ApprovalChainMutation {
+	return _c.mutation
 }
 
 // Save creates the ApprovalChain in the database.
-func (acc *ApprovalChainCreate) Save(ctx context.Context) (*ApprovalChain, error) {
-	acc.defaults()
-	return withHooks(ctx, acc.sqlSave, acc.mutation, acc.hooks)
+func (_c *ApprovalChainCreate) Save(ctx context.Context) (*ApprovalChain, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (acc *ApprovalChainCreate) SaveX(ctx context.Context) *ApprovalChain {
-	v, err := acc.Save(ctx)
+func (_c *ApprovalChainCreate) SaveX(ctx context.Context) *ApprovalChain {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -152,72 +152,72 @@ func (acc *ApprovalChainCreate) SaveX(ctx context.Context) *ApprovalChain {
 }
 
 // Exec executes the query.
-func (acc *ApprovalChainCreate) Exec(ctx context.Context) error {
-	_, err := acc.Save(ctx)
+func (_c *ApprovalChainCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (acc *ApprovalChainCreate) ExecX(ctx context.Context) {
-	if err := acc.Exec(ctx); err != nil {
+func (_c *ApprovalChainCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (acc *ApprovalChainCreate) defaults() {
-	if _, ok := acc.mutation.EntityType(); !ok {
+func (_c *ApprovalChainCreate) defaults() {
+	if _, ok := _c.mutation.EntityType(); !ok {
 		v := approvalchain.DefaultEntityType
-		acc.mutation.SetEntityType(v)
+		_c.mutation.SetEntityType(v)
 	}
-	if _, ok := acc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := approvalchain.DefaultStatus
-		acc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := acc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := approvalchain.DefaultCreatedAt()
-		acc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := acc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := approvalchain.DefaultUpdatedAt()
-		acc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (acc *ApprovalChainCreate) check() error {
-	if _, ok := acc.mutation.Name(); !ok {
+func (_c *ApprovalChainCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "ApprovalChain.name"`)}
 	}
-	if v, ok := acc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := approvalchain.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApprovalChain.name": %w`, err)}
 		}
 	}
-	if _, ok := acc.mutation.EntityType(); !ok {
+	if _, ok := _c.mutation.EntityType(); !ok {
 		return &ValidationError{Name: "entity_type", err: errors.New(`ent: missing required field "ApprovalChain.entity_type"`)}
 	}
-	if _, ok := acc.mutation.Chain(); !ok {
+	if _, ok := _c.mutation.Chain(); !ok {
 		return &ValidationError{Name: "chain", err: errors.New(`ent: missing required field "ApprovalChain.chain"`)}
 	}
-	if _, ok := acc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ApprovalChain.status"`)}
 	}
-	if _, ok := acc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ApprovalChain.created_at"`)}
 	}
-	if _, ok := acc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ApprovalChain.updated_at"`)}
 	}
 	return nil
 }
 
-func (acc *ApprovalChainCreate) sqlSave(ctx context.Context) (*ApprovalChain, error) {
-	if err := acc.check(); err != nil {
+func (_c *ApprovalChainCreate) sqlSave(ctx context.Context) (*ApprovalChain, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := acc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, acc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -225,49 +225,49 @@ func (acc *ApprovalChainCreate) sqlSave(ctx context.Context) (*ApprovalChain, er
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	acc.mutation.id = &_node.ID
-	acc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (acc *ApprovalChainCreate) createSpec() (*ApprovalChain, *sqlgraph.CreateSpec) {
+func (_c *ApprovalChainCreate) createSpec() (*ApprovalChain, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ApprovalChain{config: acc.config}
+		_node = &ApprovalChain{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(approvalchain.Table, sqlgraph.NewFieldSpec(approvalchain.FieldID, field.TypeInt))
 	)
-	if value, ok := acc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(approvalchain.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := acc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(approvalchain.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := acc.mutation.EntityType(); ok {
+	if value, ok := _c.mutation.EntityType(); ok {
 		_spec.SetField(approvalchain.FieldEntityType, field.TypeString, value)
 		_node.EntityType = value
 	}
-	if value, ok := acc.mutation.Chain(); ok {
+	if value, ok := _c.mutation.Chain(); ok {
 		_spec.SetField(approvalchain.FieldChain, field.TypeJSON, value)
 		_node.Chain = value
 	}
-	if value, ok := acc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(approvalchain.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := acc.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(approvalchain.FieldCreatedBy, field.TypeInt, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := acc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(approvalchain.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := acc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalchain.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := acc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(approvalchain.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -282,16 +282,16 @@ type ApprovalChainCreateBulk struct {
 }
 
 // Save creates the ApprovalChain entities in the database.
-func (accb *ApprovalChainCreateBulk) Save(ctx context.Context) ([]*ApprovalChain, error) {
-	if accb.err != nil {
-		return nil, accb.err
+func (_c *ApprovalChainCreateBulk) Save(ctx context.Context) ([]*ApprovalChain, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(accb.builders))
-	nodes := make([]*ApprovalChain, len(accb.builders))
-	mutators := make([]Mutator, len(accb.builders))
-	for i := range accb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ApprovalChain, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := accb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ApprovalChainMutation)
@@ -305,11 +305,11 @@ func (accb *ApprovalChainCreateBulk) Save(ctx context.Context) ([]*ApprovalChain
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, accb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, accb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -333,7 +333,7 @@ func (accb *ApprovalChainCreateBulk) Save(ctx context.Context) ([]*ApprovalChain
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, accb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -341,8 +341,8 @@ func (accb *ApprovalChainCreateBulk) Save(ctx context.Context) ([]*ApprovalChain
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (accb *ApprovalChainCreateBulk) SaveX(ctx context.Context) []*ApprovalChain {
-	v, err := accb.Save(ctx)
+func (_c *ApprovalChainCreateBulk) SaveX(ctx context.Context) []*ApprovalChain {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -350,14 +350,14 @@ func (accb *ApprovalChainCreateBulk) SaveX(ctx context.Context) []*ApprovalChain
 }
 
 // Exec executes the query.
-func (accb *ApprovalChainCreateBulk) Exec(ctx context.Context) error {
-	_, err := accb.Save(ctx)
+func (_c *ApprovalChainCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (accb *ApprovalChainCreateBulk) ExecX(ctx context.Context) {
-	if err := accb.Exec(ctx); err != nil {
+func (_c *ApprovalChainCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

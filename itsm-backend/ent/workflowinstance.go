@@ -103,7 +103,7 @@ func (*WorkflowInstance) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the WorkflowInstance fields.
-func (wi *WorkflowInstance) assignValues(columns []string, values []any) error {
+func (_m *WorkflowInstance) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -114,24 +114,24 @@ func (wi *WorkflowInstance) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			wi.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case workflowinstance.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				wi.Status = value.String
+				_m.Status = value.String
 			}
 		case workflowinstance.FieldCurrentStep:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field current_step", values[i])
 			} else if value.Valid {
-				wi.CurrentStep = value.String
+				_m.CurrentStep = value.String
 			}
 		case workflowinstance.FieldContext:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field context", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &wi.Context); err != nil {
+				if err := json.Unmarshal(*value, &_m.Context); err != nil {
 					return fmt.Errorf("unmarshal field context: %w", err)
 				}
 			}
@@ -139,59 +139,59 @@ func (wi *WorkflowInstance) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
 			} else if value.Valid {
-				wi.WorkflowID = int(value.Int64)
+				_m.WorkflowID = int(value.Int64)
 			}
 		case workflowinstance.FieldEntityID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field entity_id", values[i])
 			} else if value.Valid {
-				wi.EntityID = int(value.Int64)
+				_m.EntityID = int(value.Int64)
 			}
 		case workflowinstance.FieldEntityType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field entity_type", values[i])
 			} else if value.Valid {
-				wi.EntityType = value.String
+				_m.EntityType = value.String
 			}
 		case workflowinstance.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				wi.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case workflowinstance.FieldStartedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field started_at", values[i])
 			} else if value.Valid {
-				wi.StartedAt = value.Time
+				_m.StartedAt = value.Time
 			}
 		case workflowinstance.FieldCompletedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field completed_at", values[i])
 			} else if value.Valid {
-				wi.CompletedAt = value.Time
+				_m.CompletedAt = value.Time
 			}
 		case workflowinstance.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				wi.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case workflowinstance.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				wi.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case workflowinstance.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field ticket_workflow_instances", value)
 			} else if value.Valid {
-				wi.ticket_workflow_instances = new(int)
-				*wi.ticket_workflow_instances = int(value.Int64)
+				_m.ticket_workflow_instances = new(int)
+				*_m.ticket_workflow_instances = int(value.Int64)
 			}
 		default:
-			wi.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -199,75 +199,75 @@ func (wi *WorkflowInstance) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the WorkflowInstance.
 // This includes values selected through modifiers, order, etc.
-func (wi *WorkflowInstance) Value(name string) (ent.Value, error) {
-	return wi.selectValues.Get(name)
+func (_m *WorkflowInstance) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryWorkflow queries the "workflow" edge of the WorkflowInstance entity.
-func (wi *WorkflowInstance) QueryWorkflow() *WorkflowQuery {
-	return NewWorkflowInstanceClient(wi.config).QueryWorkflow(wi)
+func (_m *WorkflowInstance) QueryWorkflow() *WorkflowQuery {
+	return NewWorkflowInstanceClient(_m.config).QueryWorkflow(_m)
 }
 
 // QueryWorkflowTasks queries the "workflow_tasks" edge of the WorkflowInstance entity.
-func (wi *WorkflowInstance) QueryWorkflowTasks() *WorkflowTaskQuery {
-	return NewWorkflowInstanceClient(wi.config).QueryWorkflowTasks(wi)
+func (_m *WorkflowInstance) QueryWorkflowTasks() *WorkflowTaskQuery {
+	return NewWorkflowInstanceClient(_m.config).QueryWorkflowTasks(_m)
 }
 
 // Update returns a builder for updating this WorkflowInstance.
 // Note that you need to call WorkflowInstance.Unwrap() before calling this method if this WorkflowInstance
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (wi *WorkflowInstance) Update() *WorkflowInstanceUpdateOne {
-	return NewWorkflowInstanceClient(wi.config).UpdateOne(wi)
+func (_m *WorkflowInstance) Update() *WorkflowInstanceUpdateOne {
+	return NewWorkflowInstanceClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the WorkflowInstance entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (wi *WorkflowInstance) Unwrap() *WorkflowInstance {
-	_tx, ok := wi.config.driver.(*txDriver)
+func (_m *WorkflowInstance) Unwrap() *WorkflowInstance {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: WorkflowInstance is not a transactional entity")
 	}
-	wi.config.driver = _tx.drv
-	return wi
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (wi *WorkflowInstance) String() string {
+func (_m *WorkflowInstance) String() string {
 	var builder strings.Builder
 	builder.WriteString("WorkflowInstance(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", wi.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("status=")
-	builder.WriteString(wi.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("current_step=")
-	builder.WriteString(wi.CurrentStep)
+	builder.WriteString(_m.CurrentStep)
 	builder.WriteString(", ")
 	builder.WriteString("context=")
-	builder.WriteString(fmt.Sprintf("%v", wi.Context))
+	builder.WriteString(fmt.Sprintf("%v", _m.Context))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
-	builder.WriteString(fmt.Sprintf("%v", wi.WorkflowID))
+	builder.WriteString(fmt.Sprintf("%v", _m.WorkflowID))
 	builder.WriteString(", ")
 	builder.WriteString("entity_id=")
-	builder.WriteString(fmt.Sprintf("%v", wi.EntityID))
+	builder.WriteString(fmt.Sprintf("%v", _m.EntityID))
 	builder.WriteString(", ")
 	builder.WriteString("entity_type=")
-	builder.WriteString(wi.EntityType)
+	builder.WriteString(_m.EntityType)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", wi.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("started_at=")
-	builder.WriteString(wi.StartedAt.Format(time.ANSIC))
+	builder.WriteString(_m.StartedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("completed_at=")
-	builder.WriteString(wi.CompletedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CompletedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(wi.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(wi.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -86,7 +86,7 @@ func (*TicketTemplate) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketTemplate fields.
-func (tt *TicketTemplate) assignValues(columns []string, values []any) error {
+func (_m *TicketTemplate) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -97,36 +97,36 @@ func (tt *TicketTemplate) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			tt.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case tickettemplate.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				tt.Name = value.String
+				_m.Name = value.String
 			}
 		case tickettemplate.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				tt.Description = value.String
+				_m.Description = value.String
 			}
 		case tickettemplate.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				tt.Category = value.String
+				_m.Category = value.String
 			}
 		case tickettemplate.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				tt.Priority = value.String
+				_m.Priority = value.String
 			}
 		case tickettemplate.FieldFormFields:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field form_fields", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tt.FormFields); err != nil {
+				if err := json.Unmarshal(*value, &_m.FormFields); err != nil {
 					return fmt.Errorf("unmarshal field form_fields: %w", err)
 				}
 			}
@@ -134,7 +134,7 @@ func (tt *TicketTemplate) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_steps", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tt.WorkflowSteps); err != nil {
+				if err := json.Unmarshal(*value, &_m.WorkflowSteps); err != nil {
 					return fmt.Errorf("unmarshal field workflow_steps: %w", err)
 				}
 			}
@@ -142,28 +142,28 @@ func (tt *TicketTemplate) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				tt.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case tickettemplate.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				tt.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case tickettemplate.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tt.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case tickettemplate.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				tt.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			tt.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -171,67 +171,67 @@ func (tt *TicketTemplate) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketTemplate.
 // This includes values selected through modifiers, order, etc.
-func (tt *TicketTemplate) Value(name string) (ent.Value, error) {
-	return tt.selectValues.Get(name)
+func (_m *TicketTemplate) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTickets queries the "tickets" edge of the TicketTemplate entity.
-func (tt *TicketTemplate) QueryTickets() *TicketQuery {
-	return NewTicketTemplateClient(tt.config).QueryTickets(tt)
+func (_m *TicketTemplate) QueryTickets() *TicketQuery {
+	return NewTicketTemplateClient(_m.config).QueryTickets(_m)
 }
 
 // Update returns a builder for updating this TicketTemplate.
 // Note that you need to call TicketTemplate.Unwrap() before calling this method if this TicketTemplate
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tt *TicketTemplate) Update() *TicketTemplateUpdateOne {
-	return NewTicketTemplateClient(tt.config).UpdateOne(tt)
+func (_m *TicketTemplate) Update() *TicketTemplateUpdateOne {
+	return NewTicketTemplateClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketTemplate entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tt *TicketTemplate) Unwrap() *TicketTemplate {
-	_tx, ok := tt.config.driver.(*txDriver)
+func (_m *TicketTemplate) Unwrap() *TicketTemplate {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketTemplate is not a transactional entity")
 	}
-	tt.config.driver = _tx.drv
-	return tt
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tt *TicketTemplate) String() string {
+func (_m *TicketTemplate) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketTemplate(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tt.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(tt.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(tt.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(tt.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(tt.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("form_fields=")
-	builder.WriteString(fmt.Sprintf("%v", tt.FormFields))
+	builder.WriteString(fmt.Sprintf("%v", _m.FormFields))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_steps=")
-	builder.WriteString(fmt.Sprintf("%v", tt.WorkflowSteps))
+	builder.WriteString(fmt.Sprintf("%v", _m.WorkflowSteps))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", tt.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", tt.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tt.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(tt.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

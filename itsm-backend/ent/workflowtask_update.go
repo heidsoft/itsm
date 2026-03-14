@@ -25,351 +25,351 @@ type WorkflowTaskUpdate struct {
 }
 
 // Where appends a list predicates to the WorkflowTaskUpdate builder.
-func (wtu *WorkflowTaskUpdate) Where(ps ...predicate.WorkflowTask) *WorkflowTaskUpdate {
-	wtu.mutation.Where(ps...)
-	return wtu
+func (_u *WorkflowTaskUpdate) Where(ps ...predicate.WorkflowTask) *WorkflowTaskUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTaskID sets the "task_id" field.
-func (wtu *WorkflowTaskUpdate) SetTaskID(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetTaskID(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetTaskID(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetTaskID(v)
+	return _u
 }
 
 // SetNillableTaskID sets the "task_id" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableTaskID(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetTaskID(*s)
+func (_u *WorkflowTaskUpdate) SetNillableTaskID(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetTaskID(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetInstanceID sets the "instance_id" field.
-func (wtu *WorkflowTaskUpdate) SetInstanceID(i int) *WorkflowTaskUpdate {
-	wtu.mutation.SetInstanceID(i)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetInstanceID(v int) *WorkflowTaskUpdate {
+	_u.mutation.SetInstanceID(v)
+	return _u
 }
 
 // SetNillableInstanceID sets the "instance_id" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableInstanceID(i *int) *WorkflowTaskUpdate {
-	if i != nil {
-		wtu.SetInstanceID(*i)
+func (_u *WorkflowTaskUpdate) SetNillableInstanceID(v *int) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetInstanceID(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetActivityID sets the "activity_id" field.
-func (wtu *WorkflowTaskUpdate) SetActivityID(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetActivityID(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetActivityID(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetActivityID(v)
+	return _u
 }
 
 // SetNillableActivityID sets the "activity_id" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableActivityID(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetActivityID(*s)
+func (_u *WorkflowTaskUpdate) SetNillableActivityID(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetActivityID(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetName sets the "name" field.
-func (wtu *WorkflowTaskUpdate) SetName(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetName(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetName(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableName(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetName(*s)
+func (_u *WorkflowTaskUpdate) SetNillableName(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetType sets the "type" field.
-func (wtu *WorkflowTaskUpdate) SetType(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetType(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetType(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableType(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetType(*s)
+func (_u *WorkflowTaskUpdate) SetNillableType(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetAssignee sets the "assignee" field.
-func (wtu *WorkflowTaskUpdate) SetAssignee(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetAssignee(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetAssignee(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetAssignee(v)
+	return _u
 }
 
 // SetNillableAssignee sets the "assignee" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableAssignee(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetAssignee(*s)
+func (_u *WorkflowTaskUpdate) SetNillableAssignee(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetAssignee(*v)
 	}
-	return wtu
+	return _u
 }
 
 // ClearAssignee clears the value of the "assignee" field.
-func (wtu *WorkflowTaskUpdate) ClearAssignee() *WorkflowTaskUpdate {
-	wtu.mutation.ClearAssignee()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearAssignee() *WorkflowTaskUpdate {
+	_u.mutation.ClearAssignee()
+	return _u
 }
 
 // SetCandidateUsers sets the "candidate_users" field.
-func (wtu *WorkflowTaskUpdate) SetCandidateUsers(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetCandidateUsers(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetCandidateUsers(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetCandidateUsers(v)
+	return _u
 }
 
 // SetNillableCandidateUsers sets the "candidate_users" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableCandidateUsers(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetCandidateUsers(*s)
+func (_u *WorkflowTaskUpdate) SetNillableCandidateUsers(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetCandidateUsers(*v)
 	}
-	return wtu
+	return _u
 }
 
 // ClearCandidateUsers clears the value of the "candidate_users" field.
-func (wtu *WorkflowTaskUpdate) ClearCandidateUsers() *WorkflowTaskUpdate {
-	wtu.mutation.ClearCandidateUsers()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearCandidateUsers() *WorkflowTaskUpdate {
+	_u.mutation.ClearCandidateUsers()
+	return _u
 }
 
 // SetCandidateGroups sets the "candidate_groups" field.
-func (wtu *WorkflowTaskUpdate) SetCandidateGroups(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetCandidateGroups(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetCandidateGroups(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetCandidateGroups(v)
+	return _u
 }
 
 // SetNillableCandidateGroups sets the "candidate_groups" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableCandidateGroups(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetCandidateGroups(*s)
+func (_u *WorkflowTaskUpdate) SetNillableCandidateGroups(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetCandidateGroups(*v)
 	}
-	return wtu
+	return _u
 }
 
 // ClearCandidateGroups clears the value of the "candidate_groups" field.
-func (wtu *WorkflowTaskUpdate) ClearCandidateGroups() *WorkflowTaskUpdate {
-	wtu.mutation.ClearCandidateGroups()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearCandidateGroups() *WorkflowTaskUpdate {
+	_u.mutation.ClearCandidateGroups()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (wtu *WorkflowTaskUpdate) SetStatus(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetStatus(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetStatus(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableStatus(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetStatus(*s)
+func (_u *WorkflowTaskUpdate) SetNillableStatus(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (wtu *WorkflowTaskUpdate) SetPriority(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetPriority(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetPriority(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillablePriority(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetPriority(*s)
+func (_u *WorkflowTaskUpdate) SetNillablePriority(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetFormData sets the "form_data" field.
-func (wtu *WorkflowTaskUpdate) SetFormData(u []uint8) *WorkflowTaskUpdate {
-	wtu.mutation.SetFormData(u)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetFormData(v []uint8) *WorkflowTaskUpdate {
+	_u.mutation.SetFormData(v)
+	return _u
 }
 
-// AppendFormData appends u to the "form_data" field.
-func (wtu *WorkflowTaskUpdate) AppendFormData(u []uint8) *WorkflowTaskUpdate {
-	wtu.mutation.AppendFormData(u)
-	return wtu
+// AppendFormData appends value to the "form_data" field.
+func (_u *WorkflowTaskUpdate) AppendFormData(v []uint8) *WorkflowTaskUpdate {
+	_u.mutation.AppendFormData(v)
+	return _u
 }
 
 // ClearFormData clears the value of the "form_data" field.
-func (wtu *WorkflowTaskUpdate) ClearFormData() *WorkflowTaskUpdate {
-	wtu.mutation.ClearFormData()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearFormData() *WorkflowTaskUpdate {
+	_u.mutation.ClearFormData()
+	return _u
 }
 
 // SetVariables sets the "variables" field.
-func (wtu *WorkflowTaskUpdate) SetVariables(u []uint8) *WorkflowTaskUpdate {
-	wtu.mutation.SetVariables(u)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetVariables(v []uint8) *WorkflowTaskUpdate {
+	_u.mutation.SetVariables(v)
+	return _u
 }
 
-// AppendVariables appends u to the "variables" field.
-func (wtu *WorkflowTaskUpdate) AppendVariables(u []uint8) *WorkflowTaskUpdate {
-	wtu.mutation.AppendVariables(u)
-	return wtu
+// AppendVariables appends value to the "variables" field.
+func (_u *WorkflowTaskUpdate) AppendVariables(v []uint8) *WorkflowTaskUpdate {
+	_u.mutation.AppendVariables(v)
+	return _u
 }
 
 // ClearVariables clears the value of the "variables" field.
-func (wtu *WorkflowTaskUpdate) ClearVariables() *WorkflowTaskUpdate {
-	wtu.mutation.ClearVariables()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearVariables() *WorkflowTaskUpdate {
+	_u.mutation.ClearVariables()
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (wtu *WorkflowTaskUpdate) SetComment(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetComment(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetComment(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableComment(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetComment(*s)
+func (_u *WorkflowTaskUpdate) SetNillableComment(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return wtu
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (wtu *WorkflowTaskUpdate) ClearComment() *WorkflowTaskUpdate {
-	wtu.mutation.ClearComment()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearComment() *WorkflowTaskUpdate {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (wtu *WorkflowTaskUpdate) SetTenantID(i int) *WorkflowTaskUpdate {
-	wtu.mutation.ResetTenantID()
-	wtu.mutation.SetTenantID(i)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetTenantID(v int) *WorkflowTaskUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableTenantID(i *int) *WorkflowTaskUpdate {
-	if i != nil {
-		wtu.SetTenantID(*i)
+func (_u *WorkflowTaskUpdate) SetNillableTenantID(v *int) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return wtu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (wtu *WorkflowTaskUpdate) AddTenantID(i int) *WorkflowTaskUpdate {
-	wtu.mutation.AddTenantID(i)
-	return wtu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *WorkflowTaskUpdate) AddTenantID(v int) *WorkflowTaskUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetDueDate sets the "due_date" field.
-func (wtu *WorkflowTaskUpdate) SetDueDate(t time.Time) *WorkflowTaskUpdate {
-	wtu.mutation.SetDueDate(t)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetDueDate(v time.Time) *WorkflowTaskUpdate {
+	_u.mutation.SetDueDate(v)
+	return _u
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableDueDate(t *time.Time) *WorkflowTaskUpdate {
-	if t != nil {
-		wtu.SetDueDate(*t)
+func (_u *WorkflowTaskUpdate) SetNillableDueDate(v *time.Time) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetDueDate(*v)
 	}
-	return wtu
+	return _u
 }
 
 // ClearDueDate clears the value of the "due_date" field.
-func (wtu *WorkflowTaskUpdate) ClearDueDate() *WorkflowTaskUpdate {
-	wtu.mutation.ClearDueDate()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearDueDate() *WorkflowTaskUpdate {
+	_u.mutation.ClearDueDate()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (wtu *WorkflowTaskUpdate) SetCreatedAt(t time.Time) *WorkflowTaskUpdate {
-	wtu.mutation.SetCreatedAt(t)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetCreatedAt(v time.Time) *WorkflowTaskUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableCreatedAt(t *time.Time) *WorkflowTaskUpdate {
-	if t != nil {
-		wtu.SetCreatedAt(*t)
+func (_u *WorkflowTaskUpdate) SetNillableCreatedAt(v *time.Time) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return wtu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (wtu *WorkflowTaskUpdate) SetUpdatedAt(t time.Time) *WorkflowTaskUpdate {
-	wtu.mutation.SetUpdatedAt(t)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetUpdatedAt(v time.Time) *WorkflowTaskUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (wtu *WorkflowTaskUpdate) SetCompletedAt(t time.Time) *WorkflowTaskUpdate {
-	wtu.mutation.SetCompletedAt(t)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetCompletedAt(v time.Time) *WorkflowTaskUpdate {
+	_u.mutation.SetCompletedAt(v)
+	return _u
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableCompletedAt(t *time.Time) *WorkflowTaskUpdate {
-	if t != nil {
-		wtu.SetCompletedAt(*t)
+func (_u *WorkflowTaskUpdate) SetNillableCompletedAt(v *time.Time) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetCompletedAt(*v)
 	}
-	return wtu
+	return _u
 }
 
 // ClearCompletedAt clears the value of the "completed_at" field.
-func (wtu *WorkflowTaskUpdate) ClearCompletedAt() *WorkflowTaskUpdate {
-	wtu.mutation.ClearCompletedAt()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearCompletedAt() *WorkflowTaskUpdate {
+	_u.mutation.ClearCompletedAt()
+	return _u
 }
 
 // SetCompletedBy sets the "completed_by" field.
-func (wtu *WorkflowTaskUpdate) SetCompletedBy(s string) *WorkflowTaskUpdate {
-	wtu.mutation.SetCompletedBy(s)
-	return wtu
+func (_u *WorkflowTaskUpdate) SetCompletedBy(v string) *WorkflowTaskUpdate {
+	_u.mutation.SetCompletedBy(v)
+	return _u
 }
 
 // SetNillableCompletedBy sets the "completed_by" field if the given value is not nil.
-func (wtu *WorkflowTaskUpdate) SetNillableCompletedBy(s *string) *WorkflowTaskUpdate {
-	if s != nil {
-		wtu.SetCompletedBy(*s)
+func (_u *WorkflowTaskUpdate) SetNillableCompletedBy(v *string) *WorkflowTaskUpdate {
+	if v != nil {
+		_u.SetCompletedBy(*v)
 	}
-	return wtu
+	return _u
 }
 
 // ClearCompletedBy clears the value of the "completed_by" field.
-func (wtu *WorkflowTaskUpdate) ClearCompletedBy() *WorkflowTaskUpdate {
-	wtu.mutation.ClearCompletedBy()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearCompletedBy() *WorkflowTaskUpdate {
+	_u.mutation.ClearCompletedBy()
+	return _u
 }
 
 // SetInstance sets the "instance" edge to the WorkflowInstance entity.
-func (wtu *WorkflowTaskUpdate) SetInstance(w *WorkflowInstance) *WorkflowTaskUpdate {
-	return wtu.SetInstanceID(w.ID)
+func (_u *WorkflowTaskUpdate) SetInstance(v *WorkflowInstance) *WorkflowTaskUpdate {
+	return _u.SetInstanceID(v.ID)
 }
 
 // Mutation returns the WorkflowTaskMutation object of the builder.
-func (wtu *WorkflowTaskUpdate) Mutation() *WorkflowTaskMutation {
-	return wtu.mutation
+func (_u *WorkflowTaskUpdate) Mutation() *WorkflowTaskMutation {
+	return _u.mutation
 }
 
 // ClearInstance clears the "instance" edge to the WorkflowInstance entity.
-func (wtu *WorkflowTaskUpdate) ClearInstance() *WorkflowTaskUpdate {
-	wtu.mutation.ClearInstance()
-	return wtu
+func (_u *WorkflowTaskUpdate) ClearInstance() *WorkflowTaskUpdate {
+	_u.mutation.ClearInstance()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (wtu *WorkflowTaskUpdate) Save(ctx context.Context) (int, error) {
-	wtu.defaults()
-	return withHooks(ctx, wtu.sqlSave, wtu.mutation, wtu.hooks)
+func (_u *WorkflowTaskUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (wtu *WorkflowTaskUpdate) SaveX(ctx context.Context) int {
-	affected, err := wtu.Save(ctx)
+func (_u *WorkflowTaskUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -377,166 +377,166 @@ func (wtu *WorkflowTaskUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (wtu *WorkflowTaskUpdate) Exec(ctx context.Context) error {
-	_, err := wtu.Save(ctx)
+func (_u *WorkflowTaskUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wtu *WorkflowTaskUpdate) ExecX(ctx context.Context) {
-	if err := wtu.Exec(ctx); err != nil {
+func (_u *WorkflowTaskUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (wtu *WorkflowTaskUpdate) defaults() {
-	if _, ok := wtu.mutation.UpdatedAt(); !ok {
+func (_u *WorkflowTaskUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := workflowtask.UpdateDefaultUpdatedAt()
-		wtu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (wtu *WorkflowTaskUpdate) check() error {
-	if v, ok := wtu.mutation.TaskID(); ok {
+func (_u *WorkflowTaskUpdate) check() error {
+	if v, ok := _u.mutation.TaskID(); ok {
 		if err := workflowtask.TaskIDValidator(v); err != nil {
 			return &ValidationError{Name: "task_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.task_id": %w`, err)}
 		}
 	}
-	if v, ok := wtu.mutation.InstanceID(); ok {
+	if v, ok := _u.mutation.InstanceID(); ok {
 		if err := workflowtask.InstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "instance_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.instance_id": %w`, err)}
 		}
 	}
-	if v, ok := wtu.mutation.ActivityID(); ok {
+	if v, ok := _u.mutation.ActivityID(); ok {
 		if err := workflowtask.ActivityIDValidator(v); err != nil {
 			return &ValidationError{Name: "activity_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.activity_id": %w`, err)}
 		}
 	}
-	if v, ok := wtu.mutation.Name(); ok {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := workflowtask.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.name": %w`, err)}
 		}
 	}
-	if v, ok := wtu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := workflowtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.tenant_id": %w`, err)}
 		}
 	}
-	if wtu.mutation.InstanceCleared() && len(wtu.mutation.InstanceIDs()) > 0 {
+	if _u.mutation.InstanceCleared() && len(_u.mutation.InstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "WorkflowTask.instance"`)
 	}
 	return nil
 }
 
-func (wtu *WorkflowTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := wtu.check(); err != nil {
-		return n, err
+func (_u *WorkflowTaskUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(workflowtask.Table, workflowtask.Columns, sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt))
-	if ps := wtu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := wtu.mutation.TaskID(); ok {
+	if value, ok := _u.mutation.TaskID(); ok {
 		_spec.SetField(workflowtask.FieldTaskID, field.TypeString, value)
 	}
-	if value, ok := wtu.mutation.ActivityID(); ok {
+	if value, ok := _u.mutation.ActivityID(); ok {
 		_spec.SetField(workflowtask.FieldActivityID, field.TypeString, value)
 	}
-	if value, ok := wtu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(workflowtask.FieldName, field.TypeString, value)
 	}
-	if value, ok := wtu.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(workflowtask.FieldType, field.TypeString, value)
 	}
-	if value, ok := wtu.mutation.Assignee(); ok {
+	if value, ok := _u.mutation.Assignee(); ok {
 		_spec.SetField(workflowtask.FieldAssignee, field.TypeString, value)
 	}
-	if wtu.mutation.AssigneeCleared() {
+	if _u.mutation.AssigneeCleared() {
 		_spec.ClearField(workflowtask.FieldAssignee, field.TypeString)
 	}
-	if value, ok := wtu.mutation.CandidateUsers(); ok {
+	if value, ok := _u.mutation.CandidateUsers(); ok {
 		_spec.SetField(workflowtask.FieldCandidateUsers, field.TypeString, value)
 	}
-	if wtu.mutation.CandidateUsersCleared() {
+	if _u.mutation.CandidateUsersCleared() {
 		_spec.ClearField(workflowtask.FieldCandidateUsers, field.TypeString)
 	}
-	if value, ok := wtu.mutation.CandidateGroups(); ok {
+	if value, ok := _u.mutation.CandidateGroups(); ok {
 		_spec.SetField(workflowtask.FieldCandidateGroups, field.TypeString, value)
 	}
-	if wtu.mutation.CandidateGroupsCleared() {
+	if _u.mutation.CandidateGroupsCleared() {
 		_spec.ClearField(workflowtask.FieldCandidateGroups, field.TypeString)
 	}
-	if value, ok := wtu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(workflowtask.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := wtu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(workflowtask.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := wtu.mutation.FormData(); ok {
+	if value, ok := _u.mutation.FormData(); ok {
 		_spec.SetField(workflowtask.FieldFormData, field.TypeJSON, value)
 	}
-	if value, ok := wtu.mutation.AppendedFormData(); ok {
+	if value, ok := _u.mutation.AppendedFormData(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, workflowtask.FieldFormData, value)
 		})
 	}
-	if wtu.mutation.FormDataCleared() {
+	if _u.mutation.FormDataCleared() {
 		_spec.ClearField(workflowtask.FieldFormData, field.TypeJSON)
 	}
-	if value, ok := wtu.mutation.Variables(); ok {
+	if value, ok := _u.mutation.Variables(); ok {
 		_spec.SetField(workflowtask.FieldVariables, field.TypeJSON, value)
 	}
-	if value, ok := wtu.mutation.AppendedVariables(); ok {
+	if value, ok := _u.mutation.AppendedVariables(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, workflowtask.FieldVariables, value)
 		})
 	}
-	if wtu.mutation.VariablesCleared() {
+	if _u.mutation.VariablesCleared() {
 		_spec.ClearField(workflowtask.FieldVariables, field.TypeJSON)
 	}
-	if value, ok := wtu.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(workflowtask.FieldComment, field.TypeString, value)
 	}
-	if wtu.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(workflowtask.FieldComment, field.TypeString)
 	}
-	if value, ok := wtu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(workflowtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := wtu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(workflowtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := wtu.mutation.DueDate(); ok {
+	if value, ok := _u.mutation.DueDate(); ok {
 		_spec.SetField(workflowtask.FieldDueDate, field.TypeTime, value)
 	}
-	if wtu.mutation.DueDateCleared() {
+	if _u.mutation.DueDateCleared() {
 		_spec.ClearField(workflowtask.FieldDueDate, field.TypeTime)
 	}
-	if value, ok := wtu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(workflowtask.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := wtu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(workflowtask.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := wtu.mutation.CompletedAt(); ok {
+	if value, ok := _u.mutation.CompletedAt(); ok {
 		_spec.SetField(workflowtask.FieldCompletedAt, field.TypeTime, value)
 	}
-	if wtu.mutation.CompletedAtCleared() {
+	if _u.mutation.CompletedAtCleared() {
 		_spec.ClearField(workflowtask.FieldCompletedAt, field.TypeTime)
 	}
-	if value, ok := wtu.mutation.CompletedBy(); ok {
+	if value, ok := _u.mutation.CompletedBy(); ok {
 		_spec.SetField(workflowtask.FieldCompletedBy, field.TypeString, value)
 	}
-	if wtu.mutation.CompletedByCleared() {
+	if _u.mutation.CompletedByCleared() {
 		_spec.ClearField(workflowtask.FieldCompletedBy, field.TypeString)
 	}
-	if wtu.mutation.InstanceCleared() {
+	if _u.mutation.InstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -549,7 +549,7 @@ func (wtu *WorkflowTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wtu.mutation.InstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.InstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -565,7 +565,7 @@ func (wtu *WorkflowTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, wtu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{workflowtask.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -573,8 +573,8 @@ func (wtu *WorkflowTaskUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	wtu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // WorkflowTaskUpdateOne is the builder for updating a single WorkflowTask entity.
@@ -586,358 +586,358 @@ type WorkflowTaskUpdateOne struct {
 }
 
 // SetTaskID sets the "task_id" field.
-func (wtuo *WorkflowTaskUpdateOne) SetTaskID(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetTaskID(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetTaskID(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetTaskID(v)
+	return _u
 }
 
 // SetNillableTaskID sets the "task_id" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableTaskID(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetTaskID(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableTaskID(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetTaskID(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetInstanceID sets the "instance_id" field.
-func (wtuo *WorkflowTaskUpdateOne) SetInstanceID(i int) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetInstanceID(i)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetInstanceID(v int) *WorkflowTaskUpdateOne {
+	_u.mutation.SetInstanceID(v)
+	return _u
 }
 
 // SetNillableInstanceID sets the "instance_id" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableInstanceID(i *int) *WorkflowTaskUpdateOne {
-	if i != nil {
-		wtuo.SetInstanceID(*i)
+func (_u *WorkflowTaskUpdateOne) SetNillableInstanceID(v *int) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetInstanceID(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetActivityID sets the "activity_id" field.
-func (wtuo *WorkflowTaskUpdateOne) SetActivityID(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetActivityID(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetActivityID(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetActivityID(v)
+	return _u
 }
 
 // SetNillableActivityID sets the "activity_id" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableActivityID(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetActivityID(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableActivityID(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetActivityID(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetName sets the "name" field.
-func (wtuo *WorkflowTaskUpdateOne) SetName(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetName(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetName(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableName(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetName(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableName(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetType sets the "type" field.
-func (wtuo *WorkflowTaskUpdateOne) SetType(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetType(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetType(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableType(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetType(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableType(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetAssignee sets the "assignee" field.
-func (wtuo *WorkflowTaskUpdateOne) SetAssignee(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetAssignee(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetAssignee(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetAssignee(v)
+	return _u
 }
 
 // SetNillableAssignee sets the "assignee" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableAssignee(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetAssignee(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableAssignee(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetAssignee(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // ClearAssignee clears the value of the "assignee" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearAssignee() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearAssignee()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearAssignee() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearAssignee()
+	return _u
 }
 
 // SetCandidateUsers sets the "candidate_users" field.
-func (wtuo *WorkflowTaskUpdateOne) SetCandidateUsers(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetCandidateUsers(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetCandidateUsers(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetCandidateUsers(v)
+	return _u
 }
 
 // SetNillableCandidateUsers sets the "candidate_users" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableCandidateUsers(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetCandidateUsers(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableCandidateUsers(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetCandidateUsers(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // ClearCandidateUsers clears the value of the "candidate_users" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearCandidateUsers() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearCandidateUsers()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearCandidateUsers() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearCandidateUsers()
+	return _u
 }
 
 // SetCandidateGroups sets the "candidate_groups" field.
-func (wtuo *WorkflowTaskUpdateOne) SetCandidateGroups(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetCandidateGroups(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetCandidateGroups(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetCandidateGroups(v)
+	return _u
 }
 
 // SetNillableCandidateGroups sets the "candidate_groups" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableCandidateGroups(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetCandidateGroups(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableCandidateGroups(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetCandidateGroups(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // ClearCandidateGroups clears the value of the "candidate_groups" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearCandidateGroups() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearCandidateGroups()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearCandidateGroups() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearCandidateGroups()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (wtuo *WorkflowTaskUpdateOne) SetStatus(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetStatus(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetStatus(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableStatus(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetStatus(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableStatus(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (wtuo *WorkflowTaskUpdateOne) SetPriority(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetPriority(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetPriority(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillablePriority(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetPriority(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillablePriority(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetFormData sets the "form_data" field.
-func (wtuo *WorkflowTaskUpdateOne) SetFormData(u []uint8) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetFormData(u)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetFormData(v []uint8) *WorkflowTaskUpdateOne {
+	_u.mutation.SetFormData(v)
+	return _u
 }
 
-// AppendFormData appends u to the "form_data" field.
-func (wtuo *WorkflowTaskUpdateOne) AppendFormData(u []uint8) *WorkflowTaskUpdateOne {
-	wtuo.mutation.AppendFormData(u)
-	return wtuo
+// AppendFormData appends value to the "form_data" field.
+func (_u *WorkflowTaskUpdateOne) AppendFormData(v []uint8) *WorkflowTaskUpdateOne {
+	_u.mutation.AppendFormData(v)
+	return _u
 }
 
 // ClearFormData clears the value of the "form_data" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearFormData() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearFormData()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearFormData() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearFormData()
+	return _u
 }
 
 // SetVariables sets the "variables" field.
-func (wtuo *WorkflowTaskUpdateOne) SetVariables(u []uint8) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetVariables(u)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetVariables(v []uint8) *WorkflowTaskUpdateOne {
+	_u.mutation.SetVariables(v)
+	return _u
 }
 
-// AppendVariables appends u to the "variables" field.
-func (wtuo *WorkflowTaskUpdateOne) AppendVariables(u []uint8) *WorkflowTaskUpdateOne {
-	wtuo.mutation.AppendVariables(u)
-	return wtuo
+// AppendVariables appends value to the "variables" field.
+func (_u *WorkflowTaskUpdateOne) AppendVariables(v []uint8) *WorkflowTaskUpdateOne {
+	_u.mutation.AppendVariables(v)
+	return _u
 }
 
 // ClearVariables clears the value of the "variables" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearVariables() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearVariables()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearVariables() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearVariables()
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (wtuo *WorkflowTaskUpdateOne) SetComment(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetComment(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetComment(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableComment(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetComment(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableComment(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearComment() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearComment()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearComment() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (wtuo *WorkflowTaskUpdateOne) SetTenantID(i int) *WorkflowTaskUpdateOne {
-	wtuo.mutation.ResetTenantID()
-	wtuo.mutation.SetTenantID(i)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetTenantID(v int) *WorkflowTaskUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableTenantID(i *int) *WorkflowTaskUpdateOne {
-	if i != nil {
-		wtuo.SetTenantID(*i)
+func (_u *WorkflowTaskUpdateOne) SetNillableTenantID(v *int) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return wtuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (wtuo *WorkflowTaskUpdateOne) AddTenantID(i int) *WorkflowTaskUpdateOne {
-	wtuo.mutation.AddTenantID(i)
-	return wtuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *WorkflowTaskUpdateOne) AddTenantID(v int) *WorkflowTaskUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetDueDate sets the "due_date" field.
-func (wtuo *WorkflowTaskUpdateOne) SetDueDate(t time.Time) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetDueDate(t)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetDueDate(v time.Time) *WorkflowTaskUpdateOne {
+	_u.mutation.SetDueDate(v)
+	return _u
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableDueDate(t *time.Time) *WorkflowTaskUpdateOne {
-	if t != nil {
-		wtuo.SetDueDate(*t)
+func (_u *WorkflowTaskUpdateOne) SetNillableDueDate(v *time.Time) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetDueDate(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // ClearDueDate clears the value of the "due_date" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearDueDate() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearDueDate()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearDueDate() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearDueDate()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (wtuo *WorkflowTaskUpdateOne) SetCreatedAt(t time.Time) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetCreatedAt(t)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetCreatedAt(v time.Time) *WorkflowTaskUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableCreatedAt(t *time.Time) *WorkflowTaskUpdateOne {
-	if t != nil {
-		wtuo.SetCreatedAt(*t)
+func (_u *WorkflowTaskUpdateOne) SetNillableCreatedAt(v *time.Time) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (wtuo *WorkflowTaskUpdateOne) SetUpdatedAt(t time.Time) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetUpdatedAt(t)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetUpdatedAt(v time.Time) *WorkflowTaskUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (wtuo *WorkflowTaskUpdateOne) SetCompletedAt(t time.Time) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetCompletedAt(t)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetCompletedAt(v time.Time) *WorkflowTaskUpdateOne {
+	_u.mutation.SetCompletedAt(v)
+	return _u
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableCompletedAt(t *time.Time) *WorkflowTaskUpdateOne {
-	if t != nil {
-		wtuo.SetCompletedAt(*t)
+func (_u *WorkflowTaskUpdateOne) SetNillableCompletedAt(v *time.Time) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetCompletedAt(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // ClearCompletedAt clears the value of the "completed_at" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearCompletedAt() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearCompletedAt()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearCompletedAt() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearCompletedAt()
+	return _u
 }
 
 // SetCompletedBy sets the "completed_by" field.
-func (wtuo *WorkflowTaskUpdateOne) SetCompletedBy(s string) *WorkflowTaskUpdateOne {
-	wtuo.mutation.SetCompletedBy(s)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) SetCompletedBy(v string) *WorkflowTaskUpdateOne {
+	_u.mutation.SetCompletedBy(v)
+	return _u
 }
 
 // SetNillableCompletedBy sets the "completed_by" field if the given value is not nil.
-func (wtuo *WorkflowTaskUpdateOne) SetNillableCompletedBy(s *string) *WorkflowTaskUpdateOne {
-	if s != nil {
-		wtuo.SetCompletedBy(*s)
+func (_u *WorkflowTaskUpdateOne) SetNillableCompletedBy(v *string) *WorkflowTaskUpdateOne {
+	if v != nil {
+		_u.SetCompletedBy(*v)
 	}
-	return wtuo
+	return _u
 }
 
 // ClearCompletedBy clears the value of the "completed_by" field.
-func (wtuo *WorkflowTaskUpdateOne) ClearCompletedBy() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearCompletedBy()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearCompletedBy() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearCompletedBy()
+	return _u
 }
 
 // SetInstance sets the "instance" edge to the WorkflowInstance entity.
-func (wtuo *WorkflowTaskUpdateOne) SetInstance(w *WorkflowInstance) *WorkflowTaskUpdateOne {
-	return wtuo.SetInstanceID(w.ID)
+func (_u *WorkflowTaskUpdateOne) SetInstance(v *WorkflowInstance) *WorkflowTaskUpdateOne {
+	return _u.SetInstanceID(v.ID)
 }
 
 // Mutation returns the WorkflowTaskMutation object of the builder.
-func (wtuo *WorkflowTaskUpdateOne) Mutation() *WorkflowTaskMutation {
-	return wtuo.mutation
+func (_u *WorkflowTaskUpdateOne) Mutation() *WorkflowTaskMutation {
+	return _u.mutation
 }
 
 // ClearInstance clears the "instance" edge to the WorkflowInstance entity.
-func (wtuo *WorkflowTaskUpdateOne) ClearInstance() *WorkflowTaskUpdateOne {
-	wtuo.mutation.ClearInstance()
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) ClearInstance() *WorkflowTaskUpdateOne {
+	_u.mutation.ClearInstance()
+	return _u
 }
 
 // Where appends a list predicates to the WorkflowTaskUpdate builder.
-func (wtuo *WorkflowTaskUpdateOne) Where(ps ...predicate.WorkflowTask) *WorkflowTaskUpdateOne {
-	wtuo.mutation.Where(ps...)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) Where(ps ...predicate.WorkflowTask) *WorkflowTaskUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (wtuo *WorkflowTaskUpdateOne) Select(field string, fields ...string) *WorkflowTaskUpdateOne {
-	wtuo.fields = append([]string{field}, fields...)
-	return wtuo
+func (_u *WorkflowTaskUpdateOne) Select(field string, fields ...string) *WorkflowTaskUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated WorkflowTask entity.
-func (wtuo *WorkflowTaskUpdateOne) Save(ctx context.Context) (*WorkflowTask, error) {
-	wtuo.defaults()
-	return withHooks(ctx, wtuo.sqlSave, wtuo.mutation, wtuo.hooks)
+func (_u *WorkflowTaskUpdateOne) Save(ctx context.Context) (*WorkflowTask, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (wtuo *WorkflowTaskUpdateOne) SaveX(ctx context.Context) *WorkflowTask {
-	node, err := wtuo.Save(ctx)
+func (_u *WorkflowTaskUpdateOne) SaveX(ctx context.Context) *WorkflowTask {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -945,70 +945,70 @@ func (wtuo *WorkflowTaskUpdateOne) SaveX(ctx context.Context) *WorkflowTask {
 }
 
 // Exec executes the query on the entity.
-func (wtuo *WorkflowTaskUpdateOne) Exec(ctx context.Context) error {
-	_, err := wtuo.Save(ctx)
+func (_u *WorkflowTaskUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wtuo *WorkflowTaskUpdateOne) ExecX(ctx context.Context) {
-	if err := wtuo.Exec(ctx); err != nil {
+func (_u *WorkflowTaskUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (wtuo *WorkflowTaskUpdateOne) defaults() {
-	if _, ok := wtuo.mutation.UpdatedAt(); !ok {
+func (_u *WorkflowTaskUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := workflowtask.UpdateDefaultUpdatedAt()
-		wtuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (wtuo *WorkflowTaskUpdateOne) check() error {
-	if v, ok := wtuo.mutation.TaskID(); ok {
+func (_u *WorkflowTaskUpdateOne) check() error {
+	if v, ok := _u.mutation.TaskID(); ok {
 		if err := workflowtask.TaskIDValidator(v); err != nil {
 			return &ValidationError{Name: "task_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.task_id": %w`, err)}
 		}
 	}
-	if v, ok := wtuo.mutation.InstanceID(); ok {
+	if v, ok := _u.mutation.InstanceID(); ok {
 		if err := workflowtask.InstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "instance_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.instance_id": %w`, err)}
 		}
 	}
-	if v, ok := wtuo.mutation.ActivityID(); ok {
+	if v, ok := _u.mutation.ActivityID(); ok {
 		if err := workflowtask.ActivityIDValidator(v); err != nil {
 			return &ValidationError{Name: "activity_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.activity_id": %w`, err)}
 		}
 	}
-	if v, ok := wtuo.mutation.Name(); ok {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := workflowtask.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.name": %w`, err)}
 		}
 	}
-	if v, ok := wtuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := workflowtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowTask.tenant_id": %w`, err)}
 		}
 	}
-	if wtuo.mutation.InstanceCleared() && len(wtuo.mutation.InstanceIDs()) > 0 {
+	if _u.mutation.InstanceCleared() && len(_u.mutation.InstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "WorkflowTask.instance"`)
 	}
 	return nil
 }
 
-func (wtuo *WorkflowTaskUpdateOne) sqlSave(ctx context.Context) (_node *WorkflowTask, err error) {
-	if err := wtuo.check(); err != nil {
+func (_u *WorkflowTaskUpdateOne) sqlSave(ctx context.Context) (_node *WorkflowTask, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(workflowtask.Table, workflowtask.Columns, sqlgraph.NewFieldSpec(workflowtask.FieldID, field.TypeInt))
-	id, ok := wtuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "WorkflowTask.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := wtuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, workflowtask.FieldID)
 		for _, f := range fields {
@@ -1020,108 +1020,108 @@ func (wtuo *WorkflowTaskUpdateOne) sqlSave(ctx context.Context) (_node *Workflow
 			}
 		}
 	}
-	if ps := wtuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := wtuo.mutation.TaskID(); ok {
+	if value, ok := _u.mutation.TaskID(); ok {
 		_spec.SetField(workflowtask.FieldTaskID, field.TypeString, value)
 	}
-	if value, ok := wtuo.mutation.ActivityID(); ok {
+	if value, ok := _u.mutation.ActivityID(); ok {
 		_spec.SetField(workflowtask.FieldActivityID, field.TypeString, value)
 	}
-	if value, ok := wtuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(workflowtask.FieldName, field.TypeString, value)
 	}
-	if value, ok := wtuo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(workflowtask.FieldType, field.TypeString, value)
 	}
-	if value, ok := wtuo.mutation.Assignee(); ok {
+	if value, ok := _u.mutation.Assignee(); ok {
 		_spec.SetField(workflowtask.FieldAssignee, field.TypeString, value)
 	}
-	if wtuo.mutation.AssigneeCleared() {
+	if _u.mutation.AssigneeCleared() {
 		_spec.ClearField(workflowtask.FieldAssignee, field.TypeString)
 	}
-	if value, ok := wtuo.mutation.CandidateUsers(); ok {
+	if value, ok := _u.mutation.CandidateUsers(); ok {
 		_spec.SetField(workflowtask.FieldCandidateUsers, field.TypeString, value)
 	}
-	if wtuo.mutation.CandidateUsersCleared() {
+	if _u.mutation.CandidateUsersCleared() {
 		_spec.ClearField(workflowtask.FieldCandidateUsers, field.TypeString)
 	}
-	if value, ok := wtuo.mutation.CandidateGroups(); ok {
+	if value, ok := _u.mutation.CandidateGroups(); ok {
 		_spec.SetField(workflowtask.FieldCandidateGroups, field.TypeString, value)
 	}
-	if wtuo.mutation.CandidateGroupsCleared() {
+	if _u.mutation.CandidateGroupsCleared() {
 		_spec.ClearField(workflowtask.FieldCandidateGroups, field.TypeString)
 	}
-	if value, ok := wtuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(workflowtask.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := wtuo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(workflowtask.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := wtuo.mutation.FormData(); ok {
+	if value, ok := _u.mutation.FormData(); ok {
 		_spec.SetField(workflowtask.FieldFormData, field.TypeJSON, value)
 	}
-	if value, ok := wtuo.mutation.AppendedFormData(); ok {
+	if value, ok := _u.mutation.AppendedFormData(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, workflowtask.FieldFormData, value)
 		})
 	}
-	if wtuo.mutation.FormDataCleared() {
+	if _u.mutation.FormDataCleared() {
 		_spec.ClearField(workflowtask.FieldFormData, field.TypeJSON)
 	}
-	if value, ok := wtuo.mutation.Variables(); ok {
+	if value, ok := _u.mutation.Variables(); ok {
 		_spec.SetField(workflowtask.FieldVariables, field.TypeJSON, value)
 	}
-	if value, ok := wtuo.mutation.AppendedVariables(); ok {
+	if value, ok := _u.mutation.AppendedVariables(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, workflowtask.FieldVariables, value)
 		})
 	}
-	if wtuo.mutation.VariablesCleared() {
+	if _u.mutation.VariablesCleared() {
 		_spec.ClearField(workflowtask.FieldVariables, field.TypeJSON)
 	}
-	if value, ok := wtuo.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(workflowtask.FieldComment, field.TypeString, value)
 	}
-	if wtuo.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(workflowtask.FieldComment, field.TypeString)
 	}
-	if value, ok := wtuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(workflowtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := wtuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(workflowtask.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := wtuo.mutation.DueDate(); ok {
+	if value, ok := _u.mutation.DueDate(); ok {
 		_spec.SetField(workflowtask.FieldDueDate, field.TypeTime, value)
 	}
-	if wtuo.mutation.DueDateCleared() {
+	if _u.mutation.DueDateCleared() {
 		_spec.ClearField(workflowtask.FieldDueDate, field.TypeTime)
 	}
-	if value, ok := wtuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(workflowtask.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := wtuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(workflowtask.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if value, ok := wtuo.mutation.CompletedAt(); ok {
+	if value, ok := _u.mutation.CompletedAt(); ok {
 		_spec.SetField(workflowtask.FieldCompletedAt, field.TypeTime, value)
 	}
-	if wtuo.mutation.CompletedAtCleared() {
+	if _u.mutation.CompletedAtCleared() {
 		_spec.ClearField(workflowtask.FieldCompletedAt, field.TypeTime)
 	}
-	if value, ok := wtuo.mutation.CompletedBy(); ok {
+	if value, ok := _u.mutation.CompletedBy(); ok {
 		_spec.SetField(workflowtask.FieldCompletedBy, field.TypeString, value)
 	}
-	if wtuo.mutation.CompletedByCleared() {
+	if _u.mutation.CompletedByCleared() {
 		_spec.ClearField(workflowtask.FieldCompletedBy, field.TypeString)
 	}
-	if wtuo.mutation.InstanceCleared() {
+	if _u.mutation.InstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1134,7 +1134,7 @@ func (wtuo *WorkflowTaskUpdateOne) sqlSave(ctx context.Context) (_node *Workflow
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := wtuo.mutation.InstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.InstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1150,10 +1150,10 @@ func (wtuo *WorkflowTaskUpdateOne) sqlSave(ctx context.Context) (_node *Workflow
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &WorkflowTask{config: wtuo.config}
+	_node = &WorkflowTask{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, wtuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{workflowtask.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1161,6 +1161,6 @@ func (wtuo *WorkflowTaskUpdateOne) sqlSave(ctx context.Context) (_node *Workflow
 		}
 		return nil, err
 	}
-	wtuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

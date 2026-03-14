@@ -25,290 +25,290 @@ type IncidentAlertUpdate struct {
 }
 
 // Where appends a list predicates to the IncidentAlertUpdate builder.
-func (iau *IncidentAlertUpdate) Where(ps ...predicate.IncidentAlert) *IncidentAlertUpdate {
-	iau.mutation.Where(ps...)
-	return iau
+func (_u *IncidentAlertUpdate) Where(ps ...predicate.IncidentAlert) *IncidentAlertUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (iau *IncidentAlertUpdate) SetIncidentID(i int) *IncidentAlertUpdate {
-	iau.mutation.SetIncidentID(i)
-	return iau
+func (_u *IncidentAlertUpdate) SetIncidentID(v int) *IncidentAlertUpdate {
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableIncidentID(i *int) *IncidentAlertUpdate {
-	if i != nil {
-		iau.SetIncidentID(*i)
+func (_u *IncidentAlertUpdate) SetNillableIncidentID(v *int) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetAlertType sets the "alert_type" field.
-func (iau *IncidentAlertUpdate) SetAlertType(s string) *IncidentAlertUpdate {
-	iau.mutation.SetAlertType(s)
-	return iau
+func (_u *IncidentAlertUpdate) SetAlertType(v string) *IncidentAlertUpdate {
+	_u.mutation.SetAlertType(v)
+	return _u
 }
 
 // SetNillableAlertType sets the "alert_type" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableAlertType(s *string) *IncidentAlertUpdate {
-	if s != nil {
-		iau.SetAlertType(*s)
+func (_u *IncidentAlertUpdate) SetNillableAlertType(v *string) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetAlertType(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetAlertName sets the "alert_name" field.
-func (iau *IncidentAlertUpdate) SetAlertName(s string) *IncidentAlertUpdate {
-	iau.mutation.SetAlertName(s)
-	return iau
+func (_u *IncidentAlertUpdate) SetAlertName(v string) *IncidentAlertUpdate {
+	_u.mutation.SetAlertName(v)
+	return _u
 }
 
 // SetNillableAlertName sets the "alert_name" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableAlertName(s *string) *IncidentAlertUpdate {
-	if s != nil {
-		iau.SetAlertName(*s)
+func (_u *IncidentAlertUpdate) SetNillableAlertName(v *string) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetAlertName(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetMessage sets the "message" field.
-func (iau *IncidentAlertUpdate) SetMessage(s string) *IncidentAlertUpdate {
-	iau.mutation.SetMessage(s)
-	return iau
+func (_u *IncidentAlertUpdate) SetMessage(v string) *IncidentAlertUpdate {
+	_u.mutation.SetMessage(v)
+	return _u
 }
 
 // SetNillableMessage sets the "message" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableMessage(s *string) *IncidentAlertUpdate {
-	if s != nil {
-		iau.SetMessage(*s)
+func (_u *IncidentAlertUpdate) SetNillableMessage(v *string) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetMessage(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (iau *IncidentAlertUpdate) SetSeverity(s string) *IncidentAlertUpdate {
-	iau.mutation.SetSeverity(s)
-	return iau
+func (_u *IncidentAlertUpdate) SetSeverity(v string) *IncidentAlertUpdate {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableSeverity(s *string) *IncidentAlertUpdate {
-	if s != nil {
-		iau.SetSeverity(*s)
+func (_u *IncidentAlertUpdate) SetNillableSeverity(v *string) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (iau *IncidentAlertUpdate) SetStatus(s string) *IncidentAlertUpdate {
-	iau.mutation.SetStatus(s)
-	return iau
+func (_u *IncidentAlertUpdate) SetStatus(v string) *IncidentAlertUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableStatus(s *string) *IncidentAlertUpdate {
-	if s != nil {
-		iau.SetStatus(*s)
+func (_u *IncidentAlertUpdate) SetNillableStatus(v *string) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetChannels sets the "channels" field.
-func (iau *IncidentAlertUpdate) SetChannels(s []string) *IncidentAlertUpdate {
-	iau.mutation.SetChannels(s)
-	return iau
+func (_u *IncidentAlertUpdate) SetChannels(v []string) *IncidentAlertUpdate {
+	_u.mutation.SetChannels(v)
+	return _u
 }
 
-// AppendChannels appends s to the "channels" field.
-func (iau *IncidentAlertUpdate) AppendChannels(s []string) *IncidentAlertUpdate {
-	iau.mutation.AppendChannels(s)
-	return iau
+// AppendChannels appends value to the "channels" field.
+func (_u *IncidentAlertUpdate) AppendChannels(v []string) *IncidentAlertUpdate {
+	_u.mutation.AppendChannels(v)
+	return _u
 }
 
 // ClearChannels clears the value of the "channels" field.
-func (iau *IncidentAlertUpdate) ClearChannels() *IncidentAlertUpdate {
-	iau.mutation.ClearChannels()
-	return iau
+func (_u *IncidentAlertUpdate) ClearChannels() *IncidentAlertUpdate {
+	_u.mutation.ClearChannels()
+	return _u
 }
 
 // SetRecipients sets the "recipients" field.
-func (iau *IncidentAlertUpdate) SetRecipients(s []string) *IncidentAlertUpdate {
-	iau.mutation.SetRecipients(s)
-	return iau
+func (_u *IncidentAlertUpdate) SetRecipients(v []string) *IncidentAlertUpdate {
+	_u.mutation.SetRecipients(v)
+	return _u
 }
 
-// AppendRecipients appends s to the "recipients" field.
-func (iau *IncidentAlertUpdate) AppendRecipients(s []string) *IncidentAlertUpdate {
-	iau.mutation.AppendRecipients(s)
-	return iau
+// AppendRecipients appends value to the "recipients" field.
+func (_u *IncidentAlertUpdate) AppendRecipients(v []string) *IncidentAlertUpdate {
+	_u.mutation.AppendRecipients(v)
+	return _u
 }
 
 // ClearRecipients clears the value of the "recipients" field.
-func (iau *IncidentAlertUpdate) ClearRecipients() *IncidentAlertUpdate {
-	iau.mutation.ClearRecipients()
-	return iau
+func (_u *IncidentAlertUpdate) ClearRecipients() *IncidentAlertUpdate {
+	_u.mutation.ClearRecipients()
+	return _u
 }
 
 // SetTriggeredAt sets the "triggered_at" field.
-func (iau *IncidentAlertUpdate) SetTriggeredAt(t time.Time) *IncidentAlertUpdate {
-	iau.mutation.SetTriggeredAt(t)
-	return iau
+func (_u *IncidentAlertUpdate) SetTriggeredAt(v time.Time) *IncidentAlertUpdate {
+	_u.mutation.SetTriggeredAt(v)
+	return _u
 }
 
 // SetNillableTriggeredAt sets the "triggered_at" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableTriggeredAt(t *time.Time) *IncidentAlertUpdate {
-	if t != nil {
-		iau.SetTriggeredAt(*t)
+func (_u *IncidentAlertUpdate) SetNillableTriggeredAt(v *time.Time) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetTriggeredAt(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetAcknowledgedAt sets the "acknowledged_at" field.
-func (iau *IncidentAlertUpdate) SetAcknowledgedAt(t time.Time) *IncidentAlertUpdate {
-	iau.mutation.SetAcknowledgedAt(t)
-	return iau
+func (_u *IncidentAlertUpdate) SetAcknowledgedAt(v time.Time) *IncidentAlertUpdate {
+	_u.mutation.SetAcknowledgedAt(v)
+	return _u
 }
 
 // SetNillableAcknowledgedAt sets the "acknowledged_at" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableAcknowledgedAt(t *time.Time) *IncidentAlertUpdate {
-	if t != nil {
-		iau.SetAcknowledgedAt(*t)
+func (_u *IncidentAlertUpdate) SetNillableAcknowledgedAt(v *time.Time) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetAcknowledgedAt(*v)
 	}
-	return iau
+	return _u
 }
 
 // ClearAcknowledgedAt clears the value of the "acknowledged_at" field.
-func (iau *IncidentAlertUpdate) ClearAcknowledgedAt() *IncidentAlertUpdate {
-	iau.mutation.ClearAcknowledgedAt()
-	return iau
+func (_u *IncidentAlertUpdate) ClearAcknowledgedAt() *IncidentAlertUpdate {
+	_u.mutation.ClearAcknowledgedAt()
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (iau *IncidentAlertUpdate) SetResolvedAt(t time.Time) *IncidentAlertUpdate {
-	iau.mutation.SetResolvedAt(t)
-	return iau
+func (_u *IncidentAlertUpdate) SetResolvedAt(v time.Time) *IncidentAlertUpdate {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableResolvedAt(t *time.Time) *IncidentAlertUpdate {
-	if t != nil {
-		iau.SetResolvedAt(*t)
+func (_u *IncidentAlertUpdate) SetNillableResolvedAt(v *time.Time) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return iau
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (iau *IncidentAlertUpdate) ClearResolvedAt() *IncidentAlertUpdate {
-	iau.mutation.ClearResolvedAt()
-	return iau
+func (_u *IncidentAlertUpdate) ClearResolvedAt() *IncidentAlertUpdate {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetAcknowledgedBy sets the "acknowledged_by" field.
-func (iau *IncidentAlertUpdate) SetAcknowledgedBy(i int) *IncidentAlertUpdate {
-	iau.mutation.ResetAcknowledgedBy()
-	iau.mutation.SetAcknowledgedBy(i)
-	return iau
+func (_u *IncidentAlertUpdate) SetAcknowledgedBy(v int) *IncidentAlertUpdate {
+	_u.mutation.ResetAcknowledgedBy()
+	_u.mutation.SetAcknowledgedBy(v)
+	return _u
 }
 
 // SetNillableAcknowledgedBy sets the "acknowledged_by" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableAcknowledgedBy(i *int) *IncidentAlertUpdate {
-	if i != nil {
-		iau.SetAcknowledgedBy(*i)
+func (_u *IncidentAlertUpdate) SetNillableAcknowledgedBy(v *int) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetAcknowledgedBy(*v)
 	}
-	return iau
+	return _u
 }
 
-// AddAcknowledgedBy adds i to the "acknowledged_by" field.
-func (iau *IncidentAlertUpdate) AddAcknowledgedBy(i int) *IncidentAlertUpdate {
-	iau.mutation.AddAcknowledgedBy(i)
-	return iau
+// AddAcknowledgedBy adds value to the "acknowledged_by" field.
+func (_u *IncidentAlertUpdate) AddAcknowledgedBy(v int) *IncidentAlertUpdate {
+	_u.mutation.AddAcknowledgedBy(v)
+	return _u
 }
 
 // ClearAcknowledgedBy clears the value of the "acknowledged_by" field.
-func (iau *IncidentAlertUpdate) ClearAcknowledgedBy() *IncidentAlertUpdate {
-	iau.mutation.ClearAcknowledgedBy()
-	return iau
+func (_u *IncidentAlertUpdate) ClearAcknowledgedBy() *IncidentAlertUpdate {
+	_u.mutation.ClearAcknowledgedBy()
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (iau *IncidentAlertUpdate) SetMetadata(m map[string]interface{}) *IncidentAlertUpdate {
-	iau.mutation.SetMetadata(m)
-	return iau
+func (_u *IncidentAlertUpdate) SetMetadata(v map[string]interface{}) *IncidentAlertUpdate {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (iau *IncidentAlertUpdate) ClearMetadata() *IncidentAlertUpdate {
-	iau.mutation.ClearMetadata()
-	return iau
+func (_u *IncidentAlertUpdate) ClearMetadata() *IncidentAlertUpdate {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (iau *IncidentAlertUpdate) SetTenantID(i int) *IncidentAlertUpdate {
-	iau.mutation.ResetTenantID()
-	iau.mutation.SetTenantID(i)
-	return iau
+func (_u *IncidentAlertUpdate) SetTenantID(v int) *IncidentAlertUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableTenantID(i *int) *IncidentAlertUpdate {
-	if i != nil {
-		iau.SetTenantID(*i)
+func (_u *IncidentAlertUpdate) SetNillableTenantID(v *int) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return iau
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (iau *IncidentAlertUpdate) AddTenantID(i int) *IncidentAlertUpdate {
-	iau.mutation.AddTenantID(i)
-	return iau
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentAlertUpdate) AddTenantID(v int) *IncidentAlertUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (iau *IncidentAlertUpdate) SetCreatedAt(t time.Time) *IncidentAlertUpdate {
-	iau.mutation.SetCreatedAt(t)
-	return iau
+func (_u *IncidentAlertUpdate) SetCreatedAt(v time.Time) *IncidentAlertUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (iau *IncidentAlertUpdate) SetNillableCreatedAt(t *time.Time) *IncidentAlertUpdate {
-	if t != nil {
-		iau.SetCreatedAt(*t)
+func (_u *IncidentAlertUpdate) SetNillableCreatedAt(v *time.Time) *IncidentAlertUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return iau
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (iau *IncidentAlertUpdate) SetUpdatedAt(t time.Time) *IncidentAlertUpdate {
-	iau.mutation.SetUpdatedAt(t)
-	return iau
+func (_u *IncidentAlertUpdate) SetUpdatedAt(v time.Time) *IncidentAlertUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (iau *IncidentAlertUpdate) SetIncident(i *Incident) *IncidentAlertUpdate {
-	return iau.SetIncidentID(i.ID)
+func (_u *IncidentAlertUpdate) SetIncident(v *Incident) *IncidentAlertUpdate {
+	return _u.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentAlertMutation object of the builder.
-func (iau *IncidentAlertUpdate) Mutation() *IncidentAlertMutation {
-	return iau.mutation
+func (_u *IncidentAlertUpdate) Mutation() *IncidentAlertMutation {
+	return _u.mutation
 }
 
 // ClearIncident clears the "incident" edge to the Incident entity.
-func (iau *IncidentAlertUpdate) ClearIncident() *IncidentAlertUpdate {
-	iau.mutation.ClearIncident()
-	return iau
+func (_u *IncidentAlertUpdate) ClearIncident() *IncidentAlertUpdate {
+	_u.mutation.ClearIncident()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (iau *IncidentAlertUpdate) Save(ctx context.Context) (int, error) {
-	iau.defaults()
-	return withHooks(ctx, iau.sqlSave, iau.mutation, iau.hooks)
+func (_u *IncidentAlertUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (iau *IncidentAlertUpdate) SaveX(ctx context.Context) int {
-	affected, err := iau.Save(ctx)
+func (_u *IncidentAlertUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -316,151 +316,151 @@ func (iau *IncidentAlertUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (iau *IncidentAlertUpdate) Exec(ctx context.Context) error {
-	_, err := iau.Save(ctx)
+func (_u *IncidentAlertUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iau *IncidentAlertUpdate) ExecX(ctx context.Context) {
-	if err := iau.Exec(ctx); err != nil {
+func (_u *IncidentAlertUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (iau *IncidentAlertUpdate) defaults() {
-	if _, ok := iau.mutation.UpdatedAt(); !ok {
+func (_u *IncidentAlertUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentalert.UpdateDefaultUpdatedAt()
-		iau.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (iau *IncidentAlertUpdate) check() error {
-	if v, ok := iau.mutation.IncidentID(); ok {
+func (_u *IncidentAlertUpdate) check() error {
+	if v, ok := _u.mutation.IncidentID(); ok {
 		if err := incidentalert.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.incident_id": %w`, err)}
 		}
 	}
-	if v, ok := iau.mutation.AlertType(); ok {
+	if v, ok := _u.mutation.AlertType(); ok {
 		if err := incidentalert.AlertTypeValidator(v); err != nil {
 			return &ValidationError{Name: "alert_type", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.alert_type": %w`, err)}
 		}
 	}
-	if v, ok := iau.mutation.AlertName(); ok {
+	if v, ok := _u.mutation.AlertName(); ok {
 		if err := incidentalert.AlertNameValidator(v); err != nil {
 			return &ValidationError{Name: "alert_name", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.alert_name": %w`, err)}
 		}
 	}
-	if v, ok := iau.mutation.Message(); ok {
+	if v, ok := _u.mutation.Message(); ok {
 		if err := incidentalert.MessageValidator(v); err != nil {
 			return &ValidationError{Name: "message", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.message": %w`, err)}
 		}
 	}
-	if v, ok := iau.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentalert.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.tenant_id": %w`, err)}
 		}
 	}
-	if iau.mutation.IncidentCleared() && len(iau.mutation.IncidentIDs()) > 0 {
+	if _u.mutation.IncidentCleared() && len(_u.mutation.IncidentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentAlert.incident"`)
 	}
 	return nil
 }
 
-func (iau *IncidentAlertUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := iau.check(); err != nil {
-		return n, err
+func (_u *IncidentAlertUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentalert.Table, incidentalert.Columns, sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt))
-	if ps := iau.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := iau.mutation.AlertType(); ok {
+	if value, ok := _u.mutation.AlertType(); ok {
 		_spec.SetField(incidentalert.FieldAlertType, field.TypeString, value)
 	}
-	if value, ok := iau.mutation.AlertName(); ok {
+	if value, ok := _u.mutation.AlertName(); ok {
 		_spec.SetField(incidentalert.FieldAlertName, field.TypeString, value)
 	}
-	if value, ok := iau.mutation.Message(); ok {
+	if value, ok := _u.mutation.Message(); ok {
 		_spec.SetField(incidentalert.FieldMessage, field.TypeString, value)
 	}
-	if value, ok := iau.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incidentalert.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := iau.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incidentalert.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := iau.mutation.Channels(); ok {
+	if value, ok := _u.mutation.Channels(); ok {
 		_spec.SetField(incidentalert.FieldChannels, field.TypeJSON, value)
 	}
-	if value, ok := iau.mutation.AppendedChannels(); ok {
+	if value, ok := _u.mutation.AppendedChannels(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, incidentalert.FieldChannels, value)
 		})
 	}
-	if iau.mutation.ChannelsCleared() {
+	if _u.mutation.ChannelsCleared() {
 		_spec.ClearField(incidentalert.FieldChannels, field.TypeJSON)
 	}
-	if value, ok := iau.mutation.Recipients(); ok {
+	if value, ok := _u.mutation.Recipients(); ok {
 		_spec.SetField(incidentalert.FieldRecipients, field.TypeJSON, value)
 	}
-	if value, ok := iau.mutation.AppendedRecipients(); ok {
+	if value, ok := _u.mutation.AppendedRecipients(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, incidentalert.FieldRecipients, value)
 		})
 	}
-	if iau.mutation.RecipientsCleared() {
+	if _u.mutation.RecipientsCleared() {
 		_spec.ClearField(incidentalert.FieldRecipients, field.TypeJSON)
 	}
-	if value, ok := iau.mutation.TriggeredAt(); ok {
+	if value, ok := _u.mutation.TriggeredAt(); ok {
 		_spec.SetField(incidentalert.FieldTriggeredAt, field.TypeTime, value)
 	}
-	if value, ok := iau.mutation.AcknowledgedAt(); ok {
+	if value, ok := _u.mutation.AcknowledgedAt(); ok {
 		_spec.SetField(incidentalert.FieldAcknowledgedAt, field.TypeTime, value)
 	}
-	if iau.mutation.AcknowledgedAtCleared() {
+	if _u.mutation.AcknowledgedAtCleared() {
 		_spec.ClearField(incidentalert.FieldAcknowledgedAt, field.TypeTime)
 	}
-	if value, ok := iau.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(incidentalert.FieldResolvedAt, field.TypeTime, value)
 	}
-	if iau.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(incidentalert.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := iau.mutation.AcknowledgedBy(); ok {
+	if value, ok := _u.mutation.AcknowledgedBy(); ok {
 		_spec.SetField(incidentalert.FieldAcknowledgedBy, field.TypeInt, value)
 	}
-	if value, ok := iau.mutation.AddedAcknowledgedBy(); ok {
+	if value, ok := _u.mutation.AddedAcknowledgedBy(); ok {
 		_spec.AddField(incidentalert.FieldAcknowledgedBy, field.TypeInt, value)
 	}
-	if iau.mutation.AcknowledgedByCleared() {
+	if _u.mutation.AcknowledgedByCleared() {
 		_spec.ClearField(incidentalert.FieldAcknowledgedBy, field.TypeInt)
 	}
-	if value, ok := iau.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incidentalert.FieldMetadata, field.TypeJSON, value)
 	}
-	if iau.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incidentalert.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := iau.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentalert.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iau.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentalert.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iau.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentalert.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := iau.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentalert.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if iau.mutation.IncidentCleared() {
+	if _u.mutation.IncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -473,7 +473,7 @@ func (iau *IncidentAlertUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iau.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -489,7 +489,7 @@ func (iau *IncidentAlertUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, iau.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentalert.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -497,8 +497,8 @@ func (iau *IncidentAlertUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	iau.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // IncidentAlertUpdateOne is the builder for updating a single IncidentAlert entity.
@@ -510,297 +510,297 @@ type IncidentAlertUpdateOne struct {
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (iauo *IncidentAlertUpdateOne) SetIncidentID(i int) *IncidentAlertUpdateOne {
-	iauo.mutation.SetIncidentID(i)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetIncidentID(v int) *IncidentAlertUpdateOne {
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableIncidentID(i *int) *IncidentAlertUpdateOne {
-	if i != nil {
-		iauo.SetIncidentID(*i)
+func (_u *IncidentAlertUpdateOne) SetNillableIncidentID(v *int) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetAlertType sets the "alert_type" field.
-func (iauo *IncidentAlertUpdateOne) SetAlertType(s string) *IncidentAlertUpdateOne {
-	iauo.mutation.SetAlertType(s)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetAlertType(v string) *IncidentAlertUpdateOne {
+	_u.mutation.SetAlertType(v)
+	return _u
 }
 
 // SetNillableAlertType sets the "alert_type" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableAlertType(s *string) *IncidentAlertUpdateOne {
-	if s != nil {
-		iauo.SetAlertType(*s)
+func (_u *IncidentAlertUpdateOne) SetNillableAlertType(v *string) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetAlertType(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetAlertName sets the "alert_name" field.
-func (iauo *IncidentAlertUpdateOne) SetAlertName(s string) *IncidentAlertUpdateOne {
-	iauo.mutation.SetAlertName(s)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetAlertName(v string) *IncidentAlertUpdateOne {
+	_u.mutation.SetAlertName(v)
+	return _u
 }
 
 // SetNillableAlertName sets the "alert_name" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableAlertName(s *string) *IncidentAlertUpdateOne {
-	if s != nil {
-		iauo.SetAlertName(*s)
+func (_u *IncidentAlertUpdateOne) SetNillableAlertName(v *string) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetAlertName(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetMessage sets the "message" field.
-func (iauo *IncidentAlertUpdateOne) SetMessage(s string) *IncidentAlertUpdateOne {
-	iauo.mutation.SetMessage(s)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetMessage(v string) *IncidentAlertUpdateOne {
+	_u.mutation.SetMessage(v)
+	return _u
 }
 
 // SetNillableMessage sets the "message" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableMessage(s *string) *IncidentAlertUpdateOne {
-	if s != nil {
-		iauo.SetMessage(*s)
+func (_u *IncidentAlertUpdateOne) SetNillableMessage(v *string) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetMessage(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (iauo *IncidentAlertUpdateOne) SetSeverity(s string) *IncidentAlertUpdateOne {
-	iauo.mutation.SetSeverity(s)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetSeverity(v string) *IncidentAlertUpdateOne {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableSeverity(s *string) *IncidentAlertUpdateOne {
-	if s != nil {
-		iauo.SetSeverity(*s)
+func (_u *IncidentAlertUpdateOne) SetNillableSeverity(v *string) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (iauo *IncidentAlertUpdateOne) SetStatus(s string) *IncidentAlertUpdateOne {
-	iauo.mutation.SetStatus(s)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetStatus(v string) *IncidentAlertUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableStatus(s *string) *IncidentAlertUpdateOne {
-	if s != nil {
-		iauo.SetStatus(*s)
+func (_u *IncidentAlertUpdateOne) SetNillableStatus(v *string) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetChannels sets the "channels" field.
-func (iauo *IncidentAlertUpdateOne) SetChannels(s []string) *IncidentAlertUpdateOne {
-	iauo.mutation.SetChannels(s)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetChannels(v []string) *IncidentAlertUpdateOne {
+	_u.mutation.SetChannels(v)
+	return _u
 }
 
-// AppendChannels appends s to the "channels" field.
-func (iauo *IncidentAlertUpdateOne) AppendChannels(s []string) *IncidentAlertUpdateOne {
-	iauo.mutation.AppendChannels(s)
-	return iauo
+// AppendChannels appends value to the "channels" field.
+func (_u *IncidentAlertUpdateOne) AppendChannels(v []string) *IncidentAlertUpdateOne {
+	_u.mutation.AppendChannels(v)
+	return _u
 }
 
 // ClearChannels clears the value of the "channels" field.
-func (iauo *IncidentAlertUpdateOne) ClearChannels() *IncidentAlertUpdateOne {
-	iauo.mutation.ClearChannels()
-	return iauo
+func (_u *IncidentAlertUpdateOne) ClearChannels() *IncidentAlertUpdateOne {
+	_u.mutation.ClearChannels()
+	return _u
 }
 
 // SetRecipients sets the "recipients" field.
-func (iauo *IncidentAlertUpdateOne) SetRecipients(s []string) *IncidentAlertUpdateOne {
-	iauo.mutation.SetRecipients(s)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetRecipients(v []string) *IncidentAlertUpdateOne {
+	_u.mutation.SetRecipients(v)
+	return _u
 }
 
-// AppendRecipients appends s to the "recipients" field.
-func (iauo *IncidentAlertUpdateOne) AppendRecipients(s []string) *IncidentAlertUpdateOne {
-	iauo.mutation.AppendRecipients(s)
-	return iauo
+// AppendRecipients appends value to the "recipients" field.
+func (_u *IncidentAlertUpdateOne) AppendRecipients(v []string) *IncidentAlertUpdateOne {
+	_u.mutation.AppendRecipients(v)
+	return _u
 }
 
 // ClearRecipients clears the value of the "recipients" field.
-func (iauo *IncidentAlertUpdateOne) ClearRecipients() *IncidentAlertUpdateOne {
-	iauo.mutation.ClearRecipients()
-	return iauo
+func (_u *IncidentAlertUpdateOne) ClearRecipients() *IncidentAlertUpdateOne {
+	_u.mutation.ClearRecipients()
+	return _u
 }
 
 // SetTriggeredAt sets the "triggered_at" field.
-func (iauo *IncidentAlertUpdateOne) SetTriggeredAt(t time.Time) *IncidentAlertUpdateOne {
-	iauo.mutation.SetTriggeredAt(t)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetTriggeredAt(v time.Time) *IncidentAlertUpdateOne {
+	_u.mutation.SetTriggeredAt(v)
+	return _u
 }
 
 // SetNillableTriggeredAt sets the "triggered_at" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableTriggeredAt(t *time.Time) *IncidentAlertUpdateOne {
-	if t != nil {
-		iauo.SetTriggeredAt(*t)
+func (_u *IncidentAlertUpdateOne) SetNillableTriggeredAt(v *time.Time) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetTriggeredAt(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetAcknowledgedAt sets the "acknowledged_at" field.
-func (iauo *IncidentAlertUpdateOne) SetAcknowledgedAt(t time.Time) *IncidentAlertUpdateOne {
-	iauo.mutation.SetAcknowledgedAt(t)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetAcknowledgedAt(v time.Time) *IncidentAlertUpdateOne {
+	_u.mutation.SetAcknowledgedAt(v)
+	return _u
 }
 
 // SetNillableAcknowledgedAt sets the "acknowledged_at" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableAcknowledgedAt(t *time.Time) *IncidentAlertUpdateOne {
-	if t != nil {
-		iauo.SetAcknowledgedAt(*t)
+func (_u *IncidentAlertUpdateOne) SetNillableAcknowledgedAt(v *time.Time) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetAcknowledgedAt(*v)
 	}
-	return iauo
+	return _u
 }
 
 // ClearAcknowledgedAt clears the value of the "acknowledged_at" field.
-func (iauo *IncidentAlertUpdateOne) ClearAcknowledgedAt() *IncidentAlertUpdateOne {
-	iauo.mutation.ClearAcknowledgedAt()
-	return iauo
+func (_u *IncidentAlertUpdateOne) ClearAcknowledgedAt() *IncidentAlertUpdateOne {
+	_u.mutation.ClearAcknowledgedAt()
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (iauo *IncidentAlertUpdateOne) SetResolvedAt(t time.Time) *IncidentAlertUpdateOne {
-	iauo.mutation.SetResolvedAt(t)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetResolvedAt(v time.Time) *IncidentAlertUpdateOne {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableResolvedAt(t *time.Time) *IncidentAlertUpdateOne {
-	if t != nil {
-		iauo.SetResolvedAt(*t)
+func (_u *IncidentAlertUpdateOne) SetNillableResolvedAt(v *time.Time) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return iauo
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (iauo *IncidentAlertUpdateOne) ClearResolvedAt() *IncidentAlertUpdateOne {
-	iauo.mutation.ClearResolvedAt()
-	return iauo
+func (_u *IncidentAlertUpdateOne) ClearResolvedAt() *IncidentAlertUpdateOne {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetAcknowledgedBy sets the "acknowledged_by" field.
-func (iauo *IncidentAlertUpdateOne) SetAcknowledgedBy(i int) *IncidentAlertUpdateOne {
-	iauo.mutation.ResetAcknowledgedBy()
-	iauo.mutation.SetAcknowledgedBy(i)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetAcknowledgedBy(v int) *IncidentAlertUpdateOne {
+	_u.mutation.ResetAcknowledgedBy()
+	_u.mutation.SetAcknowledgedBy(v)
+	return _u
 }
 
 // SetNillableAcknowledgedBy sets the "acknowledged_by" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableAcknowledgedBy(i *int) *IncidentAlertUpdateOne {
-	if i != nil {
-		iauo.SetAcknowledgedBy(*i)
+func (_u *IncidentAlertUpdateOne) SetNillableAcknowledgedBy(v *int) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetAcknowledgedBy(*v)
 	}
-	return iauo
+	return _u
 }
 
-// AddAcknowledgedBy adds i to the "acknowledged_by" field.
-func (iauo *IncidentAlertUpdateOne) AddAcknowledgedBy(i int) *IncidentAlertUpdateOne {
-	iauo.mutation.AddAcknowledgedBy(i)
-	return iauo
+// AddAcknowledgedBy adds value to the "acknowledged_by" field.
+func (_u *IncidentAlertUpdateOne) AddAcknowledgedBy(v int) *IncidentAlertUpdateOne {
+	_u.mutation.AddAcknowledgedBy(v)
+	return _u
 }
 
 // ClearAcknowledgedBy clears the value of the "acknowledged_by" field.
-func (iauo *IncidentAlertUpdateOne) ClearAcknowledgedBy() *IncidentAlertUpdateOne {
-	iauo.mutation.ClearAcknowledgedBy()
-	return iauo
+func (_u *IncidentAlertUpdateOne) ClearAcknowledgedBy() *IncidentAlertUpdateOne {
+	_u.mutation.ClearAcknowledgedBy()
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (iauo *IncidentAlertUpdateOne) SetMetadata(m map[string]interface{}) *IncidentAlertUpdateOne {
-	iauo.mutation.SetMetadata(m)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetMetadata(v map[string]interface{}) *IncidentAlertUpdateOne {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (iauo *IncidentAlertUpdateOne) ClearMetadata() *IncidentAlertUpdateOne {
-	iauo.mutation.ClearMetadata()
-	return iauo
+func (_u *IncidentAlertUpdateOne) ClearMetadata() *IncidentAlertUpdateOne {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (iauo *IncidentAlertUpdateOne) SetTenantID(i int) *IncidentAlertUpdateOne {
-	iauo.mutation.ResetTenantID()
-	iauo.mutation.SetTenantID(i)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetTenantID(v int) *IncidentAlertUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableTenantID(i *int) *IncidentAlertUpdateOne {
-	if i != nil {
-		iauo.SetTenantID(*i)
+func (_u *IncidentAlertUpdateOne) SetNillableTenantID(v *int) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return iauo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (iauo *IncidentAlertUpdateOne) AddTenantID(i int) *IncidentAlertUpdateOne {
-	iauo.mutation.AddTenantID(i)
-	return iauo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentAlertUpdateOne) AddTenantID(v int) *IncidentAlertUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (iauo *IncidentAlertUpdateOne) SetCreatedAt(t time.Time) *IncidentAlertUpdateOne {
-	iauo.mutation.SetCreatedAt(t)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetCreatedAt(v time.Time) *IncidentAlertUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (iauo *IncidentAlertUpdateOne) SetNillableCreatedAt(t *time.Time) *IncidentAlertUpdateOne {
-	if t != nil {
-		iauo.SetCreatedAt(*t)
+func (_u *IncidentAlertUpdateOne) SetNillableCreatedAt(v *time.Time) *IncidentAlertUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return iauo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (iauo *IncidentAlertUpdateOne) SetUpdatedAt(t time.Time) *IncidentAlertUpdateOne {
-	iauo.mutation.SetUpdatedAt(t)
-	return iauo
+func (_u *IncidentAlertUpdateOne) SetUpdatedAt(v time.Time) *IncidentAlertUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (iauo *IncidentAlertUpdateOne) SetIncident(i *Incident) *IncidentAlertUpdateOne {
-	return iauo.SetIncidentID(i.ID)
+func (_u *IncidentAlertUpdateOne) SetIncident(v *Incident) *IncidentAlertUpdateOne {
+	return _u.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentAlertMutation object of the builder.
-func (iauo *IncidentAlertUpdateOne) Mutation() *IncidentAlertMutation {
-	return iauo.mutation
+func (_u *IncidentAlertUpdateOne) Mutation() *IncidentAlertMutation {
+	return _u.mutation
 }
 
 // ClearIncident clears the "incident" edge to the Incident entity.
-func (iauo *IncidentAlertUpdateOne) ClearIncident() *IncidentAlertUpdateOne {
-	iauo.mutation.ClearIncident()
-	return iauo
+func (_u *IncidentAlertUpdateOne) ClearIncident() *IncidentAlertUpdateOne {
+	_u.mutation.ClearIncident()
+	return _u
 }
 
 // Where appends a list predicates to the IncidentAlertUpdate builder.
-func (iauo *IncidentAlertUpdateOne) Where(ps ...predicate.IncidentAlert) *IncidentAlertUpdateOne {
-	iauo.mutation.Where(ps...)
-	return iauo
+func (_u *IncidentAlertUpdateOne) Where(ps ...predicate.IncidentAlert) *IncidentAlertUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (iauo *IncidentAlertUpdateOne) Select(field string, fields ...string) *IncidentAlertUpdateOne {
-	iauo.fields = append([]string{field}, fields...)
-	return iauo
+func (_u *IncidentAlertUpdateOne) Select(field string, fields ...string) *IncidentAlertUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated IncidentAlert entity.
-func (iauo *IncidentAlertUpdateOne) Save(ctx context.Context) (*IncidentAlert, error) {
-	iauo.defaults()
-	return withHooks(ctx, iauo.sqlSave, iauo.mutation, iauo.hooks)
+func (_u *IncidentAlertUpdateOne) Save(ctx context.Context) (*IncidentAlert, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (iauo *IncidentAlertUpdateOne) SaveX(ctx context.Context) *IncidentAlert {
-	node, err := iauo.Save(ctx)
+func (_u *IncidentAlertUpdateOne) SaveX(ctx context.Context) *IncidentAlert {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -808,70 +808,70 @@ func (iauo *IncidentAlertUpdateOne) SaveX(ctx context.Context) *IncidentAlert {
 }
 
 // Exec executes the query on the entity.
-func (iauo *IncidentAlertUpdateOne) Exec(ctx context.Context) error {
-	_, err := iauo.Save(ctx)
+func (_u *IncidentAlertUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iauo *IncidentAlertUpdateOne) ExecX(ctx context.Context) {
-	if err := iauo.Exec(ctx); err != nil {
+func (_u *IncidentAlertUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (iauo *IncidentAlertUpdateOne) defaults() {
-	if _, ok := iauo.mutation.UpdatedAt(); !ok {
+func (_u *IncidentAlertUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentalert.UpdateDefaultUpdatedAt()
-		iauo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (iauo *IncidentAlertUpdateOne) check() error {
-	if v, ok := iauo.mutation.IncidentID(); ok {
+func (_u *IncidentAlertUpdateOne) check() error {
+	if v, ok := _u.mutation.IncidentID(); ok {
 		if err := incidentalert.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.incident_id": %w`, err)}
 		}
 	}
-	if v, ok := iauo.mutation.AlertType(); ok {
+	if v, ok := _u.mutation.AlertType(); ok {
 		if err := incidentalert.AlertTypeValidator(v); err != nil {
 			return &ValidationError{Name: "alert_type", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.alert_type": %w`, err)}
 		}
 	}
-	if v, ok := iauo.mutation.AlertName(); ok {
+	if v, ok := _u.mutation.AlertName(); ok {
 		if err := incidentalert.AlertNameValidator(v); err != nil {
 			return &ValidationError{Name: "alert_name", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.alert_name": %w`, err)}
 		}
 	}
-	if v, ok := iauo.mutation.Message(); ok {
+	if v, ok := _u.mutation.Message(); ok {
 		if err := incidentalert.MessageValidator(v); err != nil {
 			return &ValidationError{Name: "message", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.message": %w`, err)}
 		}
 	}
-	if v, ok := iauo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentalert.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.tenant_id": %w`, err)}
 		}
 	}
-	if iauo.mutation.IncidentCleared() && len(iauo.mutation.IncidentIDs()) > 0 {
+	if _u.mutation.IncidentCleared() && len(_u.mutation.IncidentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentAlert.incident"`)
 	}
 	return nil
 }
 
-func (iauo *IncidentAlertUpdateOne) sqlSave(ctx context.Context) (_node *IncidentAlert, err error) {
-	if err := iauo.check(); err != nil {
+func (_u *IncidentAlertUpdateOne) sqlSave(ctx context.Context) (_node *IncidentAlert, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentalert.Table, incidentalert.Columns, sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt))
-	id, ok := iauo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "IncidentAlert.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := iauo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incidentalert.FieldID)
 		for _, f := range fields {
@@ -883,93 +883,93 @@ func (iauo *IncidentAlertUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 			}
 		}
 	}
-	if ps := iauo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := iauo.mutation.AlertType(); ok {
+	if value, ok := _u.mutation.AlertType(); ok {
 		_spec.SetField(incidentalert.FieldAlertType, field.TypeString, value)
 	}
-	if value, ok := iauo.mutation.AlertName(); ok {
+	if value, ok := _u.mutation.AlertName(); ok {
 		_spec.SetField(incidentalert.FieldAlertName, field.TypeString, value)
 	}
-	if value, ok := iauo.mutation.Message(); ok {
+	if value, ok := _u.mutation.Message(); ok {
 		_spec.SetField(incidentalert.FieldMessage, field.TypeString, value)
 	}
-	if value, ok := iauo.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(incidentalert.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := iauo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(incidentalert.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := iauo.mutation.Channels(); ok {
+	if value, ok := _u.mutation.Channels(); ok {
 		_spec.SetField(incidentalert.FieldChannels, field.TypeJSON, value)
 	}
-	if value, ok := iauo.mutation.AppendedChannels(); ok {
+	if value, ok := _u.mutation.AppendedChannels(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, incidentalert.FieldChannels, value)
 		})
 	}
-	if iauo.mutation.ChannelsCleared() {
+	if _u.mutation.ChannelsCleared() {
 		_spec.ClearField(incidentalert.FieldChannels, field.TypeJSON)
 	}
-	if value, ok := iauo.mutation.Recipients(); ok {
+	if value, ok := _u.mutation.Recipients(); ok {
 		_spec.SetField(incidentalert.FieldRecipients, field.TypeJSON, value)
 	}
-	if value, ok := iauo.mutation.AppendedRecipients(); ok {
+	if value, ok := _u.mutation.AppendedRecipients(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, incidentalert.FieldRecipients, value)
 		})
 	}
-	if iauo.mutation.RecipientsCleared() {
+	if _u.mutation.RecipientsCleared() {
 		_spec.ClearField(incidentalert.FieldRecipients, field.TypeJSON)
 	}
-	if value, ok := iauo.mutation.TriggeredAt(); ok {
+	if value, ok := _u.mutation.TriggeredAt(); ok {
 		_spec.SetField(incidentalert.FieldTriggeredAt, field.TypeTime, value)
 	}
-	if value, ok := iauo.mutation.AcknowledgedAt(); ok {
+	if value, ok := _u.mutation.AcknowledgedAt(); ok {
 		_spec.SetField(incidentalert.FieldAcknowledgedAt, field.TypeTime, value)
 	}
-	if iauo.mutation.AcknowledgedAtCleared() {
+	if _u.mutation.AcknowledgedAtCleared() {
 		_spec.ClearField(incidentalert.FieldAcknowledgedAt, field.TypeTime)
 	}
-	if value, ok := iauo.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(incidentalert.FieldResolvedAt, field.TypeTime, value)
 	}
-	if iauo.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(incidentalert.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := iauo.mutation.AcknowledgedBy(); ok {
+	if value, ok := _u.mutation.AcknowledgedBy(); ok {
 		_spec.SetField(incidentalert.FieldAcknowledgedBy, field.TypeInt, value)
 	}
-	if value, ok := iauo.mutation.AddedAcknowledgedBy(); ok {
+	if value, ok := _u.mutation.AddedAcknowledgedBy(); ok {
 		_spec.AddField(incidentalert.FieldAcknowledgedBy, field.TypeInt, value)
 	}
-	if iauo.mutation.AcknowledgedByCleared() {
+	if _u.mutation.AcknowledgedByCleared() {
 		_spec.ClearField(incidentalert.FieldAcknowledgedBy, field.TypeInt)
 	}
-	if value, ok := iauo.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incidentalert.FieldMetadata, field.TypeJSON, value)
 	}
-	if iauo.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incidentalert.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := iauo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentalert.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iauo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentalert.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := iauo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentalert.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := iauo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentalert.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if iauo.mutation.IncidentCleared() {
+	if _u.mutation.IncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -982,7 +982,7 @@ func (iauo *IncidentAlertUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := iauo.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -998,10 +998,10 @@ func (iauo *IncidentAlertUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &IncidentAlert{config: iauo.config}
+	_node = &IncidentAlert{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, iauo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentalert.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1009,6 +1009,6 @@ func (iauo *IncidentAlertUpdateOne) sqlSave(ctx context.Context) (_node *Inciden
 		}
 		return nil, err
 	}
-	iauo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

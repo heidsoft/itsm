@@ -132,6 +132,7 @@ export default function CreateTicketPage() {
         priority: priority,
         category: values.category || (selectedType ? selectedType.category : undefined),
         formFields: selectedType ? { type: selectedType.id } : undefined,
+        workflow_definition_key: selectedType?.workflowTemplateId,
       });
 
       message.success('工单创建成功');

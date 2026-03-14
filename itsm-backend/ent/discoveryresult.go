@@ -87,7 +87,7 @@ func (*DiscoveryResult) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the DiscoveryResult fields.
-func (dr *DiscoveryResult) assignValues(columns []string, values []any) error {
+func (_m *DiscoveryResult) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -98,42 +98,42 @@ func (dr *DiscoveryResult) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			dr.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case discoveryresult.FieldJobID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field job_id", values[i])
 			} else if value.Valid {
-				dr.JobID = int(value.Int64)
+				_m.JobID = int(value.Int64)
 			}
 		case discoveryresult.FieldCiID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_id", values[i])
 			} else if value.Valid {
-				dr.CiID = int(value.Int64)
+				_m.CiID = int(value.Int64)
 			}
 		case discoveryresult.FieldAction:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field action", values[i])
 			} else if value.Valid {
-				dr.Action = value.String
+				_m.Action = value.String
 			}
 		case discoveryresult.FieldResourceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_type", values[i])
 			} else if value.Valid {
-				dr.ResourceType = value.String
+				_m.ResourceType = value.String
 			}
 		case discoveryresult.FieldResourceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_id", values[i])
 			} else if value.Valid {
-				dr.ResourceID = value.String
+				_m.ResourceID = value.String
 			}
 		case discoveryresult.FieldDiff:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field diff", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &dr.Diff); err != nil {
+				if err := json.Unmarshal(*value, &_m.Diff); err != nil {
 					return fmt.Errorf("unmarshal field diff: %w", err)
 				}
 			}
@@ -141,28 +141,28 @@ func (dr *DiscoveryResult) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				dr.Status = value.String
+				_m.Status = value.String
 			}
 		case discoveryresult.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				dr.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case discoveryresult.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				dr.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case discoveryresult.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				dr.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			dr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -170,67 +170,67 @@ func (dr *DiscoveryResult) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the DiscoveryResult.
 // This includes values selected through modifiers, order, etc.
-func (dr *DiscoveryResult) Value(name string) (ent.Value, error) {
-	return dr.selectValues.Get(name)
+func (_m *DiscoveryResult) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryJob queries the "job" edge of the DiscoveryResult entity.
-func (dr *DiscoveryResult) QueryJob() *DiscoveryJobQuery {
-	return NewDiscoveryResultClient(dr.config).QueryJob(dr)
+func (_m *DiscoveryResult) QueryJob() *DiscoveryJobQuery {
+	return NewDiscoveryResultClient(_m.config).QueryJob(_m)
 }
 
 // Update returns a builder for updating this DiscoveryResult.
 // Note that you need to call DiscoveryResult.Unwrap() before calling this method if this DiscoveryResult
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (dr *DiscoveryResult) Update() *DiscoveryResultUpdateOne {
-	return NewDiscoveryResultClient(dr.config).UpdateOne(dr)
+func (_m *DiscoveryResult) Update() *DiscoveryResultUpdateOne {
+	return NewDiscoveryResultClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the DiscoveryResult entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (dr *DiscoveryResult) Unwrap() *DiscoveryResult {
-	_tx, ok := dr.config.driver.(*txDriver)
+func (_m *DiscoveryResult) Unwrap() *DiscoveryResult {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: DiscoveryResult is not a transactional entity")
 	}
-	dr.config.driver = _tx.drv
-	return dr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (dr *DiscoveryResult) String() string {
+func (_m *DiscoveryResult) String() string {
 	var builder strings.Builder
 	builder.WriteString("DiscoveryResult(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", dr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("job_id=")
-	builder.WriteString(fmt.Sprintf("%v", dr.JobID))
+	builder.WriteString(fmt.Sprintf("%v", _m.JobID))
 	builder.WriteString(", ")
 	builder.WriteString("ci_id=")
-	builder.WriteString(fmt.Sprintf("%v", dr.CiID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CiID))
 	builder.WriteString(", ")
 	builder.WriteString("action=")
-	builder.WriteString(dr.Action)
+	builder.WriteString(_m.Action)
 	builder.WriteString(", ")
 	builder.WriteString("resource_type=")
-	builder.WriteString(dr.ResourceType)
+	builder.WriteString(_m.ResourceType)
 	builder.WriteString(", ")
 	builder.WriteString("resource_id=")
-	builder.WriteString(dr.ResourceID)
+	builder.WriteString(_m.ResourceID)
 	builder.WriteString(", ")
 	builder.WriteString("diff=")
-	builder.WriteString(fmt.Sprintf("%v", dr.Diff))
+	builder.WriteString(fmt.Sprintf("%v", _m.Diff))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(dr.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", dr.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(dr.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(dr.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

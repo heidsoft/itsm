@@ -24,326 +24,326 @@ type ProcessExecutionHistoryUpdate struct {
 }
 
 // Where appends a list predicates to the ProcessExecutionHistoryUpdate builder.
-func (pehu *ProcessExecutionHistoryUpdate) Where(ps ...predicate.ProcessExecutionHistory) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.Where(ps...)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) Where(ps ...predicate.ProcessExecutionHistory) *ProcessExecutionHistoryUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetHistoryID sets the "history_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetHistoryID(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetHistoryID(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetHistoryID(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetHistoryID(v)
+	return _u
 }
 
 // SetNillableHistoryID sets the "history_id" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableHistoryID(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetHistoryID(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableHistoryID(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetHistoryID(*v)
 	}
-	return pehu
+	return _u
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetProcessInstanceID(i int) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetProcessInstanceID(i)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetProcessInstanceID(v int) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableProcessInstanceID(i *int) *ProcessExecutionHistoryUpdate {
-	if i != nil {
-		pehu.SetProcessInstanceID(*i)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableProcessInstanceID(v *int) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return pehu
+	return _u
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetProcessDefinitionKey(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetProcessDefinitionKey(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetProcessDefinitionKey(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableProcessDefinitionKey(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetProcessDefinitionKey(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableProcessDefinitionKey(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
 	}
-	return pehu
+	return _u
 }
 
 // SetActivityID sets the "activity_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetActivityID(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetActivityID(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetActivityID(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetActivityID(v)
+	return _u
 }
 
 // SetNillableActivityID sets the "activity_id" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableActivityID(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetActivityID(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableActivityID(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetActivityID(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearActivityID clears the value of the "activity_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearActivityID() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearActivityID()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearActivityID() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearActivityID()
+	return _u
 }
 
 // SetActivityName sets the "activity_name" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetActivityName(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetActivityName(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetActivityName(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetActivityName(v)
+	return _u
 }
 
 // SetNillableActivityName sets the "activity_name" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableActivityName(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetActivityName(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableActivityName(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetActivityName(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearActivityName clears the value of the "activity_name" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearActivityName() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearActivityName()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearActivityName() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearActivityName()
+	return _u
 }
 
 // SetActivityType sets the "activity_type" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetActivityType(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetActivityType(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetActivityType(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetActivityType(v)
+	return _u
 }
 
 // SetNillableActivityType sets the "activity_type" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableActivityType(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetActivityType(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableActivityType(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetActivityType(*v)
 	}
-	return pehu
+	return _u
 }
 
 // SetEventType sets the "event_type" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetEventType(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetEventType(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetEventType(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetEventType(v)
+	return _u
 }
 
 // SetNillableEventType sets the "event_type" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableEventType(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetEventType(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableEventType(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetEventType(*v)
 	}
-	return pehu
+	return _u
 }
 
 // SetEventDetail sets the "event_detail" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetEventDetail(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetEventDetail(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetEventDetail(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetEventDetail(v)
+	return _u
 }
 
 // SetNillableEventDetail sets the "event_detail" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableEventDetail(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetEventDetail(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableEventDetail(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetEventDetail(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearEventDetail clears the value of the "event_detail" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearEventDetail() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearEventDetail()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearEventDetail() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearEventDetail()
+	return _u
 }
 
 // SetVariables sets the "variables" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetVariables(m map[string]interface{}) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetVariables(m)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetVariables(v map[string]interface{}) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetVariables(v)
+	return _u
 }
 
 // ClearVariables clears the value of the "variables" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearVariables() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearVariables()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearVariables() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearVariables()
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetUserID(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetUserID(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetUserID(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableUserID(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetUserID(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableUserID(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearUserID() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearUserID()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearUserID() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetUserName sets the "user_name" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetUserName(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetUserName(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetUserName(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetUserName(v)
+	return _u
 }
 
 // SetNillableUserName sets the "user_name" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableUserName(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetUserName(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableUserName(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetUserName(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearUserName clears the value of the "user_name" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearUserName() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearUserName()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearUserName() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearUserName()
+	return _u
 }
 
 // SetTimestamp sets the "timestamp" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetTimestamp(t time.Time) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetTimestamp(t)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetTimestamp(v time.Time) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetTimestamp(v)
+	return _u
 }
 
 // SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableTimestamp(t *time.Time) *ProcessExecutionHistoryUpdate {
-	if t != nil {
-		pehu.SetTimestamp(*t)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableTimestamp(v *time.Time) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetTimestamp(*v)
 	}
-	return pehu
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetComment(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetComment(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetComment(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableComment(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetComment(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableComment(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearComment() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearComment()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearComment() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetErrorMessage(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetErrorMessage(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetErrorMessage(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetErrorMessage(v)
+	return _u
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableErrorMessage(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetErrorMessage(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableErrorMessage(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetErrorMessage(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearErrorMessage clears the value of the "error_message" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearErrorMessage() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearErrorMessage()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearErrorMessage() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearErrorMessage()
+	return _u
 }
 
 // SetErrorCode sets the "error_code" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetErrorCode(s string) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetErrorCode(s)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetErrorCode(v string) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetErrorCode(v)
+	return _u
 }
 
 // SetNillableErrorCode sets the "error_code" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableErrorCode(s *string) *ProcessExecutionHistoryUpdate {
-	if s != nil {
-		pehu.SetErrorCode(*s)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableErrorCode(v *string) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetErrorCode(*v)
 	}
-	return pehu
+	return _u
 }
 
 // ClearErrorCode clears the value of the "error_code" field.
-func (pehu *ProcessExecutionHistoryUpdate) ClearErrorCode() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearErrorCode()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearErrorCode() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearErrorCode()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetTenantID(i int) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ResetTenantID()
-	pehu.mutation.SetTenantID(i)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetTenantID(v int) *ProcessExecutionHistoryUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableTenantID(i *int) *ProcessExecutionHistoryUpdate {
-	if i != nil {
-		pehu.SetTenantID(*i)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableTenantID(v *int) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pehu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pehu *ProcessExecutionHistoryUpdate) AddTenantID(i int) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.AddTenantID(i)
-	return pehu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessExecutionHistoryUpdate) AddTenantID(v int) *ProcessExecutionHistoryUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pehu *ProcessExecutionHistoryUpdate) SetCreatedAt(t time.Time) *ProcessExecutionHistoryUpdate {
-	pehu.mutation.SetCreatedAt(t)
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) SetCreatedAt(v time.Time) *ProcessExecutionHistoryUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pehu *ProcessExecutionHistoryUpdate) SetNillableCreatedAt(t *time.Time) *ProcessExecutionHistoryUpdate {
-	if t != nil {
-		pehu.SetCreatedAt(*t)
+func (_u *ProcessExecutionHistoryUpdate) SetNillableCreatedAt(v *time.Time) *ProcessExecutionHistoryUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pehu
+	return _u
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (pehu *ProcessExecutionHistoryUpdate) SetProcessInstance(p *ProcessInstance) *ProcessExecutionHistoryUpdate {
-	return pehu.SetProcessInstanceID(p.ID)
+func (_u *ProcessExecutionHistoryUpdate) SetProcessInstance(v *ProcessInstance) *ProcessExecutionHistoryUpdate {
+	return _u.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessExecutionHistoryMutation object of the builder.
-func (pehu *ProcessExecutionHistoryUpdate) Mutation() *ProcessExecutionHistoryMutation {
-	return pehu.mutation
+func (_u *ProcessExecutionHistoryUpdate) Mutation() *ProcessExecutionHistoryMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
-func (pehu *ProcessExecutionHistoryUpdate) ClearProcessInstance() *ProcessExecutionHistoryUpdate {
-	pehu.mutation.ClearProcessInstance()
-	return pehu
+func (_u *ProcessExecutionHistoryUpdate) ClearProcessInstance() *ProcessExecutionHistoryUpdate {
+	_u.mutation.ClearProcessInstance()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pehu *ProcessExecutionHistoryUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, pehu.sqlSave, pehu.mutation, pehu.hooks)
+func (_u *ProcessExecutionHistoryUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pehu *ProcessExecutionHistoryUpdate) SaveX(ctx context.Context) int {
-	affected, err := pehu.Save(ctx)
+func (_u *ProcessExecutionHistoryUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -351,147 +351,147 @@ func (pehu *ProcessExecutionHistoryUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pehu *ProcessExecutionHistoryUpdate) Exec(ctx context.Context) error {
-	_, err := pehu.Save(ctx)
+func (_u *ProcessExecutionHistoryUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pehu *ProcessExecutionHistoryUpdate) ExecX(ctx context.Context) {
-	if err := pehu.Exec(ctx); err != nil {
+func (_u *ProcessExecutionHistoryUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pehu *ProcessExecutionHistoryUpdate) check() error {
-	if v, ok := pehu.mutation.HistoryID(); ok {
+func (_u *ProcessExecutionHistoryUpdate) check() error {
+	if v, ok := _u.mutation.HistoryID(); ok {
 		if err := processexecutionhistory.HistoryIDValidator(v); err != nil {
 			return &ValidationError{Name: "history_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.history_id": %w`, err)}
 		}
 	}
-	if v, ok := pehu.mutation.ProcessInstanceID(); ok {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processexecutionhistory.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := pehu.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		if err := processexecutionhistory.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.process_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := pehu.mutation.ActivityType(); ok {
+	if v, ok := _u.mutation.ActivityType(); ok {
 		if err := processexecutionhistory.ActivityTypeValidator(v); err != nil {
 			return &ValidationError{Name: "activity_type", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.activity_type": %w`, err)}
 		}
 	}
-	if v, ok := pehu.mutation.EventType(); ok {
+	if v, ok := _u.mutation.EventType(); ok {
 		if err := processexecutionhistory.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.event_type": %w`, err)}
 		}
 	}
-	if v, ok := pehu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processexecutionhistory.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.tenant_id": %w`, err)}
 		}
 	}
-	if pehu.mutation.ProcessInstanceCleared() && len(pehu.mutation.ProcessInstanceIDs()) > 0 {
+	if _u.mutation.ProcessInstanceCleared() && len(_u.mutation.ProcessInstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessExecutionHistory.process_instance"`)
 	}
 	return nil
 }
 
-func (pehu *ProcessExecutionHistoryUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pehu.check(); err != nil {
-		return n, err
+func (_u *ProcessExecutionHistoryUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processexecutionhistory.Table, processexecutionhistory.Columns, sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt))
-	if ps := pehu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pehu.mutation.HistoryID(); ok {
+	if value, ok := _u.mutation.HistoryID(); ok {
 		_spec.SetField(processexecutionhistory.FieldHistoryID, field.TypeString, value)
 	}
-	if value, ok := pehu.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processexecutionhistory.FieldProcessDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := pehu.mutation.ActivityID(); ok {
+	if value, ok := _u.mutation.ActivityID(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityID, field.TypeString, value)
 	}
-	if pehu.mutation.ActivityIDCleared() {
+	if _u.mutation.ActivityIDCleared() {
 		_spec.ClearField(processexecutionhistory.FieldActivityID, field.TypeString)
 	}
-	if value, ok := pehu.mutation.ActivityName(); ok {
+	if value, ok := _u.mutation.ActivityName(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityName, field.TypeString, value)
 	}
-	if pehu.mutation.ActivityNameCleared() {
+	if _u.mutation.ActivityNameCleared() {
 		_spec.ClearField(processexecutionhistory.FieldActivityName, field.TypeString)
 	}
-	if value, ok := pehu.mutation.ActivityType(); ok {
+	if value, ok := _u.mutation.ActivityType(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityType, field.TypeString, value)
 	}
-	if value, ok := pehu.mutation.EventType(); ok {
+	if value, ok := _u.mutation.EventType(); ok {
 		_spec.SetField(processexecutionhistory.FieldEventType, field.TypeString, value)
 	}
-	if value, ok := pehu.mutation.EventDetail(); ok {
+	if value, ok := _u.mutation.EventDetail(); ok {
 		_spec.SetField(processexecutionhistory.FieldEventDetail, field.TypeString, value)
 	}
-	if pehu.mutation.EventDetailCleared() {
+	if _u.mutation.EventDetailCleared() {
 		_spec.ClearField(processexecutionhistory.FieldEventDetail, field.TypeString)
 	}
-	if value, ok := pehu.mutation.Variables(); ok {
+	if value, ok := _u.mutation.Variables(); ok {
 		_spec.SetField(processexecutionhistory.FieldVariables, field.TypeJSON, value)
 	}
-	if pehu.mutation.VariablesCleared() {
+	if _u.mutation.VariablesCleared() {
 		_spec.ClearField(processexecutionhistory.FieldVariables, field.TypeJSON)
 	}
-	if value, ok := pehu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(processexecutionhistory.FieldUserID, field.TypeString, value)
 	}
-	if pehu.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(processexecutionhistory.FieldUserID, field.TypeString)
 	}
-	if value, ok := pehu.mutation.UserName(); ok {
+	if value, ok := _u.mutation.UserName(); ok {
 		_spec.SetField(processexecutionhistory.FieldUserName, field.TypeString, value)
 	}
-	if pehu.mutation.UserNameCleared() {
+	if _u.mutation.UserNameCleared() {
 		_spec.ClearField(processexecutionhistory.FieldUserName, field.TypeString)
 	}
-	if value, ok := pehu.mutation.Timestamp(); ok {
+	if value, ok := _u.mutation.Timestamp(); ok {
 		_spec.SetField(processexecutionhistory.FieldTimestamp, field.TypeTime, value)
 	}
-	if value, ok := pehu.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(processexecutionhistory.FieldComment, field.TypeString, value)
 	}
-	if pehu.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(processexecutionhistory.FieldComment, field.TypeString)
 	}
-	if value, ok := pehu.mutation.ErrorMessage(); ok {
+	if value, ok := _u.mutation.ErrorMessage(); ok {
 		_spec.SetField(processexecutionhistory.FieldErrorMessage, field.TypeString, value)
 	}
-	if pehu.mutation.ErrorMessageCleared() {
+	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(processexecutionhistory.FieldErrorMessage, field.TypeString)
 	}
-	if value, ok := pehu.mutation.ErrorCode(); ok {
+	if value, ok := _u.mutation.ErrorCode(); ok {
 		_spec.SetField(processexecutionhistory.FieldErrorCode, field.TypeString, value)
 	}
-	if pehu.mutation.ErrorCodeCleared() {
+	if _u.mutation.ErrorCodeCleared() {
 		_spec.ClearField(processexecutionhistory.FieldErrorCode, field.TypeString)
 	}
-	if value, ok := pehu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processexecutionhistory.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pehu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processexecutionhistory.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pehu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processexecutionhistory.FieldCreatedAt, field.TypeTime, value)
 	}
-	if pehu.mutation.ProcessInstanceCleared() {
+	if _u.mutation.ProcessInstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -504,7 +504,7 @@ func (pehu *ProcessExecutionHistoryUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pehu.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -520,7 +520,7 @@ func (pehu *ProcessExecutionHistoryUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pehu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processexecutionhistory.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -528,8 +528,8 @@ func (pehu *ProcessExecutionHistoryUpdate) sqlSave(ctx context.Context) (n int, 
 		}
 		return 0, err
 	}
-	pehu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProcessExecutionHistoryUpdateOne is the builder for updating a single ProcessExecutionHistory entity.
@@ -541,333 +541,333 @@ type ProcessExecutionHistoryUpdateOne struct {
 }
 
 // SetHistoryID sets the "history_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetHistoryID(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetHistoryID(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetHistoryID(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetHistoryID(v)
+	return _u
 }
 
 // SetNillableHistoryID sets the "history_id" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableHistoryID(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetHistoryID(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableHistoryID(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetHistoryID(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetProcessInstanceID(i int) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetProcessInstanceID(i)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetProcessInstanceID(v int) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetProcessInstanceID(v)
+	return _u
 }
 
 // SetNillableProcessInstanceID sets the "process_instance_id" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableProcessInstanceID(i *int) *ProcessExecutionHistoryUpdateOne {
-	if i != nil {
-		pehuo.SetProcessInstanceID(*i)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableProcessInstanceID(v *int) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetProcessInstanceID(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetProcessDefinitionKey(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetProcessDefinitionKey(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetProcessDefinitionKey(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetProcessDefinitionKey(v)
+	return _u
 }
 
 // SetNillableProcessDefinitionKey sets the "process_definition_key" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableProcessDefinitionKey(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetProcessDefinitionKey(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableProcessDefinitionKey(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetProcessDefinitionKey(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // SetActivityID sets the "activity_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetActivityID(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetActivityID(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetActivityID(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetActivityID(v)
+	return _u
 }
 
 // SetNillableActivityID sets the "activity_id" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableActivityID(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetActivityID(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableActivityID(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetActivityID(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearActivityID clears the value of the "activity_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearActivityID() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearActivityID()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearActivityID() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearActivityID()
+	return _u
 }
 
 // SetActivityName sets the "activity_name" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetActivityName(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetActivityName(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetActivityName(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetActivityName(v)
+	return _u
 }
 
 // SetNillableActivityName sets the "activity_name" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableActivityName(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetActivityName(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableActivityName(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetActivityName(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearActivityName clears the value of the "activity_name" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearActivityName() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearActivityName()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearActivityName() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearActivityName()
+	return _u
 }
 
 // SetActivityType sets the "activity_type" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetActivityType(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetActivityType(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetActivityType(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetActivityType(v)
+	return _u
 }
 
 // SetNillableActivityType sets the "activity_type" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableActivityType(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetActivityType(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableActivityType(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetActivityType(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // SetEventType sets the "event_type" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetEventType(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetEventType(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetEventType(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetEventType(v)
+	return _u
 }
 
 // SetNillableEventType sets the "event_type" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableEventType(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetEventType(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableEventType(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetEventType(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // SetEventDetail sets the "event_detail" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetEventDetail(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetEventDetail(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetEventDetail(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetEventDetail(v)
+	return _u
 }
 
 // SetNillableEventDetail sets the "event_detail" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableEventDetail(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetEventDetail(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableEventDetail(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetEventDetail(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearEventDetail clears the value of the "event_detail" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearEventDetail() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearEventDetail()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearEventDetail() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearEventDetail()
+	return _u
 }
 
 // SetVariables sets the "variables" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetVariables(m map[string]interface{}) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetVariables(m)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetVariables(v map[string]interface{}) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetVariables(v)
+	return _u
 }
 
 // ClearVariables clears the value of the "variables" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearVariables() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearVariables()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearVariables() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearVariables()
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetUserID(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetUserID(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetUserID(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableUserID(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetUserID(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableUserID(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearUserID() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearUserID()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearUserID() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetUserName sets the "user_name" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetUserName(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetUserName(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetUserName(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetUserName(v)
+	return _u
 }
 
 // SetNillableUserName sets the "user_name" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableUserName(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetUserName(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableUserName(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetUserName(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearUserName clears the value of the "user_name" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearUserName() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearUserName()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearUserName() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearUserName()
+	return _u
 }
 
 // SetTimestamp sets the "timestamp" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetTimestamp(t time.Time) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetTimestamp(t)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetTimestamp(v time.Time) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetTimestamp(v)
+	return _u
 }
 
 // SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableTimestamp(t *time.Time) *ProcessExecutionHistoryUpdateOne {
-	if t != nil {
-		pehuo.SetTimestamp(*t)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableTimestamp(v *time.Time) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetTimestamp(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetComment(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetComment(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetComment(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableComment(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetComment(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableComment(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearComment() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearComment()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearComment() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetErrorMessage(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetErrorMessage(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetErrorMessage(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetErrorMessage(v)
+	return _u
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableErrorMessage(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetErrorMessage(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableErrorMessage(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetErrorMessage(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearErrorMessage clears the value of the "error_message" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearErrorMessage() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearErrorMessage()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearErrorMessage() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearErrorMessage()
+	return _u
 }
 
 // SetErrorCode sets the "error_code" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetErrorCode(s string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetErrorCode(s)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetErrorCode(v string) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetErrorCode(v)
+	return _u
 }
 
 // SetNillableErrorCode sets the "error_code" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableErrorCode(s *string) *ProcessExecutionHistoryUpdateOne {
-	if s != nil {
-		pehuo.SetErrorCode(*s)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableErrorCode(v *string) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetErrorCode(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // ClearErrorCode clears the value of the "error_code" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearErrorCode() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearErrorCode()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearErrorCode() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearErrorCode()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetTenantID(i int) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ResetTenantID()
-	pehuo.mutation.SetTenantID(i)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetTenantID(v int) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableTenantID(i *int) *ProcessExecutionHistoryUpdateOne {
-	if i != nil {
-		pehuo.SetTenantID(*i)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableTenantID(v *int) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pehuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) AddTenantID(i int) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.AddTenantID(i)
-	return pehuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessExecutionHistoryUpdateOne) AddTenantID(v int) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetCreatedAt(t time.Time) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.SetCreatedAt(t)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) SetCreatedAt(v time.Time) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetNillableCreatedAt(t *time.Time) *ProcessExecutionHistoryUpdateOne {
-	if t != nil {
-		pehuo.SetCreatedAt(*t)
+func (_u *ProcessExecutionHistoryUpdateOne) SetNillableCreatedAt(v *time.Time) *ProcessExecutionHistoryUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pehuo
+	return _u
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SetProcessInstance(p *ProcessInstance) *ProcessExecutionHistoryUpdateOne {
-	return pehuo.SetProcessInstanceID(p.ID)
+func (_u *ProcessExecutionHistoryUpdateOne) SetProcessInstance(v *ProcessInstance) *ProcessExecutionHistoryUpdateOne {
+	return _u.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessExecutionHistoryMutation object of the builder.
-func (pehuo *ProcessExecutionHistoryUpdateOne) Mutation() *ProcessExecutionHistoryMutation {
-	return pehuo.mutation
+func (_u *ProcessExecutionHistoryUpdateOne) Mutation() *ProcessExecutionHistoryMutation {
+	return _u.mutation
 }
 
 // ClearProcessInstance clears the "process_instance" edge to the ProcessInstance entity.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ClearProcessInstance() *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.ClearProcessInstance()
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) ClearProcessInstance() *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.ClearProcessInstance()
+	return _u
 }
 
 // Where appends a list predicates to the ProcessExecutionHistoryUpdate builder.
-func (pehuo *ProcessExecutionHistoryUpdateOne) Where(ps ...predicate.ProcessExecutionHistory) *ProcessExecutionHistoryUpdateOne {
-	pehuo.mutation.Where(ps...)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) Where(ps ...predicate.ProcessExecutionHistory) *ProcessExecutionHistoryUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (pehuo *ProcessExecutionHistoryUpdateOne) Select(field string, fields ...string) *ProcessExecutionHistoryUpdateOne {
-	pehuo.fields = append([]string{field}, fields...)
-	return pehuo
+func (_u *ProcessExecutionHistoryUpdateOne) Select(field string, fields ...string) *ProcessExecutionHistoryUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProcessExecutionHistory entity.
-func (pehuo *ProcessExecutionHistoryUpdateOne) Save(ctx context.Context) (*ProcessExecutionHistory, error) {
-	return withHooks(ctx, pehuo.sqlSave, pehuo.mutation, pehuo.hooks)
+func (_u *ProcessExecutionHistoryUpdateOne) Save(ctx context.Context) (*ProcessExecutionHistory, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pehuo *ProcessExecutionHistoryUpdateOne) SaveX(ctx context.Context) *ProcessExecutionHistory {
-	node, err := pehuo.Save(ctx)
+func (_u *ProcessExecutionHistoryUpdateOne) SaveX(ctx context.Context) *ProcessExecutionHistory {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -875,67 +875,67 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) SaveX(ctx context.Context) *Proce
 }
 
 // Exec executes the query on the entity.
-func (pehuo *ProcessExecutionHistoryUpdateOne) Exec(ctx context.Context) error {
-	_, err := pehuo.Save(ctx)
+func (_u *ProcessExecutionHistoryUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pehuo *ProcessExecutionHistoryUpdateOne) ExecX(ctx context.Context) {
-	if err := pehuo.Exec(ctx); err != nil {
+func (_u *ProcessExecutionHistoryUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pehuo *ProcessExecutionHistoryUpdateOne) check() error {
-	if v, ok := pehuo.mutation.HistoryID(); ok {
+func (_u *ProcessExecutionHistoryUpdateOne) check() error {
+	if v, ok := _u.mutation.HistoryID(); ok {
 		if err := processexecutionhistory.HistoryIDValidator(v); err != nil {
 			return &ValidationError{Name: "history_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.history_id": %w`, err)}
 		}
 	}
-	if v, ok := pehuo.mutation.ProcessInstanceID(); ok {
+	if v, ok := _u.mutation.ProcessInstanceID(); ok {
 		if err := processexecutionhistory.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.process_instance_id": %w`, err)}
 		}
 	}
-	if v, ok := pehuo.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		if err := processexecutionhistory.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.process_definition_key": %w`, err)}
 		}
 	}
-	if v, ok := pehuo.mutation.ActivityType(); ok {
+	if v, ok := _u.mutation.ActivityType(); ok {
 		if err := processexecutionhistory.ActivityTypeValidator(v); err != nil {
 			return &ValidationError{Name: "activity_type", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.activity_type": %w`, err)}
 		}
 	}
-	if v, ok := pehuo.mutation.EventType(); ok {
+	if v, ok := _u.mutation.EventType(); ok {
 		if err := processexecutionhistory.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.event_type": %w`, err)}
 		}
 	}
-	if v, ok := pehuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processexecutionhistory.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.tenant_id": %w`, err)}
 		}
 	}
-	if pehuo.mutation.ProcessInstanceCleared() && len(pehuo.mutation.ProcessInstanceIDs()) > 0 {
+	if _u.mutation.ProcessInstanceCleared() && len(_u.mutation.ProcessInstanceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ProcessExecutionHistory.process_instance"`)
 	}
 	return nil
 }
 
-func (pehuo *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_node *ProcessExecutionHistory, err error) {
-	if err := pehuo.check(); err != nil {
+func (_u *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_node *ProcessExecutionHistory, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processexecutionhistory.Table, processexecutionhistory.Columns, sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt))
-	id, ok := pehuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProcessExecutionHistory.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := pehuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processexecutionhistory.FieldID)
 		for _, f := range fields {
@@ -947,92 +947,92 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_no
 			}
 		}
 	}
-	if ps := pehuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pehuo.mutation.HistoryID(); ok {
+	if value, ok := _u.mutation.HistoryID(); ok {
 		_spec.SetField(processexecutionhistory.FieldHistoryID, field.TypeString, value)
 	}
-	if value, ok := pehuo.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _u.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processexecutionhistory.FieldProcessDefinitionKey, field.TypeString, value)
 	}
-	if value, ok := pehuo.mutation.ActivityID(); ok {
+	if value, ok := _u.mutation.ActivityID(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityID, field.TypeString, value)
 	}
-	if pehuo.mutation.ActivityIDCleared() {
+	if _u.mutation.ActivityIDCleared() {
 		_spec.ClearField(processexecutionhistory.FieldActivityID, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.ActivityName(); ok {
+	if value, ok := _u.mutation.ActivityName(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityName, field.TypeString, value)
 	}
-	if pehuo.mutation.ActivityNameCleared() {
+	if _u.mutation.ActivityNameCleared() {
 		_spec.ClearField(processexecutionhistory.FieldActivityName, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.ActivityType(); ok {
+	if value, ok := _u.mutation.ActivityType(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityType, field.TypeString, value)
 	}
-	if value, ok := pehuo.mutation.EventType(); ok {
+	if value, ok := _u.mutation.EventType(); ok {
 		_spec.SetField(processexecutionhistory.FieldEventType, field.TypeString, value)
 	}
-	if value, ok := pehuo.mutation.EventDetail(); ok {
+	if value, ok := _u.mutation.EventDetail(); ok {
 		_spec.SetField(processexecutionhistory.FieldEventDetail, field.TypeString, value)
 	}
-	if pehuo.mutation.EventDetailCleared() {
+	if _u.mutation.EventDetailCleared() {
 		_spec.ClearField(processexecutionhistory.FieldEventDetail, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.Variables(); ok {
+	if value, ok := _u.mutation.Variables(); ok {
 		_spec.SetField(processexecutionhistory.FieldVariables, field.TypeJSON, value)
 	}
-	if pehuo.mutation.VariablesCleared() {
+	if _u.mutation.VariablesCleared() {
 		_spec.ClearField(processexecutionhistory.FieldVariables, field.TypeJSON)
 	}
-	if value, ok := pehuo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(processexecutionhistory.FieldUserID, field.TypeString, value)
 	}
-	if pehuo.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(processexecutionhistory.FieldUserID, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.UserName(); ok {
+	if value, ok := _u.mutation.UserName(); ok {
 		_spec.SetField(processexecutionhistory.FieldUserName, field.TypeString, value)
 	}
-	if pehuo.mutation.UserNameCleared() {
+	if _u.mutation.UserNameCleared() {
 		_spec.ClearField(processexecutionhistory.FieldUserName, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.Timestamp(); ok {
+	if value, ok := _u.mutation.Timestamp(); ok {
 		_spec.SetField(processexecutionhistory.FieldTimestamp, field.TypeTime, value)
 	}
-	if value, ok := pehuo.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(processexecutionhistory.FieldComment, field.TypeString, value)
 	}
-	if pehuo.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(processexecutionhistory.FieldComment, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.ErrorMessage(); ok {
+	if value, ok := _u.mutation.ErrorMessage(); ok {
 		_spec.SetField(processexecutionhistory.FieldErrorMessage, field.TypeString, value)
 	}
-	if pehuo.mutation.ErrorMessageCleared() {
+	if _u.mutation.ErrorMessageCleared() {
 		_spec.ClearField(processexecutionhistory.FieldErrorMessage, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.ErrorCode(); ok {
+	if value, ok := _u.mutation.ErrorCode(); ok {
 		_spec.SetField(processexecutionhistory.FieldErrorCode, field.TypeString, value)
 	}
-	if pehuo.mutation.ErrorCodeCleared() {
+	if _u.mutation.ErrorCodeCleared() {
 		_spec.ClearField(processexecutionhistory.FieldErrorCode, field.TypeString)
 	}
-	if value, ok := pehuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processexecutionhistory.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pehuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processexecutionhistory.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pehuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processexecutionhistory.FieldCreatedAt, field.TypeTime, value)
 	}
-	if pehuo.mutation.ProcessInstanceCleared() {
+	if _u.mutation.ProcessInstanceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1045,7 +1045,7 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pehuo.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1061,10 +1061,10 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ProcessExecutionHistory{config: pehuo.config}
+	_node = &ProcessExecutionHistory{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, pehuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processexecutionhistory.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1072,6 +1072,6 @@ func (pehuo *ProcessExecutionHistoryUpdateOne) sqlSave(ctx context.Context) (_no
 		}
 		return nil, err
 	}
-	pehuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

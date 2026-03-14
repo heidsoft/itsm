@@ -93,7 +93,7 @@ func (*TicketAutomationRule) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketAutomationRule fields.
-func (tar *TicketAutomationRule) assignValues(columns []string, values []any) error {
+func (_m *TicketAutomationRule) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -104,30 +104,30 @@ func (tar *TicketAutomationRule) assignValues(columns []string, values []any) er
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			tar.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ticketautomationrule.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				tar.Name = value.String
+				_m.Name = value.String
 			}
 		case ticketautomationrule.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				tar.Description = value.String
+				_m.Description = value.String
 			}
 		case ticketautomationrule.FieldPriority:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				tar.Priority = int(value.Int64)
+				_m.Priority = int(value.Int64)
 			}
 		case ticketautomationrule.FieldConditions:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field conditions", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tar.Conditions); err != nil {
+				if err := json.Unmarshal(*value, &_m.Conditions); err != nil {
 					return fmt.Errorf("unmarshal field conditions: %w", err)
 				}
 			}
@@ -135,7 +135,7 @@ func (tar *TicketAutomationRule) assignValues(columns []string, values []any) er
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field actions", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tar.Actions); err != nil {
+				if err := json.Unmarshal(*value, &_m.Actions); err != nil {
 					return fmt.Errorf("unmarshal field actions: %w", err)
 				}
 			}
@@ -143,46 +143,46 @@ func (tar *TicketAutomationRule) assignValues(columns []string, values []any) er
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				tar.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case ticketautomationrule.FieldExecutionCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field execution_count", values[i])
 			} else if value.Valid {
-				tar.ExecutionCount = int(value.Int64)
+				_m.ExecutionCount = int(value.Int64)
 			}
 		case ticketautomationrule.FieldLastExecutedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field last_executed_at", values[i])
 			} else if value.Valid {
-				tar.LastExecutedAt = value.Time
+				_m.LastExecutedAt = value.Time
 			}
 		case ticketautomationrule.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				tar.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case ticketautomationrule.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				tar.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ticketautomationrule.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tar.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case ticketautomationrule.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				tar.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			tar.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -190,73 +190,73 @@ func (tar *TicketAutomationRule) assignValues(columns []string, values []any) er
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketAutomationRule.
 // This includes values selected through modifiers, order, etc.
-func (tar *TicketAutomationRule) Value(name string) (ent.Value, error) {
-	return tar.selectValues.Get(name)
+func (_m *TicketAutomationRule) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryCreator queries the "creator" edge of the TicketAutomationRule entity.
-func (tar *TicketAutomationRule) QueryCreator() *UserQuery {
-	return NewTicketAutomationRuleClient(tar.config).QueryCreator(tar)
+func (_m *TicketAutomationRule) QueryCreator() *UserQuery {
+	return NewTicketAutomationRuleClient(_m.config).QueryCreator(_m)
 }
 
 // Update returns a builder for updating this TicketAutomationRule.
 // Note that you need to call TicketAutomationRule.Unwrap() before calling this method if this TicketAutomationRule
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tar *TicketAutomationRule) Update() *TicketAutomationRuleUpdateOne {
-	return NewTicketAutomationRuleClient(tar.config).UpdateOne(tar)
+func (_m *TicketAutomationRule) Update() *TicketAutomationRuleUpdateOne {
+	return NewTicketAutomationRuleClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketAutomationRule entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tar *TicketAutomationRule) Unwrap() *TicketAutomationRule {
-	_tx, ok := tar.config.driver.(*txDriver)
+func (_m *TicketAutomationRule) Unwrap() *TicketAutomationRule {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketAutomationRule is not a transactional entity")
 	}
-	tar.config.driver = _tx.drv
-	return tar
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tar *TicketAutomationRule) String() string {
+func (_m *TicketAutomationRule) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketAutomationRule(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tar.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(tar.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(tar.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(fmt.Sprintf("%v", tar.Priority))
+	builder.WriteString(fmt.Sprintf("%v", _m.Priority))
 	builder.WriteString(", ")
 	builder.WriteString("conditions=")
-	builder.WriteString(fmt.Sprintf("%v", tar.Conditions))
+	builder.WriteString(fmt.Sprintf("%v", _m.Conditions))
 	builder.WriteString(", ")
 	builder.WriteString("actions=")
-	builder.WriteString(fmt.Sprintf("%v", tar.Actions))
+	builder.WriteString(fmt.Sprintf("%v", _m.Actions))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", tar.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("execution_count=")
-	builder.WriteString(fmt.Sprintf("%v", tar.ExecutionCount))
+	builder.WriteString(fmt.Sprintf("%v", _m.ExecutionCount))
 	builder.WriteString(", ")
 	builder.WriteString("last_executed_at=")
-	builder.WriteString(tar.LastExecutedAt.Format(time.ANSIC))
+	builder.WriteString(_m.LastExecutedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", tar.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", tar.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tar.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(tar.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

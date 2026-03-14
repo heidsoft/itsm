@@ -104,7 +104,7 @@ func (*CIRelationship) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the CIRelationship fields.
-func (cr *CIRelationship) assignValues(columns []string, values []any) error {
+func (_m *CIRelationship) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -115,60 +115,60 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			cr.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case cirelationship.FieldRelationshipType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field relationship_type", values[i])
 			} else if value.Valid {
-				cr.RelationshipType = value.String
+				_m.RelationshipType = value.String
 			}
 		case cirelationship.FieldSourceCiID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field source_ci_id", values[i])
 			} else if value.Valid {
-				cr.SourceCiID = int(value.Int64)
+				_m.SourceCiID = int(value.Int64)
 			}
 		case cirelationship.FieldTargetCiID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field target_ci_id", values[i])
 			} else if value.Valid {
-				cr.TargetCiID = int(value.Int64)
+				_m.TargetCiID = int(value.Int64)
 			}
 		case cirelationship.FieldStrength:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field strength", values[i])
 			} else if value.Valid {
-				cr.Strength = cirelationship.Strength(value.String)
+				_m.Strength = cirelationship.Strength(value.String)
 			}
 		case cirelationship.FieldImpactLevel:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field impact_level", values[i])
 			} else if value.Valid {
-				cr.ImpactLevel = cirelationship.ImpactLevel(value.String)
+				_m.ImpactLevel = cirelationship.ImpactLevel(value.String)
 			}
 		case cirelationship.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				cr.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case cirelationship.FieldIsDiscovered:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_discovered", values[i])
 			} else if value.Valid {
-				cr.IsDiscovered = value.Bool
+				_m.IsDiscovered = value.Bool
 			}
 		case cirelationship.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				cr.Description = value.String
+				_m.Description = value.String
 			}
 		case cirelationship.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &cr.Metadata); err != nil {
+				if err := json.Unmarshal(*value, &_m.Metadata); err != nil {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
 				}
 			}
@@ -176,16 +176,16 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				cr.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case cirelationship.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				cr.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			cr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -193,75 +193,75 @@ func (cr *CIRelationship) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the CIRelationship.
 // This includes values selected through modifiers, order, etc.
-func (cr *CIRelationship) Value(name string) (ent.Value, error) {
-	return cr.selectValues.Get(name)
+func (_m *CIRelationship) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QuerySourceCi queries the "source_ci" edge of the CIRelationship entity.
-func (cr *CIRelationship) QuerySourceCi() *ConfigurationItemQuery {
-	return NewCIRelationshipClient(cr.config).QuerySourceCi(cr)
+func (_m *CIRelationship) QuerySourceCi() *ConfigurationItemQuery {
+	return NewCIRelationshipClient(_m.config).QuerySourceCi(_m)
 }
 
 // QueryTargetCi queries the "target_ci" edge of the CIRelationship entity.
-func (cr *CIRelationship) QueryTargetCi() *ConfigurationItemQuery {
-	return NewCIRelationshipClient(cr.config).QueryTargetCi(cr)
+func (_m *CIRelationship) QueryTargetCi() *ConfigurationItemQuery {
+	return NewCIRelationshipClient(_m.config).QueryTargetCi(_m)
 }
 
 // Update returns a builder for updating this CIRelationship.
 // Note that you need to call CIRelationship.Unwrap() before calling this method if this CIRelationship
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (cr *CIRelationship) Update() *CIRelationshipUpdateOne {
-	return NewCIRelationshipClient(cr.config).UpdateOne(cr)
+func (_m *CIRelationship) Update() *CIRelationshipUpdateOne {
+	return NewCIRelationshipClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the CIRelationship entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (cr *CIRelationship) Unwrap() *CIRelationship {
-	_tx, ok := cr.config.driver.(*txDriver)
+func (_m *CIRelationship) Unwrap() *CIRelationship {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: CIRelationship is not a transactional entity")
 	}
-	cr.config.driver = _tx.drv
-	return cr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (cr *CIRelationship) String() string {
+func (_m *CIRelationship) String() string {
 	var builder strings.Builder
 	builder.WriteString("CIRelationship(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", cr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("relationship_type=")
-	builder.WriteString(cr.RelationshipType)
+	builder.WriteString(_m.RelationshipType)
 	builder.WriteString(", ")
 	builder.WriteString("source_ci_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.SourceCiID))
+	builder.WriteString(fmt.Sprintf("%v", _m.SourceCiID))
 	builder.WriteString(", ")
 	builder.WriteString("target_ci_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.TargetCiID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TargetCiID))
 	builder.WriteString(", ")
 	builder.WriteString("strength=")
-	builder.WriteString(fmt.Sprintf("%v", cr.Strength))
+	builder.WriteString(fmt.Sprintf("%v", _m.Strength))
 	builder.WriteString(", ")
 	builder.WriteString("impact_level=")
-	builder.WriteString(fmt.Sprintf("%v", cr.ImpactLevel))
+	builder.WriteString(fmt.Sprintf("%v", _m.ImpactLevel))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", cr.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("is_discovered=")
-	builder.WriteString(fmt.Sprintf("%v", cr.IsDiscovered))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsDiscovered))
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(cr.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
-	builder.WriteString(fmt.Sprintf("%v", cr.Metadata))
+	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(cr.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(cr.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

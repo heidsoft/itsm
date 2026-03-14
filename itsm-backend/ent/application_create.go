@@ -24,170 +24,170 @@ type ApplicationCreate struct {
 }
 
 // SetName sets the "name" field.
-func (ac *ApplicationCreate) SetName(s string) *ApplicationCreate {
-	ac.mutation.SetName(s)
-	return ac
+func (_c *ApplicationCreate) SetName(v string) *ApplicationCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetCode sets the "code" field.
-func (ac *ApplicationCreate) SetCode(s string) *ApplicationCreate {
-	ac.mutation.SetCode(s)
-	return ac
+func (_c *ApplicationCreate) SetCode(v string) *ApplicationCreate {
+	_c.mutation.SetCode(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (ac *ApplicationCreate) SetDescription(s string) *ApplicationCreate {
-	ac.mutation.SetDescription(s)
-	return ac
+func (_c *ApplicationCreate) SetDescription(v string) *ApplicationCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ac *ApplicationCreate) SetNillableDescription(s *string) *ApplicationCreate {
-	if s != nil {
-		ac.SetDescription(*s)
+func (_c *ApplicationCreate) SetNillableDescription(v *string) *ApplicationCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return ac
+	return _c
 }
 
 // SetType sets the "type" field.
-func (ac *ApplicationCreate) SetType(s string) *ApplicationCreate {
-	ac.mutation.SetType(s)
-	return ac
+func (_c *ApplicationCreate) SetType(v string) *ApplicationCreate {
+	_c.mutation.SetType(v)
+	return _c
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (ac *ApplicationCreate) SetNillableType(s *string) *ApplicationCreate {
-	if s != nil {
-		ac.SetType(*s)
+func (_c *ApplicationCreate) SetNillableType(v *string) *ApplicationCreate {
+	if v != nil {
+		_c.SetType(*v)
 	}
-	return ac
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (ac *ApplicationCreate) SetStatus(s string) *ApplicationCreate {
-	ac.mutation.SetStatus(s)
-	return ac
+func (_c *ApplicationCreate) SetStatus(v string) *ApplicationCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ac *ApplicationCreate) SetNillableStatus(s *string) *ApplicationCreate {
-	if s != nil {
-		ac.SetStatus(*s)
+func (_c *ApplicationCreate) SetNillableStatus(v *string) *ApplicationCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return ac
+	return _c
 }
 
 // SetOwnerID sets the "owner_id" field.
-func (ac *ApplicationCreate) SetOwnerID(i int) *ApplicationCreate {
-	ac.mutation.SetOwnerID(i)
-	return ac
+func (_c *ApplicationCreate) SetOwnerID(v int) *ApplicationCreate {
+	_c.mutation.SetOwnerID(v)
+	return _c
 }
 
 // SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
-func (ac *ApplicationCreate) SetNillableOwnerID(i *int) *ApplicationCreate {
-	if i != nil {
-		ac.SetOwnerID(*i)
+func (_c *ApplicationCreate) SetNillableOwnerID(v *int) *ApplicationCreate {
+	if v != nil {
+		_c.SetOwnerID(*v)
 	}
-	return ac
+	return _c
 }
 
 // SetProjectID sets the "project_id" field.
-func (ac *ApplicationCreate) SetProjectID(i int) *ApplicationCreate {
-	ac.mutation.SetProjectID(i)
-	return ac
+func (_c *ApplicationCreate) SetProjectID(v int) *ApplicationCreate {
+	_c.mutation.SetProjectID(v)
+	return _c
 }
 
 // SetNillableProjectID sets the "project_id" field if the given value is not nil.
-func (ac *ApplicationCreate) SetNillableProjectID(i *int) *ApplicationCreate {
-	if i != nil {
-		ac.SetProjectID(*i)
+func (_c *ApplicationCreate) SetNillableProjectID(v *int) *ApplicationCreate {
+	if v != nil {
+		_c.SetProjectID(*v)
 	}
-	return ac
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ac *ApplicationCreate) SetTenantID(i int) *ApplicationCreate {
-	ac.mutation.SetTenantID(i)
-	return ac
+func (_c *ApplicationCreate) SetTenantID(v int) *ApplicationCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ac *ApplicationCreate) SetCreatedAt(t time.Time) *ApplicationCreate {
-	ac.mutation.SetCreatedAt(t)
-	return ac
+func (_c *ApplicationCreate) SetCreatedAt(v time.Time) *ApplicationCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ac *ApplicationCreate) SetNillableCreatedAt(t *time.Time) *ApplicationCreate {
-	if t != nil {
-		ac.SetCreatedAt(*t)
+func (_c *ApplicationCreate) SetNillableCreatedAt(v *time.Time) *ApplicationCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ac
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ac *ApplicationCreate) SetUpdatedAt(t time.Time) *ApplicationCreate {
-	ac.mutation.SetUpdatedAt(t)
-	return ac
+func (_c *ApplicationCreate) SetUpdatedAt(v time.Time) *ApplicationCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ac *ApplicationCreate) SetNillableUpdatedAt(t *time.Time) *ApplicationCreate {
-	if t != nil {
-		ac.SetUpdatedAt(*t)
+func (_c *ApplicationCreate) SetNillableUpdatedAt(v *time.Time) *ApplicationCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ac
+	return _c
 }
 
 // SetProject sets the "project" edge to the Project entity.
-func (ac *ApplicationCreate) SetProject(p *Project) *ApplicationCreate {
-	return ac.SetProjectID(p.ID)
+func (_c *ApplicationCreate) SetProject(v *Project) *ApplicationCreate {
+	return _c.SetProjectID(v.ID)
 }
 
 // AddMicroserviceIDs adds the "microservices" edge to the Microservice entity by IDs.
-func (ac *ApplicationCreate) AddMicroserviceIDs(ids ...int) *ApplicationCreate {
-	ac.mutation.AddMicroserviceIDs(ids...)
-	return ac
+func (_c *ApplicationCreate) AddMicroserviceIDs(ids ...int) *ApplicationCreate {
+	_c.mutation.AddMicroserviceIDs(ids...)
+	return _c
 }
 
 // AddMicroservices adds the "microservices" edges to the Microservice entity.
-func (ac *ApplicationCreate) AddMicroservices(m ...*Microservice) *ApplicationCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_c *ApplicationCreate) AddMicroservices(v ...*Microservice) *ApplicationCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ac.AddMicroserviceIDs(ids...)
+	return _c.AddMicroserviceIDs(ids...)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
-func (ac *ApplicationCreate) AddTagIDs(ids ...int) *ApplicationCreate {
-	ac.mutation.AddTagIDs(ids...)
-	return ac
+func (_c *ApplicationCreate) AddTagIDs(ids ...int) *ApplicationCreate {
+	_c.mutation.AddTagIDs(ids...)
+	return _c
 }
 
 // AddTags adds the "tags" edges to the Tag entity.
-func (ac *ApplicationCreate) AddTags(t ...*Tag) *ApplicationCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *ApplicationCreate) AddTags(v ...*Tag) *ApplicationCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ac.AddTagIDs(ids...)
+	return _c.AddTagIDs(ids...)
 }
 
 // Mutation returns the ApplicationMutation object of the builder.
-func (ac *ApplicationCreate) Mutation() *ApplicationMutation {
-	return ac.mutation
+func (_c *ApplicationCreate) Mutation() *ApplicationMutation {
+	return _c.mutation
 }
 
 // Save creates the Application in the database.
-func (ac *ApplicationCreate) Save(ctx context.Context) (*Application, error) {
-	ac.defaults()
-	return withHooks(ctx, ac.sqlSave, ac.mutation, ac.hooks)
+func (_c *ApplicationCreate) Save(ctx context.Context) (*Application, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ac *ApplicationCreate) SaveX(ctx context.Context) *Application {
-	v, err := ac.Save(ctx)
+func (_c *ApplicationCreate) SaveX(ctx context.Context) *Application {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -195,85 +195,85 @@ func (ac *ApplicationCreate) SaveX(ctx context.Context) *Application {
 }
 
 // Exec executes the query.
-func (ac *ApplicationCreate) Exec(ctx context.Context) error {
-	_, err := ac.Save(ctx)
+func (_c *ApplicationCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ac *ApplicationCreate) ExecX(ctx context.Context) {
-	if err := ac.Exec(ctx); err != nil {
+func (_c *ApplicationCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ac *ApplicationCreate) defaults() {
-	if _, ok := ac.mutation.GetType(); !ok {
+func (_c *ApplicationCreate) defaults() {
+	if _, ok := _c.mutation.GetType(); !ok {
 		v := application.DefaultType
-		ac.mutation.SetType(v)
+		_c.mutation.SetType(v)
 	}
-	if _, ok := ac.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := application.DefaultStatus
-		ac.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := ac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := application.DefaultCreatedAt()
-		ac.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := application.DefaultUpdatedAt()
-		ac.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ac *ApplicationCreate) check() error {
-	if _, ok := ac.mutation.Name(); !ok {
+func (_c *ApplicationCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Application.name"`)}
 	}
-	if v, ok := ac.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := application.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Application.name": %w`, err)}
 		}
 	}
-	if _, ok := ac.mutation.Code(); !ok {
+	if _, ok := _c.mutation.Code(); !ok {
 		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "Application.code"`)}
 	}
-	if v, ok := ac.mutation.Code(); ok {
+	if v, ok := _c.mutation.Code(); ok {
 		if err := application.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Application.code": %w`, err)}
 		}
 	}
-	if _, ok := ac.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Application.type"`)}
 	}
-	if _, ok := ac.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Application.status"`)}
 	}
-	if _, ok := ac.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Application.tenant_id"`)}
 	}
-	if v, ok := ac.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := application.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Application.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := ac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Application.created_at"`)}
 	}
-	if _, ok := ac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Application.updated_at"`)}
 	}
 	return nil
 }
 
-func (ac *ApplicationCreate) sqlSave(ctx context.Context) (*Application, error) {
-	if err := ac.check(); err != nil {
+func (_c *ApplicationCreate) sqlSave(ctx context.Context) (*Application, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ac.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ac.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -281,53 +281,53 @@ func (ac *ApplicationCreate) sqlSave(ctx context.Context) (*Application, error) 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ac.mutation.id = &_node.ID
-	ac.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ac *ApplicationCreate) createSpec() (*Application, *sqlgraph.CreateSpec) {
+func (_c *ApplicationCreate) createSpec() (*Application, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Application{config: ac.config}
+		_node = &Application{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(application.Table, sqlgraph.NewFieldSpec(application.FieldID, field.TypeInt))
 	)
-	if value, ok := ac.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(application.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := ac.mutation.Code(); ok {
+	if value, ok := _c.mutation.Code(); ok {
 		_spec.SetField(application.FieldCode, field.TypeString, value)
 		_node.Code = value
 	}
-	if value, ok := ac.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(application.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := ac.mutation.GetType(); ok {
+	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(application.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := ac.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(application.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := ac.mutation.OwnerID(); ok {
+	if value, ok := _c.mutation.OwnerID(); ok {
 		_spec.SetField(application.FieldOwnerID, field.TypeInt, value)
 		_node.OwnerID = value
 	}
-	if value, ok := ac.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(application.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := ac.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(application.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ac.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(application.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := ac.mutation.ProjectIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProjectIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -344,7 +344,7 @@ func (ac *ApplicationCreate) createSpec() (*Application, *sqlgraph.CreateSpec) {
 		_node.ProjectID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ac.mutation.MicroservicesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MicroservicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -360,7 +360,7 @@ func (ac *ApplicationCreate) createSpec() (*Application, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ac.mutation.TagsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -387,16 +387,16 @@ type ApplicationCreateBulk struct {
 }
 
 // Save creates the Application entities in the database.
-func (acb *ApplicationCreateBulk) Save(ctx context.Context) ([]*Application, error) {
-	if acb.err != nil {
-		return nil, acb.err
+func (_c *ApplicationCreateBulk) Save(ctx context.Context) ([]*Application, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(acb.builders))
-	nodes := make([]*Application, len(acb.builders))
-	mutators := make([]Mutator, len(acb.builders))
-	for i := range acb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Application, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := acb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ApplicationMutation)
@@ -410,11 +410,11 @@ func (acb *ApplicationCreateBulk) Save(ctx context.Context) ([]*Application, err
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, acb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, acb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -438,7 +438,7 @@ func (acb *ApplicationCreateBulk) Save(ctx context.Context) ([]*Application, err
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, acb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -446,8 +446,8 @@ func (acb *ApplicationCreateBulk) Save(ctx context.Context) ([]*Application, err
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (acb *ApplicationCreateBulk) SaveX(ctx context.Context) []*Application {
-	v, err := acb.Save(ctx)
+func (_c *ApplicationCreateBulk) SaveX(ctx context.Context) []*Application {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -455,14 +455,14 @@ func (acb *ApplicationCreateBulk) SaveX(ctx context.Context) []*Application {
 }
 
 // Exec executes the query.
-func (acb *ApplicationCreateBulk) Exec(ctx context.Context) error {
-	_, err := acb.Save(ctx)
+func (_c *ApplicationCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (acb *ApplicationCreateBulk) ExecX(ctx context.Context) {
-	if err := acb.Exec(ctx); err != nil {
+func (_c *ApplicationCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

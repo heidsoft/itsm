@@ -20,56 +20,56 @@ type TicketViewDelete struct {
 }
 
 // Where appends a list predicates to the TicketViewDelete builder.
-func (tvd *TicketViewDelete) Where(ps ...predicate.TicketView) *TicketViewDelete {
-	tvd.mutation.Where(ps...)
-	return tvd
+func (_d *TicketViewDelete) Where(ps ...predicate.TicketView) *TicketViewDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (tvd *TicketViewDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, tvd.sqlExec, tvd.mutation, tvd.hooks)
+func (_d *TicketViewDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tvd *TicketViewDelete) ExecX(ctx context.Context) int {
-	n, err := tvd.Exec(ctx)
+func (_d *TicketViewDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (tvd *TicketViewDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *TicketViewDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(ticketview.Table, sqlgraph.NewFieldSpec(ticketview.FieldID, field.TypeInt))
-	if ps := tvd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, tvd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	tvd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // TicketViewDeleteOne is the builder for deleting a single TicketView entity.
 type TicketViewDeleteOne struct {
-	tvd *TicketViewDelete
+	_d *TicketViewDelete
 }
 
 // Where appends a list predicates to the TicketViewDelete builder.
-func (tvdo *TicketViewDeleteOne) Where(ps ...predicate.TicketView) *TicketViewDeleteOne {
-	tvdo.tvd.mutation.Where(ps...)
-	return tvdo
+func (_d *TicketViewDeleteOne) Where(ps ...predicate.TicketView) *TicketViewDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (tvdo *TicketViewDeleteOne) Exec(ctx context.Context) error {
-	n, err := tvdo.tvd.Exec(ctx)
+func (_d *TicketViewDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (tvdo *TicketViewDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tvdo *TicketViewDeleteOne) ExecX(ctx context.Context) {
-	if err := tvdo.Exec(ctx); err != nil {
+func (_d *TicketViewDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

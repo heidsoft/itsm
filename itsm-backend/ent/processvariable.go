@@ -90,7 +90,7 @@ func (*ProcessVariable) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ProcessVariable fields.
-func (pv *ProcessVariable) assignValues(columns []string, values []any) error {
+func (_m *ProcessVariable) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -101,81 +101,81 @@ func (pv *ProcessVariable) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pv.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case processvariable.FieldVariableID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field variable_id", values[i])
 			} else if value.Valid {
-				pv.VariableID = value.String
+				_m.VariableID = value.String
 			}
 		case processvariable.FieldProcessInstanceID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_instance_id", values[i])
 			} else if value.Valid {
-				pv.ProcessInstanceID = int(value.Int64)
+				_m.ProcessInstanceID = int(value.Int64)
 			}
 		case processvariable.FieldTaskID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_id", values[i])
 			} else if value.Valid {
-				pv.TaskID = value.String
+				_m.TaskID = value.String
 			}
 		case processvariable.FieldVariableName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field variable_name", values[i])
 			} else if value.Valid {
-				pv.VariableName = value.String
+				_m.VariableName = value.String
 			}
 		case processvariable.FieldVariableType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field variable_type", values[i])
 			} else if value.Valid {
-				pv.VariableType = value.String
+				_m.VariableType = value.String
 			}
 		case processvariable.FieldVariableValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field variable_value", values[i])
 			} else if value.Valid {
-				pv.VariableValue = value.String
+				_m.VariableValue = value.String
 			}
 		case processvariable.FieldScope:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field scope", values[i])
 			} else if value.Valid {
-				pv.Scope = value.String
+				_m.Scope = value.String
 			}
 		case processvariable.FieldIsTransient:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_transient", values[i])
 			} else if value.Valid {
-				pv.IsTransient = value.Bool
+				_m.IsTransient = value.Bool
 			}
 		case processvariable.FieldSerializationFormat:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field serialization_format", values[i])
 			} else if value.Valid {
-				pv.SerializationFormat = value.String
+				_m.SerializationFormat = value.String
 			}
 		case processvariable.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pv.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case processvariable.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pv.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case processvariable.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pv.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			pv.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -183,73 +183,73 @@ func (pv *ProcessVariable) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ProcessVariable.
 // This includes values selected through modifiers, order, etc.
-func (pv *ProcessVariable) Value(name string) (ent.Value, error) {
-	return pv.selectValues.Get(name)
+func (_m *ProcessVariable) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProcessInstance queries the "process_instance" edge of the ProcessVariable entity.
-func (pv *ProcessVariable) QueryProcessInstance() *ProcessInstanceQuery {
-	return NewProcessVariableClient(pv.config).QueryProcessInstance(pv)
+func (_m *ProcessVariable) QueryProcessInstance() *ProcessInstanceQuery {
+	return NewProcessVariableClient(_m.config).QueryProcessInstance(_m)
 }
 
 // Update returns a builder for updating this ProcessVariable.
 // Note that you need to call ProcessVariable.Unwrap() before calling this method if this ProcessVariable
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pv *ProcessVariable) Update() *ProcessVariableUpdateOne {
-	return NewProcessVariableClient(pv.config).UpdateOne(pv)
+func (_m *ProcessVariable) Update() *ProcessVariableUpdateOne {
+	return NewProcessVariableClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ProcessVariable entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pv *ProcessVariable) Unwrap() *ProcessVariable {
-	_tx, ok := pv.config.driver.(*txDriver)
+func (_m *ProcessVariable) Unwrap() *ProcessVariable {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ProcessVariable is not a transactional entity")
 	}
-	pv.config.driver = _tx.drv
-	return pv
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pv *ProcessVariable) String() string {
+func (_m *ProcessVariable) String() string {
 	var builder strings.Builder
 	builder.WriteString("ProcessVariable(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pv.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("variable_id=")
-	builder.WriteString(pv.VariableID)
+	builder.WriteString(_m.VariableID)
 	builder.WriteString(", ")
 	builder.WriteString("process_instance_id=")
-	builder.WriteString(fmt.Sprintf("%v", pv.ProcessInstanceID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessInstanceID))
 	builder.WriteString(", ")
 	builder.WriteString("task_id=")
-	builder.WriteString(pv.TaskID)
+	builder.WriteString(_m.TaskID)
 	builder.WriteString(", ")
 	builder.WriteString("variable_name=")
-	builder.WriteString(pv.VariableName)
+	builder.WriteString(_m.VariableName)
 	builder.WriteString(", ")
 	builder.WriteString("variable_type=")
-	builder.WriteString(pv.VariableType)
+	builder.WriteString(_m.VariableType)
 	builder.WriteString(", ")
 	builder.WriteString("variable_value=")
-	builder.WriteString(pv.VariableValue)
+	builder.WriteString(_m.VariableValue)
 	builder.WriteString(", ")
 	builder.WriteString("scope=")
-	builder.WriteString(pv.Scope)
+	builder.WriteString(_m.Scope)
 	builder.WriteString(", ")
 	builder.WriteString("is_transient=")
-	builder.WriteString(fmt.Sprintf("%v", pv.IsTransient))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsTransient))
 	builder.WriteString(", ")
 	builder.WriteString("serialization_format=")
-	builder.WriteString(pv.SerializationFormat)
+	builder.WriteString(_m.SerializationFormat)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pv.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pv.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pv.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

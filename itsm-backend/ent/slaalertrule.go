@@ -102,7 +102,7 @@ func (*SLAAlertRule) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the SLAAlertRule fields.
-func (sar *SLAAlertRule) assignValues(columns []string, values []any) error {
+func (_m *SLAAlertRule) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -113,36 +113,36 @@ func (sar *SLAAlertRule) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sar.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case slaalertrule.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				sar.Name = value.String
+				_m.Name = value.String
 			}
 		case slaalertrule.FieldSLADefinitionID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sla_definition_id", values[i])
 			} else if value.Valid {
-				sar.SLADefinitionID = int(value.Int64)
+				_m.SLADefinitionID = int(value.Int64)
 			}
 		case slaalertrule.FieldAlertLevel:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_level", values[i])
 			} else if value.Valid {
-				sar.AlertLevel = value.String
+				_m.AlertLevel = value.String
 			}
 		case slaalertrule.FieldThresholdPercentage:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field threshold_percentage", values[i])
 			} else if value.Valid {
-				sar.ThresholdPercentage = int(value.Int64)
+				_m.ThresholdPercentage = int(value.Int64)
 			}
 		case slaalertrule.FieldNotificationChannels:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field notification_channels", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sar.NotificationChannels); err != nil {
+				if err := json.Unmarshal(*value, &_m.NotificationChannels); err != nil {
 					return fmt.Errorf("unmarshal field notification_channels: %w", err)
 				}
 			}
@@ -150,13 +150,13 @@ func (sar *SLAAlertRule) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field escalation_enabled", values[i])
 			} else if value.Valid {
-				sar.EscalationEnabled = value.Bool
+				_m.EscalationEnabled = value.Bool
 			}
 		case slaalertrule.FieldEscalationLevels:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field escalation_levels", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sar.EscalationLevels); err != nil {
+				if err := json.Unmarshal(*value, &_m.EscalationLevels); err != nil {
 					return fmt.Errorf("unmarshal field escalation_levels: %w", err)
 				}
 			}
@@ -164,28 +164,28 @@ func (sar *SLAAlertRule) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				sar.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case slaalertrule.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sar.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case slaalertrule.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sar.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case slaalertrule.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				sar.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			sar.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -193,75 +193,75 @@ func (sar *SLAAlertRule) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the SLAAlertRule.
 // This includes values selected through modifiers, order, etc.
-func (sar *SLAAlertRule) Value(name string) (ent.Value, error) {
-	return sar.selectValues.Get(name)
+func (_m *SLAAlertRule) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QuerySLADefinition queries the "sla_definition" edge of the SLAAlertRule entity.
-func (sar *SLAAlertRule) QuerySLADefinition() *SLADefinitionQuery {
-	return NewSLAAlertRuleClient(sar.config).QuerySLADefinition(sar)
+func (_m *SLAAlertRule) QuerySLADefinition() *SLADefinitionQuery {
+	return NewSLAAlertRuleClient(_m.config).QuerySLADefinition(_m)
 }
 
 // QueryAlertHistory queries the "alert_history" edge of the SLAAlertRule entity.
-func (sar *SLAAlertRule) QueryAlertHistory() *SLAAlertHistoryQuery {
-	return NewSLAAlertRuleClient(sar.config).QueryAlertHistory(sar)
+func (_m *SLAAlertRule) QueryAlertHistory() *SLAAlertHistoryQuery {
+	return NewSLAAlertRuleClient(_m.config).QueryAlertHistory(_m)
 }
 
 // Update returns a builder for updating this SLAAlertRule.
 // Note that you need to call SLAAlertRule.Unwrap() before calling this method if this SLAAlertRule
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sar *SLAAlertRule) Update() *SLAAlertRuleUpdateOne {
-	return NewSLAAlertRuleClient(sar.config).UpdateOne(sar)
+func (_m *SLAAlertRule) Update() *SLAAlertRuleUpdateOne {
+	return NewSLAAlertRuleClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the SLAAlertRule entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sar *SLAAlertRule) Unwrap() *SLAAlertRule {
-	_tx, ok := sar.config.driver.(*txDriver)
+func (_m *SLAAlertRule) Unwrap() *SLAAlertRule {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: SLAAlertRule is not a transactional entity")
 	}
-	sar.config.driver = _tx.drv
-	return sar
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sar *SLAAlertRule) String() string {
+func (_m *SLAAlertRule) String() string {
 	var builder strings.Builder
 	builder.WriteString("SLAAlertRule(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sar.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(sar.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("sla_definition_id=")
-	builder.WriteString(fmt.Sprintf("%v", sar.SLADefinitionID))
+	builder.WriteString(fmt.Sprintf("%v", _m.SLADefinitionID))
 	builder.WriteString(", ")
 	builder.WriteString("alert_level=")
-	builder.WriteString(sar.AlertLevel)
+	builder.WriteString(_m.AlertLevel)
 	builder.WriteString(", ")
 	builder.WriteString("threshold_percentage=")
-	builder.WriteString(fmt.Sprintf("%v", sar.ThresholdPercentage))
+	builder.WriteString(fmt.Sprintf("%v", _m.ThresholdPercentage))
 	builder.WriteString(", ")
 	builder.WriteString("notification_channels=")
-	builder.WriteString(fmt.Sprintf("%v", sar.NotificationChannels))
+	builder.WriteString(fmt.Sprintf("%v", _m.NotificationChannels))
 	builder.WriteString(", ")
 	builder.WriteString("escalation_enabled=")
-	builder.WriteString(fmt.Sprintf("%v", sar.EscalationEnabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.EscalationEnabled))
 	builder.WriteString(", ")
 	builder.WriteString("escalation_levels=")
-	builder.WriteString(fmt.Sprintf("%v", sar.EscalationLevels))
+	builder.WriteString(fmt.Sprintf("%v", _m.EscalationLevels))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", sar.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sar.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sar.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(sar.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

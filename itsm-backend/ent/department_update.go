@@ -29,424 +29,424 @@ type DepartmentUpdate struct {
 }
 
 // Where appends a list predicates to the DepartmentUpdate builder.
-func (du *DepartmentUpdate) Where(ps ...predicate.Department) *DepartmentUpdate {
-	du.mutation.Where(ps...)
-	return du
+func (_u *DepartmentUpdate) Where(ps ...predicate.Department) *DepartmentUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (du *DepartmentUpdate) SetName(s string) *DepartmentUpdate {
-	du.mutation.SetName(s)
-	return du
+func (_u *DepartmentUpdate) SetName(v string) *DepartmentUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableName(s *string) *DepartmentUpdate {
-	if s != nil {
-		du.SetName(*s)
+func (_u *DepartmentUpdate) SetNillableName(v *string) *DepartmentUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return du
+	return _u
 }
 
 // SetCode sets the "code" field.
-func (du *DepartmentUpdate) SetCode(s string) *DepartmentUpdate {
-	du.mutation.SetCode(s)
-	return du
+func (_u *DepartmentUpdate) SetCode(v string) *DepartmentUpdate {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableCode(s *string) *DepartmentUpdate {
-	if s != nil {
-		du.SetCode(*s)
+func (_u *DepartmentUpdate) SetNillableCode(v *string) *DepartmentUpdate {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return du
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (du *DepartmentUpdate) SetDescription(s string) *DepartmentUpdate {
-	du.mutation.SetDescription(s)
-	return du
+func (_u *DepartmentUpdate) SetDescription(v string) *DepartmentUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableDescription(s *string) *DepartmentUpdate {
-	if s != nil {
-		du.SetDescription(*s)
+func (_u *DepartmentUpdate) SetNillableDescription(v *string) *DepartmentUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return du
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (du *DepartmentUpdate) ClearDescription() *DepartmentUpdate {
-	du.mutation.ClearDescription()
-	return du
+func (_u *DepartmentUpdate) ClearDescription() *DepartmentUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetManagerID sets the "manager_id" field.
-func (du *DepartmentUpdate) SetManagerID(i int) *DepartmentUpdate {
-	du.mutation.ResetManagerID()
-	du.mutation.SetManagerID(i)
-	return du
+func (_u *DepartmentUpdate) SetManagerID(v int) *DepartmentUpdate {
+	_u.mutation.ResetManagerID()
+	_u.mutation.SetManagerID(v)
+	return _u
 }
 
 // SetNillableManagerID sets the "manager_id" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableManagerID(i *int) *DepartmentUpdate {
-	if i != nil {
-		du.SetManagerID(*i)
+func (_u *DepartmentUpdate) SetNillableManagerID(v *int) *DepartmentUpdate {
+	if v != nil {
+		_u.SetManagerID(*v)
 	}
-	return du
+	return _u
 }
 
-// AddManagerID adds i to the "manager_id" field.
-func (du *DepartmentUpdate) AddManagerID(i int) *DepartmentUpdate {
-	du.mutation.AddManagerID(i)
-	return du
+// AddManagerID adds value to the "manager_id" field.
+func (_u *DepartmentUpdate) AddManagerID(v int) *DepartmentUpdate {
+	_u.mutation.AddManagerID(v)
+	return _u
 }
 
 // ClearManagerID clears the value of the "manager_id" field.
-func (du *DepartmentUpdate) ClearManagerID() *DepartmentUpdate {
-	du.mutation.ClearManagerID()
-	return du
+func (_u *DepartmentUpdate) ClearManagerID() *DepartmentUpdate {
+	_u.mutation.ClearManagerID()
+	return _u
 }
 
 // SetParentID sets the "parent_id" field.
-func (du *DepartmentUpdate) SetParentID(i int) *DepartmentUpdate {
-	du.mutation.SetParentID(i)
-	return du
+func (_u *DepartmentUpdate) SetParentID(v int) *DepartmentUpdate {
+	_u.mutation.SetParentID(v)
+	return _u
 }
 
 // SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableParentID(i *int) *DepartmentUpdate {
-	if i != nil {
-		du.SetParentID(*i)
+func (_u *DepartmentUpdate) SetNillableParentID(v *int) *DepartmentUpdate {
+	if v != nil {
+		_u.SetParentID(*v)
 	}
-	return du
+	return _u
 }
 
 // ClearParentID clears the value of the "parent_id" field.
-func (du *DepartmentUpdate) ClearParentID() *DepartmentUpdate {
-	du.mutation.ClearParentID()
-	return du
+func (_u *DepartmentUpdate) ClearParentID() *DepartmentUpdate {
+	_u.mutation.ClearParentID()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (du *DepartmentUpdate) SetTenantID(i int) *DepartmentUpdate {
-	du.mutation.ResetTenantID()
-	du.mutation.SetTenantID(i)
-	return du
+func (_u *DepartmentUpdate) SetTenantID(v int) *DepartmentUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableTenantID(i *int) *DepartmentUpdate {
-	if i != nil {
-		du.SetTenantID(*i)
+func (_u *DepartmentUpdate) SetNillableTenantID(v *int) *DepartmentUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return du
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (du *DepartmentUpdate) AddTenantID(i int) *DepartmentUpdate {
-	du.mutation.AddTenantID(i)
-	return du
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DepartmentUpdate) AddTenantID(v int) *DepartmentUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (du *DepartmentUpdate) SetCreatedAt(t time.Time) *DepartmentUpdate {
-	du.mutation.SetCreatedAt(t)
-	return du
+func (_u *DepartmentUpdate) SetCreatedAt(v time.Time) *DepartmentUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (du *DepartmentUpdate) SetNillableCreatedAt(t *time.Time) *DepartmentUpdate {
-	if t != nil {
-		du.SetCreatedAt(*t)
+func (_u *DepartmentUpdate) SetNillableCreatedAt(v *time.Time) *DepartmentUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return du
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (du *DepartmentUpdate) SetUpdatedAt(t time.Time) *DepartmentUpdate {
-	du.mutation.SetUpdatedAt(t)
-	return du
+func (_u *DepartmentUpdate) SetUpdatedAt(v time.Time) *DepartmentUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetParent sets the "parent" edge to the Department entity.
-func (du *DepartmentUpdate) SetParent(d *Department) *DepartmentUpdate {
-	return du.SetParentID(d.ID)
+func (_u *DepartmentUpdate) SetParent(v *Department) *DepartmentUpdate {
+	return _u.SetParentID(v.ID)
 }
 
 // AddChildIDs adds the "children" edge to the Department entity by IDs.
-func (du *DepartmentUpdate) AddChildIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.AddChildIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) AddChildIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.AddChildIDs(ids...)
+	return _u
 }
 
 // AddChildren adds the "children" edges to the Department entity.
-func (du *DepartmentUpdate) AddChildren(d ...*Department) *DepartmentUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DepartmentUpdate) AddChildren(v ...*Department) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.AddChildIDs(ids...)
+	return _u.AddChildIDs(ids...)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (du *DepartmentUpdate) AddUserIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.AddUserIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) AddUserIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.AddUserIDs(ids...)
+	return _u
 }
 
 // AddUsers adds the "users" edges to the User entity.
-func (du *DepartmentUpdate) AddUsers(u ...*User) *DepartmentUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+func (_u *DepartmentUpdate) AddUsers(v ...*User) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.AddUserIDs(ids...)
+	return _u.AddUserIDs(ids...)
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (du *DepartmentUpdate) AddTicketIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.AddTicketIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) AddTicketIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (du *DepartmentUpdate) AddTickets(t ...*Ticket) *DepartmentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdate) AddTickets(v ...*Ticket) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
-func (du *DepartmentUpdate) AddWorkflowIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.AddWorkflowIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) AddWorkflowIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.AddWorkflowIDs(ids...)
+	return _u
 }
 
 // AddWorkflows adds the "workflows" edges to the Workflow entity.
-func (du *DepartmentUpdate) AddWorkflows(w ...*Workflow) *DepartmentUpdate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+func (_u *DepartmentUpdate) AddWorkflows(v ...*Workflow) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.AddWorkflowIDs(ids...)
+	return _u.AddWorkflowIDs(ids...)
 }
 
 // AddCategoryIDs adds the "categories" edge to the TicketCategory entity by IDs.
-func (du *DepartmentUpdate) AddCategoryIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.AddCategoryIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) AddCategoryIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.AddCategoryIDs(ids...)
+	return _u
 }
 
 // AddCategories adds the "categories" edges to the TicketCategory entity.
-func (du *DepartmentUpdate) AddCategories(t ...*TicketCategory) *DepartmentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdate) AddCategories(v ...*TicketCategory) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.AddCategoryIDs(ids...)
+	return _u.AddCategoryIDs(ids...)
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
-func (du *DepartmentUpdate) AddProjectIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.AddProjectIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) AddProjectIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.AddProjectIDs(ids...)
+	return _u
 }
 
 // AddProjects adds the "projects" edges to the Project entity.
-func (du *DepartmentUpdate) AddProjects(p ...*Project) *DepartmentUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *DepartmentUpdate) AddProjects(v ...*Project) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.AddProjectIDs(ids...)
+	return _u.AddProjectIDs(ids...)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
-func (du *DepartmentUpdate) AddTagIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.AddTagIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) AddTagIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.AddTagIDs(ids...)
+	return _u
 }
 
 // AddTags adds the "tags" edges to the Tag entity.
-func (du *DepartmentUpdate) AddTags(t ...*Tag) *DepartmentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdate) AddTags(v ...*Tag) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.AddTagIDs(ids...)
+	return _u.AddTagIDs(ids...)
 }
 
 // Mutation returns the DepartmentMutation object of the builder.
-func (du *DepartmentUpdate) Mutation() *DepartmentMutation {
-	return du.mutation
+func (_u *DepartmentUpdate) Mutation() *DepartmentMutation {
+	return _u.mutation
 }
 
 // ClearParent clears the "parent" edge to the Department entity.
-func (du *DepartmentUpdate) ClearParent() *DepartmentUpdate {
-	du.mutation.ClearParent()
-	return du
+func (_u *DepartmentUpdate) ClearParent() *DepartmentUpdate {
+	_u.mutation.ClearParent()
+	return _u
 }
 
 // ClearChildren clears all "children" edges to the Department entity.
-func (du *DepartmentUpdate) ClearChildren() *DepartmentUpdate {
-	du.mutation.ClearChildren()
-	return du
+func (_u *DepartmentUpdate) ClearChildren() *DepartmentUpdate {
+	_u.mutation.ClearChildren()
+	return _u
 }
 
 // RemoveChildIDs removes the "children" edge to Department entities by IDs.
-func (du *DepartmentUpdate) RemoveChildIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.RemoveChildIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) RemoveChildIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.RemoveChildIDs(ids...)
+	return _u
 }
 
 // RemoveChildren removes "children" edges to Department entities.
-func (du *DepartmentUpdate) RemoveChildren(d ...*Department) *DepartmentUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DepartmentUpdate) RemoveChildren(v ...*Department) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.RemoveChildIDs(ids...)
+	return _u.RemoveChildIDs(ids...)
 }
 
 // ClearUsers clears all "users" edges to the User entity.
-func (du *DepartmentUpdate) ClearUsers() *DepartmentUpdate {
-	du.mutation.ClearUsers()
-	return du
+func (_u *DepartmentUpdate) ClearUsers() *DepartmentUpdate {
+	_u.mutation.ClearUsers()
+	return _u
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (du *DepartmentUpdate) RemoveUserIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.RemoveUserIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) RemoveUserIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.RemoveUserIDs(ids...)
+	return _u
 }
 
 // RemoveUsers removes "users" edges to User entities.
-func (du *DepartmentUpdate) RemoveUsers(u ...*User) *DepartmentUpdate {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+func (_u *DepartmentUpdate) RemoveUsers(v ...*User) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.RemoveUserIDs(ids...)
+	return _u.RemoveUserIDs(ids...)
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (du *DepartmentUpdate) ClearTickets() *DepartmentUpdate {
-	du.mutation.ClearTickets()
-	return du
+func (_u *DepartmentUpdate) ClearTickets() *DepartmentUpdate {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (du *DepartmentUpdate) RemoveTicketIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.RemoveTicketIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) RemoveTicketIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (du *DepartmentUpdate) RemoveTickets(t ...*Ticket) *DepartmentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdate) RemoveTickets(v ...*Ticket) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // ClearWorkflows clears all "workflows" edges to the Workflow entity.
-func (du *DepartmentUpdate) ClearWorkflows() *DepartmentUpdate {
-	du.mutation.ClearWorkflows()
-	return du
+func (_u *DepartmentUpdate) ClearWorkflows() *DepartmentUpdate {
+	_u.mutation.ClearWorkflows()
+	return _u
 }
 
 // RemoveWorkflowIDs removes the "workflows" edge to Workflow entities by IDs.
-func (du *DepartmentUpdate) RemoveWorkflowIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.RemoveWorkflowIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) RemoveWorkflowIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.RemoveWorkflowIDs(ids...)
+	return _u
 }
 
 // RemoveWorkflows removes "workflows" edges to Workflow entities.
-func (du *DepartmentUpdate) RemoveWorkflows(w ...*Workflow) *DepartmentUpdate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+func (_u *DepartmentUpdate) RemoveWorkflows(v ...*Workflow) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.RemoveWorkflowIDs(ids...)
+	return _u.RemoveWorkflowIDs(ids...)
 }
 
 // ClearCategories clears all "categories" edges to the TicketCategory entity.
-func (du *DepartmentUpdate) ClearCategories() *DepartmentUpdate {
-	du.mutation.ClearCategories()
-	return du
+func (_u *DepartmentUpdate) ClearCategories() *DepartmentUpdate {
+	_u.mutation.ClearCategories()
+	return _u
 }
 
 // RemoveCategoryIDs removes the "categories" edge to TicketCategory entities by IDs.
-func (du *DepartmentUpdate) RemoveCategoryIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.RemoveCategoryIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) RemoveCategoryIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.RemoveCategoryIDs(ids...)
+	return _u
 }
 
 // RemoveCategories removes "categories" edges to TicketCategory entities.
-func (du *DepartmentUpdate) RemoveCategories(t ...*TicketCategory) *DepartmentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdate) RemoveCategories(v ...*TicketCategory) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.RemoveCategoryIDs(ids...)
+	return _u.RemoveCategoryIDs(ids...)
 }
 
 // ClearProjects clears all "projects" edges to the Project entity.
-func (du *DepartmentUpdate) ClearProjects() *DepartmentUpdate {
-	du.mutation.ClearProjects()
-	return du
+func (_u *DepartmentUpdate) ClearProjects() *DepartmentUpdate {
+	_u.mutation.ClearProjects()
+	return _u
 }
 
 // RemoveProjectIDs removes the "projects" edge to Project entities by IDs.
-func (du *DepartmentUpdate) RemoveProjectIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.RemoveProjectIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) RemoveProjectIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.RemoveProjectIDs(ids...)
+	return _u
 }
 
 // RemoveProjects removes "projects" edges to Project entities.
-func (du *DepartmentUpdate) RemoveProjects(p ...*Project) *DepartmentUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *DepartmentUpdate) RemoveProjects(v ...*Project) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.RemoveProjectIDs(ids...)
+	return _u.RemoveProjectIDs(ids...)
 }
 
 // ClearTags clears all "tags" edges to the Tag entity.
-func (du *DepartmentUpdate) ClearTags() *DepartmentUpdate {
-	du.mutation.ClearTags()
-	return du
+func (_u *DepartmentUpdate) ClearTags() *DepartmentUpdate {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // RemoveTagIDs removes the "tags" edge to Tag entities by IDs.
-func (du *DepartmentUpdate) RemoveTagIDs(ids ...int) *DepartmentUpdate {
-	du.mutation.RemoveTagIDs(ids...)
-	return du
+func (_u *DepartmentUpdate) RemoveTagIDs(ids ...int) *DepartmentUpdate {
+	_u.mutation.RemoveTagIDs(ids...)
+	return _u
 }
 
 // RemoveTags removes "tags" edges to Tag entities.
-func (du *DepartmentUpdate) RemoveTags(t ...*Tag) *DepartmentUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdate) RemoveTags(v ...*Tag) *DepartmentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return du.RemoveTagIDs(ids...)
+	return _u.RemoveTagIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (du *DepartmentUpdate) Save(ctx context.Context) (int, error) {
-	du.defaults()
-	return withHooks(ctx, du.sqlSave, du.mutation, du.hooks)
+func (_u *DepartmentUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (du *DepartmentUpdate) SaveX(ctx context.Context) int {
-	affected, err := du.Save(ctx)
+func (_u *DepartmentUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -454,39 +454,39 @@ func (du *DepartmentUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (du *DepartmentUpdate) Exec(ctx context.Context) error {
-	_, err := du.Save(ctx)
+func (_u *DepartmentUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (du *DepartmentUpdate) ExecX(ctx context.Context) {
-	if err := du.Exec(ctx); err != nil {
+func (_u *DepartmentUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (du *DepartmentUpdate) defaults() {
-	if _, ok := du.mutation.UpdatedAt(); !ok {
+func (_u *DepartmentUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := department.UpdateDefaultUpdatedAt()
-		du.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (du *DepartmentUpdate) check() error {
-	if v, ok := du.mutation.Name(); ok {
+func (_u *DepartmentUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := department.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Department.name": %w`, err)}
 		}
 	}
-	if v, ok := du.mutation.Code(); ok {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := department.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Department.code": %w`, err)}
 		}
 	}
-	if v, ok := du.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := department.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Department.tenant_id": %w`, err)}
 		}
@@ -494,52 +494,52 @@ func (du *DepartmentUpdate) check() error {
 	return nil
 }
 
-func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := du.check(); err != nil {
-		return n, err
+func (_u *DepartmentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(department.Table, department.Columns, sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt))
-	if ps := du.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := du.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(department.FieldName, field.TypeString, value)
 	}
-	if value, ok := du.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(department.FieldCode, field.TypeString, value)
 	}
-	if value, ok := du.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(department.FieldDescription, field.TypeString, value)
 	}
-	if du.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(department.FieldDescription, field.TypeString)
 	}
-	if value, ok := du.mutation.ManagerID(); ok {
+	if value, ok := _u.mutation.ManagerID(); ok {
 		_spec.SetField(department.FieldManagerID, field.TypeInt, value)
 	}
-	if value, ok := du.mutation.AddedManagerID(); ok {
+	if value, ok := _u.mutation.AddedManagerID(); ok {
 		_spec.AddField(department.FieldManagerID, field.TypeInt, value)
 	}
-	if du.mutation.ManagerIDCleared() {
+	if _u.mutation.ManagerIDCleared() {
 		_spec.ClearField(department.FieldManagerID, field.TypeInt)
 	}
-	if value, ok := du.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(department.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := du.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(department.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := du.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(department.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := du.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(department.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if du.mutation.ParentCleared() {
+	if _u.mutation.ParentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -552,7 +552,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -568,7 +568,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if du.mutation.ChildrenCleared() {
+	if _u.mutation.ChildrenCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -581,23 +581,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !du.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.ChildrenTable,
-			Columns: []string{department.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := du.mutation.ChildrenIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !_u.mutation.ChildrenCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -611,9 +595,25 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.ChildrenTable,
+			Columns: []string{department.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if du.mutation.UsersCleared() {
+	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -626,7 +626,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.RemovedUsersIDs(); len(nodes) > 0 && !du.mutation.UsersCleared() {
+	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -642,7 +642,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.UsersIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -658,7 +658,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if du.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -671,23 +671,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !du.mutation.TicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.TicketsTable,
-			Columns: []string{department.TicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := du.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -701,9 +685,25 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.TicketsTable,
+			Columns: []string{department.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if du.mutation.WorkflowsCleared() {
+	if _u.mutation.WorkflowsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -716,7 +716,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.RemovedWorkflowsIDs(); len(nodes) > 0 && !du.mutation.WorkflowsCleared() {
+	if nodes := _u.mutation.RemovedWorkflowsIDs(); len(nodes) > 0 && !_u.mutation.WorkflowsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -732,7 +732,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.WorkflowsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.WorkflowsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -748,7 +748,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if du.mutation.CategoriesCleared() {
+	if _u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -761,7 +761,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !du.mutation.CategoriesCleared() {
+	if nodes := _u.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !_u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -777,7 +777,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.CategoriesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CategoriesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -793,7 +793,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if du.mutation.ProjectsCleared() {
+	if _u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -806,7 +806,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !du.mutation.ProjectsCleared() {
+	if nodes := _u.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !_u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -822,7 +822,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.ProjectsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProjectsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -838,7 +838,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if du.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -851,7 +851,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.RemovedTagsIDs(); len(nodes) > 0 && !du.mutation.TagsCleared() {
+	if nodes := _u.mutation.RemovedTagsIDs(); len(nodes) > 0 && !_u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -867,7 +867,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := du.mutation.TagsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -883,7 +883,7 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, du.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{department.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -891,8 +891,8 @@ func (du *DepartmentUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	du.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // DepartmentUpdateOne is the builder for updating a single Department entity.
@@ -904,431 +904,431 @@ type DepartmentUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (duo *DepartmentUpdateOne) SetName(s string) *DepartmentUpdateOne {
-	duo.mutation.SetName(s)
-	return duo
+func (_u *DepartmentUpdateOne) SetName(v string) *DepartmentUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableName(s *string) *DepartmentUpdateOne {
-	if s != nil {
-		duo.SetName(*s)
+func (_u *DepartmentUpdateOne) SetNillableName(v *string) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return duo
+	return _u
 }
 
 // SetCode sets the "code" field.
-func (duo *DepartmentUpdateOne) SetCode(s string) *DepartmentUpdateOne {
-	duo.mutation.SetCode(s)
-	return duo
+func (_u *DepartmentUpdateOne) SetCode(v string) *DepartmentUpdateOne {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableCode(s *string) *DepartmentUpdateOne {
-	if s != nil {
-		duo.SetCode(*s)
+func (_u *DepartmentUpdateOne) SetNillableCode(v *string) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return duo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (duo *DepartmentUpdateOne) SetDescription(s string) *DepartmentUpdateOne {
-	duo.mutation.SetDescription(s)
-	return duo
+func (_u *DepartmentUpdateOne) SetDescription(v string) *DepartmentUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableDescription(s *string) *DepartmentUpdateOne {
-	if s != nil {
-		duo.SetDescription(*s)
+func (_u *DepartmentUpdateOne) SetNillableDescription(v *string) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return duo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (duo *DepartmentUpdateOne) ClearDescription() *DepartmentUpdateOne {
-	duo.mutation.ClearDescription()
-	return duo
+func (_u *DepartmentUpdateOne) ClearDescription() *DepartmentUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetManagerID sets the "manager_id" field.
-func (duo *DepartmentUpdateOne) SetManagerID(i int) *DepartmentUpdateOne {
-	duo.mutation.ResetManagerID()
-	duo.mutation.SetManagerID(i)
-	return duo
+func (_u *DepartmentUpdateOne) SetManagerID(v int) *DepartmentUpdateOne {
+	_u.mutation.ResetManagerID()
+	_u.mutation.SetManagerID(v)
+	return _u
 }
 
 // SetNillableManagerID sets the "manager_id" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableManagerID(i *int) *DepartmentUpdateOne {
-	if i != nil {
-		duo.SetManagerID(*i)
+func (_u *DepartmentUpdateOne) SetNillableManagerID(v *int) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetManagerID(*v)
 	}
-	return duo
+	return _u
 }
 
-// AddManagerID adds i to the "manager_id" field.
-func (duo *DepartmentUpdateOne) AddManagerID(i int) *DepartmentUpdateOne {
-	duo.mutation.AddManagerID(i)
-	return duo
+// AddManagerID adds value to the "manager_id" field.
+func (_u *DepartmentUpdateOne) AddManagerID(v int) *DepartmentUpdateOne {
+	_u.mutation.AddManagerID(v)
+	return _u
 }
 
 // ClearManagerID clears the value of the "manager_id" field.
-func (duo *DepartmentUpdateOne) ClearManagerID() *DepartmentUpdateOne {
-	duo.mutation.ClearManagerID()
-	return duo
+func (_u *DepartmentUpdateOne) ClearManagerID() *DepartmentUpdateOne {
+	_u.mutation.ClearManagerID()
+	return _u
 }
 
 // SetParentID sets the "parent_id" field.
-func (duo *DepartmentUpdateOne) SetParentID(i int) *DepartmentUpdateOne {
-	duo.mutation.SetParentID(i)
-	return duo
+func (_u *DepartmentUpdateOne) SetParentID(v int) *DepartmentUpdateOne {
+	_u.mutation.SetParentID(v)
+	return _u
 }
 
 // SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableParentID(i *int) *DepartmentUpdateOne {
-	if i != nil {
-		duo.SetParentID(*i)
+func (_u *DepartmentUpdateOne) SetNillableParentID(v *int) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetParentID(*v)
 	}
-	return duo
+	return _u
 }
 
 // ClearParentID clears the value of the "parent_id" field.
-func (duo *DepartmentUpdateOne) ClearParentID() *DepartmentUpdateOne {
-	duo.mutation.ClearParentID()
-	return duo
+func (_u *DepartmentUpdateOne) ClearParentID() *DepartmentUpdateOne {
+	_u.mutation.ClearParentID()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (duo *DepartmentUpdateOne) SetTenantID(i int) *DepartmentUpdateOne {
-	duo.mutation.ResetTenantID()
-	duo.mutation.SetTenantID(i)
-	return duo
+func (_u *DepartmentUpdateOne) SetTenantID(v int) *DepartmentUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableTenantID(i *int) *DepartmentUpdateOne {
-	if i != nil {
-		duo.SetTenantID(*i)
+func (_u *DepartmentUpdateOne) SetNillableTenantID(v *int) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return duo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (duo *DepartmentUpdateOne) AddTenantID(i int) *DepartmentUpdateOne {
-	duo.mutation.AddTenantID(i)
-	return duo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DepartmentUpdateOne) AddTenantID(v int) *DepartmentUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (duo *DepartmentUpdateOne) SetCreatedAt(t time.Time) *DepartmentUpdateOne {
-	duo.mutation.SetCreatedAt(t)
-	return duo
+func (_u *DepartmentUpdateOne) SetCreatedAt(v time.Time) *DepartmentUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (duo *DepartmentUpdateOne) SetNillableCreatedAt(t *time.Time) *DepartmentUpdateOne {
-	if t != nil {
-		duo.SetCreatedAt(*t)
+func (_u *DepartmentUpdateOne) SetNillableCreatedAt(v *time.Time) *DepartmentUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return duo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (duo *DepartmentUpdateOne) SetUpdatedAt(t time.Time) *DepartmentUpdateOne {
-	duo.mutation.SetUpdatedAt(t)
-	return duo
+func (_u *DepartmentUpdateOne) SetUpdatedAt(v time.Time) *DepartmentUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetParent sets the "parent" edge to the Department entity.
-func (duo *DepartmentUpdateOne) SetParent(d *Department) *DepartmentUpdateOne {
-	return duo.SetParentID(d.ID)
+func (_u *DepartmentUpdateOne) SetParent(v *Department) *DepartmentUpdateOne {
+	return _u.SetParentID(v.ID)
 }
 
 // AddChildIDs adds the "children" edge to the Department entity by IDs.
-func (duo *DepartmentUpdateOne) AddChildIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.AddChildIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) AddChildIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.AddChildIDs(ids...)
+	return _u
 }
 
 // AddChildren adds the "children" edges to the Department entity.
-func (duo *DepartmentUpdateOne) AddChildren(d ...*Department) *DepartmentUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DepartmentUpdateOne) AddChildren(v ...*Department) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.AddChildIDs(ids...)
+	return _u.AddChildIDs(ids...)
 }
 
 // AddUserIDs adds the "users" edge to the User entity by IDs.
-func (duo *DepartmentUpdateOne) AddUserIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.AddUserIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) AddUserIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.AddUserIDs(ids...)
+	return _u
 }
 
 // AddUsers adds the "users" edges to the User entity.
-func (duo *DepartmentUpdateOne) AddUsers(u ...*User) *DepartmentUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+func (_u *DepartmentUpdateOne) AddUsers(v ...*User) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.AddUserIDs(ids...)
+	return _u.AddUserIDs(ids...)
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (duo *DepartmentUpdateOne) AddTicketIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.AddTicketIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) AddTicketIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (duo *DepartmentUpdateOne) AddTickets(t ...*Ticket) *DepartmentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdateOne) AddTickets(v ...*Ticket) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // AddWorkflowIDs adds the "workflows" edge to the Workflow entity by IDs.
-func (duo *DepartmentUpdateOne) AddWorkflowIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.AddWorkflowIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) AddWorkflowIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.AddWorkflowIDs(ids...)
+	return _u
 }
 
 // AddWorkflows adds the "workflows" edges to the Workflow entity.
-func (duo *DepartmentUpdateOne) AddWorkflows(w ...*Workflow) *DepartmentUpdateOne {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+func (_u *DepartmentUpdateOne) AddWorkflows(v ...*Workflow) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.AddWorkflowIDs(ids...)
+	return _u.AddWorkflowIDs(ids...)
 }
 
 // AddCategoryIDs adds the "categories" edge to the TicketCategory entity by IDs.
-func (duo *DepartmentUpdateOne) AddCategoryIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.AddCategoryIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) AddCategoryIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.AddCategoryIDs(ids...)
+	return _u
 }
 
 // AddCategories adds the "categories" edges to the TicketCategory entity.
-func (duo *DepartmentUpdateOne) AddCategories(t ...*TicketCategory) *DepartmentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdateOne) AddCategories(v ...*TicketCategory) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.AddCategoryIDs(ids...)
+	return _u.AddCategoryIDs(ids...)
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
-func (duo *DepartmentUpdateOne) AddProjectIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.AddProjectIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) AddProjectIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.AddProjectIDs(ids...)
+	return _u
 }
 
 // AddProjects adds the "projects" edges to the Project entity.
-func (duo *DepartmentUpdateOne) AddProjects(p ...*Project) *DepartmentUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *DepartmentUpdateOne) AddProjects(v ...*Project) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.AddProjectIDs(ids...)
+	return _u.AddProjectIDs(ids...)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
-func (duo *DepartmentUpdateOne) AddTagIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.AddTagIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) AddTagIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.AddTagIDs(ids...)
+	return _u
 }
 
 // AddTags adds the "tags" edges to the Tag entity.
-func (duo *DepartmentUpdateOne) AddTags(t ...*Tag) *DepartmentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdateOne) AddTags(v ...*Tag) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.AddTagIDs(ids...)
+	return _u.AddTagIDs(ids...)
 }
 
 // Mutation returns the DepartmentMutation object of the builder.
-func (duo *DepartmentUpdateOne) Mutation() *DepartmentMutation {
-	return duo.mutation
+func (_u *DepartmentUpdateOne) Mutation() *DepartmentMutation {
+	return _u.mutation
 }
 
 // ClearParent clears the "parent" edge to the Department entity.
-func (duo *DepartmentUpdateOne) ClearParent() *DepartmentUpdateOne {
-	duo.mutation.ClearParent()
-	return duo
+func (_u *DepartmentUpdateOne) ClearParent() *DepartmentUpdateOne {
+	_u.mutation.ClearParent()
+	return _u
 }
 
 // ClearChildren clears all "children" edges to the Department entity.
-func (duo *DepartmentUpdateOne) ClearChildren() *DepartmentUpdateOne {
-	duo.mutation.ClearChildren()
-	return duo
+func (_u *DepartmentUpdateOne) ClearChildren() *DepartmentUpdateOne {
+	_u.mutation.ClearChildren()
+	return _u
 }
 
 // RemoveChildIDs removes the "children" edge to Department entities by IDs.
-func (duo *DepartmentUpdateOne) RemoveChildIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.RemoveChildIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) RemoveChildIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.RemoveChildIDs(ids...)
+	return _u
 }
 
 // RemoveChildren removes "children" edges to Department entities.
-func (duo *DepartmentUpdateOne) RemoveChildren(d ...*Department) *DepartmentUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DepartmentUpdateOne) RemoveChildren(v ...*Department) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.RemoveChildIDs(ids...)
+	return _u.RemoveChildIDs(ids...)
 }
 
 // ClearUsers clears all "users" edges to the User entity.
-func (duo *DepartmentUpdateOne) ClearUsers() *DepartmentUpdateOne {
-	duo.mutation.ClearUsers()
-	return duo
+func (_u *DepartmentUpdateOne) ClearUsers() *DepartmentUpdateOne {
+	_u.mutation.ClearUsers()
+	return _u
 }
 
 // RemoveUserIDs removes the "users" edge to User entities by IDs.
-func (duo *DepartmentUpdateOne) RemoveUserIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.RemoveUserIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) RemoveUserIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.RemoveUserIDs(ids...)
+	return _u
 }
 
 // RemoveUsers removes "users" edges to User entities.
-func (duo *DepartmentUpdateOne) RemoveUsers(u ...*User) *DepartmentUpdateOne {
-	ids := make([]int, len(u))
-	for i := range u {
-		ids[i] = u[i].ID
+func (_u *DepartmentUpdateOne) RemoveUsers(v ...*User) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.RemoveUserIDs(ids...)
+	return _u.RemoveUserIDs(ids...)
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (duo *DepartmentUpdateOne) ClearTickets() *DepartmentUpdateOne {
-	duo.mutation.ClearTickets()
-	return duo
+func (_u *DepartmentUpdateOne) ClearTickets() *DepartmentUpdateOne {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (duo *DepartmentUpdateOne) RemoveTicketIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.RemoveTicketIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) RemoveTicketIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (duo *DepartmentUpdateOne) RemoveTickets(t ...*Ticket) *DepartmentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdateOne) RemoveTickets(v ...*Ticket) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // ClearWorkflows clears all "workflows" edges to the Workflow entity.
-func (duo *DepartmentUpdateOne) ClearWorkflows() *DepartmentUpdateOne {
-	duo.mutation.ClearWorkflows()
-	return duo
+func (_u *DepartmentUpdateOne) ClearWorkflows() *DepartmentUpdateOne {
+	_u.mutation.ClearWorkflows()
+	return _u
 }
 
 // RemoveWorkflowIDs removes the "workflows" edge to Workflow entities by IDs.
-func (duo *DepartmentUpdateOne) RemoveWorkflowIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.RemoveWorkflowIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) RemoveWorkflowIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.RemoveWorkflowIDs(ids...)
+	return _u
 }
 
 // RemoveWorkflows removes "workflows" edges to Workflow entities.
-func (duo *DepartmentUpdateOne) RemoveWorkflows(w ...*Workflow) *DepartmentUpdateOne {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+func (_u *DepartmentUpdateOne) RemoveWorkflows(v ...*Workflow) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.RemoveWorkflowIDs(ids...)
+	return _u.RemoveWorkflowIDs(ids...)
 }
 
 // ClearCategories clears all "categories" edges to the TicketCategory entity.
-func (duo *DepartmentUpdateOne) ClearCategories() *DepartmentUpdateOne {
-	duo.mutation.ClearCategories()
-	return duo
+func (_u *DepartmentUpdateOne) ClearCategories() *DepartmentUpdateOne {
+	_u.mutation.ClearCategories()
+	return _u
 }
 
 // RemoveCategoryIDs removes the "categories" edge to TicketCategory entities by IDs.
-func (duo *DepartmentUpdateOne) RemoveCategoryIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.RemoveCategoryIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) RemoveCategoryIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.RemoveCategoryIDs(ids...)
+	return _u
 }
 
 // RemoveCategories removes "categories" edges to TicketCategory entities.
-func (duo *DepartmentUpdateOne) RemoveCategories(t ...*TicketCategory) *DepartmentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdateOne) RemoveCategories(v ...*TicketCategory) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.RemoveCategoryIDs(ids...)
+	return _u.RemoveCategoryIDs(ids...)
 }
 
 // ClearProjects clears all "projects" edges to the Project entity.
-func (duo *DepartmentUpdateOne) ClearProjects() *DepartmentUpdateOne {
-	duo.mutation.ClearProjects()
-	return duo
+func (_u *DepartmentUpdateOne) ClearProjects() *DepartmentUpdateOne {
+	_u.mutation.ClearProjects()
+	return _u
 }
 
 // RemoveProjectIDs removes the "projects" edge to Project entities by IDs.
-func (duo *DepartmentUpdateOne) RemoveProjectIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.RemoveProjectIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) RemoveProjectIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.RemoveProjectIDs(ids...)
+	return _u
 }
 
 // RemoveProjects removes "projects" edges to Project entities.
-func (duo *DepartmentUpdateOne) RemoveProjects(p ...*Project) *DepartmentUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *DepartmentUpdateOne) RemoveProjects(v ...*Project) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.RemoveProjectIDs(ids...)
+	return _u.RemoveProjectIDs(ids...)
 }
 
 // ClearTags clears all "tags" edges to the Tag entity.
-func (duo *DepartmentUpdateOne) ClearTags() *DepartmentUpdateOne {
-	duo.mutation.ClearTags()
-	return duo
+func (_u *DepartmentUpdateOne) ClearTags() *DepartmentUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // RemoveTagIDs removes the "tags" edge to Tag entities by IDs.
-func (duo *DepartmentUpdateOne) RemoveTagIDs(ids ...int) *DepartmentUpdateOne {
-	duo.mutation.RemoveTagIDs(ids...)
-	return duo
+func (_u *DepartmentUpdateOne) RemoveTagIDs(ids ...int) *DepartmentUpdateOne {
+	_u.mutation.RemoveTagIDs(ids...)
+	return _u
 }
 
 // RemoveTags removes "tags" edges to Tag entities.
-func (duo *DepartmentUpdateOne) RemoveTags(t ...*Tag) *DepartmentUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *DepartmentUpdateOne) RemoveTags(v ...*Tag) *DepartmentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return duo.RemoveTagIDs(ids...)
+	return _u.RemoveTagIDs(ids...)
 }
 
 // Where appends a list predicates to the DepartmentUpdate builder.
-func (duo *DepartmentUpdateOne) Where(ps ...predicate.Department) *DepartmentUpdateOne {
-	duo.mutation.Where(ps...)
-	return duo
+func (_u *DepartmentUpdateOne) Where(ps ...predicate.Department) *DepartmentUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (duo *DepartmentUpdateOne) Select(field string, fields ...string) *DepartmentUpdateOne {
-	duo.fields = append([]string{field}, fields...)
-	return duo
+func (_u *DepartmentUpdateOne) Select(field string, fields ...string) *DepartmentUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Department entity.
-func (duo *DepartmentUpdateOne) Save(ctx context.Context) (*Department, error) {
-	duo.defaults()
-	return withHooks(ctx, duo.sqlSave, duo.mutation, duo.hooks)
+func (_u *DepartmentUpdateOne) Save(ctx context.Context) (*Department, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (duo *DepartmentUpdateOne) SaveX(ctx context.Context) *Department {
-	node, err := duo.Save(ctx)
+func (_u *DepartmentUpdateOne) SaveX(ctx context.Context) *Department {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1336,39 +1336,39 @@ func (duo *DepartmentUpdateOne) SaveX(ctx context.Context) *Department {
 }
 
 // Exec executes the query on the entity.
-func (duo *DepartmentUpdateOne) Exec(ctx context.Context) error {
-	_, err := duo.Save(ctx)
+func (_u *DepartmentUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (duo *DepartmentUpdateOne) ExecX(ctx context.Context) {
-	if err := duo.Exec(ctx); err != nil {
+func (_u *DepartmentUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (duo *DepartmentUpdateOne) defaults() {
-	if _, ok := duo.mutation.UpdatedAt(); !ok {
+func (_u *DepartmentUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := department.UpdateDefaultUpdatedAt()
-		duo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (duo *DepartmentUpdateOne) check() error {
-	if v, ok := duo.mutation.Name(); ok {
+func (_u *DepartmentUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := department.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Department.name": %w`, err)}
 		}
 	}
-	if v, ok := duo.mutation.Code(); ok {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := department.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Department.code": %w`, err)}
 		}
 	}
-	if v, ok := duo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := department.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Department.tenant_id": %w`, err)}
 		}
@@ -1376,17 +1376,17 @@ func (duo *DepartmentUpdateOne) check() error {
 	return nil
 }
 
-func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department, err error) {
-	if err := duo.check(); err != nil {
+func (_u *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(department.Table, department.Columns, sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt))
-	id, ok := duo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Department.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := duo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, department.FieldID)
 		for _, f := range fields {
@@ -1398,47 +1398,47 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 			}
 		}
 	}
-	if ps := duo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := duo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(department.FieldName, field.TypeString, value)
 	}
-	if value, ok := duo.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(department.FieldCode, field.TypeString, value)
 	}
-	if value, ok := duo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(department.FieldDescription, field.TypeString, value)
 	}
-	if duo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(department.FieldDescription, field.TypeString)
 	}
-	if value, ok := duo.mutation.ManagerID(); ok {
+	if value, ok := _u.mutation.ManagerID(); ok {
 		_spec.SetField(department.FieldManagerID, field.TypeInt, value)
 	}
-	if value, ok := duo.mutation.AddedManagerID(); ok {
+	if value, ok := _u.mutation.AddedManagerID(); ok {
 		_spec.AddField(department.FieldManagerID, field.TypeInt, value)
 	}
-	if duo.mutation.ManagerIDCleared() {
+	if _u.mutation.ManagerIDCleared() {
 		_spec.ClearField(department.FieldManagerID, field.TypeInt)
 	}
-	if value, ok := duo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(department.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := duo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(department.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := duo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(department.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := duo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(department.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if duo.mutation.ParentCleared() {
+	if _u.mutation.ParentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1451,7 +1451,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ParentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1467,7 +1467,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if duo.mutation.ChildrenCleared() {
+	if _u.mutation.ChildrenCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1480,23 +1480,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !duo.mutation.ChildrenCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.ChildrenTable,
-			Columns: []string{department.ChildrenColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := duo.mutation.ChildrenIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedChildrenIDs(); len(nodes) > 0 && !_u.mutation.ChildrenCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1510,9 +1494,25 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ChildrenIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.ChildrenTable,
+			Columns: []string{department.ChildrenColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(department.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if duo.mutation.UsersCleared() {
+	if _u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1525,7 +1525,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.RemovedUsersIDs(); len(nodes) > 0 && !duo.mutation.UsersCleared() {
+	if nodes := _u.mutation.RemovedUsersIDs(); len(nodes) > 0 && !_u.mutation.UsersCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1541,7 +1541,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.UsersIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UsersIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1557,7 +1557,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if duo.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1570,23 +1570,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !duo.mutation.TicketsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   department.TicketsTable,
-			Columns: []string{department.TicketsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := duo.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1600,9 +1584,25 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   department.TicketsTable,
+			Columns: []string{department.TicketsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(ticket.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if duo.mutation.WorkflowsCleared() {
+	if _u.mutation.WorkflowsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1615,7 +1615,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.RemovedWorkflowsIDs(); len(nodes) > 0 && !duo.mutation.WorkflowsCleared() {
+	if nodes := _u.mutation.RemovedWorkflowsIDs(); len(nodes) > 0 && !_u.mutation.WorkflowsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1631,7 +1631,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.WorkflowsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.WorkflowsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1647,7 +1647,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if duo.mutation.CategoriesCleared() {
+	if _u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1660,7 +1660,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !duo.mutation.CategoriesCleared() {
+	if nodes := _u.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !_u.mutation.CategoriesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1676,7 +1676,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.CategoriesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CategoriesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1692,7 +1692,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if duo.mutation.ProjectsCleared() {
+	if _u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1705,7 +1705,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !duo.mutation.ProjectsCleared() {
+	if nodes := _u.mutation.RemovedProjectsIDs(); len(nodes) > 0 && !_u.mutation.ProjectsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1721,7 +1721,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.ProjectsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ProjectsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1737,7 +1737,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if duo.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -1750,7 +1750,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.RemovedTagsIDs(); len(nodes) > 0 && !duo.mutation.TagsCleared() {
+	if nodes := _u.mutation.RemovedTagsIDs(); len(nodes) > 0 && !_u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -1766,7 +1766,7 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := duo.mutation.TagsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -1782,10 +1782,10 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Department{config: duo.config}
+	_node = &Department{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, duo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{department.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1793,6 +1793,6 @@ func (duo *DepartmentUpdateOne) sqlSave(ctx context.Context) (_node *Department,
 		}
 		return nil, err
 	}
-	duo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

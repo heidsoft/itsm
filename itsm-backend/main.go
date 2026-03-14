@@ -8,12 +8,12 @@
 package main
 
 import (
-	"itsm-backend/internal/bootstrap"
+	boot "itsm-backend/internal/bootstrap"
 )
 
 // main函数：Go程序的入口点
 // 当程序启动时，首先执行这个函数
 func main() {
-	app := bootstrap.NewApplication()
+	app := boot.NewApplication()
 	app.Run()
 }

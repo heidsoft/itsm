@@ -25,343 +25,343 @@ type ApprovalRecordUpdate struct {
 }
 
 // Where appends a list predicates to the ApprovalRecordUpdate builder.
-func (aru *ApprovalRecordUpdate) Where(ps ...predicate.ApprovalRecord) *ApprovalRecordUpdate {
-	aru.mutation.Where(ps...)
-	return aru
+func (_u *ApprovalRecordUpdate) Where(ps ...predicate.ApprovalRecord) *ApprovalRecordUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (aru *ApprovalRecordUpdate) SetTicketID(i int) *ApprovalRecordUpdate {
-	aru.mutation.SetTicketID(i)
-	return aru
+func (_u *ApprovalRecordUpdate) SetTicketID(v int) *ApprovalRecordUpdate {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableTicketID(i *int) *ApprovalRecordUpdate {
-	if i != nil {
-		aru.SetTicketID(*i)
+func (_u *ApprovalRecordUpdate) SetNillableTicketID(v *int) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetTicketNumber sets the "ticket_number" field.
-func (aru *ApprovalRecordUpdate) SetTicketNumber(s string) *ApprovalRecordUpdate {
-	aru.mutation.SetTicketNumber(s)
-	return aru
+func (_u *ApprovalRecordUpdate) SetTicketNumber(v string) *ApprovalRecordUpdate {
+	_u.mutation.SetTicketNumber(v)
+	return _u
 }
 
 // SetNillableTicketNumber sets the "ticket_number" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableTicketNumber(s *string) *ApprovalRecordUpdate {
-	if s != nil {
-		aru.SetTicketNumber(*s)
+func (_u *ApprovalRecordUpdate) SetNillableTicketNumber(v *string) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetTicketNumber(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetTicketTitle sets the "ticket_title" field.
-func (aru *ApprovalRecordUpdate) SetTicketTitle(s string) *ApprovalRecordUpdate {
-	aru.mutation.SetTicketTitle(s)
-	return aru
+func (_u *ApprovalRecordUpdate) SetTicketTitle(v string) *ApprovalRecordUpdate {
+	_u.mutation.SetTicketTitle(v)
+	return _u
 }
 
 // SetNillableTicketTitle sets the "ticket_title" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableTicketTitle(s *string) *ApprovalRecordUpdate {
-	if s != nil {
-		aru.SetTicketTitle(*s)
+func (_u *ApprovalRecordUpdate) SetNillableTicketTitle(v *string) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetTicketTitle(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetWorkflowID sets the "workflow_id" field.
-func (aru *ApprovalRecordUpdate) SetWorkflowID(i int) *ApprovalRecordUpdate {
-	aru.mutation.SetWorkflowID(i)
-	return aru
+func (_u *ApprovalRecordUpdate) SetWorkflowID(v int) *ApprovalRecordUpdate {
+	_u.mutation.SetWorkflowID(v)
+	return _u
 }
 
 // SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableWorkflowID(i *int) *ApprovalRecordUpdate {
-	if i != nil {
-		aru.SetWorkflowID(*i)
+func (_u *ApprovalRecordUpdate) SetNillableWorkflowID(v *int) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetWorkflowID(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetWorkflowName sets the "workflow_name" field.
-func (aru *ApprovalRecordUpdate) SetWorkflowName(s string) *ApprovalRecordUpdate {
-	aru.mutation.SetWorkflowName(s)
-	return aru
+func (_u *ApprovalRecordUpdate) SetWorkflowName(v string) *ApprovalRecordUpdate {
+	_u.mutation.SetWorkflowName(v)
+	return _u
 }
 
 // SetNillableWorkflowName sets the "workflow_name" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableWorkflowName(s *string) *ApprovalRecordUpdate {
-	if s != nil {
-		aru.SetWorkflowName(*s)
+func (_u *ApprovalRecordUpdate) SetNillableWorkflowName(v *string) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetWorkflowName(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetCurrentLevel sets the "current_level" field.
-func (aru *ApprovalRecordUpdate) SetCurrentLevel(i int) *ApprovalRecordUpdate {
-	aru.mutation.ResetCurrentLevel()
-	aru.mutation.SetCurrentLevel(i)
-	return aru
+func (_u *ApprovalRecordUpdate) SetCurrentLevel(v int) *ApprovalRecordUpdate {
+	_u.mutation.ResetCurrentLevel()
+	_u.mutation.SetCurrentLevel(v)
+	return _u
 }
 
 // SetNillableCurrentLevel sets the "current_level" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableCurrentLevel(i *int) *ApprovalRecordUpdate {
-	if i != nil {
-		aru.SetCurrentLevel(*i)
+func (_u *ApprovalRecordUpdate) SetNillableCurrentLevel(v *int) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetCurrentLevel(*v)
 	}
-	return aru
+	return _u
 }
 
-// AddCurrentLevel adds i to the "current_level" field.
-func (aru *ApprovalRecordUpdate) AddCurrentLevel(i int) *ApprovalRecordUpdate {
-	aru.mutation.AddCurrentLevel(i)
-	return aru
+// AddCurrentLevel adds value to the "current_level" field.
+func (_u *ApprovalRecordUpdate) AddCurrentLevel(v int) *ApprovalRecordUpdate {
+	_u.mutation.AddCurrentLevel(v)
+	return _u
 }
 
 // SetTotalLevels sets the "total_levels" field.
-func (aru *ApprovalRecordUpdate) SetTotalLevels(i int) *ApprovalRecordUpdate {
-	aru.mutation.ResetTotalLevels()
-	aru.mutation.SetTotalLevels(i)
-	return aru
+func (_u *ApprovalRecordUpdate) SetTotalLevels(v int) *ApprovalRecordUpdate {
+	_u.mutation.ResetTotalLevels()
+	_u.mutation.SetTotalLevels(v)
+	return _u
 }
 
 // SetNillableTotalLevels sets the "total_levels" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableTotalLevels(i *int) *ApprovalRecordUpdate {
-	if i != nil {
-		aru.SetTotalLevels(*i)
+func (_u *ApprovalRecordUpdate) SetNillableTotalLevels(v *int) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetTotalLevels(*v)
 	}
-	return aru
+	return _u
 }
 
-// AddTotalLevels adds i to the "total_levels" field.
-func (aru *ApprovalRecordUpdate) AddTotalLevels(i int) *ApprovalRecordUpdate {
-	aru.mutation.AddTotalLevels(i)
-	return aru
+// AddTotalLevels adds value to the "total_levels" field.
+func (_u *ApprovalRecordUpdate) AddTotalLevels(v int) *ApprovalRecordUpdate {
+	_u.mutation.AddTotalLevels(v)
+	return _u
 }
 
 // SetApproverID sets the "approver_id" field.
-func (aru *ApprovalRecordUpdate) SetApproverID(i int) *ApprovalRecordUpdate {
-	aru.mutation.ResetApproverID()
-	aru.mutation.SetApproverID(i)
-	return aru
+func (_u *ApprovalRecordUpdate) SetApproverID(v int) *ApprovalRecordUpdate {
+	_u.mutation.ResetApproverID()
+	_u.mutation.SetApproverID(v)
+	return _u
 }
 
 // SetNillableApproverID sets the "approver_id" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableApproverID(i *int) *ApprovalRecordUpdate {
-	if i != nil {
-		aru.SetApproverID(*i)
+func (_u *ApprovalRecordUpdate) SetNillableApproverID(v *int) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetApproverID(*v)
 	}
-	return aru
+	return _u
 }
 
-// AddApproverID adds i to the "approver_id" field.
-func (aru *ApprovalRecordUpdate) AddApproverID(i int) *ApprovalRecordUpdate {
-	aru.mutation.AddApproverID(i)
-	return aru
+// AddApproverID adds value to the "approver_id" field.
+func (_u *ApprovalRecordUpdate) AddApproverID(v int) *ApprovalRecordUpdate {
+	_u.mutation.AddApproverID(v)
+	return _u
 }
 
 // SetApproverName sets the "approver_name" field.
-func (aru *ApprovalRecordUpdate) SetApproverName(s string) *ApprovalRecordUpdate {
-	aru.mutation.SetApproverName(s)
-	return aru
+func (_u *ApprovalRecordUpdate) SetApproverName(v string) *ApprovalRecordUpdate {
+	_u.mutation.SetApproverName(v)
+	return _u
 }
 
 // SetNillableApproverName sets the "approver_name" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableApproverName(s *string) *ApprovalRecordUpdate {
-	if s != nil {
-		aru.SetApproverName(*s)
+func (_u *ApprovalRecordUpdate) SetNillableApproverName(v *string) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetApproverName(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetStepOrder sets the "step_order" field.
-func (aru *ApprovalRecordUpdate) SetStepOrder(i int) *ApprovalRecordUpdate {
-	aru.mutation.ResetStepOrder()
-	aru.mutation.SetStepOrder(i)
-	return aru
+func (_u *ApprovalRecordUpdate) SetStepOrder(v int) *ApprovalRecordUpdate {
+	_u.mutation.ResetStepOrder()
+	_u.mutation.SetStepOrder(v)
+	return _u
 }
 
 // SetNillableStepOrder sets the "step_order" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableStepOrder(i *int) *ApprovalRecordUpdate {
-	if i != nil {
-		aru.SetStepOrder(*i)
+func (_u *ApprovalRecordUpdate) SetNillableStepOrder(v *int) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetStepOrder(*v)
 	}
-	return aru
+	return _u
 }
 
-// AddStepOrder adds i to the "step_order" field.
-func (aru *ApprovalRecordUpdate) AddStepOrder(i int) *ApprovalRecordUpdate {
-	aru.mutation.AddStepOrder(i)
-	return aru
+// AddStepOrder adds value to the "step_order" field.
+func (_u *ApprovalRecordUpdate) AddStepOrder(v int) *ApprovalRecordUpdate {
+	_u.mutation.AddStepOrder(v)
+	return _u
 }
 
 // SetDueDate sets the "due_date" field.
-func (aru *ApprovalRecordUpdate) SetDueDate(t time.Time) *ApprovalRecordUpdate {
-	aru.mutation.SetDueDate(t)
-	return aru
+func (_u *ApprovalRecordUpdate) SetDueDate(v time.Time) *ApprovalRecordUpdate {
+	_u.mutation.SetDueDate(v)
+	return _u
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableDueDate(t *time.Time) *ApprovalRecordUpdate {
-	if t != nil {
-		aru.SetDueDate(*t)
+func (_u *ApprovalRecordUpdate) SetNillableDueDate(v *time.Time) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetDueDate(*v)
 	}
-	return aru
+	return _u
 }
 
 // ClearDueDate clears the value of the "due_date" field.
-func (aru *ApprovalRecordUpdate) ClearDueDate() *ApprovalRecordUpdate {
-	aru.mutation.ClearDueDate()
-	return aru
+func (_u *ApprovalRecordUpdate) ClearDueDate() *ApprovalRecordUpdate {
+	_u.mutation.ClearDueDate()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (aru *ApprovalRecordUpdate) SetStatus(s string) *ApprovalRecordUpdate {
-	aru.mutation.SetStatus(s)
-	return aru
+func (_u *ApprovalRecordUpdate) SetStatus(v string) *ApprovalRecordUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableStatus(s *string) *ApprovalRecordUpdate {
-	if s != nil {
-		aru.SetStatus(*s)
+func (_u *ApprovalRecordUpdate) SetNillableStatus(v *string) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (aru *ApprovalRecordUpdate) SetAction(s string) *ApprovalRecordUpdate {
-	aru.mutation.SetAction(s)
-	return aru
+func (_u *ApprovalRecordUpdate) SetAction(v string) *ApprovalRecordUpdate {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableAction(s *string) *ApprovalRecordUpdate {
-	if s != nil {
-		aru.SetAction(*s)
+func (_u *ApprovalRecordUpdate) SetNillableAction(v *string) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return aru
+	return _u
 }
 
 // ClearAction clears the value of the "action" field.
-func (aru *ApprovalRecordUpdate) ClearAction() *ApprovalRecordUpdate {
-	aru.mutation.ClearAction()
-	return aru
+func (_u *ApprovalRecordUpdate) ClearAction() *ApprovalRecordUpdate {
+	_u.mutation.ClearAction()
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (aru *ApprovalRecordUpdate) SetComment(s string) *ApprovalRecordUpdate {
-	aru.mutation.SetComment(s)
-	return aru
+func (_u *ApprovalRecordUpdate) SetComment(v string) *ApprovalRecordUpdate {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableComment(s *string) *ApprovalRecordUpdate {
-	if s != nil {
-		aru.SetComment(*s)
+func (_u *ApprovalRecordUpdate) SetNillableComment(v *string) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return aru
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (aru *ApprovalRecordUpdate) ClearComment() *ApprovalRecordUpdate {
-	aru.mutation.ClearComment()
-	return aru
+func (_u *ApprovalRecordUpdate) ClearComment() *ApprovalRecordUpdate {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (aru *ApprovalRecordUpdate) SetTenantID(i int) *ApprovalRecordUpdate {
-	aru.mutation.ResetTenantID()
-	aru.mutation.SetTenantID(i)
-	return aru
+func (_u *ApprovalRecordUpdate) SetTenantID(v int) *ApprovalRecordUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableTenantID(i *int) *ApprovalRecordUpdate {
-	if i != nil {
-		aru.SetTenantID(*i)
+func (_u *ApprovalRecordUpdate) SetNillableTenantID(v *int) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return aru
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (aru *ApprovalRecordUpdate) AddTenantID(i int) *ApprovalRecordUpdate {
-	aru.mutation.AddTenantID(i)
-	return aru
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ApprovalRecordUpdate) AddTenantID(v int) *ApprovalRecordUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (aru *ApprovalRecordUpdate) SetCreatedAt(t time.Time) *ApprovalRecordUpdate {
-	aru.mutation.SetCreatedAt(t)
-	return aru
+func (_u *ApprovalRecordUpdate) SetCreatedAt(v time.Time) *ApprovalRecordUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableCreatedAt(t *time.Time) *ApprovalRecordUpdate {
-	if t != nil {
-		aru.SetCreatedAt(*t)
+func (_u *ApprovalRecordUpdate) SetNillableCreatedAt(v *time.Time) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return aru
+	return _u
 }
 
 // SetProcessedAt sets the "processed_at" field.
-func (aru *ApprovalRecordUpdate) SetProcessedAt(t time.Time) *ApprovalRecordUpdate {
-	aru.mutation.SetProcessedAt(t)
-	return aru
+func (_u *ApprovalRecordUpdate) SetProcessedAt(v time.Time) *ApprovalRecordUpdate {
+	_u.mutation.SetProcessedAt(v)
+	return _u
 }
 
 // SetNillableProcessedAt sets the "processed_at" field if the given value is not nil.
-func (aru *ApprovalRecordUpdate) SetNillableProcessedAt(t *time.Time) *ApprovalRecordUpdate {
-	if t != nil {
-		aru.SetProcessedAt(*t)
+func (_u *ApprovalRecordUpdate) SetNillableProcessedAt(v *time.Time) *ApprovalRecordUpdate {
+	if v != nil {
+		_u.SetProcessedAt(*v)
 	}
-	return aru
+	return _u
 }
 
 // ClearProcessedAt clears the value of the "processed_at" field.
-func (aru *ApprovalRecordUpdate) ClearProcessedAt() *ApprovalRecordUpdate {
-	aru.mutation.ClearProcessedAt()
-	return aru
+func (_u *ApprovalRecordUpdate) ClearProcessedAt() *ApprovalRecordUpdate {
+	_u.mutation.ClearProcessedAt()
+	return _u
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (aru *ApprovalRecordUpdate) SetTicket(t *Ticket) *ApprovalRecordUpdate {
-	return aru.SetTicketID(t.ID)
+func (_u *ApprovalRecordUpdate) SetTicket(v *Ticket) *ApprovalRecordUpdate {
+	return _u.SetTicketID(v.ID)
 }
 
 // SetWorkflow sets the "workflow" edge to the ApprovalWorkflow entity.
-func (aru *ApprovalRecordUpdate) SetWorkflow(a *ApprovalWorkflow) *ApprovalRecordUpdate {
-	return aru.SetWorkflowID(a.ID)
+func (_u *ApprovalRecordUpdate) SetWorkflow(v *ApprovalWorkflow) *ApprovalRecordUpdate {
+	return _u.SetWorkflowID(v.ID)
 }
 
 // Mutation returns the ApprovalRecordMutation object of the builder.
-func (aru *ApprovalRecordUpdate) Mutation() *ApprovalRecordMutation {
-	return aru.mutation
+func (_u *ApprovalRecordUpdate) Mutation() *ApprovalRecordMutation {
+	return _u.mutation
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (aru *ApprovalRecordUpdate) ClearTicket() *ApprovalRecordUpdate {
-	aru.mutation.ClearTicket()
-	return aru
+func (_u *ApprovalRecordUpdate) ClearTicket() *ApprovalRecordUpdate {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // ClearWorkflow clears the "workflow" edge to the ApprovalWorkflow entity.
-func (aru *ApprovalRecordUpdate) ClearWorkflow() *ApprovalRecordUpdate {
-	aru.mutation.ClearWorkflow()
-	return aru
+func (_u *ApprovalRecordUpdate) ClearWorkflow() *ApprovalRecordUpdate {
+	_u.mutation.ClearWorkflow()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (aru *ApprovalRecordUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, aru.sqlSave, aru.mutation, aru.hooks)
+func (_u *ApprovalRecordUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (aru *ApprovalRecordUpdate) SaveX(ctx context.Context) int {
-	affected, err := aru.Save(ctx)
+func (_u *ApprovalRecordUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -369,154 +369,154 @@ func (aru *ApprovalRecordUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (aru *ApprovalRecordUpdate) Exec(ctx context.Context) error {
-	_, err := aru.Save(ctx)
+func (_u *ApprovalRecordUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (aru *ApprovalRecordUpdate) ExecX(ctx context.Context) {
-	if err := aru.Exec(ctx); err != nil {
+func (_u *ApprovalRecordUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (aru *ApprovalRecordUpdate) check() error {
-	if v, ok := aru.mutation.TicketID(); ok {
+func (_u *ApprovalRecordUpdate) check() error {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := approvalrecord.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := aru.mutation.TicketNumber(); ok {
+	if v, ok := _u.mutation.TicketNumber(); ok {
 		if err := approvalrecord.TicketNumberValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_number", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_number": %w`, err)}
 		}
 	}
-	if v, ok := aru.mutation.TicketTitle(); ok {
+	if v, ok := _u.mutation.TicketTitle(); ok {
 		if err := approvalrecord.TicketTitleValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_title", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_title": %w`, err)}
 		}
 	}
-	if v, ok := aru.mutation.WorkflowID(); ok {
+	if v, ok := _u.mutation.WorkflowID(); ok {
 		if err := approvalrecord.WorkflowIDValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.workflow_id": %w`, err)}
 		}
 	}
-	if v, ok := aru.mutation.WorkflowName(); ok {
+	if v, ok := _u.mutation.WorkflowName(); ok {
 		if err := approvalrecord.WorkflowNameValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_name", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.workflow_name": %w`, err)}
 		}
 	}
-	if v, ok := aru.mutation.ApproverID(); ok {
+	if v, ok := _u.mutation.ApproverID(); ok {
 		if err := approvalrecord.ApproverIDValidator(v); err != nil {
 			return &ValidationError{Name: "approver_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.approver_id": %w`, err)}
 		}
 	}
-	if v, ok := aru.mutation.ApproverName(); ok {
+	if v, ok := _u.mutation.ApproverName(); ok {
 		if err := approvalrecord.ApproverNameValidator(v); err != nil {
 			return &ValidationError{Name: "approver_name", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.approver_name": %w`, err)}
 		}
 	}
-	if v, ok := aru.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := approvalrecord.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.tenant_id": %w`, err)}
 		}
 	}
-	if aru.mutation.TicketCleared() && len(aru.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ApprovalRecord.ticket"`)
 	}
-	if aru.mutation.WorkflowCleared() && len(aru.mutation.WorkflowIDs()) > 0 {
+	if _u.mutation.WorkflowCleared() && len(_u.mutation.WorkflowIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ApprovalRecord.workflow"`)
 	}
 	return nil
 }
 
-func (aru *ApprovalRecordUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := aru.check(); err != nil {
-		return n, err
+func (_u *ApprovalRecordUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(approvalrecord.Table, approvalrecord.Columns, sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt))
-	if ps := aru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := aru.mutation.TicketNumber(); ok {
+	if value, ok := _u.mutation.TicketNumber(); ok {
 		_spec.SetField(approvalrecord.FieldTicketNumber, field.TypeString, value)
 	}
-	if value, ok := aru.mutation.TicketTitle(); ok {
+	if value, ok := _u.mutation.TicketTitle(); ok {
 		_spec.SetField(approvalrecord.FieldTicketTitle, field.TypeString, value)
 	}
-	if value, ok := aru.mutation.WorkflowName(); ok {
+	if value, ok := _u.mutation.WorkflowName(); ok {
 		_spec.SetField(approvalrecord.FieldWorkflowName, field.TypeString, value)
 	}
-	if value, ok := aru.mutation.CurrentLevel(); ok {
+	if value, ok := _u.mutation.CurrentLevel(); ok {
 		_spec.SetField(approvalrecord.FieldCurrentLevel, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.AddedCurrentLevel(); ok {
+	if value, ok := _u.mutation.AddedCurrentLevel(); ok {
 		_spec.AddField(approvalrecord.FieldCurrentLevel, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.TotalLevels(); ok {
+	if value, ok := _u.mutation.TotalLevels(); ok {
 		_spec.SetField(approvalrecord.FieldTotalLevels, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.AddedTotalLevels(); ok {
+	if value, ok := _u.mutation.AddedTotalLevels(); ok {
 		_spec.AddField(approvalrecord.FieldTotalLevels, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.ApproverID(); ok {
+	if value, ok := _u.mutation.ApproverID(); ok {
 		_spec.SetField(approvalrecord.FieldApproverID, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.AddedApproverID(); ok {
+	if value, ok := _u.mutation.AddedApproverID(); ok {
 		_spec.AddField(approvalrecord.FieldApproverID, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.ApproverName(); ok {
+	if value, ok := _u.mutation.ApproverName(); ok {
 		_spec.SetField(approvalrecord.FieldApproverName, field.TypeString, value)
 	}
-	if value, ok := aru.mutation.StepOrder(); ok {
+	if value, ok := _u.mutation.StepOrder(); ok {
 		_spec.SetField(approvalrecord.FieldStepOrder, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.AddedStepOrder(); ok {
+	if value, ok := _u.mutation.AddedStepOrder(); ok {
 		_spec.AddField(approvalrecord.FieldStepOrder, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.DueDate(); ok {
+	if value, ok := _u.mutation.DueDate(); ok {
 		_spec.SetField(approvalrecord.FieldDueDate, field.TypeTime, value)
 	}
-	if aru.mutation.DueDateCleared() {
+	if _u.mutation.DueDateCleared() {
 		_spec.ClearField(approvalrecord.FieldDueDate, field.TypeTime)
 	}
-	if value, ok := aru.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(approvalrecord.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := aru.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(approvalrecord.FieldAction, field.TypeString, value)
 	}
-	if aru.mutation.ActionCleared() {
+	if _u.mutation.ActionCleared() {
 		_spec.ClearField(approvalrecord.FieldAction, field.TypeString)
 	}
-	if value, ok := aru.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(approvalrecord.FieldComment, field.TypeString, value)
 	}
-	if aru.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(approvalrecord.FieldComment, field.TypeString)
 	}
-	if value, ok := aru.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(approvalrecord.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(approvalrecord.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := aru.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalrecord.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := aru.mutation.ProcessedAt(); ok {
+	if value, ok := _u.mutation.ProcessedAt(); ok {
 		_spec.SetField(approvalrecord.FieldProcessedAt, field.TypeTime, value)
 	}
-	if aru.mutation.ProcessedAtCleared() {
+	if _u.mutation.ProcessedAtCleared() {
 		_spec.ClearField(approvalrecord.FieldProcessedAt, field.TypeTime)
 	}
-	if aru.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -529,7 +529,7 @@ func (aru *ApprovalRecordUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := aru.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -545,7 +545,7 @@ func (aru *ApprovalRecordUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if aru.mutation.WorkflowCleared() {
+	if _u.mutation.WorkflowCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -558,7 +558,7 @@ func (aru *ApprovalRecordUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := aru.mutation.WorkflowIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.WorkflowIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -574,7 +574,7 @@ func (aru *ApprovalRecordUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, aru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{approvalrecord.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -582,8 +582,8 @@ func (aru *ApprovalRecordUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		return 0, err
 	}
-	aru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ApprovalRecordUpdateOne is the builder for updating a single ApprovalRecord entity.
@@ -595,350 +595,350 @@ type ApprovalRecordUpdateOne struct {
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (aruo *ApprovalRecordUpdateOne) SetTicketID(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetTicketID(i)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetTicketID(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableTicketID(i *int) *ApprovalRecordUpdateOne {
-	if i != nil {
-		aruo.SetTicketID(*i)
+func (_u *ApprovalRecordUpdateOne) SetNillableTicketID(v *int) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetTicketNumber sets the "ticket_number" field.
-func (aruo *ApprovalRecordUpdateOne) SetTicketNumber(s string) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetTicketNumber(s)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetTicketNumber(v string) *ApprovalRecordUpdateOne {
+	_u.mutation.SetTicketNumber(v)
+	return _u
 }
 
 // SetNillableTicketNumber sets the "ticket_number" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableTicketNumber(s *string) *ApprovalRecordUpdateOne {
-	if s != nil {
-		aruo.SetTicketNumber(*s)
+func (_u *ApprovalRecordUpdateOne) SetNillableTicketNumber(v *string) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetTicketNumber(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetTicketTitle sets the "ticket_title" field.
-func (aruo *ApprovalRecordUpdateOne) SetTicketTitle(s string) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetTicketTitle(s)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetTicketTitle(v string) *ApprovalRecordUpdateOne {
+	_u.mutation.SetTicketTitle(v)
+	return _u
 }
 
 // SetNillableTicketTitle sets the "ticket_title" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableTicketTitle(s *string) *ApprovalRecordUpdateOne {
-	if s != nil {
-		aruo.SetTicketTitle(*s)
+func (_u *ApprovalRecordUpdateOne) SetNillableTicketTitle(v *string) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetTicketTitle(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetWorkflowID sets the "workflow_id" field.
-func (aruo *ApprovalRecordUpdateOne) SetWorkflowID(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetWorkflowID(i)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetWorkflowID(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.SetWorkflowID(v)
+	return _u
 }
 
 // SetNillableWorkflowID sets the "workflow_id" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableWorkflowID(i *int) *ApprovalRecordUpdateOne {
-	if i != nil {
-		aruo.SetWorkflowID(*i)
+func (_u *ApprovalRecordUpdateOne) SetNillableWorkflowID(v *int) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetWorkflowID(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetWorkflowName sets the "workflow_name" field.
-func (aruo *ApprovalRecordUpdateOne) SetWorkflowName(s string) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetWorkflowName(s)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetWorkflowName(v string) *ApprovalRecordUpdateOne {
+	_u.mutation.SetWorkflowName(v)
+	return _u
 }
 
 // SetNillableWorkflowName sets the "workflow_name" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableWorkflowName(s *string) *ApprovalRecordUpdateOne {
-	if s != nil {
-		aruo.SetWorkflowName(*s)
+func (_u *ApprovalRecordUpdateOne) SetNillableWorkflowName(v *string) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetWorkflowName(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetCurrentLevel sets the "current_level" field.
-func (aruo *ApprovalRecordUpdateOne) SetCurrentLevel(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.ResetCurrentLevel()
-	aruo.mutation.SetCurrentLevel(i)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetCurrentLevel(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.ResetCurrentLevel()
+	_u.mutation.SetCurrentLevel(v)
+	return _u
 }
 
 // SetNillableCurrentLevel sets the "current_level" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableCurrentLevel(i *int) *ApprovalRecordUpdateOne {
-	if i != nil {
-		aruo.SetCurrentLevel(*i)
+func (_u *ApprovalRecordUpdateOne) SetNillableCurrentLevel(v *int) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetCurrentLevel(*v)
 	}
-	return aruo
+	return _u
 }
 
-// AddCurrentLevel adds i to the "current_level" field.
-func (aruo *ApprovalRecordUpdateOne) AddCurrentLevel(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.AddCurrentLevel(i)
-	return aruo
+// AddCurrentLevel adds value to the "current_level" field.
+func (_u *ApprovalRecordUpdateOne) AddCurrentLevel(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.AddCurrentLevel(v)
+	return _u
 }
 
 // SetTotalLevels sets the "total_levels" field.
-func (aruo *ApprovalRecordUpdateOne) SetTotalLevels(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.ResetTotalLevels()
-	aruo.mutation.SetTotalLevels(i)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetTotalLevels(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.ResetTotalLevels()
+	_u.mutation.SetTotalLevels(v)
+	return _u
 }
 
 // SetNillableTotalLevels sets the "total_levels" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableTotalLevels(i *int) *ApprovalRecordUpdateOne {
-	if i != nil {
-		aruo.SetTotalLevels(*i)
+func (_u *ApprovalRecordUpdateOne) SetNillableTotalLevels(v *int) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetTotalLevels(*v)
 	}
-	return aruo
+	return _u
 }
 
-// AddTotalLevels adds i to the "total_levels" field.
-func (aruo *ApprovalRecordUpdateOne) AddTotalLevels(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.AddTotalLevels(i)
-	return aruo
+// AddTotalLevels adds value to the "total_levels" field.
+func (_u *ApprovalRecordUpdateOne) AddTotalLevels(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.AddTotalLevels(v)
+	return _u
 }
 
 // SetApproverID sets the "approver_id" field.
-func (aruo *ApprovalRecordUpdateOne) SetApproverID(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.ResetApproverID()
-	aruo.mutation.SetApproverID(i)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetApproverID(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.ResetApproverID()
+	_u.mutation.SetApproverID(v)
+	return _u
 }
 
 // SetNillableApproverID sets the "approver_id" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableApproverID(i *int) *ApprovalRecordUpdateOne {
-	if i != nil {
-		aruo.SetApproverID(*i)
+func (_u *ApprovalRecordUpdateOne) SetNillableApproverID(v *int) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetApproverID(*v)
 	}
-	return aruo
+	return _u
 }
 
-// AddApproverID adds i to the "approver_id" field.
-func (aruo *ApprovalRecordUpdateOne) AddApproverID(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.AddApproverID(i)
-	return aruo
+// AddApproverID adds value to the "approver_id" field.
+func (_u *ApprovalRecordUpdateOne) AddApproverID(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.AddApproverID(v)
+	return _u
 }
 
 // SetApproverName sets the "approver_name" field.
-func (aruo *ApprovalRecordUpdateOne) SetApproverName(s string) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetApproverName(s)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetApproverName(v string) *ApprovalRecordUpdateOne {
+	_u.mutation.SetApproverName(v)
+	return _u
 }
 
 // SetNillableApproverName sets the "approver_name" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableApproverName(s *string) *ApprovalRecordUpdateOne {
-	if s != nil {
-		aruo.SetApproverName(*s)
+func (_u *ApprovalRecordUpdateOne) SetNillableApproverName(v *string) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetApproverName(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetStepOrder sets the "step_order" field.
-func (aruo *ApprovalRecordUpdateOne) SetStepOrder(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.ResetStepOrder()
-	aruo.mutation.SetStepOrder(i)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetStepOrder(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.ResetStepOrder()
+	_u.mutation.SetStepOrder(v)
+	return _u
 }
 
 // SetNillableStepOrder sets the "step_order" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableStepOrder(i *int) *ApprovalRecordUpdateOne {
-	if i != nil {
-		aruo.SetStepOrder(*i)
+func (_u *ApprovalRecordUpdateOne) SetNillableStepOrder(v *int) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetStepOrder(*v)
 	}
-	return aruo
+	return _u
 }
 
-// AddStepOrder adds i to the "step_order" field.
-func (aruo *ApprovalRecordUpdateOne) AddStepOrder(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.AddStepOrder(i)
-	return aruo
+// AddStepOrder adds value to the "step_order" field.
+func (_u *ApprovalRecordUpdateOne) AddStepOrder(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.AddStepOrder(v)
+	return _u
 }
 
 // SetDueDate sets the "due_date" field.
-func (aruo *ApprovalRecordUpdateOne) SetDueDate(t time.Time) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetDueDate(t)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetDueDate(v time.Time) *ApprovalRecordUpdateOne {
+	_u.mutation.SetDueDate(v)
+	return _u
 }
 
 // SetNillableDueDate sets the "due_date" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableDueDate(t *time.Time) *ApprovalRecordUpdateOne {
-	if t != nil {
-		aruo.SetDueDate(*t)
+func (_u *ApprovalRecordUpdateOne) SetNillableDueDate(v *time.Time) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetDueDate(*v)
 	}
-	return aruo
+	return _u
 }
 
 // ClearDueDate clears the value of the "due_date" field.
-func (aruo *ApprovalRecordUpdateOne) ClearDueDate() *ApprovalRecordUpdateOne {
-	aruo.mutation.ClearDueDate()
-	return aruo
+func (_u *ApprovalRecordUpdateOne) ClearDueDate() *ApprovalRecordUpdateOne {
+	_u.mutation.ClearDueDate()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (aruo *ApprovalRecordUpdateOne) SetStatus(s string) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetStatus(s)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetStatus(v string) *ApprovalRecordUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableStatus(s *string) *ApprovalRecordUpdateOne {
-	if s != nil {
-		aruo.SetStatus(*s)
+func (_u *ApprovalRecordUpdateOne) SetNillableStatus(v *string) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (aruo *ApprovalRecordUpdateOne) SetAction(s string) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetAction(s)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetAction(v string) *ApprovalRecordUpdateOne {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableAction(s *string) *ApprovalRecordUpdateOne {
-	if s != nil {
-		aruo.SetAction(*s)
+func (_u *ApprovalRecordUpdateOne) SetNillableAction(v *string) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return aruo
+	return _u
 }
 
 // ClearAction clears the value of the "action" field.
-func (aruo *ApprovalRecordUpdateOne) ClearAction() *ApprovalRecordUpdateOne {
-	aruo.mutation.ClearAction()
-	return aruo
+func (_u *ApprovalRecordUpdateOne) ClearAction() *ApprovalRecordUpdateOne {
+	_u.mutation.ClearAction()
+	return _u
 }
 
 // SetComment sets the "comment" field.
-func (aruo *ApprovalRecordUpdateOne) SetComment(s string) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetComment(s)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetComment(v string) *ApprovalRecordUpdateOne {
+	_u.mutation.SetComment(v)
+	return _u
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableComment(s *string) *ApprovalRecordUpdateOne {
-	if s != nil {
-		aruo.SetComment(*s)
+func (_u *ApprovalRecordUpdateOne) SetNillableComment(v *string) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetComment(*v)
 	}
-	return aruo
+	return _u
 }
 
 // ClearComment clears the value of the "comment" field.
-func (aruo *ApprovalRecordUpdateOne) ClearComment() *ApprovalRecordUpdateOne {
-	aruo.mutation.ClearComment()
-	return aruo
+func (_u *ApprovalRecordUpdateOne) ClearComment() *ApprovalRecordUpdateOne {
+	_u.mutation.ClearComment()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (aruo *ApprovalRecordUpdateOne) SetTenantID(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.ResetTenantID()
-	aruo.mutation.SetTenantID(i)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetTenantID(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableTenantID(i *int) *ApprovalRecordUpdateOne {
-	if i != nil {
-		aruo.SetTenantID(*i)
+func (_u *ApprovalRecordUpdateOne) SetNillableTenantID(v *int) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return aruo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (aruo *ApprovalRecordUpdateOne) AddTenantID(i int) *ApprovalRecordUpdateOne {
-	aruo.mutation.AddTenantID(i)
-	return aruo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ApprovalRecordUpdateOne) AddTenantID(v int) *ApprovalRecordUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (aruo *ApprovalRecordUpdateOne) SetCreatedAt(t time.Time) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetCreatedAt(t)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetCreatedAt(v time.Time) *ApprovalRecordUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableCreatedAt(t *time.Time) *ApprovalRecordUpdateOne {
-	if t != nil {
-		aruo.SetCreatedAt(*t)
+func (_u *ApprovalRecordUpdateOne) SetNillableCreatedAt(v *time.Time) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return aruo
+	return _u
 }
 
 // SetProcessedAt sets the "processed_at" field.
-func (aruo *ApprovalRecordUpdateOne) SetProcessedAt(t time.Time) *ApprovalRecordUpdateOne {
-	aruo.mutation.SetProcessedAt(t)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) SetProcessedAt(v time.Time) *ApprovalRecordUpdateOne {
+	_u.mutation.SetProcessedAt(v)
+	return _u
 }
 
 // SetNillableProcessedAt sets the "processed_at" field if the given value is not nil.
-func (aruo *ApprovalRecordUpdateOne) SetNillableProcessedAt(t *time.Time) *ApprovalRecordUpdateOne {
-	if t != nil {
-		aruo.SetProcessedAt(*t)
+func (_u *ApprovalRecordUpdateOne) SetNillableProcessedAt(v *time.Time) *ApprovalRecordUpdateOne {
+	if v != nil {
+		_u.SetProcessedAt(*v)
 	}
-	return aruo
+	return _u
 }
 
 // ClearProcessedAt clears the value of the "processed_at" field.
-func (aruo *ApprovalRecordUpdateOne) ClearProcessedAt() *ApprovalRecordUpdateOne {
-	aruo.mutation.ClearProcessedAt()
-	return aruo
+func (_u *ApprovalRecordUpdateOne) ClearProcessedAt() *ApprovalRecordUpdateOne {
+	_u.mutation.ClearProcessedAt()
+	return _u
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (aruo *ApprovalRecordUpdateOne) SetTicket(t *Ticket) *ApprovalRecordUpdateOne {
-	return aruo.SetTicketID(t.ID)
+func (_u *ApprovalRecordUpdateOne) SetTicket(v *Ticket) *ApprovalRecordUpdateOne {
+	return _u.SetTicketID(v.ID)
 }
 
 // SetWorkflow sets the "workflow" edge to the ApprovalWorkflow entity.
-func (aruo *ApprovalRecordUpdateOne) SetWorkflow(a *ApprovalWorkflow) *ApprovalRecordUpdateOne {
-	return aruo.SetWorkflowID(a.ID)
+func (_u *ApprovalRecordUpdateOne) SetWorkflow(v *ApprovalWorkflow) *ApprovalRecordUpdateOne {
+	return _u.SetWorkflowID(v.ID)
 }
 
 // Mutation returns the ApprovalRecordMutation object of the builder.
-func (aruo *ApprovalRecordUpdateOne) Mutation() *ApprovalRecordMutation {
-	return aruo.mutation
+func (_u *ApprovalRecordUpdateOne) Mutation() *ApprovalRecordMutation {
+	return _u.mutation
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (aruo *ApprovalRecordUpdateOne) ClearTicket() *ApprovalRecordUpdateOne {
-	aruo.mutation.ClearTicket()
-	return aruo
+func (_u *ApprovalRecordUpdateOne) ClearTicket() *ApprovalRecordUpdateOne {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // ClearWorkflow clears the "workflow" edge to the ApprovalWorkflow entity.
-func (aruo *ApprovalRecordUpdateOne) ClearWorkflow() *ApprovalRecordUpdateOne {
-	aruo.mutation.ClearWorkflow()
-	return aruo
+func (_u *ApprovalRecordUpdateOne) ClearWorkflow() *ApprovalRecordUpdateOne {
+	_u.mutation.ClearWorkflow()
+	return _u
 }
 
 // Where appends a list predicates to the ApprovalRecordUpdate builder.
-func (aruo *ApprovalRecordUpdateOne) Where(ps ...predicate.ApprovalRecord) *ApprovalRecordUpdateOne {
-	aruo.mutation.Where(ps...)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) Where(ps ...predicate.ApprovalRecord) *ApprovalRecordUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (aruo *ApprovalRecordUpdateOne) Select(field string, fields ...string) *ApprovalRecordUpdateOne {
-	aruo.fields = append([]string{field}, fields...)
-	return aruo
+func (_u *ApprovalRecordUpdateOne) Select(field string, fields ...string) *ApprovalRecordUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ApprovalRecord entity.
-func (aruo *ApprovalRecordUpdateOne) Save(ctx context.Context) (*ApprovalRecord, error) {
-	return withHooks(ctx, aruo.sqlSave, aruo.mutation, aruo.hooks)
+func (_u *ApprovalRecordUpdateOne) Save(ctx context.Context) (*ApprovalRecord, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (aruo *ApprovalRecordUpdateOne) SaveX(ctx context.Context) *ApprovalRecord {
-	node, err := aruo.Save(ctx)
+func (_u *ApprovalRecordUpdateOne) SaveX(ctx context.Context) *ApprovalRecord {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -946,80 +946,80 @@ func (aruo *ApprovalRecordUpdateOne) SaveX(ctx context.Context) *ApprovalRecord 
 }
 
 // Exec executes the query on the entity.
-func (aruo *ApprovalRecordUpdateOne) Exec(ctx context.Context) error {
-	_, err := aruo.Save(ctx)
+func (_u *ApprovalRecordUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (aruo *ApprovalRecordUpdateOne) ExecX(ctx context.Context) {
-	if err := aruo.Exec(ctx); err != nil {
+func (_u *ApprovalRecordUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (aruo *ApprovalRecordUpdateOne) check() error {
-	if v, ok := aruo.mutation.TicketID(); ok {
+func (_u *ApprovalRecordUpdateOne) check() error {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := approvalrecord.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := aruo.mutation.TicketNumber(); ok {
+	if v, ok := _u.mutation.TicketNumber(); ok {
 		if err := approvalrecord.TicketNumberValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_number", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_number": %w`, err)}
 		}
 	}
-	if v, ok := aruo.mutation.TicketTitle(); ok {
+	if v, ok := _u.mutation.TicketTitle(); ok {
 		if err := approvalrecord.TicketTitleValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_title", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.ticket_title": %w`, err)}
 		}
 	}
-	if v, ok := aruo.mutation.WorkflowID(); ok {
+	if v, ok := _u.mutation.WorkflowID(); ok {
 		if err := approvalrecord.WorkflowIDValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.workflow_id": %w`, err)}
 		}
 	}
-	if v, ok := aruo.mutation.WorkflowName(); ok {
+	if v, ok := _u.mutation.WorkflowName(); ok {
 		if err := approvalrecord.WorkflowNameValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_name", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.workflow_name": %w`, err)}
 		}
 	}
-	if v, ok := aruo.mutation.ApproverID(); ok {
+	if v, ok := _u.mutation.ApproverID(); ok {
 		if err := approvalrecord.ApproverIDValidator(v); err != nil {
 			return &ValidationError{Name: "approver_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.approver_id": %w`, err)}
 		}
 	}
-	if v, ok := aruo.mutation.ApproverName(); ok {
+	if v, ok := _u.mutation.ApproverName(); ok {
 		if err := approvalrecord.ApproverNameValidator(v); err != nil {
 			return &ValidationError{Name: "approver_name", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.approver_name": %w`, err)}
 		}
 	}
-	if v, ok := aruo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := approvalrecord.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalRecord.tenant_id": %w`, err)}
 		}
 	}
-	if aruo.mutation.TicketCleared() && len(aruo.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ApprovalRecord.ticket"`)
 	}
-	if aruo.mutation.WorkflowCleared() && len(aruo.mutation.WorkflowIDs()) > 0 {
+	if _u.mutation.WorkflowCleared() && len(_u.mutation.WorkflowIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "ApprovalRecord.workflow"`)
 	}
 	return nil
 }
 
-func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *ApprovalRecord, err error) {
-	if err := aruo.check(); err != nil {
+func (_u *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *ApprovalRecord, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(approvalrecord.Table, approvalrecord.Columns, sqlgraph.NewFieldSpec(approvalrecord.FieldID, field.TypeInt))
-	id, ok := aruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ApprovalRecord.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := aruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, approvalrecord.FieldID)
 		for _, f := range fields {
@@ -1031,86 +1031,86 @@ func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *Approv
 			}
 		}
 	}
-	if ps := aruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := aruo.mutation.TicketNumber(); ok {
+	if value, ok := _u.mutation.TicketNumber(); ok {
 		_spec.SetField(approvalrecord.FieldTicketNumber, field.TypeString, value)
 	}
-	if value, ok := aruo.mutation.TicketTitle(); ok {
+	if value, ok := _u.mutation.TicketTitle(); ok {
 		_spec.SetField(approvalrecord.FieldTicketTitle, field.TypeString, value)
 	}
-	if value, ok := aruo.mutation.WorkflowName(); ok {
+	if value, ok := _u.mutation.WorkflowName(); ok {
 		_spec.SetField(approvalrecord.FieldWorkflowName, field.TypeString, value)
 	}
-	if value, ok := aruo.mutation.CurrentLevel(); ok {
+	if value, ok := _u.mutation.CurrentLevel(); ok {
 		_spec.SetField(approvalrecord.FieldCurrentLevel, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.AddedCurrentLevel(); ok {
+	if value, ok := _u.mutation.AddedCurrentLevel(); ok {
 		_spec.AddField(approvalrecord.FieldCurrentLevel, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.TotalLevels(); ok {
+	if value, ok := _u.mutation.TotalLevels(); ok {
 		_spec.SetField(approvalrecord.FieldTotalLevels, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.AddedTotalLevels(); ok {
+	if value, ok := _u.mutation.AddedTotalLevels(); ok {
 		_spec.AddField(approvalrecord.FieldTotalLevels, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.ApproverID(); ok {
+	if value, ok := _u.mutation.ApproverID(); ok {
 		_spec.SetField(approvalrecord.FieldApproverID, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.AddedApproverID(); ok {
+	if value, ok := _u.mutation.AddedApproverID(); ok {
 		_spec.AddField(approvalrecord.FieldApproverID, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.ApproverName(); ok {
+	if value, ok := _u.mutation.ApproverName(); ok {
 		_spec.SetField(approvalrecord.FieldApproverName, field.TypeString, value)
 	}
-	if value, ok := aruo.mutation.StepOrder(); ok {
+	if value, ok := _u.mutation.StepOrder(); ok {
 		_spec.SetField(approvalrecord.FieldStepOrder, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.AddedStepOrder(); ok {
+	if value, ok := _u.mutation.AddedStepOrder(); ok {
 		_spec.AddField(approvalrecord.FieldStepOrder, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.DueDate(); ok {
+	if value, ok := _u.mutation.DueDate(); ok {
 		_spec.SetField(approvalrecord.FieldDueDate, field.TypeTime, value)
 	}
-	if aruo.mutation.DueDateCleared() {
+	if _u.mutation.DueDateCleared() {
 		_spec.ClearField(approvalrecord.FieldDueDate, field.TypeTime)
 	}
-	if value, ok := aruo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(approvalrecord.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := aruo.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(approvalrecord.FieldAction, field.TypeString, value)
 	}
-	if aruo.mutation.ActionCleared() {
+	if _u.mutation.ActionCleared() {
 		_spec.ClearField(approvalrecord.FieldAction, field.TypeString)
 	}
-	if value, ok := aruo.mutation.Comment(); ok {
+	if value, ok := _u.mutation.Comment(); ok {
 		_spec.SetField(approvalrecord.FieldComment, field.TypeString, value)
 	}
-	if aruo.mutation.CommentCleared() {
+	if _u.mutation.CommentCleared() {
 		_spec.ClearField(approvalrecord.FieldComment, field.TypeString)
 	}
-	if value, ok := aruo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(approvalrecord.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(approvalrecord.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := aruo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalrecord.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := aruo.mutation.ProcessedAt(); ok {
+	if value, ok := _u.mutation.ProcessedAt(); ok {
 		_spec.SetField(approvalrecord.FieldProcessedAt, field.TypeTime, value)
 	}
-	if aruo.mutation.ProcessedAtCleared() {
+	if _u.mutation.ProcessedAtCleared() {
 		_spec.ClearField(approvalrecord.FieldProcessedAt, field.TypeTime)
 	}
-	if aruo.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1123,7 +1123,7 @@ func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *Approv
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := aruo.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1139,7 +1139,7 @@ func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *Approv
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if aruo.mutation.WorkflowCleared() {
+	if _u.mutation.WorkflowCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1152,7 +1152,7 @@ func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *Approv
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := aruo.mutation.WorkflowIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.WorkflowIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1168,10 +1168,10 @@ func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *Approv
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ApprovalRecord{config: aruo.config}
+	_node = &ApprovalRecord{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, aruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{approvalrecord.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1179,6 +1179,6 @@ func (aruo *ApprovalRecordUpdateOne) sqlSave(ctx context.Context) (_node *Approv
 		}
 		return nil, err
 	}
-	aruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

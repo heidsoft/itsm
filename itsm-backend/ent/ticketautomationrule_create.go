@@ -22,158 +22,158 @@ type TicketAutomationRuleCreate struct {
 }
 
 // SetName sets the "name" field.
-func (tarc *TicketAutomationRuleCreate) SetName(s string) *TicketAutomationRuleCreate {
-	tarc.mutation.SetName(s)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetName(v string) *TicketAutomationRuleCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (tarc *TicketAutomationRuleCreate) SetDescription(s string) *TicketAutomationRuleCreate {
-	tarc.mutation.SetDescription(s)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetDescription(v string) *TicketAutomationRuleCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tarc *TicketAutomationRuleCreate) SetNillableDescription(s *string) *TicketAutomationRuleCreate {
-	if s != nil {
-		tarc.SetDescription(*s)
+func (_c *TicketAutomationRuleCreate) SetNillableDescription(v *string) *TicketAutomationRuleCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (tarc *TicketAutomationRuleCreate) SetPriority(i int) *TicketAutomationRuleCreate {
-	tarc.mutation.SetPriority(i)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetPriority(v int) *TicketAutomationRuleCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (tarc *TicketAutomationRuleCreate) SetNillablePriority(i *int) *TicketAutomationRuleCreate {
-	if i != nil {
-		tarc.SetPriority(*i)
+func (_c *TicketAutomationRuleCreate) SetNillablePriority(v *int) *TicketAutomationRuleCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetConditions sets the "conditions" field.
-func (tarc *TicketAutomationRuleCreate) SetConditions(m []map[string]interface{}) *TicketAutomationRuleCreate {
-	tarc.mutation.SetConditions(m)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetConditions(v []map[string]interface{}) *TicketAutomationRuleCreate {
+	_c.mutation.SetConditions(v)
+	return _c
 }
 
 // SetActions sets the "actions" field.
-func (tarc *TicketAutomationRuleCreate) SetActions(m []map[string]interface{}) *TicketAutomationRuleCreate {
-	tarc.mutation.SetActions(m)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetActions(v []map[string]interface{}) *TicketAutomationRuleCreate {
+	_c.mutation.SetActions(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (tarc *TicketAutomationRuleCreate) SetIsActive(b bool) *TicketAutomationRuleCreate {
-	tarc.mutation.SetIsActive(b)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetIsActive(v bool) *TicketAutomationRuleCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (tarc *TicketAutomationRuleCreate) SetNillableIsActive(b *bool) *TicketAutomationRuleCreate {
-	if b != nil {
-		tarc.SetIsActive(*b)
+func (_c *TicketAutomationRuleCreate) SetNillableIsActive(v *bool) *TicketAutomationRuleCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetExecutionCount sets the "execution_count" field.
-func (tarc *TicketAutomationRuleCreate) SetExecutionCount(i int) *TicketAutomationRuleCreate {
-	tarc.mutation.SetExecutionCount(i)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetExecutionCount(v int) *TicketAutomationRuleCreate {
+	_c.mutation.SetExecutionCount(v)
+	return _c
 }
 
 // SetNillableExecutionCount sets the "execution_count" field if the given value is not nil.
-func (tarc *TicketAutomationRuleCreate) SetNillableExecutionCount(i *int) *TicketAutomationRuleCreate {
-	if i != nil {
-		tarc.SetExecutionCount(*i)
+func (_c *TicketAutomationRuleCreate) SetNillableExecutionCount(v *int) *TicketAutomationRuleCreate {
+	if v != nil {
+		_c.SetExecutionCount(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetLastExecutedAt sets the "last_executed_at" field.
-func (tarc *TicketAutomationRuleCreate) SetLastExecutedAt(t time.Time) *TicketAutomationRuleCreate {
-	tarc.mutation.SetLastExecutedAt(t)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetLastExecutedAt(v time.Time) *TicketAutomationRuleCreate {
+	_c.mutation.SetLastExecutedAt(v)
+	return _c
 }
 
 // SetNillableLastExecutedAt sets the "last_executed_at" field if the given value is not nil.
-func (tarc *TicketAutomationRuleCreate) SetNillableLastExecutedAt(t *time.Time) *TicketAutomationRuleCreate {
-	if t != nil {
-		tarc.SetLastExecutedAt(*t)
+func (_c *TicketAutomationRuleCreate) SetNillableLastExecutedAt(v *time.Time) *TicketAutomationRuleCreate {
+	if v != nil {
+		_c.SetLastExecutedAt(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (tarc *TicketAutomationRuleCreate) SetCreatedBy(i int) *TicketAutomationRuleCreate {
-	tarc.mutation.SetCreatedBy(i)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetCreatedBy(v int) *TicketAutomationRuleCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tarc *TicketAutomationRuleCreate) SetTenantID(i int) *TicketAutomationRuleCreate {
-	tarc.mutation.SetTenantID(i)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetTenantID(v int) *TicketAutomationRuleCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tarc *TicketAutomationRuleCreate) SetCreatedAt(t time.Time) *TicketAutomationRuleCreate {
-	tarc.mutation.SetCreatedAt(t)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetCreatedAt(v time.Time) *TicketAutomationRuleCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tarc *TicketAutomationRuleCreate) SetNillableCreatedAt(t *time.Time) *TicketAutomationRuleCreate {
-	if t != nil {
-		tarc.SetCreatedAt(*t)
+func (_c *TicketAutomationRuleCreate) SetNillableCreatedAt(v *time.Time) *TicketAutomationRuleCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tarc *TicketAutomationRuleCreate) SetUpdatedAt(t time.Time) *TicketAutomationRuleCreate {
-	tarc.mutation.SetUpdatedAt(t)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetUpdatedAt(v time.Time) *TicketAutomationRuleCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (tarc *TicketAutomationRuleCreate) SetNillableUpdatedAt(t *time.Time) *TicketAutomationRuleCreate {
-	if t != nil {
-		tarc.SetUpdatedAt(*t)
+func (_c *TicketAutomationRuleCreate) SetNillableUpdatedAt(v *time.Time) *TicketAutomationRuleCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetCreatorID sets the "creator" edge to the User entity by ID.
-func (tarc *TicketAutomationRuleCreate) SetCreatorID(id int) *TicketAutomationRuleCreate {
-	tarc.mutation.SetCreatorID(id)
-	return tarc
+func (_c *TicketAutomationRuleCreate) SetCreatorID(id int) *TicketAutomationRuleCreate {
+	_c.mutation.SetCreatorID(id)
+	return _c
 }
 
 // SetCreator sets the "creator" edge to the User entity.
-func (tarc *TicketAutomationRuleCreate) SetCreator(u *User) *TicketAutomationRuleCreate {
-	return tarc.SetCreatorID(u.ID)
+func (_c *TicketAutomationRuleCreate) SetCreator(v *User) *TicketAutomationRuleCreate {
+	return _c.SetCreatorID(v.ID)
 }
 
 // Mutation returns the TicketAutomationRuleMutation object of the builder.
-func (tarc *TicketAutomationRuleCreate) Mutation() *TicketAutomationRuleMutation {
-	return tarc.mutation
+func (_c *TicketAutomationRuleCreate) Mutation() *TicketAutomationRuleMutation {
+	return _c.mutation
 }
 
 // Save creates the TicketAutomationRule in the database.
-func (tarc *TicketAutomationRuleCreate) Save(ctx context.Context) (*TicketAutomationRule, error) {
-	tarc.defaults()
-	return withHooks(ctx, tarc.sqlSave, tarc.mutation, tarc.hooks)
+func (_c *TicketAutomationRuleCreate) Save(ctx context.Context) (*TicketAutomationRule, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tarc *TicketAutomationRuleCreate) SaveX(ctx context.Context) *TicketAutomationRule {
-	v, err := tarc.Save(ctx)
+func (_c *TicketAutomationRuleCreate) SaveX(ctx context.Context) *TicketAutomationRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -181,95 +181,95 @@ func (tarc *TicketAutomationRuleCreate) SaveX(ctx context.Context) *TicketAutoma
 }
 
 // Exec executes the query.
-func (tarc *TicketAutomationRuleCreate) Exec(ctx context.Context) error {
-	_, err := tarc.Save(ctx)
+func (_c *TicketAutomationRuleCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tarc *TicketAutomationRuleCreate) ExecX(ctx context.Context) {
-	if err := tarc.Exec(ctx); err != nil {
+func (_c *TicketAutomationRuleCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tarc *TicketAutomationRuleCreate) defaults() {
-	if _, ok := tarc.mutation.Priority(); !ok {
+func (_c *TicketAutomationRuleCreate) defaults() {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := ticketautomationrule.DefaultPriority
-		tarc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := tarc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := ticketautomationrule.DefaultIsActive
-		tarc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := tarc.mutation.ExecutionCount(); !ok {
+	if _, ok := _c.mutation.ExecutionCount(); !ok {
 		v := ticketautomationrule.DefaultExecutionCount
-		tarc.mutation.SetExecutionCount(v)
+		_c.mutation.SetExecutionCount(v)
 	}
-	if _, ok := tarc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := ticketautomationrule.DefaultCreatedAt()
-		tarc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := tarc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := ticketautomationrule.DefaultUpdatedAt()
-		tarc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tarc *TicketAutomationRuleCreate) check() error {
-	if _, ok := tarc.mutation.Name(); !ok {
+func (_c *TicketAutomationRuleCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "TicketAutomationRule.name"`)}
 	}
-	if v, ok := tarc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := ticketautomationrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketAutomationRule.name": %w`, err)}
 		}
 	}
-	if _, ok := tarc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "TicketAutomationRule.priority"`)}
 	}
-	if _, ok := tarc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "TicketAutomationRule.is_active"`)}
 	}
-	if _, ok := tarc.mutation.ExecutionCount(); !ok {
+	if _, ok := _c.mutation.ExecutionCount(); !ok {
 		return &ValidationError{Name: "execution_count", err: errors.New(`ent: missing required field "TicketAutomationRule.execution_count"`)}
 	}
-	if _, ok := tarc.mutation.CreatedBy(); !ok {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "TicketAutomationRule.created_by"`)}
 	}
-	if v, ok := tarc.mutation.CreatedBy(); ok {
+	if v, ok := _c.mutation.CreatedBy(); ok {
 		if err := ticketautomationrule.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "TicketAutomationRule.created_by": %w`, err)}
 		}
 	}
-	if _, ok := tarc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketAutomationRule.tenant_id"`)}
 	}
-	if v, ok := tarc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := ticketautomationrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketAutomationRule.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := tarc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketAutomationRule.created_at"`)}
 	}
-	if _, ok := tarc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "TicketAutomationRule.updated_at"`)}
 	}
-	if len(tarc.mutation.CreatorIDs()) == 0 {
+	if len(_c.mutation.CreatorIDs()) == 0 {
 		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "TicketAutomationRule.creator"`)}
 	}
 	return nil
 }
 
-func (tarc *TicketAutomationRuleCreate) sqlSave(ctx context.Context) (*TicketAutomationRule, error) {
-	if err := tarc.check(); err != nil {
+func (_c *TicketAutomationRuleCreate) sqlSave(ctx context.Context) (*TicketAutomationRule, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tarc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tarc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -277,61 +277,61 @@ func (tarc *TicketAutomationRuleCreate) sqlSave(ctx context.Context) (*TicketAut
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tarc.mutation.id = &_node.ID
-	tarc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tarc *TicketAutomationRuleCreate) createSpec() (*TicketAutomationRule, *sqlgraph.CreateSpec) {
+func (_c *TicketAutomationRuleCreate) createSpec() (*TicketAutomationRule, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TicketAutomationRule{config: tarc.config}
+		_node = &TicketAutomationRule{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ticketautomationrule.Table, sqlgraph.NewFieldSpec(ticketautomationrule.FieldID, field.TypeInt))
 	)
-	if value, ok := tarc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(ticketautomationrule.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tarc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(ticketautomationrule.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := tarc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(ticketautomationrule.FieldPriority, field.TypeInt, value)
 		_node.Priority = value
 	}
-	if value, ok := tarc.mutation.Conditions(); ok {
+	if value, ok := _c.mutation.Conditions(); ok {
 		_spec.SetField(ticketautomationrule.FieldConditions, field.TypeJSON, value)
 		_node.Conditions = value
 	}
-	if value, ok := tarc.mutation.Actions(); ok {
+	if value, ok := _c.mutation.Actions(); ok {
 		_spec.SetField(ticketautomationrule.FieldActions, field.TypeJSON, value)
 		_node.Actions = value
 	}
-	if value, ok := tarc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(ticketautomationrule.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := tarc.mutation.ExecutionCount(); ok {
+	if value, ok := _c.mutation.ExecutionCount(); ok {
 		_spec.SetField(ticketautomationrule.FieldExecutionCount, field.TypeInt, value)
 		_node.ExecutionCount = value
 	}
-	if value, ok := tarc.mutation.LastExecutedAt(); ok {
+	if value, ok := _c.mutation.LastExecutedAt(); ok {
 		_spec.SetField(ticketautomationrule.FieldLastExecutedAt, field.TypeTime, value)
 		_node.LastExecutedAt = value
 	}
-	if value, ok := tarc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticketautomationrule.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := tarc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketautomationrule.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := tarc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketautomationrule.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := tarc.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -359,16 +359,16 @@ type TicketAutomationRuleCreateBulk struct {
 }
 
 // Save creates the TicketAutomationRule entities in the database.
-func (tarcb *TicketAutomationRuleCreateBulk) Save(ctx context.Context) ([]*TicketAutomationRule, error) {
-	if tarcb.err != nil {
-		return nil, tarcb.err
+func (_c *TicketAutomationRuleCreateBulk) Save(ctx context.Context) ([]*TicketAutomationRule, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tarcb.builders))
-	nodes := make([]*TicketAutomationRule, len(tarcb.builders))
-	mutators := make([]Mutator, len(tarcb.builders))
-	for i := range tarcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TicketAutomationRule, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tarcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketAutomationRuleMutation)
@@ -382,11 +382,11 @@ func (tarcb *TicketAutomationRuleCreateBulk) Save(ctx context.Context) ([]*Ticke
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tarcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tarcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -410,7 +410,7 @@ func (tarcb *TicketAutomationRuleCreateBulk) Save(ctx context.Context) ([]*Ticke
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tarcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -418,8 +418,8 @@ func (tarcb *TicketAutomationRuleCreateBulk) Save(ctx context.Context) ([]*Ticke
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tarcb *TicketAutomationRuleCreateBulk) SaveX(ctx context.Context) []*TicketAutomationRule {
-	v, err := tarcb.Save(ctx)
+func (_c *TicketAutomationRuleCreateBulk) SaveX(ctx context.Context) []*TicketAutomationRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -427,14 +427,14 @@ func (tarcb *TicketAutomationRuleCreateBulk) SaveX(ctx context.Context) []*Ticke
 }
 
 // Exec executes the query.
-func (tarcb *TicketAutomationRuleCreateBulk) Exec(ctx context.Context) error {
-	_, err := tarcb.Save(ctx)
+func (_c *TicketAutomationRuleCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tarcb *TicketAutomationRuleCreateBulk) ExecX(ctx context.Context) {
-	if err := tarcb.Exec(ctx); err != nil {
+func (_c *TicketAutomationRuleCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

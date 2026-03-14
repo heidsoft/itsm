@@ -118,7 +118,7 @@ func (*CloudService) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the CloudService fields.
-func (cs *CloudService) assignValues(columns []string, values []any) error {
+func (_m *CloudService) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -129,60 +129,60 @@ func (cs *CloudService) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			cs.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case cloudservice.FieldParentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_id", values[i])
 			} else if value.Valid {
-				cs.ParentID = int(value.Int64)
+				_m.ParentID = int(value.Int64)
 			}
 		case cloudservice.FieldProvider:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field provider", values[i])
 			} else if value.Valid {
-				cs.Provider = value.String
+				_m.Provider = value.String
 			}
 		case cloudservice.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				cs.Category = value.String
+				_m.Category = value.String
 			}
 		case cloudservice.FieldServiceCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field service_code", values[i])
 			} else if value.Valid {
-				cs.ServiceCode = value.String
+				_m.ServiceCode = value.String
 			}
 		case cloudservice.FieldServiceName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field service_name", values[i])
 			} else if value.Valid {
-				cs.ServiceName = value.String
+				_m.ServiceName = value.String
 			}
 		case cloudservice.FieldResourceTypeCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_type_code", values[i])
 			} else if value.Valid {
-				cs.ResourceTypeCode = value.String
+				_m.ResourceTypeCode = value.String
 			}
 		case cloudservice.FieldResourceTypeName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_type_name", values[i])
 			} else if value.Valid {
-				cs.ResourceTypeName = value.String
+				_m.ResourceTypeName = value.String
 			}
 		case cloudservice.FieldAPIVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field api_version", values[i])
 			} else if value.Valid {
-				cs.APIVersion = value.String
+				_m.APIVersion = value.String
 			}
 		case cloudservice.FieldAttributeSchema:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field attribute_schema", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &cs.AttributeSchema); err != nil {
+				if err := json.Unmarshal(*value, &_m.AttributeSchema); err != nil {
 					return fmt.Errorf("unmarshal field attribute_schema: %w", err)
 				}
 			}
@@ -190,34 +190,34 @@ func (cs *CloudService) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_system", values[i])
 			} else if value.Valid {
-				cs.IsSystem = value.Bool
+				_m.IsSystem = value.Bool
 			}
 		case cloudservice.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				cs.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case cloudservice.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				cs.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case cloudservice.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				cs.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case cloudservice.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				cs.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			cs.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -225,89 +225,89 @@ func (cs *CloudService) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the CloudService.
 // This includes values selected through modifiers, order, etc.
-func (cs *CloudService) Value(name string) (ent.Value, error) {
-	return cs.selectValues.Get(name)
+func (_m *CloudService) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryParent queries the "parent" edge of the CloudService entity.
-func (cs *CloudService) QueryParent() *CloudServiceQuery {
-	return NewCloudServiceClient(cs.config).QueryParent(cs)
+func (_m *CloudService) QueryParent() *CloudServiceQuery {
+	return NewCloudServiceClient(_m.config).QueryParent(_m)
 }
 
 // QueryChildren queries the "children" edge of the CloudService entity.
-func (cs *CloudService) QueryChildren() *CloudServiceQuery {
-	return NewCloudServiceClient(cs.config).QueryChildren(cs)
+func (_m *CloudService) QueryChildren() *CloudServiceQuery {
+	return NewCloudServiceClient(_m.config).QueryChildren(_m)
 }
 
 // QueryResources queries the "resources" edge of the CloudService entity.
-func (cs *CloudService) QueryResources() *CloudResourceQuery {
-	return NewCloudServiceClient(cs.config).QueryResources(cs)
+func (_m *CloudService) QueryResources() *CloudResourceQuery {
+	return NewCloudServiceClient(_m.config).QueryResources(_m)
 }
 
 // Update returns a builder for updating this CloudService.
 // Note that you need to call CloudService.Unwrap() before calling this method if this CloudService
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (cs *CloudService) Update() *CloudServiceUpdateOne {
-	return NewCloudServiceClient(cs.config).UpdateOne(cs)
+func (_m *CloudService) Update() *CloudServiceUpdateOne {
+	return NewCloudServiceClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the CloudService entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (cs *CloudService) Unwrap() *CloudService {
-	_tx, ok := cs.config.driver.(*txDriver)
+func (_m *CloudService) Unwrap() *CloudService {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: CloudService is not a transactional entity")
 	}
-	cs.config.driver = _tx.drv
-	return cs
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (cs *CloudService) String() string {
+func (_m *CloudService) String() string {
 	var builder strings.Builder
 	builder.WriteString("CloudService(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", cs.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("parent_id=")
-	builder.WriteString(fmt.Sprintf("%v", cs.ParentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ParentID))
 	builder.WriteString(", ")
 	builder.WriteString("provider=")
-	builder.WriteString(cs.Provider)
+	builder.WriteString(_m.Provider)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(cs.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("service_code=")
-	builder.WriteString(cs.ServiceCode)
+	builder.WriteString(_m.ServiceCode)
 	builder.WriteString(", ")
 	builder.WriteString("service_name=")
-	builder.WriteString(cs.ServiceName)
+	builder.WriteString(_m.ServiceName)
 	builder.WriteString(", ")
 	builder.WriteString("resource_type_code=")
-	builder.WriteString(cs.ResourceTypeCode)
+	builder.WriteString(_m.ResourceTypeCode)
 	builder.WriteString(", ")
 	builder.WriteString("resource_type_name=")
-	builder.WriteString(cs.ResourceTypeName)
+	builder.WriteString(_m.ResourceTypeName)
 	builder.WriteString(", ")
 	builder.WriteString("api_version=")
-	builder.WriteString(cs.APIVersion)
+	builder.WriteString(_m.APIVersion)
 	builder.WriteString(", ")
 	builder.WriteString("attribute_schema=")
-	builder.WriteString(fmt.Sprintf("%v", cs.AttributeSchema))
+	builder.WriteString(fmt.Sprintf("%v", _m.AttributeSchema))
 	builder.WriteString(", ")
 	builder.WriteString("is_system=")
-	builder.WriteString(fmt.Sprintf("%v", cs.IsSystem))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsSystem))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", cs.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", cs.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(cs.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(cs.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

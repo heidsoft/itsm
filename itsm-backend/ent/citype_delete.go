@@ -20,56 +20,56 @@ type CITypeDelete struct {
 }
 
 // Where appends a list predicates to the CITypeDelete builder.
-func (ctd *CITypeDelete) Where(ps ...predicate.CIType) *CITypeDelete {
-	ctd.mutation.Where(ps...)
-	return ctd
+func (_d *CITypeDelete) Where(ps ...predicate.CIType) *CITypeDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ctd *CITypeDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ctd.sqlExec, ctd.mutation, ctd.hooks)
+func (_d *CITypeDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ctd *CITypeDelete) ExecX(ctx context.Context) int {
-	n, err := ctd.Exec(ctx)
+func (_d *CITypeDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ctd *CITypeDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *CITypeDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(citype.Table, sqlgraph.NewFieldSpec(citype.FieldID, field.TypeInt))
-	if ps := ctd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ctd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ctd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // CITypeDeleteOne is the builder for deleting a single CIType entity.
 type CITypeDeleteOne struct {
-	ctd *CITypeDelete
+	_d *CITypeDelete
 }
 
 // Where appends a list predicates to the CITypeDelete builder.
-func (ctdo *CITypeDeleteOne) Where(ps ...predicate.CIType) *CITypeDeleteOne {
-	ctdo.ctd.mutation.Where(ps...)
-	return ctdo
+func (_d *CITypeDeleteOne) Where(ps ...predicate.CIType) *CITypeDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (ctdo *CITypeDeleteOne) Exec(ctx context.Context) error {
-	n, err := ctdo.ctd.Exec(ctx)
+func (_d *CITypeDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (ctdo *CITypeDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ctdo *CITypeDeleteOne) ExecX(ctx context.Context) {
-	if err := ctdo.Exec(ctx); err != nil {
+func (_d *CITypeDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

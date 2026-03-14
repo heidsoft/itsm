@@ -99,7 +99,7 @@ func (*Asset) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Asset fields.
-func (a *Asset) assignValues(columns []string, values []any) error {
+func (_m *Asset) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -110,144 +110,144 @@ func (a *Asset) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			a.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case asset.FieldAssetNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field asset_number", values[i])
 			} else if value.Valid {
-				a.AssetNumber = value.String
+				_m.AssetNumber = value.String
 			}
 		case asset.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				a.Name = value.String
+				_m.Name = value.String
 			}
 		case asset.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				a.Description = value.String
+				_m.Description = value.String
 			}
 		case asset.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				a.Type = value.String
+				_m.Type = value.String
 			}
 		case asset.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				a.Status = value.String
+				_m.Status = value.String
 			}
 		case asset.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				a.Category = value.String
+				_m.Category = value.String
 			}
 		case asset.FieldSubcategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field subcategory", values[i])
 			} else if value.Valid {
-				a.Subcategory = value.String
+				_m.Subcategory = value.String
 			}
 		case asset.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				a.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case asset.FieldCiID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_id", values[i])
 			} else if value.Valid {
-				a.CiID = int(value.Int64)
+				_m.CiID = int(value.Int64)
 			}
 		case asset.FieldAssignedTo:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field assigned_to", values[i])
 			} else if value.Valid {
-				a.AssignedTo = int(value.Int64)
+				_m.AssignedTo = int(value.Int64)
 			}
 		case asset.FieldLocationID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field location_id", values[i])
 			} else if value.Valid {
-				a.LocationID = int(value.Int64)
+				_m.LocationID = int(value.Int64)
 			}
 		case asset.FieldSerialNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field serial_number", values[i])
 			} else if value.Valid {
-				a.SerialNumber = value.String
+				_m.SerialNumber = value.String
 			}
 		case asset.FieldModel:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field model", values[i])
 			} else if value.Valid {
-				a.Model = value.String
+				_m.Model = value.String
 			}
 		case asset.FieldManufacturer:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field manufacturer", values[i])
 			} else if value.Valid {
-				a.Manufacturer = value.String
+				_m.Manufacturer = value.String
 			}
 		case asset.FieldVendor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field vendor", values[i])
 			} else if value.Valid {
-				a.Vendor = value.String
+				_m.Vendor = value.String
 			}
 		case asset.FieldPurchaseDate:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field purchase_date", values[i])
 			} else if value.Valid {
-				a.PurchaseDate = value.String
+				_m.PurchaseDate = value.String
 			}
 		case asset.FieldPurchasePrice:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field purchase_price", values[i])
 			} else if value.Valid {
-				a.PurchasePrice = value.Float64
+				_m.PurchasePrice = value.Float64
 			}
 		case asset.FieldWarrantyExpiry:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field warranty_expiry", values[i])
 			} else if value.Valid {
-				a.WarrantyExpiry = value.String
+				_m.WarrantyExpiry = value.String
 			}
 		case asset.FieldSupportExpiry:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field support_expiry", values[i])
 			} else if value.Valid {
-				a.SupportExpiry = value.String
+				_m.SupportExpiry = value.String
 			}
 		case asset.FieldLocation:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field location", values[i])
 			} else if value.Valid {
-				a.Location = value.String
+				_m.Location = value.String
 			}
 		case asset.FieldDepartment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field department", values[i])
 			} else if value.Valid {
-				a.Department = value.String
+				_m.Department = value.String
 			}
 		case asset.FieldParentAssetID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_asset_id", values[i])
 			} else if value.Valid {
-				a.ParentAssetID = int(value.Int64)
+				_m.ParentAssetID = int(value.Int64)
 			}
 		case asset.FieldSpecifications:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field specifications", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &a.Specifications); err != nil {
+				if err := json.Unmarshal(*value, &_m.Specifications); err != nil {
 					return fmt.Errorf("unmarshal field specifications: %w", err)
 				}
 			}
@@ -255,7 +255,7 @@ func (a *Asset) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field custom_fields", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &a.CustomFields); err != nil {
+				if err := json.Unmarshal(*value, &_m.CustomFields); err != nil {
 					return fmt.Errorf("unmarshal field custom_fields: %w", err)
 				}
 			}
@@ -263,7 +263,7 @@ func (a *Asset) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &a.Tags); err != nil {
+				if err := json.Unmarshal(*value, &_m.Tags); err != nil {
 					return fmt.Errorf("unmarshal field tags: %w", err)
 				}
 			}
@@ -271,16 +271,16 @@ func (a *Asset) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				a.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case asset.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				a.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			a.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -288,113 +288,113 @@ func (a *Asset) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Asset.
 // This includes values selected through modifiers, order, etc.
-func (a *Asset) Value(name string) (ent.Value, error) {
-	return a.selectValues.Get(name)
+func (_m *Asset) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this Asset.
 // Note that you need to call Asset.Unwrap() before calling this method if this Asset
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (a *Asset) Update() *AssetUpdateOne {
-	return NewAssetClient(a.config).UpdateOne(a)
+func (_m *Asset) Update() *AssetUpdateOne {
+	return NewAssetClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Asset entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (a *Asset) Unwrap() *Asset {
-	_tx, ok := a.config.driver.(*txDriver)
+func (_m *Asset) Unwrap() *Asset {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Asset is not a transactional entity")
 	}
-	a.config.driver = _tx.drv
-	return a
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (a *Asset) String() string {
+func (_m *Asset) String() string {
 	var builder strings.Builder
 	builder.WriteString("Asset(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("asset_number=")
-	builder.WriteString(a.AssetNumber)
+	builder.WriteString(_m.AssetNumber)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
-	builder.WriteString(a.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(a.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(a.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(a.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(a.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("subcategory=")
-	builder.WriteString(a.Subcategory)
+	builder.WriteString(_m.Subcategory)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("ci_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.CiID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CiID))
 	builder.WriteString(", ")
 	builder.WriteString("assigned_to=")
-	builder.WriteString(fmt.Sprintf("%v", a.AssignedTo))
+	builder.WriteString(fmt.Sprintf("%v", _m.AssignedTo))
 	builder.WriteString(", ")
 	builder.WriteString("location_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.LocationID))
+	builder.WriteString(fmt.Sprintf("%v", _m.LocationID))
 	builder.WriteString(", ")
 	builder.WriteString("serial_number=")
-	builder.WriteString(a.SerialNumber)
+	builder.WriteString(_m.SerialNumber)
 	builder.WriteString(", ")
 	builder.WriteString("model=")
-	builder.WriteString(a.Model)
+	builder.WriteString(_m.Model)
 	builder.WriteString(", ")
 	builder.WriteString("manufacturer=")
-	builder.WriteString(a.Manufacturer)
+	builder.WriteString(_m.Manufacturer)
 	builder.WriteString(", ")
 	builder.WriteString("vendor=")
-	builder.WriteString(a.Vendor)
+	builder.WriteString(_m.Vendor)
 	builder.WriteString(", ")
 	builder.WriteString("purchase_date=")
-	builder.WriteString(a.PurchaseDate)
+	builder.WriteString(_m.PurchaseDate)
 	builder.WriteString(", ")
 	builder.WriteString("purchase_price=")
-	builder.WriteString(fmt.Sprintf("%v", a.PurchasePrice))
+	builder.WriteString(fmt.Sprintf("%v", _m.PurchasePrice))
 	builder.WriteString(", ")
 	builder.WriteString("warranty_expiry=")
-	builder.WriteString(a.WarrantyExpiry)
+	builder.WriteString(_m.WarrantyExpiry)
 	builder.WriteString(", ")
 	builder.WriteString("support_expiry=")
-	builder.WriteString(a.SupportExpiry)
+	builder.WriteString(_m.SupportExpiry)
 	builder.WriteString(", ")
 	builder.WriteString("location=")
-	builder.WriteString(a.Location)
+	builder.WriteString(_m.Location)
 	builder.WriteString(", ")
 	builder.WriteString("department=")
-	builder.WriteString(a.Department)
+	builder.WriteString(_m.Department)
 	builder.WriteString(", ")
 	builder.WriteString("parent_asset_id=")
-	builder.WriteString(fmt.Sprintf("%v", a.ParentAssetID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ParentAssetID))
 	builder.WriteString(", ")
 	builder.WriteString("specifications=")
-	builder.WriteString(fmt.Sprintf("%v", a.Specifications))
+	builder.WriteString(fmt.Sprintf("%v", _m.Specifications))
 	builder.WriteString(", ")
 	builder.WriteString("custom_fields=")
-	builder.WriteString(fmt.Sprintf("%v", a.CustomFields))
+	builder.WriteString(fmt.Sprintf("%v", _m.CustomFields))
 	builder.WriteString(", ")
 	builder.WriteString("tags=")
-	builder.WriteString(fmt.Sprintf("%v", a.Tags))
+	builder.WriteString(fmt.Sprintf("%v", _m.Tags))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(a.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

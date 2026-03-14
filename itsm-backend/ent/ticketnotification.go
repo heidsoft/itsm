@@ -98,7 +98,7 @@ func (*TicketNotification) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketNotification fields.
-func (tn *TicketNotification) assignValues(columns []string, values []any) error {
+func (_m *TicketNotification) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -109,69 +109,69 @@ func (tn *TicketNotification) assignValues(columns []string, values []any) error
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			tn.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ticketnotification.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
 			} else if value.Valid {
-				tn.TicketID = int(value.Int64)
+				_m.TicketID = int(value.Int64)
 			}
 		case ticketnotification.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				tn.UserID = int(value.Int64)
+				_m.UserID = int(value.Int64)
 			}
 		case ticketnotification.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				tn.Type = value.String
+				_m.Type = value.String
 			}
 		case ticketnotification.FieldChannel:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field channel", values[i])
 			} else if value.Valid {
-				tn.Channel = value.String
+				_m.Channel = value.String
 			}
 		case ticketnotification.FieldContent:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value.Valid {
-				tn.Content = value.String
+				_m.Content = value.String
 			}
 		case ticketnotification.FieldSentAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field sent_at", values[i])
 			} else if value.Valid {
-				tn.SentAt = value.Time
+				_m.SentAt = value.Time
 			}
 		case ticketnotification.FieldReadAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field read_at", values[i])
 			} else if value.Valid {
-				tn.ReadAt = value.Time
+				_m.ReadAt = value.Time
 			}
 		case ticketnotification.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				tn.Status = value.String
+				_m.Status = value.String
 			}
 		case ticketnotification.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				tn.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ticketnotification.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tn.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			tn.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -179,72 +179,72 @@ func (tn *TicketNotification) assignValues(columns []string, values []any) error
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketNotification.
 // This includes values selected through modifiers, order, etc.
-func (tn *TicketNotification) Value(name string) (ent.Value, error) {
-	return tn.selectValues.Get(name)
+func (_m *TicketNotification) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTicket queries the "ticket" edge of the TicketNotification entity.
-func (tn *TicketNotification) QueryTicket() *TicketQuery {
-	return NewTicketNotificationClient(tn.config).QueryTicket(tn)
+func (_m *TicketNotification) QueryTicket() *TicketQuery {
+	return NewTicketNotificationClient(_m.config).QueryTicket(_m)
 }
 
 // QueryUser queries the "user" edge of the TicketNotification entity.
-func (tn *TicketNotification) QueryUser() *UserQuery {
-	return NewTicketNotificationClient(tn.config).QueryUser(tn)
+func (_m *TicketNotification) QueryUser() *UserQuery {
+	return NewTicketNotificationClient(_m.config).QueryUser(_m)
 }
 
 // Update returns a builder for updating this TicketNotification.
 // Note that you need to call TicketNotification.Unwrap() before calling this method if this TicketNotification
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tn *TicketNotification) Update() *TicketNotificationUpdateOne {
-	return NewTicketNotificationClient(tn.config).UpdateOne(tn)
+func (_m *TicketNotification) Update() *TicketNotificationUpdateOne {
+	return NewTicketNotificationClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketNotification entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tn *TicketNotification) Unwrap() *TicketNotification {
-	_tx, ok := tn.config.driver.(*txDriver)
+func (_m *TicketNotification) Unwrap() *TicketNotification {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketNotification is not a transactional entity")
 	}
-	tn.config.driver = _tx.drv
-	return tn
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tn *TicketNotification) String() string {
+func (_m *TicketNotification) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketNotification(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tn.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", tn.TicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", tn.UserID))
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(tn.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("channel=")
-	builder.WriteString(tn.Channel)
+	builder.WriteString(_m.Channel)
 	builder.WriteString(", ")
 	builder.WriteString("content=")
-	builder.WriteString(tn.Content)
+	builder.WriteString(_m.Content)
 	builder.WriteString(", ")
 	builder.WriteString("sent_at=")
-	builder.WriteString(tn.SentAt.Format(time.ANSIC))
+	builder.WriteString(_m.SentAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("read_at=")
-	builder.WriteString(tn.ReadAt.Format(time.ANSIC))
+	builder.WriteString(_m.ReadAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(tn.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", tn.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tn.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

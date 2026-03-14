@@ -21,93 +21,93 @@ type PromptTemplateCreate struct {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ptc *PromptTemplateCreate) SetCreatedAt(t time.Time) *PromptTemplateCreate {
-	ptc.mutation.SetCreatedAt(t)
-	return ptc
+func (_c *PromptTemplateCreate) SetCreatedAt(v time.Time) *PromptTemplateCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ptc *PromptTemplateCreate) SetNillableCreatedAt(t *time.Time) *PromptTemplateCreate {
-	if t != nil {
-		ptc.SetCreatedAt(*t)
+func (_c *PromptTemplateCreate) SetNillableCreatedAt(v *time.Time) *PromptTemplateCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ptc *PromptTemplateCreate) SetUpdatedAt(t time.Time) *PromptTemplateCreate {
-	ptc.mutation.SetUpdatedAt(t)
-	return ptc
+func (_c *PromptTemplateCreate) SetUpdatedAt(v time.Time) *PromptTemplateCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ptc *PromptTemplateCreate) SetNillableUpdatedAt(t *time.Time) *PromptTemplateCreate {
-	if t != nil {
-		ptc.SetUpdatedAt(*t)
+func (_c *PromptTemplateCreate) SetNillableUpdatedAt(v *time.Time) *PromptTemplateCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetName sets the "name" field.
-func (ptc *PromptTemplateCreate) SetName(s string) *PromptTemplateCreate {
-	ptc.mutation.SetName(s)
-	return ptc
+func (_c *PromptTemplateCreate) SetName(v string) *PromptTemplateCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetVersion sets the "version" field.
-func (ptc *PromptTemplateCreate) SetVersion(s string) *PromptTemplateCreate {
-	ptc.mutation.SetVersion(s)
-	return ptc
+func (_c *PromptTemplateCreate) SetVersion(v string) *PromptTemplateCreate {
+	_c.mutation.SetVersion(v)
+	return _c
 }
 
 // SetNillableVersion sets the "version" field if the given value is not nil.
-func (ptc *PromptTemplateCreate) SetNillableVersion(s *string) *PromptTemplateCreate {
-	if s != nil {
-		ptc.SetVersion(*s)
+func (_c *PromptTemplateCreate) SetNillableVersion(v *string) *PromptTemplateCreate {
+	if v != nil {
+		_c.SetVersion(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetTemplate sets the "template" field.
-func (ptc *PromptTemplateCreate) SetTemplate(s string) *PromptTemplateCreate {
-	ptc.mutation.SetTemplate(s)
-	return ptc
+func (_c *PromptTemplateCreate) SetTemplate(v string) *PromptTemplateCreate {
+	_c.mutation.SetTemplate(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (ptc *PromptTemplateCreate) SetDescription(s string) *PromptTemplateCreate {
-	ptc.mutation.SetDescription(s)
-	return ptc
+func (_c *PromptTemplateCreate) SetDescription(v string) *PromptTemplateCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ptc *PromptTemplateCreate) SetNillableDescription(s *string) *PromptTemplateCreate {
-	if s != nil {
-		ptc.SetDescription(*s)
+func (_c *PromptTemplateCreate) SetNillableDescription(v *string) *PromptTemplateCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetMetadata sets the "metadata" field.
-func (ptc *PromptTemplateCreate) SetMetadata(m map[string]interface{}) *PromptTemplateCreate {
-	ptc.mutation.SetMetadata(m)
-	return ptc
+func (_c *PromptTemplateCreate) SetMetadata(v map[string]interface{}) *PromptTemplateCreate {
+	_c.mutation.SetMetadata(v)
+	return _c
 }
 
 // Mutation returns the PromptTemplateMutation object of the builder.
-func (ptc *PromptTemplateCreate) Mutation() *PromptTemplateMutation {
-	return ptc.mutation
+func (_c *PromptTemplateCreate) Mutation() *PromptTemplateMutation {
+	return _c.mutation
 }
 
 // Save creates the PromptTemplate in the database.
-func (ptc *PromptTemplateCreate) Save(ctx context.Context) (*PromptTemplate, error) {
-	ptc.defaults()
-	return withHooks(ctx, ptc.sqlSave, ptc.mutation, ptc.hooks)
+func (_c *PromptTemplateCreate) Save(ctx context.Context) (*PromptTemplate, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ptc *PromptTemplateCreate) SaveX(ctx context.Context) *PromptTemplate {
-	v, err := ptc.Save(ctx)
+func (_c *PromptTemplateCreate) SaveX(ctx context.Context) *PromptTemplate {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -115,67 +115,67 @@ func (ptc *PromptTemplateCreate) SaveX(ctx context.Context) *PromptTemplate {
 }
 
 // Exec executes the query.
-func (ptc *PromptTemplateCreate) Exec(ctx context.Context) error {
-	_, err := ptc.Save(ctx)
+func (_c *PromptTemplateCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptc *PromptTemplateCreate) ExecX(ctx context.Context) {
-	if err := ptc.Exec(ctx); err != nil {
+func (_c *PromptTemplateCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ptc *PromptTemplateCreate) defaults() {
-	if _, ok := ptc.mutation.CreatedAt(); !ok {
+func (_c *PromptTemplateCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := prompttemplate.DefaultCreatedAt()
-		ptc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ptc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := prompttemplate.DefaultUpdatedAt()
-		ptc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
-	if _, ok := ptc.mutation.Version(); !ok {
+	if _, ok := _c.mutation.Version(); !ok {
 		v := prompttemplate.DefaultVersion
-		ptc.mutation.SetVersion(v)
+		_c.mutation.SetVersion(v)
 	}
-	if _, ok := ptc.mutation.Description(); !ok {
+	if _, ok := _c.mutation.Description(); !ok {
 		v := prompttemplate.DefaultDescription
-		ptc.mutation.SetDescription(v)
+		_c.mutation.SetDescription(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ptc *PromptTemplateCreate) check() error {
-	if _, ok := ptc.mutation.CreatedAt(); !ok {
+func (_c *PromptTemplateCreate) check() error {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "PromptTemplate.created_at"`)}
 	}
-	if _, ok := ptc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "PromptTemplate.updated_at"`)}
 	}
-	if _, ok := ptc.mutation.Name(); !ok {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "PromptTemplate.name"`)}
 	}
-	if _, ok := ptc.mutation.Version(); !ok {
+	if _, ok := _c.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "PromptTemplate.version"`)}
 	}
-	if _, ok := ptc.mutation.Template(); !ok {
+	if _, ok := _c.mutation.Template(); !ok {
 		return &ValidationError{Name: "template", err: errors.New(`ent: missing required field "PromptTemplate.template"`)}
 	}
-	if _, ok := ptc.mutation.Description(); !ok {
+	if _, ok := _c.mutation.Description(); !ok {
 		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "PromptTemplate.description"`)}
 	}
 	return nil
 }
 
-func (ptc *PromptTemplateCreate) sqlSave(ctx context.Context) (*PromptTemplate, error) {
-	if err := ptc.check(); err != nil {
+func (_c *PromptTemplateCreate) sqlSave(ctx context.Context) (*PromptTemplate, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ptc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ptc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -183,41 +183,41 @@ func (ptc *PromptTemplateCreate) sqlSave(ctx context.Context) (*PromptTemplate, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ptc.mutation.id = &_node.ID
-	ptc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ptc *PromptTemplateCreate) createSpec() (*PromptTemplate, *sqlgraph.CreateSpec) {
+func (_c *PromptTemplateCreate) createSpec() (*PromptTemplate, *sqlgraph.CreateSpec) {
 	var (
-		_node = &PromptTemplate{config: ptc.config}
+		_node = &PromptTemplate{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(prompttemplate.Table, sqlgraph.NewFieldSpec(prompttemplate.FieldID, field.TypeInt))
 	)
-	if value, ok := ptc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(prompttemplate.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ptc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(prompttemplate.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if value, ok := ptc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(prompttemplate.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := ptc.mutation.Version(); ok {
+	if value, ok := _c.mutation.Version(); ok {
 		_spec.SetField(prompttemplate.FieldVersion, field.TypeString, value)
 		_node.Version = value
 	}
-	if value, ok := ptc.mutation.Template(); ok {
+	if value, ok := _c.mutation.Template(); ok {
 		_spec.SetField(prompttemplate.FieldTemplate, field.TypeString, value)
 		_node.Template = value
 	}
-	if value, ok := ptc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(prompttemplate.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := ptc.mutation.Metadata(); ok {
+	if value, ok := _c.mutation.Metadata(); ok {
 		_spec.SetField(prompttemplate.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
 	}
@@ -232,16 +232,16 @@ type PromptTemplateCreateBulk struct {
 }
 
 // Save creates the PromptTemplate entities in the database.
-func (ptcb *PromptTemplateCreateBulk) Save(ctx context.Context) ([]*PromptTemplate, error) {
-	if ptcb.err != nil {
-		return nil, ptcb.err
+func (_c *PromptTemplateCreateBulk) Save(ctx context.Context) ([]*PromptTemplate, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ptcb.builders))
-	nodes := make([]*PromptTemplate, len(ptcb.builders))
-	mutators := make([]Mutator, len(ptcb.builders))
-	for i := range ptcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*PromptTemplate, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ptcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*PromptTemplateMutation)
@@ -255,11 +255,11 @@ func (ptcb *PromptTemplateCreateBulk) Save(ctx context.Context) ([]*PromptTempla
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ptcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ptcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -283,7 +283,7 @@ func (ptcb *PromptTemplateCreateBulk) Save(ctx context.Context) ([]*PromptTempla
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ptcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -291,8 +291,8 @@ func (ptcb *PromptTemplateCreateBulk) Save(ctx context.Context) ([]*PromptTempla
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ptcb *PromptTemplateCreateBulk) SaveX(ctx context.Context) []*PromptTemplate {
-	v, err := ptcb.Save(ctx)
+func (_c *PromptTemplateCreateBulk) SaveX(ctx context.Context) []*PromptTemplate {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -300,14 +300,14 @@ func (ptcb *PromptTemplateCreateBulk) SaveX(ctx context.Context) []*PromptTempla
 }
 
 // Exec executes the query.
-func (ptcb *PromptTemplateCreateBulk) Exec(ctx context.Context) error {
-	_, err := ptcb.Save(ctx)
+func (_c *PromptTemplateCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptcb *PromptTemplateCreateBulk) ExecX(ctx context.Context) {
-	if err := ptcb.Exec(ctx); err != nil {
+func (_c *PromptTemplateCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -108,7 +108,7 @@ func (*Project) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Project fields.
-func (pr *Project) assignValues(columns []string, values []any) error {
+func (_m *Project) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -119,75 +119,75 @@ func (pr *Project) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pr.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case project.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				pr.Name = value.String
+				_m.Name = value.String
 			}
 		case project.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				pr.Code = value.String
+				_m.Code = value.String
 			}
 		case project.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				pr.Description = value.String
+				_m.Description = value.String
 			}
 		case project.FieldManagerID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field manager_id", values[i])
 			} else if value.Valid {
-				pr.ManagerID = int(value.Int64)
+				_m.ManagerID = int(value.Int64)
 			}
 		case project.FieldDepartmentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field department_id", values[i])
 			} else if value.Valid {
-				pr.DepartmentID = int(value.Int64)
+				_m.DepartmentID = int(value.Int64)
 			}
 		case project.FieldStartDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field start_date", values[i])
 			} else if value.Valid {
-				pr.StartDate = value.Time
+				_m.StartDate = value.Time
 			}
 		case project.FieldEndDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field end_date", values[i])
 			} else if value.Valid {
-				pr.EndDate = value.Time
+				_m.EndDate = value.Time
 			}
 		case project.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				pr.Status = value.String
+				_m.Status = value.String
 			}
 		case project.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pr.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case project.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pr.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case project.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pr.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			pr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -195,80 +195,80 @@ func (pr *Project) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Project.
 // This includes values selected through modifiers, order, etc.
-func (pr *Project) Value(name string) (ent.Value, error) {
-	return pr.selectValues.Get(name)
+func (_m *Project) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryDepartment queries the "department" edge of the Project entity.
-func (pr *Project) QueryDepartment() *DepartmentQuery {
-	return NewProjectClient(pr.config).QueryDepartment(pr)
+func (_m *Project) QueryDepartment() *DepartmentQuery {
+	return NewProjectClient(_m.config).QueryDepartment(_m)
 }
 
 // QueryApplications queries the "applications" edge of the Project entity.
-func (pr *Project) QueryApplications() *ApplicationQuery {
-	return NewProjectClient(pr.config).QueryApplications(pr)
+func (_m *Project) QueryApplications() *ApplicationQuery {
+	return NewProjectClient(_m.config).QueryApplications(_m)
 }
 
 // QueryTags queries the "tags" edge of the Project entity.
-func (pr *Project) QueryTags() *TagQuery {
-	return NewProjectClient(pr.config).QueryTags(pr)
+func (_m *Project) QueryTags() *TagQuery {
+	return NewProjectClient(_m.config).QueryTags(_m)
 }
 
 // Update returns a builder for updating this Project.
 // Note that you need to call Project.Unwrap() before calling this method if this Project
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pr *Project) Update() *ProjectUpdateOne {
-	return NewProjectClient(pr.config).UpdateOne(pr)
+func (_m *Project) Update() *ProjectUpdateOne {
+	return NewProjectClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Project entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pr *Project) Unwrap() *Project {
-	_tx, ok := pr.config.driver.(*txDriver)
+func (_m *Project) Unwrap() *Project {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Project is not a transactional entity")
 	}
-	pr.config.driver = _tx.drv
-	return pr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pr *Project) String() string {
+func (_m *Project) String() string {
 	var builder strings.Builder
 	builder.WriteString("Project(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(pr.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("code=")
-	builder.WriteString(pr.Code)
+	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(pr.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("manager_id=")
-	builder.WriteString(fmt.Sprintf("%v", pr.ManagerID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ManagerID))
 	builder.WriteString(", ")
 	builder.WriteString("department_id=")
-	builder.WriteString(fmt.Sprintf("%v", pr.DepartmentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("start_date=")
-	builder.WriteString(pr.StartDate.Format(time.ANSIC))
+	builder.WriteString(_m.StartDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("end_date=")
-	builder.WriteString(pr.EndDate.Format(time.ANSIC))
+	builder.WriteString(_m.EndDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(pr.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pr.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pr.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pr.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

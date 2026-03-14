@@ -21,127 +21,127 @@ type ProvisioningTaskCreate struct {
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ptc *ProvisioningTaskCreate) SetTenantID(i int) *ProvisioningTaskCreate {
-	ptc.mutation.SetTenantID(i)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetTenantID(v int) *ProvisioningTaskCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetServiceRequestID sets the "service_request_id" field.
-func (ptc *ProvisioningTaskCreate) SetServiceRequestID(i int) *ProvisioningTaskCreate {
-	ptc.mutation.SetServiceRequestID(i)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetServiceRequestID(v int) *ProvisioningTaskCreate {
+	_c.mutation.SetServiceRequestID(v)
+	return _c
 }
 
 // SetProvider sets the "provider" field.
-func (ptc *ProvisioningTaskCreate) SetProvider(s string) *ProvisioningTaskCreate {
-	ptc.mutation.SetProvider(s)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetProvider(v string) *ProvisioningTaskCreate {
+	_c.mutation.SetProvider(v)
+	return _c
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (ptc *ProvisioningTaskCreate) SetNillableProvider(s *string) *ProvisioningTaskCreate {
-	if s != nil {
-		ptc.SetProvider(*s)
+func (_c *ProvisioningTaskCreate) SetNillableProvider(v *string) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetProvider(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetResourceType sets the "resource_type" field.
-func (ptc *ProvisioningTaskCreate) SetResourceType(s string) *ProvisioningTaskCreate {
-	ptc.mutation.SetResourceType(s)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetResourceType(v string) *ProvisioningTaskCreate {
+	_c.mutation.SetResourceType(v)
+	return _c
 }
 
 // SetNillableResourceType sets the "resource_type" field if the given value is not nil.
-func (ptc *ProvisioningTaskCreate) SetNillableResourceType(s *string) *ProvisioningTaskCreate {
-	if s != nil {
-		ptc.SetResourceType(*s)
+func (_c *ProvisioningTaskCreate) SetNillableResourceType(v *string) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetResourceType(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetPayload sets the "payload" field.
-func (ptc *ProvisioningTaskCreate) SetPayload(m map[string]interface{}) *ProvisioningTaskCreate {
-	ptc.mutation.SetPayload(m)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetPayload(v map[string]interface{}) *ProvisioningTaskCreate {
+	_c.mutation.SetPayload(v)
+	return _c
 }
 
 // SetResult sets the "result" field.
-func (ptc *ProvisioningTaskCreate) SetResult(m map[string]interface{}) *ProvisioningTaskCreate {
-	ptc.mutation.SetResult(m)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetResult(v map[string]interface{}) *ProvisioningTaskCreate {
+	_c.mutation.SetResult(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (ptc *ProvisioningTaskCreate) SetStatus(s string) *ProvisioningTaskCreate {
-	ptc.mutation.SetStatus(s)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetStatus(v string) *ProvisioningTaskCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (ptc *ProvisioningTaskCreate) SetNillableStatus(s *string) *ProvisioningTaskCreate {
-	if s != nil {
-		ptc.SetStatus(*s)
+func (_c *ProvisioningTaskCreate) SetNillableStatus(v *string) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (ptc *ProvisioningTaskCreate) SetErrorMessage(s string) *ProvisioningTaskCreate {
-	ptc.mutation.SetErrorMessage(s)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetErrorMessage(v string) *ProvisioningTaskCreate {
+	_c.mutation.SetErrorMessage(v)
+	return _c
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (ptc *ProvisioningTaskCreate) SetNillableErrorMessage(s *string) *ProvisioningTaskCreate {
-	if s != nil {
-		ptc.SetErrorMessage(*s)
+func (_c *ProvisioningTaskCreate) SetNillableErrorMessage(v *string) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetErrorMessage(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ptc *ProvisioningTaskCreate) SetCreatedAt(t time.Time) *ProvisioningTaskCreate {
-	ptc.mutation.SetCreatedAt(t)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetCreatedAt(v time.Time) *ProvisioningTaskCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ptc *ProvisioningTaskCreate) SetNillableCreatedAt(t *time.Time) *ProvisioningTaskCreate {
-	if t != nil {
-		ptc.SetCreatedAt(*t)
+func (_c *ProvisioningTaskCreate) SetNillableCreatedAt(v *time.Time) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return ptc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ptc *ProvisioningTaskCreate) SetUpdatedAt(t time.Time) *ProvisioningTaskCreate {
-	ptc.mutation.SetUpdatedAt(t)
-	return ptc
+func (_c *ProvisioningTaskCreate) SetUpdatedAt(v time.Time) *ProvisioningTaskCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (ptc *ProvisioningTaskCreate) SetNillableUpdatedAt(t *time.Time) *ProvisioningTaskCreate {
-	if t != nil {
-		ptc.SetUpdatedAt(*t)
+func (_c *ProvisioningTaskCreate) SetNillableUpdatedAt(v *time.Time) *ProvisioningTaskCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return ptc
+	return _c
 }
 
 // Mutation returns the ProvisioningTaskMutation object of the builder.
-func (ptc *ProvisioningTaskCreate) Mutation() *ProvisioningTaskMutation {
-	return ptc.mutation
+func (_c *ProvisioningTaskCreate) Mutation() *ProvisioningTaskMutation {
+	return _c.mutation
 }
 
 // Save creates the ProvisioningTask in the database.
-func (ptc *ProvisioningTaskCreate) Save(ctx context.Context) (*ProvisioningTask, error) {
-	ptc.defaults()
-	return withHooks(ctx, ptc.sqlSave, ptc.mutation, ptc.hooks)
+func (_c *ProvisioningTaskCreate) Save(ctx context.Context) (*ProvisioningTask, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (ptc *ProvisioningTaskCreate) SaveX(ctx context.Context) *ProvisioningTask {
-	v, err := ptc.Save(ctx)
+func (_c *ProvisioningTaskCreate) SaveX(ctx context.Context) *ProvisioningTask {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -149,84 +149,84 @@ func (ptc *ProvisioningTaskCreate) SaveX(ctx context.Context) *ProvisioningTask 
 }
 
 // Exec executes the query.
-func (ptc *ProvisioningTaskCreate) Exec(ctx context.Context) error {
-	_, err := ptc.Save(ctx)
+func (_c *ProvisioningTaskCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptc *ProvisioningTaskCreate) ExecX(ctx context.Context) {
-	if err := ptc.Exec(ctx); err != nil {
+func (_c *ProvisioningTaskCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ptc *ProvisioningTaskCreate) defaults() {
-	if _, ok := ptc.mutation.Provider(); !ok {
+func (_c *ProvisioningTaskCreate) defaults() {
+	if _, ok := _c.mutation.Provider(); !ok {
 		v := provisioningtask.DefaultProvider
-		ptc.mutation.SetProvider(v)
+		_c.mutation.SetProvider(v)
 	}
-	if _, ok := ptc.mutation.ResourceType(); !ok {
+	if _, ok := _c.mutation.ResourceType(); !ok {
 		v := provisioningtask.DefaultResourceType
-		ptc.mutation.SetResourceType(v)
+		_c.mutation.SetResourceType(v)
 	}
-	if _, ok := ptc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := provisioningtask.DefaultStatus
-		ptc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := ptc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := provisioningtask.DefaultCreatedAt()
-		ptc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := ptc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := provisioningtask.DefaultUpdatedAt()
-		ptc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ptc *ProvisioningTaskCreate) check() error {
-	if _, ok := ptc.mutation.TenantID(); !ok {
+func (_c *ProvisioningTaskCreate) check() error {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProvisioningTask.tenant_id"`)}
 	}
-	if v, ok := ptc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := provisioningtask.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.ServiceRequestID(); !ok {
+	if _, ok := _c.mutation.ServiceRequestID(); !ok {
 		return &ValidationError{Name: "service_request_id", err: errors.New(`ent: missing required field "ProvisioningTask.service_request_id"`)}
 	}
-	if v, ok := ptc.mutation.ServiceRequestID(); ok {
+	if v, ok := _c.mutation.ServiceRequestID(); ok {
 		if err := provisioningtask.ServiceRequestIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_request_id", err: fmt.Errorf(`ent: validator failed for field "ProvisioningTask.service_request_id": %w`, err)}
 		}
 	}
-	if _, ok := ptc.mutation.Provider(); !ok {
+	if _, ok := _c.mutation.Provider(); !ok {
 		return &ValidationError{Name: "provider", err: errors.New(`ent: missing required field "ProvisioningTask.provider"`)}
 	}
-	if _, ok := ptc.mutation.ResourceType(); !ok {
+	if _, ok := _c.mutation.ResourceType(); !ok {
 		return &ValidationError{Name: "resource_type", err: errors.New(`ent: missing required field "ProvisioningTask.resource_type"`)}
 	}
-	if _, ok := ptc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ProvisioningTask.status"`)}
 	}
-	if _, ok := ptc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProvisioningTask.created_at"`)}
 	}
-	if _, ok := ptc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProvisioningTask.updated_at"`)}
 	}
 	return nil
 }
 
-func (ptc *ProvisioningTaskCreate) sqlSave(ctx context.Context) (*ProvisioningTask, error) {
-	if err := ptc.check(); err != nil {
+func (_c *ProvisioningTaskCreate) sqlSave(ctx context.Context) (*ProvisioningTask, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := ptc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, ptc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -234,53 +234,53 @@ func (ptc *ProvisioningTaskCreate) sqlSave(ctx context.Context) (*ProvisioningTa
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	ptc.mutation.id = &_node.ID
-	ptc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (ptc *ProvisioningTaskCreate) createSpec() (*ProvisioningTask, *sqlgraph.CreateSpec) {
+func (_c *ProvisioningTaskCreate) createSpec() (*ProvisioningTask, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProvisioningTask{config: ptc.config}
+		_node = &ProvisioningTask{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(provisioningtask.Table, sqlgraph.NewFieldSpec(provisioningtask.FieldID, field.TypeInt))
 	)
-	if value, ok := ptc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(provisioningtask.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := ptc.mutation.ServiceRequestID(); ok {
+	if value, ok := _c.mutation.ServiceRequestID(); ok {
 		_spec.SetField(provisioningtask.FieldServiceRequestID, field.TypeInt, value)
 		_node.ServiceRequestID = value
 	}
-	if value, ok := ptc.mutation.Provider(); ok {
+	if value, ok := _c.mutation.Provider(); ok {
 		_spec.SetField(provisioningtask.FieldProvider, field.TypeString, value)
 		_node.Provider = value
 	}
-	if value, ok := ptc.mutation.ResourceType(); ok {
+	if value, ok := _c.mutation.ResourceType(); ok {
 		_spec.SetField(provisioningtask.FieldResourceType, field.TypeString, value)
 		_node.ResourceType = value
 	}
-	if value, ok := ptc.mutation.Payload(); ok {
+	if value, ok := _c.mutation.Payload(); ok {
 		_spec.SetField(provisioningtask.FieldPayload, field.TypeJSON, value)
 		_node.Payload = value
 	}
-	if value, ok := ptc.mutation.Result(); ok {
+	if value, ok := _c.mutation.Result(); ok {
 		_spec.SetField(provisioningtask.FieldResult, field.TypeJSON, value)
 		_node.Result = value
 	}
-	if value, ok := ptc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(provisioningtask.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := ptc.mutation.ErrorMessage(); ok {
+	if value, ok := _c.mutation.ErrorMessage(); ok {
 		_spec.SetField(provisioningtask.FieldErrorMessage, field.TypeString, value)
 		_node.ErrorMessage = value
 	}
-	if value, ok := ptc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := ptc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(provisioningtask.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -295,16 +295,16 @@ type ProvisioningTaskCreateBulk struct {
 }
 
 // Save creates the ProvisioningTask entities in the database.
-func (ptcb *ProvisioningTaskCreateBulk) Save(ctx context.Context) ([]*ProvisioningTask, error) {
-	if ptcb.err != nil {
-		return nil, ptcb.err
+func (_c *ProvisioningTaskCreateBulk) Save(ctx context.Context) ([]*ProvisioningTask, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ptcb.builders))
-	nodes := make([]*ProvisioningTask, len(ptcb.builders))
-	mutators := make([]Mutator, len(ptcb.builders))
-	for i := range ptcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProvisioningTask, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ptcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProvisioningTaskMutation)
@@ -318,11 +318,11 @@ func (ptcb *ProvisioningTaskCreateBulk) Save(ctx context.Context) ([]*Provisioni
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ptcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ptcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -346,7 +346,7 @@ func (ptcb *ProvisioningTaskCreateBulk) Save(ctx context.Context) ([]*Provisioni
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ptcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -354,8 +354,8 @@ func (ptcb *ProvisioningTaskCreateBulk) Save(ctx context.Context) ([]*Provisioni
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ptcb *ProvisioningTaskCreateBulk) SaveX(ctx context.Context) []*ProvisioningTask {
-	v, err := ptcb.Save(ctx)
+func (_c *ProvisioningTaskCreateBulk) SaveX(ctx context.Context) []*ProvisioningTask {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -363,14 +363,14 @@ func (ptcb *ProvisioningTaskCreateBulk) SaveX(ctx context.Context) []*Provisioni
 }
 
 // Exec executes the query.
-func (ptcb *ProvisioningTaskCreateBulk) Exec(ctx context.Context) error {
-	_, err := ptcb.Save(ctx)
+func (_c *ProvisioningTaskCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptcb *ProvisioningTaskCreateBulk) ExecX(ctx context.Context) {
-	if err := ptcb.Exec(ctx); err != nil {
+func (_c *ProvisioningTaskCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

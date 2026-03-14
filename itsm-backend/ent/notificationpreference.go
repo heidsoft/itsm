@@ -92,7 +92,7 @@ func (*NotificationPreference) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the NotificationPreference fields.
-func (np *NotificationPreference) assignValues(columns []string, values []any) error {
+func (_m *NotificationPreference) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -103,87 +103,87 @@ func (np *NotificationPreference) assignValues(columns []string, values []any) e
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			np.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case notificationpreference.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				np.UserID = int(value.Int64)
+				_m.UserID = int(value.Int64)
 			}
 		case notificationpreference.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				np.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case notificationpreference.FieldEventType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field event_type", values[i])
 			} else if value.Valid {
-				np.EventType = value.String
+				_m.EventType = value.String
 			}
 		case notificationpreference.FieldEmailEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field email_enabled", values[i])
 			} else if value.Valid {
-				np.EmailEnabled = value.Bool
+				_m.EmailEnabled = value.Bool
 			}
 		case notificationpreference.FieldSmsEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field sms_enabled", values[i])
 			} else if value.Valid {
-				np.SmsEnabled = value.Bool
+				_m.SmsEnabled = value.Bool
 			}
 		case notificationpreference.FieldInAppEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field in_app_enabled", values[i])
 			} else if value.Valid {
-				np.InAppEnabled = value.Bool
+				_m.InAppEnabled = value.Bool
 			}
 		case notificationpreference.FieldPushEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field push_enabled", values[i])
 			} else if value.Valid {
-				np.PushEnabled = value.Bool
+				_m.PushEnabled = value.Bool
 			}
 		case notificationpreference.FieldFrequency:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field frequency", values[i])
 			} else if value.Valid {
-				np.Frequency = value.String
+				_m.Frequency = value.String
 			}
 		case notificationpreference.FieldQuietHoursStart:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field quiet_hours_start", values[i])
 			} else if value.Valid {
-				np.QuietHoursStart = value.Time
+				_m.QuietHoursStart = value.Time
 			}
 		case notificationpreference.FieldQuietHoursEnd:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field quiet_hours_end", values[i])
 			} else if value.Valid {
-				np.QuietHoursEnd = value.Time
+				_m.QuietHoursEnd = value.Time
 			}
 		case notificationpreference.FieldTimezone:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field timezone", values[i])
 			} else if value.Valid {
-				np.Timezone = value.String
+				_m.Timezone = value.String
 			}
 		case notificationpreference.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				np.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case notificationpreference.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				np.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			np.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -191,76 +191,76 @@ func (np *NotificationPreference) assignValues(columns []string, values []any) e
 
 // Value returns the ent.Value that was dynamically selected and assigned to the NotificationPreference.
 // This includes values selected through modifiers, order, etc.
-func (np *NotificationPreference) Value(name string) (ent.Value, error) {
-	return np.selectValues.Get(name)
+func (_m *NotificationPreference) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryUser queries the "user" edge of the NotificationPreference entity.
-func (np *NotificationPreference) QueryUser() *UserQuery {
-	return NewNotificationPreferenceClient(np.config).QueryUser(np)
+func (_m *NotificationPreference) QueryUser() *UserQuery {
+	return NewNotificationPreferenceClient(_m.config).QueryUser(_m)
 }
 
 // Update returns a builder for updating this NotificationPreference.
 // Note that you need to call NotificationPreference.Unwrap() before calling this method if this NotificationPreference
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (np *NotificationPreference) Update() *NotificationPreferenceUpdateOne {
-	return NewNotificationPreferenceClient(np.config).UpdateOne(np)
+func (_m *NotificationPreference) Update() *NotificationPreferenceUpdateOne {
+	return NewNotificationPreferenceClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the NotificationPreference entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (np *NotificationPreference) Unwrap() *NotificationPreference {
-	_tx, ok := np.config.driver.(*txDriver)
+func (_m *NotificationPreference) Unwrap() *NotificationPreference {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: NotificationPreference is not a transactional entity")
 	}
-	np.config.driver = _tx.drv
-	return np
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (np *NotificationPreference) String() string {
+func (_m *NotificationPreference) String() string {
 	var builder strings.Builder
 	builder.WriteString("NotificationPreference(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", np.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", np.UserID))
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", np.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("event_type=")
-	builder.WriteString(np.EventType)
+	builder.WriteString(_m.EventType)
 	builder.WriteString(", ")
 	builder.WriteString("email_enabled=")
-	builder.WriteString(fmt.Sprintf("%v", np.EmailEnabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.EmailEnabled))
 	builder.WriteString(", ")
 	builder.WriteString("sms_enabled=")
-	builder.WriteString(fmt.Sprintf("%v", np.SmsEnabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.SmsEnabled))
 	builder.WriteString(", ")
 	builder.WriteString("in_app_enabled=")
-	builder.WriteString(fmt.Sprintf("%v", np.InAppEnabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.InAppEnabled))
 	builder.WriteString(", ")
 	builder.WriteString("push_enabled=")
-	builder.WriteString(fmt.Sprintf("%v", np.PushEnabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.PushEnabled))
 	builder.WriteString(", ")
 	builder.WriteString("frequency=")
-	builder.WriteString(np.Frequency)
+	builder.WriteString(_m.Frequency)
 	builder.WriteString(", ")
 	builder.WriteString("quiet_hours_start=")
-	builder.WriteString(np.QuietHoursStart.Format(time.ANSIC))
+	builder.WriteString(_m.QuietHoursStart.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("quiet_hours_end=")
-	builder.WriteString(np.QuietHoursEnd.Format(time.ANSIC))
+	builder.WriteString(_m.QuietHoursEnd.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("timezone=")
-	builder.WriteString(np.Timezone)
+	builder.WriteString(_m.Timezone)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(np.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(np.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

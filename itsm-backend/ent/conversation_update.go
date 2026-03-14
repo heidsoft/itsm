@@ -25,178 +25,178 @@ type ConversationUpdate struct {
 }
 
 // Where appends a list predicates to the ConversationUpdate builder.
-func (cu *ConversationUpdate) Where(ps ...predicate.Conversation) *ConversationUpdate {
-	cu.mutation.Where(ps...)
-	return cu
+func (_u *ConversationUpdate) Where(ps ...predicate.Conversation) *ConversationUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cu *ConversationUpdate) SetCreatedAt(t time.Time) *ConversationUpdate {
-	cu.mutation.SetCreatedAt(t)
-	return cu
+func (_u *ConversationUpdate) SetCreatedAt(v time.Time) *ConversationUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cu *ConversationUpdate) SetNillableCreatedAt(t *time.Time) *ConversationUpdate {
-	if t != nil {
-		cu.SetCreatedAt(*t)
+func (_u *ConversationUpdate) SetNillableCreatedAt(v *time.Time) *ConversationUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cu *ConversationUpdate) SetTenantID(i int) *ConversationUpdate {
-	cu.mutation.ResetTenantID()
-	cu.mutation.SetTenantID(i)
-	return cu
+func (_u *ConversationUpdate) SetTenantID(v int) *ConversationUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cu *ConversationUpdate) SetNillableTenantID(i *int) *ConversationUpdate {
-	if i != nil {
-		cu.SetTenantID(*i)
+func (_u *ConversationUpdate) SetNillableTenantID(v *int) *ConversationUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cu *ConversationUpdate) AddTenantID(i int) *ConversationUpdate {
-	cu.mutation.AddTenantID(i)
-	return cu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ConversationUpdate) AddTenantID(v int) *ConversationUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (cu *ConversationUpdate) ClearTenantID() *ConversationUpdate {
-	cu.mutation.ClearTenantID()
-	return cu
+func (_u *ConversationUpdate) ClearTenantID() *ConversationUpdate {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (cu *ConversationUpdate) SetUserID(i int) *ConversationUpdate {
-	cu.mutation.ResetUserID()
-	cu.mutation.SetUserID(i)
-	return cu
+func (_u *ConversationUpdate) SetUserID(v int) *ConversationUpdate {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (cu *ConversationUpdate) SetNillableUserID(i *int) *ConversationUpdate {
-	if i != nil {
-		cu.SetUserID(*i)
+func (_u *ConversationUpdate) SetNillableUserID(v *int) *ConversationUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (cu *ConversationUpdate) AddUserID(i int) *ConversationUpdate {
-	cu.mutation.AddUserID(i)
-	return cu
+// AddUserID adds value to the "user_id" field.
+func (_u *ConversationUpdate) AddUserID(v int) *ConversationUpdate {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (cu *ConversationUpdate) ClearUserID() *ConversationUpdate {
-	cu.mutation.ClearUserID()
-	return cu
+func (_u *ConversationUpdate) ClearUserID() *ConversationUpdate {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (cu *ConversationUpdate) SetTitle(s string) *ConversationUpdate {
-	cu.mutation.SetTitle(s)
-	return cu
+func (_u *ConversationUpdate) SetTitle(v string) *ConversationUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (cu *ConversationUpdate) SetNillableTitle(s *string) *ConversationUpdate {
-	if s != nil {
-		cu.SetTitle(*s)
+func (_u *ConversationUpdate) SetNillableTitle(v *string) *ConversationUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return cu
+	return _u
 }
 
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
-func (cu *ConversationUpdate) AddMessageIDs(ids ...int) *ConversationUpdate {
-	cu.mutation.AddMessageIDs(ids...)
-	return cu
+func (_u *ConversationUpdate) AddMessageIDs(ids ...int) *ConversationUpdate {
+	_u.mutation.AddMessageIDs(ids...)
+	return _u
 }
 
 // AddMessages adds the "messages" edges to the Message entity.
-func (cu *ConversationUpdate) AddMessages(m ...*Message) *ConversationUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *ConversationUpdate) AddMessages(v ...*Message) *ConversationUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cu.AddMessageIDs(ids...)
+	return _u.AddMessageIDs(ids...)
 }
 
 // AddToolInvocationIDs adds the "tool_invocations" edge to the ToolInvocation entity by IDs.
-func (cu *ConversationUpdate) AddToolInvocationIDs(ids ...int) *ConversationUpdate {
-	cu.mutation.AddToolInvocationIDs(ids...)
-	return cu
+func (_u *ConversationUpdate) AddToolInvocationIDs(ids ...int) *ConversationUpdate {
+	_u.mutation.AddToolInvocationIDs(ids...)
+	return _u
 }
 
 // AddToolInvocations adds the "tool_invocations" edges to the ToolInvocation entity.
-func (cu *ConversationUpdate) AddToolInvocations(t ...*ToolInvocation) *ConversationUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *ConversationUpdate) AddToolInvocations(v ...*ToolInvocation) *ConversationUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cu.AddToolInvocationIDs(ids...)
+	return _u.AddToolInvocationIDs(ids...)
 }
 
 // Mutation returns the ConversationMutation object of the builder.
-func (cu *ConversationUpdate) Mutation() *ConversationMutation {
-	return cu.mutation
+func (_u *ConversationUpdate) Mutation() *ConversationMutation {
+	return _u.mutation
 }
 
 // ClearMessages clears all "messages" edges to the Message entity.
-func (cu *ConversationUpdate) ClearMessages() *ConversationUpdate {
-	cu.mutation.ClearMessages()
-	return cu
+func (_u *ConversationUpdate) ClearMessages() *ConversationUpdate {
+	_u.mutation.ClearMessages()
+	return _u
 }
 
 // RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
-func (cu *ConversationUpdate) RemoveMessageIDs(ids ...int) *ConversationUpdate {
-	cu.mutation.RemoveMessageIDs(ids...)
-	return cu
+func (_u *ConversationUpdate) RemoveMessageIDs(ids ...int) *ConversationUpdate {
+	_u.mutation.RemoveMessageIDs(ids...)
+	return _u
 }
 
 // RemoveMessages removes "messages" edges to Message entities.
-func (cu *ConversationUpdate) RemoveMessages(m ...*Message) *ConversationUpdate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *ConversationUpdate) RemoveMessages(v ...*Message) *ConversationUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cu.RemoveMessageIDs(ids...)
+	return _u.RemoveMessageIDs(ids...)
 }
 
 // ClearToolInvocations clears all "tool_invocations" edges to the ToolInvocation entity.
-func (cu *ConversationUpdate) ClearToolInvocations() *ConversationUpdate {
-	cu.mutation.ClearToolInvocations()
-	return cu
+func (_u *ConversationUpdate) ClearToolInvocations() *ConversationUpdate {
+	_u.mutation.ClearToolInvocations()
+	return _u
 }
 
 // RemoveToolInvocationIDs removes the "tool_invocations" edge to ToolInvocation entities by IDs.
-func (cu *ConversationUpdate) RemoveToolInvocationIDs(ids ...int) *ConversationUpdate {
-	cu.mutation.RemoveToolInvocationIDs(ids...)
-	return cu
+func (_u *ConversationUpdate) RemoveToolInvocationIDs(ids ...int) *ConversationUpdate {
+	_u.mutation.RemoveToolInvocationIDs(ids...)
+	return _u
 }
 
 // RemoveToolInvocations removes "tool_invocations" edges to ToolInvocation entities.
-func (cu *ConversationUpdate) RemoveToolInvocations(t ...*ToolInvocation) *ConversationUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *ConversationUpdate) RemoveToolInvocations(v ...*ToolInvocation) *ConversationUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cu.RemoveToolInvocationIDs(ids...)
+	return _u.RemoveToolInvocationIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (cu *ConversationUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, cu.sqlSave, cu.mutation, cu.hooks)
+func (_u *ConversationUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cu *ConversationUpdate) SaveX(ctx context.Context) int {
-	affected, err := cu.Save(ctx)
+func (_u *ConversationUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -204,52 +204,52 @@ func (cu *ConversationUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (cu *ConversationUpdate) Exec(ctx context.Context) error {
-	_, err := cu.Save(ctx)
+func (_u *ConversationUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cu *ConversationUpdate) ExecX(ctx context.Context) {
-	if err := cu.Exec(ctx); err != nil {
+func (_u *ConversationUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
+func (_u *ConversationUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	_spec := sqlgraph.NewUpdateSpec(conversation.Table, conversation.Columns, sqlgraph.NewFieldSpec(conversation.FieldID, field.TypeInt))
-	if ps := cu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(conversation.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(conversation.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(conversation.FieldTenantID, field.TypeInt, value)
 	}
-	if cu.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(conversation.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := cu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(conversation.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(conversation.FieldUserID, field.TypeInt, value)
 	}
-	if cu.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(conversation.FieldUserID, field.TypeInt)
 	}
-	if value, ok := cu.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(conversation.FieldTitle, field.TypeString, value)
 	}
-	if cu.mutation.MessagesCleared() {
+	if _u.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -262,7 +262,7 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !cu.mutation.MessagesCleared() {
+	if nodes := _u.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !_u.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -278,7 +278,7 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.MessagesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -294,7 +294,7 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cu.mutation.ToolInvocationsCleared() {
+	if _u.mutation.ToolInvocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -307,7 +307,7 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.RemovedToolInvocationsIDs(); len(nodes) > 0 && !cu.mutation.ToolInvocationsCleared() {
+	if nodes := _u.mutation.RemovedToolInvocationsIDs(); len(nodes) > 0 && !_u.mutation.ToolInvocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -323,7 +323,7 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cu.mutation.ToolInvocationsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ToolInvocationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -339,7 +339,7 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{conversation.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -347,8 +347,8 @@ func (cu *ConversationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	cu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ConversationUpdateOne is the builder for updating a single Conversation entity.
@@ -360,185 +360,185 @@ type ConversationUpdateOne struct {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cuo *ConversationUpdateOne) SetCreatedAt(t time.Time) *ConversationUpdateOne {
-	cuo.mutation.SetCreatedAt(t)
-	return cuo
+func (_u *ConversationUpdateOne) SetCreatedAt(v time.Time) *ConversationUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cuo *ConversationUpdateOne) SetNillableCreatedAt(t *time.Time) *ConversationUpdateOne {
-	if t != nil {
-		cuo.SetCreatedAt(*t)
+func (_u *ConversationUpdateOne) SetNillableCreatedAt(v *time.Time) *ConversationUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cuo *ConversationUpdateOne) SetTenantID(i int) *ConversationUpdateOne {
-	cuo.mutation.ResetTenantID()
-	cuo.mutation.SetTenantID(i)
-	return cuo
+func (_u *ConversationUpdateOne) SetTenantID(v int) *ConversationUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cuo *ConversationUpdateOne) SetNillableTenantID(i *int) *ConversationUpdateOne {
-	if i != nil {
-		cuo.SetTenantID(*i)
+func (_u *ConversationUpdateOne) SetNillableTenantID(v *int) *ConversationUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cuo *ConversationUpdateOne) AddTenantID(i int) *ConversationUpdateOne {
-	cuo.mutation.AddTenantID(i)
-	return cuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ConversationUpdateOne) AddTenantID(v int) *ConversationUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (cuo *ConversationUpdateOne) ClearTenantID() *ConversationUpdateOne {
-	cuo.mutation.ClearTenantID()
-	return cuo
+func (_u *ConversationUpdateOne) ClearTenantID() *ConversationUpdateOne {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (cuo *ConversationUpdateOne) SetUserID(i int) *ConversationUpdateOne {
-	cuo.mutation.ResetUserID()
-	cuo.mutation.SetUserID(i)
-	return cuo
+func (_u *ConversationUpdateOne) SetUserID(v int) *ConversationUpdateOne {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (cuo *ConversationUpdateOne) SetNillableUserID(i *int) *ConversationUpdateOne {
-	if i != nil {
-		cuo.SetUserID(*i)
+func (_u *ConversationUpdateOne) SetNillableUserID(v *int) *ConversationUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (cuo *ConversationUpdateOne) AddUserID(i int) *ConversationUpdateOne {
-	cuo.mutation.AddUserID(i)
-	return cuo
+// AddUserID adds value to the "user_id" field.
+func (_u *ConversationUpdateOne) AddUserID(v int) *ConversationUpdateOne {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // ClearUserID clears the value of the "user_id" field.
-func (cuo *ConversationUpdateOne) ClearUserID() *ConversationUpdateOne {
-	cuo.mutation.ClearUserID()
-	return cuo
+func (_u *ConversationUpdateOne) ClearUserID() *ConversationUpdateOne {
+	_u.mutation.ClearUserID()
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (cuo *ConversationUpdateOne) SetTitle(s string) *ConversationUpdateOne {
-	cuo.mutation.SetTitle(s)
-	return cuo
+func (_u *ConversationUpdateOne) SetTitle(v string) *ConversationUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (cuo *ConversationUpdateOne) SetNillableTitle(s *string) *ConversationUpdateOne {
-	if s != nil {
-		cuo.SetTitle(*s)
+func (_u *ConversationUpdateOne) SetNillableTitle(v *string) *ConversationUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return cuo
+	return _u
 }
 
 // AddMessageIDs adds the "messages" edge to the Message entity by IDs.
-func (cuo *ConversationUpdateOne) AddMessageIDs(ids ...int) *ConversationUpdateOne {
-	cuo.mutation.AddMessageIDs(ids...)
-	return cuo
+func (_u *ConversationUpdateOne) AddMessageIDs(ids ...int) *ConversationUpdateOne {
+	_u.mutation.AddMessageIDs(ids...)
+	return _u
 }
 
 // AddMessages adds the "messages" edges to the Message entity.
-func (cuo *ConversationUpdateOne) AddMessages(m ...*Message) *ConversationUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *ConversationUpdateOne) AddMessages(v ...*Message) *ConversationUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cuo.AddMessageIDs(ids...)
+	return _u.AddMessageIDs(ids...)
 }
 
 // AddToolInvocationIDs adds the "tool_invocations" edge to the ToolInvocation entity by IDs.
-func (cuo *ConversationUpdateOne) AddToolInvocationIDs(ids ...int) *ConversationUpdateOne {
-	cuo.mutation.AddToolInvocationIDs(ids...)
-	return cuo
+func (_u *ConversationUpdateOne) AddToolInvocationIDs(ids ...int) *ConversationUpdateOne {
+	_u.mutation.AddToolInvocationIDs(ids...)
+	return _u
 }
 
 // AddToolInvocations adds the "tool_invocations" edges to the ToolInvocation entity.
-func (cuo *ConversationUpdateOne) AddToolInvocations(t ...*ToolInvocation) *ConversationUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *ConversationUpdateOne) AddToolInvocations(v ...*ToolInvocation) *ConversationUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cuo.AddToolInvocationIDs(ids...)
+	return _u.AddToolInvocationIDs(ids...)
 }
 
 // Mutation returns the ConversationMutation object of the builder.
-func (cuo *ConversationUpdateOne) Mutation() *ConversationMutation {
-	return cuo.mutation
+func (_u *ConversationUpdateOne) Mutation() *ConversationMutation {
+	return _u.mutation
 }
 
 // ClearMessages clears all "messages" edges to the Message entity.
-func (cuo *ConversationUpdateOne) ClearMessages() *ConversationUpdateOne {
-	cuo.mutation.ClearMessages()
-	return cuo
+func (_u *ConversationUpdateOne) ClearMessages() *ConversationUpdateOne {
+	_u.mutation.ClearMessages()
+	return _u
 }
 
 // RemoveMessageIDs removes the "messages" edge to Message entities by IDs.
-func (cuo *ConversationUpdateOne) RemoveMessageIDs(ids ...int) *ConversationUpdateOne {
-	cuo.mutation.RemoveMessageIDs(ids...)
-	return cuo
+func (_u *ConversationUpdateOne) RemoveMessageIDs(ids ...int) *ConversationUpdateOne {
+	_u.mutation.RemoveMessageIDs(ids...)
+	return _u
 }
 
 // RemoveMessages removes "messages" edges to Message entities.
-func (cuo *ConversationUpdateOne) RemoveMessages(m ...*Message) *ConversationUpdateOne {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_u *ConversationUpdateOne) RemoveMessages(v ...*Message) *ConversationUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cuo.RemoveMessageIDs(ids...)
+	return _u.RemoveMessageIDs(ids...)
 }
 
 // ClearToolInvocations clears all "tool_invocations" edges to the ToolInvocation entity.
-func (cuo *ConversationUpdateOne) ClearToolInvocations() *ConversationUpdateOne {
-	cuo.mutation.ClearToolInvocations()
-	return cuo
+func (_u *ConversationUpdateOne) ClearToolInvocations() *ConversationUpdateOne {
+	_u.mutation.ClearToolInvocations()
+	return _u
 }
 
 // RemoveToolInvocationIDs removes the "tool_invocations" edge to ToolInvocation entities by IDs.
-func (cuo *ConversationUpdateOne) RemoveToolInvocationIDs(ids ...int) *ConversationUpdateOne {
-	cuo.mutation.RemoveToolInvocationIDs(ids...)
-	return cuo
+func (_u *ConversationUpdateOne) RemoveToolInvocationIDs(ids ...int) *ConversationUpdateOne {
+	_u.mutation.RemoveToolInvocationIDs(ids...)
+	return _u
 }
 
 // RemoveToolInvocations removes "tool_invocations" edges to ToolInvocation entities.
-func (cuo *ConversationUpdateOne) RemoveToolInvocations(t ...*ToolInvocation) *ConversationUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *ConversationUpdateOne) RemoveToolInvocations(v ...*ToolInvocation) *ConversationUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cuo.RemoveToolInvocationIDs(ids...)
+	return _u.RemoveToolInvocationIDs(ids...)
 }
 
 // Where appends a list predicates to the ConversationUpdate builder.
-func (cuo *ConversationUpdateOne) Where(ps ...predicate.Conversation) *ConversationUpdateOne {
-	cuo.mutation.Where(ps...)
-	return cuo
+func (_u *ConversationUpdateOne) Where(ps ...predicate.Conversation) *ConversationUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (cuo *ConversationUpdateOne) Select(field string, fields ...string) *ConversationUpdateOne {
-	cuo.fields = append([]string{field}, fields...)
-	return cuo
+func (_u *ConversationUpdateOne) Select(field string, fields ...string) *ConversationUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Conversation entity.
-func (cuo *ConversationUpdateOne) Save(ctx context.Context) (*Conversation, error) {
-	return withHooks(ctx, cuo.sqlSave, cuo.mutation, cuo.hooks)
+func (_u *ConversationUpdateOne) Save(ctx context.Context) (*Conversation, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cuo *ConversationUpdateOne) SaveX(ctx context.Context) *Conversation {
-	node, err := cuo.Save(ctx)
+func (_u *ConversationUpdateOne) SaveX(ctx context.Context) *Conversation {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -546,26 +546,26 @@ func (cuo *ConversationUpdateOne) SaveX(ctx context.Context) *Conversation {
 }
 
 // Exec executes the query on the entity.
-func (cuo *ConversationUpdateOne) Exec(ctx context.Context) error {
-	_, err := cuo.Save(ctx)
+func (_u *ConversationUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cuo *ConversationUpdateOne) ExecX(ctx context.Context) {
-	if err := cuo.Exec(ctx); err != nil {
+func (_u *ConversationUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
-func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversation, err error) {
+func (_u *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversation, err error) {
 	_spec := sqlgraph.NewUpdateSpec(conversation.Table, conversation.Columns, sqlgraph.NewFieldSpec(conversation.FieldID, field.TypeInt))
-	id, ok := cuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Conversation.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := cuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, conversation.FieldID)
 		for _, f := range fields {
@@ -577,38 +577,38 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 			}
 		}
 	}
-	if ps := cuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(conversation.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(conversation.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(conversation.FieldTenantID, field.TypeInt, value)
 	}
-	if cuo.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(conversation.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := cuo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(conversation.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(conversation.FieldUserID, field.TypeInt, value)
 	}
-	if cuo.mutation.UserIDCleared() {
+	if _u.mutation.UserIDCleared() {
 		_spec.ClearField(conversation.FieldUserID, field.TypeInt)
 	}
-	if value, ok := cuo.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(conversation.FieldTitle, field.TypeString, value)
 	}
-	if cuo.mutation.MessagesCleared() {
+	if _u.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -621,7 +621,7 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !cuo.mutation.MessagesCleared() {
+	if nodes := _u.mutation.RemovedMessagesIDs(); len(nodes) > 0 && !_u.mutation.MessagesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -637,7 +637,7 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.MessagesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.MessagesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -653,7 +653,7 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cuo.mutation.ToolInvocationsCleared() {
+	if _u.mutation.ToolInvocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -666,7 +666,7 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.RemovedToolInvocationsIDs(); len(nodes) > 0 && !cuo.mutation.ToolInvocationsCleared() {
+	if nodes := _u.mutation.RemovedToolInvocationsIDs(); len(nodes) > 0 && !_u.mutation.ToolInvocationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -682,7 +682,7 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cuo.mutation.ToolInvocationsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ToolInvocationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -698,10 +698,10 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Conversation{config: cuo.config}
+	_node = &Conversation{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, cuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{conversation.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -709,6 +709,6 @@ func (cuo *ConversationUpdateOne) sqlSave(ctx context.Context) (_node *Conversat
 		}
 		return nil, err
 	}
-	cuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -70,7 +70,7 @@ func (*KnowledgeArticleLike) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the KnowledgeArticleLike fields.
-func (kal *KnowledgeArticleLike) assignValues(columns []string, values []any) error {
+func (_m *KnowledgeArticleLike) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -81,33 +81,33 @@ func (kal *KnowledgeArticleLike) assignValues(columns []string, values []any) er
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			kal.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case knowledgearticlelike.FieldArticleID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field article_id", values[i])
 			} else if value.Valid {
-				kal.ArticleID = int(value.Int64)
+				_m.ArticleID = int(value.Int64)
 			}
 		case knowledgearticlelike.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				kal.UserID = int(value.Int64)
+				_m.UserID = int(value.Int64)
 			}
 		case knowledgearticlelike.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				kal.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case knowledgearticlelike.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				kal.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		default:
-			kal.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -115,49 +115,49 @@ func (kal *KnowledgeArticleLike) assignValues(columns []string, values []any) er
 
 // Value returns the ent.Value that was dynamically selected and assigned to the KnowledgeArticleLike.
 // This includes values selected through modifiers, order, etc.
-func (kal *KnowledgeArticleLike) Value(name string) (ent.Value, error) {
-	return kal.selectValues.Get(name)
+func (_m *KnowledgeArticleLike) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryArticle queries the "article" edge of the KnowledgeArticleLike entity.
-func (kal *KnowledgeArticleLike) QueryArticle() *KnowledgeArticleQuery {
-	return NewKnowledgeArticleLikeClient(kal.config).QueryArticle(kal)
+func (_m *KnowledgeArticleLike) QueryArticle() *KnowledgeArticleQuery {
+	return NewKnowledgeArticleLikeClient(_m.config).QueryArticle(_m)
 }
 
 // Update returns a builder for updating this KnowledgeArticleLike.
 // Note that you need to call KnowledgeArticleLike.Unwrap() before calling this method if this KnowledgeArticleLike
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (kal *KnowledgeArticleLike) Update() *KnowledgeArticleLikeUpdateOne {
-	return NewKnowledgeArticleLikeClient(kal.config).UpdateOne(kal)
+func (_m *KnowledgeArticleLike) Update() *KnowledgeArticleLikeUpdateOne {
+	return NewKnowledgeArticleLikeClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the KnowledgeArticleLike entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (kal *KnowledgeArticleLike) Unwrap() *KnowledgeArticleLike {
-	_tx, ok := kal.config.driver.(*txDriver)
+func (_m *KnowledgeArticleLike) Unwrap() *KnowledgeArticleLike {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: KnowledgeArticleLike is not a transactional entity")
 	}
-	kal.config.driver = _tx.drv
-	return kal
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (kal *KnowledgeArticleLike) String() string {
+func (_m *KnowledgeArticleLike) String() string {
 	var builder strings.Builder
 	builder.WriteString("KnowledgeArticleLike(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", kal.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("article_id=")
-	builder.WriteString(fmt.Sprintf("%v", kal.ArticleID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ArticleID))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", kal.UserID))
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", kal.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(kal.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -26,336 +26,336 @@ type CloudResourceUpdate struct {
 }
 
 // Where appends a list predicates to the CloudResourceUpdate builder.
-func (cru *CloudResourceUpdate) Where(ps ...predicate.CloudResource) *CloudResourceUpdate {
-	cru.mutation.Where(ps...)
-	return cru
+func (_u *CloudResourceUpdate) Where(ps ...predicate.CloudResource) *CloudResourceUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetCloudAccountID sets the "cloud_account_id" field.
-func (cru *CloudResourceUpdate) SetCloudAccountID(i int) *CloudResourceUpdate {
-	cru.mutation.SetCloudAccountID(i)
-	return cru
+func (_u *CloudResourceUpdate) SetCloudAccountID(v int) *CloudResourceUpdate {
+	_u.mutation.SetCloudAccountID(v)
+	return _u
 }
 
 // SetNillableCloudAccountID sets the "cloud_account_id" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableCloudAccountID(i *int) *CloudResourceUpdate {
-	if i != nil {
-		cru.SetCloudAccountID(*i)
+func (_u *CloudResourceUpdate) SetNillableCloudAccountID(v *int) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetCloudAccountID(*v)
 	}
-	return cru
+	return _u
 }
 
 // SetServiceID sets the "service_id" field.
-func (cru *CloudResourceUpdate) SetServiceID(i int) *CloudResourceUpdate {
-	cru.mutation.SetServiceID(i)
-	return cru
+func (_u *CloudResourceUpdate) SetServiceID(v int) *CloudResourceUpdate {
+	_u.mutation.SetServiceID(v)
+	return _u
 }
 
 // SetNillableServiceID sets the "service_id" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableServiceID(i *int) *CloudResourceUpdate {
-	if i != nil {
-		cru.SetServiceID(*i)
+func (_u *CloudResourceUpdate) SetNillableServiceID(v *int) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetServiceID(*v)
 	}
-	return cru
+	return _u
 }
 
 // SetResourceID sets the "resource_id" field.
-func (cru *CloudResourceUpdate) SetResourceID(s string) *CloudResourceUpdate {
-	cru.mutation.SetResourceID(s)
-	return cru
+func (_u *CloudResourceUpdate) SetResourceID(v string) *CloudResourceUpdate {
+	_u.mutation.SetResourceID(v)
+	return _u
 }
 
 // SetNillableResourceID sets the "resource_id" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableResourceID(s *string) *CloudResourceUpdate {
-	if s != nil {
-		cru.SetResourceID(*s)
+func (_u *CloudResourceUpdate) SetNillableResourceID(v *string) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetResourceID(*v)
 	}
-	return cru
+	return _u
 }
 
 // SetResourceName sets the "resource_name" field.
-func (cru *CloudResourceUpdate) SetResourceName(s string) *CloudResourceUpdate {
-	cru.mutation.SetResourceName(s)
-	return cru
+func (_u *CloudResourceUpdate) SetResourceName(v string) *CloudResourceUpdate {
+	_u.mutation.SetResourceName(v)
+	return _u
 }
 
 // SetNillableResourceName sets the "resource_name" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableResourceName(s *string) *CloudResourceUpdate {
-	if s != nil {
-		cru.SetResourceName(*s)
+func (_u *CloudResourceUpdate) SetNillableResourceName(v *string) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetResourceName(*v)
 	}
-	return cru
+	return _u
 }
 
 // ClearResourceName clears the value of the "resource_name" field.
-func (cru *CloudResourceUpdate) ClearResourceName() *CloudResourceUpdate {
-	cru.mutation.ClearResourceName()
-	return cru
+func (_u *CloudResourceUpdate) ClearResourceName() *CloudResourceUpdate {
+	_u.mutation.ClearResourceName()
+	return _u
 }
 
 // SetRegion sets the "region" field.
-func (cru *CloudResourceUpdate) SetRegion(s string) *CloudResourceUpdate {
-	cru.mutation.SetRegion(s)
-	return cru
+func (_u *CloudResourceUpdate) SetRegion(v string) *CloudResourceUpdate {
+	_u.mutation.SetRegion(v)
+	return _u
 }
 
 // SetNillableRegion sets the "region" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableRegion(s *string) *CloudResourceUpdate {
-	if s != nil {
-		cru.SetRegion(*s)
+func (_u *CloudResourceUpdate) SetNillableRegion(v *string) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetRegion(*v)
 	}
-	return cru
+	return _u
 }
 
 // ClearRegion clears the value of the "region" field.
-func (cru *CloudResourceUpdate) ClearRegion() *CloudResourceUpdate {
-	cru.mutation.ClearRegion()
-	return cru
+func (_u *CloudResourceUpdate) ClearRegion() *CloudResourceUpdate {
+	_u.mutation.ClearRegion()
+	return _u
 }
 
 // SetZone sets the "zone" field.
-func (cru *CloudResourceUpdate) SetZone(s string) *CloudResourceUpdate {
-	cru.mutation.SetZone(s)
-	return cru
+func (_u *CloudResourceUpdate) SetZone(v string) *CloudResourceUpdate {
+	_u.mutation.SetZone(v)
+	return _u
 }
 
 // SetNillableZone sets the "zone" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableZone(s *string) *CloudResourceUpdate {
-	if s != nil {
-		cru.SetZone(*s)
+func (_u *CloudResourceUpdate) SetNillableZone(v *string) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetZone(*v)
 	}
-	return cru
+	return _u
 }
 
 // ClearZone clears the value of the "zone" field.
-func (cru *CloudResourceUpdate) ClearZone() *CloudResourceUpdate {
-	cru.mutation.ClearZone()
-	return cru
+func (_u *CloudResourceUpdate) ClearZone() *CloudResourceUpdate {
+	_u.mutation.ClearZone()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (cru *CloudResourceUpdate) SetStatus(s string) *CloudResourceUpdate {
-	cru.mutation.SetStatus(s)
-	return cru
+func (_u *CloudResourceUpdate) SetStatus(v string) *CloudResourceUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableStatus(s *string) *CloudResourceUpdate {
-	if s != nil {
-		cru.SetStatus(*s)
+func (_u *CloudResourceUpdate) SetNillableStatus(v *string) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return cru
+	return _u
 }
 
 // ClearStatus clears the value of the "status" field.
-func (cru *CloudResourceUpdate) ClearStatus() *CloudResourceUpdate {
-	cru.mutation.ClearStatus()
-	return cru
+func (_u *CloudResourceUpdate) ClearStatus() *CloudResourceUpdate {
+	_u.mutation.ClearStatus()
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (cru *CloudResourceUpdate) SetTags(m map[string]string) *CloudResourceUpdate {
-	cru.mutation.SetTags(m)
-	return cru
+func (_u *CloudResourceUpdate) SetTags(v map[string]string) *CloudResourceUpdate {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (cru *CloudResourceUpdate) ClearTags() *CloudResourceUpdate {
-	cru.mutation.ClearTags()
-	return cru
+func (_u *CloudResourceUpdate) ClearTags() *CloudResourceUpdate {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (cru *CloudResourceUpdate) SetMetadata(m map[string]interface{}) *CloudResourceUpdate {
-	cru.mutation.SetMetadata(m)
-	return cru
+func (_u *CloudResourceUpdate) SetMetadata(v map[string]interface{}) *CloudResourceUpdate {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (cru *CloudResourceUpdate) ClearMetadata() *CloudResourceUpdate {
-	cru.mutation.ClearMetadata()
-	return cru
+func (_u *CloudResourceUpdate) ClearMetadata() *CloudResourceUpdate {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetFirstSeenAt sets the "first_seen_at" field.
-func (cru *CloudResourceUpdate) SetFirstSeenAt(t time.Time) *CloudResourceUpdate {
-	cru.mutation.SetFirstSeenAt(t)
-	return cru
+func (_u *CloudResourceUpdate) SetFirstSeenAt(v time.Time) *CloudResourceUpdate {
+	_u.mutation.SetFirstSeenAt(v)
+	return _u
 }
 
 // SetNillableFirstSeenAt sets the "first_seen_at" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableFirstSeenAt(t *time.Time) *CloudResourceUpdate {
-	if t != nil {
-		cru.SetFirstSeenAt(*t)
+func (_u *CloudResourceUpdate) SetNillableFirstSeenAt(v *time.Time) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetFirstSeenAt(*v)
 	}
-	return cru
+	return _u
 }
 
 // ClearFirstSeenAt clears the value of the "first_seen_at" field.
-func (cru *CloudResourceUpdate) ClearFirstSeenAt() *CloudResourceUpdate {
-	cru.mutation.ClearFirstSeenAt()
-	return cru
+func (_u *CloudResourceUpdate) ClearFirstSeenAt() *CloudResourceUpdate {
+	_u.mutation.ClearFirstSeenAt()
+	return _u
 }
 
 // SetLastSeenAt sets the "last_seen_at" field.
-func (cru *CloudResourceUpdate) SetLastSeenAt(t time.Time) *CloudResourceUpdate {
-	cru.mutation.SetLastSeenAt(t)
-	return cru
+func (_u *CloudResourceUpdate) SetLastSeenAt(v time.Time) *CloudResourceUpdate {
+	_u.mutation.SetLastSeenAt(v)
+	return _u
 }
 
 // SetNillableLastSeenAt sets the "last_seen_at" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableLastSeenAt(t *time.Time) *CloudResourceUpdate {
-	if t != nil {
-		cru.SetLastSeenAt(*t)
+func (_u *CloudResourceUpdate) SetNillableLastSeenAt(v *time.Time) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetLastSeenAt(*v)
 	}
-	return cru
+	return _u
 }
 
 // ClearLastSeenAt clears the value of the "last_seen_at" field.
-func (cru *CloudResourceUpdate) ClearLastSeenAt() *CloudResourceUpdate {
-	cru.mutation.ClearLastSeenAt()
-	return cru
+func (_u *CloudResourceUpdate) ClearLastSeenAt() *CloudResourceUpdate {
+	_u.mutation.ClearLastSeenAt()
+	return _u
 }
 
 // SetLifecycleState sets the "lifecycle_state" field.
-func (cru *CloudResourceUpdate) SetLifecycleState(s string) *CloudResourceUpdate {
-	cru.mutation.SetLifecycleState(s)
-	return cru
+func (_u *CloudResourceUpdate) SetLifecycleState(v string) *CloudResourceUpdate {
+	_u.mutation.SetLifecycleState(v)
+	return _u
 }
 
 // SetNillableLifecycleState sets the "lifecycle_state" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableLifecycleState(s *string) *CloudResourceUpdate {
-	if s != nil {
-		cru.SetLifecycleState(*s)
+func (_u *CloudResourceUpdate) SetNillableLifecycleState(v *string) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetLifecycleState(*v)
 	}
-	return cru
+	return _u
 }
 
 // ClearLifecycleState clears the value of the "lifecycle_state" field.
-func (cru *CloudResourceUpdate) ClearLifecycleState() *CloudResourceUpdate {
-	cru.mutation.ClearLifecycleState()
-	return cru
+func (_u *CloudResourceUpdate) ClearLifecycleState() *CloudResourceUpdate {
+	_u.mutation.ClearLifecycleState()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cru *CloudResourceUpdate) SetTenantID(i int) *CloudResourceUpdate {
-	cru.mutation.ResetTenantID()
-	cru.mutation.SetTenantID(i)
-	return cru
+func (_u *CloudResourceUpdate) SetTenantID(v int) *CloudResourceUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableTenantID(i *int) *CloudResourceUpdate {
-	if i != nil {
-		cru.SetTenantID(*i)
+func (_u *CloudResourceUpdate) SetNillableTenantID(v *int) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cru
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cru *CloudResourceUpdate) AddTenantID(i int) *CloudResourceUpdate {
-	cru.mutation.AddTenantID(i)
-	return cru
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CloudResourceUpdate) AddTenantID(v int) *CloudResourceUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cru *CloudResourceUpdate) SetCreatedAt(t time.Time) *CloudResourceUpdate {
-	cru.mutation.SetCreatedAt(t)
-	return cru
+func (_u *CloudResourceUpdate) SetCreatedAt(v time.Time) *CloudResourceUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cru *CloudResourceUpdate) SetNillableCreatedAt(t *time.Time) *CloudResourceUpdate {
-	if t != nil {
-		cru.SetCreatedAt(*t)
+func (_u *CloudResourceUpdate) SetNillableCreatedAt(v *time.Time) *CloudResourceUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cru
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cru *CloudResourceUpdate) SetUpdatedAt(t time.Time) *CloudResourceUpdate {
-	cru.mutation.SetUpdatedAt(t)
-	return cru
+func (_u *CloudResourceUpdate) SetUpdatedAt(v time.Time) *CloudResourceUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetAccountID sets the "account" edge to the CloudAccount entity by ID.
-func (cru *CloudResourceUpdate) SetAccountID(id int) *CloudResourceUpdate {
-	cru.mutation.SetAccountID(id)
-	return cru
+func (_u *CloudResourceUpdate) SetAccountID(id int) *CloudResourceUpdate {
+	_u.mutation.SetAccountID(id)
+	return _u
 }
 
 // SetAccount sets the "account" edge to the CloudAccount entity.
-func (cru *CloudResourceUpdate) SetAccount(c *CloudAccount) *CloudResourceUpdate {
-	return cru.SetAccountID(c.ID)
+func (_u *CloudResourceUpdate) SetAccount(v *CloudAccount) *CloudResourceUpdate {
+	return _u.SetAccountID(v.ID)
 }
 
 // SetService sets the "service" edge to the CloudService entity.
-func (cru *CloudResourceUpdate) SetService(c *CloudService) *CloudResourceUpdate {
-	return cru.SetServiceID(c.ID)
+func (_u *CloudResourceUpdate) SetService(v *CloudService) *CloudResourceUpdate {
+	return _u.SetServiceID(v.ID)
 }
 
 // AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
-func (cru *CloudResourceUpdate) AddCiIDs(ids ...int) *CloudResourceUpdate {
-	cru.mutation.AddCiIDs(ids...)
-	return cru
+func (_u *CloudResourceUpdate) AddCiIDs(ids ...int) *CloudResourceUpdate {
+	_u.mutation.AddCiIDs(ids...)
+	return _u
 }
 
 // AddCis adds the "cis" edges to the ConfigurationItem entity.
-func (cru *CloudResourceUpdate) AddCis(c ...*ConfigurationItem) *CloudResourceUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudResourceUpdate) AddCis(v ...*ConfigurationItem) *CloudResourceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cru.AddCiIDs(ids...)
+	return _u.AddCiIDs(ids...)
 }
 
 // Mutation returns the CloudResourceMutation object of the builder.
-func (cru *CloudResourceUpdate) Mutation() *CloudResourceMutation {
-	return cru.mutation
+func (_u *CloudResourceUpdate) Mutation() *CloudResourceMutation {
+	return _u.mutation
 }
 
 // ClearAccount clears the "account" edge to the CloudAccount entity.
-func (cru *CloudResourceUpdate) ClearAccount() *CloudResourceUpdate {
-	cru.mutation.ClearAccount()
-	return cru
+func (_u *CloudResourceUpdate) ClearAccount() *CloudResourceUpdate {
+	_u.mutation.ClearAccount()
+	return _u
 }
 
 // ClearService clears the "service" edge to the CloudService entity.
-func (cru *CloudResourceUpdate) ClearService() *CloudResourceUpdate {
-	cru.mutation.ClearService()
-	return cru
+func (_u *CloudResourceUpdate) ClearService() *CloudResourceUpdate {
+	_u.mutation.ClearService()
+	return _u
 }
 
 // ClearCis clears all "cis" edges to the ConfigurationItem entity.
-func (cru *CloudResourceUpdate) ClearCis() *CloudResourceUpdate {
-	cru.mutation.ClearCis()
-	return cru
+func (_u *CloudResourceUpdate) ClearCis() *CloudResourceUpdate {
+	_u.mutation.ClearCis()
+	return _u
 }
 
 // RemoveCiIDs removes the "cis" edge to ConfigurationItem entities by IDs.
-func (cru *CloudResourceUpdate) RemoveCiIDs(ids ...int) *CloudResourceUpdate {
-	cru.mutation.RemoveCiIDs(ids...)
-	return cru
+func (_u *CloudResourceUpdate) RemoveCiIDs(ids ...int) *CloudResourceUpdate {
+	_u.mutation.RemoveCiIDs(ids...)
+	return _u
 }
 
 // RemoveCis removes "cis" edges to ConfigurationItem entities.
-func (cru *CloudResourceUpdate) RemoveCis(c ...*ConfigurationItem) *CloudResourceUpdate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudResourceUpdate) RemoveCis(v ...*ConfigurationItem) *CloudResourceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cru.RemoveCiIDs(ids...)
+	return _u.RemoveCiIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (cru *CloudResourceUpdate) Save(ctx context.Context) (int, error) {
-	cru.defaults()
-	return withHooks(ctx, cru.sqlSave, cru.mutation, cru.hooks)
+func (_u *CloudResourceUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cru *CloudResourceUpdate) SaveX(ctx context.Context) int {
-	affected, err := cru.Save(ctx)
+func (_u *CloudResourceUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -363,139 +363,139 @@ func (cru *CloudResourceUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (cru *CloudResourceUpdate) Exec(ctx context.Context) error {
-	_, err := cru.Save(ctx)
+func (_u *CloudResourceUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cru *CloudResourceUpdate) ExecX(ctx context.Context) {
-	if err := cru.Exec(ctx); err != nil {
+func (_u *CloudResourceUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cru *CloudResourceUpdate) defaults() {
-	if _, ok := cru.mutation.UpdatedAt(); !ok {
+func (_u *CloudResourceUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := cloudresource.UpdateDefaultUpdatedAt()
-		cru.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cru *CloudResourceUpdate) check() error {
-	if v, ok := cru.mutation.CloudAccountID(); ok {
+func (_u *CloudResourceUpdate) check() error {
+	if v, ok := _u.mutation.CloudAccountID(); ok {
 		if err := cloudresource.CloudAccountIDValidator(v); err != nil {
 			return &ValidationError{Name: "cloud_account_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.cloud_account_id": %w`, err)}
 		}
 	}
-	if v, ok := cru.mutation.ServiceID(); ok {
+	if v, ok := _u.mutation.ServiceID(); ok {
 		if err := cloudresource.ServiceIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.service_id": %w`, err)}
 		}
 	}
-	if v, ok := cru.mutation.ResourceID(); ok {
+	if v, ok := _u.mutation.ResourceID(); ok {
 		if err := cloudresource.ResourceIDValidator(v); err != nil {
 			return &ValidationError{Name: "resource_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.resource_id": %w`, err)}
 		}
 	}
-	if v, ok := cru.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := cloudresource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.tenant_id": %w`, err)}
 		}
 	}
-	if cru.mutation.AccountCleared() && len(cru.mutation.AccountIDs()) > 0 {
+	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "CloudResource.account"`)
 	}
-	if cru.mutation.ServiceCleared() && len(cru.mutation.ServiceIDs()) > 0 {
+	if _u.mutation.ServiceCleared() && len(_u.mutation.ServiceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "CloudResource.service"`)
 	}
 	return nil
 }
 
-func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := cru.check(); err != nil {
-		return n, err
+func (_u *CloudResourceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(cloudresource.Table, cloudresource.Columns, sqlgraph.NewFieldSpec(cloudresource.FieldID, field.TypeInt))
-	if ps := cru.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cru.mutation.ResourceID(); ok {
+	if value, ok := _u.mutation.ResourceID(); ok {
 		_spec.SetField(cloudresource.FieldResourceID, field.TypeString, value)
 	}
-	if value, ok := cru.mutation.ResourceName(); ok {
+	if value, ok := _u.mutation.ResourceName(); ok {
 		_spec.SetField(cloudresource.FieldResourceName, field.TypeString, value)
 	}
-	if cru.mutation.ResourceNameCleared() {
+	if _u.mutation.ResourceNameCleared() {
 		_spec.ClearField(cloudresource.FieldResourceName, field.TypeString)
 	}
-	if value, ok := cru.mutation.Region(); ok {
+	if value, ok := _u.mutation.Region(); ok {
 		_spec.SetField(cloudresource.FieldRegion, field.TypeString, value)
 	}
-	if cru.mutation.RegionCleared() {
+	if _u.mutation.RegionCleared() {
 		_spec.ClearField(cloudresource.FieldRegion, field.TypeString)
 	}
-	if value, ok := cru.mutation.Zone(); ok {
+	if value, ok := _u.mutation.Zone(); ok {
 		_spec.SetField(cloudresource.FieldZone, field.TypeString, value)
 	}
-	if cru.mutation.ZoneCleared() {
+	if _u.mutation.ZoneCleared() {
 		_spec.ClearField(cloudresource.FieldZone, field.TypeString)
 	}
-	if value, ok := cru.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(cloudresource.FieldStatus, field.TypeString, value)
 	}
-	if cru.mutation.StatusCleared() {
+	if _u.mutation.StatusCleared() {
 		_spec.ClearField(cloudresource.FieldStatus, field.TypeString)
 	}
-	if value, ok := cru.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(cloudresource.FieldTags, field.TypeJSON, value)
 	}
-	if cru.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(cloudresource.FieldTags, field.TypeJSON)
 	}
-	if value, ok := cru.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(cloudresource.FieldMetadata, field.TypeJSON, value)
 	}
-	if cru.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(cloudresource.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := cru.mutation.FirstSeenAt(); ok {
+	if value, ok := _u.mutation.FirstSeenAt(); ok {
 		_spec.SetField(cloudresource.FieldFirstSeenAt, field.TypeTime, value)
 	}
-	if cru.mutation.FirstSeenAtCleared() {
+	if _u.mutation.FirstSeenAtCleared() {
 		_spec.ClearField(cloudresource.FieldFirstSeenAt, field.TypeTime)
 	}
-	if value, ok := cru.mutation.LastSeenAt(); ok {
+	if value, ok := _u.mutation.LastSeenAt(); ok {
 		_spec.SetField(cloudresource.FieldLastSeenAt, field.TypeTime, value)
 	}
-	if cru.mutation.LastSeenAtCleared() {
+	if _u.mutation.LastSeenAtCleared() {
 		_spec.ClearField(cloudresource.FieldLastSeenAt, field.TypeTime)
 	}
-	if value, ok := cru.mutation.LifecycleState(); ok {
+	if value, ok := _u.mutation.LifecycleState(); ok {
 		_spec.SetField(cloudresource.FieldLifecycleState, field.TypeString, value)
 	}
-	if cru.mutation.LifecycleStateCleared() {
+	if _u.mutation.LifecycleStateCleared() {
 		_spec.ClearField(cloudresource.FieldLifecycleState, field.TypeString)
 	}
-	if value, ok := cru.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(cloudresource.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cru.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(cloudresource.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cru.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(cloudresource.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cru.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(cloudresource.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cru.mutation.AccountCleared() {
+	if _u.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -508,7 +508,7 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cru.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -524,7 +524,7 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cru.mutation.ServiceCleared() {
+	if _u.mutation.ServiceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -537,7 +537,7 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cru.mutation.ServiceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ServiceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -553,7 +553,7 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cru.mutation.CisCleared() {
+	if _u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -566,7 +566,7 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cru.mutation.RemovedCisIDs(); len(nodes) > 0 && !cru.mutation.CisCleared() {
+	if nodes := _u.mutation.RemovedCisIDs(); len(nodes) > 0 && !_u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -582,7 +582,7 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cru.mutation.CisIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CisIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -598,7 +598,7 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, cru.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{cloudresource.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -606,8 +606,8 @@ func (cru *CloudResourceUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	cru.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // CloudResourceUpdateOne is the builder for updating a single CloudResource entity.
@@ -619,343 +619,343 @@ type CloudResourceUpdateOne struct {
 }
 
 // SetCloudAccountID sets the "cloud_account_id" field.
-func (cruo *CloudResourceUpdateOne) SetCloudAccountID(i int) *CloudResourceUpdateOne {
-	cruo.mutation.SetCloudAccountID(i)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetCloudAccountID(v int) *CloudResourceUpdateOne {
+	_u.mutation.SetCloudAccountID(v)
+	return _u
 }
 
 // SetNillableCloudAccountID sets the "cloud_account_id" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableCloudAccountID(i *int) *CloudResourceUpdateOne {
-	if i != nil {
-		cruo.SetCloudAccountID(*i)
+func (_u *CloudResourceUpdateOne) SetNillableCloudAccountID(v *int) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetCloudAccountID(*v)
 	}
-	return cruo
+	return _u
 }
 
 // SetServiceID sets the "service_id" field.
-func (cruo *CloudResourceUpdateOne) SetServiceID(i int) *CloudResourceUpdateOne {
-	cruo.mutation.SetServiceID(i)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetServiceID(v int) *CloudResourceUpdateOne {
+	_u.mutation.SetServiceID(v)
+	return _u
 }
 
 // SetNillableServiceID sets the "service_id" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableServiceID(i *int) *CloudResourceUpdateOne {
-	if i != nil {
-		cruo.SetServiceID(*i)
+func (_u *CloudResourceUpdateOne) SetNillableServiceID(v *int) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetServiceID(*v)
 	}
-	return cruo
+	return _u
 }
 
 // SetResourceID sets the "resource_id" field.
-func (cruo *CloudResourceUpdateOne) SetResourceID(s string) *CloudResourceUpdateOne {
-	cruo.mutation.SetResourceID(s)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetResourceID(v string) *CloudResourceUpdateOne {
+	_u.mutation.SetResourceID(v)
+	return _u
 }
 
 // SetNillableResourceID sets the "resource_id" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableResourceID(s *string) *CloudResourceUpdateOne {
-	if s != nil {
-		cruo.SetResourceID(*s)
+func (_u *CloudResourceUpdateOne) SetNillableResourceID(v *string) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetResourceID(*v)
 	}
-	return cruo
+	return _u
 }
 
 // SetResourceName sets the "resource_name" field.
-func (cruo *CloudResourceUpdateOne) SetResourceName(s string) *CloudResourceUpdateOne {
-	cruo.mutation.SetResourceName(s)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetResourceName(v string) *CloudResourceUpdateOne {
+	_u.mutation.SetResourceName(v)
+	return _u
 }
 
 // SetNillableResourceName sets the "resource_name" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableResourceName(s *string) *CloudResourceUpdateOne {
-	if s != nil {
-		cruo.SetResourceName(*s)
+func (_u *CloudResourceUpdateOne) SetNillableResourceName(v *string) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetResourceName(*v)
 	}
-	return cruo
+	return _u
 }
 
 // ClearResourceName clears the value of the "resource_name" field.
-func (cruo *CloudResourceUpdateOne) ClearResourceName() *CloudResourceUpdateOne {
-	cruo.mutation.ClearResourceName()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearResourceName() *CloudResourceUpdateOne {
+	_u.mutation.ClearResourceName()
+	return _u
 }
 
 // SetRegion sets the "region" field.
-func (cruo *CloudResourceUpdateOne) SetRegion(s string) *CloudResourceUpdateOne {
-	cruo.mutation.SetRegion(s)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetRegion(v string) *CloudResourceUpdateOne {
+	_u.mutation.SetRegion(v)
+	return _u
 }
 
 // SetNillableRegion sets the "region" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableRegion(s *string) *CloudResourceUpdateOne {
-	if s != nil {
-		cruo.SetRegion(*s)
+func (_u *CloudResourceUpdateOne) SetNillableRegion(v *string) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetRegion(*v)
 	}
-	return cruo
+	return _u
 }
 
 // ClearRegion clears the value of the "region" field.
-func (cruo *CloudResourceUpdateOne) ClearRegion() *CloudResourceUpdateOne {
-	cruo.mutation.ClearRegion()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearRegion() *CloudResourceUpdateOne {
+	_u.mutation.ClearRegion()
+	return _u
 }
 
 // SetZone sets the "zone" field.
-func (cruo *CloudResourceUpdateOne) SetZone(s string) *CloudResourceUpdateOne {
-	cruo.mutation.SetZone(s)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetZone(v string) *CloudResourceUpdateOne {
+	_u.mutation.SetZone(v)
+	return _u
 }
 
 // SetNillableZone sets the "zone" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableZone(s *string) *CloudResourceUpdateOne {
-	if s != nil {
-		cruo.SetZone(*s)
+func (_u *CloudResourceUpdateOne) SetNillableZone(v *string) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetZone(*v)
 	}
-	return cruo
+	return _u
 }
 
 // ClearZone clears the value of the "zone" field.
-func (cruo *CloudResourceUpdateOne) ClearZone() *CloudResourceUpdateOne {
-	cruo.mutation.ClearZone()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearZone() *CloudResourceUpdateOne {
+	_u.mutation.ClearZone()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (cruo *CloudResourceUpdateOne) SetStatus(s string) *CloudResourceUpdateOne {
-	cruo.mutation.SetStatus(s)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetStatus(v string) *CloudResourceUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableStatus(s *string) *CloudResourceUpdateOne {
-	if s != nil {
-		cruo.SetStatus(*s)
+func (_u *CloudResourceUpdateOne) SetNillableStatus(v *string) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return cruo
+	return _u
 }
 
 // ClearStatus clears the value of the "status" field.
-func (cruo *CloudResourceUpdateOne) ClearStatus() *CloudResourceUpdateOne {
-	cruo.mutation.ClearStatus()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearStatus() *CloudResourceUpdateOne {
+	_u.mutation.ClearStatus()
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (cruo *CloudResourceUpdateOne) SetTags(m map[string]string) *CloudResourceUpdateOne {
-	cruo.mutation.SetTags(m)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetTags(v map[string]string) *CloudResourceUpdateOne {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (cruo *CloudResourceUpdateOne) ClearTags() *CloudResourceUpdateOne {
-	cruo.mutation.ClearTags()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearTags() *CloudResourceUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (cruo *CloudResourceUpdateOne) SetMetadata(m map[string]interface{}) *CloudResourceUpdateOne {
-	cruo.mutation.SetMetadata(m)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetMetadata(v map[string]interface{}) *CloudResourceUpdateOne {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (cruo *CloudResourceUpdateOne) ClearMetadata() *CloudResourceUpdateOne {
-	cruo.mutation.ClearMetadata()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearMetadata() *CloudResourceUpdateOne {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetFirstSeenAt sets the "first_seen_at" field.
-func (cruo *CloudResourceUpdateOne) SetFirstSeenAt(t time.Time) *CloudResourceUpdateOne {
-	cruo.mutation.SetFirstSeenAt(t)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetFirstSeenAt(v time.Time) *CloudResourceUpdateOne {
+	_u.mutation.SetFirstSeenAt(v)
+	return _u
 }
 
 // SetNillableFirstSeenAt sets the "first_seen_at" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableFirstSeenAt(t *time.Time) *CloudResourceUpdateOne {
-	if t != nil {
-		cruo.SetFirstSeenAt(*t)
+func (_u *CloudResourceUpdateOne) SetNillableFirstSeenAt(v *time.Time) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetFirstSeenAt(*v)
 	}
-	return cruo
+	return _u
 }
 
 // ClearFirstSeenAt clears the value of the "first_seen_at" field.
-func (cruo *CloudResourceUpdateOne) ClearFirstSeenAt() *CloudResourceUpdateOne {
-	cruo.mutation.ClearFirstSeenAt()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearFirstSeenAt() *CloudResourceUpdateOne {
+	_u.mutation.ClearFirstSeenAt()
+	return _u
 }
 
 // SetLastSeenAt sets the "last_seen_at" field.
-func (cruo *CloudResourceUpdateOne) SetLastSeenAt(t time.Time) *CloudResourceUpdateOne {
-	cruo.mutation.SetLastSeenAt(t)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetLastSeenAt(v time.Time) *CloudResourceUpdateOne {
+	_u.mutation.SetLastSeenAt(v)
+	return _u
 }
 
 // SetNillableLastSeenAt sets the "last_seen_at" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableLastSeenAt(t *time.Time) *CloudResourceUpdateOne {
-	if t != nil {
-		cruo.SetLastSeenAt(*t)
+func (_u *CloudResourceUpdateOne) SetNillableLastSeenAt(v *time.Time) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetLastSeenAt(*v)
 	}
-	return cruo
+	return _u
 }
 
 // ClearLastSeenAt clears the value of the "last_seen_at" field.
-func (cruo *CloudResourceUpdateOne) ClearLastSeenAt() *CloudResourceUpdateOne {
-	cruo.mutation.ClearLastSeenAt()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearLastSeenAt() *CloudResourceUpdateOne {
+	_u.mutation.ClearLastSeenAt()
+	return _u
 }
 
 // SetLifecycleState sets the "lifecycle_state" field.
-func (cruo *CloudResourceUpdateOne) SetLifecycleState(s string) *CloudResourceUpdateOne {
-	cruo.mutation.SetLifecycleState(s)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetLifecycleState(v string) *CloudResourceUpdateOne {
+	_u.mutation.SetLifecycleState(v)
+	return _u
 }
 
 // SetNillableLifecycleState sets the "lifecycle_state" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableLifecycleState(s *string) *CloudResourceUpdateOne {
-	if s != nil {
-		cruo.SetLifecycleState(*s)
+func (_u *CloudResourceUpdateOne) SetNillableLifecycleState(v *string) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetLifecycleState(*v)
 	}
-	return cruo
+	return _u
 }
 
 // ClearLifecycleState clears the value of the "lifecycle_state" field.
-func (cruo *CloudResourceUpdateOne) ClearLifecycleState() *CloudResourceUpdateOne {
-	cruo.mutation.ClearLifecycleState()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearLifecycleState() *CloudResourceUpdateOne {
+	_u.mutation.ClearLifecycleState()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cruo *CloudResourceUpdateOne) SetTenantID(i int) *CloudResourceUpdateOne {
-	cruo.mutation.ResetTenantID()
-	cruo.mutation.SetTenantID(i)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetTenantID(v int) *CloudResourceUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableTenantID(i *int) *CloudResourceUpdateOne {
-	if i != nil {
-		cruo.SetTenantID(*i)
+func (_u *CloudResourceUpdateOne) SetNillableTenantID(v *int) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cruo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cruo *CloudResourceUpdateOne) AddTenantID(i int) *CloudResourceUpdateOne {
-	cruo.mutation.AddTenantID(i)
-	return cruo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CloudResourceUpdateOne) AddTenantID(v int) *CloudResourceUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cruo *CloudResourceUpdateOne) SetCreatedAt(t time.Time) *CloudResourceUpdateOne {
-	cruo.mutation.SetCreatedAt(t)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetCreatedAt(v time.Time) *CloudResourceUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cruo *CloudResourceUpdateOne) SetNillableCreatedAt(t *time.Time) *CloudResourceUpdateOne {
-	if t != nil {
-		cruo.SetCreatedAt(*t)
+func (_u *CloudResourceUpdateOne) SetNillableCreatedAt(v *time.Time) *CloudResourceUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cruo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cruo *CloudResourceUpdateOne) SetUpdatedAt(t time.Time) *CloudResourceUpdateOne {
-	cruo.mutation.SetUpdatedAt(t)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetUpdatedAt(v time.Time) *CloudResourceUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetAccountID sets the "account" edge to the CloudAccount entity by ID.
-func (cruo *CloudResourceUpdateOne) SetAccountID(id int) *CloudResourceUpdateOne {
-	cruo.mutation.SetAccountID(id)
-	return cruo
+func (_u *CloudResourceUpdateOne) SetAccountID(id int) *CloudResourceUpdateOne {
+	_u.mutation.SetAccountID(id)
+	return _u
 }
 
 // SetAccount sets the "account" edge to the CloudAccount entity.
-func (cruo *CloudResourceUpdateOne) SetAccount(c *CloudAccount) *CloudResourceUpdateOne {
-	return cruo.SetAccountID(c.ID)
+func (_u *CloudResourceUpdateOne) SetAccount(v *CloudAccount) *CloudResourceUpdateOne {
+	return _u.SetAccountID(v.ID)
 }
 
 // SetService sets the "service" edge to the CloudService entity.
-func (cruo *CloudResourceUpdateOne) SetService(c *CloudService) *CloudResourceUpdateOne {
-	return cruo.SetServiceID(c.ID)
+func (_u *CloudResourceUpdateOne) SetService(v *CloudService) *CloudResourceUpdateOne {
+	return _u.SetServiceID(v.ID)
 }
 
 // AddCiIDs adds the "cis" edge to the ConfigurationItem entity by IDs.
-func (cruo *CloudResourceUpdateOne) AddCiIDs(ids ...int) *CloudResourceUpdateOne {
-	cruo.mutation.AddCiIDs(ids...)
-	return cruo
+func (_u *CloudResourceUpdateOne) AddCiIDs(ids ...int) *CloudResourceUpdateOne {
+	_u.mutation.AddCiIDs(ids...)
+	return _u
 }
 
 // AddCis adds the "cis" edges to the ConfigurationItem entity.
-func (cruo *CloudResourceUpdateOne) AddCis(c ...*ConfigurationItem) *CloudResourceUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudResourceUpdateOne) AddCis(v ...*ConfigurationItem) *CloudResourceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cruo.AddCiIDs(ids...)
+	return _u.AddCiIDs(ids...)
 }
 
 // Mutation returns the CloudResourceMutation object of the builder.
-func (cruo *CloudResourceUpdateOne) Mutation() *CloudResourceMutation {
-	return cruo.mutation
+func (_u *CloudResourceUpdateOne) Mutation() *CloudResourceMutation {
+	return _u.mutation
 }
 
 // ClearAccount clears the "account" edge to the CloudAccount entity.
-func (cruo *CloudResourceUpdateOne) ClearAccount() *CloudResourceUpdateOne {
-	cruo.mutation.ClearAccount()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearAccount() *CloudResourceUpdateOne {
+	_u.mutation.ClearAccount()
+	return _u
 }
 
 // ClearService clears the "service" edge to the CloudService entity.
-func (cruo *CloudResourceUpdateOne) ClearService() *CloudResourceUpdateOne {
-	cruo.mutation.ClearService()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearService() *CloudResourceUpdateOne {
+	_u.mutation.ClearService()
+	return _u
 }
 
 // ClearCis clears all "cis" edges to the ConfigurationItem entity.
-func (cruo *CloudResourceUpdateOne) ClearCis() *CloudResourceUpdateOne {
-	cruo.mutation.ClearCis()
-	return cruo
+func (_u *CloudResourceUpdateOne) ClearCis() *CloudResourceUpdateOne {
+	_u.mutation.ClearCis()
+	return _u
 }
 
 // RemoveCiIDs removes the "cis" edge to ConfigurationItem entities by IDs.
-func (cruo *CloudResourceUpdateOne) RemoveCiIDs(ids ...int) *CloudResourceUpdateOne {
-	cruo.mutation.RemoveCiIDs(ids...)
-	return cruo
+func (_u *CloudResourceUpdateOne) RemoveCiIDs(ids ...int) *CloudResourceUpdateOne {
+	_u.mutation.RemoveCiIDs(ids...)
+	return _u
 }
 
 // RemoveCis removes "cis" edges to ConfigurationItem entities.
-func (cruo *CloudResourceUpdateOne) RemoveCis(c ...*ConfigurationItem) *CloudResourceUpdateOne {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_u *CloudResourceUpdateOne) RemoveCis(v ...*ConfigurationItem) *CloudResourceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return cruo.RemoveCiIDs(ids...)
+	return _u.RemoveCiIDs(ids...)
 }
 
 // Where appends a list predicates to the CloudResourceUpdate builder.
-func (cruo *CloudResourceUpdateOne) Where(ps ...predicate.CloudResource) *CloudResourceUpdateOne {
-	cruo.mutation.Where(ps...)
-	return cruo
+func (_u *CloudResourceUpdateOne) Where(ps ...predicate.CloudResource) *CloudResourceUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (cruo *CloudResourceUpdateOne) Select(field string, fields ...string) *CloudResourceUpdateOne {
-	cruo.fields = append([]string{field}, fields...)
-	return cruo
+func (_u *CloudResourceUpdateOne) Select(field string, fields ...string) *CloudResourceUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated CloudResource entity.
-func (cruo *CloudResourceUpdateOne) Save(ctx context.Context) (*CloudResource, error) {
-	cruo.defaults()
-	return withHooks(ctx, cruo.sqlSave, cruo.mutation, cruo.hooks)
+func (_u *CloudResourceUpdateOne) Save(ctx context.Context) (*CloudResource, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cruo *CloudResourceUpdateOne) SaveX(ctx context.Context) *CloudResource {
-	node, err := cruo.Save(ctx)
+func (_u *CloudResourceUpdateOne) SaveX(ctx context.Context) *CloudResource {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -963,68 +963,68 @@ func (cruo *CloudResourceUpdateOne) SaveX(ctx context.Context) *CloudResource {
 }
 
 // Exec executes the query on the entity.
-func (cruo *CloudResourceUpdateOne) Exec(ctx context.Context) error {
-	_, err := cruo.Save(ctx)
+func (_u *CloudResourceUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cruo *CloudResourceUpdateOne) ExecX(ctx context.Context) {
-	if err := cruo.Exec(ctx); err != nil {
+func (_u *CloudResourceUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cruo *CloudResourceUpdateOne) defaults() {
-	if _, ok := cruo.mutation.UpdatedAt(); !ok {
+func (_u *CloudResourceUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := cloudresource.UpdateDefaultUpdatedAt()
-		cruo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cruo *CloudResourceUpdateOne) check() error {
-	if v, ok := cruo.mutation.CloudAccountID(); ok {
+func (_u *CloudResourceUpdateOne) check() error {
+	if v, ok := _u.mutation.CloudAccountID(); ok {
 		if err := cloudresource.CloudAccountIDValidator(v); err != nil {
 			return &ValidationError{Name: "cloud_account_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.cloud_account_id": %w`, err)}
 		}
 	}
-	if v, ok := cruo.mutation.ServiceID(); ok {
+	if v, ok := _u.mutation.ServiceID(); ok {
 		if err := cloudresource.ServiceIDValidator(v); err != nil {
 			return &ValidationError{Name: "service_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.service_id": %w`, err)}
 		}
 	}
-	if v, ok := cruo.mutation.ResourceID(); ok {
+	if v, ok := _u.mutation.ResourceID(); ok {
 		if err := cloudresource.ResourceIDValidator(v); err != nil {
 			return &ValidationError{Name: "resource_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.resource_id": %w`, err)}
 		}
 	}
-	if v, ok := cruo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := cloudresource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CloudResource.tenant_id": %w`, err)}
 		}
 	}
-	if cruo.mutation.AccountCleared() && len(cruo.mutation.AccountIDs()) > 0 {
+	if _u.mutation.AccountCleared() && len(_u.mutation.AccountIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "CloudResource.account"`)
 	}
-	if cruo.mutation.ServiceCleared() && len(cruo.mutation.ServiceIDs()) > 0 {
+	if _u.mutation.ServiceCleared() && len(_u.mutation.ServiceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "CloudResource.service"`)
 	}
 	return nil
 }
 
-func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudResource, err error) {
-	if err := cruo.check(); err != nil {
+func (_u *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudResource, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(cloudresource.Table, cloudresource.Columns, sqlgraph.NewFieldSpec(cloudresource.FieldID, field.TypeInt))
-	id, ok := cruo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "CloudResource.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := cruo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, cloudresource.FieldID)
 		for _, f := range fields {
@@ -1036,83 +1036,83 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 			}
 		}
 	}
-	if ps := cruo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cruo.mutation.ResourceID(); ok {
+	if value, ok := _u.mutation.ResourceID(); ok {
 		_spec.SetField(cloudresource.FieldResourceID, field.TypeString, value)
 	}
-	if value, ok := cruo.mutation.ResourceName(); ok {
+	if value, ok := _u.mutation.ResourceName(); ok {
 		_spec.SetField(cloudresource.FieldResourceName, field.TypeString, value)
 	}
-	if cruo.mutation.ResourceNameCleared() {
+	if _u.mutation.ResourceNameCleared() {
 		_spec.ClearField(cloudresource.FieldResourceName, field.TypeString)
 	}
-	if value, ok := cruo.mutation.Region(); ok {
+	if value, ok := _u.mutation.Region(); ok {
 		_spec.SetField(cloudresource.FieldRegion, field.TypeString, value)
 	}
-	if cruo.mutation.RegionCleared() {
+	if _u.mutation.RegionCleared() {
 		_spec.ClearField(cloudresource.FieldRegion, field.TypeString)
 	}
-	if value, ok := cruo.mutation.Zone(); ok {
+	if value, ok := _u.mutation.Zone(); ok {
 		_spec.SetField(cloudresource.FieldZone, field.TypeString, value)
 	}
-	if cruo.mutation.ZoneCleared() {
+	if _u.mutation.ZoneCleared() {
 		_spec.ClearField(cloudresource.FieldZone, field.TypeString)
 	}
-	if value, ok := cruo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(cloudresource.FieldStatus, field.TypeString, value)
 	}
-	if cruo.mutation.StatusCleared() {
+	if _u.mutation.StatusCleared() {
 		_spec.ClearField(cloudresource.FieldStatus, field.TypeString)
 	}
-	if value, ok := cruo.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(cloudresource.FieldTags, field.TypeJSON, value)
 	}
-	if cruo.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(cloudresource.FieldTags, field.TypeJSON)
 	}
-	if value, ok := cruo.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(cloudresource.FieldMetadata, field.TypeJSON, value)
 	}
-	if cruo.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(cloudresource.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := cruo.mutation.FirstSeenAt(); ok {
+	if value, ok := _u.mutation.FirstSeenAt(); ok {
 		_spec.SetField(cloudresource.FieldFirstSeenAt, field.TypeTime, value)
 	}
-	if cruo.mutation.FirstSeenAtCleared() {
+	if _u.mutation.FirstSeenAtCleared() {
 		_spec.ClearField(cloudresource.FieldFirstSeenAt, field.TypeTime)
 	}
-	if value, ok := cruo.mutation.LastSeenAt(); ok {
+	if value, ok := _u.mutation.LastSeenAt(); ok {
 		_spec.SetField(cloudresource.FieldLastSeenAt, field.TypeTime, value)
 	}
-	if cruo.mutation.LastSeenAtCleared() {
+	if _u.mutation.LastSeenAtCleared() {
 		_spec.ClearField(cloudresource.FieldLastSeenAt, field.TypeTime)
 	}
-	if value, ok := cruo.mutation.LifecycleState(); ok {
+	if value, ok := _u.mutation.LifecycleState(); ok {
 		_spec.SetField(cloudresource.FieldLifecycleState, field.TypeString, value)
 	}
-	if cruo.mutation.LifecycleStateCleared() {
+	if _u.mutation.LifecycleStateCleared() {
 		_spec.ClearField(cloudresource.FieldLifecycleState, field.TypeString)
 	}
-	if value, ok := cruo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(cloudresource.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cruo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(cloudresource.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cruo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(cloudresource.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cruo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(cloudresource.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if cruo.mutation.AccountCleared() {
+	if _u.mutation.AccountCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1125,7 +1125,7 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cruo.mutation.AccountIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.AccountIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1141,7 +1141,7 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cruo.mutation.ServiceCleared() {
+	if _u.mutation.ServiceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1154,7 +1154,7 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cruo.mutation.ServiceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ServiceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1170,7 +1170,7 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if cruo.mutation.CisCleared() {
+	if _u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1183,7 +1183,7 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cruo.mutation.RemovedCisIDs(); len(nodes) > 0 && !cruo.mutation.CisCleared() {
+	if nodes := _u.mutation.RemovedCisIDs(); len(nodes) > 0 && !_u.mutation.CisCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1199,7 +1199,7 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := cruo.mutation.CisIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.CisIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1215,10 +1215,10 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &CloudResource{config: cruo.config}
+	_node = &CloudResource{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, cruo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{cloudresource.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1226,6 +1226,6 @@ func (cruo *CloudResourceUpdateOne) sqlSave(ctx context.Context) (_node *CloudRe
 		}
 		return nil, err
 	}
-	cruo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

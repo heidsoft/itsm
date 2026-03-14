@@ -20,56 +20,56 @@ type EngineerSkillDelete struct {
 }
 
 // Where appends a list predicates to the EngineerSkillDelete builder.
-func (esd *EngineerSkillDelete) Where(ps ...predicate.EngineerSkill) *EngineerSkillDelete {
-	esd.mutation.Where(ps...)
-	return esd
+func (_d *EngineerSkillDelete) Where(ps ...predicate.EngineerSkill) *EngineerSkillDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (esd *EngineerSkillDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, esd.sqlExec, esd.mutation, esd.hooks)
+func (_d *EngineerSkillDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (esd *EngineerSkillDelete) ExecX(ctx context.Context) int {
-	n, err := esd.Exec(ctx)
+func (_d *EngineerSkillDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (esd *EngineerSkillDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *EngineerSkillDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(engineerskill.Table, sqlgraph.NewFieldSpec(engineerskill.FieldID, field.TypeInt))
-	if ps := esd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, esd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	esd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // EngineerSkillDeleteOne is the builder for deleting a single EngineerSkill entity.
 type EngineerSkillDeleteOne struct {
-	esd *EngineerSkillDelete
+	_d *EngineerSkillDelete
 }
 
 // Where appends a list predicates to the EngineerSkillDelete builder.
-func (esdo *EngineerSkillDeleteOne) Where(ps ...predicate.EngineerSkill) *EngineerSkillDeleteOne {
-	esdo.esd.mutation.Where(ps...)
-	return esdo
+func (_d *EngineerSkillDeleteOne) Where(ps ...predicate.EngineerSkill) *EngineerSkillDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (esdo *EngineerSkillDeleteOne) Exec(ctx context.Context) error {
-	n, err := esdo.esd.Exec(ctx)
+func (_d *EngineerSkillDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (esdo *EngineerSkillDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (esdo *EngineerSkillDeleteOne) ExecX(ctx context.Context) {
-	if err := esdo.Exec(ctx); err != nil {
+func (_d *EngineerSkillDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

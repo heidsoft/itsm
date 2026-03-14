@@ -199,7 +199,7 @@ func (s *AuthService) GetUserTenants(ctx context.Context, userID int) (*dto.User
 			Name:   tenantEntity.Name,
 			Code:   tenantEntity.Code,
 			Domain: tenantEntity.Domain,
-			Type:   tenantEntity.Type,
+			Type:   string(tenantEntity.Type),
 			Status: tenantEntity.Status,
 		},
 	}

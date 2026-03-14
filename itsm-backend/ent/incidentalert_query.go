@@ -30,44 +30,44 @@ type IncidentAlertQuery struct {
 }
 
 // Where adds a new predicate for the IncidentAlertQuery builder.
-func (iaq *IncidentAlertQuery) Where(ps ...predicate.IncidentAlert) *IncidentAlertQuery {
-	iaq.predicates = append(iaq.predicates, ps...)
-	return iaq
+func (_q *IncidentAlertQuery) Where(ps ...predicate.IncidentAlert) *IncidentAlertQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (iaq *IncidentAlertQuery) Limit(limit int) *IncidentAlertQuery {
-	iaq.ctx.Limit = &limit
-	return iaq
+func (_q *IncidentAlertQuery) Limit(limit int) *IncidentAlertQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (iaq *IncidentAlertQuery) Offset(offset int) *IncidentAlertQuery {
-	iaq.ctx.Offset = &offset
-	return iaq
+func (_q *IncidentAlertQuery) Offset(offset int) *IncidentAlertQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (iaq *IncidentAlertQuery) Unique(unique bool) *IncidentAlertQuery {
-	iaq.ctx.Unique = &unique
-	return iaq
+func (_q *IncidentAlertQuery) Unique(unique bool) *IncidentAlertQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (iaq *IncidentAlertQuery) Order(o ...incidentalert.OrderOption) *IncidentAlertQuery {
-	iaq.order = append(iaq.order, o...)
-	return iaq
+func (_q *IncidentAlertQuery) Order(o ...incidentalert.OrderOption) *IncidentAlertQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryIncident chains the current query on the "incident" edge.
-func (iaq *IncidentAlertQuery) QueryIncident() *IncidentQuery {
-	query := (&IncidentClient{config: iaq.config}).Query()
+func (_q *IncidentAlertQuery) QueryIncident() *IncidentQuery {
+	query := (&IncidentClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := iaq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := iaq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (iaq *IncidentAlertQuery) QueryIncident() *IncidentQuery {
 			sqlgraph.To(incident.Table, incident.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, incidentalert.IncidentTable, incidentalert.IncidentColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(iaq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (iaq *IncidentAlertQuery) QueryIncident() *IncidentQuery {
 
 // First returns the first IncidentAlert entity from the query.
 // Returns a *NotFoundError when no IncidentAlert was found.
-func (iaq *IncidentAlertQuery) First(ctx context.Context) (*IncidentAlert, error) {
-	nodes, err := iaq.Limit(1).All(setContextOp(ctx, iaq.ctx, ent.OpQueryFirst))
+func (_q *IncidentAlertQuery) First(ctx context.Context) (*IncidentAlert, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (iaq *IncidentAlertQuery) First(ctx context.Context) (*IncidentAlert, error
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) FirstX(ctx context.Context) *IncidentAlert {
-	node, err := iaq.First(ctx)
+func (_q *IncidentAlertQuery) FirstX(ctx context.Context) *IncidentAlert {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (iaq *IncidentAlertQuery) FirstX(ctx context.Context) *IncidentAlert {
 
 // FirstID returns the first IncidentAlert ID from the query.
 // Returns a *NotFoundError when no IncidentAlert ID was found.
-func (iaq *IncidentAlertQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *IncidentAlertQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = iaq.Limit(1).IDs(setContextOp(ctx, iaq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (iaq *IncidentAlertQuery) FirstID(ctx context.Context) (id int, err error) 
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) FirstIDX(ctx context.Context) int {
-	id, err := iaq.FirstID(ctx)
+func (_q *IncidentAlertQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (iaq *IncidentAlertQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single IncidentAlert entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one IncidentAlert entity is found.
 // Returns a *NotFoundError when no IncidentAlert entities are found.
-func (iaq *IncidentAlertQuery) Only(ctx context.Context) (*IncidentAlert, error) {
-	nodes, err := iaq.Limit(2).All(setContextOp(ctx, iaq.ctx, ent.OpQueryOnly))
+func (_q *IncidentAlertQuery) Only(ctx context.Context) (*IncidentAlert, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (iaq *IncidentAlertQuery) Only(ctx context.Context) (*IncidentAlert, error)
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) OnlyX(ctx context.Context) *IncidentAlert {
-	node, err := iaq.Only(ctx)
+func (_q *IncidentAlertQuery) OnlyX(ctx context.Context) *IncidentAlert {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (iaq *IncidentAlertQuery) OnlyX(ctx context.Context) *IncidentAlert {
 // OnlyID is like Only, but returns the only IncidentAlert ID in the query.
 // Returns a *NotSingularError when more than one IncidentAlert ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (iaq *IncidentAlertQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *IncidentAlertQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = iaq.Limit(2).IDs(setContextOp(ctx, iaq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (iaq *IncidentAlertQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) OnlyIDX(ctx context.Context) int {
-	id, err := iaq.OnlyID(ctx)
+func (_q *IncidentAlertQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (iaq *IncidentAlertQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of IncidentAlerts.
-func (iaq *IncidentAlertQuery) All(ctx context.Context) ([]*IncidentAlert, error) {
-	ctx = setContextOp(ctx, iaq.ctx, ent.OpQueryAll)
-	if err := iaq.prepareQuery(ctx); err != nil {
+func (_q *IncidentAlertQuery) All(ctx context.Context) ([]*IncidentAlert, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*IncidentAlert, *IncidentAlertQuery]()
-	return withInterceptors[[]*IncidentAlert](ctx, iaq, qr, iaq.inters)
+	return withInterceptors[[]*IncidentAlert](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) AllX(ctx context.Context) []*IncidentAlert {
-	nodes, err := iaq.All(ctx)
+func (_q *IncidentAlertQuery) AllX(ctx context.Context) []*IncidentAlert {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (iaq *IncidentAlertQuery) AllX(ctx context.Context) []*IncidentAlert {
 }
 
 // IDs executes the query and returns a list of IncidentAlert IDs.
-func (iaq *IncidentAlertQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if iaq.ctx.Unique == nil && iaq.path != nil {
-		iaq.Unique(true)
+func (_q *IncidentAlertQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, iaq.ctx, ent.OpQueryIDs)
-	if err = iaq.Select(incidentalert.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(incidentalert.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) IDsX(ctx context.Context) []int {
-	ids, err := iaq.IDs(ctx)
+func (_q *IncidentAlertQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (iaq *IncidentAlertQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (iaq *IncidentAlertQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, iaq.ctx, ent.OpQueryCount)
-	if err := iaq.prepareQuery(ctx); err != nil {
+func (_q *IncidentAlertQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, iaq, querierCount[*IncidentAlertQuery](), iaq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*IncidentAlertQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) CountX(ctx context.Context) int {
-	count, err := iaq.Count(ctx)
+func (_q *IncidentAlertQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (iaq *IncidentAlertQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (iaq *IncidentAlertQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, iaq.ctx, ent.OpQueryExist)
-	switch _, err := iaq.FirstID(ctx); {
+func (_q *IncidentAlertQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (iaq *IncidentAlertQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (iaq *IncidentAlertQuery) ExistX(ctx context.Context) bool {
-	exist, err := iaq.Exist(ctx)
+func (_q *IncidentAlertQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (iaq *IncidentAlertQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the IncidentAlertQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (iaq *IncidentAlertQuery) Clone() *IncidentAlertQuery {
-	if iaq == nil {
+func (_q *IncidentAlertQuery) Clone() *IncidentAlertQuery {
+	if _q == nil {
 		return nil
 	}
 	return &IncidentAlertQuery{
-		config:       iaq.config,
-		ctx:          iaq.ctx.Clone(),
-		order:        append([]incidentalert.OrderOption{}, iaq.order...),
-		inters:       append([]Interceptor{}, iaq.inters...),
-		predicates:   append([]predicate.IncidentAlert{}, iaq.predicates...),
-		withIncident: iaq.withIncident.Clone(),
+		config:       _q.config,
+		ctx:          _q.ctx.Clone(),
+		order:        append([]incidentalert.OrderOption{}, _q.order...),
+		inters:       append([]Interceptor{}, _q.inters...),
+		predicates:   append([]predicate.IncidentAlert{}, _q.predicates...),
+		withIncident: _q.withIncident.Clone(),
 		// clone intermediate query.
-		sql:  iaq.sql.Clone(),
-		path: iaq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithIncident tells the query-builder to eager-load the nodes that are connected to
 // the "incident" edge. The optional arguments are used to configure the query builder of the edge.
-func (iaq *IncidentAlertQuery) WithIncident(opts ...func(*IncidentQuery)) *IncidentAlertQuery {
-	query := (&IncidentClient{config: iaq.config}).Query()
+func (_q *IncidentAlertQuery) WithIncident(opts ...func(*IncidentQuery)) *IncidentAlertQuery {
+	query := (&IncidentClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	iaq.withIncident = query
-	return iaq
+	_q.withIncident = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (iaq *IncidentAlertQuery) WithIncident(opts ...func(*IncidentQuery)) *Incid
 //		GroupBy(incidentalert.FieldIncidentID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (iaq *IncidentAlertQuery) GroupBy(field string, fields ...string) *IncidentAlertGroupBy {
-	iaq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &IncidentAlertGroupBy{build: iaq}
-	grbuild.flds = &iaq.ctx.Fields
+func (_q *IncidentAlertQuery) GroupBy(field string, fields ...string) *IncidentAlertGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &IncidentAlertGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = incidentalert.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (iaq *IncidentAlertQuery) GroupBy(field string, fields ...string) *Incident
 //	client.IncidentAlert.Query().
 //		Select(incidentalert.FieldIncidentID).
 //		Scan(ctx, &v)
-func (iaq *IncidentAlertQuery) Select(fields ...string) *IncidentAlertSelect {
-	iaq.ctx.Fields = append(iaq.ctx.Fields, fields...)
-	sbuild := &IncidentAlertSelect{IncidentAlertQuery: iaq}
+func (_q *IncidentAlertQuery) Select(fields ...string) *IncidentAlertSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &IncidentAlertSelect{IncidentAlertQuery: _q}
 	sbuild.label = incidentalert.Label
-	sbuild.flds, sbuild.scan = &iaq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a IncidentAlertSelect configured with the given aggregations.
-func (iaq *IncidentAlertQuery) Aggregate(fns ...AggregateFunc) *IncidentAlertSelect {
-	return iaq.Select().Aggregate(fns...)
+func (_q *IncidentAlertQuery) Aggregate(fns ...AggregateFunc) *IncidentAlertSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (iaq *IncidentAlertQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range iaq.inters {
+func (_q *IncidentAlertQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, iaq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range iaq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !incidentalert.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if iaq.path != nil {
-		prev, err := iaq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		iaq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (iaq *IncidentAlertQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*IncidentAlert, error) {
+func (_q *IncidentAlertQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*IncidentAlert, error) {
 	var (
 		nodes       = []*IncidentAlert{}
-		_spec       = iaq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			iaq.withIncident != nil,
+			_q.withIncident != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*IncidentAlert).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &IncidentAlert{config: iaq.config}
+		node := &IncidentAlert{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (iaq *IncidentAlertQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, iaq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := iaq.withIncident; query != nil {
-		if err := iaq.loadIncident(ctx, query, nodes, nil,
+	if query := _q.withIncident; query != nil {
+		if err := _q.loadIncident(ctx, query, nodes, nil,
 			func(n *IncidentAlert, e *Incident) { n.Edges.Incident = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (iaq *IncidentAlertQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	return nodes, nil
 }
 
-func (iaq *IncidentAlertQuery) loadIncident(ctx context.Context, query *IncidentQuery, nodes []*IncidentAlert, init func(*IncidentAlert), assign func(*IncidentAlert, *Incident)) error {
+func (_q *IncidentAlertQuery) loadIncident(ctx context.Context, query *IncidentQuery, nodes []*IncidentAlert, init func(*IncidentAlert), assign func(*IncidentAlert, *Incident)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*IncidentAlert)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (iaq *IncidentAlertQuery) loadIncident(ctx context.Context, query *Incident
 	return nil
 }
 
-func (iaq *IncidentAlertQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := iaq.querySpec()
-	_spec.Node.Columns = iaq.ctx.Fields
-	if len(iaq.ctx.Fields) > 0 {
-		_spec.Unique = iaq.ctx.Unique != nil && *iaq.ctx.Unique
+func (_q *IncidentAlertQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, iaq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (iaq *IncidentAlertQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *IncidentAlertQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(incidentalert.Table, incidentalert.Columns, sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt))
-	_spec.From = iaq.sql
-	if unique := iaq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if iaq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := iaq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incidentalert.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (iaq *IncidentAlertQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if iaq.withIncident != nil {
+		if _q.withIncident != nil {
 			_spec.Node.AddColumnOnce(incidentalert.FieldIncidentID)
 		}
 	}
-	if ps := iaq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := iaq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := iaq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := iaq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (iaq *IncidentAlertQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (iaq *IncidentAlertQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(iaq.driver.Dialect())
+func (_q *IncidentAlertQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(incidentalert.Table)
-	columns := iaq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = incidentalert.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if iaq.sql != nil {
-		selector = iaq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if iaq.ctx.Unique != nil && *iaq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range iaq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range iaq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := iaq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := iaq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type IncidentAlertGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (iagb *IncidentAlertGroupBy) Aggregate(fns ...AggregateFunc) *IncidentAlertGroupBy {
-	iagb.fns = append(iagb.fns, fns...)
-	return iagb
+func (_g *IncidentAlertGroupBy) Aggregate(fns ...AggregateFunc) *IncidentAlertGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (iagb *IncidentAlertGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, iagb.build.ctx, ent.OpQueryGroupBy)
-	if err := iagb.build.prepareQuery(ctx); err != nil {
+func (_g *IncidentAlertGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*IncidentAlertQuery, *IncidentAlertGroupBy](ctx, iagb.build, iagb, iagb.build.inters, v)
+	return scanWithInterceptors[*IncidentAlertQuery, *IncidentAlertGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (iagb *IncidentAlertGroupBy) sqlScan(ctx context.Context, root *IncidentAlertQuery, v any) error {
+func (_g *IncidentAlertGroupBy) sqlScan(ctx context.Context, root *IncidentAlertQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(iagb.fns))
-	for _, fn := range iagb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*iagb.flds)+len(iagb.fns))
-		for _, f := range *iagb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*iagb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := iagb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type IncidentAlertSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (ias *IncidentAlertSelect) Aggregate(fns ...AggregateFunc) *IncidentAlertSelect {
-	ias.fns = append(ias.fns, fns...)
-	return ias
+func (_s *IncidentAlertSelect) Aggregate(fns ...AggregateFunc) *IncidentAlertSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ias *IncidentAlertSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ias.ctx, ent.OpQuerySelect)
-	if err := ias.prepareQuery(ctx); err != nil {
+func (_s *IncidentAlertSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*IncidentAlertQuery, *IncidentAlertSelect](ctx, ias.IncidentAlertQuery, ias, ias.inters, v)
+	return scanWithInterceptors[*IncidentAlertQuery, *IncidentAlertSelect](ctx, _s.IncidentAlertQuery, _s, _s.inters, v)
 }
 
-func (ias *IncidentAlertSelect) sqlScan(ctx context.Context, root *IncidentAlertQuery, v any) error {
+func (_s *IncidentAlertSelect) sqlScan(ctx context.Context, root *IncidentAlertQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(ias.fns))
-	for _, fn := range ias.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*ias.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (ias *IncidentAlertSelect) sqlScan(ctx context.Context, root *IncidentAlert
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ias.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

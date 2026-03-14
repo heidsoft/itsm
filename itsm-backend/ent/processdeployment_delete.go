@@ -20,56 +20,56 @@ type ProcessDeploymentDelete struct {
 }
 
 // Where appends a list predicates to the ProcessDeploymentDelete builder.
-func (pdd *ProcessDeploymentDelete) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentDelete {
-	pdd.mutation.Where(ps...)
-	return pdd
+func (_d *ProcessDeploymentDelete) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (pdd *ProcessDeploymentDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, pdd.sqlExec, pdd.mutation, pdd.hooks)
+func (_d *ProcessDeploymentDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pdd *ProcessDeploymentDelete) ExecX(ctx context.Context) int {
-	n, err := pdd.Exec(ctx)
+func (_d *ProcessDeploymentDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (pdd *ProcessDeploymentDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *ProcessDeploymentDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(processdeployment.Table, sqlgraph.NewFieldSpec(processdeployment.FieldID, field.TypeInt))
-	if ps := pdd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, pdd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	pdd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // ProcessDeploymentDeleteOne is the builder for deleting a single ProcessDeployment entity.
 type ProcessDeploymentDeleteOne struct {
-	pdd *ProcessDeploymentDelete
+	_d *ProcessDeploymentDelete
 }
 
 // Where appends a list predicates to the ProcessDeploymentDelete builder.
-func (pddo *ProcessDeploymentDeleteOne) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentDeleteOne {
-	pddo.pdd.mutation.Where(ps...)
-	return pddo
+func (_d *ProcessDeploymentDeleteOne) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (pddo *ProcessDeploymentDeleteOne) Exec(ctx context.Context) error {
-	n, err := pddo.pdd.Exec(ctx)
+func (_d *ProcessDeploymentDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (pddo *ProcessDeploymentDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pddo *ProcessDeploymentDeleteOne) ExecX(ctx context.Context) {
-	if err := pddo.Exec(ctx); err != nil {
+func (_d *ProcessDeploymentDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

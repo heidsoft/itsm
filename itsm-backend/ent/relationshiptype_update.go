@@ -23,134 +23,134 @@ type RelationshipTypeUpdate struct {
 }
 
 // Where appends a list predicates to the RelationshipTypeUpdate builder.
-func (rtu *RelationshipTypeUpdate) Where(ps ...predicate.RelationshipType) *RelationshipTypeUpdate {
-	rtu.mutation.Where(ps...)
-	return rtu
+func (_u *RelationshipTypeUpdate) Where(ps ...predicate.RelationshipType) *RelationshipTypeUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (rtu *RelationshipTypeUpdate) SetName(s string) *RelationshipTypeUpdate {
-	rtu.mutation.SetName(s)
-	return rtu
+func (_u *RelationshipTypeUpdate) SetName(v string) *RelationshipTypeUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (rtu *RelationshipTypeUpdate) SetNillableName(s *string) *RelationshipTypeUpdate {
-	if s != nil {
-		rtu.SetName(*s)
+func (_u *RelationshipTypeUpdate) SetNillableName(v *string) *RelationshipTypeUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return rtu
+	return _u
 }
 
 // SetDirectional sets the "directional" field.
-func (rtu *RelationshipTypeUpdate) SetDirectional(b bool) *RelationshipTypeUpdate {
-	rtu.mutation.SetDirectional(b)
-	return rtu
+func (_u *RelationshipTypeUpdate) SetDirectional(v bool) *RelationshipTypeUpdate {
+	_u.mutation.SetDirectional(v)
+	return _u
 }
 
 // SetNillableDirectional sets the "directional" field if the given value is not nil.
-func (rtu *RelationshipTypeUpdate) SetNillableDirectional(b *bool) *RelationshipTypeUpdate {
-	if b != nil {
-		rtu.SetDirectional(*b)
+func (_u *RelationshipTypeUpdate) SetNillableDirectional(v *bool) *RelationshipTypeUpdate {
+	if v != nil {
+		_u.SetDirectional(*v)
 	}
-	return rtu
+	return _u
 }
 
 // SetReverseName sets the "reverse_name" field.
-func (rtu *RelationshipTypeUpdate) SetReverseName(s string) *RelationshipTypeUpdate {
-	rtu.mutation.SetReverseName(s)
-	return rtu
+func (_u *RelationshipTypeUpdate) SetReverseName(v string) *RelationshipTypeUpdate {
+	_u.mutation.SetReverseName(v)
+	return _u
 }
 
 // SetNillableReverseName sets the "reverse_name" field if the given value is not nil.
-func (rtu *RelationshipTypeUpdate) SetNillableReverseName(s *string) *RelationshipTypeUpdate {
-	if s != nil {
-		rtu.SetReverseName(*s)
+func (_u *RelationshipTypeUpdate) SetNillableReverseName(v *string) *RelationshipTypeUpdate {
+	if v != nil {
+		_u.SetReverseName(*v)
 	}
-	return rtu
+	return _u
 }
 
 // ClearReverseName clears the value of the "reverse_name" field.
-func (rtu *RelationshipTypeUpdate) ClearReverseName() *RelationshipTypeUpdate {
-	rtu.mutation.ClearReverseName()
-	return rtu
+func (_u *RelationshipTypeUpdate) ClearReverseName() *RelationshipTypeUpdate {
+	_u.mutation.ClearReverseName()
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (rtu *RelationshipTypeUpdate) SetDescription(s string) *RelationshipTypeUpdate {
-	rtu.mutation.SetDescription(s)
-	return rtu
+func (_u *RelationshipTypeUpdate) SetDescription(v string) *RelationshipTypeUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (rtu *RelationshipTypeUpdate) SetNillableDescription(s *string) *RelationshipTypeUpdate {
-	if s != nil {
-		rtu.SetDescription(*s)
+func (_u *RelationshipTypeUpdate) SetNillableDescription(v *string) *RelationshipTypeUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return rtu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (rtu *RelationshipTypeUpdate) ClearDescription() *RelationshipTypeUpdate {
-	rtu.mutation.ClearDescription()
-	return rtu
+func (_u *RelationshipTypeUpdate) ClearDescription() *RelationshipTypeUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (rtu *RelationshipTypeUpdate) SetTenantID(i int) *RelationshipTypeUpdate {
-	rtu.mutation.ResetTenantID()
-	rtu.mutation.SetTenantID(i)
-	return rtu
+func (_u *RelationshipTypeUpdate) SetTenantID(v int) *RelationshipTypeUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (rtu *RelationshipTypeUpdate) SetNillableTenantID(i *int) *RelationshipTypeUpdate {
-	if i != nil {
-		rtu.SetTenantID(*i)
+func (_u *RelationshipTypeUpdate) SetNillableTenantID(v *int) *RelationshipTypeUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return rtu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (rtu *RelationshipTypeUpdate) AddTenantID(i int) *RelationshipTypeUpdate {
-	rtu.mutation.AddTenantID(i)
-	return rtu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *RelationshipTypeUpdate) AddTenantID(v int) *RelationshipTypeUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (rtu *RelationshipTypeUpdate) SetCreatedAt(t time.Time) *RelationshipTypeUpdate {
-	rtu.mutation.SetCreatedAt(t)
-	return rtu
+func (_u *RelationshipTypeUpdate) SetCreatedAt(v time.Time) *RelationshipTypeUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (rtu *RelationshipTypeUpdate) SetNillableCreatedAt(t *time.Time) *RelationshipTypeUpdate {
-	if t != nil {
-		rtu.SetCreatedAt(*t)
+func (_u *RelationshipTypeUpdate) SetNillableCreatedAt(v *time.Time) *RelationshipTypeUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return rtu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (rtu *RelationshipTypeUpdate) SetUpdatedAt(t time.Time) *RelationshipTypeUpdate {
-	rtu.mutation.SetUpdatedAt(t)
-	return rtu
+func (_u *RelationshipTypeUpdate) SetUpdatedAt(v time.Time) *RelationshipTypeUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the RelationshipTypeMutation object of the builder.
-func (rtu *RelationshipTypeUpdate) Mutation() *RelationshipTypeMutation {
-	return rtu.mutation
+func (_u *RelationshipTypeUpdate) Mutation() *RelationshipTypeMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (rtu *RelationshipTypeUpdate) Save(ctx context.Context) (int, error) {
-	rtu.defaults()
-	return withHooks(ctx, rtu.sqlSave, rtu.mutation, rtu.hooks)
+func (_u *RelationshipTypeUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (rtu *RelationshipTypeUpdate) SaveX(ctx context.Context) int {
-	affected, err := rtu.Save(ctx)
+func (_u *RelationshipTypeUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -158,34 +158,34 @@ func (rtu *RelationshipTypeUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (rtu *RelationshipTypeUpdate) Exec(ctx context.Context) error {
-	_, err := rtu.Save(ctx)
+func (_u *RelationshipTypeUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rtu *RelationshipTypeUpdate) ExecX(ctx context.Context) {
-	if err := rtu.Exec(ctx); err != nil {
+func (_u *RelationshipTypeUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (rtu *RelationshipTypeUpdate) defaults() {
-	if _, ok := rtu.mutation.UpdatedAt(); !ok {
+func (_u *RelationshipTypeUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := relationshiptype.UpdateDefaultUpdatedAt()
-		rtu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (rtu *RelationshipTypeUpdate) check() error {
-	if v, ok := rtu.mutation.Name(); ok {
+func (_u *RelationshipTypeUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := relationshiptype.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RelationshipType.name": %w`, err)}
 		}
 	}
-	if v, ok := rtu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := relationshiptype.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "RelationshipType.tenant_id": %w`, err)}
 		}
@@ -193,49 +193,49 @@ func (rtu *RelationshipTypeUpdate) check() error {
 	return nil
 }
 
-func (rtu *RelationshipTypeUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := rtu.check(); err != nil {
-		return n, err
+func (_u *RelationshipTypeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(relationshiptype.Table, relationshiptype.Columns, sqlgraph.NewFieldSpec(relationshiptype.FieldID, field.TypeInt))
-	if ps := rtu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := rtu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(relationshiptype.FieldName, field.TypeString, value)
 	}
-	if value, ok := rtu.mutation.Directional(); ok {
+	if value, ok := _u.mutation.Directional(); ok {
 		_spec.SetField(relationshiptype.FieldDirectional, field.TypeBool, value)
 	}
-	if value, ok := rtu.mutation.ReverseName(); ok {
+	if value, ok := _u.mutation.ReverseName(); ok {
 		_spec.SetField(relationshiptype.FieldReverseName, field.TypeString, value)
 	}
-	if rtu.mutation.ReverseNameCleared() {
+	if _u.mutation.ReverseNameCleared() {
 		_spec.ClearField(relationshiptype.FieldReverseName, field.TypeString)
 	}
-	if value, ok := rtu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(relationshiptype.FieldDescription, field.TypeString, value)
 	}
-	if rtu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(relationshiptype.FieldDescription, field.TypeString)
 	}
-	if value, ok := rtu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(relationshiptype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := rtu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(relationshiptype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := rtu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(relationshiptype.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := rtu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(relationshiptype.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, rtu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{relationshiptype.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -243,8 +243,8 @@ func (rtu *RelationshipTypeUpdate) sqlSave(ctx context.Context) (n int, err erro
 		}
 		return 0, err
 	}
-	rtu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // RelationshipTypeUpdateOne is the builder for updating a single RelationshipType entity.
@@ -256,141 +256,141 @@ type RelationshipTypeUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (rtuo *RelationshipTypeUpdateOne) SetName(s string) *RelationshipTypeUpdateOne {
-	rtuo.mutation.SetName(s)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) SetName(v string) *RelationshipTypeUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (rtuo *RelationshipTypeUpdateOne) SetNillableName(s *string) *RelationshipTypeUpdateOne {
-	if s != nil {
-		rtuo.SetName(*s)
+func (_u *RelationshipTypeUpdateOne) SetNillableName(v *string) *RelationshipTypeUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return rtuo
+	return _u
 }
 
 // SetDirectional sets the "directional" field.
-func (rtuo *RelationshipTypeUpdateOne) SetDirectional(b bool) *RelationshipTypeUpdateOne {
-	rtuo.mutation.SetDirectional(b)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) SetDirectional(v bool) *RelationshipTypeUpdateOne {
+	_u.mutation.SetDirectional(v)
+	return _u
 }
 
 // SetNillableDirectional sets the "directional" field if the given value is not nil.
-func (rtuo *RelationshipTypeUpdateOne) SetNillableDirectional(b *bool) *RelationshipTypeUpdateOne {
-	if b != nil {
-		rtuo.SetDirectional(*b)
+func (_u *RelationshipTypeUpdateOne) SetNillableDirectional(v *bool) *RelationshipTypeUpdateOne {
+	if v != nil {
+		_u.SetDirectional(*v)
 	}
-	return rtuo
+	return _u
 }
 
 // SetReverseName sets the "reverse_name" field.
-func (rtuo *RelationshipTypeUpdateOne) SetReverseName(s string) *RelationshipTypeUpdateOne {
-	rtuo.mutation.SetReverseName(s)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) SetReverseName(v string) *RelationshipTypeUpdateOne {
+	_u.mutation.SetReverseName(v)
+	return _u
 }
 
 // SetNillableReverseName sets the "reverse_name" field if the given value is not nil.
-func (rtuo *RelationshipTypeUpdateOne) SetNillableReverseName(s *string) *RelationshipTypeUpdateOne {
-	if s != nil {
-		rtuo.SetReverseName(*s)
+func (_u *RelationshipTypeUpdateOne) SetNillableReverseName(v *string) *RelationshipTypeUpdateOne {
+	if v != nil {
+		_u.SetReverseName(*v)
 	}
-	return rtuo
+	return _u
 }
 
 // ClearReverseName clears the value of the "reverse_name" field.
-func (rtuo *RelationshipTypeUpdateOne) ClearReverseName() *RelationshipTypeUpdateOne {
-	rtuo.mutation.ClearReverseName()
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) ClearReverseName() *RelationshipTypeUpdateOne {
+	_u.mutation.ClearReverseName()
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (rtuo *RelationshipTypeUpdateOne) SetDescription(s string) *RelationshipTypeUpdateOne {
-	rtuo.mutation.SetDescription(s)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) SetDescription(v string) *RelationshipTypeUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (rtuo *RelationshipTypeUpdateOne) SetNillableDescription(s *string) *RelationshipTypeUpdateOne {
-	if s != nil {
-		rtuo.SetDescription(*s)
+func (_u *RelationshipTypeUpdateOne) SetNillableDescription(v *string) *RelationshipTypeUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return rtuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (rtuo *RelationshipTypeUpdateOne) ClearDescription() *RelationshipTypeUpdateOne {
-	rtuo.mutation.ClearDescription()
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) ClearDescription() *RelationshipTypeUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (rtuo *RelationshipTypeUpdateOne) SetTenantID(i int) *RelationshipTypeUpdateOne {
-	rtuo.mutation.ResetTenantID()
-	rtuo.mutation.SetTenantID(i)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) SetTenantID(v int) *RelationshipTypeUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (rtuo *RelationshipTypeUpdateOne) SetNillableTenantID(i *int) *RelationshipTypeUpdateOne {
-	if i != nil {
-		rtuo.SetTenantID(*i)
+func (_u *RelationshipTypeUpdateOne) SetNillableTenantID(v *int) *RelationshipTypeUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return rtuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (rtuo *RelationshipTypeUpdateOne) AddTenantID(i int) *RelationshipTypeUpdateOne {
-	rtuo.mutation.AddTenantID(i)
-	return rtuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *RelationshipTypeUpdateOne) AddTenantID(v int) *RelationshipTypeUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (rtuo *RelationshipTypeUpdateOne) SetCreatedAt(t time.Time) *RelationshipTypeUpdateOne {
-	rtuo.mutation.SetCreatedAt(t)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) SetCreatedAt(v time.Time) *RelationshipTypeUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (rtuo *RelationshipTypeUpdateOne) SetNillableCreatedAt(t *time.Time) *RelationshipTypeUpdateOne {
-	if t != nil {
-		rtuo.SetCreatedAt(*t)
+func (_u *RelationshipTypeUpdateOne) SetNillableCreatedAt(v *time.Time) *RelationshipTypeUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return rtuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (rtuo *RelationshipTypeUpdateOne) SetUpdatedAt(t time.Time) *RelationshipTypeUpdateOne {
-	rtuo.mutation.SetUpdatedAt(t)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) SetUpdatedAt(v time.Time) *RelationshipTypeUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the RelationshipTypeMutation object of the builder.
-func (rtuo *RelationshipTypeUpdateOne) Mutation() *RelationshipTypeMutation {
-	return rtuo.mutation
+func (_u *RelationshipTypeUpdateOne) Mutation() *RelationshipTypeMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the RelationshipTypeUpdate builder.
-func (rtuo *RelationshipTypeUpdateOne) Where(ps ...predicate.RelationshipType) *RelationshipTypeUpdateOne {
-	rtuo.mutation.Where(ps...)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) Where(ps ...predicate.RelationshipType) *RelationshipTypeUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (rtuo *RelationshipTypeUpdateOne) Select(field string, fields ...string) *RelationshipTypeUpdateOne {
-	rtuo.fields = append([]string{field}, fields...)
-	return rtuo
+func (_u *RelationshipTypeUpdateOne) Select(field string, fields ...string) *RelationshipTypeUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated RelationshipType entity.
-func (rtuo *RelationshipTypeUpdateOne) Save(ctx context.Context) (*RelationshipType, error) {
-	rtuo.defaults()
-	return withHooks(ctx, rtuo.sqlSave, rtuo.mutation, rtuo.hooks)
+func (_u *RelationshipTypeUpdateOne) Save(ctx context.Context) (*RelationshipType, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (rtuo *RelationshipTypeUpdateOne) SaveX(ctx context.Context) *RelationshipType {
-	node, err := rtuo.Save(ctx)
+func (_u *RelationshipTypeUpdateOne) SaveX(ctx context.Context) *RelationshipType {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -398,34 +398,34 @@ func (rtuo *RelationshipTypeUpdateOne) SaveX(ctx context.Context) *RelationshipT
 }
 
 // Exec executes the query on the entity.
-func (rtuo *RelationshipTypeUpdateOne) Exec(ctx context.Context) error {
-	_, err := rtuo.Save(ctx)
+func (_u *RelationshipTypeUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rtuo *RelationshipTypeUpdateOne) ExecX(ctx context.Context) {
-	if err := rtuo.Exec(ctx); err != nil {
+func (_u *RelationshipTypeUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (rtuo *RelationshipTypeUpdateOne) defaults() {
-	if _, ok := rtuo.mutation.UpdatedAt(); !ok {
+func (_u *RelationshipTypeUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := relationshiptype.UpdateDefaultUpdatedAt()
-		rtuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (rtuo *RelationshipTypeUpdateOne) check() error {
-	if v, ok := rtuo.mutation.Name(); ok {
+func (_u *RelationshipTypeUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := relationshiptype.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "RelationshipType.name": %w`, err)}
 		}
 	}
-	if v, ok := rtuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := relationshiptype.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "RelationshipType.tenant_id": %w`, err)}
 		}
@@ -433,17 +433,17 @@ func (rtuo *RelationshipTypeUpdateOne) check() error {
 	return nil
 }
 
-func (rtuo *RelationshipTypeUpdateOne) sqlSave(ctx context.Context) (_node *RelationshipType, err error) {
-	if err := rtuo.check(); err != nil {
+func (_u *RelationshipTypeUpdateOne) sqlSave(ctx context.Context) (_node *RelationshipType, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(relationshiptype.Table, relationshiptype.Columns, sqlgraph.NewFieldSpec(relationshiptype.FieldID, field.TypeInt))
-	id, ok := rtuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "RelationshipType.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := rtuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, relationshiptype.FieldID)
 		for _, f := range fields {
@@ -455,47 +455,47 @@ func (rtuo *RelationshipTypeUpdateOne) sqlSave(ctx context.Context) (_node *Rela
 			}
 		}
 	}
-	if ps := rtuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := rtuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(relationshiptype.FieldName, field.TypeString, value)
 	}
-	if value, ok := rtuo.mutation.Directional(); ok {
+	if value, ok := _u.mutation.Directional(); ok {
 		_spec.SetField(relationshiptype.FieldDirectional, field.TypeBool, value)
 	}
-	if value, ok := rtuo.mutation.ReverseName(); ok {
+	if value, ok := _u.mutation.ReverseName(); ok {
 		_spec.SetField(relationshiptype.FieldReverseName, field.TypeString, value)
 	}
-	if rtuo.mutation.ReverseNameCleared() {
+	if _u.mutation.ReverseNameCleared() {
 		_spec.ClearField(relationshiptype.FieldReverseName, field.TypeString)
 	}
-	if value, ok := rtuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(relationshiptype.FieldDescription, field.TypeString, value)
 	}
-	if rtuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(relationshiptype.FieldDescription, field.TypeString)
 	}
-	if value, ok := rtuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(relationshiptype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := rtuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(relationshiptype.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := rtuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(relationshiptype.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := rtuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(relationshiptype.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &RelationshipType{config: rtuo.config}
+	_node = &RelationshipType{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, rtuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{relationshiptype.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -503,6 +503,6 @@ func (rtuo *RelationshipTypeUpdateOne) sqlSave(ctx context.Context) (_node *Rela
 		}
 		return nil, err
 	}
-	rtuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

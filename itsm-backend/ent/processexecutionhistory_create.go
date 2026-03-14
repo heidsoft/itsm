@@ -22,206 +22,206 @@ type ProcessExecutionHistoryCreate struct {
 }
 
 // SetHistoryID sets the "history_id" field.
-func (pehc *ProcessExecutionHistoryCreate) SetHistoryID(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetHistoryID(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetHistoryID(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetHistoryID(v)
+	return _c
 }
 
 // SetProcessInstanceID sets the "process_instance_id" field.
-func (pehc *ProcessExecutionHistoryCreate) SetProcessInstanceID(i int) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetProcessInstanceID(i)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetProcessInstanceID(v int) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetProcessInstanceID(v)
+	return _c
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (pehc *ProcessExecutionHistoryCreate) SetProcessDefinitionKey(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetProcessDefinitionKey(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetProcessDefinitionKey(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetProcessDefinitionKey(v)
+	return _c
 }
 
 // SetActivityID sets the "activity_id" field.
-func (pehc *ProcessExecutionHistoryCreate) SetActivityID(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetActivityID(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetActivityID(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetActivityID(v)
+	return _c
 }
 
 // SetNillableActivityID sets the "activity_id" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableActivityID(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetActivityID(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableActivityID(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetActivityID(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetActivityName sets the "activity_name" field.
-func (pehc *ProcessExecutionHistoryCreate) SetActivityName(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetActivityName(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetActivityName(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetActivityName(v)
+	return _c
 }
 
 // SetNillableActivityName sets the "activity_name" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableActivityName(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetActivityName(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableActivityName(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetActivityName(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetActivityType sets the "activity_type" field.
-func (pehc *ProcessExecutionHistoryCreate) SetActivityType(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetActivityType(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetActivityType(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetActivityType(v)
+	return _c
 }
 
 // SetEventType sets the "event_type" field.
-func (pehc *ProcessExecutionHistoryCreate) SetEventType(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetEventType(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetEventType(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetEventType(v)
+	return _c
 }
 
 // SetEventDetail sets the "event_detail" field.
-func (pehc *ProcessExecutionHistoryCreate) SetEventDetail(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetEventDetail(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetEventDetail(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetEventDetail(v)
+	return _c
 }
 
 // SetNillableEventDetail sets the "event_detail" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableEventDetail(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetEventDetail(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableEventDetail(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetEventDetail(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetVariables sets the "variables" field.
-func (pehc *ProcessExecutionHistoryCreate) SetVariables(m map[string]interface{}) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetVariables(m)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetVariables(v map[string]interface{}) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetVariables(v)
+	return _c
 }
 
 // SetUserID sets the "user_id" field.
-func (pehc *ProcessExecutionHistoryCreate) SetUserID(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetUserID(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetUserID(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetUserID(v)
+	return _c
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableUserID(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetUserID(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableUserID(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetUserID(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetUserName sets the "user_name" field.
-func (pehc *ProcessExecutionHistoryCreate) SetUserName(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetUserName(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetUserName(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetUserName(v)
+	return _c
 }
 
 // SetNillableUserName sets the "user_name" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableUserName(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetUserName(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableUserName(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetUserName(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetTimestamp sets the "timestamp" field.
-func (pehc *ProcessExecutionHistoryCreate) SetTimestamp(t time.Time) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetTimestamp(t)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetTimestamp(v time.Time) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetTimestamp(v)
+	return _c
 }
 
 // SetNillableTimestamp sets the "timestamp" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableTimestamp(t *time.Time) *ProcessExecutionHistoryCreate {
-	if t != nil {
-		pehc.SetTimestamp(*t)
+func (_c *ProcessExecutionHistoryCreate) SetNillableTimestamp(v *time.Time) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetTimestamp(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetComment sets the "comment" field.
-func (pehc *ProcessExecutionHistoryCreate) SetComment(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetComment(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetComment(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetComment(v)
+	return _c
 }
 
 // SetNillableComment sets the "comment" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableComment(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetComment(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableComment(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetComment(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetErrorMessage sets the "error_message" field.
-func (pehc *ProcessExecutionHistoryCreate) SetErrorMessage(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetErrorMessage(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetErrorMessage(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetErrorMessage(v)
+	return _c
 }
 
 // SetNillableErrorMessage sets the "error_message" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableErrorMessage(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetErrorMessage(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableErrorMessage(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetErrorMessage(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetErrorCode sets the "error_code" field.
-func (pehc *ProcessExecutionHistoryCreate) SetErrorCode(s string) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetErrorCode(s)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetErrorCode(v string) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetErrorCode(v)
+	return _c
 }
 
 // SetNillableErrorCode sets the "error_code" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableErrorCode(s *string) *ProcessExecutionHistoryCreate {
-	if s != nil {
-		pehc.SetErrorCode(*s)
+func (_c *ProcessExecutionHistoryCreate) SetNillableErrorCode(v *string) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetErrorCode(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pehc *ProcessExecutionHistoryCreate) SetTenantID(i int) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetTenantID(i)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetTenantID(v int) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pehc *ProcessExecutionHistoryCreate) SetCreatedAt(t time.Time) *ProcessExecutionHistoryCreate {
-	pehc.mutation.SetCreatedAt(t)
-	return pehc
+func (_c *ProcessExecutionHistoryCreate) SetCreatedAt(v time.Time) *ProcessExecutionHistoryCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pehc *ProcessExecutionHistoryCreate) SetNillableCreatedAt(t *time.Time) *ProcessExecutionHistoryCreate {
-	if t != nil {
-		pehc.SetCreatedAt(*t)
+func (_c *ProcessExecutionHistoryCreate) SetNillableCreatedAt(v *time.Time) *ProcessExecutionHistoryCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pehc
+	return _c
 }
 
 // SetProcessInstance sets the "process_instance" edge to the ProcessInstance entity.
-func (pehc *ProcessExecutionHistoryCreate) SetProcessInstance(p *ProcessInstance) *ProcessExecutionHistoryCreate {
-	return pehc.SetProcessInstanceID(p.ID)
+func (_c *ProcessExecutionHistoryCreate) SetProcessInstance(v *ProcessInstance) *ProcessExecutionHistoryCreate {
+	return _c.SetProcessInstanceID(v.ID)
 }
 
 // Mutation returns the ProcessExecutionHistoryMutation object of the builder.
-func (pehc *ProcessExecutionHistoryCreate) Mutation() *ProcessExecutionHistoryMutation {
-	return pehc.mutation
+func (_c *ProcessExecutionHistoryCreate) Mutation() *ProcessExecutionHistoryMutation {
+	return _c.mutation
 }
 
 // Save creates the ProcessExecutionHistory in the database.
-func (pehc *ProcessExecutionHistoryCreate) Save(ctx context.Context) (*ProcessExecutionHistory, error) {
-	pehc.defaults()
-	return withHooks(ctx, pehc.sqlSave, pehc.mutation, pehc.hooks)
+func (_c *ProcessExecutionHistoryCreate) Save(ctx context.Context) (*ProcessExecutionHistory, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pehc *ProcessExecutionHistoryCreate) SaveX(ctx context.Context) *ProcessExecutionHistory {
-	v, err := pehc.Save(ctx)
+func (_c *ProcessExecutionHistoryCreate) SaveX(ctx context.Context) *ProcessExecutionHistory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -229,98 +229,98 @@ func (pehc *ProcessExecutionHistoryCreate) SaveX(ctx context.Context) *ProcessEx
 }
 
 // Exec executes the query.
-func (pehc *ProcessExecutionHistoryCreate) Exec(ctx context.Context) error {
-	_, err := pehc.Save(ctx)
+func (_c *ProcessExecutionHistoryCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pehc *ProcessExecutionHistoryCreate) ExecX(ctx context.Context) {
-	if err := pehc.Exec(ctx); err != nil {
+func (_c *ProcessExecutionHistoryCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pehc *ProcessExecutionHistoryCreate) defaults() {
-	if _, ok := pehc.mutation.Timestamp(); !ok {
+func (_c *ProcessExecutionHistoryCreate) defaults() {
+	if _, ok := _c.mutation.Timestamp(); !ok {
 		v := processexecutionhistory.DefaultTimestamp()
-		pehc.mutation.SetTimestamp(v)
+		_c.mutation.SetTimestamp(v)
 	}
-	if _, ok := pehc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processexecutionhistory.DefaultCreatedAt()
-		pehc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pehc *ProcessExecutionHistoryCreate) check() error {
-	if _, ok := pehc.mutation.HistoryID(); !ok {
+func (_c *ProcessExecutionHistoryCreate) check() error {
+	if _, ok := _c.mutation.HistoryID(); !ok {
 		return &ValidationError{Name: "history_id", err: errors.New(`ent: missing required field "ProcessExecutionHistory.history_id"`)}
 	}
-	if v, ok := pehc.mutation.HistoryID(); ok {
+	if v, ok := _c.mutation.HistoryID(); ok {
 		if err := processexecutionhistory.HistoryIDValidator(v); err != nil {
 			return &ValidationError{Name: "history_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.history_id": %w`, err)}
 		}
 	}
-	if _, ok := pehc.mutation.ProcessInstanceID(); !ok {
+	if _, ok := _c.mutation.ProcessInstanceID(); !ok {
 		return &ValidationError{Name: "process_instance_id", err: errors.New(`ent: missing required field "ProcessExecutionHistory.process_instance_id"`)}
 	}
-	if v, ok := pehc.mutation.ProcessInstanceID(); ok {
+	if v, ok := _c.mutation.ProcessInstanceID(); ok {
 		if err := processexecutionhistory.ProcessInstanceIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_instance_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.process_instance_id": %w`, err)}
 		}
 	}
-	if _, ok := pehc.mutation.ProcessDefinitionKey(); !ok {
+	if _, ok := _c.mutation.ProcessDefinitionKey(); !ok {
 		return &ValidationError{Name: "process_definition_key", err: errors.New(`ent: missing required field "ProcessExecutionHistory.process_definition_key"`)}
 	}
-	if v, ok := pehc.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		if err := processexecutionhistory.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.process_definition_key": %w`, err)}
 		}
 	}
-	if _, ok := pehc.mutation.ActivityType(); !ok {
+	if _, ok := _c.mutation.ActivityType(); !ok {
 		return &ValidationError{Name: "activity_type", err: errors.New(`ent: missing required field "ProcessExecutionHistory.activity_type"`)}
 	}
-	if v, ok := pehc.mutation.ActivityType(); ok {
+	if v, ok := _c.mutation.ActivityType(); ok {
 		if err := processexecutionhistory.ActivityTypeValidator(v); err != nil {
 			return &ValidationError{Name: "activity_type", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.activity_type": %w`, err)}
 		}
 	}
-	if _, ok := pehc.mutation.EventType(); !ok {
+	if _, ok := _c.mutation.EventType(); !ok {
 		return &ValidationError{Name: "event_type", err: errors.New(`ent: missing required field "ProcessExecutionHistory.event_type"`)}
 	}
-	if v, ok := pehc.mutation.EventType(); ok {
+	if v, ok := _c.mutation.EventType(); ok {
 		if err := processexecutionhistory.EventTypeValidator(v); err != nil {
 			return &ValidationError{Name: "event_type", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.event_type": %w`, err)}
 		}
 	}
-	if _, ok := pehc.mutation.Timestamp(); !ok {
+	if _, ok := _c.mutation.Timestamp(); !ok {
 		return &ValidationError{Name: "timestamp", err: errors.New(`ent: missing required field "ProcessExecutionHistory.timestamp"`)}
 	}
-	if _, ok := pehc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProcessExecutionHistory.tenant_id"`)}
 	}
-	if v, ok := pehc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := processexecutionhistory.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessExecutionHistory.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := pehc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessExecutionHistory.created_at"`)}
 	}
-	if len(pehc.mutation.ProcessInstanceIDs()) == 0 {
+	if len(_c.mutation.ProcessInstanceIDs()) == 0 {
 		return &ValidationError{Name: "process_instance", err: errors.New(`ent: missing required edge "ProcessExecutionHistory.process_instance"`)}
 	}
 	return nil
 }
 
-func (pehc *ProcessExecutionHistoryCreate) sqlSave(ctx context.Context) (*ProcessExecutionHistory, error) {
-	if err := pehc.check(); err != nil {
+func (_c *ProcessExecutionHistoryCreate) sqlSave(ctx context.Context) (*ProcessExecutionHistory, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pehc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pehc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -328,81 +328,81 @@ func (pehc *ProcessExecutionHistoryCreate) sqlSave(ctx context.Context) (*Proces
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	pehc.mutation.id = &_node.ID
-	pehc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pehc *ProcessExecutionHistoryCreate) createSpec() (*ProcessExecutionHistory, *sqlgraph.CreateSpec) {
+func (_c *ProcessExecutionHistoryCreate) createSpec() (*ProcessExecutionHistory, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProcessExecutionHistory{config: pehc.config}
+		_node = &ProcessExecutionHistory{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(processexecutionhistory.Table, sqlgraph.NewFieldSpec(processexecutionhistory.FieldID, field.TypeInt))
 	)
-	if value, ok := pehc.mutation.HistoryID(); ok {
+	if value, ok := _c.mutation.HistoryID(); ok {
 		_spec.SetField(processexecutionhistory.FieldHistoryID, field.TypeString, value)
 		_node.HistoryID = value
 	}
-	if value, ok := pehc.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processexecutionhistory.FieldProcessDefinitionKey, field.TypeString, value)
 		_node.ProcessDefinitionKey = value
 	}
-	if value, ok := pehc.mutation.ActivityID(); ok {
+	if value, ok := _c.mutation.ActivityID(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityID, field.TypeString, value)
 		_node.ActivityID = value
 	}
-	if value, ok := pehc.mutation.ActivityName(); ok {
+	if value, ok := _c.mutation.ActivityName(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityName, field.TypeString, value)
 		_node.ActivityName = value
 	}
-	if value, ok := pehc.mutation.ActivityType(); ok {
+	if value, ok := _c.mutation.ActivityType(); ok {
 		_spec.SetField(processexecutionhistory.FieldActivityType, field.TypeString, value)
 		_node.ActivityType = value
 	}
-	if value, ok := pehc.mutation.EventType(); ok {
+	if value, ok := _c.mutation.EventType(); ok {
 		_spec.SetField(processexecutionhistory.FieldEventType, field.TypeString, value)
 		_node.EventType = value
 	}
-	if value, ok := pehc.mutation.EventDetail(); ok {
+	if value, ok := _c.mutation.EventDetail(); ok {
 		_spec.SetField(processexecutionhistory.FieldEventDetail, field.TypeString, value)
 		_node.EventDetail = value
 	}
-	if value, ok := pehc.mutation.Variables(); ok {
+	if value, ok := _c.mutation.Variables(); ok {
 		_spec.SetField(processexecutionhistory.FieldVariables, field.TypeJSON, value)
 		_node.Variables = value
 	}
-	if value, ok := pehc.mutation.UserID(); ok {
+	if value, ok := _c.mutation.UserID(); ok {
 		_spec.SetField(processexecutionhistory.FieldUserID, field.TypeString, value)
 		_node.UserID = value
 	}
-	if value, ok := pehc.mutation.UserName(); ok {
+	if value, ok := _c.mutation.UserName(); ok {
 		_spec.SetField(processexecutionhistory.FieldUserName, field.TypeString, value)
 		_node.UserName = value
 	}
-	if value, ok := pehc.mutation.Timestamp(); ok {
+	if value, ok := _c.mutation.Timestamp(); ok {
 		_spec.SetField(processexecutionhistory.FieldTimestamp, field.TypeTime, value)
 		_node.Timestamp = value
 	}
-	if value, ok := pehc.mutation.Comment(); ok {
+	if value, ok := _c.mutation.Comment(); ok {
 		_spec.SetField(processexecutionhistory.FieldComment, field.TypeString, value)
 		_node.Comment = value
 	}
-	if value, ok := pehc.mutation.ErrorMessage(); ok {
+	if value, ok := _c.mutation.ErrorMessage(); ok {
 		_spec.SetField(processexecutionhistory.FieldErrorMessage, field.TypeString, value)
 		_node.ErrorMessage = value
 	}
-	if value, ok := pehc.mutation.ErrorCode(); ok {
+	if value, ok := _c.mutation.ErrorCode(); ok {
 		_spec.SetField(processexecutionhistory.FieldErrorCode, field.TypeString, value)
 		_node.ErrorCode = value
 	}
-	if value, ok := pehc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processexecutionhistory.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := pehc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(processexecutionhistory.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := pehc.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProcessInstanceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -430,16 +430,16 @@ type ProcessExecutionHistoryCreateBulk struct {
 }
 
 // Save creates the ProcessExecutionHistory entities in the database.
-func (pehcb *ProcessExecutionHistoryCreateBulk) Save(ctx context.Context) ([]*ProcessExecutionHistory, error) {
-	if pehcb.err != nil {
-		return nil, pehcb.err
+func (_c *ProcessExecutionHistoryCreateBulk) Save(ctx context.Context) ([]*ProcessExecutionHistory, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(pehcb.builders))
-	nodes := make([]*ProcessExecutionHistory, len(pehcb.builders))
-	mutators := make([]Mutator, len(pehcb.builders))
-	for i := range pehcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProcessExecutionHistory, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := pehcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProcessExecutionHistoryMutation)
@@ -453,11 +453,11 @@ func (pehcb *ProcessExecutionHistoryCreateBulk) Save(ctx context.Context) ([]*Pr
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, pehcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, pehcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -481,7 +481,7 @@ func (pehcb *ProcessExecutionHistoryCreateBulk) Save(ctx context.Context) ([]*Pr
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, pehcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -489,8 +489,8 @@ func (pehcb *ProcessExecutionHistoryCreateBulk) Save(ctx context.Context) ([]*Pr
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pehcb *ProcessExecutionHistoryCreateBulk) SaveX(ctx context.Context) []*ProcessExecutionHistory {
-	v, err := pehcb.Save(ctx)
+func (_c *ProcessExecutionHistoryCreateBulk) SaveX(ctx context.Context) []*ProcessExecutionHistory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -498,14 +498,14 @@ func (pehcb *ProcessExecutionHistoryCreateBulk) SaveX(ctx context.Context) []*Pr
 }
 
 // Exec executes the query.
-func (pehcb *ProcessExecutionHistoryCreateBulk) Exec(ctx context.Context) error {
-	_, err := pehcb.Save(ctx)
+func (_c *ProcessExecutionHistoryCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pehcb *ProcessExecutionHistoryCreateBulk) ExecX(ctx context.Context) {
-	if err := pehcb.Exec(ctx); err != nil {
+func (_c *ProcessExecutionHistoryCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

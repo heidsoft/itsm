@@ -22,130 +22,130 @@ type RootCauseAnalysisCreate struct {
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (rcac *RootCauseAnalysisCreate) SetTicketID(i int) *RootCauseAnalysisCreate {
-	rcac.mutation.SetTicketID(i)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetTicketID(v int) *RootCauseAnalysisCreate {
+	_c.mutation.SetTicketID(v)
+	return _c
 }
 
 // SetTicketNumber sets the "ticket_number" field.
-func (rcac *RootCauseAnalysisCreate) SetTicketNumber(s string) *RootCauseAnalysisCreate {
-	rcac.mutation.SetTicketNumber(s)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetTicketNumber(v string) *RootCauseAnalysisCreate {
+	_c.mutation.SetTicketNumber(v)
+	return _c
 }
 
 // SetTicketTitle sets the "ticket_title" field.
-func (rcac *RootCauseAnalysisCreate) SetTicketTitle(s string) *RootCauseAnalysisCreate {
-	rcac.mutation.SetTicketTitle(s)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetTicketTitle(v string) *RootCauseAnalysisCreate {
+	_c.mutation.SetTicketTitle(v)
+	return _c
 }
 
 // SetAnalysisDate sets the "analysis_date" field.
-func (rcac *RootCauseAnalysisCreate) SetAnalysisDate(s string) *RootCauseAnalysisCreate {
-	rcac.mutation.SetAnalysisDate(s)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetAnalysisDate(v string) *RootCauseAnalysisCreate {
+	_c.mutation.SetAnalysisDate(v)
+	return _c
 }
 
 // SetRootCauses sets the "root_causes" field.
-func (rcac *RootCauseAnalysisCreate) SetRootCauses(m []map[string]interface{}) *RootCauseAnalysisCreate {
-	rcac.mutation.SetRootCauses(m)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetRootCauses(v []map[string]interface{}) *RootCauseAnalysisCreate {
+	_c.mutation.SetRootCauses(v)
+	return _c
 }
 
 // SetAnalysisSummary sets the "analysis_summary" field.
-func (rcac *RootCauseAnalysisCreate) SetAnalysisSummary(s string) *RootCauseAnalysisCreate {
-	rcac.mutation.SetAnalysisSummary(s)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetAnalysisSummary(v string) *RootCauseAnalysisCreate {
+	_c.mutation.SetAnalysisSummary(v)
+	return _c
 }
 
 // SetNillableAnalysisSummary sets the "analysis_summary" field if the given value is not nil.
-func (rcac *RootCauseAnalysisCreate) SetNillableAnalysisSummary(s *string) *RootCauseAnalysisCreate {
-	if s != nil {
-		rcac.SetAnalysisSummary(*s)
+func (_c *RootCauseAnalysisCreate) SetNillableAnalysisSummary(v *string) *RootCauseAnalysisCreate {
+	if v != nil {
+		_c.SetAnalysisSummary(*v)
 	}
-	return rcac
+	return _c
 }
 
 // SetConfidenceScore sets the "confidence_score" field.
-func (rcac *RootCauseAnalysisCreate) SetConfidenceScore(f float64) *RootCauseAnalysisCreate {
-	rcac.mutation.SetConfidenceScore(f)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetConfidenceScore(v float64) *RootCauseAnalysisCreate {
+	_c.mutation.SetConfidenceScore(v)
+	return _c
 }
 
 // SetNillableConfidenceScore sets the "confidence_score" field if the given value is not nil.
-func (rcac *RootCauseAnalysisCreate) SetNillableConfidenceScore(f *float64) *RootCauseAnalysisCreate {
-	if f != nil {
-		rcac.SetConfidenceScore(*f)
+func (_c *RootCauseAnalysisCreate) SetNillableConfidenceScore(v *float64) *RootCauseAnalysisCreate {
+	if v != nil {
+		_c.SetConfidenceScore(*v)
 	}
-	return rcac
+	return _c
 }
 
 // SetAnalysisMethod sets the "analysis_method" field.
-func (rcac *RootCauseAnalysisCreate) SetAnalysisMethod(s string) *RootCauseAnalysisCreate {
-	rcac.mutation.SetAnalysisMethod(s)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetAnalysisMethod(v string) *RootCauseAnalysisCreate {
+	_c.mutation.SetAnalysisMethod(v)
+	return _c
 }
 
 // SetNillableAnalysisMethod sets the "analysis_method" field if the given value is not nil.
-func (rcac *RootCauseAnalysisCreate) SetNillableAnalysisMethod(s *string) *RootCauseAnalysisCreate {
-	if s != nil {
-		rcac.SetAnalysisMethod(*s)
+func (_c *RootCauseAnalysisCreate) SetNillableAnalysisMethod(v *string) *RootCauseAnalysisCreate {
+	if v != nil {
+		_c.SetAnalysisMethod(*v)
 	}
-	return rcac
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (rcac *RootCauseAnalysisCreate) SetTenantID(i int) *RootCauseAnalysisCreate {
-	rcac.mutation.SetTenantID(i)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetTenantID(v int) *RootCauseAnalysisCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (rcac *RootCauseAnalysisCreate) SetCreatedAt(t time.Time) *RootCauseAnalysisCreate {
-	rcac.mutation.SetCreatedAt(t)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetCreatedAt(v time.Time) *RootCauseAnalysisCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (rcac *RootCauseAnalysisCreate) SetNillableCreatedAt(t *time.Time) *RootCauseAnalysisCreate {
-	if t != nil {
-		rcac.SetCreatedAt(*t)
+func (_c *RootCauseAnalysisCreate) SetNillableCreatedAt(v *time.Time) *RootCauseAnalysisCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return rcac
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (rcac *RootCauseAnalysisCreate) SetUpdatedAt(t time.Time) *RootCauseAnalysisCreate {
-	rcac.mutation.SetUpdatedAt(t)
-	return rcac
+func (_c *RootCauseAnalysisCreate) SetUpdatedAt(v time.Time) *RootCauseAnalysisCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (rcac *RootCauseAnalysisCreate) SetNillableUpdatedAt(t *time.Time) *RootCauseAnalysisCreate {
-	if t != nil {
-		rcac.SetUpdatedAt(*t)
+func (_c *RootCauseAnalysisCreate) SetNillableUpdatedAt(v *time.Time) *RootCauseAnalysisCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return rcac
+	return _c
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (rcac *RootCauseAnalysisCreate) SetTicket(t *Ticket) *RootCauseAnalysisCreate {
-	return rcac.SetTicketID(t.ID)
+func (_c *RootCauseAnalysisCreate) SetTicket(v *Ticket) *RootCauseAnalysisCreate {
+	return _c.SetTicketID(v.ID)
 }
 
 // Mutation returns the RootCauseAnalysisMutation object of the builder.
-func (rcac *RootCauseAnalysisCreate) Mutation() *RootCauseAnalysisMutation {
-	return rcac.mutation
+func (_c *RootCauseAnalysisCreate) Mutation() *RootCauseAnalysisMutation {
+	return _c.mutation
 }
 
 // Save creates the RootCauseAnalysis in the database.
-func (rcac *RootCauseAnalysisCreate) Save(ctx context.Context) (*RootCauseAnalysis, error) {
-	rcac.defaults()
-	return withHooks(ctx, rcac.sqlSave, rcac.mutation, rcac.hooks)
+func (_c *RootCauseAnalysisCreate) Save(ctx context.Context) (*RootCauseAnalysis, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (rcac *RootCauseAnalysisCreate) SaveX(ctx context.Context) *RootCauseAnalysis {
-	v, err := rcac.Save(ctx)
+func (_c *RootCauseAnalysisCreate) SaveX(ctx context.Context) *RootCauseAnalysis {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -153,116 +153,116 @@ func (rcac *RootCauseAnalysisCreate) SaveX(ctx context.Context) *RootCauseAnalys
 }
 
 // Exec executes the query.
-func (rcac *RootCauseAnalysisCreate) Exec(ctx context.Context) error {
-	_, err := rcac.Save(ctx)
+func (_c *RootCauseAnalysisCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rcac *RootCauseAnalysisCreate) ExecX(ctx context.Context) {
-	if err := rcac.Exec(ctx); err != nil {
+func (_c *RootCauseAnalysisCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (rcac *RootCauseAnalysisCreate) defaults() {
-	if _, ok := rcac.mutation.RootCauses(); !ok {
+func (_c *RootCauseAnalysisCreate) defaults() {
+	if _, ok := _c.mutation.RootCauses(); !ok {
 		v := rootcauseanalysis.DefaultRootCauses
-		rcac.mutation.SetRootCauses(v)
+		_c.mutation.SetRootCauses(v)
 	}
-	if _, ok := rcac.mutation.ConfidenceScore(); !ok {
+	if _, ok := _c.mutation.ConfidenceScore(); !ok {
 		v := rootcauseanalysis.DefaultConfidenceScore
-		rcac.mutation.SetConfidenceScore(v)
+		_c.mutation.SetConfidenceScore(v)
 	}
-	if _, ok := rcac.mutation.AnalysisMethod(); !ok {
+	if _, ok := _c.mutation.AnalysisMethod(); !ok {
 		v := rootcauseanalysis.DefaultAnalysisMethod
-		rcac.mutation.SetAnalysisMethod(v)
+		_c.mutation.SetAnalysisMethod(v)
 	}
-	if _, ok := rcac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := rootcauseanalysis.DefaultCreatedAt()
-		rcac.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := rcac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := rootcauseanalysis.DefaultUpdatedAt()
-		rcac.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (rcac *RootCauseAnalysisCreate) check() error {
-	if _, ok := rcac.mutation.TicketID(); !ok {
+func (_c *RootCauseAnalysisCreate) check() error {
+	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "RootCauseAnalysis.ticket_id"`)}
 	}
-	if v, ok := rcac.mutation.TicketID(); ok {
+	if v, ok := _c.mutation.TicketID(); ok {
 		if err := rootcauseanalysis.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "RootCauseAnalysis.ticket_id": %w`, err)}
 		}
 	}
-	if _, ok := rcac.mutation.TicketNumber(); !ok {
+	if _, ok := _c.mutation.TicketNumber(); !ok {
 		return &ValidationError{Name: "ticket_number", err: errors.New(`ent: missing required field "RootCauseAnalysis.ticket_number"`)}
 	}
-	if v, ok := rcac.mutation.TicketNumber(); ok {
+	if v, ok := _c.mutation.TicketNumber(); ok {
 		if err := rootcauseanalysis.TicketNumberValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_number", err: fmt.Errorf(`ent: validator failed for field "RootCauseAnalysis.ticket_number": %w`, err)}
 		}
 	}
-	if _, ok := rcac.mutation.TicketTitle(); !ok {
+	if _, ok := _c.mutation.TicketTitle(); !ok {
 		return &ValidationError{Name: "ticket_title", err: errors.New(`ent: missing required field "RootCauseAnalysis.ticket_title"`)}
 	}
-	if v, ok := rcac.mutation.TicketTitle(); ok {
+	if v, ok := _c.mutation.TicketTitle(); ok {
 		if err := rootcauseanalysis.TicketTitleValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_title", err: fmt.Errorf(`ent: validator failed for field "RootCauseAnalysis.ticket_title": %w`, err)}
 		}
 	}
-	if _, ok := rcac.mutation.AnalysisDate(); !ok {
+	if _, ok := _c.mutation.AnalysisDate(); !ok {
 		return &ValidationError{Name: "analysis_date", err: errors.New(`ent: missing required field "RootCauseAnalysis.analysis_date"`)}
 	}
-	if v, ok := rcac.mutation.AnalysisDate(); ok {
+	if v, ok := _c.mutation.AnalysisDate(); ok {
 		if err := rootcauseanalysis.AnalysisDateValidator(v); err != nil {
 			return &ValidationError{Name: "analysis_date", err: fmt.Errorf(`ent: validator failed for field "RootCauseAnalysis.analysis_date": %w`, err)}
 		}
 	}
-	if _, ok := rcac.mutation.RootCauses(); !ok {
+	if _, ok := _c.mutation.RootCauses(); !ok {
 		return &ValidationError{Name: "root_causes", err: errors.New(`ent: missing required field "RootCauseAnalysis.root_causes"`)}
 	}
-	if _, ok := rcac.mutation.ConfidenceScore(); !ok {
+	if _, ok := _c.mutation.ConfidenceScore(); !ok {
 		return &ValidationError{Name: "confidence_score", err: errors.New(`ent: missing required field "RootCauseAnalysis.confidence_score"`)}
 	}
-	if v, ok := rcac.mutation.ConfidenceScore(); ok {
+	if v, ok := _c.mutation.ConfidenceScore(); ok {
 		if err := rootcauseanalysis.ConfidenceScoreValidator(v); err != nil {
 			return &ValidationError{Name: "confidence_score", err: fmt.Errorf(`ent: validator failed for field "RootCauseAnalysis.confidence_score": %w`, err)}
 		}
 	}
-	if _, ok := rcac.mutation.AnalysisMethod(); !ok {
+	if _, ok := _c.mutation.AnalysisMethod(); !ok {
 		return &ValidationError{Name: "analysis_method", err: errors.New(`ent: missing required field "RootCauseAnalysis.analysis_method"`)}
 	}
-	if _, ok := rcac.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "RootCauseAnalysis.tenant_id"`)}
 	}
-	if v, ok := rcac.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := rootcauseanalysis.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "RootCauseAnalysis.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := rcac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "RootCauseAnalysis.created_at"`)}
 	}
-	if _, ok := rcac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "RootCauseAnalysis.updated_at"`)}
 	}
-	if len(rcac.mutation.TicketIDs()) == 0 {
+	if len(_c.mutation.TicketIDs()) == 0 {
 		return &ValidationError{Name: "ticket", err: errors.New(`ent: missing required edge "RootCauseAnalysis.ticket"`)}
 	}
 	return nil
 }
 
-func (rcac *RootCauseAnalysisCreate) sqlSave(ctx context.Context) (*RootCauseAnalysis, error) {
-	if err := rcac.check(); err != nil {
+func (_c *RootCauseAnalysisCreate) sqlSave(ctx context.Context) (*RootCauseAnalysis, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := rcac.createSpec()
-	if err := sqlgraph.CreateNode(ctx, rcac.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -270,57 +270,57 @@ func (rcac *RootCauseAnalysisCreate) sqlSave(ctx context.Context) (*RootCauseAna
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	rcac.mutation.id = &_node.ID
-	rcac.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (rcac *RootCauseAnalysisCreate) createSpec() (*RootCauseAnalysis, *sqlgraph.CreateSpec) {
+func (_c *RootCauseAnalysisCreate) createSpec() (*RootCauseAnalysis, *sqlgraph.CreateSpec) {
 	var (
-		_node = &RootCauseAnalysis{config: rcac.config}
+		_node = &RootCauseAnalysis{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(rootcauseanalysis.Table, sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt))
 	)
-	if value, ok := rcac.mutation.TicketNumber(); ok {
+	if value, ok := _c.mutation.TicketNumber(); ok {
 		_spec.SetField(rootcauseanalysis.FieldTicketNumber, field.TypeString, value)
 		_node.TicketNumber = value
 	}
-	if value, ok := rcac.mutation.TicketTitle(); ok {
+	if value, ok := _c.mutation.TicketTitle(); ok {
 		_spec.SetField(rootcauseanalysis.FieldTicketTitle, field.TypeString, value)
 		_node.TicketTitle = value
 	}
-	if value, ok := rcac.mutation.AnalysisDate(); ok {
+	if value, ok := _c.mutation.AnalysisDate(); ok {
 		_spec.SetField(rootcauseanalysis.FieldAnalysisDate, field.TypeString, value)
 		_node.AnalysisDate = value
 	}
-	if value, ok := rcac.mutation.RootCauses(); ok {
+	if value, ok := _c.mutation.RootCauses(); ok {
 		_spec.SetField(rootcauseanalysis.FieldRootCauses, field.TypeJSON, value)
 		_node.RootCauses = value
 	}
-	if value, ok := rcac.mutation.AnalysisSummary(); ok {
+	if value, ok := _c.mutation.AnalysisSummary(); ok {
 		_spec.SetField(rootcauseanalysis.FieldAnalysisSummary, field.TypeString, value)
 		_node.AnalysisSummary = value
 	}
-	if value, ok := rcac.mutation.ConfidenceScore(); ok {
+	if value, ok := _c.mutation.ConfidenceScore(); ok {
 		_spec.SetField(rootcauseanalysis.FieldConfidenceScore, field.TypeFloat64, value)
 		_node.ConfidenceScore = value
 	}
-	if value, ok := rcac.mutation.AnalysisMethod(); ok {
+	if value, ok := _c.mutation.AnalysisMethod(); ok {
 		_spec.SetField(rootcauseanalysis.FieldAnalysisMethod, field.TypeString, value)
 		_node.AnalysisMethod = value
 	}
-	if value, ok := rcac.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(rootcauseanalysis.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := rcac.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(rootcauseanalysis.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := rcac.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(rootcauseanalysis.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := rcac.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -348,16 +348,16 @@ type RootCauseAnalysisCreateBulk struct {
 }
 
 // Save creates the RootCauseAnalysis entities in the database.
-func (rcacb *RootCauseAnalysisCreateBulk) Save(ctx context.Context) ([]*RootCauseAnalysis, error) {
-	if rcacb.err != nil {
-		return nil, rcacb.err
+func (_c *RootCauseAnalysisCreateBulk) Save(ctx context.Context) ([]*RootCauseAnalysis, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(rcacb.builders))
-	nodes := make([]*RootCauseAnalysis, len(rcacb.builders))
-	mutators := make([]Mutator, len(rcacb.builders))
-	for i := range rcacb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*RootCauseAnalysis, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := rcacb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*RootCauseAnalysisMutation)
@@ -371,11 +371,11 @@ func (rcacb *RootCauseAnalysisCreateBulk) Save(ctx context.Context) ([]*RootCaus
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, rcacb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, rcacb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -399,7 +399,7 @@ func (rcacb *RootCauseAnalysisCreateBulk) Save(ctx context.Context) ([]*RootCaus
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, rcacb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -407,8 +407,8 @@ func (rcacb *RootCauseAnalysisCreateBulk) Save(ctx context.Context) ([]*RootCaus
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (rcacb *RootCauseAnalysisCreateBulk) SaveX(ctx context.Context) []*RootCauseAnalysis {
-	v, err := rcacb.Save(ctx)
+func (_c *RootCauseAnalysisCreateBulk) SaveX(ctx context.Context) []*RootCauseAnalysis {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -416,14 +416,14 @@ func (rcacb *RootCauseAnalysisCreateBulk) SaveX(ctx context.Context) []*RootCaus
 }
 
 // Exec executes the query.
-func (rcacb *RootCauseAnalysisCreateBulk) Exec(ctx context.Context) error {
-	_, err := rcacb.Save(ctx)
+func (_c *RootCauseAnalysisCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rcacb *RootCauseAnalysisCreateBulk) ExecX(ctx context.Context) {
-	if err := rcacb.Exec(ctx); err != nil {
+func (_c *RootCauseAnalysisCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

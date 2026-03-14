@@ -20,10 +20,11 @@
     "test:ci": "jest --ci --coverage --watchAll=false --passWithNoTests",
     "test:unit": "jest --coverage=false --passWithNoTests",
     "test:integration": "jest --coverage=false --passWithNoTests",
-    "test:e2e": "jest src/app/__tests__/e2e --coverage=false",
+    "test:e2e": "playwright test",
     "test:ux": "jest src/app/__tests__/ux --coverage=false",
     "test:performance": "jest src/app/__tests__/performance --coverage=false",
-    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:ux && npm run test:performance"
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e && npm run test:ux && npm run test:performance",
+    "screenshot": "npx ts-node tests/e2e/screenshot.ts"
   },
   "dependencies": {
     "@ant-design/charts": "^2.6.2",
@@ -87,6 +88,7 @@
     "lint-staged": "^16.3.1",
     "prettier": "^3.8.1",
     "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
     "typescript": "5.9.3"
   },
   "lint-staged": {

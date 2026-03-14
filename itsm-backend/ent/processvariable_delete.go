@@ -20,56 +20,56 @@ type ProcessVariableDelete struct {
 }
 
 // Where appends a list predicates to the ProcessVariableDelete builder.
-func (pvd *ProcessVariableDelete) Where(ps ...predicate.ProcessVariable) *ProcessVariableDelete {
-	pvd.mutation.Where(ps...)
-	return pvd
+func (_d *ProcessVariableDelete) Where(ps ...predicate.ProcessVariable) *ProcessVariableDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (pvd *ProcessVariableDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, pvd.sqlExec, pvd.mutation, pvd.hooks)
+func (_d *ProcessVariableDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvd *ProcessVariableDelete) ExecX(ctx context.Context) int {
-	n, err := pvd.Exec(ctx)
+func (_d *ProcessVariableDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (pvd *ProcessVariableDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *ProcessVariableDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(processvariable.Table, sqlgraph.NewFieldSpec(processvariable.FieldID, field.TypeInt))
-	if ps := pvd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, pvd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	pvd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // ProcessVariableDeleteOne is the builder for deleting a single ProcessVariable entity.
 type ProcessVariableDeleteOne struct {
-	pvd *ProcessVariableDelete
+	_d *ProcessVariableDelete
 }
 
 // Where appends a list predicates to the ProcessVariableDelete builder.
-func (pvdo *ProcessVariableDeleteOne) Where(ps ...predicate.ProcessVariable) *ProcessVariableDeleteOne {
-	pvdo.pvd.mutation.Where(ps...)
-	return pvdo
+func (_d *ProcessVariableDeleteOne) Where(ps ...predicate.ProcessVariable) *ProcessVariableDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (pvdo *ProcessVariableDeleteOne) Exec(ctx context.Context) error {
-	n, err := pvdo.pvd.Exec(ctx)
+func (_d *ProcessVariableDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (pvdo *ProcessVariableDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvdo *ProcessVariableDeleteOne) ExecX(ctx context.Context) {
-	if err := pvdo.Exec(ctx); err != nil {
+func (_d *ProcessVariableDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

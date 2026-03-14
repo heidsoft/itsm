@@ -119,7 +119,7 @@ func (*Tag) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Tag fields.
-func (t *Tag) assignValues(columns []string, values []any) error {
+func (_m *Tag) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -130,51 +130,51 @@ func (t *Tag) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			t.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case tag.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				t.Name = value.String
+				_m.Name = value.String
 			}
 		case tag.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				t.Code = value.String
+				_m.Code = value.String
 			}
 		case tag.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				t.Description = value.String
+				_m.Description = value.String
 			}
 		case tag.FieldColor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field color", values[i])
 			} else if value.Valid {
-				t.Color = value.String
+				_m.Color = value.String
 			}
 		case tag.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				t.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case tag.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				t.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case tag.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				t.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			t.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -182,78 +182,78 @@ func (t *Tag) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Tag.
 // This includes values selected through modifiers, order, etc.
-func (t *Tag) Value(name string) (ent.Value, error) {
-	return t.selectValues.Get(name)
+func (_m *Tag) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProjects queries the "projects" edge of the Tag entity.
-func (t *Tag) QueryProjects() *ProjectQuery {
-	return NewTagClient(t.config).QueryProjects(t)
+func (_m *Tag) QueryProjects() *ProjectQuery {
+	return NewTagClient(_m.config).QueryProjects(_m)
 }
 
 // QueryApplications queries the "applications" edge of the Tag entity.
-func (t *Tag) QueryApplications() *ApplicationQuery {
-	return NewTagClient(t.config).QueryApplications(t)
+func (_m *Tag) QueryApplications() *ApplicationQuery {
+	return NewTagClient(_m.config).QueryApplications(_m)
 }
 
 // QueryMicroservices queries the "microservices" edge of the Tag entity.
-func (t *Tag) QueryMicroservices() *MicroserviceQuery {
-	return NewTagClient(t.config).QueryMicroservices(t)
+func (_m *Tag) QueryMicroservices() *MicroserviceQuery {
+	return NewTagClient(_m.config).QueryMicroservices(_m)
 }
 
 // QueryDepartments queries the "departments" edge of the Tag entity.
-func (t *Tag) QueryDepartments() *DepartmentQuery {
-	return NewTagClient(t.config).QueryDepartments(t)
+func (_m *Tag) QueryDepartments() *DepartmentQuery {
+	return NewTagClient(_m.config).QueryDepartments(_m)
 }
 
 // QueryTeams queries the "teams" edge of the Tag entity.
-func (t *Tag) QueryTeams() *TeamQuery {
-	return NewTagClient(t.config).QueryTeams(t)
+func (_m *Tag) QueryTeams() *TeamQuery {
+	return NewTagClient(_m.config).QueryTeams(_m)
 }
 
 // Update returns a builder for updating this Tag.
 // Note that you need to call Tag.Unwrap() before calling this method if this Tag
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (t *Tag) Update() *TagUpdateOne {
-	return NewTagClient(t.config).UpdateOne(t)
+func (_m *Tag) Update() *TagUpdateOne {
+	return NewTagClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Tag entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (t *Tag) Unwrap() *Tag {
-	_tx, ok := t.config.driver.(*txDriver)
+func (_m *Tag) Unwrap() *Tag {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Tag is not a transactional entity")
 	}
-	t.config.driver = _tx.drv
-	return t
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (t *Tag) String() string {
+func (_m *Tag) String() string {
 	var builder strings.Builder
 	builder.WriteString("Tag(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", t.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(t.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("code=")
-	builder.WriteString(t.Code)
+	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(t.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("color=")
-	builder.WriteString(t.Color)
+	builder.WriteString(_m.Color)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", t.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(t.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(t.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

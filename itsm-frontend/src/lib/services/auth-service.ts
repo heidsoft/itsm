@@ -7,6 +7,9 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       localStorage.setItem('access_token', accessToken);
       localStorage.setItem('refresh_token', refreshToken);
+      // 同时设置 Cookie（用于 middleware 验证）
+      document.cookie = `auth-token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+      document.cookie = `access_token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
     }
   }
 
@@ -137,6 +140,9 @@ export class AuthService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
+      // 清除 Cookies
+      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      document.cookie = 'access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     }
   }
 

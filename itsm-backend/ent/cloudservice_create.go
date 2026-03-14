@@ -22,194 +22,194 @@ type CloudServiceCreate struct {
 }
 
 // SetParentID sets the "parent_id" field.
-func (csc *CloudServiceCreate) SetParentID(i int) *CloudServiceCreate {
-	csc.mutation.SetParentID(i)
-	return csc
+func (_c *CloudServiceCreate) SetParentID(v int) *CloudServiceCreate {
+	_c.mutation.SetParentID(v)
+	return _c
 }
 
 // SetNillableParentID sets the "parent_id" field if the given value is not nil.
-func (csc *CloudServiceCreate) SetNillableParentID(i *int) *CloudServiceCreate {
-	if i != nil {
-		csc.SetParentID(*i)
+func (_c *CloudServiceCreate) SetNillableParentID(v *int) *CloudServiceCreate {
+	if v != nil {
+		_c.SetParentID(*v)
 	}
-	return csc
+	return _c
 }
 
 // SetProvider sets the "provider" field.
-func (csc *CloudServiceCreate) SetProvider(s string) *CloudServiceCreate {
-	csc.mutation.SetProvider(s)
-	return csc
+func (_c *CloudServiceCreate) SetProvider(v string) *CloudServiceCreate {
+	_c.mutation.SetProvider(v)
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (csc *CloudServiceCreate) SetCategory(s string) *CloudServiceCreate {
-	csc.mutation.SetCategory(s)
-	return csc
+func (_c *CloudServiceCreate) SetCategory(v string) *CloudServiceCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (csc *CloudServiceCreate) SetNillableCategory(s *string) *CloudServiceCreate {
-	if s != nil {
-		csc.SetCategory(*s)
+func (_c *CloudServiceCreate) SetNillableCategory(v *string) *CloudServiceCreate {
+	if v != nil {
+		_c.SetCategory(*v)
 	}
-	return csc
+	return _c
 }
 
 // SetServiceCode sets the "service_code" field.
-func (csc *CloudServiceCreate) SetServiceCode(s string) *CloudServiceCreate {
-	csc.mutation.SetServiceCode(s)
-	return csc
+func (_c *CloudServiceCreate) SetServiceCode(v string) *CloudServiceCreate {
+	_c.mutation.SetServiceCode(v)
+	return _c
 }
 
 // SetServiceName sets the "service_name" field.
-func (csc *CloudServiceCreate) SetServiceName(s string) *CloudServiceCreate {
-	csc.mutation.SetServiceName(s)
-	return csc
+func (_c *CloudServiceCreate) SetServiceName(v string) *CloudServiceCreate {
+	_c.mutation.SetServiceName(v)
+	return _c
 }
 
 // SetResourceTypeCode sets the "resource_type_code" field.
-func (csc *CloudServiceCreate) SetResourceTypeCode(s string) *CloudServiceCreate {
-	csc.mutation.SetResourceTypeCode(s)
-	return csc
+func (_c *CloudServiceCreate) SetResourceTypeCode(v string) *CloudServiceCreate {
+	_c.mutation.SetResourceTypeCode(v)
+	return _c
 }
 
 // SetResourceTypeName sets the "resource_type_name" field.
-func (csc *CloudServiceCreate) SetResourceTypeName(s string) *CloudServiceCreate {
-	csc.mutation.SetResourceTypeName(s)
-	return csc
+func (_c *CloudServiceCreate) SetResourceTypeName(v string) *CloudServiceCreate {
+	_c.mutation.SetResourceTypeName(v)
+	return _c
 }
 
 // SetAPIVersion sets the "api_version" field.
-func (csc *CloudServiceCreate) SetAPIVersion(s string) *CloudServiceCreate {
-	csc.mutation.SetAPIVersion(s)
-	return csc
+func (_c *CloudServiceCreate) SetAPIVersion(v string) *CloudServiceCreate {
+	_c.mutation.SetAPIVersion(v)
+	return _c
 }
 
 // SetNillableAPIVersion sets the "api_version" field if the given value is not nil.
-func (csc *CloudServiceCreate) SetNillableAPIVersion(s *string) *CloudServiceCreate {
-	if s != nil {
-		csc.SetAPIVersion(*s)
+func (_c *CloudServiceCreate) SetNillableAPIVersion(v *string) *CloudServiceCreate {
+	if v != nil {
+		_c.SetAPIVersion(*v)
 	}
-	return csc
+	return _c
 }
 
 // SetAttributeSchema sets the "attribute_schema" field.
-func (csc *CloudServiceCreate) SetAttributeSchema(m map[string]interface{}) *CloudServiceCreate {
-	csc.mutation.SetAttributeSchema(m)
-	return csc
+func (_c *CloudServiceCreate) SetAttributeSchema(v map[string]interface{}) *CloudServiceCreate {
+	_c.mutation.SetAttributeSchema(v)
+	return _c
 }
 
 // SetIsSystem sets the "is_system" field.
-func (csc *CloudServiceCreate) SetIsSystem(b bool) *CloudServiceCreate {
-	csc.mutation.SetIsSystem(b)
-	return csc
+func (_c *CloudServiceCreate) SetIsSystem(v bool) *CloudServiceCreate {
+	_c.mutation.SetIsSystem(v)
+	return _c
 }
 
 // SetNillableIsSystem sets the "is_system" field if the given value is not nil.
-func (csc *CloudServiceCreate) SetNillableIsSystem(b *bool) *CloudServiceCreate {
-	if b != nil {
-		csc.SetIsSystem(*b)
+func (_c *CloudServiceCreate) SetNillableIsSystem(v *bool) *CloudServiceCreate {
+	if v != nil {
+		_c.SetIsSystem(*v)
 	}
-	return csc
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (csc *CloudServiceCreate) SetIsActive(b bool) *CloudServiceCreate {
-	csc.mutation.SetIsActive(b)
-	return csc
+func (_c *CloudServiceCreate) SetIsActive(v bool) *CloudServiceCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (csc *CloudServiceCreate) SetNillableIsActive(b *bool) *CloudServiceCreate {
-	if b != nil {
-		csc.SetIsActive(*b)
+func (_c *CloudServiceCreate) SetNillableIsActive(v *bool) *CloudServiceCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return csc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (csc *CloudServiceCreate) SetTenantID(i int) *CloudServiceCreate {
-	csc.mutation.SetTenantID(i)
-	return csc
+func (_c *CloudServiceCreate) SetTenantID(v int) *CloudServiceCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (csc *CloudServiceCreate) SetCreatedAt(t time.Time) *CloudServiceCreate {
-	csc.mutation.SetCreatedAt(t)
-	return csc
+func (_c *CloudServiceCreate) SetCreatedAt(v time.Time) *CloudServiceCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (csc *CloudServiceCreate) SetNillableCreatedAt(t *time.Time) *CloudServiceCreate {
-	if t != nil {
-		csc.SetCreatedAt(*t)
+func (_c *CloudServiceCreate) SetNillableCreatedAt(v *time.Time) *CloudServiceCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return csc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (csc *CloudServiceCreate) SetUpdatedAt(t time.Time) *CloudServiceCreate {
-	csc.mutation.SetUpdatedAt(t)
-	return csc
+func (_c *CloudServiceCreate) SetUpdatedAt(v time.Time) *CloudServiceCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (csc *CloudServiceCreate) SetNillableUpdatedAt(t *time.Time) *CloudServiceCreate {
-	if t != nil {
-		csc.SetUpdatedAt(*t)
+func (_c *CloudServiceCreate) SetNillableUpdatedAt(v *time.Time) *CloudServiceCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return csc
+	return _c
 }
 
 // SetParent sets the "parent" edge to the CloudService entity.
-func (csc *CloudServiceCreate) SetParent(c *CloudService) *CloudServiceCreate {
-	return csc.SetParentID(c.ID)
+func (_c *CloudServiceCreate) SetParent(v *CloudService) *CloudServiceCreate {
+	return _c.SetParentID(v.ID)
 }
 
 // AddChildIDs adds the "children" edge to the CloudService entity by IDs.
-func (csc *CloudServiceCreate) AddChildIDs(ids ...int) *CloudServiceCreate {
-	csc.mutation.AddChildIDs(ids...)
-	return csc
+func (_c *CloudServiceCreate) AddChildIDs(ids ...int) *CloudServiceCreate {
+	_c.mutation.AddChildIDs(ids...)
+	return _c
 }
 
 // AddChildren adds the "children" edges to the CloudService entity.
-func (csc *CloudServiceCreate) AddChildren(c ...*CloudService) *CloudServiceCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_c *CloudServiceCreate) AddChildren(v ...*CloudService) *CloudServiceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return csc.AddChildIDs(ids...)
+	return _c.AddChildIDs(ids...)
 }
 
 // AddResourceIDs adds the "resources" edge to the CloudResource entity by IDs.
-func (csc *CloudServiceCreate) AddResourceIDs(ids ...int) *CloudServiceCreate {
-	csc.mutation.AddResourceIDs(ids...)
-	return csc
+func (_c *CloudServiceCreate) AddResourceIDs(ids ...int) *CloudServiceCreate {
+	_c.mutation.AddResourceIDs(ids...)
+	return _c
 }
 
 // AddResources adds the "resources" edges to the CloudResource entity.
-func (csc *CloudServiceCreate) AddResources(c ...*CloudResource) *CloudServiceCreate {
-	ids := make([]int, len(c))
-	for i := range c {
-		ids[i] = c[i].ID
+func (_c *CloudServiceCreate) AddResources(v ...*CloudResource) *CloudServiceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return csc.AddResourceIDs(ids...)
+	return _c.AddResourceIDs(ids...)
 }
 
 // Mutation returns the CloudServiceMutation object of the builder.
-func (csc *CloudServiceCreate) Mutation() *CloudServiceMutation {
-	return csc.mutation
+func (_c *CloudServiceCreate) Mutation() *CloudServiceMutation {
+	return _c.mutation
 }
 
 // Save creates the CloudService in the database.
-func (csc *CloudServiceCreate) Save(ctx context.Context) (*CloudService, error) {
-	csc.defaults()
-	return withHooks(ctx, csc.sqlSave, csc.mutation, csc.hooks)
+func (_c *CloudServiceCreate) Save(ctx context.Context) (*CloudService, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (csc *CloudServiceCreate) SaveX(ctx context.Context) *CloudService {
-	v, err := csc.Save(ctx)
+func (_c *CloudServiceCreate) SaveX(ctx context.Context) *CloudService {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -217,109 +217,109 @@ func (csc *CloudServiceCreate) SaveX(ctx context.Context) *CloudService {
 }
 
 // Exec executes the query.
-func (csc *CloudServiceCreate) Exec(ctx context.Context) error {
-	_, err := csc.Save(ctx)
+func (_c *CloudServiceCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (csc *CloudServiceCreate) ExecX(ctx context.Context) {
-	if err := csc.Exec(ctx); err != nil {
+func (_c *CloudServiceCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (csc *CloudServiceCreate) defaults() {
-	if _, ok := csc.mutation.IsSystem(); !ok {
+func (_c *CloudServiceCreate) defaults() {
+	if _, ok := _c.mutation.IsSystem(); !ok {
 		v := cloudservice.DefaultIsSystem
-		csc.mutation.SetIsSystem(v)
+		_c.mutation.SetIsSystem(v)
 	}
-	if _, ok := csc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := cloudservice.DefaultIsActive
-		csc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := csc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := cloudservice.DefaultCreatedAt()
-		csc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := csc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := cloudservice.DefaultUpdatedAt()
-		csc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (csc *CloudServiceCreate) check() error {
-	if _, ok := csc.mutation.Provider(); !ok {
+func (_c *CloudServiceCreate) check() error {
+	if _, ok := _c.mutation.Provider(); !ok {
 		return &ValidationError{Name: "provider", err: errors.New(`ent: missing required field "CloudService.provider"`)}
 	}
-	if v, ok := csc.mutation.Provider(); ok {
+	if v, ok := _c.mutation.Provider(); ok {
 		if err := cloudservice.ProviderValidator(v); err != nil {
 			return &ValidationError{Name: "provider", err: fmt.Errorf(`ent: validator failed for field "CloudService.provider": %w`, err)}
 		}
 	}
-	if _, ok := csc.mutation.ServiceCode(); !ok {
+	if _, ok := _c.mutation.ServiceCode(); !ok {
 		return &ValidationError{Name: "service_code", err: errors.New(`ent: missing required field "CloudService.service_code"`)}
 	}
-	if v, ok := csc.mutation.ServiceCode(); ok {
+	if v, ok := _c.mutation.ServiceCode(); ok {
 		if err := cloudservice.ServiceCodeValidator(v); err != nil {
 			return &ValidationError{Name: "service_code", err: fmt.Errorf(`ent: validator failed for field "CloudService.service_code": %w`, err)}
 		}
 	}
-	if _, ok := csc.mutation.ServiceName(); !ok {
+	if _, ok := _c.mutation.ServiceName(); !ok {
 		return &ValidationError{Name: "service_name", err: errors.New(`ent: missing required field "CloudService.service_name"`)}
 	}
-	if v, ok := csc.mutation.ServiceName(); ok {
+	if v, ok := _c.mutation.ServiceName(); ok {
 		if err := cloudservice.ServiceNameValidator(v); err != nil {
 			return &ValidationError{Name: "service_name", err: fmt.Errorf(`ent: validator failed for field "CloudService.service_name": %w`, err)}
 		}
 	}
-	if _, ok := csc.mutation.ResourceTypeCode(); !ok {
+	if _, ok := _c.mutation.ResourceTypeCode(); !ok {
 		return &ValidationError{Name: "resource_type_code", err: errors.New(`ent: missing required field "CloudService.resource_type_code"`)}
 	}
-	if v, ok := csc.mutation.ResourceTypeCode(); ok {
+	if v, ok := _c.mutation.ResourceTypeCode(); ok {
 		if err := cloudservice.ResourceTypeCodeValidator(v); err != nil {
 			return &ValidationError{Name: "resource_type_code", err: fmt.Errorf(`ent: validator failed for field "CloudService.resource_type_code": %w`, err)}
 		}
 	}
-	if _, ok := csc.mutation.ResourceTypeName(); !ok {
+	if _, ok := _c.mutation.ResourceTypeName(); !ok {
 		return &ValidationError{Name: "resource_type_name", err: errors.New(`ent: missing required field "CloudService.resource_type_name"`)}
 	}
-	if v, ok := csc.mutation.ResourceTypeName(); ok {
+	if v, ok := _c.mutation.ResourceTypeName(); ok {
 		if err := cloudservice.ResourceTypeNameValidator(v); err != nil {
 			return &ValidationError{Name: "resource_type_name", err: fmt.Errorf(`ent: validator failed for field "CloudService.resource_type_name": %w`, err)}
 		}
 	}
-	if _, ok := csc.mutation.IsSystem(); !ok {
+	if _, ok := _c.mutation.IsSystem(); !ok {
 		return &ValidationError{Name: "is_system", err: errors.New(`ent: missing required field "CloudService.is_system"`)}
 	}
-	if _, ok := csc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "CloudService.is_active"`)}
 	}
-	if _, ok := csc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CloudService.tenant_id"`)}
 	}
-	if v, ok := csc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := cloudservice.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CloudService.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := csc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CloudService.created_at"`)}
 	}
-	if _, ok := csc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CloudService.updated_at"`)}
 	}
 	return nil
 }
 
-func (csc *CloudServiceCreate) sqlSave(ctx context.Context) (*CloudService, error) {
-	if err := csc.check(); err != nil {
+func (_c *CloudServiceCreate) sqlSave(ctx context.Context) (*CloudService, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := csc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, csc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -327,69 +327,69 @@ func (csc *CloudServiceCreate) sqlSave(ctx context.Context) (*CloudService, erro
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	csc.mutation.id = &_node.ID
-	csc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (csc *CloudServiceCreate) createSpec() (*CloudService, *sqlgraph.CreateSpec) {
+func (_c *CloudServiceCreate) createSpec() (*CloudService, *sqlgraph.CreateSpec) {
 	var (
-		_node = &CloudService{config: csc.config}
+		_node = &CloudService{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(cloudservice.Table, sqlgraph.NewFieldSpec(cloudservice.FieldID, field.TypeInt))
 	)
-	if value, ok := csc.mutation.Provider(); ok {
+	if value, ok := _c.mutation.Provider(); ok {
 		_spec.SetField(cloudservice.FieldProvider, field.TypeString, value)
 		_node.Provider = value
 	}
-	if value, ok := csc.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(cloudservice.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := csc.mutation.ServiceCode(); ok {
+	if value, ok := _c.mutation.ServiceCode(); ok {
 		_spec.SetField(cloudservice.FieldServiceCode, field.TypeString, value)
 		_node.ServiceCode = value
 	}
-	if value, ok := csc.mutation.ServiceName(); ok {
+	if value, ok := _c.mutation.ServiceName(); ok {
 		_spec.SetField(cloudservice.FieldServiceName, field.TypeString, value)
 		_node.ServiceName = value
 	}
-	if value, ok := csc.mutation.ResourceTypeCode(); ok {
+	if value, ok := _c.mutation.ResourceTypeCode(); ok {
 		_spec.SetField(cloudservice.FieldResourceTypeCode, field.TypeString, value)
 		_node.ResourceTypeCode = value
 	}
-	if value, ok := csc.mutation.ResourceTypeName(); ok {
+	if value, ok := _c.mutation.ResourceTypeName(); ok {
 		_spec.SetField(cloudservice.FieldResourceTypeName, field.TypeString, value)
 		_node.ResourceTypeName = value
 	}
-	if value, ok := csc.mutation.APIVersion(); ok {
+	if value, ok := _c.mutation.APIVersion(); ok {
 		_spec.SetField(cloudservice.FieldAPIVersion, field.TypeString, value)
 		_node.APIVersion = value
 	}
-	if value, ok := csc.mutation.AttributeSchema(); ok {
+	if value, ok := _c.mutation.AttributeSchema(); ok {
 		_spec.SetField(cloudservice.FieldAttributeSchema, field.TypeJSON, value)
 		_node.AttributeSchema = value
 	}
-	if value, ok := csc.mutation.IsSystem(); ok {
+	if value, ok := _c.mutation.IsSystem(); ok {
 		_spec.SetField(cloudservice.FieldIsSystem, field.TypeBool, value)
 		_node.IsSystem = value
 	}
-	if value, ok := csc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(cloudservice.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := csc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(cloudservice.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := csc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(cloudservice.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := csc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(cloudservice.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := csc.mutation.ParentIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ParentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -406,7 +406,7 @@ func (csc *CloudServiceCreate) createSpec() (*CloudService, *sqlgraph.CreateSpec
 		_node.ParentID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := csc.mutation.ChildrenIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ChildrenIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -422,7 +422,7 @@ func (csc *CloudServiceCreate) createSpec() (*CloudService, *sqlgraph.CreateSpec
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := csc.mutation.ResourcesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ResourcesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -449,16 +449,16 @@ type CloudServiceCreateBulk struct {
 }
 
 // Save creates the CloudService entities in the database.
-func (cscb *CloudServiceCreateBulk) Save(ctx context.Context) ([]*CloudService, error) {
-	if cscb.err != nil {
-		return nil, cscb.err
+func (_c *CloudServiceCreateBulk) Save(ctx context.Context) ([]*CloudService, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(cscb.builders))
-	nodes := make([]*CloudService, len(cscb.builders))
-	mutators := make([]Mutator, len(cscb.builders))
-	for i := range cscb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*CloudService, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := cscb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CloudServiceMutation)
@@ -472,11 +472,11 @@ func (cscb *CloudServiceCreateBulk) Save(ctx context.Context) ([]*CloudService, 
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, cscb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, cscb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -500,7 +500,7 @@ func (cscb *CloudServiceCreateBulk) Save(ctx context.Context) ([]*CloudService, 
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, cscb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -508,8 +508,8 @@ func (cscb *CloudServiceCreateBulk) Save(ctx context.Context) ([]*CloudService, 
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cscb *CloudServiceCreateBulk) SaveX(ctx context.Context) []*CloudService {
-	v, err := cscb.Save(ctx)
+func (_c *CloudServiceCreateBulk) SaveX(ctx context.Context) []*CloudService {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -517,14 +517,14 @@ func (cscb *CloudServiceCreateBulk) SaveX(ctx context.Context) []*CloudService {
 }
 
 // Exec executes the query.
-func (cscb *CloudServiceCreateBulk) Exec(ctx context.Context) error {
-	_, err := cscb.Save(ctx)
+func (_c *CloudServiceCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cscb *CloudServiceCreateBulk) ExecX(ctx context.Context) {
-	if err := cscb.Exec(ctx); err != nil {
+func (_c *CloudServiceCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

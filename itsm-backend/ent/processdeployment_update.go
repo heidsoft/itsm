@@ -24,244 +24,244 @@ type ProcessDeploymentUpdate struct {
 }
 
 // Where appends a list predicates to the ProcessDeploymentUpdate builder.
-func (pdu *ProcessDeploymentUpdate) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentUpdate {
-	pdu.mutation.Where(ps...)
-	return pdu
+func (_u *ProcessDeploymentUpdate) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetDeploymentID sets the "deployment_id" field.
-func (pdu *ProcessDeploymentUpdate) SetDeploymentID(s string) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeploymentID(s)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeploymentID(v string) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeploymentID(v)
+	return _u
 }
 
 // SetNillableDeploymentID sets the "deployment_id" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableDeploymentID(s *string) *ProcessDeploymentUpdate {
-	if s != nil {
-		pdu.SetDeploymentID(*s)
+func (_u *ProcessDeploymentUpdate) SetNillableDeploymentID(v *string) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetDeploymentID(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDeploymentName sets the "deployment_name" field.
-func (pdu *ProcessDeploymentUpdate) SetDeploymentName(s string) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeploymentName(s)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeploymentName(v string) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeploymentName(v)
+	return _u
 }
 
 // SetNillableDeploymentName sets the "deployment_name" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableDeploymentName(s *string) *ProcessDeploymentUpdate {
-	if s != nil {
-		pdu.SetDeploymentName(*s)
+func (_u *ProcessDeploymentUpdate) SetNillableDeploymentName(v *string) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetDeploymentName(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDeploymentSource sets the "deployment_source" field.
-func (pdu *ProcessDeploymentUpdate) SetDeploymentSource(s string) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeploymentSource(s)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeploymentSource(v string) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeploymentSource(v)
+	return _u
 }
 
 // SetNillableDeploymentSource sets the "deployment_source" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableDeploymentSource(s *string) *ProcessDeploymentUpdate {
-	if s != nil {
-		pdu.SetDeploymentSource(*s)
+func (_u *ProcessDeploymentUpdate) SetNillableDeploymentSource(v *string) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetDeploymentSource(*v)
 	}
-	return pdu
+	return _u
 }
 
 // ClearDeploymentSource clears the value of the "deployment_source" field.
-func (pdu *ProcessDeploymentUpdate) ClearDeploymentSource() *ProcessDeploymentUpdate {
-	pdu.mutation.ClearDeploymentSource()
-	return pdu
+func (_u *ProcessDeploymentUpdate) ClearDeploymentSource() *ProcessDeploymentUpdate {
+	_u.mutation.ClearDeploymentSource()
+	return _u
 }
 
 // SetDeploymentTime sets the "deployment_time" field.
-func (pdu *ProcessDeploymentUpdate) SetDeploymentTime(t time.Time) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeploymentTime(t)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeploymentTime(v time.Time) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeploymentTime(v)
+	return _u
 }
 
 // SetNillableDeploymentTime sets the "deployment_time" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableDeploymentTime(t *time.Time) *ProcessDeploymentUpdate {
-	if t != nil {
-		pdu.SetDeploymentTime(*t)
+func (_u *ProcessDeploymentUpdate) SetNillableDeploymentTime(v *time.Time) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetDeploymentTime(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDeployedBy sets the "deployed_by" field.
-func (pdu *ProcessDeploymentUpdate) SetDeployedBy(s string) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeployedBy(s)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeployedBy(v string) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeployedBy(v)
+	return _u
 }
 
 // SetNillableDeployedBy sets the "deployed_by" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableDeployedBy(s *string) *ProcessDeploymentUpdate {
-	if s != nil {
-		pdu.SetDeployedBy(*s)
+func (_u *ProcessDeploymentUpdate) SetNillableDeployedBy(v *string) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetDeployedBy(*v)
 	}
-	return pdu
+	return _u
 }
 
 // ClearDeployedBy clears the value of the "deployed_by" field.
-func (pdu *ProcessDeploymentUpdate) ClearDeployedBy() *ProcessDeploymentUpdate {
-	pdu.mutation.ClearDeployedBy()
-	return pdu
+func (_u *ProcessDeploymentUpdate) ClearDeployedBy() *ProcessDeploymentUpdate {
+	_u.mutation.ClearDeployedBy()
+	return _u
 }
 
 // SetDeploymentComment sets the "deployment_comment" field.
-func (pdu *ProcessDeploymentUpdate) SetDeploymentComment(s string) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeploymentComment(s)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeploymentComment(v string) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeploymentComment(v)
+	return _u
 }
 
 // SetNillableDeploymentComment sets the "deployment_comment" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableDeploymentComment(s *string) *ProcessDeploymentUpdate {
-	if s != nil {
-		pdu.SetDeploymentComment(*s)
+func (_u *ProcessDeploymentUpdate) SetNillableDeploymentComment(v *string) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetDeploymentComment(*v)
 	}
-	return pdu
+	return _u
 }
 
 // ClearDeploymentComment clears the value of the "deployment_comment" field.
-func (pdu *ProcessDeploymentUpdate) ClearDeploymentComment() *ProcessDeploymentUpdate {
-	pdu.mutation.ClearDeploymentComment()
-	return pdu
+func (_u *ProcessDeploymentUpdate) ClearDeploymentComment() *ProcessDeploymentUpdate {
+	_u.mutation.ClearDeploymentComment()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (pdu *ProcessDeploymentUpdate) SetIsActive(b bool) *ProcessDeploymentUpdate {
-	pdu.mutation.SetIsActive(b)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetIsActive(v bool) *ProcessDeploymentUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableIsActive(b *bool) *ProcessDeploymentUpdate {
-	if b != nil {
-		pdu.SetIsActive(*b)
+func (_u *ProcessDeploymentUpdate) SetNillableIsActive(v *bool) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDeploymentCategory sets the "deployment_category" field.
-func (pdu *ProcessDeploymentUpdate) SetDeploymentCategory(s string) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeploymentCategory(s)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeploymentCategory(v string) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeploymentCategory(v)
+	return _u
 }
 
 // SetNillableDeploymentCategory sets the "deployment_category" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableDeploymentCategory(s *string) *ProcessDeploymentUpdate {
-	if s != nil {
-		pdu.SetDeploymentCategory(*s)
+func (_u *ProcessDeploymentUpdate) SetNillableDeploymentCategory(v *string) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetDeploymentCategory(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetDeploymentMetadata sets the "deployment_metadata" field.
-func (pdu *ProcessDeploymentUpdate) SetDeploymentMetadata(m map[string]interface{}) *ProcessDeploymentUpdate {
-	pdu.mutation.SetDeploymentMetadata(m)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetDeploymentMetadata(v map[string]interface{}) *ProcessDeploymentUpdate {
+	_u.mutation.SetDeploymentMetadata(v)
+	return _u
 }
 
 // ClearDeploymentMetadata clears the value of the "deployment_metadata" field.
-func (pdu *ProcessDeploymentUpdate) ClearDeploymentMetadata() *ProcessDeploymentUpdate {
-	pdu.mutation.ClearDeploymentMetadata()
-	return pdu
+func (_u *ProcessDeploymentUpdate) ClearDeploymentMetadata() *ProcessDeploymentUpdate {
+	_u.mutation.ClearDeploymentMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pdu *ProcessDeploymentUpdate) SetTenantID(i int) *ProcessDeploymentUpdate {
-	pdu.mutation.ResetTenantID()
-	pdu.mutation.SetTenantID(i)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetTenantID(v int) *ProcessDeploymentUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableTenantID(i *int) *ProcessDeploymentUpdate {
-	if i != nil {
-		pdu.SetTenantID(*i)
+func (_u *ProcessDeploymentUpdate) SetNillableTenantID(v *int) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pdu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pdu *ProcessDeploymentUpdate) AddTenantID(i int) *ProcessDeploymentUpdate {
-	pdu.mutation.AddTenantID(i)
-	return pdu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessDeploymentUpdate) AddTenantID(v int) *ProcessDeploymentUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pdu *ProcessDeploymentUpdate) SetCreatedAt(t time.Time) *ProcessDeploymentUpdate {
-	pdu.mutation.SetCreatedAt(t)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetCreatedAt(v time.Time) *ProcessDeploymentUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pdu *ProcessDeploymentUpdate) SetNillableCreatedAt(t *time.Time) *ProcessDeploymentUpdate {
-	if t != nil {
-		pdu.SetCreatedAt(*t)
+func (_u *ProcessDeploymentUpdate) SetNillableCreatedAt(v *time.Time) *ProcessDeploymentUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pdu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pdu *ProcessDeploymentUpdate) SetUpdatedAt(t time.Time) *ProcessDeploymentUpdate {
-	pdu.mutation.SetUpdatedAt(t)
-	return pdu
+func (_u *ProcessDeploymentUpdate) SetUpdatedAt(v time.Time) *ProcessDeploymentUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddDefinitionIDs adds the "definitions" edge to the ProcessDefinition entity by IDs.
-func (pdu *ProcessDeploymentUpdate) AddDefinitionIDs(ids ...int) *ProcessDeploymentUpdate {
-	pdu.mutation.AddDefinitionIDs(ids...)
-	return pdu
+func (_u *ProcessDeploymentUpdate) AddDefinitionIDs(ids ...int) *ProcessDeploymentUpdate {
+	_u.mutation.AddDefinitionIDs(ids...)
+	return _u
 }
 
 // AddDefinitions adds the "definitions" edges to the ProcessDefinition entity.
-func (pdu *ProcessDeploymentUpdate) AddDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDeploymentUpdate) AddDefinitions(v ...*ProcessDefinition) *ProcessDeploymentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.AddDefinitionIDs(ids...)
+	return _u.AddDefinitionIDs(ids...)
 }
 
 // Mutation returns the ProcessDeploymentMutation object of the builder.
-func (pdu *ProcessDeploymentUpdate) Mutation() *ProcessDeploymentMutation {
-	return pdu.mutation
+func (_u *ProcessDeploymentUpdate) Mutation() *ProcessDeploymentMutation {
+	return _u.mutation
 }
 
 // ClearDefinitions clears all "definitions" edges to the ProcessDefinition entity.
-func (pdu *ProcessDeploymentUpdate) ClearDefinitions() *ProcessDeploymentUpdate {
-	pdu.mutation.ClearDefinitions()
-	return pdu
+func (_u *ProcessDeploymentUpdate) ClearDefinitions() *ProcessDeploymentUpdate {
+	_u.mutation.ClearDefinitions()
+	return _u
 }
 
 // RemoveDefinitionIDs removes the "definitions" edge to ProcessDefinition entities by IDs.
-func (pdu *ProcessDeploymentUpdate) RemoveDefinitionIDs(ids ...int) *ProcessDeploymentUpdate {
-	pdu.mutation.RemoveDefinitionIDs(ids...)
-	return pdu
+func (_u *ProcessDeploymentUpdate) RemoveDefinitionIDs(ids ...int) *ProcessDeploymentUpdate {
+	_u.mutation.RemoveDefinitionIDs(ids...)
+	return _u
 }
 
 // RemoveDefinitions removes "definitions" edges to ProcessDefinition entities.
-func (pdu *ProcessDeploymentUpdate) RemoveDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDeploymentUpdate) RemoveDefinitions(v ...*ProcessDefinition) *ProcessDeploymentUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pdu.RemoveDefinitionIDs(ids...)
+	return _u.RemoveDefinitionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pdu *ProcessDeploymentUpdate) Save(ctx context.Context) (int, error) {
-	pdu.defaults()
-	return withHooks(ctx, pdu.sqlSave, pdu.mutation, pdu.hooks)
+func (_u *ProcessDeploymentUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pdu *ProcessDeploymentUpdate) SaveX(ctx context.Context) int {
-	affected, err := pdu.Save(ctx)
+func (_u *ProcessDeploymentUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -269,39 +269,39 @@ func (pdu *ProcessDeploymentUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pdu *ProcessDeploymentUpdate) Exec(ctx context.Context) error {
-	_, err := pdu.Save(ctx)
+func (_u *ProcessDeploymentUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pdu *ProcessDeploymentUpdate) ExecX(ctx context.Context) {
-	if err := pdu.Exec(ctx); err != nil {
+func (_u *ProcessDeploymentUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pdu *ProcessDeploymentUpdate) defaults() {
-	if _, ok := pdu.mutation.UpdatedAt(); !ok {
+func (_u *ProcessDeploymentUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processdeployment.UpdateDefaultUpdatedAt()
-		pdu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pdu *ProcessDeploymentUpdate) check() error {
-	if v, ok := pdu.mutation.DeploymentID(); ok {
+func (_u *ProcessDeploymentUpdate) check() error {
+	if v, ok := _u.mutation.DeploymentID(); ok {
 		if err := processdeployment.DeploymentIDValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.deployment_id": %w`, err)}
 		}
 	}
-	if v, ok := pdu.mutation.DeploymentName(); ok {
+	if v, ok := _u.mutation.DeploymentName(); ok {
 		if err := processdeployment.DeploymentNameValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_name", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.deployment_name": %w`, err)}
 		}
 	}
-	if v, ok := pdu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processdeployment.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.tenant_id": %w`, err)}
 		}
@@ -309,70 +309,70 @@ func (pdu *ProcessDeploymentUpdate) check() error {
 	return nil
 }
 
-func (pdu *ProcessDeploymentUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pdu.check(); err != nil {
-		return n, err
+func (_u *ProcessDeploymentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processdeployment.Table, processdeployment.Columns, sqlgraph.NewFieldSpec(processdeployment.FieldID, field.TypeInt))
-	if ps := pdu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pdu.mutation.DeploymentID(); ok {
+	if value, ok := _u.mutation.DeploymentID(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentID, field.TypeString, value)
 	}
-	if value, ok := pdu.mutation.DeploymentName(); ok {
+	if value, ok := _u.mutation.DeploymentName(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentName, field.TypeString, value)
 	}
-	if value, ok := pdu.mutation.DeploymentSource(); ok {
+	if value, ok := _u.mutation.DeploymentSource(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentSource, field.TypeString, value)
 	}
-	if pdu.mutation.DeploymentSourceCleared() {
+	if _u.mutation.DeploymentSourceCleared() {
 		_spec.ClearField(processdeployment.FieldDeploymentSource, field.TypeString)
 	}
-	if value, ok := pdu.mutation.DeploymentTime(); ok {
+	if value, ok := _u.mutation.DeploymentTime(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentTime, field.TypeTime, value)
 	}
-	if value, ok := pdu.mutation.DeployedBy(); ok {
+	if value, ok := _u.mutation.DeployedBy(); ok {
 		_spec.SetField(processdeployment.FieldDeployedBy, field.TypeString, value)
 	}
-	if pdu.mutation.DeployedByCleared() {
+	if _u.mutation.DeployedByCleared() {
 		_spec.ClearField(processdeployment.FieldDeployedBy, field.TypeString)
 	}
-	if value, ok := pdu.mutation.DeploymentComment(); ok {
+	if value, ok := _u.mutation.DeploymentComment(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentComment, field.TypeString, value)
 	}
-	if pdu.mutation.DeploymentCommentCleared() {
+	if _u.mutation.DeploymentCommentCleared() {
 		_spec.ClearField(processdeployment.FieldDeploymentComment, field.TypeString)
 	}
-	if value, ok := pdu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(processdeployment.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := pdu.mutation.DeploymentCategory(); ok {
+	if value, ok := _u.mutation.DeploymentCategory(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentCategory, field.TypeString, value)
 	}
-	if value, ok := pdu.mutation.DeploymentMetadata(); ok {
+	if value, ok := _u.mutation.DeploymentMetadata(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentMetadata, field.TypeJSON, value)
 	}
-	if pdu.mutation.DeploymentMetadataCleared() {
+	if _u.mutation.DeploymentMetadataCleared() {
 		_spec.ClearField(processdeployment.FieldDeploymentMetadata, field.TypeJSON)
 	}
-	if value, ok := pdu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processdeployment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pdu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processdeployment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pdu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processdeployment.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pdu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdeployment.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pdu.mutation.DefinitionsCleared() {
+	if _u.mutation.DefinitionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -385,7 +385,7 @@ func (pdu *ProcessDeploymentUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.RemovedDefinitionsIDs(); len(nodes) > 0 && !pdu.mutation.DefinitionsCleared() {
+	if nodes := _u.mutation.RemovedDefinitionsIDs(); len(nodes) > 0 && !_u.mutation.DefinitionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -401,7 +401,7 @@ func (pdu *ProcessDeploymentUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pdu.mutation.DefinitionsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DefinitionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -417,7 +417,7 @@ func (pdu *ProcessDeploymentUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pdu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processdeployment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -425,8 +425,8 @@ func (pdu *ProcessDeploymentUpdate) sqlSave(ctx context.Context) (n int, err err
 		}
 		return 0, err
 	}
-	pdu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ProcessDeploymentUpdateOne is the builder for updating a single ProcessDeployment entity.
@@ -438,251 +438,251 @@ type ProcessDeploymentUpdateOne struct {
 }
 
 // SetDeploymentID sets the "deployment_id" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeploymentID(s string) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeploymentID(s)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeploymentID(v string) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeploymentID(v)
+	return _u
 }
 
 // SetNillableDeploymentID sets the "deployment_id" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableDeploymentID(s *string) *ProcessDeploymentUpdateOne {
-	if s != nil {
-		pduo.SetDeploymentID(*s)
+func (_u *ProcessDeploymentUpdateOne) SetNillableDeploymentID(v *string) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetDeploymentID(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDeploymentName sets the "deployment_name" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeploymentName(s string) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeploymentName(s)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeploymentName(v string) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeploymentName(v)
+	return _u
 }
 
 // SetNillableDeploymentName sets the "deployment_name" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableDeploymentName(s *string) *ProcessDeploymentUpdateOne {
-	if s != nil {
-		pduo.SetDeploymentName(*s)
+func (_u *ProcessDeploymentUpdateOne) SetNillableDeploymentName(v *string) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetDeploymentName(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDeploymentSource sets the "deployment_source" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeploymentSource(s string) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeploymentSource(s)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeploymentSource(v string) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeploymentSource(v)
+	return _u
 }
 
 // SetNillableDeploymentSource sets the "deployment_source" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableDeploymentSource(s *string) *ProcessDeploymentUpdateOne {
-	if s != nil {
-		pduo.SetDeploymentSource(*s)
+func (_u *ProcessDeploymentUpdateOne) SetNillableDeploymentSource(v *string) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetDeploymentSource(*v)
 	}
-	return pduo
+	return _u
 }
 
 // ClearDeploymentSource clears the value of the "deployment_source" field.
-func (pduo *ProcessDeploymentUpdateOne) ClearDeploymentSource() *ProcessDeploymentUpdateOne {
-	pduo.mutation.ClearDeploymentSource()
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) ClearDeploymentSource() *ProcessDeploymentUpdateOne {
+	_u.mutation.ClearDeploymentSource()
+	return _u
 }
 
 // SetDeploymentTime sets the "deployment_time" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeploymentTime(t time.Time) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeploymentTime(t)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeploymentTime(v time.Time) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeploymentTime(v)
+	return _u
 }
 
 // SetNillableDeploymentTime sets the "deployment_time" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableDeploymentTime(t *time.Time) *ProcessDeploymentUpdateOne {
-	if t != nil {
-		pduo.SetDeploymentTime(*t)
+func (_u *ProcessDeploymentUpdateOne) SetNillableDeploymentTime(v *time.Time) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetDeploymentTime(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDeployedBy sets the "deployed_by" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeployedBy(s string) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeployedBy(s)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeployedBy(v string) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeployedBy(v)
+	return _u
 }
 
 // SetNillableDeployedBy sets the "deployed_by" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableDeployedBy(s *string) *ProcessDeploymentUpdateOne {
-	if s != nil {
-		pduo.SetDeployedBy(*s)
+func (_u *ProcessDeploymentUpdateOne) SetNillableDeployedBy(v *string) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetDeployedBy(*v)
 	}
-	return pduo
+	return _u
 }
 
 // ClearDeployedBy clears the value of the "deployed_by" field.
-func (pduo *ProcessDeploymentUpdateOne) ClearDeployedBy() *ProcessDeploymentUpdateOne {
-	pduo.mutation.ClearDeployedBy()
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) ClearDeployedBy() *ProcessDeploymentUpdateOne {
+	_u.mutation.ClearDeployedBy()
+	return _u
 }
 
 // SetDeploymentComment sets the "deployment_comment" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeploymentComment(s string) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeploymentComment(s)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeploymentComment(v string) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeploymentComment(v)
+	return _u
 }
 
 // SetNillableDeploymentComment sets the "deployment_comment" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableDeploymentComment(s *string) *ProcessDeploymentUpdateOne {
-	if s != nil {
-		pduo.SetDeploymentComment(*s)
+func (_u *ProcessDeploymentUpdateOne) SetNillableDeploymentComment(v *string) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetDeploymentComment(*v)
 	}
-	return pduo
+	return _u
 }
 
 // ClearDeploymentComment clears the value of the "deployment_comment" field.
-func (pduo *ProcessDeploymentUpdateOne) ClearDeploymentComment() *ProcessDeploymentUpdateOne {
-	pduo.mutation.ClearDeploymentComment()
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) ClearDeploymentComment() *ProcessDeploymentUpdateOne {
+	_u.mutation.ClearDeploymentComment()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (pduo *ProcessDeploymentUpdateOne) SetIsActive(b bool) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetIsActive(b)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetIsActive(v bool) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableIsActive(b *bool) *ProcessDeploymentUpdateOne {
-	if b != nil {
-		pduo.SetIsActive(*b)
+func (_u *ProcessDeploymentUpdateOne) SetNillableIsActive(v *bool) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDeploymentCategory sets the "deployment_category" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeploymentCategory(s string) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeploymentCategory(s)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeploymentCategory(v string) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeploymentCategory(v)
+	return _u
 }
 
 // SetNillableDeploymentCategory sets the "deployment_category" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableDeploymentCategory(s *string) *ProcessDeploymentUpdateOne {
-	if s != nil {
-		pduo.SetDeploymentCategory(*s)
+func (_u *ProcessDeploymentUpdateOne) SetNillableDeploymentCategory(v *string) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetDeploymentCategory(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetDeploymentMetadata sets the "deployment_metadata" field.
-func (pduo *ProcessDeploymentUpdateOne) SetDeploymentMetadata(m map[string]interface{}) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetDeploymentMetadata(m)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetDeploymentMetadata(v map[string]interface{}) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetDeploymentMetadata(v)
+	return _u
 }
 
 // ClearDeploymentMetadata clears the value of the "deployment_metadata" field.
-func (pduo *ProcessDeploymentUpdateOne) ClearDeploymentMetadata() *ProcessDeploymentUpdateOne {
-	pduo.mutation.ClearDeploymentMetadata()
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) ClearDeploymentMetadata() *ProcessDeploymentUpdateOne {
+	_u.mutation.ClearDeploymentMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pduo *ProcessDeploymentUpdateOne) SetTenantID(i int) *ProcessDeploymentUpdateOne {
-	pduo.mutation.ResetTenantID()
-	pduo.mutation.SetTenantID(i)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetTenantID(v int) *ProcessDeploymentUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableTenantID(i *int) *ProcessDeploymentUpdateOne {
-	if i != nil {
-		pduo.SetTenantID(*i)
+func (_u *ProcessDeploymentUpdateOne) SetNillableTenantID(v *int) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pduo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pduo *ProcessDeploymentUpdateOne) AddTenantID(i int) *ProcessDeploymentUpdateOne {
-	pduo.mutation.AddTenantID(i)
-	return pduo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ProcessDeploymentUpdateOne) AddTenantID(v int) *ProcessDeploymentUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pduo *ProcessDeploymentUpdateOne) SetCreatedAt(t time.Time) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetCreatedAt(t)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetCreatedAt(v time.Time) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pduo *ProcessDeploymentUpdateOne) SetNillableCreatedAt(t *time.Time) *ProcessDeploymentUpdateOne {
-	if t != nil {
-		pduo.SetCreatedAt(*t)
+func (_u *ProcessDeploymentUpdateOne) SetNillableCreatedAt(v *time.Time) *ProcessDeploymentUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pduo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pduo *ProcessDeploymentUpdateOne) SetUpdatedAt(t time.Time) *ProcessDeploymentUpdateOne {
-	pduo.mutation.SetUpdatedAt(t)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) SetUpdatedAt(v time.Time) *ProcessDeploymentUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddDefinitionIDs adds the "definitions" edge to the ProcessDefinition entity by IDs.
-func (pduo *ProcessDeploymentUpdateOne) AddDefinitionIDs(ids ...int) *ProcessDeploymentUpdateOne {
-	pduo.mutation.AddDefinitionIDs(ids...)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) AddDefinitionIDs(ids ...int) *ProcessDeploymentUpdateOne {
+	_u.mutation.AddDefinitionIDs(ids...)
+	return _u
 }
 
 // AddDefinitions adds the "definitions" edges to the ProcessDefinition entity.
-func (pduo *ProcessDeploymentUpdateOne) AddDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDeploymentUpdateOne) AddDefinitions(v ...*ProcessDefinition) *ProcessDeploymentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.AddDefinitionIDs(ids...)
+	return _u.AddDefinitionIDs(ids...)
 }
 
 // Mutation returns the ProcessDeploymentMutation object of the builder.
-func (pduo *ProcessDeploymentUpdateOne) Mutation() *ProcessDeploymentMutation {
-	return pduo.mutation
+func (_u *ProcessDeploymentUpdateOne) Mutation() *ProcessDeploymentMutation {
+	return _u.mutation
 }
 
 // ClearDefinitions clears all "definitions" edges to the ProcessDefinition entity.
-func (pduo *ProcessDeploymentUpdateOne) ClearDefinitions() *ProcessDeploymentUpdateOne {
-	pduo.mutation.ClearDefinitions()
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) ClearDefinitions() *ProcessDeploymentUpdateOne {
+	_u.mutation.ClearDefinitions()
+	return _u
 }
 
 // RemoveDefinitionIDs removes the "definitions" edge to ProcessDefinition entities by IDs.
-func (pduo *ProcessDeploymentUpdateOne) RemoveDefinitionIDs(ids ...int) *ProcessDeploymentUpdateOne {
-	pduo.mutation.RemoveDefinitionIDs(ids...)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) RemoveDefinitionIDs(ids ...int) *ProcessDeploymentUpdateOne {
+	_u.mutation.RemoveDefinitionIDs(ids...)
+	return _u
 }
 
 // RemoveDefinitions removes "definitions" edges to ProcessDefinition entities.
-func (pduo *ProcessDeploymentUpdateOne) RemoveDefinitions(p ...*ProcessDefinition) *ProcessDeploymentUpdateOne {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_u *ProcessDeploymentUpdateOne) RemoveDefinitions(v ...*ProcessDefinition) *ProcessDeploymentUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pduo.RemoveDefinitionIDs(ids...)
+	return _u.RemoveDefinitionIDs(ids...)
 }
 
 // Where appends a list predicates to the ProcessDeploymentUpdate builder.
-func (pduo *ProcessDeploymentUpdateOne) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentUpdateOne {
-	pduo.mutation.Where(ps...)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) Where(ps ...predicate.ProcessDeployment) *ProcessDeploymentUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (pduo *ProcessDeploymentUpdateOne) Select(field string, fields ...string) *ProcessDeploymentUpdateOne {
-	pduo.fields = append([]string{field}, fields...)
-	return pduo
+func (_u *ProcessDeploymentUpdateOne) Select(field string, fields ...string) *ProcessDeploymentUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ProcessDeployment entity.
-func (pduo *ProcessDeploymentUpdateOne) Save(ctx context.Context) (*ProcessDeployment, error) {
-	pduo.defaults()
-	return withHooks(ctx, pduo.sqlSave, pduo.mutation, pduo.hooks)
+func (_u *ProcessDeploymentUpdateOne) Save(ctx context.Context) (*ProcessDeployment, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pduo *ProcessDeploymentUpdateOne) SaveX(ctx context.Context) *ProcessDeployment {
-	node, err := pduo.Save(ctx)
+func (_u *ProcessDeploymentUpdateOne) SaveX(ctx context.Context) *ProcessDeployment {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -690,39 +690,39 @@ func (pduo *ProcessDeploymentUpdateOne) SaveX(ctx context.Context) *ProcessDeplo
 }
 
 // Exec executes the query on the entity.
-func (pduo *ProcessDeploymentUpdateOne) Exec(ctx context.Context) error {
-	_, err := pduo.Save(ctx)
+func (_u *ProcessDeploymentUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pduo *ProcessDeploymentUpdateOne) ExecX(ctx context.Context) {
-	if err := pduo.Exec(ctx); err != nil {
+func (_u *ProcessDeploymentUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pduo *ProcessDeploymentUpdateOne) defaults() {
-	if _, ok := pduo.mutation.UpdatedAt(); !ok {
+func (_u *ProcessDeploymentUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := processdeployment.UpdateDefaultUpdatedAt()
-		pduo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pduo *ProcessDeploymentUpdateOne) check() error {
-	if v, ok := pduo.mutation.DeploymentID(); ok {
+func (_u *ProcessDeploymentUpdateOne) check() error {
+	if v, ok := _u.mutation.DeploymentID(); ok {
 		if err := processdeployment.DeploymentIDValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.deployment_id": %w`, err)}
 		}
 	}
-	if v, ok := pduo.mutation.DeploymentName(); ok {
+	if v, ok := _u.mutation.DeploymentName(); ok {
 		if err := processdeployment.DeploymentNameValidator(v); err != nil {
 			return &ValidationError{Name: "deployment_name", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.deployment_name": %w`, err)}
 		}
 	}
-	if v, ok := pduo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := processdeployment.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessDeployment.tenant_id": %w`, err)}
 		}
@@ -730,17 +730,17 @@ func (pduo *ProcessDeploymentUpdateOne) check() error {
 	return nil
 }
 
-func (pduo *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *ProcessDeployment, err error) {
-	if err := pduo.check(); err != nil {
+func (_u *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *ProcessDeployment, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(processdeployment.Table, processdeployment.Columns, sqlgraph.NewFieldSpec(processdeployment.FieldID, field.TypeInt))
-	id, ok := pduo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ProcessDeployment.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := pduo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processdeployment.FieldID)
 		for _, f := range fields {
@@ -752,65 +752,65 @@ func (pduo *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 			}
 		}
 	}
-	if ps := pduo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pduo.mutation.DeploymentID(); ok {
+	if value, ok := _u.mutation.DeploymentID(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentID, field.TypeString, value)
 	}
-	if value, ok := pduo.mutation.DeploymentName(); ok {
+	if value, ok := _u.mutation.DeploymentName(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentName, field.TypeString, value)
 	}
-	if value, ok := pduo.mutation.DeploymentSource(); ok {
+	if value, ok := _u.mutation.DeploymentSource(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentSource, field.TypeString, value)
 	}
-	if pduo.mutation.DeploymentSourceCleared() {
+	if _u.mutation.DeploymentSourceCleared() {
 		_spec.ClearField(processdeployment.FieldDeploymentSource, field.TypeString)
 	}
-	if value, ok := pduo.mutation.DeploymentTime(); ok {
+	if value, ok := _u.mutation.DeploymentTime(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentTime, field.TypeTime, value)
 	}
-	if value, ok := pduo.mutation.DeployedBy(); ok {
+	if value, ok := _u.mutation.DeployedBy(); ok {
 		_spec.SetField(processdeployment.FieldDeployedBy, field.TypeString, value)
 	}
-	if pduo.mutation.DeployedByCleared() {
+	if _u.mutation.DeployedByCleared() {
 		_spec.ClearField(processdeployment.FieldDeployedBy, field.TypeString)
 	}
-	if value, ok := pduo.mutation.DeploymentComment(); ok {
+	if value, ok := _u.mutation.DeploymentComment(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentComment, field.TypeString, value)
 	}
-	if pduo.mutation.DeploymentCommentCleared() {
+	if _u.mutation.DeploymentCommentCleared() {
 		_spec.ClearField(processdeployment.FieldDeploymentComment, field.TypeString)
 	}
-	if value, ok := pduo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(processdeployment.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := pduo.mutation.DeploymentCategory(); ok {
+	if value, ok := _u.mutation.DeploymentCategory(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentCategory, field.TypeString, value)
 	}
-	if value, ok := pduo.mutation.DeploymentMetadata(); ok {
+	if value, ok := _u.mutation.DeploymentMetadata(); ok {
 		_spec.SetField(processdeployment.FieldDeploymentMetadata, field.TypeJSON, value)
 	}
-	if pduo.mutation.DeploymentMetadataCleared() {
+	if _u.mutation.DeploymentMetadataCleared() {
 		_spec.ClearField(processdeployment.FieldDeploymentMetadata, field.TypeJSON)
 	}
-	if value, ok := pduo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(processdeployment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pduo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(processdeployment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pduo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(processdeployment.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pduo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(processdeployment.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pduo.mutation.DefinitionsCleared() {
+	if _u.mutation.DefinitionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -823,7 +823,7 @@ func (pduo *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.RemovedDefinitionsIDs(); len(nodes) > 0 && !pduo.mutation.DefinitionsCleared() {
+	if nodes := _u.mutation.RemovedDefinitionsIDs(); len(nodes) > 0 && !_u.mutation.DefinitionsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -839,7 +839,7 @@ func (pduo *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pduo.mutation.DefinitionsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.DefinitionsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -855,10 +855,10 @@ func (pduo *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ProcessDeployment{config: pduo.config}
+	_node = &ProcessDeployment{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, pduo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{processdeployment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -866,6 +866,6 @@ func (pduo *ProcessDeploymentUpdateOne) sqlSave(ctx context.Context) (_node *Pro
 		}
 		return nil, err
 	}
-	pduo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

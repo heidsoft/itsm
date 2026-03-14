@@ -23,267 +23,267 @@ type KnownErrorCreate struct {
 }
 
 // SetTitle sets the "title" field.
-func (kec *KnownErrorCreate) SetTitle(s string) *KnownErrorCreate {
-	kec.mutation.SetTitle(s)
-	return kec
+func (_c *KnownErrorCreate) SetTitle(v string) *KnownErrorCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (kec *KnownErrorCreate) SetDescription(s string) *KnownErrorCreate {
-	kec.mutation.SetDescription(s)
-	return kec
+func (_c *KnownErrorCreate) SetDescription(v string) *KnownErrorCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableDescription(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetDescription(*s)
+func (_c *KnownErrorCreate) SetNillableDescription(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetSymptoms sets the "symptoms" field.
-func (kec *KnownErrorCreate) SetSymptoms(s string) *KnownErrorCreate {
-	kec.mutation.SetSymptoms(s)
-	return kec
+func (_c *KnownErrorCreate) SetSymptoms(v string) *KnownErrorCreate {
+	_c.mutation.SetSymptoms(v)
+	return _c
 }
 
 // SetNillableSymptoms sets the "symptoms" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableSymptoms(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetSymptoms(*s)
+func (_c *KnownErrorCreate) SetNillableSymptoms(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetSymptoms(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetRootCause sets the "root_cause" field.
-func (kec *KnownErrorCreate) SetRootCause(s string) *KnownErrorCreate {
-	kec.mutation.SetRootCause(s)
-	return kec
+func (_c *KnownErrorCreate) SetRootCause(v string) *KnownErrorCreate {
+	_c.mutation.SetRootCause(v)
+	return _c
 }
 
 // SetNillableRootCause sets the "root_cause" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableRootCause(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetRootCause(*s)
+func (_c *KnownErrorCreate) SetNillableRootCause(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetRootCause(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetWorkaround sets the "workaround" field.
-func (kec *KnownErrorCreate) SetWorkaround(s string) *KnownErrorCreate {
-	kec.mutation.SetWorkaround(s)
-	return kec
+func (_c *KnownErrorCreate) SetWorkaround(v string) *KnownErrorCreate {
+	_c.mutation.SetWorkaround(v)
+	return _c
 }
 
 // SetNillableWorkaround sets the "workaround" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableWorkaround(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetWorkaround(*s)
+func (_c *KnownErrorCreate) SetNillableWorkaround(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetWorkaround(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetResolution sets the "resolution" field.
-func (kec *KnownErrorCreate) SetResolution(s string) *KnownErrorCreate {
-	kec.mutation.SetResolution(s)
-	return kec
+func (_c *KnownErrorCreate) SetResolution(v string) *KnownErrorCreate {
+	_c.mutation.SetResolution(v)
+	return _c
 }
 
 // SetNillableResolution sets the "resolution" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableResolution(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetResolution(*s)
+func (_c *KnownErrorCreate) SetNillableResolution(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetResolution(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (kec *KnownErrorCreate) SetStatus(s string) *KnownErrorCreate {
-	kec.mutation.SetStatus(s)
-	return kec
+func (_c *KnownErrorCreate) SetStatus(v string) *KnownErrorCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableStatus(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetStatus(*s)
+func (_c *KnownErrorCreate) SetNillableStatus(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (kec *KnownErrorCreate) SetCategory(s string) *KnownErrorCreate {
-	kec.mutation.SetCategory(s)
-	return kec
+func (_c *KnownErrorCreate) SetCategory(v string) *KnownErrorCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableCategory(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetCategory(*s)
+func (_c *KnownErrorCreate) SetNillableCategory(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetCategory(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetSeverity sets the "severity" field.
-func (kec *KnownErrorCreate) SetSeverity(s string) *KnownErrorCreate {
-	kec.mutation.SetSeverity(s)
-	return kec
+func (_c *KnownErrorCreate) SetSeverity(v string) *KnownErrorCreate {
+	_c.mutation.SetSeverity(v)
+	return _c
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableSeverity(s *string) *KnownErrorCreate {
-	if s != nil {
-		kec.SetSeverity(*s)
+func (_c *KnownErrorCreate) SetNillableSeverity(v *string) *KnownErrorCreate {
+	if v != nil {
+		_c.SetSeverity(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetAffectedProducts sets the "affected_products" field.
-func (kec *KnownErrorCreate) SetAffectedProducts(s []string) *KnownErrorCreate {
-	kec.mutation.SetAffectedProducts(s)
-	return kec
+func (_c *KnownErrorCreate) SetAffectedProducts(v []string) *KnownErrorCreate {
+	_c.mutation.SetAffectedProducts(v)
+	return _c
 }
 
 // SetAffectedCis sets the "affected_cis" field.
-func (kec *KnownErrorCreate) SetAffectedCis(s []string) *KnownErrorCreate {
-	kec.mutation.SetAffectedCis(s)
-	return kec
+func (_c *KnownErrorCreate) SetAffectedCis(v []string) *KnownErrorCreate {
+	_c.mutation.SetAffectedCis(v)
+	return _c
 }
 
 // SetKeywords sets the "keywords" field.
-func (kec *KnownErrorCreate) SetKeywords(s []string) *KnownErrorCreate {
-	kec.mutation.SetKeywords(s)
-	return kec
+func (_c *KnownErrorCreate) SetKeywords(v []string) *KnownErrorCreate {
+	_c.mutation.SetKeywords(v)
+	return _c
 }
 
 // SetOccurrenceCount sets the "occurrence_count" field.
-func (kec *KnownErrorCreate) SetOccurrenceCount(i int) *KnownErrorCreate {
-	kec.mutation.SetOccurrenceCount(i)
-	return kec
+func (_c *KnownErrorCreate) SetOccurrenceCount(v int) *KnownErrorCreate {
+	_c.mutation.SetOccurrenceCount(v)
+	return _c
 }
 
 // SetNillableOccurrenceCount sets the "occurrence_count" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableOccurrenceCount(i *int) *KnownErrorCreate {
-	if i != nil {
-		kec.SetOccurrenceCount(*i)
+func (_c *KnownErrorCreate) SetNillableOccurrenceCount(v *int) *KnownErrorCreate {
+	if v != nil {
+		_c.SetOccurrenceCount(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (kec *KnownErrorCreate) SetCreatedBy(i int) *KnownErrorCreate {
-	kec.mutation.SetCreatedBy(i)
-	return kec
+func (_c *KnownErrorCreate) SetCreatedBy(v int) *KnownErrorCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetApprovedBy sets the "approved_by" field.
-func (kec *KnownErrorCreate) SetApprovedBy(i int) *KnownErrorCreate {
-	kec.mutation.SetApprovedBy(i)
-	return kec
+func (_c *KnownErrorCreate) SetApprovedBy(v int) *KnownErrorCreate {
+	_c.mutation.SetApprovedBy(v)
+	return _c
 }
 
 // SetNillableApprovedBy sets the "approved_by" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableApprovedBy(i *int) *KnownErrorCreate {
-	if i != nil {
-		kec.SetApprovedBy(*i)
+func (_c *KnownErrorCreate) SetNillableApprovedBy(v *int) *KnownErrorCreate {
+	if v != nil {
+		_c.SetApprovedBy(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetApprovedAt sets the "approved_at" field.
-func (kec *KnownErrorCreate) SetApprovedAt(t time.Time) *KnownErrorCreate {
-	kec.mutation.SetApprovedAt(t)
-	return kec
+func (_c *KnownErrorCreate) SetApprovedAt(v time.Time) *KnownErrorCreate {
+	_c.mutation.SetApprovedAt(v)
+	return _c
 }
 
 // SetNillableApprovedAt sets the "approved_at" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableApprovedAt(t *time.Time) *KnownErrorCreate {
-	if t != nil {
-		kec.SetApprovedAt(*t)
+func (_c *KnownErrorCreate) SetNillableApprovedAt(v *time.Time) *KnownErrorCreate {
+	if v != nil {
+		_c.SetApprovedAt(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (kec *KnownErrorCreate) SetTenantID(i int) *KnownErrorCreate {
-	kec.mutation.SetTenantID(i)
-	return kec
+func (_c *KnownErrorCreate) SetTenantID(v int) *KnownErrorCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (kec *KnownErrorCreate) SetCreatedAt(t time.Time) *KnownErrorCreate {
-	kec.mutation.SetCreatedAt(t)
-	return kec
+func (_c *KnownErrorCreate) SetCreatedAt(v time.Time) *KnownErrorCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableCreatedAt(t *time.Time) *KnownErrorCreate {
-	if t != nil {
-		kec.SetCreatedAt(*t)
+func (_c *KnownErrorCreate) SetNillableCreatedAt(v *time.Time) *KnownErrorCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return kec
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (kec *KnownErrorCreate) SetUpdatedAt(t time.Time) *KnownErrorCreate {
-	kec.mutation.SetUpdatedAt(t)
-	return kec
+func (_c *KnownErrorCreate) SetUpdatedAt(v time.Time) *KnownErrorCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (kec *KnownErrorCreate) SetNillableUpdatedAt(t *time.Time) *KnownErrorCreate {
-	if t != nil {
-		kec.SetUpdatedAt(*t)
+func (_c *KnownErrorCreate) SetNillableUpdatedAt(v *time.Time) *KnownErrorCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return kec
+	return _c
 }
 
 // AddProblemIDs adds the "problem" edge to the Problem entity by IDs.
-func (kec *KnownErrorCreate) AddProblemIDs(ids ...int) *KnownErrorCreate {
-	kec.mutation.AddProblemIDs(ids...)
-	return kec
+func (_c *KnownErrorCreate) AddProblemIDs(ids ...int) *KnownErrorCreate {
+	_c.mutation.AddProblemIDs(ids...)
+	return _c
 }
 
 // AddProblem adds the "problem" edges to the Problem entity.
-func (kec *KnownErrorCreate) AddProblem(p ...*Problem) *KnownErrorCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *KnownErrorCreate) AddProblem(v ...*Problem) *KnownErrorCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return kec.AddProblemIDs(ids...)
+	return _c.AddProblemIDs(ids...)
 }
 
 // AddKnowledgeArticleIDs adds the "knowledge_articles" edge to the KnowledgeArticle entity by IDs.
-func (kec *KnownErrorCreate) AddKnowledgeArticleIDs(ids ...int) *KnownErrorCreate {
-	kec.mutation.AddKnowledgeArticleIDs(ids...)
-	return kec
+func (_c *KnownErrorCreate) AddKnowledgeArticleIDs(ids ...int) *KnownErrorCreate {
+	_c.mutation.AddKnowledgeArticleIDs(ids...)
+	return _c
 }
 
 // AddKnowledgeArticles adds the "knowledge_articles" edges to the KnowledgeArticle entity.
-func (kec *KnownErrorCreate) AddKnowledgeArticles(k ...*KnowledgeArticle) *KnownErrorCreate {
-	ids := make([]int, len(k))
-	for i := range k {
-		ids[i] = k[i].ID
+func (_c *KnownErrorCreate) AddKnowledgeArticles(v ...*KnowledgeArticle) *KnownErrorCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return kec.AddKnowledgeArticleIDs(ids...)
+	return _c.AddKnowledgeArticleIDs(ids...)
 }
 
 // Mutation returns the KnownErrorMutation object of the builder.
-func (kec *KnownErrorCreate) Mutation() *KnownErrorMutation {
-	return kec.mutation
+func (_c *KnownErrorCreate) Mutation() *KnownErrorMutation {
+	return _c.mutation
 }
 
 // Save creates the KnownError in the database.
-func (kec *KnownErrorCreate) Save(ctx context.Context) (*KnownError, error) {
-	kec.defaults()
-	return withHooks(ctx, kec.sqlSave, kec.mutation, kec.hooks)
+func (_c *KnownErrorCreate) Save(ctx context.Context) (*KnownError, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (kec *KnownErrorCreate) SaveX(ctx context.Context) *KnownError {
-	v, err := kec.Save(ctx)
+func (_c *KnownErrorCreate) SaveX(ctx context.Context) *KnownError {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -291,92 +291,92 @@ func (kec *KnownErrorCreate) SaveX(ctx context.Context) *KnownError {
 }
 
 // Exec executes the query.
-func (kec *KnownErrorCreate) Exec(ctx context.Context) error {
-	_, err := kec.Save(ctx)
+func (_c *KnownErrorCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kec *KnownErrorCreate) ExecX(ctx context.Context) {
-	if err := kec.Exec(ctx); err != nil {
+func (_c *KnownErrorCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (kec *KnownErrorCreate) defaults() {
-	if _, ok := kec.mutation.Status(); !ok {
+func (_c *KnownErrorCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := knownerror.DefaultStatus
-		kec.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := kec.mutation.Severity(); !ok {
+	if _, ok := _c.mutation.Severity(); !ok {
 		v := knownerror.DefaultSeverity
-		kec.mutation.SetSeverity(v)
+		_c.mutation.SetSeverity(v)
 	}
-	if _, ok := kec.mutation.OccurrenceCount(); !ok {
+	if _, ok := _c.mutation.OccurrenceCount(); !ok {
 		v := knownerror.DefaultOccurrenceCount
-		kec.mutation.SetOccurrenceCount(v)
+		_c.mutation.SetOccurrenceCount(v)
 	}
-	if _, ok := kec.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := knownerror.DefaultCreatedAt()
-		kec.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := kec.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := knownerror.DefaultUpdatedAt()
-		kec.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (kec *KnownErrorCreate) check() error {
-	if _, ok := kec.mutation.Title(); !ok {
+func (_c *KnownErrorCreate) check() error {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "KnownError.title"`)}
 	}
-	if v, ok := kec.mutation.Title(); ok {
+	if v, ok := _c.mutation.Title(); ok {
 		if err := knownerror.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "KnownError.title": %w`, err)}
 		}
 	}
-	if _, ok := kec.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "KnownError.status"`)}
 	}
-	if _, ok := kec.mutation.Severity(); !ok {
+	if _, ok := _c.mutation.Severity(); !ok {
 		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "KnownError.severity"`)}
 	}
-	if _, ok := kec.mutation.OccurrenceCount(); !ok {
+	if _, ok := _c.mutation.OccurrenceCount(); !ok {
 		return &ValidationError{Name: "occurrence_count", err: errors.New(`ent: missing required field "KnownError.occurrence_count"`)}
 	}
-	if _, ok := kec.mutation.CreatedBy(); !ok {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "KnownError.created_by"`)}
 	}
-	if v, ok := kec.mutation.CreatedBy(); ok {
+	if v, ok := _c.mutation.CreatedBy(); ok {
 		if err := knownerror.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "KnownError.created_by": %w`, err)}
 		}
 	}
-	if _, ok := kec.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "KnownError.tenant_id"`)}
 	}
-	if v, ok := kec.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := knownerror.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnownError.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := kec.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "KnownError.created_at"`)}
 	}
-	if _, ok := kec.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "KnownError.updated_at"`)}
 	}
 	return nil
 }
 
-func (kec *KnownErrorCreate) sqlSave(ctx context.Context) (*KnownError, error) {
-	if err := kec.check(); err != nil {
+func (_c *KnownErrorCreate) sqlSave(ctx context.Context) (*KnownError, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := kec.createSpec()
-	if err := sqlgraph.CreateNode(ctx, kec.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -384,93 +384,93 @@ func (kec *KnownErrorCreate) sqlSave(ctx context.Context) (*KnownError, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	kec.mutation.id = &_node.ID
-	kec.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (kec *KnownErrorCreate) createSpec() (*KnownError, *sqlgraph.CreateSpec) {
+func (_c *KnownErrorCreate) createSpec() (*KnownError, *sqlgraph.CreateSpec) {
 	var (
-		_node = &KnownError{config: kec.config}
+		_node = &KnownError{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(knownerror.Table, sqlgraph.NewFieldSpec(knownerror.FieldID, field.TypeInt))
 	)
-	if value, ok := kec.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(knownerror.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := kec.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(knownerror.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := kec.mutation.Symptoms(); ok {
+	if value, ok := _c.mutation.Symptoms(); ok {
 		_spec.SetField(knownerror.FieldSymptoms, field.TypeString, value)
 		_node.Symptoms = value
 	}
-	if value, ok := kec.mutation.RootCause(); ok {
+	if value, ok := _c.mutation.RootCause(); ok {
 		_spec.SetField(knownerror.FieldRootCause, field.TypeString, value)
 		_node.RootCause = value
 	}
-	if value, ok := kec.mutation.Workaround(); ok {
+	if value, ok := _c.mutation.Workaround(); ok {
 		_spec.SetField(knownerror.FieldWorkaround, field.TypeString, value)
 		_node.Workaround = value
 	}
-	if value, ok := kec.mutation.Resolution(); ok {
+	if value, ok := _c.mutation.Resolution(); ok {
 		_spec.SetField(knownerror.FieldResolution, field.TypeString, value)
 		_node.Resolution = value
 	}
-	if value, ok := kec.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(knownerror.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := kec.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(knownerror.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := kec.mutation.Severity(); ok {
+	if value, ok := _c.mutation.Severity(); ok {
 		_spec.SetField(knownerror.FieldSeverity, field.TypeString, value)
 		_node.Severity = value
 	}
-	if value, ok := kec.mutation.AffectedProducts(); ok {
+	if value, ok := _c.mutation.AffectedProducts(); ok {
 		_spec.SetField(knownerror.FieldAffectedProducts, field.TypeJSON, value)
 		_node.AffectedProducts = value
 	}
-	if value, ok := kec.mutation.AffectedCis(); ok {
+	if value, ok := _c.mutation.AffectedCis(); ok {
 		_spec.SetField(knownerror.FieldAffectedCis, field.TypeJSON, value)
 		_node.AffectedCis = value
 	}
-	if value, ok := kec.mutation.Keywords(); ok {
+	if value, ok := _c.mutation.Keywords(); ok {
 		_spec.SetField(knownerror.FieldKeywords, field.TypeJSON, value)
 		_node.Keywords = value
 	}
-	if value, ok := kec.mutation.OccurrenceCount(); ok {
+	if value, ok := _c.mutation.OccurrenceCount(); ok {
 		_spec.SetField(knownerror.FieldOccurrenceCount, field.TypeInt, value)
 		_node.OccurrenceCount = value
 	}
-	if value, ok := kec.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(knownerror.FieldCreatedBy, field.TypeInt, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := kec.mutation.ApprovedBy(); ok {
+	if value, ok := _c.mutation.ApprovedBy(); ok {
 		_spec.SetField(knownerror.FieldApprovedBy, field.TypeInt, value)
 		_node.ApprovedBy = value
 	}
-	if value, ok := kec.mutation.ApprovedAt(); ok {
+	if value, ok := _c.mutation.ApprovedAt(); ok {
 		_spec.SetField(knownerror.FieldApprovedAt, field.TypeTime, value)
 		_node.ApprovedAt = value
 	}
-	if value, ok := kec.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(knownerror.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := kec.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(knownerror.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := kec.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(knownerror.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := kec.mutation.ProblemIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProblemIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -486,7 +486,7 @@ func (kec *KnownErrorCreate) createSpec() (*KnownError, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := kec.mutation.KnowledgeArticlesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.KnowledgeArticlesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -513,16 +513,16 @@ type KnownErrorCreateBulk struct {
 }
 
 // Save creates the KnownError entities in the database.
-func (kecb *KnownErrorCreateBulk) Save(ctx context.Context) ([]*KnownError, error) {
-	if kecb.err != nil {
-		return nil, kecb.err
+func (_c *KnownErrorCreateBulk) Save(ctx context.Context) ([]*KnownError, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(kecb.builders))
-	nodes := make([]*KnownError, len(kecb.builders))
-	mutators := make([]Mutator, len(kecb.builders))
-	for i := range kecb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*KnownError, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := kecb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*KnownErrorMutation)
@@ -536,11 +536,11 @@ func (kecb *KnownErrorCreateBulk) Save(ctx context.Context) ([]*KnownError, erro
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, kecb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, kecb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -564,7 +564,7 @@ func (kecb *KnownErrorCreateBulk) Save(ctx context.Context) ([]*KnownError, erro
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, kecb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -572,8 +572,8 @@ func (kecb *KnownErrorCreateBulk) Save(ctx context.Context) ([]*KnownError, erro
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (kecb *KnownErrorCreateBulk) SaveX(ctx context.Context) []*KnownError {
-	v, err := kecb.Save(ctx)
+func (_c *KnownErrorCreateBulk) SaveX(ctx context.Context) []*KnownError {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -581,14 +581,14 @@ func (kecb *KnownErrorCreateBulk) SaveX(ctx context.Context) []*KnownError {
 }
 
 // Exec executes the query.
-func (kecb *KnownErrorCreateBulk) Exec(ctx context.Context) error {
-	_, err := kecb.Save(ctx)
+func (_c *KnownErrorCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kecb *KnownErrorCreateBulk) ExecX(ctx context.Context) {
-	if err := kecb.Exec(ctx); err != nil {
+func (_c *KnownErrorCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

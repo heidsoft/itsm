@@ -48,8 +48,9 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
                 {item.impact_level}
               </Tag>
               <Text>{item.ci_name}</Text>
-              <Text type="secondary">({item.ci_type})</Text>
+              <Text type="secondary">- {item.ci_type}</Text>
               <Text type="secondary">- {item.relationship}</Text>
+              <Text type="secondary">- 距离: {item.distance}</Text>
             </Space>
           </List.Item>
         )}
@@ -131,7 +132,7 @@ export const CIImpactAnalysisTab: React.FC<CIImpactAnalysisTabProps> = ({
       {impactAnalysis && (
         <>
           <Alert
-            message="风险等级"
+            title="风险等级"
             description={
               <Space>
                 <Tag color={RISK_LEVEL_COLORS[impactAnalysis.risk_level]}>

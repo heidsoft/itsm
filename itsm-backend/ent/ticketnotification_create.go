@@ -23,129 +23,129 @@ type TicketNotificationCreate struct {
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (tnc *TicketNotificationCreate) SetTicketID(i int) *TicketNotificationCreate {
-	tnc.mutation.SetTicketID(i)
-	return tnc
+func (_c *TicketNotificationCreate) SetTicketID(v int) *TicketNotificationCreate {
+	_c.mutation.SetTicketID(v)
+	return _c
 }
 
 // SetUserID sets the "user_id" field.
-func (tnc *TicketNotificationCreate) SetUserID(i int) *TicketNotificationCreate {
-	tnc.mutation.SetUserID(i)
-	return tnc
+func (_c *TicketNotificationCreate) SetUserID(v int) *TicketNotificationCreate {
+	_c.mutation.SetUserID(v)
+	return _c
 }
 
 // SetType sets the "type" field.
-func (tnc *TicketNotificationCreate) SetType(s string) *TicketNotificationCreate {
-	tnc.mutation.SetType(s)
-	return tnc
+func (_c *TicketNotificationCreate) SetType(v string) *TicketNotificationCreate {
+	_c.mutation.SetType(v)
+	return _c
 }
 
 // SetChannel sets the "channel" field.
-func (tnc *TicketNotificationCreate) SetChannel(s string) *TicketNotificationCreate {
-	tnc.mutation.SetChannel(s)
-	return tnc
+func (_c *TicketNotificationCreate) SetChannel(v string) *TicketNotificationCreate {
+	_c.mutation.SetChannel(v)
+	return _c
 }
 
 // SetNillableChannel sets the "channel" field if the given value is not nil.
-func (tnc *TicketNotificationCreate) SetNillableChannel(s *string) *TicketNotificationCreate {
-	if s != nil {
-		tnc.SetChannel(*s)
+func (_c *TicketNotificationCreate) SetNillableChannel(v *string) *TicketNotificationCreate {
+	if v != nil {
+		_c.SetChannel(*v)
 	}
-	return tnc
+	return _c
 }
 
 // SetContent sets the "content" field.
-func (tnc *TicketNotificationCreate) SetContent(s string) *TicketNotificationCreate {
-	tnc.mutation.SetContent(s)
-	return tnc
+func (_c *TicketNotificationCreate) SetContent(v string) *TicketNotificationCreate {
+	_c.mutation.SetContent(v)
+	return _c
 }
 
 // SetSentAt sets the "sent_at" field.
-func (tnc *TicketNotificationCreate) SetSentAt(t time.Time) *TicketNotificationCreate {
-	tnc.mutation.SetSentAt(t)
-	return tnc
+func (_c *TicketNotificationCreate) SetSentAt(v time.Time) *TicketNotificationCreate {
+	_c.mutation.SetSentAt(v)
+	return _c
 }
 
 // SetNillableSentAt sets the "sent_at" field if the given value is not nil.
-func (tnc *TicketNotificationCreate) SetNillableSentAt(t *time.Time) *TicketNotificationCreate {
-	if t != nil {
-		tnc.SetSentAt(*t)
+func (_c *TicketNotificationCreate) SetNillableSentAt(v *time.Time) *TicketNotificationCreate {
+	if v != nil {
+		_c.SetSentAt(*v)
 	}
-	return tnc
+	return _c
 }
 
 // SetReadAt sets the "read_at" field.
-func (tnc *TicketNotificationCreate) SetReadAt(t time.Time) *TicketNotificationCreate {
-	tnc.mutation.SetReadAt(t)
-	return tnc
+func (_c *TicketNotificationCreate) SetReadAt(v time.Time) *TicketNotificationCreate {
+	_c.mutation.SetReadAt(v)
+	return _c
 }
 
 // SetNillableReadAt sets the "read_at" field if the given value is not nil.
-func (tnc *TicketNotificationCreate) SetNillableReadAt(t *time.Time) *TicketNotificationCreate {
-	if t != nil {
-		tnc.SetReadAt(*t)
+func (_c *TicketNotificationCreate) SetNillableReadAt(v *time.Time) *TicketNotificationCreate {
+	if v != nil {
+		_c.SetReadAt(*v)
 	}
-	return tnc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (tnc *TicketNotificationCreate) SetStatus(s string) *TicketNotificationCreate {
-	tnc.mutation.SetStatus(s)
-	return tnc
+func (_c *TicketNotificationCreate) SetStatus(v string) *TicketNotificationCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tnc *TicketNotificationCreate) SetNillableStatus(s *string) *TicketNotificationCreate {
-	if s != nil {
-		tnc.SetStatus(*s)
+func (_c *TicketNotificationCreate) SetNillableStatus(v *string) *TicketNotificationCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return tnc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tnc *TicketNotificationCreate) SetTenantID(i int) *TicketNotificationCreate {
-	tnc.mutation.SetTenantID(i)
-	return tnc
+func (_c *TicketNotificationCreate) SetTenantID(v int) *TicketNotificationCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tnc *TicketNotificationCreate) SetCreatedAt(t time.Time) *TicketNotificationCreate {
-	tnc.mutation.SetCreatedAt(t)
-	return tnc
+func (_c *TicketNotificationCreate) SetCreatedAt(v time.Time) *TicketNotificationCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tnc *TicketNotificationCreate) SetNillableCreatedAt(t *time.Time) *TicketNotificationCreate {
-	if t != nil {
-		tnc.SetCreatedAt(*t)
+func (_c *TicketNotificationCreate) SetNillableCreatedAt(v *time.Time) *TicketNotificationCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tnc
+	return _c
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (tnc *TicketNotificationCreate) SetTicket(t *Ticket) *TicketNotificationCreate {
-	return tnc.SetTicketID(t.ID)
+func (_c *TicketNotificationCreate) SetTicket(v *Ticket) *TicketNotificationCreate {
+	return _c.SetTicketID(v.ID)
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (tnc *TicketNotificationCreate) SetUser(u *User) *TicketNotificationCreate {
-	return tnc.SetUserID(u.ID)
+func (_c *TicketNotificationCreate) SetUser(v *User) *TicketNotificationCreate {
+	return _c.SetUserID(v.ID)
 }
 
 // Mutation returns the TicketNotificationMutation object of the builder.
-func (tnc *TicketNotificationCreate) Mutation() *TicketNotificationMutation {
-	return tnc.mutation
+func (_c *TicketNotificationCreate) Mutation() *TicketNotificationMutation {
+	return _c.mutation
 }
 
 // Save creates the TicketNotification in the database.
-func (tnc *TicketNotificationCreate) Save(ctx context.Context) (*TicketNotification, error) {
-	tnc.defaults()
-	return withHooks(ctx, tnc.sqlSave, tnc.mutation, tnc.hooks)
+func (_c *TicketNotificationCreate) Save(ctx context.Context) (*TicketNotification, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tnc *TicketNotificationCreate) SaveX(ctx context.Context) *TicketNotification {
-	v, err := tnc.Save(ctx)
+func (_c *TicketNotificationCreate) SaveX(ctx context.Context) *TicketNotification {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -153,100 +153,100 @@ func (tnc *TicketNotificationCreate) SaveX(ctx context.Context) *TicketNotificat
 }
 
 // Exec executes the query.
-func (tnc *TicketNotificationCreate) Exec(ctx context.Context) error {
-	_, err := tnc.Save(ctx)
+func (_c *TicketNotificationCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tnc *TicketNotificationCreate) ExecX(ctx context.Context) {
-	if err := tnc.Exec(ctx); err != nil {
+func (_c *TicketNotificationCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tnc *TicketNotificationCreate) defaults() {
-	if _, ok := tnc.mutation.Channel(); !ok {
+func (_c *TicketNotificationCreate) defaults() {
+	if _, ok := _c.mutation.Channel(); !ok {
 		v := ticketnotification.DefaultChannel
-		tnc.mutation.SetChannel(v)
+		_c.mutation.SetChannel(v)
 	}
-	if _, ok := tnc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := ticketnotification.DefaultStatus
-		tnc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := tnc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := ticketnotification.DefaultCreatedAt()
-		tnc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tnc *TicketNotificationCreate) check() error {
-	if _, ok := tnc.mutation.TicketID(); !ok {
+func (_c *TicketNotificationCreate) check() error {
+	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "TicketNotification.ticket_id"`)}
 	}
-	if v, ok := tnc.mutation.TicketID(); ok {
+	if v, ok := _c.mutation.TicketID(); ok {
 		if err := ticketnotification.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.ticket_id": %w`, err)}
 		}
 	}
-	if _, ok := tnc.mutation.UserID(); !ok {
+	if _, ok := _c.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "TicketNotification.user_id"`)}
 	}
-	if v, ok := tnc.mutation.UserID(); ok {
+	if v, ok := _c.mutation.UserID(); ok {
 		if err := ticketnotification.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.user_id": %w`, err)}
 		}
 	}
-	if _, ok := tnc.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "TicketNotification.type"`)}
 	}
-	if v, ok := tnc.mutation.GetType(); ok {
+	if v, ok := _c.mutation.GetType(); ok {
 		if err := ticketnotification.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.type": %w`, err)}
 		}
 	}
-	if _, ok := tnc.mutation.Channel(); !ok {
+	if _, ok := _c.mutation.Channel(); !ok {
 		return &ValidationError{Name: "channel", err: errors.New(`ent: missing required field "TicketNotification.channel"`)}
 	}
-	if _, ok := tnc.mutation.Content(); !ok {
+	if _, ok := _c.mutation.Content(); !ok {
 		return &ValidationError{Name: "content", err: errors.New(`ent: missing required field "TicketNotification.content"`)}
 	}
-	if v, ok := tnc.mutation.Content(); ok {
+	if v, ok := _c.mutation.Content(); ok {
 		if err := ticketnotification.ContentValidator(v); err != nil {
 			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.content": %w`, err)}
 		}
 	}
-	if _, ok := tnc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "TicketNotification.status"`)}
 	}
-	if _, ok := tnc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketNotification.tenant_id"`)}
 	}
-	if v, ok := tnc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := ticketnotification.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketNotification.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := tnc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketNotification.created_at"`)}
 	}
-	if len(tnc.mutation.TicketIDs()) == 0 {
+	if len(_c.mutation.TicketIDs()) == 0 {
 		return &ValidationError{Name: "ticket", err: errors.New(`ent: missing required edge "TicketNotification.ticket"`)}
 	}
-	if len(tnc.mutation.UserIDs()) == 0 {
+	if len(_c.mutation.UserIDs()) == 0 {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "TicketNotification.user"`)}
 	}
 	return nil
 }
 
-func (tnc *TicketNotificationCreate) sqlSave(ctx context.Context) (*TicketNotification, error) {
-	if err := tnc.check(); err != nil {
+func (_c *TicketNotificationCreate) sqlSave(ctx context.Context) (*TicketNotification, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tnc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tnc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -254,49 +254,49 @@ func (tnc *TicketNotificationCreate) sqlSave(ctx context.Context) (*TicketNotifi
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tnc.mutation.id = &_node.ID
-	tnc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tnc *TicketNotificationCreate) createSpec() (*TicketNotification, *sqlgraph.CreateSpec) {
+func (_c *TicketNotificationCreate) createSpec() (*TicketNotification, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TicketNotification{config: tnc.config}
+		_node = &TicketNotification{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ticketnotification.Table, sqlgraph.NewFieldSpec(ticketnotification.FieldID, field.TypeInt))
 	)
-	if value, ok := tnc.mutation.GetType(); ok {
+	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(ticketnotification.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := tnc.mutation.Channel(); ok {
+	if value, ok := _c.mutation.Channel(); ok {
 		_spec.SetField(ticketnotification.FieldChannel, field.TypeString, value)
 		_node.Channel = value
 	}
-	if value, ok := tnc.mutation.Content(); ok {
+	if value, ok := _c.mutation.Content(); ok {
 		_spec.SetField(ticketnotification.FieldContent, field.TypeString, value)
 		_node.Content = value
 	}
-	if value, ok := tnc.mutation.SentAt(); ok {
+	if value, ok := _c.mutation.SentAt(); ok {
 		_spec.SetField(ticketnotification.FieldSentAt, field.TypeTime, value)
 		_node.SentAt = value
 	}
-	if value, ok := tnc.mutation.ReadAt(); ok {
+	if value, ok := _c.mutation.ReadAt(); ok {
 		_spec.SetField(ticketnotification.FieldReadAt, field.TypeTime, value)
 		_node.ReadAt = value
 	}
-	if value, ok := tnc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(ticketnotification.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := tnc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticketnotification.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := tnc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketnotification.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := tnc.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -313,7 +313,7 @@ func (tnc *TicketNotificationCreate) createSpec() (*TicketNotification, *sqlgrap
 		_node.TicketID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tnc.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -341,16 +341,16 @@ type TicketNotificationCreateBulk struct {
 }
 
 // Save creates the TicketNotification entities in the database.
-func (tncb *TicketNotificationCreateBulk) Save(ctx context.Context) ([]*TicketNotification, error) {
-	if tncb.err != nil {
-		return nil, tncb.err
+func (_c *TicketNotificationCreateBulk) Save(ctx context.Context) ([]*TicketNotification, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tncb.builders))
-	nodes := make([]*TicketNotification, len(tncb.builders))
-	mutators := make([]Mutator, len(tncb.builders))
-	for i := range tncb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TicketNotification, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tncb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketNotificationMutation)
@@ -364,11 +364,11 @@ func (tncb *TicketNotificationCreateBulk) Save(ctx context.Context) ([]*TicketNo
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tncb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tncb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -392,7 +392,7 @@ func (tncb *TicketNotificationCreateBulk) Save(ctx context.Context) ([]*TicketNo
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tncb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -400,8 +400,8 @@ func (tncb *TicketNotificationCreateBulk) Save(ctx context.Context) ([]*TicketNo
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tncb *TicketNotificationCreateBulk) SaveX(ctx context.Context) []*TicketNotification {
-	v, err := tncb.Save(ctx)
+func (_c *TicketNotificationCreateBulk) SaveX(ctx context.Context) []*TicketNotification {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -409,14 +409,14 @@ func (tncb *TicketNotificationCreateBulk) SaveX(ctx context.Context) []*TicketNo
 }
 
 // Exec executes the query.
-func (tncb *TicketNotificationCreateBulk) Exec(ctx context.Context) error {
-	_, err := tncb.Save(ctx)
+func (_c *TicketNotificationCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tncb *TicketNotificationCreateBulk) ExecX(ctx context.Context) {
-	if err := tncb.Exec(ctx); err != nil {
+func (_c *TicketNotificationCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

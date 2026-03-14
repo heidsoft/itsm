@@ -120,7 +120,7 @@ func (*SLAViolation) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the SLAViolation fields.
-func (sv *SLAViolation) assignValues(columns []string, values []any) error {
+func (_m *SLAViolation) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -131,129 +131,129 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sv.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case slaviolation.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				sv.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case slaviolation.FieldSLADefinitionID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sla_definition_id", values[i])
 			} else if value.Valid {
-				sv.SLADefinitionID = int(value.Int64)
+				_m.SLADefinitionID = int(value.Int64)
 			}
 		case slaviolation.FieldTicketType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_type", values[i])
 			} else if value.Valid {
-				sv.TicketType = value.String
+				_m.TicketType = value.String
 			}
 		case slaviolation.FieldSLAName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field sla_name", values[i])
 			} else if value.Valid {
-				sv.SLAName = value.String
+				_m.SLAName = value.String
 			}
 		case slaviolation.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
 			} else if value.Valid {
-				sv.TicketID = int(value.Int64)
+				_m.TicketID = int(value.Int64)
 			}
 		case slaviolation.FieldViolationType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field violation_type", values[i])
 			} else if value.Valid {
-				sv.ViolationType = value.String
+				_m.ViolationType = value.String
 			}
 		case slaviolation.FieldViolationTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field violation_time", values[i])
 			} else if value.Valid {
-				sv.ViolationTime = value.Time
+				_m.ViolationTime = value.Time
 			}
 		case slaviolation.FieldViolationOccurredAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field violation_occurred_at", values[i])
 			} else if value.Valid {
-				sv.ViolationOccurredAt = value.Time
+				_m.ViolationOccurredAt = value.Time
 			}
 		case slaviolation.FieldExpectedTime:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field expected_time", values[i])
 			} else if value.Valid {
-				sv.ExpectedTime = int(value.Int64)
+				_m.ExpectedTime = int(value.Int64)
 			}
 		case slaviolation.FieldActualTime:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field actual_time", values[i])
 			} else if value.Valid {
-				sv.ActualTime = int(value.Int64)
+				_m.ActualTime = int(value.Int64)
 			}
 		case slaviolation.FieldOverdueMinutes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field overdue_minutes", values[i])
 			} else if value.Valid {
-				sv.OverdueMinutes = int(value.Int64)
+				_m.OverdueMinutes = int(value.Int64)
 			}
 		case slaviolation.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				sv.Status = value.String
+				_m.Status = value.String
 			}
 		case slaviolation.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				sv.Description = value.String
+				_m.Description = value.String
 			}
 		case slaviolation.FieldSeverity:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field severity", values[i])
 			} else if value.Valid {
-				sv.Severity = value.String
+				_m.Severity = value.String
 			}
 		case slaviolation.FieldIsResolved:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_resolved", values[i])
 			} else if value.Valid {
-				sv.IsResolved = value.Bool
+				_m.IsResolved = value.Bool
 			}
 		case slaviolation.FieldResolvedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
 			} else if value.Valid {
-				sv.ResolvedAt = value.Time
+				_m.ResolvedAt = value.Time
 			}
 		case slaviolation.FieldResolutionNotes:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resolution_notes", values[i])
 			} else if value.Valid {
-				sv.ResolutionNotes = value.String
+				_m.ResolutionNotes = value.String
 			}
 		case slaviolation.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sv.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case slaviolation.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sv.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case slaviolation.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				sv.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			sv.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -261,102 +261,102 @@ func (sv *SLAViolation) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the SLAViolation.
 // This includes values selected through modifiers, order, etc.
-func (sv *SLAViolation) Value(name string) (ent.Value, error) {
-	return sv.selectValues.Get(name)
+func (_m *SLAViolation) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QuerySLADefinition queries the "sla_definition" edge of the SLAViolation entity.
-func (sv *SLAViolation) QuerySLADefinition() *SLADefinitionQuery {
-	return NewSLAViolationClient(sv.config).QuerySLADefinition(sv)
+func (_m *SLAViolation) QuerySLADefinition() *SLADefinitionQuery {
+	return NewSLAViolationClient(_m.config).QuerySLADefinition(_m)
 }
 
 // QueryTicket queries the "ticket" edge of the SLAViolation entity.
-func (sv *SLAViolation) QueryTicket() *TicketQuery {
-	return NewSLAViolationClient(sv.config).QueryTicket(sv)
+func (_m *SLAViolation) QueryTicket() *TicketQuery {
+	return NewSLAViolationClient(_m.config).QueryTicket(_m)
 }
 
 // Update returns a builder for updating this SLAViolation.
 // Note that you need to call SLAViolation.Unwrap() before calling this method if this SLAViolation
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sv *SLAViolation) Update() *SLAViolationUpdateOne {
-	return NewSLAViolationClient(sv.config).UpdateOne(sv)
+func (_m *SLAViolation) Update() *SLAViolationUpdateOne {
+	return NewSLAViolationClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the SLAViolation entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sv *SLAViolation) Unwrap() *SLAViolation {
-	_tx, ok := sv.config.driver.(*txDriver)
+func (_m *SLAViolation) Unwrap() *SLAViolation {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: SLAViolation is not a transactional entity")
 	}
-	sv.config.driver = _tx.drv
-	return sv
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sv *SLAViolation) String() string {
+func (_m *SLAViolation) String() string {
 	var builder strings.Builder
 	builder.WriteString("SLAViolation(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sv.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", sv.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("sla_definition_id=")
-	builder.WriteString(fmt.Sprintf("%v", sv.SLADefinitionID))
+	builder.WriteString(fmt.Sprintf("%v", _m.SLADefinitionID))
 	builder.WriteString(", ")
 	builder.WriteString("ticket_type=")
-	builder.WriteString(sv.TicketType)
+	builder.WriteString(_m.TicketType)
 	builder.WriteString(", ")
 	builder.WriteString("sla_name=")
-	builder.WriteString(sv.SLAName)
+	builder.WriteString(_m.SLAName)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", sv.TicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
 	builder.WriteString("violation_type=")
-	builder.WriteString(sv.ViolationType)
+	builder.WriteString(_m.ViolationType)
 	builder.WriteString(", ")
 	builder.WriteString("violation_time=")
-	builder.WriteString(sv.ViolationTime.Format(time.ANSIC))
+	builder.WriteString(_m.ViolationTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("violation_occurred_at=")
-	builder.WriteString(sv.ViolationOccurredAt.Format(time.ANSIC))
+	builder.WriteString(_m.ViolationOccurredAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("expected_time=")
-	builder.WriteString(fmt.Sprintf("%v", sv.ExpectedTime))
+	builder.WriteString(fmt.Sprintf("%v", _m.ExpectedTime))
 	builder.WriteString(", ")
 	builder.WriteString("actual_time=")
-	builder.WriteString(fmt.Sprintf("%v", sv.ActualTime))
+	builder.WriteString(fmt.Sprintf("%v", _m.ActualTime))
 	builder.WriteString(", ")
 	builder.WriteString("overdue_minutes=")
-	builder.WriteString(fmt.Sprintf("%v", sv.OverdueMinutes))
+	builder.WriteString(fmt.Sprintf("%v", _m.OverdueMinutes))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(sv.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(sv.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
-	builder.WriteString(sv.Severity)
+	builder.WriteString(_m.Severity)
 	builder.WriteString(", ")
 	builder.WriteString("is_resolved=")
-	builder.WriteString(fmt.Sprintf("%v", sv.IsResolved))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsResolved))
 	builder.WriteString(", ")
 	builder.WriteString("resolved_at=")
-	builder.WriteString(sv.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ResolvedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("resolution_notes=")
-	builder.WriteString(sv.ResolutionNotes)
+	builder.WriteString(_m.ResolutionNotes)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sv.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sv.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(sv.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }
