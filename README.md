@@ -1,17 +1,19 @@
-# <div align="center">🤖 AI-Driven ITSM</div>
-
 <div align="center">
 
-# 企业级IT服务管理平台
+# 🤖 AI-Driven ITSM
+
+## 企业级IT服务管理平台
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=flat&logo=go)](https://golang.org)
 [![Next.js](https://img.shields.io/badge/Next.js-15.5-000000?style=flat&logo=nextdotjs)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat&logo=typescript)](https://typescriptlang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-336791?style=flat&logo=postgresql)](https://postgresql.org)
-[![License](https://img.shields.io/badge/License-MIT-yellowgreen?style=flat)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache_2.0-yellowgreen?style=flat)](LICENSE)
 [![AI Powered](https://img.shields.io/badge/AI-Powered-FF6B6B?style=flat&logo=openai)](https://openai.com)
 
 **🚀 基于 ITIL 最佳实践 | AI 智能驱动 | 开源免费**
+
+**[🌐 官网](https://cloudmesh.top/)**
 
 [English](./README_EN.md) · [快速开始](#快速开始) · [功能特性](#核心功能) · [AI 智能](#ai-智能功能) · [贡献代码](#参与贡献)
 
@@ -51,8 +53,8 @@ make dev-up
 
 # 访问应用
 # 🌐 前端:    http://localhost:3000
-# 🔧 后端:    http://localhost:8090
-# 📚 API文档: http://localhost:8090/swagger
+# 🔧 后端:    http://localhost:8080
+# 📚 API文档: http://localhost:8080/swagger
 ```
 
 > **👤 首次登录**: 用户名 `admin`，密码 `admin123`
@@ -215,26 +217,6 @@ npm run dev
 
 ---
 
-## 📸 系统预览
-
-<div align="center">
-
-| 登录页面 | 仪表盘 | 工单管理 |
-|:---:|:---:|:---:|
-| ![登录](docs/images/login.png) | ![仪表盘](docs/images/dashboard.png) | ![工单](docs/images/tickets.png) |
-
-| BPMN 设计器 | BPMN 监控 | SLA 监控 |
-|:---:|:---:|:---:|
-| ![设计器](docs/images/workflow-designer.png) | ![监控](docs/images/workflow-dashboard.png) | ![SLA](docs/images/sla-monitor.png) |
-
-| 知识库 | MSP 管理 | 资产管理 |
-|:---:|:---:|:---:|
-| ![知识库](docs/images/knowledge.png) | ![MSP](docs/images/msp-management.png) | ![资产](docs/images/assets.png) |
-
-</div>
-
----
-
 ## 📚 文档导航
 
 | 📖 [开发指南](./docs/DEVELOPMENT.md) | 🚀 [部署指南](./DEPLOYMENT.md) | ⚙️ [配置参考](./docs/CONFIGURATION.md) |
@@ -245,9 +227,9 @@ npm run dev
 |:---:|:---:|:---:|
 | 迁移与备份 | 日志与监控 | 权限与审计 |
 
-| 🛠️ [自动化测试](./itsm-frontend/tests/e2e) | 📸 [截图工具](./itsm-frontend/screenshot.js) |
-|:---:|:---:|
-| E2E 测试 | 自动生成页面截图 |
+| 🛠️ [自动化测试](./itsm-frontend/tests/e2e) |
+|:---:|
+| E2E 测试 |
 
 ---
 
@@ -255,13 +237,9 @@ npm run dev
 
 ```bash
 # Docker 开发环境
-make dev-up          # 启动所有服务
+make dev-up          # 启动所有服务 (前端:3000 | 后端:8080)
 make dev-down        # 停止服务
 make dev-logs        # 查看日志
-
-# 本地开发
-cd itsm-backend && go run main.go   # 后端
-cd itsm-frontend && npm run dev     # 前端
 
 # 测试
 cd itsm-frontend && npm run test:e2e   # E2E 测试
@@ -297,7 +275,9 @@ git push origin feature/amazing-feature
 
 ## 📄 许可证
 
-MIT License - 自由使用与商业化
+Apache License 2.0 - 开源免费，企业级商用首选
+
+> **商业化授权声明**: 如需将本项目用于商业产品，请访问 [官网](https://cloudmesh.top/) 获取商业授权。未经授权的商业使用将视为侵权行为。
 
 ---
 
