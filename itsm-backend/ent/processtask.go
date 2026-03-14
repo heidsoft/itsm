@@ -115,7 +115,7 @@ func (*ProcessTask) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ProcessTask fields.
-func (pt *ProcessTask) assignValues(columns []string, values []any) error {
+func (_m *ProcessTask) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -126,114 +126,114 @@ func (pt *ProcessTask) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pt.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case processtask.FieldTaskID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_id", values[i])
 			} else if value.Valid {
-				pt.TaskID = value.String
+				_m.TaskID = value.String
 			}
 		case processtask.FieldProcessInstanceID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field process_instance_id", values[i])
 			} else if value.Valid {
-				pt.ProcessInstanceID = int(value.Int64)
+				_m.ProcessInstanceID = int(value.Int64)
 			}
 		case processtask.FieldProcessDefinitionKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field process_definition_key", values[i])
 			} else if value.Valid {
-				pt.ProcessDefinitionKey = value.String
+				_m.ProcessDefinitionKey = value.String
 			}
 		case processtask.FieldTaskDefinitionKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_definition_key", values[i])
 			} else if value.Valid {
-				pt.TaskDefinitionKey = value.String
+				_m.TaskDefinitionKey = value.String
 			}
 		case processtask.FieldTaskName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_name", values[i])
 			} else if value.Valid {
-				pt.TaskName = value.String
+				_m.TaskName = value.String
 			}
 		case processtask.FieldTaskType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field task_type", values[i])
 			} else if value.Valid {
-				pt.TaskType = value.String
+				_m.TaskType = value.String
 			}
 		case processtask.FieldAssignee:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field assignee", values[i])
 			} else if value.Valid {
-				pt.Assignee = value.String
+				_m.Assignee = value.String
 			}
 		case processtask.FieldCandidateUsers:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field candidate_users", values[i])
 			} else if value.Valid {
-				pt.CandidateUsers = value.String
+				_m.CandidateUsers = value.String
 			}
 		case processtask.FieldCandidateGroups:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field candidate_groups", values[i])
 			} else if value.Valid {
-				pt.CandidateGroups = value.String
+				_m.CandidateGroups = value.String
 			}
 		case processtask.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				pt.Status = value.String
+				_m.Status = value.String
 			}
 		case processtask.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				pt.Priority = value.String
+				_m.Priority = value.String
 			}
 		case processtask.FieldDueDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field due_date", values[i])
 			} else if value.Valid {
-				pt.DueDate = value.Time
+				_m.DueDate = value.Time
 			}
 		case processtask.FieldCreatedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_time", values[i])
 			} else if value.Valid {
-				pt.CreatedTime = value.Time
+				_m.CreatedTime = value.Time
 			}
 		case processtask.FieldAssignedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field assigned_time", values[i])
 			} else if value.Valid {
-				pt.AssignedTime = value.Time
+				_m.AssignedTime = value.Time
 			}
 		case processtask.FieldStartedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field started_time", values[i])
 			} else if value.Valid {
-				pt.StartedTime = value.Time
+				_m.StartedTime = value.Time
 			}
 		case processtask.FieldCompletedTime:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field completed_time", values[i])
 			} else if value.Valid {
-				pt.CompletedTime = value.Time
+				_m.CompletedTime = value.Time
 			}
 		case processtask.FieldFormKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field form_key", values[i])
 			} else if value.Valid {
-				pt.FormKey = value.String
+				_m.FormKey = value.String
 			}
 		case processtask.FieldTaskVariables:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field task_variables", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pt.TaskVariables); err != nil {
+				if err := json.Unmarshal(*value, &_m.TaskVariables); err != nil {
 					return fmt.Errorf("unmarshal field task_variables: %w", err)
 				}
 			}
@@ -241,40 +241,40 @@ func (pt *ProcessTask) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				pt.Description = value.String
+				_m.Description = value.String
 			}
 		case processtask.FieldParentTaskID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_task_id", values[i])
 			} else if value.Valid {
-				pt.ParentTaskID = value.String
+				_m.ParentTaskID = value.String
 			}
 		case processtask.FieldRootTaskID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field root_task_id", values[i])
 			} else if value.Valid {
-				pt.RootTaskID = value.String
+				_m.RootTaskID = value.String
 			}
 		case processtask.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pt.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case processtask.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pt.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case processtask.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pt.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			pt.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -282,109 +282,109 @@ func (pt *ProcessTask) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ProcessTask.
 // This includes values selected through modifiers, order, etc.
-func (pt *ProcessTask) Value(name string) (ent.Value, error) {
-	return pt.selectValues.Get(name)
+func (_m *ProcessTask) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProcessInstance queries the "process_instance" edge of the ProcessTask entity.
-func (pt *ProcessTask) QueryProcessInstance() *ProcessInstanceQuery {
-	return NewProcessTaskClient(pt.config).QueryProcessInstance(pt)
+func (_m *ProcessTask) QueryProcessInstance() *ProcessInstanceQuery {
+	return NewProcessTaskClient(_m.config).QueryProcessInstance(_m)
 }
 
 // Update returns a builder for updating this ProcessTask.
 // Note that you need to call ProcessTask.Unwrap() before calling this method if this ProcessTask
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pt *ProcessTask) Update() *ProcessTaskUpdateOne {
-	return NewProcessTaskClient(pt.config).UpdateOne(pt)
+func (_m *ProcessTask) Update() *ProcessTaskUpdateOne {
+	return NewProcessTaskClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ProcessTask entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pt *ProcessTask) Unwrap() *ProcessTask {
-	_tx, ok := pt.config.driver.(*txDriver)
+func (_m *ProcessTask) Unwrap() *ProcessTask {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ProcessTask is not a transactional entity")
 	}
-	pt.config.driver = _tx.drv
-	return pt
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pt *ProcessTask) String() string {
+func (_m *ProcessTask) String() string {
 	var builder strings.Builder
 	builder.WriteString("ProcessTask(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pt.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("task_id=")
-	builder.WriteString(pt.TaskID)
+	builder.WriteString(_m.TaskID)
 	builder.WriteString(", ")
 	builder.WriteString("process_instance_id=")
-	builder.WriteString(fmt.Sprintf("%v", pt.ProcessInstanceID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessInstanceID))
 	builder.WriteString(", ")
 	builder.WriteString("process_definition_key=")
-	builder.WriteString(pt.ProcessDefinitionKey)
+	builder.WriteString(_m.ProcessDefinitionKey)
 	builder.WriteString(", ")
 	builder.WriteString("task_definition_key=")
-	builder.WriteString(pt.TaskDefinitionKey)
+	builder.WriteString(_m.TaskDefinitionKey)
 	builder.WriteString(", ")
 	builder.WriteString("task_name=")
-	builder.WriteString(pt.TaskName)
+	builder.WriteString(_m.TaskName)
 	builder.WriteString(", ")
 	builder.WriteString("task_type=")
-	builder.WriteString(pt.TaskType)
+	builder.WriteString(_m.TaskType)
 	builder.WriteString(", ")
 	builder.WriteString("assignee=")
-	builder.WriteString(pt.Assignee)
+	builder.WriteString(_m.Assignee)
 	builder.WriteString(", ")
 	builder.WriteString("candidate_users=")
-	builder.WriteString(pt.CandidateUsers)
+	builder.WriteString(_m.CandidateUsers)
 	builder.WriteString(", ")
 	builder.WriteString("candidate_groups=")
-	builder.WriteString(pt.CandidateGroups)
+	builder.WriteString(_m.CandidateGroups)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(pt.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(pt.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("due_date=")
-	builder.WriteString(pt.DueDate.Format(time.ANSIC))
+	builder.WriteString(_m.DueDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("created_time=")
-	builder.WriteString(pt.CreatedTime.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("assigned_time=")
-	builder.WriteString(pt.AssignedTime.Format(time.ANSIC))
+	builder.WriteString(_m.AssignedTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("started_time=")
-	builder.WriteString(pt.StartedTime.Format(time.ANSIC))
+	builder.WriteString(_m.StartedTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("completed_time=")
-	builder.WriteString(pt.CompletedTime.Format(time.ANSIC))
+	builder.WriteString(_m.CompletedTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("form_key=")
-	builder.WriteString(pt.FormKey)
+	builder.WriteString(_m.FormKey)
 	builder.WriteString(", ")
 	builder.WriteString("task_variables=")
-	builder.WriteString(fmt.Sprintf("%v", pt.TaskVariables))
+	builder.WriteString(fmt.Sprintf("%v", _m.TaskVariables))
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(pt.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("parent_task_id=")
-	builder.WriteString(pt.ParentTaskID)
+	builder.WriteString(_m.ParentTaskID)
 	builder.WriteString(", ")
 	builder.WriteString("root_task_id=")
-	builder.WriteString(pt.RootTaskID)
+	builder.WriteString(_m.RootTaskID)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pt.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pt.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pt.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

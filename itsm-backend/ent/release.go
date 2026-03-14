@@ -97,7 +97,7 @@ func (*Release) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Release fields.
-func (r *Release) assignValues(columns []string, values []any) error {
+func (_m *Release) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -108,122 +108,122 @@ func (r *Release) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			r.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case release.FieldReleaseNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field release_number", values[i])
 			} else if value.Valid {
-				r.ReleaseNumber = value.String
+				_m.ReleaseNumber = value.String
 			}
 		case release.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				r.Title = value.String
+				_m.Title = value.String
 			}
 		case release.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				r.Description = value.String
+				_m.Description = value.String
 			}
 		case release.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				r.Type = value.String
+				_m.Type = value.String
 			}
 		case release.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				r.Status = value.String
+				_m.Status = value.String
 			}
 		case release.FieldSeverity:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field severity", values[i])
 			} else if value.Valid {
-				r.Severity = value.String
+				_m.Severity = value.String
 			}
 		case release.FieldEnvironment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field environment", values[i])
 			} else if value.Valid {
-				r.Environment = value.String
+				_m.Environment = value.String
 			}
 		case release.FieldChangeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field change_id", values[i])
 			} else if value.Valid {
-				r.ChangeID = new(int)
-				*r.ChangeID = int(value.Int64)
+				_m.ChangeID = new(int)
+				*_m.ChangeID = int(value.Int64)
 			}
 		case release.FieldOwnerID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
 			} else if value.Valid {
-				r.OwnerID = new(int)
-				*r.OwnerID = int(value.Int64)
+				_m.OwnerID = new(int)
+				*_m.OwnerID = int(value.Int64)
 			}
 		case release.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				r.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case release.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				r.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case release.FieldPlannedReleaseDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field planned_release_date", values[i])
 			} else if value.Valid {
-				r.PlannedReleaseDate = value.Time
+				_m.PlannedReleaseDate = value.Time
 			}
 		case release.FieldActualReleaseDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field actual_release_date", values[i])
 			} else if value.Valid {
-				r.ActualReleaseDate = value.Time
+				_m.ActualReleaseDate = value.Time
 			}
 		case release.FieldPlannedStartDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field planned_start_date", values[i])
 			} else if value.Valid {
-				r.PlannedStartDate = value.Time
+				_m.PlannedStartDate = value.Time
 			}
 		case release.FieldPlannedEndDate:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field planned_end_date", values[i])
 			} else if value.Valid {
-				r.PlannedEndDate = value.Time
+				_m.PlannedEndDate = value.Time
 			}
 		case release.FieldReleaseNotes:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field release_notes", values[i])
 			} else if value.Valid {
-				r.ReleaseNotes = value.String
+				_m.ReleaseNotes = value.String
 			}
 		case release.FieldRollbackProcedure:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field rollback_procedure", values[i])
 			} else if value.Valid {
-				r.RollbackProcedure = value.String
+				_m.RollbackProcedure = value.String
 			}
 		case release.FieldValidationCriteria:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field validation_criteria", values[i])
 			} else if value.Valid {
-				r.ValidationCriteria = value.String
+				_m.ValidationCriteria = value.String
 			}
 		case release.FieldAffectedSystems:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field affected_systems", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &r.AffectedSystems); err != nil {
+				if err := json.Unmarshal(*value, &_m.AffectedSystems); err != nil {
 					return fmt.Errorf("unmarshal field affected_systems: %w", err)
 				}
 			}
@@ -231,7 +231,7 @@ func (r *Release) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field affected_components", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &r.AffectedComponents); err != nil {
+				if err := json.Unmarshal(*value, &_m.AffectedComponents); err != nil {
 					return fmt.Errorf("unmarshal field affected_components: %w", err)
 				}
 			}
@@ -239,7 +239,7 @@ func (r *Release) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field deployment_steps", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &r.DeploymentSteps); err != nil {
+				if err := json.Unmarshal(*value, &_m.DeploymentSteps); err != nil {
 					return fmt.Errorf("unmarshal field deployment_steps: %w", err)
 				}
 			}
@@ -247,7 +247,7 @@ func (r *Release) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &r.Tags); err != nil {
+				if err := json.Unmarshal(*value, &_m.Tags); err != nil {
 					return fmt.Errorf("unmarshal field tags: %w", err)
 				}
 			}
@@ -255,28 +255,28 @@ func (r *Release) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_emergency", values[i])
 			} else if value.Valid {
-				r.IsEmergency = value.Bool
+				_m.IsEmergency = value.Bool
 			}
 		case release.FieldRequiresApproval:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field requires_approval", values[i])
 			} else if value.Valid {
-				r.RequiresApproval = value.Bool
+				_m.RequiresApproval = value.Bool
 			}
 		case release.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				r.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case release.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				r.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			r.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -284,114 +284,114 @@ func (r *Release) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Release.
 // This includes values selected through modifiers, order, etc.
-func (r *Release) Value(name string) (ent.Value, error) {
-	return r.selectValues.Get(name)
+func (_m *Release) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this Release.
 // Note that you need to call Release.Unwrap() before calling this method if this Release
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (r *Release) Update() *ReleaseUpdateOne {
-	return NewReleaseClient(r.config).UpdateOne(r)
+func (_m *Release) Update() *ReleaseUpdateOne {
+	return NewReleaseClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Release entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (r *Release) Unwrap() *Release {
-	_tx, ok := r.config.driver.(*txDriver)
+func (_m *Release) Unwrap() *Release {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Release is not a transactional entity")
 	}
-	r.config.driver = _tx.drv
-	return r
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (r *Release) String() string {
+func (_m *Release) String() string {
 	var builder strings.Builder
 	builder.WriteString("Release(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", r.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("release_number=")
-	builder.WriteString(r.ReleaseNumber)
+	builder.WriteString(_m.ReleaseNumber)
 	builder.WriteString(", ")
 	builder.WriteString("title=")
-	builder.WriteString(r.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(r.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(r.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(r.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
-	builder.WriteString(r.Severity)
+	builder.WriteString(_m.Severity)
 	builder.WriteString(", ")
 	builder.WriteString("environment=")
-	builder.WriteString(r.Environment)
+	builder.WriteString(_m.Environment)
 	builder.WriteString(", ")
-	if v := r.ChangeID; v != nil {
+	if v := _m.ChangeID; v != nil {
 		builder.WriteString("change_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
-	if v := r.OwnerID; v != nil {
+	if v := _m.OwnerID; v != nil {
 		builder.WriteString("owner_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", r.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", r.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("planned_release_date=")
-	builder.WriteString(r.PlannedReleaseDate.Format(time.ANSIC))
+	builder.WriteString(_m.PlannedReleaseDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("actual_release_date=")
-	builder.WriteString(r.ActualReleaseDate.Format(time.ANSIC))
+	builder.WriteString(_m.ActualReleaseDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("planned_start_date=")
-	builder.WriteString(r.PlannedStartDate.Format(time.ANSIC))
+	builder.WriteString(_m.PlannedStartDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("planned_end_date=")
-	builder.WriteString(r.PlannedEndDate.Format(time.ANSIC))
+	builder.WriteString(_m.PlannedEndDate.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("release_notes=")
-	builder.WriteString(r.ReleaseNotes)
+	builder.WriteString(_m.ReleaseNotes)
 	builder.WriteString(", ")
 	builder.WriteString("rollback_procedure=")
-	builder.WriteString(r.RollbackProcedure)
+	builder.WriteString(_m.RollbackProcedure)
 	builder.WriteString(", ")
 	builder.WriteString("validation_criteria=")
-	builder.WriteString(r.ValidationCriteria)
+	builder.WriteString(_m.ValidationCriteria)
 	builder.WriteString(", ")
 	builder.WriteString("affected_systems=")
-	builder.WriteString(fmt.Sprintf("%v", r.AffectedSystems))
+	builder.WriteString(fmt.Sprintf("%v", _m.AffectedSystems))
 	builder.WriteString(", ")
 	builder.WriteString("affected_components=")
-	builder.WriteString(fmt.Sprintf("%v", r.AffectedComponents))
+	builder.WriteString(fmt.Sprintf("%v", _m.AffectedComponents))
 	builder.WriteString(", ")
 	builder.WriteString("deployment_steps=")
-	builder.WriteString(fmt.Sprintf("%v", r.DeploymentSteps))
+	builder.WriteString(fmt.Sprintf("%v", _m.DeploymentSteps))
 	builder.WriteString(", ")
 	builder.WriteString("tags=")
-	builder.WriteString(fmt.Sprintf("%v", r.Tags))
+	builder.WriteString(fmt.Sprintf("%v", _m.Tags))
 	builder.WriteString(", ")
 	builder.WriteString("is_emergency=")
-	builder.WriteString(fmt.Sprintf("%v", r.IsEmergency))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsEmergency))
 	builder.WriteString(", ")
 	builder.WriteString("requires_approval=")
-	builder.WriteString(fmt.Sprintf("%v", r.RequiresApproval))
+	builder.WriteString(fmt.Sprintf("%v", _m.RequiresApproval))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(r.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(r.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

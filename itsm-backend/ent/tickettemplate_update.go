@@ -25,214 +25,214 @@ type TicketTemplateUpdate struct {
 }
 
 // Where appends a list predicates to the TicketTemplateUpdate builder.
-func (ttu *TicketTemplateUpdate) Where(ps ...predicate.TicketTemplate) *TicketTemplateUpdate {
-	ttu.mutation.Where(ps...)
-	return ttu
+func (_u *TicketTemplateUpdate) Where(ps ...predicate.TicketTemplate) *TicketTemplateUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (ttu *TicketTemplateUpdate) SetName(s string) *TicketTemplateUpdate {
-	ttu.mutation.SetName(s)
-	return ttu
+func (_u *TicketTemplateUpdate) SetName(v string) *TicketTemplateUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ttu *TicketTemplateUpdate) SetNillableName(s *string) *TicketTemplateUpdate {
-	if s != nil {
-		ttu.SetName(*s)
+func (_u *TicketTemplateUpdate) SetNillableName(v *string) *TicketTemplateUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ttu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ttu *TicketTemplateUpdate) SetDescription(s string) *TicketTemplateUpdate {
-	ttu.mutation.SetDescription(s)
-	return ttu
+func (_u *TicketTemplateUpdate) SetDescription(v string) *TicketTemplateUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ttu *TicketTemplateUpdate) SetNillableDescription(s *string) *TicketTemplateUpdate {
-	if s != nil {
-		ttu.SetDescription(*s)
+func (_u *TicketTemplateUpdate) SetNillableDescription(v *string) *TicketTemplateUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ttu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ttu *TicketTemplateUpdate) ClearDescription() *TicketTemplateUpdate {
-	ttu.mutation.ClearDescription()
-	return ttu
+func (_u *TicketTemplateUpdate) ClearDescription() *TicketTemplateUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (ttu *TicketTemplateUpdate) SetCategory(s string) *TicketTemplateUpdate {
-	ttu.mutation.SetCategory(s)
-	return ttu
+func (_u *TicketTemplateUpdate) SetCategory(v string) *TicketTemplateUpdate {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (ttu *TicketTemplateUpdate) SetNillableCategory(s *string) *TicketTemplateUpdate {
-	if s != nil {
-		ttu.SetCategory(*s)
+func (_u *TicketTemplateUpdate) SetNillableCategory(v *string) *TicketTemplateUpdate {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return ttu
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (ttu *TicketTemplateUpdate) SetPriority(s string) *TicketTemplateUpdate {
-	ttu.mutation.SetPriority(s)
-	return ttu
+func (_u *TicketTemplateUpdate) SetPriority(v string) *TicketTemplateUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (ttu *TicketTemplateUpdate) SetNillablePriority(s *string) *TicketTemplateUpdate {
-	if s != nil {
-		ttu.SetPriority(*s)
+func (_u *TicketTemplateUpdate) SetNillablePriority(v *string) *TicketTemplateUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return ttu
+	return _u
 }
 
 // SetFormFields sets the "form_fields" field.
-func (ttu *TicketTemplateUpdate) SetFormFields(u []uint8) *TicketTemplateUpdate {
-	ttu.mutation.SetFormFields(u)
-	return ttu
+func (_u *TicketTemplateUpdate) SetFormFields(v []uint8) *TicketTemplateUpdate {
+	_u.mutation.SetFormFields(v)
+	return _u
 }
 
-// AppendFormFields appends u to the "form_fields" field.
-func (ttu *TicketTemplateUpdate) AppendFormFields(u []uint8) *TicketTemplateUpdate {
-	ttu.mutation.AppendFormFields(u)
-	return ttu
+// AppendFormFields appends value to the "form_fields" field.
+func (_u *TicketTemplateUpdate) AppendFormFields(v []uint8) *TicketTemplateUpdate {
+	_u.mutation.AppendFormFields(v)
+	return _u
 }
 
 // ClearFormFields clears the value of the "form_fields" field.
-func (ttu *TicketTemplateUpdate) ClearFormFields() *TicketTemplateUpdate {
-	ttu.mutation.ClearFormFields()
-	return ttu
+func (_u *TicketTemplateUpdate) ClearFormFields() *TicketTemplateUpdate {
+	_u.mutation.ClearFormFields()
+	return _u
 }
 
 // SetWorkflowSteps sets the "workflow_steps" field.
-func (ttu *TicketTemplateUpdate) SetWorkflowSteps(u []uint8) *TicketTemplateUpdate {
-	ttu.mutation.SetWorkflowSteps(u)
-	return ttu
+func (_u *TicketTemplateUpdate) SetWorkflowSteps(v []uint8) *TicketTemplateUpdate {
+	_u.mutation.SetWorkflowSteps(v)
+	return _u
 }
 
-// AppendWorkflowSteps appends u to the "workflow_steps" field.
-func (ttu *TicketTemplateUpdate) AppendWorkflowSteps(u []uint8) *TicketTemplateUpdate {
-	ttu.mutation.AppendWorkflowSteps(u)
-	return ttu
+// AppendWorkflowSteps appends value to the "workflow_steps" field.
+func (_u *TicketTemplateUpdate) AppendWorkflowSteps(v []uint8) *TicketTemplateUpdate {
+	_u.mutation.AppendWorkflowSteps(v)
+	return _u
 }
 
 // ClearWorkflowSteps clears the value of the "workflow_steps" field.
-func (ttu *TicketTemplateUpdate) ClearWorkflowSteps() *TicketTemplateUpdate {
-	ttu.mutation.ClearWorkflowSteps()
-	return ttu
+func (_u *TicketTemplateUpdate) ClearWorkflowSteps() *TicketTemplateUpdate {
+	_u.mutation.ClearWorkflowSteps()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (ttu *TicketTemplateUpdate) SetIsActive(b bool) *TicketTemplateUpdate {
-	ttu.mutation.SetIsActive(b)
-	return ttu
+func (_u *TicketTemplateUpdate) SetIsActive(v bool) *TicketTemplateUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ttu *TicketTemplateUpdate) SetNillableIsActive(b *bool) *TicketTemplateUpdate {
-	if b != nil {
-		ttu.SetIsActive(*b)
+func (_u *TicketTemplateUpdate) SetNillableIsActive(v *bool) *TicketTemplateUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return ttu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ttu *TicketTemplateUpdate) SetTenantID(i int) *TicketTemplateUpdate {
-	ttu.mutation.ResetTenantID()
-	ttu.mutation.SetTenantID(i)
-	return ttu
+func (_u *TicketTemplateUpdate) SetTenantID(v int) *TicketTemplateUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ttu *TicketTemplateUpdate) SetNillableTenantID(i *int) *TicketTemplateUpdate {
-	if i != nil {
-		ttu.SetTenantID(*i)
+func (_u *TicketTemplateUpdate) SetNillableTenantID(v *int) *TicketTemplateUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ttu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ttu *TicketTemplateUpdate) AddTenantID(i int) *TicketTemplateUpdate {
-	ttu.mutation.AddTenantID(i)
-	return ttu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketTemplateUpdate) AddTenantID(v int) *TicketTemplateUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ttu *TicketTemplateUpdate) SetCreatedAt(t time.Time) *TicketTemplateUpdate {
-	ttu.mutation.SetCreatedAt(t)
-	return ttu
+func (_u *TicketTemplateUpdate) SetCreatedAt(v time.Time) *TicketTemplateUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ttu *TicketTemplateUpdate) SetNillableCreatedAt(t *time.Time) *TicketTemplateUpdate {
-	if t != nil {
-		ttu.SetCreatedAt(*t)
+func (_u *TicketTemplateUpdate) SetNillableCreatedAt(v *time.Time) *TicketTemplateUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ttu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ttu *TicketTemplateUpdate) SetUpdatedAt(t time.Time) *TicketTemplateUpdate {
-	ttu.mutation.SetUpdatedAt(t)
-	return ttu
+func (_u *TicketTemplateUpdate) SetUpdatedAt(v time.Time) *TicketTemplateUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (ttu *TicketTemplateUpdate) AddTicketIDs(ids ...int) *TicketTemplateUpdate {
-	ttu.mutation.AddTicketIDs(ids...)
-	return ttu
+func (_u *TicketTemplateUpdate) AddTicketIDs(ids ...int) *TicketTemplateUpdate {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (ttu *TicketTemplateUpdate) AddTickets(t ...*Ticket) *TicketTemplateUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TicketTemplateUpdate) AddTickets(v ...*Ticket) *TicketTemplateUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ttu.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // Mutation returns the TicketTemplateMutation object of the builder.
-func (ttu *TicketTemplateUpdate) Mutation() *TicketTemplateMutation {
-	return ttu.mutation
+func (_u *TicketTemplateUpdate) Mutation() *TicketTemplateMutation {
+	return _u.mutation
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (ttu *TicketTemplateUpdate) ClearTickets() *TicketTemplateUpdate {
-	ttu.mutation.ClearTickets()
-	return ttu
+func (_u *TicketTemplateUpdate) ClearTickets() *TicketTemplateUpdate {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (ttu *TicketTemplateUpdate) RemoveTicketIDs(ids ...int) *TicketTemplateUpdate {
-	ttu.mutation.RemoveTicketIDs(ids...)
-	return ttu
+func (_u *TicketTemplateUpdate) RemoveTicketIDs(ids ...int) *TicketTemplateUpdate {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (ttu *TicketTemplateUpdate) RemoveTickets(t ...*Ticket) *TicketTemplateUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TicketTemplateUpdate) RemoveTickets(v ...*Ticket) *TicketTemplateUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ttu.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (ttu *TicketTemplateUpdate) Save(ctx context.Context) (int, error) {
-	ttu.defaults()
-	return withHooks(ctx, ttu.sqlSave, ttu.mutation, ttu.hooks)
+func (_u *TicketTemplateUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ttu *TicketTemplateUpdate) SaveX(ctx context.Context) int {
-	affected, err := ttu.Save(ctx)
+func (_u *TicketTemplateUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,39 +240,39 @@ func (ttu *TicketTemplateUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (ttu *TicketTemplateUpdate) Exec(ctx context.Context) error {
-	_, err := ttu.Save(ctx)
+func (_u *TicketTemplateUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttu *TicketTemplateUpdate) ExecX(ctx context.Context) {
-	if err := ttu.Exec(ctx); err != nil {
+func (_u *TicketTemplateUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ttu *TicketTemplateUpdate) defaults() {
-	if _, ok := ttu.mutation.UpdatedAt(); !ok {
+func (_u *TicketTemplateUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := tickettemplate.UpdateDefaultUpdatedAt()
-		ttu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ttu *TicketTemplateUpdate) check() error {
-	if v, ok := ttu.mutation.Name(); ok {
+func (_u *TicketTemplateUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := tickettemplate.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.name": %w`, err)}
 		}
 	}
-	if v, ok := ttu.mutation.Category(); ok {
+	if v, ok := _u.mutation.Category(); ok {
 		if err := tickettemplate.CategoryValidator(v); err != nil {
 			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.category": %w`, err)}
 		}
 	}
-	if v, ok := ttu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := tickettemplate.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.tenant_id": %w`, err)}
 		}
@@ -280,71 +280,71 @@ func (ttu *TicketTemplateUpdate) check() error {
 	return nil
 }
 
-func (ttu *TicketTemplateUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := ttu.check(); err != nil {
-		return n, err
+func (_u *TicketTemplateUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(tickettemplate.Table, tickettemplate.Columns, sqlgraph.NewFieldSpec(tickettemplate.FieldID, field.TypeInt))
-	if ps := ttu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ttu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(tickettemplate.FieldName, field.TypeString, value)
 	}
-	if value, ok := ttu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(tickettemplate.FieldDescription, field.TypeString, value)
 	}
-	if ttu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(tickettemplate.FieldDescription, field.TypeString)
 	}
-	if value, ok := ttu.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(tickettemplate.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := ttu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(tickettemplate.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := ttu.mutation.FormFields(); ok {
+	if value, ok := _u.mutation.FormFields(); ok {
 		_spec.SetField(tickettemplate.FieldFormFields, field.TypeJSON, value)
 	}
-	if value, ok := ttu.mutation.AppendedFormFields(); ok {
+	if value, ok := _u.mutation.AppendedFormFields(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, tickettemplate.FieldFormFields, value)
 		})
 	}
-	if ttu.mutation.FormFieldsCleared() {
+	if _u.mutation.FormFieldsCleared() {
 		_spec.ClearField(tickettemplate.FieldFormFields, field.TypeJSON)
 	}
-	if value, ok := ttu.mutation.WorkflowSteps(); ok {
+	if value, ok := _u.mutation.WorkflowSteps(); ok {
 		_spec.SetField(tickettemplate.FieldWorkflowSteps, field.TypeJSON, value)
 	}
-	if value, ok := ttu.mutation.AppendedWorkflowSteps(); ok {
+	if value, ok := _u.mutation.AppendedWorkflowSteps(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, tickettemplate.FieldWorkflowSteps, value)
 		})
 	}
-	if ttu.mutation.WorkflowStepsCleared() {
+	if _u.mutation.WorkflowStepsCleared() {
 		_spec.ClearField(tickettemplate.FieldWorkflowSteps, field.TypeJSON)
 	}
-	if value, ok := ttu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(tickettemplate.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := ttu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(tickettemplate.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ttu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(tickettemplate.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ttu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tickettemplate.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ttu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(tickettemplate.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ttu.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -357,7 +357,7 @@ func (ttu *TicketTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ttu.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !ttu.mutation.TicketsCleared() {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -373,7 +373,7 @@ func (ttu *TicketTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ttu.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -389,7 +389,7 @@ func (ttu *TicketTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, ttu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tickettemplate.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -397,8 +397,8 @@ func (ttu *TicketTemplateUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		return 0, err
 	}
-	ttu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // TicketTemplateUpdateOne is the builder for updating a single TicketTemplate entity.
@@ -410,221 +410,221 @@ type TicketTemplateUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (ttuo *TicketTemplateUpdateOne) SetName(s string) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetName(s)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetName(v string) *TicketTemplateUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (ttuo *TicketTemplateUpdateOne) SetNillableName(s *string) *TicketTemplateUpdateOne {
-	if s != nil {
-		ttuo.SetName(*s)
+func (_u *TicketTemplateUpdateOne) SetNillableName(v *string) *TicketTemplateUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return ttuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (ttuo *TicketTemplateUpdateOne) SetDescription(s string) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetDescription(s)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetDescription(v string) *TicketTemplateUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (ttuo *TicketTemplateUpdateOne) SetNillableDescription(s *string) *TicketTemplateUpdateOne {
-	if s != nil {
-		ttuo.SetDescription(*s)
+func (_u *TicketTemplateUpdateOne) SetNillableDescription(v *string) *TicketTemplateUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return ttuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (ttuo *TicketTemplateUpdateOne) ClearDescription() *TicketTemplateUpdateOne {
-	ttuo.mutation.ClearDescription()
-	return ttuo
+func (_u *TicketTemplateUpdateOne) ClearDescription() *TicketTemplateUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetCategory sets the "category" field.
-func (ttuo *TicketTemplateUpdateOne) SetCategory(s string) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetCategory(s)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetCategory(v string) *TicketTemplateUpdateOne {
+	_u.mutation.SetCategory(v)
+	return _u
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (ttuo *TicketTemplateUpdateOne) SetNillableCategory(s *string) *TicketTemplateUpdateOne {
-	if s != nil {
-		ttuo.SetCategory(*s)
+func (_u *TicketTemplateUpdateOne) SetNillableCategory(v *string) *TicketTemplateUpdateOne {
+	if v != nil {
+		_u.SetCategory(*v)
 	}
-	return ttuo
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (ttuo *TicketTemplateUpdateOne) SetPriority(s string) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetPriority(s)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetPriority(v string) *TicketTemplateUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (ttuo *TicketTemplateUpdateOne) SetNillablePriority(s *string) *TicketTemplateUpdateOne {
-	if s != nil {
-		ttuo.SetPriority(*s)
+func (_u *TicketTemplateUpdateOne) SetNillablePriority(v *string) *TicketTemplateUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return ttuo
+	return _u
 }
 
 // SetFormFields sets the "form_fields" field.
-func (ttuo *TicketTemplateUpdateOne) SetFormFields(u []uint8) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetFormFields(u)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetFormFields(v []uint8) *TicketTemplateUpdateOne {
+	_u.mutation.SetFormFields(v)
+	return _u
 }
 
-// AppendFormFields appends u to the "form_fields" field.
-func (ttuo *TicketTemplateUpdateOne) AppendFormFields(u []uint8) *TicketTemplateUpdateOne {
-	ttuo.mutation.AppendFormFields(u)
-	return ttuo
+// AppendFormFields appends value to the "form_fields" field.
+func (_u *TicketTemplateUpdateOne) AppendFormFields(v []uint8) *TicketTemplateUpdateOne {
+	_u.mutation.AppendFormFields(v)
+	return _u
 }
 
 // ClearFormFields clears the value of the "form_fields" field.
-func (ttuo *TicketTemplateUpdateOne) ClearFormFields() *TicketTemplateUpdateOne {
-	ttuo.mutation.ClearFormFields()
-	return ttuo
+func (_u *TicketTemplateUpdateOne) ClearFormFields() *TicketTemplateUpdateOne {
+	_u.mutation.ClearFormFields()
+	return _u
 }
 
 // SetWorkflowSteps sets the "workflow_steps" field.
-func (ttuo *TicketTemplateUpdateOne) SetWorkflowSteps(u []uint8) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetWorkflowSteps(u)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetWorkflowSteps(v []uint8) *TicketTemplateUpdateOne {
+	_u.mutation.SetWorkflowSteps(v)
+	return _u
 }
 
-// AppendWorkflowSteps appends u to the "workflow_steps" field.
-func (ttuo *TicketTemplateUpdateOne) AppendWorkflowSteps(u []uint8) *TicketTemplateUpdateOne {
-	ttuo.mutation.AppendWorkflowSteps(u)
-	return ttuo
+// AppendWorkflowSteps appends value to the "workflow_steps" field.
+func (_u *TicketTemplateUpdateOne) AppendWorkflowSteps(v []uint8) *TicketTemplateUpdateOne {
+	_u.mutation.AppendWorkflowSteps(v)
+	return _u
 }
 
 // ClearWorkflowSteps clears the value of the "workflow_steps" field.
-func (ttuo *TicketTemplateUpdateOne) ClearWorkflowSteps() *TicketTemplateUpdateOne {
-	ttuo.mutation.ClearWorkflowSteps()
-	return ttuo
+func (_u *TicketTemplateUpdateOne) ClearWorkflowSteps() *TicketTemplateUpdateOne {
+	_u.mutation.ClearWorkflowSteps()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (ttuo *TicketTemplateUpdateOne) SetIsActive(b bool) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetIsActive(b)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetIsActive(v bool) *TicketTemplateUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (ttuo *TicketTemplateUpdateOne) SetNillableIsActive(b *bool) *TicketTemplateUpdateOne {
-	if b != nil {
-		ttuo.SetIsActive(*b)
+func (_u *TicketTemplateUpdateOne) SetNillableIsActive(v *bool) *TicketTemplateUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return ttuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (ttuo *TicketTemplateUpdateOne) SetTenantID(i int) *TicketTemplateUpdateOne {
-	ttuo.mutation.ResetTenantID()
-	ttuo.mutation.SetTenantID(i)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetTenantID(v int) *TicketTemplateUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (ttuo *TicketTemplateUpdateOne) SetNillableTenantID(i *int) *TicketTemplateUpdateOne {
-	if i != nil {
-		ttuo.SetTenantID(*i)
+func (_u *TicketTemplateUpdateOne) SetNillableTenantID(v *int) *TicketTemplateUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return ttuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (ttuo *TicketTemplateUpdateOne) AddTenantID(i int) *TicketTemplateUpdateOne {
-	ttuo.mutation.AddTenantID(i)
-	return ttuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketTemplateUpdateOne) AddTenantID(v int) *TicketTemplateUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ttuo *TicketTemplateUpdateOne) SetCreatedAt(t time.Time) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetCreatedAt(t)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetCreatedAt(v time.Time) *TicketTemplateUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ttuo *TicketTemplateUpdateOne) SetNillableCreatedAt(t *time.Time) *TicketTemplateUpdateOne {
-	if t != nil {
-		ttuo.SetCreatedAt(*t)
+func (_u *TicketTemplateUpdateOne) SetNillableCreatedAt(v *time.Time) *TicketTemplateUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return ttuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (ttuo *TicketTemplateUpdateOne) SetUpdatedAt(t time.Time) *TicketTemplateUpdateOne {
-	ttuo.mutation.SetUpdatedAt(t)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) SetUpdatedAt(v time.Time) *TicketTemplateUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (ttuo *TicketTemplateUpdateOne) AddTicketIDs(ids ...int) *TicketTemplateUpdateOne {
-	ttuo.mutation.AddTicketIDs(ids...)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) AddTicketIDs(ids ...int) *TicketTemplateUpdateOne {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (ttuo *TicketTemplateUpdateOne) AddTickets(t ...*Ticket) *TicketTemplateUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TicketTemplateUpdateOne) AddTickets(v ...*Ticket) *TicketTemplateUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ttuo.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // Mutation returns the TicketTemplateMutation object of the builder.
-func (ttuo *TicketTemplateUpdateOne) Mutation() *TicketTemplateMutation {
-	return ttuo.mutation
+func (_u *TicketTemplateUpdateOne) Mutation() *TicketTemplateMutation {
+	return _u.mutation
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (ttuo *TicketTemplateUpdateOne) ClearTickets() *TicketTemplateUpdateOne {
-	ttuo.mutation.ClearTickets()
-	return ttuo
+func (_u *TicketTemplateUpdateOne) ClearTickets() *TicketTemplateUpdateOne {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (ttuo *TicketTemplateUpdateOne) RemoveTicketIDs(ids ...int) *TicketTemplateUpdateOne {
-	ttuo.mutation.RemoveTicketIDs(ids...)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) RemoveTicketIDs(ids ...int) *TicketTemplateUpdateOne {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (ttuo *TicketTemplateUpdateOne) RemoveTickets(t ...*Ticket) *TicketTemplateUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *TicketTemplateUpdateOne) RemoveTickets(v ...*Ticket) *TicketTemplateUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return ttuo.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // Where appends a list predicates to the TicketTemplateUpdate builder.
-func (ttuo *TicketTemplateUpdateOne) Where(ps ...predicate.TicketTemplate) *TicketTemplateUpdateOne {
-	ttuo.mutation.Where(ps...)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) Where(ps ...predicate.TicketTemplate) *TicketTemplateUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (ttuo *TicketTemplateUpdateOne) Select(field string, fields ...string) *TicketTemplateUpdateOne {
-	ttuo.fields = append([]string{field}, fields...)
-	return ttuo
+func (_u *TicketTemplateUpdateOne) Select(field string, fields ...string) *TicketTemplateUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated TicketTemplate entity.
-func (ttuo *TicketTemplateUpdateOne) Save(ctx context.Context) (*TicketTemplate, error) {
-	ttuo.defaults()
-	return withHooks(ctx, ttuo.sqlSave, ttuo.mutation, ttuo.hooks)
+func (_u *TicketTemplateUpdateOne) Save(ctx context.Context) (*TicketTemplate, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ttuo *TicketTemplateUpdateOne) SaveX(ctx context.Context) *TicketTemplate {
-	node, err := ttuo.Save(ctx)
+func (_u *TicketTemplateUpdateOne) SaveX(ctx context.Context) *TicketTemplate {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -632,39 +632,39 @@ func (ttuo *TicketTemplateUpdateOne) SaveX(ctx context.Context) *TicketTemplate 
 }
 
 // Exec executes the query on the entity.
-func (ttuo *TicketTemplateUpdateOne) Exec(ctx context.Context) error {
-	_, err := ttuo.Save(ctx)
+func (_u *TicketTemplateUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttuo *TicketTemplateUpdateOne) ExecX(ctx context.Context) {
-	if err := ttuo.Exec(ctx); err != nil {
+func (_u *TicketTemplateUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (ttuo *TicketTemplateUpdateOne) defaults() {
-	if _, ok := ttuo.mutation.UpdatedAt(); !ok {
+func (_u *TicketTemplateUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := tickettemplate.UpdateDefaultUpdatedAt()
-		ttuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (ttuo *TicketTemplateUpdateOne) check() error {
-	if v, ok := ttuo.mutation.Name(); ok {
+func (_u *TicketTemplateUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := tickettemplate.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.name": %w`, err)}
 		}
 	}
-	if v, ok := ttuo.mutation.Category(); ok {
+	if v, ok := _u.mutation.Category(); ok {
 		if err := tickettemplate.CategoryValidator(v); err != nil {
 			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.category": %w`, err)}
 		}
 	}
-	if v, ok := ttuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := tickettemplate.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketTemplate.tenant_id": %w`, err)}
 		}
@@ -672,17 +672,17 @@ func (ttuo *TicketTemplateUpdateOne) check() error {
 	return nil
 }
 
-func (ttuo *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *TicketTemplate, err error) {
-	if err := ttuo.check(); err != nil {
+func (_u *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *TicketTemplate, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(tickettemplate.Table, tickettemplate.Columns, sqlgraph.NewFieldSpec(tickettemplate.FieldID, field.TypeInt))
-	id, ok := ttuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TicketTemplate.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := ttuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, tickettemplate.FieldID)
 		for _, f := range fields {
@@ -694,66 +694,66 @@ func (ttuo *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Ticket
 			}
 		}
 	}
-	if ps := ttuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := ttuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(tickettemplate.FieldName, field.TypeString, value)
 	}
-	if value, ok := ttuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(tickettemplate.FieldDescription, field.TypeString, value)
 	}
-	if ttuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(tickettemplate.FieldDescription, field.TypeString)
 	}
-	if value, ok := ttuo.mutation.Category(); ok {
+	if value, ok := _u.mutation.Category(); ok {
 		_spec.SetField(tickettemplate.FieldCategory, field.TypeString, value)
 	}
-	if value, ok := ttuo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(tickettemplate.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := ttuo.mutation.FormFields(); ok {
+	if value, ok := _u.mutation.FormFields(); ok {
 		_spec.SetField(tickettemplate.FieldFormFields, field.TypeJSON, value)
 	}
-	if value, ok := ttuo.mutation.AppendedFormFields(); ok {
+	if value, ok := _u.mutation.AppendedFormFields(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, tickettemplate.FieldFormFields, value)
 		})
 	}
-	if ttuo.mutation.FormFieldsCleared() {
+	if _u.mutation.FormFieldsCleared() {
 		_spec.ClearField(tickettemplate.FieldFormFields, field.TypeJSON)
 	}
-	if value, ok := ttuo.mutation.WorkflowSteps(); ok {
+	if value, ok := _u.mutation.WorkflowSteps(); ok {
 		_spec.SetField(tickettemplate.FieldWorkflowSteps, field.TypeJSON, value)
 	}
-	if value, ok := ttuo.mutation.AppendedWorkflowSteps(); ok {
+	if value, ok := _u.mutation.AppendedWorkflowSteps(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, tickettemplate.FieldWorkflowSteps, value)
 		})
 	}
-	if ttuo.mutation.WorkflowStepsCleared() {
+	if _u.mutation.WorkflowStepsCleared() {
 		_spec.ClearField(tickettemplate.FieldWorkflowSteps, field.TypeJSON)
 	}
-	if value, ok := ttuo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(tickettemplate.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := ttuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(tickettemplate.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ttuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(tickettemplate.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := ttuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(tickettemplate.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := ttuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(tickettemplate.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if ttuo.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -766,7 +766,7 @@ func (ttuo *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Ticket
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ttuo.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !ttuo.mutation.TicketsCleared() {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -782,7 +782,7 @@ func (ttuo *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Ticket
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := ttuo.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -798,10 +798,10 @@ func (ttuo *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Ticket
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &TicketTemplate{config: ttuo.config}
+	_node = &TicketTemplate{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, ttuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tickettemplate.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -809,6 +809,6 @@ func (ttuo *TicketTemplateUpdateOne) sqlSave(ctx context.Context) (_node *Ticket
 		}
 		return nil, err
 	}
-	ttuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

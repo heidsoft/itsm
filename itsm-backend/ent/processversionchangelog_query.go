@@ -32,44 +32,44 @@ type ProcessVersionChangelogQuery struct {
 }
 
 // Where adds a new predicate for the ProcessVersionChangelogQuery builder.
-func (pvcq *ProcessVersionChangelogQuery) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogQuery {
-	pvcq.predicates = append(pvcq.predicates, ps...)
-	return pvcq
+func (_q *ProcessVersionChangelogQuery) Where(ps ...predicate.ProcessVersionChangelog) *ProcessVersionChangelogQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (pvcq *ProcessVersionChangelogQuery) Limit(limit int) *ProcessVersionChangelogQuery {
-	pvcq.ctx.Limit = &limit
-	return pvcq
+func (_q *ProcessVersionChangelogQuery) Limit(limit int) *ProcessVersionChangelogQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (pvcq *ProcessVersionChangelogQuery) Offset(offset int) *ProcessVersionChangelogQuery {
-	pvcq.ctx.Offset = &offset
-	return pvcq
+func (_q *ProcessVersionChangelogQuery) Offset(offset int) *ProcessVersionChangelogQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (pvcq *ProcessVersionChangelogQuery) Unique(unique bool) *ProcessVersionChangelogQuery {
-	pvcq.ctx.Unique = &unique
-	return pvcq
+func (_q *ProcessVersionChangelogQuery) Unique(unique bool) *ProcessVersionChangelogQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (pvcq *ProcessVersionChangelogQuery) Order(o ...processversionchangelog.OrderOption) *ProcessVersionChangelogQuery {
-	pvcq.order = append(pvcq.order, o...)
-	return pvcq
+func (_q *ProcessVersionChangelogQuery) Order(o ...processversionchangelog.OrderOption) *ProcessVersionChangelogQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryProcessDefinition chains the current query on the "process_definition" edge.
-func (pvcq *ProcessVersionChangelogQuery) QueryProcessDefinition() *ProcessDefinitionQuery {
-	query := (&ProcessDefinitionClient{config: pvcq.config}).Query()
+func (_q *ProcessVersionChangelogQuery) QueryProcessDefinition() *ProcessDefinitionQuery {
+	query := (&ProcessDefinitionClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pvcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := pvcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -78,20 +78,20 @@ func (pvcq *ProcessVersionChangelogQuery) QueryProcessDefinition() *ProcessDefin
 			sqlgraph.To(processdefinition.Table, processdefinition.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, processversionchangelog.ProcessDefinitionTable, processversionchangelog.ProcessDefinitionColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(pvcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryUser chains the current query on the "user" edge.
-func (pvcq *ProcessVersionChangelogQuery) QueryUser() *UserQuery {
-	query := (&UserClient{config: pvcq.config}).Query()
+func (_q *ProcessVersionChangelogQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := pvcq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := pvcq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -100,7 +100,7 @@ func (pvcq *ProcessVersionChangelogQuery) QueryUser() *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, processversionchangelog.UserTable, processversionchangelog.UserColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(pvcq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -108,8 +108,8 @@ func (pvcq *ProcessVersionChangelogQuery) QueryUser() *UserQuery {
 
 // First returns the first ProcessVersionChangelog entity from the query.
 // Returns a *NotFoundError when no ProcessVersionChangelog was found.
-func (pvcq *ProcessVersionChangelogQuery) First(ctx context.Context) (*ProcessVersionChangelog, error) {
-	nodes, err := pvcq.Limit(1).All(setContextOp(ctx, pvcq.ctx, ent.OpQueryFirst))
+func (_q *ProcessVersionChangelogQuery) First(ctx context.Context) (*ProcessVersionChangelog, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -120,8 +120,8 @@ func (pvcq *ProcessVersionChangelogQuery) First(ctx context.Context) (*ProcessVe
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) FirstX(ctx context.Context) *ProcessVersionChangelog {
-	node, err := pvcq.First(ctx)
+func (_q *ProcessVersionChangelogQuery) FirstX(ctx context.Context) *ProcessVersionChangelog {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,9 +130,9 @@ func (pvcq *ProcessVersionChangelogQuery) FirstX(ctx context.Context) *ProcessVe
 
 // FirstID returns the first ProcessVersionChangelog ID from the query.
 // Returns a *NotFoundError when no ProcessVersionChangelog ID was found.
-func (pvcq *ProcessVersionChangelogQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ProcessVersionChangelogQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = pvcq.Limit(1).IDs(setContextOp(ctx, pvcq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -143,8 +143,8 @@ func (pvcq *ProcessVersionChangelogQuery) FirstID(ctx context.Context) (id int, 
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) FirstIDX(ctx context.Context) int {
-	id, err := pvcq.FirstID(ctx)
+func (_q *ProcessVersionChangelogQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -154,8 +154,8 @@ func (pvcq *ProcessVersionChangelogQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ProcessVersionChangelog entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ProcessVersionChangelog entity is found.
 // Returns a *NotFoundError when no ProcessVersionChangelog entities are found.
-func (pvcq *ProcessVersionChangelogQuery) Only(ctx context.Context) (*ProcessVersionChangelog, error) {
-	nodes, err := pvcq.Limit(2).All(setContextOp(ctx, pvcq.ctx, ent.OpQueryOnly))
+func (_q *ProcessVersionChangelogQuery) Only(ctx context.Context) (*ProcessVersionChangelog, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +170,8 @@ func (pvcq *ProcessVersionChangelogQuery) Only(ctx context.Context) (*ProcessVer
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) OnlyX(ctx context.Context) *ProcessVersionChangelog {
-	node, err := pvcq.Only(ctx)
+func (_q *ProcessVersionChangelogQuery) OnlyX(ctx context.Context) *ProcessVersionChangelog {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -181,9 +181,9 @@ func (pvcq *ProcessVersionChangelogQuery) OnlyX(ctx context.Context) *ProcessVer
 // OnlyID is like Only, but returns the only ProcessVersionChangelog ID in the query.
 // Returns a *NotSingularError when more than one ProcessVersionChangelog ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (pvcq *ProcessVersionChangelogQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ProcessVersionChangelogQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = pvcq.Limit(2).IDs(setContextOp(ctx, pvcq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -198,8 +198,8 @@ func (pvcq *ProcessVersionChangelogQuery) OnlyID(ctx context.Context) (id int, e
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) OnlyIDX(ctx context.Context) int {
-	id, err := pvcq.OnlyID(ctx)
+func (_q *ProcessVersionChangelogQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,18 +207,18 @@ func (pvcq *ProcessVersionChangelogQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ProcessVersionChangelogs.
-func (pvcq *ProcessVersionChangelogQuery) All(ctx context.Context) ([]*ProcessVersionChangelog, error) {
-	ctx = setContextOp(ctx, pvcq.ctx, ent.OpQueryAll)
-	if err := pvcq.prepareQuery(ctx); err != nil {
+func (_q *ProcessVersionChangelogQuery) All(ctx context.Context) ([]*ProcessVersionChangelog, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ProcessVersionChangelog, *ProcessVersionChangelogQuery]()
-	return withInterceptors[[]*ProcessVersionChangelog](ctx, pvcq, qr, pvcq.inters)
+	return withInterceptors[[]*ProcessVersionChangelog](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) AllX(ctx context.Context) []*ProcessVersionChangelog {
-	nodes, err := pvcq.All(ctx)
+func (_q *ProcessVersionChangelogQuery) AllX(ctx context.Context) []*ProcessVersionChangelog {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -226,20 +226,20 @@ func (pvcq *ProcessVersionChangelogQuery) AllX(ctx context.Context) []*ProcessVe
 }
 
 // IDs executes the query and returns a list of ProcessVersionChangelog IDs.
-func (pvcq *ProcessVersionChangelogQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if pvcq.ctx.Unique == nil && pvcq.path != nil {
-		pvcq.Unique(true)
+func (_q *ProcessVersionChangelogQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, pvcq.ctx, ent.OpQueryIDs)
-	if err = pvcq.Select(processversionchangelog.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(processversionchangelog.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) IDsX(ctx context.Context) []int {
-	ids, err := pvcq.IDs(ctx)
+func (_q *ProcessVersionChangelogQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -247,17 +247,17 @@ func (pvcq *ProcessVersionChangelogQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (pvcq *ProcessVersionChangelogQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, pvcq.ctx, ent.OpQueryCount)
-	if err := pvcq.prepareQuery(ctx); err != nil {
+func (_q *ProcessVersionChangelogQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, pvcq, querierCount[*ProcessVersionChangelogQuery](), pvcq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ProcessVersionChangelogQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) CountX(ctx context.Context) int {
-	count, err := pvcq.Count(ctx)
+func (_q *ProcessVersionChangelogQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,9 +265,9 @@ func (pvcq *ProcessVersionChangelogQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (pvcq *ProcessVersionChangelogQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, pvcq.ctx, ent.OpQueryExist)
-	switch _, err := pvcq.FirstID(ctx); {
+func (_q *ProcessVersionChangelogQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -278,8 +278,8 @@ func (pvcq *ProcessVersionChangelogQuery) Exist(ctx context.Context) (bool, erro
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (pvcq *ProcessVersionChangelogQuery) ExistX(ctx context.Context) bool {
-	exist, err := pvcq.Exist(ctx)
+func (_q *ProcessVersionChangelogQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -288,44 +288,44 @@ func (pvcq *ProcessVersionChangelogQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ProcessVersionChangelogQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (pvcq *ProcessVersionChangelogQuery) Clone() *ProcessVersionChangelogQuery {
-	if pvcq == nil {
+func (_q *ProcessVersionChangelogQuery) Clone() *ProcessVersionChangelogQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ProcessVersionChangelogQuery{
-		config:                pvcq.config,
-		ctx:                   pvcq.ctx.Clone(),
-		order:                 append([]processversionchangelog.OrderOption{}, pvcq.order...),
-		inters:                append([]Interceptor{}, pvcq.inters...),
-		predicates:            append([]predicate.ProcessVersionChangelog{}, pvcq.predicates...),
-		withProcessDefinition: pvcq.withProcessDefinition.Clone(),
-		withUser:              pvcq.withUser.Clone(),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]processversionchangelog.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.ProcessVersionChangelog{}, _q.predicates...),
+		withProcessDefinition: _q.withProcessDefinition.Clone(),
+		withUser:              _q.withUser.Clone(),
 		// clone intermediate query.
-		sql:  pvcq.sql.Clone(),
-		path: pvcq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithProcessDefinition tells the query-builder to eager-load the nodes that are connected to
 // the "process_definition" edge. The optional arguments are used to configure the query builder of the edge.
-func (pvcq *ProcessVersionChangelogQuery) WithProcessDefinition(opts ...func(*ProcessDefinitionQuery)) *ProcessVersionChangelogQuery {
-	query := (&ProcessDefinitionClient{config: pvcq.config}).Query()
+func (_q *ProcessVersionChangelogQuery) WithProcessDefinition(opts ...func(*ProcessDefinitionQuery)) *ProcessVersionChangelogQuery {
+	query := (&ProcessDefinitionClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pvcq.withProcessDefinition = query
-	return pvcq
+	_q.withProcessDefinition = query
+	return _q
 }
 
 // WithUser tells the query-builder to eager-load the nodes that are connected to
 // the "user" edge. The optional arguments are used to configure the query builder of the edge.
-func (pvcq *ProcessVersionChangelogQuery) WithUser(opts ...func(*UserQuery)) *ProcessVersionChangelogQuery {
-	query := (&UserClient{config: pvcq.config}).Query()
+func (_q *ProcessVersionChangelogQuery) WithUser(opts ...func(*UserQuery)) *ProcessVersionChangelogQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	pvcq.withUser = query
-	return pvcq
+	_q.withUser = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -342,10 +342,10 @@ func (pvcq *ProcessVersionChangelogQuery) WithUser(opts ...func(*UserQuery)) *Pr
 //		GroupBy(processversionchangelog.FieldProcessDefinitionID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (pvcq *ProcessVersionChangelogQuery) GroupBy(field string, fields ...string) *ProcessVersionChangelogGroupBy {
-	pvcq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ProcessVersionChangelogGroupBy{build: pvcq}
-	grbuild.flds = &pvcq.ctx.Fields
+func (_q *ProcessVersionChangelogQuery) GroupBy(field string, fields ...string) *ProcessVersionChangelogGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ProcessVersionChangelogGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = processversionchangelog.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -363,59 +363,59 @@ func (pvcq *ProcessVersionChangelogQuery) GroupBy(field string, fields ...string
 //	client.ProcessVersionChangelog.Query().
 //		Select(processversionchangelog.FieldProcessDefinitionID).
 //		Scan(ctx, &v)
-func (pvcq *ProcessVersionChangelogQuery) Select(fields ...string) *ProcessVersionChangelogSelect {
-	pvcq.ctx.Fields = append(pvcq.ctx.Fields, fields...)
-	sbuild := &ProcessVersionChangelogSelect{ProcessVersionChangelogQuery: pvcq}
+func (_q *ProcessVersionChangelogQuery) Select(fields ...string) *ProcessVersionChangelogSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ProcessVersionChangelogSelect{ProcessVersionChangelogQuery: _q}
 	sbuild.label = processversionchangelog.Label
-	sbuild.flds, sbuild.scan = &pvcq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ProcessVersionChangelogSelect configured with the given aggregations.
-func (pvcq *ProcessVersionChangelogQuery) Aggregate(fns ...AggregateFunc) *ProcessVersionChangelogSelect {
-	return pvcq.Select().Aggregate(fns...)
+func (_q *ProcessVersionChangelogQuery) Aggregate(fns ...AggregateFunc) *ProcessVersionChangelogSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (pvcq *ProcessVersionChangelogQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range pvcq.inters {
+func (_q *ProcessVersionChangelogQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, pvcq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range pvcq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !processversionchangelog.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if pvcq.path != nil {
-		prev, err := pvcq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		pvcq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (pvcq *ProcessVersionChangelogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessVersionChangelog, error) {
+func (_q *ProcessVersionChangelogQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ProcessVersionChangelog, error) {
 	var (
 		nodes       = []*ProcessVersionChangelog{}
-		_spec       = pvcq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [2]bool{
-			pvcq.withProcessDefinition != nil,
-			pvcq.withUser != nil,
+			_q.withProcessDefinition != nil,
+			_q.withUser != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ProcessVersionChangelog).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ProcessVersionChangelog{config: pvcq.config}
+		node := &ProcessVersionChangelog{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -423,20 +423,20 @@ func (pvcq *ProcessVersionChangelogQuery) sqlAll(ctx context.Context, hooks ...q
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, pvcq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := pvcq.withProcessDefinition; query != nil {
-		if err := pvcq.loadProcessDefinition(ctx, query, nodes, nil,
+	if query := _q.withProcessDefinition; query != nil {
+		if err := _q.loadProcessDefinition(ctx, query, nodes, nil,
 			func(n *ProcessVersionChangelog, e *ProcessDefinition) { n.Edges.ProcessDefinition = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := pvcq.withUser; query != nil {
-		if err := pvcq.loadUser(ctx, query, nodes, nil,
+	if query := _q.withUser; query != nil {
+		if err := _q.loadUser(ctx, query, nodes, nil,
 			func(n *ProcessVersionChangelog, e *User) { n.Edges.User = e }); err != nil {
 			return nil, err
 		}
@@ -444,7 +444,7 @@ func (pvcq *ProcessVersionChangelogQuery) sqlAll(ctx context.Context, hooks ...q
 	return nodes, nil
 }
 
-func (pvcq *ProcessVersionChangelogQuery) loadProcessDefinition(ctx context.Context, query *ProcessDefinitionQuery, nodes []*ProcessVersionChangelog, init func(*ProcessVersionChangelog), assign func(*ProcessVersionChangelog, *ProcessDefinition)) error {
+func (_q *ProcessVersionChangelogQuery) loadProcessDefinition(ctx context.Context, query *ProcessDefinitionQuery, nodes []*ProcessVersionChangelog, init func(*ProcessVersionChangelog), assign func(*ProcessVersionChangelog, *ProcessDefinition)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ProcessVersionChangelog)
 	for i := range nodes {
@@ -473,7 +473,7 @@ func (pvcq *ProcessVersionChangelogQuery) loadProcessDefinition(ctx context.Cont
 	}
 	return nil
 }
-func (pvcq *ProcessVersionChangelogQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*ProcessVersionChangelog, init func(*ProcessVersionChangelog), assign func(*ProcessVersionChangelog, *User)) error {
+func (_q *ProcessVersionChangelogQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*ProcessVersionChangelog, init func(*ProcessVersionChangelog), assign func(*ProcessVersionChangelog, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ProcessVersionChangelog)
 	for i := range nodes {
@@ -503,24 +503,24 @@ func (pvcq *ProcessVersionChangelogQuery) loadUser(ctx context.Context, query *U
 	return nil
 }
 
-func (pvcq *ProcessVersionChangelogQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := pvcq.querySpec()
-	_spec.Node.Columns = pvcq.ctx.Fields
-	if len(pvcq.ctx.Fields) > 0 {
-		_spec.Unique = pvcq.ctx.Unique != nil && *pvcq.ctx.Unique
+func (_q *ProcessVersionChangelogQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, pvcq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (pvcq *ProcessVersionChangelogQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ProcessVersionChangelogQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(processversionchangelog.Table, processversionchangelog.Columns, sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt))
-	_spec.From = pvcq.sql
-	if unique := pvcq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if pvcq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := pvcq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, processversionchangelog.FieldID)
 		for i := range fields {
@@ -528,27 +528,27 @@ func (pvcq *ProcessVersionChangelogQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if pvcq.withProcessDefinition != nil {
+		if _q.withProcessDefinition != nil {
 			_spec.Node.AddColumnOnce(processversionchangelog.FieldProcessDefinitionID)
 		}
-		if pvcq.withUser != nil {
+		if _q.withUser != nil {
 			_spec.Node.AddColumnOnce(processversionchangelog.FieldCreatedBy)
 		}
 	}
-	if ps := pvcq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := pvcq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := pvcq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := pvcq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -558,33 +558,33 @@ func (pvcq *ProcessVersionChangelogQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (pvcq *ProcessVersionChangelogQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(pvcq.driver.Dialect())
+func (_q *ProcessVersionChangelogQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(processversionchangelog.Table)
-	columns := pvcq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = processversionchangelog.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if pvcq.sql != nil {
-		selector = pvcq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if pvcq.ctx.Unique != nil && *pvcq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range pvcq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range pvcq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := pvcq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := pvcq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -597,41 +597,41 @@ type ProcessVersionChangelogGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (pvcgb *ProcessVersionChangelogGroupBy) Aggregate(fns ...AggregateFunc) *ProcessVersionChangelogGroupBy {
-	pvcgb.fns = append(pvcgb.fns, fns...)
-	return pvcgb
+func (_g *ProcessVersionChangelogGroupBy) Aggregate(fns ...AggregateFunc) *ProcessVersionChangelogGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (pvcgb *ProcessVersionChangelogGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, pvcgb.build.ctx, ent.OpQueryGroupBy)
-	if err := pvcgb.build.prepareQuery(ctx); err != nil {
+func (_g *ProcessVersionChangelogGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ProcessVersionChangelogQuery, *ProcessVersionChangelogGroupBy](ctx, pvcgb.build, pvcgb, pvcgb.build.inters, v)
+	return scanWithInterceptors[*ProcessVersionChangelogQuery, *ProcessVersionChangelogGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (pvcgb *ProcessVersionChangelogGroupBy) sqlScan(ctx context.Context, root *ProcessVersionChangelogQuery, v any) error {
+func (_g *ProcessVersionChangelogGroupBy) sqlScan(ctx context.Context, root *ProcessVersionChangelogQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(pvcgb.fns))
-	for _, fn := range pvcgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*pvcgb.flds)+len(pvcgb.fns))
-		for _, f := range *pvcgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*pvcgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pvcgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -645,27 +645,27 @@ type ProcessVersionChangelogSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (pvcs *ProcessVersionChangelogSelect) Aggregate(fns ...AggregateFunc) *ProcessVersionChangelogSelect {
-	pvcs.fns = append(pvcs.fns, fns...)
-	return pvcs
+func (_s *ProcessVersionChangelogSelect) Aggregate(fns ...AggregateFunc) *ProcessVersionChangelogSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (pvcs *ProcessVersionChangelogSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, pvcs.ctx, ent.OpQuerySelect)
-	if err := pvcs.prepareQuery(ctx); err != nil {
+func (_s *ProcessVersionChangelogSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ProcessVersionChangelogQuery, *ProcessVersionChangelogSelect](ctx, pvcs.ProcessVersionChangelogQuery, pvcs, pvcs.inters, v)
+	return scanWithInterceptors[*ProcessVersionChangelogQuery, *ProcessVersionChangelogSelect](ctx, _s.ProcessVersionChangelogQuery, _s, _s.inters, v)
 }
 
-func (pvcs *ProcessVersionChangelogSelect) sqlScan(ctx context.Context, root *ProcessVersionChangelogQuery, v any) error {
+func (_s *ProcessVersionChangelogSelect) sqlScan(ctx context.Context, root *ProcessVersionChangelogQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(pvcs.fns))
-	for _, fn := range pvcs.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*pvcs.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -673,7 +673,7 @@ func (pvcs *ProcessVersionChangelogSelect) sqlScan(ctx context.Context, root *Pr
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := pvcs.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

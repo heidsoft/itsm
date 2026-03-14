@@ -91,7 +91,7 @@ func (*RootCauseAnalysis) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the RootCauseAnalysis fields.
-func (rca *RootCauseAnalysis) assignValues(columns []string, values []any) error {
+func (_m *RootCauseAnalysis) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -102,36 +102,36 @@ func (rca *RootCauseAnalysis) assignValues(columns []string, values []any) error
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			rca.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case rootcauseanalysis.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
 			} else if value.Valid {
-				rca.TicketID = int(value.Int64)
+				_m.TicketID = int(value.Int64)
 			}
 		case rootcauseanalysis.FieldTicketNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_number", values[i])
 			} else if value.Valid {
-				rca.TicketNumber = value.String
+				_m.TicketNumber = value.String
 			}
 		case rootcauseanalysis.FieldTicketTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_title", values[i])
 			} else if value.Valid {
-				rca.TicketTitle = value.String
+				_m.TicketTitle = value.String
 			}
 		case rootcauseanalysis.FieldAnalysisDate:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field analysis_date", values[i])
 			} else if value.Valid {
-				rca.AnalysisDate = value.String
+				_m.AnalysisDate = value.String
 			}
 		case rootcauseanalysis.FieldRootCauses:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field root_causes", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &rca.RootCauses); err != nil {
+				if err := json.Unmarshal(*value, &_m.RootCauses); err != nil {
 					return fmt.Errorf("unmarshal field root_causes: %w", err)
 				}
 			}
@@ -139,40 +139,40 @@ func (rca *RootCauseAnalysis) assignValues(columns []string, values []any) error
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field analysis_summary", values[i])
 			} else if value.Valid {
-				rca.AnalysisSummary = value.String
+				_m.AnalysisSummary = value.String
 			}
 		case rootcauseanalysis.FieldConfidenceScore:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field confidence_score", values[i])
 			} else if value.Valid {
-				rca.ConfidenceScore = value.Float64
+				_m.ConfidenceScore = value.Float64
 			}
 		case rootcauseanalysis.FieldAnalysisMethod:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field analysis_method", values[i])
 			} else if value.Valid {
-				rca.AnalysisMethod = value.String
+				_m.AnalysisMethod = value.String
 			}
 		case rootcauseanalysis.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				rca.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case rootcauseanalysis.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				rca.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case rootcauseanalysis.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				rca.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			rca.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -180,70 +180,70 @@ func (rca *RootCauseAnalysis) assignValues(columns []string, values []any) error
 
 // Value returns the ent.Value that was dynamically selected and assigned to the RootCauseAnalysis.
 // This includes values selected through modifiers, order, etc.
-func (rca *RootCauseAnalysis) Value(name string) (ent.Value, error) {
-	return rca.selectValues.Get(name)
+func (_m *RootCauseAnalysis) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTicket queries the "ticket" edge of the RootCauseAnalysis entity.
-func (rca *RootCauseAnalysis) QueryTicket() *TicketQuery {
-	return NewRootCauseAnalysisClient(rca.config).QueryTicket(rca)
+func (_m *RootCauseAnalysis) QueryTicket() *TicketQuery {
+	return NewRootCauseAnalysisClient(_m.config).QueryTicket(_m)
 }
 
 // Update returns a builder for updating this RootCauseAnalysis.
 // Note that you need to call RootCauseAnalysis.Unwrap() before calling this method if this RootCauseAnalysis
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (rca *RootCauseAnalysis) Update() *RootCauseAnalysisUpdateOne {
-	return NewRootCauseAnalysisClient(rca.config).UpdateOne(rca)
+func (_m *RootCauseAnalysis) Update() *RootCauseAnalysisUpdateOne {
+	return NewRootCauseAnalysisClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the RootCauseAnalysis entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (rca *RootCauseAnalysis) Unwrap() *RootCauseAnalysis {
-	_tx, ok := rca.config.driver.(*txDriver)
+func (_m *RootCauseAnalysis) Unwrap() *RootCauseAnalysis {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: RootCauseAnalysis is not a transactional entity")
 	}
-	rca.config.driver = _tx.drv
-	return rca
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (rca *RootCauseAnalysis) String() string {
+func (_m *RootCauseAnalysis) String() string {
 	var builder strings.Builder
 	builder.WriteString("RootCauseAnalysis(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", rca.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", rca.TicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
 	builder.WriteString("ticket_number=")
-	builder.WriteString(rca.TicketNumber)
+	builder.WriteString(_m.TicketNumber)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_title=")
-	builder.WriteString(rca.TicketTitle)
+	builder.WriteString(_m.TicketTitle)
 	builder.WriteString(", ")
 	builder.WriteString("analysis_date=")
-	builder.WriteString(rca.AnalysisDate)
+	builder.WriteString(_m.AnalysisDate)
 	builder.WriteString(", ")
 	builder.WriteString("root_causes=")
-	builder.WriteString(fmt.Sprintf("%v", rca.RootCauses))
+	builder.WriteString(fmt.Sprintf("%v", _m.RootCauses))
 	builder.WriteString(", ")
 	builder.WriteString("analysis_summary=")
-	builder.WriteString(rca.AnalysisSummary)
+	builder.WriteString(_m.AnalysisSummary)
 	builder.WriteString(", ")
 	builder.WriteString("confidence_score=")
-	builder.WriteString(fmt.Sprintf("%v", rca.ConfidenceScore))
+	builder.WriteString(fmt.Sprintf("%v", _m.ConfidenceScore))
 	builder.WriteString(", ")
 	builder.WriteString("analysis_method=")
-	builder.WriteString(rca.AnalysisMethod)
+	builder.WriteString(_m.AnalysisMethod)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", rca.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(rca.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(rca.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

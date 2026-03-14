@@ -22,154 +22,154 @@ type ProcessBindingCreate struct {
 }
 
 // SetBusinessType sets the "business_type" field.
-func (pbc *ProcessBindingCreate) SetBusinessType(s string) *ProcessBindingCreate {
-	pbc.mutation.SetBusinessType(s)
-	return pbc
+func (_c *ProcessBindingCreate) SetBusinessType(v string) *ProcessBindingCreate {
+	_c.mutation.SetBusinessType(v)
+	return _c
 }
 
 // SetBusinessSubType sets the "business_sub_type" field.
-func (pbc *ProcessBindingCreate) SetBusinessSubType(s string) *ProcessBindingCreate {
-	pbc.mutation.SetBusinessSubType(s)
-	return pbc
+func (_c *ProcessBindingCreate) SetBusinessSubType(v string) *ProcessBindingCreate {
+	_c.mutation.SetBusinessSubType(v)
+	return _c
 }
 
 // SetNillableBusinessSubType sets the "business_sub_type" field if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillableBusinessSubType(s *string) *ProcessBindingCreate {
-	if s != nil {
-		pbc.SetBusinessSubType(*s)
+func (_c *ProcessBindingCreate) SetNillableBusinessSubType(v *string) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetBusinessSubType(*v)
 	}
-	return pbc
+	return _c
 }
 
 // SetProcessDefinitionKey sets the "process_definition_key" field.
-func (pbc *ProcessBindingCreate) SetProcessDefinitionKey(s string) *ProcessBindingCreate {
-	pbc.mutation.SetProcessDefinitionKey(s)
-	return pbc
+func (_c *ProcessBindingCreate) SetProcessDefinitionKey(v string) *ProcessBindingCreate {
+	_c.mutation.SetProcessDefinitionKey(v)
+	return _c
 }
 
 // SetProcessVersion sets the "process_version" field.
-func (pbc *ProcessBindingCreate) SetProcessVersion(i int) *ProcessBindingCreate {
-	pbc.mutation.SetProcessVersion(i)
-	return pbc
+func (_c *ProcessBindingCreate) SetProcessVersion(v int) *ProcessBindingCreate {
+	_c.mutation.SetProcessVersion(v)
+	return _c
 }
 
 // SetNillableProcessVersion sets the "process_version" field if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillableProcessVersion(i *int) *ProcessBindingCreate {
-	if i != nil {
-		pbc.SetProcessVersion(*i)
+func (_c *ProcessBindingCreate) SetNillableProcessVersion(v *int) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetProcessVersion(*v)
 	}
-	return pbc
+	return _c
 }
 
 // SetIsDefault sets the "is_default" field.
-func (pbc *ProcessBindingCreate) SetIsDefault(b bool) *ProcessBindingCreate {
-	pbc.mutation.SetIsDefault(b)
-	return pbc
+func (_c *ProcessBindingCreate) SetIsDefault(v bool) *ProcessBindingCreate {
+	_c.mutation.SetIsDefault(v)
+	return _c
 }
 
 // SetNillableIsDefault sets the "is_default" field if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillableIsDefault(b *bool) *ProcessBindingCreate {
-	if b != nil {
-		pbc.SetIsDefault(*b)
+func (_c *ProcessBindingCreate) SetNillableIsDefault(v *bool) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetIsDefault(*v)
 	}
-	return pbc
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (pbc *ProcessBindingCreate) SetPriority(i int) *ProcessBindingCreate {
-	pbc.mutation.SetPriority(i)
-	return pbc
+func (_c *ProcessBindingCreate) SetPriority(v int) *ProcessBindingCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillablePriority(i *int) *ProcessBindingCreate {
-	if i != nil {
-		pbc.SetPriority(*i)
+func (_c *ProcessBindingCreate) SetNillablePriority(v *int) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return pbc
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (pbc *ProcessBindingCreate) SetIsActive(b bool) *ProcessBindingCreate {
-	pbc.mutation.SetIsActive(b)
-	return pbc
+func (_c *ProcessBindingCreate) SetIsActive(v bool) *ProcessBindingCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillableIsActive(b *bool) *ProcessBindingCreate {
-	if b != nil {
-		pbc.SetIsActive(*b)
+func (_c *ProcessBindingCreate) SetNillableIsActive(v *bool) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return pbc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pbc *ProcessBindingCreate) SetTenantID(i int) *ProcessBindingCreate {
-	pbc.mutation.SetTenantID(i)
-	return pbc
+func (_c *ProcessBindingCreate) SetTenantID(v int) *ProcessBindingCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pbc *ProcessBindingCreate) SetCreatedAt(t time.Time) *ProcessBindingCreate {
-	pbc.mutation.SetCreatedAt(t)
-	return pbc
+func (_c *ProcessBindingCreate) SetCreatedAt(v time.Time) *ProcessBindingCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillableCreatedAt(t *time.Time) *ProcessBindingCreate {
-	if t != nil {
-		pbc.SetCreatedAt(*t)
+func (_c *ProcessBindingCreate) SetNillableCreatedAt(v *time.Time) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pbc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pbc *ProcessBindingCreate) SetUpdatedAt(t time.Time) *ProcessBindingCreate {
-	pbc.mutation.SetUpdatedAt(t)
-	return pbc
+func (_c *ProcessBindingCreate) SetUpdatedAt(v time.Time) *ProcessBindingCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillableUpdatedAt(t *time.Time) *ProcessBindingCreate {
-	if t != nil {
-		pbc.SetUpdatedAt(*t)
+func (_c *ProcessBindingCreate) SetNillableUpdatedAt(v *time.Time) *ProcessBindingCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return pbc
+	return _c
 }
 
 // SetProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID.
-func (pbc *ProcessBindingCreate) SetProcessDefinitionID(id int) *ProcessBindingCreate {
-	pbc.mutation.SetProcessDefinitionID(id)
-	return pbc
+func (_c *ProcessBindingCreate) SetProcessDefinitionID(id int) *ProcessBindingCreate {
+	_c.mutation.SetProcessDefinitionID(id)
+	return _c
 }
 
 // SetNillableProcessDefinitionID sets the "process_definition" edge to the ProcessDefinition entity by ID if the given value is not nil.
-func (pbc *ProcessBindingCreate) SetNillableProcessDefinitionID(id *int) *ProcessBindingCreate {
+func (_c *ProcessBindingCreate) SetNillableProcessDefinitionID(id *int) *ProcessBindingCreate {
 	if id != nil {
-		pbc = pbc.SetProcessDefinitionID(*id)
+		_c = _c.SetProcessDefinitionID(*id)
 	}
-	return pbc
+	return _c
 }
 
 // SetProcessDefinition sets the "process_definition" edge to the ProcessDefinition entity.
-func (pbc *ProcessBindingCreate) SetProcessDefinition(p *ProcessDefinition) *ProcessBindingCreate {
-	return pbc.SetProcessDefinitionID(p.ID)
+func (_c *ProcessBindingCreate) SetProcessDefinition(v *ProcessDefinition) *ProcessBindingCreate {
+	return _c.SetProcessDefinitionID(v.ID)
 }
 
 // Mutation returns the ProcessBindingMutation object of the builder.
-func (pbc *ProcessBindingCreate) Mutation() *ProcessBindingMutation {
-	return pbc.mutation
+func (_c *ProcessBindingCreate) Mutation() *ProcessBindingMutation {
+	return _c.mutation
 }
 
 // Save creates the ProcessBinding in the database.
-func (pbc *ProcessBindingCreate) Save(ctx context.Context) (*ProcessBinding, error) {
-	pbc.defaults()
-	return withHooks(ctx, pbc.sqlSave, pbc.mutation, pbc.hooks)
+func (_c *ProcessBindingCreate) Save(ctx context.Context) (*ProcessBinding, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pbc *ProcessBindingCreate) SaveX(ctx context.Context) *ProcessBinding {
-	v, err := pbc.Save(ctx)
+func (_c *ProcessBindingCreate) SaveX(ctx context.Context) *ProcessBinding {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -177,99 +177,99 @@ func (pbc *ProcessBindingCreate) SaveX(ctx context.Context) *ProcessBinding {
 }
 
 // Exec executes the query.
-func (pbc *ProcessBindingCreate) Exec(ctx context.Context) error {
-	_, err := pbc.Save(ctx)
+func (_c *ProcessBindingCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pbc *ProcessBindingCreate) ExecX(ctx context.Context) {
-	if err := pbc.Exec(ctx); err != nil {
+func (_c *ProcessBindingCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pbc *ProcessBindingCreate) defaults() {
-	if _, ok := pbc.mutation.ProcessVersion(); !ok {
+func (_c *ProcessBindingCreate) defaults() {
+	if _, ok := _c.mutation.ProcessVersion(); !ok {
 		v := processbinding.DefaultProcessVersion
-		pbc.mutation.SetProcessVersion(v)
+		_c.mutation.SetProcessVersion(v)
 	}
-	if _, ok := pbc.mutation.IsDefault(); !ok {
+	if _, ok := _c.mutation.IsDefault(); !ok {
 		v := processbinding.DefaultIsDefault
-		pbc.mutation.SetIsDefault(v)
+		_c.mutation.SetIsDefault(v)
 	}
-	if _, ok := pbc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := processbinding.DefaultPriority
-		pbc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := pbc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := processbinding.DefaultIsActive
-		pbc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := pbc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processbinding.DefaultCreatedAt()
-		pbc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := pbc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := processbinding.DefaultUpdatedAt()
-		pbc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pbc *ProcessBindingCreate) check() error {
-	if _, ok := pbc.mutation.BusinessType(); !ok {
+func (_c *ProcessBindingCreate) check() error {
+	if _, ok := _c.mutation.BusinessType(); !ok {
 		return &ValidationError{Name: "business_type", err: errors.New(`ent: missing required field "ProcessBinding.business_type"`)}
 	}
-	if v, ok := pbc.mutation.BusinessType(); ok {
+	if v, ok := _c.mutation.BusinessType(); ok {
 		if err := processbinding.BusinessTypeValidator(v); err != nil {
 			return &ValidationError{Name: "business_type", err: fmt.Errorf(`ent: validator failed for field "ProcessBinding.business_type": %w`, err)}
 		}
 	}
-	if _, ok := pbc.mutation.ProcessDefinitionKey(); !ok {
+	if _, ok := _c.mutation.ProcessDefinitionKey(); !ok {
 		return &ValidationError{Name: "process_definition_key", err: errors.New(`ent: missing required field "ProcessBinding.process_definition_key"`)}
 	}
-	if v, ok := pbc.mutation.ProcessDefinitionKey(); ok {
+	if v, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		if err := processbinding.ProcessDefinitionKeyValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_key", err: fmt.Errorf(`ent: validator failed for field "ProcessBinding.process_definition_key": %w`, err)}
 		}
 	}
-	if _, ok := pbc.mutation.ProcessVersion(); !ok {
+	if _, ok := _c.mutation.ProcessVersion(); !ok {
 		return &ValidationError{Name: "process_version", err: errors.New(`ent: missing required field "ProcessBinding.process_version"`)}
 	}
-	if _, ok := pbc.mutation.IsDefault(); !ok {
+	if _, ok := _c.mutation.IsDefault(); !ok {
 		return &ValidationError{Name: "is_default", err: errors.New(`ent: missing required field "ProcessBinding.is_default"`)}
 	}
-	if _, ok := pbc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "ProcessBinding.priority"`)}
 	}
-	if _, ok := pbc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ProcessBinding.is_active"`)}
 	}
-	if _, ok := pbc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProcessBinding.tenant_id"`)}
 	}
-	if v, ok := pbc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := processbinding.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessBinding.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := pbc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessBinding.created_at"`)}
 	}
-	if _, ok := pbc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ProcessBinding.updated_at"`)}
 	}
 	return nil
 }
 
-func (pbc *ProcessBindingCreate) sqlSave(ctx context.Context) (*ProcessBinding, error) {
-	if err := pbc.check(); err != nil {
+func (_c *ProcessBindingCreate) sqlSave(ctx context.Context) (*ProcessBinding, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pbc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pbc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -277,57 +277,57 @@ func (pbc *ProcessBindingCreate) sqlSave(ctx context.Context) (*ProcessBinding, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	pbc.mutation.id = &_node.ID
-	pbc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pbc *ProcessBindingCreate) createSpec() (*ProcessBinding, *sqlgraph.CreateSpec) {
+func (_c *ProcessBindingCreate) createSpec() (*ProcessBinding, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProcessBinding{config: pbc.config}
+		_node = &ProcessBinding{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(processbinding.Table, sqlgraph.NewFieldSpec(processbinding.FieldID, field.TypeInt))
 	)
-	if value, ok := pbc.mutation.BusinessType(); ok {
+	if value, ok := _c.mutation.BusinessType(); ok {
 		_spec.SetField(processbinding.FieldBusinessType, field.TypeString, value)
 		_node.BusinessType = value
 	}
-	if value, ok := pbc.mutation.BusinessSubType(); ok {
+	if value, ok := _c.mutation.BusinessSubType(); ok {
 		_spec.SetField(processbinding.FieldBusinessSubType, field.TypeString, value)
 		_node.BusinessSubType = value
 	}
-	if value, ok := pbc.mutation.ProcessDefinitionKey(); ok {
+	if value, ok := _c.mutation.ProcessDefinitionKey(); ok {
 		_spec.SetField(processbinding.FieldProcessDefinitionKey, field.TypeString, value)
 		_node.ProcessDefinitionKey = value
 	}
-	if value, ok := pbc.mutation.ProcessVersion(); ok {
+	if value, ok := _c.mutation.ProcessVersion(); ok {
 		_spec.SetField(processbinding.FieldProcessVersion, field.TypeInt, value)
 		_node.ProcessVersion = value
 	}
-	if value, ok := pbc.mutation.IsDefault(); ok {
+	if value, ok := _c.mutation.IsDefault(); ok {
 		_spec.SetField(processbinding.FieldIsDefault, field.TypeBool, value)
 		_node.IsDefault = value
 	}
-	if value, ok := pbc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(processbinding.FieldPriority, field.TypeInt, value)
 		_node.Priority = value
 	}
-	if value, ok := pbc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(processbinding.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := pbc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processbinding.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := pbc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(processbinding.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := pbc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(processbinding.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := pbc.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -355,16 +355,16 @@ type ProcessBindingCreateBulk struct {
 }
 
 // Save creates the ProcessBinding entities in the database.
-func (pbcb *ProcessBindingCreateBulk) Save(ctx context.Context) ([]*ProcessBinding, error) {
-	if pbcb.err != nil {
-		return nil, pbcb.err
+func (_c *ProcessBindingCreateBulk) Save(ctx context.Context) ([]*ProcessBinding, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(pbcb.builders))
-	nodes := make([]*ProcessBinding, len(pbcb.builders))
-	mutators := make([]Mutator, len(pbcb.builders))
-	for i := range pbcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProcessBinding, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := pbcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProcessBindingMutation)
@@ -378,11 +378,11 @@ func (pbcb *ProcessBindingCreateBulk) Save(ctx context.Context) ([]*ProcessBindi
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, pbcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, pbcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -406,7 +406,7 @@ func (pbcb *ProcessBindingCreateBulk) Save(ctx context.Context) ([]*ProcessBindi
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, pbcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -414,8 +414,8 @@ func (pbcb *ProcessBindingCreateBulk) Save(ctx context.Context) ([]*ProcessBindi
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pbcb *ProcessBindingCreateBulk) SaveX(ctx context.Context) []*ProcessBinding {
-	v, err := pbcb.Save(ctx)
+func (_c *ProcessBindingCreateBulk) SaveX(ctx context.Context) []*ProcessBinding {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -423,14 +423,14 @@ func (pbcb *ProcessBindingCreateBulk) SaveX(ctx context.Context) []*ProcessBindi
 }
 
 // Exec executes the query.
-func (pbcb *ProcessBindingCreateBulk) Exec(ctx context.Context) error {
-	_, err := pbcb.Save(ctx)
+func (_c *ProcessBindingCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pbcb *ProcessBindingCreateBulk) ExecX(ctx context.Context) {
-	if err := pbcb.Exec(ctx); err != nil {
+func (_c *ProcessBindingCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

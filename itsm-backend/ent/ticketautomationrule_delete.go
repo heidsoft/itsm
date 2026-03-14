@@ -20,56 +20,56 @@ type TicketAutomationRuleDelete struct {
 }
 
 // Where appends a list predicates to the TicketAutomationRuleDelete builder.
-func (tard *TicketAutomationRuleDelete) Where(ps ...predicate.TicketAutomationRule) *TicketAutomationRuleDelete {
-	tard.mutation.Where(ps...)
-	return tard
+func (_d *TicketAutomationRuleDelete) Where(ps ...predicate.TicketAutomationRule) *TicketAutomationRuleDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (tard *TicketAutomationRuleDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, tard.sqlExec, tard.mutation, tard.hooks)
+func (_d *TicketAutomationRuleDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tard *TicketAutomationRuleDelete) ExecX(ctx context.Context) int {
-	n, err := tard.Exec(ctx)
+func (_d *TicketAutomationRuleDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (tard *TicketAutomationRuleDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *TicketAutomationRuleDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(ticketautomationrule.Table, sqlgraph.NewFieldSpec(ticketautomationrule.FieldID, field.TypeInt))
-	if ps := tard.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, tard.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	tard.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // TicketAutomationRuleDeleteOne is the builder for deleting a single TicketAutomationRule entity.
 type TicketAutomationRuleDeleteOne struct {
-	tard *TicketAutomationRuleDelete
+	_d *TicketAutomationRuleDelete
 }
 
 // Where appends a list predicates to the TicketAutomationRuleDelete builder.
-func (tardo *TicketAutomationRuleDeleteOne) Where(ps ...predicate.TicketAutomationRule) *TicketAutomationRuleDeleteOne {
-	tardo.tard.mutation.Where(ps...)
-	return tardo
+func (_d *TicketAutomationRuleDeleteOne) Where(ps ...predicate.TicketAutomationRule) *TicketAutomationRuleDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (tardo *TicketAutomationRuleDeleteOne) Exec(ctx context.Context) error {
-	n, err := tardo.tard.Exec(ctx)
+func (_d *TicketAutomationRuleDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (tardo *TicketAutomationRuleDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tardo *TicketAutomationRuleDeleteOne) ExecX(ctx context.Context) {
-	if err := tardo.Exec(ctx); err != nil {
+func (_d *TicketAutomationRuleDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

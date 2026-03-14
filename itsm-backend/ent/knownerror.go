@@ -113,7 +113,7 @@ func (*KnownError) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the KnownError fields.
-func (ke *KnownError) assignValues(columns []string, values []any) error {
+func (_m *KnownError) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -124,66 +124,66 @@ func (ke *KnownError) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ke.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case knownerror.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				ke.Title = value.String
+				_m.Title = value.String
 			}
 		case knownerror.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				ke.Description = value.String
+				_m.Description = value.String
 			}
 		case knownerror.FieldSymptoms:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field symptoms", values[i])
 			} else if value.Valid {
-				ke.Symptoms = value.String
+				_m.Symptoms = value.String
 			}
 		case knownerror.FieldRootCause:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field root_cause", values[i])
 			} else if value.Valid {
-				ke.RootCause = value.String
+				_m.RootCause = value.String
 			}
 		case knownerror.FieldWorkaround:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field workaround", values[i])
 			} else if value.Valid {
-				ke.Workaround = value.String
+				_m.Workaround = value.String
 			}
 		case knownerror.FieldResolution:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resolution", values[i])
 			} else if value.Valid {
-				ke.Resolution = value.String
+				_m.Resolution = value.String
 			}
 		case knownerror.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				ke.Status = value.String
+				_m.Status = value.String
 			}
 		case knownerror.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				ke.Category = value.String
+				_m.Category = value.String
 			}
 		case knownerror.FieldSeverity:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field severity", values[i])
 			} else if value.Valid {
-				ke.Severity = value.String
+				_m.Severity = value.String
 			}
 		case knownerror.FieldAffectedProducts:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field affected_products", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ke.AffectedProducts); err != nil {
+				if err := json.Unmarshal(*value, &_m.AffectedProducts); err != nil {
 					return fmt.Errorf("unmarshal field affected_products: %w", err)
 				}
 			}
@@ -191,7 +191,7 @@ func (ke *KnownError) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field affected_cis", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ke.AffectedCis); err != nil {
+				if err := json.Unmarshal(*value, &_m.AffectedCis); err != nil {
 					return fmt.Errorf("unmarshal field affected_cis: %w", err)
 				}
 			}
@@ -199,7 +199,7 @@ func (ke *KnownError) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field keywords", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ke.Keywords); err != nil {
+				if err := json.Unmarshal(*value, &_m.Keywords); err != nil {
 					return fmt.Errorf("unmarshal field keywords: %w", err)
 				}
 			}
@@ -207,46 +207,46 @@ func (ke *KnownError) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field occurrence_count", values[i])
 			} else if value.Valid {
-				ke.OccurrenceCount = int(value.Int64)
+				_m.OccurrenceCount = int(value.Int64)
 			}
 		case knownerror.FieldCreatedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_by", values[i])
 			} else if value.Valid {
-				ke.CreatedBy = int(value.Int64)
+				_m.CreatedBy = int(value.Int64)
 			}
 		case knownerror.FieldApprovedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field approved_by", values[i])
 			} else if value.Valid {
-				ke.ApprovedBy = int(value.Int64)
+				_m.ApprovedBy = int(value.Int64)
 			}
 		case knownerror.FieldApprovedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field approved_at", values[i])
 			} else if value.Valid {
-				ke.ApprovedAt = value.Time
+				_m.ApprovedAt = value.Time
 			}
 		case knownerror.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ke.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case knownerror.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ke.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case knownerror.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ke.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ke.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -254,99 +254,99 @@ func (ke *KnownError) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the KnownError.
 // This includes values selected through modifiers, order, etc.
-func (ke *KnownError) Value(name string) (ent.Value, error) {
-	return ke.selectValues.Get(name)
+func (_m *KnownError) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProblem queries the "problem" edge of the KnownError entity.
-func (ke *KnownError) QueryProblem() *ProblemQuery {
-	return NewKnownErrorClient(ke.config).QueryProblem(ke)
+func (_m *KnownError) QueryProblem() *ProblemQuery {
+	return NewKnownErrorClient(_m.config).QueryProblem(_m)
 }
 
 // QueryKnowledgeArticles queries the "knowledge_articles" edge of the KnownError entity.
-func (ke *KnownError) QueryKnowledgeArticles() *KnowledgeArticleQuery {
-	return NewKnownErrorClient(ke.config).QueryKnowledgeArticles(ke)
+func (_m *KnownError) QueryKnowledgeArticles() *KnowledgeArticleQuery {
+	return NewKnownErrorClient(_m.config).QueryKnowledgeArticles(_m)
 }
 
 // Update returns a builder for updating this KnownError.
 // Note that you need to call KnownError.Unwrap() before calling this method if this KnownError
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ke *KnownError) Update() *KnownErrorUpdateOne {
-	return NewKnownErrorClient(ke.config).UpdateOne(ke)
+func (_m *KnownError) Update() *KnownErrorUpdateOne {
+	return NewKnownErrorClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the KnownError entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ke *KnownError) Unwrap() *KnownError {
-	_tx, ok := ke.config.driver.(*txDriver)
+func (_m *KnownError) Unwrap() *KnownError {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: KnownError is not a transactional entity")
 	}
-	ke.config.driver = _tx.drv
-	return ke
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ke *KnownError) String() string {
+func (_m *KnownError) String() string {
 	var builder strings.Builder
 	builder.WriteString("KnownError(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ke.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("title=")
-	builder.WriteString(ke.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(ke.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("symptoms=")
-	builder.WriteString(ke.Symptoms)
+	builder.WriteString(_m.Symptoms)
 	builder.WriteString(", ")
 	builder.WriteString("root_cause=")
-	builder.WriteString(ke.RootCause)
+	builder.WriteString(_m.RootCause)
 	builder.WriteString(", ")
 	builder.WriteString("workaround=")
-	builder.WriteString(ke.Workaround)
+	builder.WriteString(_m.Workaround)
 	builder.WriteString(", ")
 	builder.WriteString("resolution=")
-	builder.WriteString(ke.Resolution)
+	builder.WriteString(_m.Resolution)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(ke.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(ke.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
-	builder.WriteString(ke.Severity)
+	builder.WriteString(_m.Severity)
 	builder.WriteString(", ")
 	builder.WriteString("affected_products=")
-	builder.WriteString(fmt.Sprintf("%v", ke.AffectedProducts))
+	builder.WriteString(fmt.Sprintf("%v", _m.AffectedProducts))
 	builder.WriteString(", ")
 	builder.WriteString("affected_cis=")
-	builder.WriteString(fmt.Sprintf("%v", ke.AffectedCis))
+	builder.WriteString(fmt.Sprintf("%v", _m.AffectedCis))
 	builder.WriteString(", ")
 	builder.WriteString("keywords=")
-	builder.WriteString(fmt.Sprintf("%v", ke.Keywords))
+	builder.WriteString(fmt.Sprintf("%v", _m.Keywords))
 	builder.WriteString(", ")
 	builder.WriteString("occurrence_count=")
-	builder.WriteString(fmt.Sprintf("%v", ke.OccurrenceCount))
+	builder.WriteString(fmt.Sprintf("%v", _m.OccurrenceCount))
 	builder.WriteString(", ")
 	builder.WriteString("created_by=")
-	builder.WriteString(fmt.Sprintf("%v", ke.CreatedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.CreatedBy))
 	builder.WriteString(", ")
 	builder.WriteString("approved_by=")
-	builder.WriteString(fmt.Sprintf("%v", ke.ApprovedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.ApprovedBy))
 	builder.WriteString(", ")
 	builder.WriteString("approved_at=")
-	builder.WriteString(ke.ApprovedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ApprovedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ke.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ke.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ke.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

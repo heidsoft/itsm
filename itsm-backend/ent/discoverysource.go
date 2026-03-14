@@ -80,7 +80,7 @@ func (*DiscoverySource) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the DiscoverySource fields.
-func (ds *DiscoverySource) assignValues(columns []string, values []any) error {
+func (_m *DiscoverySource) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -90,58 +90,58 @@ func (ds *DiscoverySource) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field id", values[i])
 			} else if value.Valid {
-				ds.ID = value.String
+				_m.ID = value.String
 			}
 		case discoverysource.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ds.Name = value.String
+				_m.Name = value.String
 			}
 		case discoverysource.FieldSourceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field source_type", values[i])
 			} else if value.Valid {
-				ds.SourceType = value.String
+				_m.SourceType = value.String
 			}
 		case discoverysource.FieldProvider:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field provider", values[i])
 			} else if value.Valid {
-				ds.Provider = value.String
+				_m.Provider = value.String
 			}
 		case discoverysource.FieldEnabled:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field enabled", values[i])
 			} else if value.Valid {
-				ds.Enabled = value.Bool
+				_m.Enabled = value.Bool
 			}
 		case discoverysource.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				ds.Description = value.String
+				_m.Description = value.String
 			}
 		case discoverysource.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ds.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case discoverysource.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ds.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case discoverysource.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ds.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ds.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -149,61 +149,61 @@ func (ds *DiscoverySource) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the DiscoverySource.
 // This includes values selected through modifiers, order, etc.
-func (ds *DiscoverySource) Value(name string) (ent.Value, error) {
-	return ds.selectValues.Get(name)
+func (_m *DiscoverySource) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryJobs queries the "jobs" edge of the DiscoverySource entity.
-func (ds *DiscoverySource) QueryJobs() *DiscoveryJobQuery {
-	return NewDiscoverySourceClient(ds.config).QueryJobs(ds)
+func (_m *DiscoverySource) QueryJobs() *DiscoveryJobQuery {
+	return NewDiscoverySourceClient(_m.config).QueryJobs(_m)
 }
 
 // Update returns a builder for updating this DiscoverySource.
 // Note that you need to call DiscoverySource.Unwrap() before calling this method if this DiscoverySource
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ds *DiscoverySource) Update() *DiscoverySourceUpdateOne {
-	return NewDiscoverySourceClient(ds.config).UpdateOne(ds)
+func (_m *DiscoverySource) Update() *DiscoverySourceUpdateOne {
+	return NewDiscoverySourceClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the DiscoverySource entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ds *DiscoverySource) Unwrap() *DiscoverySource {
-	_tx, ok := ds.config.driver.(*txDriver)
+func (_m *DiscoverySource) Unwrap() *DiscoverySource {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: DiscoverySource is not a transactional entity")
 	}
-	ds.config.driver = _tx.drv
-	return ds
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ds *DiscoverySource) String() string {
+func (_m *DiscoverySource) String() string {
 	var builder strings.Builder
 	builder.WriteString("DiscoverySource(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ds.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(ds.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("source_type=")
-	builder.WriteString(ds.SourceType)
+	builder.WriteString(_m.SourceType)
 	builder.WriteString(", ")
 	builder.WriteString("provider=")
-	builder.WriteString(ds.Provider)
+	builder.WriteString(_m.Provider)
 	builder.WriteString(", ")
 	builder.WriteString("enabled=")
-	builder.WriteString(fmt.Sprintf("%v", ds.Enabled))
+	builder.WriteString(fmt.Sprintf("%v", _m.Enabled))
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(ds.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ds.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ds.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ds.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

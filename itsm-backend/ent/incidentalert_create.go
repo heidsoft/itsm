@@ -22,184 +22,184 @@ type IncidentAlertCreate struct {
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (iac *IncidentAlertCreate) SetIncidentID(i int) *IncidentAlertCreate {
-	iac.mutation.SetIncidentID(i)
-	return iac
+func (_c *IncidentAlertCreate) SetIncidentID(v int) *IncidentAlertCreate {
+	_c.mutation.SetIncidentID(v)
+	return _c
 }
 
 // SetAlertType sets the "alert_type" field.
-func (iac *IncidentAlertCreate) SetAlertType(s string) *IncidentAlertCreate {
-	iac.mutation.SetAlertType(s)
-	return iac
+func (_c *IncidentAlertCreate) SetAlertType(v string) *IncidentAlertCreate {
+	_c.mutation.SetAlertType(v)
+	return _c
 }
 
 // SetAlertName sets the "alert_name" field.
-func (iac *IncidentAlertCreate) SetAlertName(s string) *IncidentAlertCreate {
-	iac.mutation.SetAlertName(s)
-	return iac
+func (_c *IncidentAlertCreate) SetAlertName(v string) *IncidentAlertCreate {
+	_c.mutation.SetAlertName(v)
+	return _c
 }
 
 // SetMessage sets the "message" field.
-func (iac *IncidentAlertCreate) SetMessage(s string) *IncidentAlertCreate {
-	iac.mutation.SetMessage(s)
-	return iac
+func (_c *IncidentAlertCreate) SetMessage(v string) *IncidentAlertCreate {
+	_c.mutation.SetMessage(v)
+	return _c
 }
 
 // SetSeverity sets the "severity" field.
-func (iac *IncidentAlertCreate) SetSeverity(s string) *IncidentAlertCreate {
-	iac.mutation.SetSeverity(s)
-	return iac
+func (_c *IncidentAlertCreate) SetSeverity(v string) *IncidentAlertCreate {
+	_c.mutation.SetSeverity(v)
+	return _c
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableSeverity(s *string) *IncidentAlertCreate {
-	if s != nil {
-		iac.SetSeverity(*s)
+func (_c *IncidentAlertCreate) SetNillableSeverity(v *string) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetSeverity(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (iac *IncidentAlertCreate) SetStatus(s string) *IncidentAlertCreate {
-	iac.mutation.SetStatus(s)
-	return iac
+func (_c *IncidentAlertCreate) SetStatus(v string) *IncidentAlertCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableStatus(s *string) *IncidentAlertCreate {
-	if s != nil {
-		iac.SetStatus(*s)
+func (_c *IncidentAlertCreate) SetNillableStatus(v *string) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetChannels sets the "channels" field.
-func (iac *IncidentAlertCreate) SetChannels(s []string) *IncidentAlertCreate {
-	iac.mutation.SetChannels(s)
-	return iac
+func (_c *IncidentAlertCreate) SetChannels(v []string) *IncidentAlertCreate {
+	_c.mutation.SetChannels(v)
+	return _c
 }
 
 // SetRecipients sets the "recipients" field.
-func (iac *IncidentAlertCreate) SetRecipients(s []string) *IncidentAlertCreate {
-	iac.mutation.SetRecipients(s)
-	return iac
+func (_c *IncidentAlertCreate) SetRecipients(v []string) *IncidentAlertCreate {
+	_c.mutation.SetRecipients(v)
+	return _c
 }
 
 // SetTriggeredAt sets the "triggered_at" field.
-func (iac *IncidentAlertCreate) SetTriggeredAt(t time.Time) *IncidentAlertCreate {
-	iac.mutation.SetTriggeredAt(t)
-	return iac
+func (_c *IncidentAlertCreate) SetTriggeredAt(v time.Time) *IncidentAlertCreate {
+	_c.mutation.SetTriggeredAt(v)
+	return _c
 }
 
 // SetNillableTriggeredAt sets the "triggered_at" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableTriggeredAt(t *time.Time) *IncidentAlertCreate {
-	if t != nil {
-		iac.SetTriggeredAt(*t)
+func (_c *IncidentAlertCreate) SetNillableTriggeredAt(v *time.Time) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetTriggeredAt(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetAcknowledgedAt sets the "acknowledged_at" field.
-func (iac *IncidentAlertCreate) SetAcknowledgedAt(t time.Time) *IncidentAlertCreate {
-	iac.mutation.SetAcknowledgedAt(t)
-	return iac
+func (_c *IncidentAlertCreate) SetAcknowledgedAt(v time.Time) *IncidentAlertCreate {
+	_c.mutation.SetAcknowledgedAt(v)
+	return _c
 }
 
 // SetNillableAcknowledgedAt sets the "acknowledged_at" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableAcknowledgedAt(t *time.Time) *IncidentAlertCreate {
-	if t != nil {
-		iac.SetAcknowledgedAt(*t)
+func (_c *IncidentAlertCreate) SetNillableAcknowledgedAt(v *time.Time) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetAcknowledgedAt(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (iac *IncidentAlertCreate) SetResolvedAt(t time.Time) *IncidentAlertCreate {
-	iac.mutation.SetResolvedAt(t)
-	return iac
+func (_c *IncidentAlertCreate) SetResolvedAt(v time.Time) *IncidentAlertCreate {
+	_c.mutation.SetResolvedAt(v)
+	return _c
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableResolvedAt(t *time.Time) *IncidentAlertCreate {
-	if t != nil {
-		iac.SetResolvedAt(*t)
+func (_c *IncidentAlertCreate) SetNillableResolvedAt(v *time.Time) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetResolvedAt(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetAcknowledgedBy sets the "acknowledged_by" field.
-func (iac *IncidentAlertCreate) SetAcknowledgedBy(i int) *IncidentAlertCreate {
-	iac.mutation.SetAcknowledgedBy(i)
-	return iac
+func (_c *IncidentAlertCreate) SetAcknowledgedBy(v int) *IncidentAlertCreate {
+	_c.mutation.SetAcknowledgedBy(v)
+	return _c
 }
 
 // SetNillableAcknowledgedBy sets the "acknowledged_by" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableAcknowledgedBy(i *int) *IncidentAlertCreate {
-	if i != nil {
-		iac.SetAcknowledgedBy(*i)
+func (_c *IncidentAlertCreate) SetNillableAcknowledgedBy(v *int) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetAcknowledgedBy(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetMetadata sets the "metadata" field.
-func (iac *IncidentAlertCreate) SetMetadata(m map[string]interface{}) *IncidentAlertCreate {
-	iac.mutation.SetMetadata(m)
-	return iac
+func (_c *IncidentAlertCreate) SetMetadata(v map[string]interface{}) *IncidentAlertCreate {
+	_c.mutation.SetMetadata(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (iac *IncidentAlertCreate) SetTenantID(i int) *IncidentAlertCreate {
-	iac.mutation.SetTenantID(i)
-	return iac
+func (_c *IncidentAlertCreate) SetTenantID(v int) *IncidentAlertCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (iac *IncidentAlertCreate) SetCreatedAt(t time.Time) *IncidentAlertCreate {
-	iac.mutation.SetCreatedAt(t)
-	return iac
+func (_c *IncidentAlertCreate) SetCreatedAt(v time.Time) *IncidentAlertCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableCreatedAt(t *time.Time) *IncidentAlertCreate {
-	if t != nil {
-		iac.SetCreatedAt(*t)
+func (_c *IncidentAlertCreate) SetNillableCreatedAt(v *time.Time) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (iac *IncidentAlertCreate) SetUpdatedAt(t time.Time) *IncidentAlertCreate {
-	iac.mutation.SetUpdatedAt(t)
-	return iac
+func (_c *IncidentAlertCreate) SetUpdatedAt(v time.Time) *IncidentAlertCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (iac *IncidentAlertCreate) SetNillableUpdatedAt(t *time.Time) *IncidentAlertCreate {
-	if t != nil {
-		iac.SetUpdatedAt(*t)
+func (_c *IncidentAlertCreate) SetNillableUpdatedAt(v *time.Time) *IncidentAlertCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return iac
+	return _c
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (iac *IncidentAlertCreate) SetIncident(i *Incident) *IncidentAlertCreate {
-	return iac.SetIncidentID(i.ID)
+func (_c *IncidentAlertCreate) SetIncident(v *Incident) *IncidentAlertCreate {
+	return _c.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentAlertMutation object of the builder.
-func (iac *IncidentAlertCreate) Mutation() *IncidentAlertMutation {
-	return iac.mutation
+func (_c *IncidentAlertCreate) Mutation() *IncidentAlertMutation {
+	return _c.mutation
 }
 
 // Save creates the IncidentAlert in the database.
-func (iac *IncidentAlertCreate) Save(ctx context.Context) (*IncidentAlert, error) {
-	iac.defaults()
-	return withHooks(ctx, iac.sqlSave, iac.mutation, iac.hooks)
+func (_c *IncidentAlertCreate) Save(ctx context.Context) (*IncidentAlert, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (iac *IncidentAlertCreate) SaveX(ctx context.Context) *IncidentAlert {
-	v, err := iac.Save(ctx)
+func (_c *IncidentAlertCreate) SaveX(ctx context.Context) *IncidentAlert {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,111 +207,111 @@ func (iac *IncidentAlertCreate) SaveX(ctx context.Context) *IncidentAlert {
 }
 
 // Exec executes the query.
-func (iac *IncidentAlertCreate) Exec(ctx context.Context) error {
-	_, err := iac.Save(ctx)
+func (_c *IncidentAlertCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iac *IncidentAlertCreate) ExecX(ctx context.Context) {
-	if err := iac.Exec(ctx); err != nil {
+func (_c *IncidentAlertCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (iac *IncidentAlertCreate) defaults() {
-	if _, ok := iac.mutation.Severity(); !ok {
+func (_c *IncidentAlertCreate) defaults() {
+	if _, ok := _c.mutation.Severity(); !ok {
 		v := incidentalert.DefaultSeverity
-		iac.mutation.SetSeverity(v)
+		_c.mutation.SetSeverity(v)
 	}
-	if _, ok := iac.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := incidentalert.DefaultStatus
-		iac.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := iac.mutation.TriggeredAt(); !ok {
+	if _, ok := _c.mutation.TriggeredAt(); !ok {
 		v := incidentalert.DefaultTriggeredAt()
-		iac.mutation.SetTriggeredAt(v)
+		_c.mutation.SetTriggeredAt(v)
 	}
-	if _, ok := iac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := incidentalert.DefaultCreatedAt()
-		iac.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := iac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := incidentalert.DefaultUpdatedAt()
-		iac.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (iac *IncidentAlertCreate) check() error {
-	if _, ok := iac.mutation.IncidentID(); !ok {
+func (_c *IncidentAlertCreate) check() error {
+	if _, ok := _c.mutation.IncidentID(); !ok {
 		return &ValidationError{Name: "incident_id", err: errors.New(`ent: missing required field "IncidentAlert.incident_id"`)}
 	}
-	if v, ok := iac.mutation.IncidentID(); ok {
+	if v, ok := _c.mutation.IncidentID(); ok {
 		if err := incidentalert.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.incident_id": %w`, err)}
 		}
 	}
-	if _, ok := iac.mutation.AlertType(); !ok {
+	if _, ok := _c.mutation.AlertType(); !ok {
 		return &ValidationError{Name: "alert_type", err: errors.New(`ent: missing required field "IncidentAlert.alert_type"`)}
 	}
-	if v, ok := iac.mutation.AlertType(); ok {
+	if v, ok := _c.mutation.AlertType(); ok {
 		if err := incidentalert.AlertTypeValidator(v); err != nil {
 			return &ValidationError{Name: "alert_type", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.alert_type": %w`, err)}
 		}
 	}
-	if _, ok := iac.mutation.AlertName(); !ok {
+	if _, ok := _c.mutation.AlertName(); !ok {
 		return &ValidationError{Name: "alert_name", err: errors.New(`ent: missing required field "IncidentAlert.alert_name"`)}
 	}
-	if v, ok := iac.mutation.AlertName(); ok {
+	if v, ok := _c.mutation.AlertName(); ok {
 		if err := incidentalert.AlertNameValidator(v); err != nil {
 			return &ValidationError{Name: "alert_name", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.alert_name": %w`, err)}
 		}
 	}
-	if _, ok := iac.mutation.Message(); !ok {
+	if _, ok := _c.mutation.Message(); !ok {
 		return &ValidationError{Name: "message", err: errors.New(`ent: missing required field "IncidentAlert.message"`)}
 	}
-	if v, ok := iac.mutation.Message(); ok {
+	if v, ok := _c.mutation.Message(); ok {
 		if err := incidentalert.MessageValidator(v); err != nil {
 			return &ValidationError{Name: "message", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.message": %w`, err)}
 		}
 	}
-	if _, ok := iac.mutation.Severity(); !ok {
+	if _, ok := _c.mutation.Severity(); !ok {
 		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "IncidentAlert.severity"`)}
 	}
-	if _, ok := iac.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "IncidentAlert.status"`)}
 	}
-	if _, ok := iac.mutation.TriggeredAt(); !ok {
+	if _, ok := _c.mutation.TriggeredAt(); !ok {
 		return &ValidationError{Name: "triggered_at", err: errors.New(`ent: missing required field "IncidentAlert.triggered_at"`)}
 	}
-	if _, ok := iac.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "IncidentAlert.tenant_id"`)}
 	}
-	if v, ok := iac.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := incidentalert.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentAlert.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := iac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "IncidentAlert.created_at"`)}
 	}
-	if _, ok := iac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "IncidentAlert.updated_at"`)}
 	}
-	if len(iac.mutation.IncidentIDs()) == 0 {
+	if len(_c.mutation.IncidentIDs()) == 0 {
 		return &ValidationError{Name: "incident", err: errors.New(`ent: missing required edge "IncidentAlert.incident"`)}
 	}
 	return nil
 }
 
-func (iac *IncidentAlertCreate) sqlSave(ctx context.Context) (*IncidentAlert, error) {
-	if err := iac.check(); err != nil {
+func (_c *IncidentAlertCreate) sqlSave(ctx context.Context) (*IncidentAlert, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := iac.createSpec()
-	if err := sqlgraph.CreateNode(ctx, iac.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -319,77 +319,77 @@ func (iac *IncidentAlertCreate) sqlSave(ctx context.Context) (*IncidentAlert, er
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	iac.mutation.id = &_node.ID
-	iac.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (iac *IncidentAlertCreate) createSpec() (*IncidentAlert, *sqlgraph.CreateSpec) {
+func (_c *IncidentAlertCreate) createSpec() (*IncidentAlert, *sqlgraph.CreateSpec) {
 	var (
-		_node = &IncidentAlert{config: iac.config}
+		_node = &IncidentAlert{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(incidentalert.Table, sqlgraph.NewFieldSpec(incidentalert.FieldID, field.TypeInt))
 	)
-	if value, ok := iac.mutation.AlertType(); ok {
+	if value, ok := _c.mutation.AlertType(); ok {
 		_spec.SetField(incidentalert.FieldAlertType, field.TypeString, value)
 		_node.AlertType = value
 	}
-	if value, ok := iac.mutation.AlertName(); ok {
+	if value, ok := _c.mutation.AlertName(); ok {
 		_spec.SetField(incidentalert.FieldAlertName, field.TypeString, value)
 		_node.AlertName = value
 	}
-	if value, ok := iac.mutation.Message(); ok {
+	if value, ok := _c.mutation.Message(); ok {
 		_spec.SetField(incidentalert.FieldMessage, field.TypeString, value)
 		_node.Message = value
 	}
-	if value, ok := iac.mutation.Severity(); ok {
+	if value, ok := _c.mutation.Severity(); ok {
 		_spec.SetField(incidentalert.FieldSeverity, field.TypeString, value)
 		_node.Severity = value
 	}
-	if value, ok := iac.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(incidentalert.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := iac.mutation.Channels(); ok {
+	if value, ok := _c.mutation.Channels(); ok {
 		_spec.SetField(incidentalert.FieldChannels, field.TypeJSON, value)
 		_node.Channels = value
 	}
-	if value, ok := iac.mutation.Recipients(); ok {
+	if value, ok := _c.mutation.Recipients(); ok {
 		_spec.SetField(incidentalert.FieldRecipients, field.TypeJSON, value)
 		_node.Recipients = value
 	}
-	if value, ok := iac.mutation.TriggeredAt(); ok {
+	if value, ok := _c.mutation.TriggeredAt(); ok {
 		_spec.SetField(incidentalert.FieldTriggeredAt, field.TypeTime, value)
 		_node.TriggeredAt = value
 	}
-	if value, ok := iac.mutation.AcknowledgedAt(); ok {
+	if value, ok := _c.mutation.AcknowledgedAt(); ok {
 		_spec.SetField(incidentalert.FieldAcknowledgedAt, field.TypeTime, value)
 		_node.AcknowledgedAt = value
 	}
-	if value, ok := iac.mutation.ResolvedAt(); ok {
+	if value, ok := _c.mutation.ResolvedAt(); ok {
 		_spec.SetField(incidentalert.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = value
 	}
-	if value, ok := iac.mutation.AcknowledgedBy(); ok {
+	if value, ok := _c.mutation.AcknowledgedBy(); ok {
 		_spec.SetField(incidentalert.FieldAcknowledgedBy, field.TypeInt, value)
 		_node.AcknowledgedBy = value
 	}
-	if value, ok := iac.mutation.Metadata(); ok {
+	if value, ok := _c.mutation.Metadata(); ok {
 		_spec.SetField(incidentalert.FieldMetadata, field.TypeJSON, value)
 		_node.Metadata = value
 	}
-	if value, ok := iac.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(incidentalert.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := iac.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentalert.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := iac.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentalert.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := iac.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -417,16 +417,16 @@ type IncidentAlertCreateBulk struct {
 }
 
 // Save creates the IncidentAlert entities in the database.
-func (iacb *IncidentAlertCreateBulk) Save(ctx context.Context) ([]*IncidentAlert, error) {
-	if iacb.err != nil {
-		return nil, iacb.err
+func (_c *IncidentAlertCreateBulk) Save(ctx context.Context) ([]*IncidentAlert, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(iacb.builders))
-	nodes := make([]*IncidentAlert, len(iacb.builders))
-	mutators := make([]Mutator, len(iacb.builders))
-	for i := range iacb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*IncidentAlert, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := iacb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*IncidentAlertMutation)
@@ -440,11 +440,11 @@ func (iacb *IncidentAlertCreateBulk) Save(ctx context.Context) ([]*IncidentAlert
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, iacb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, iacb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -468,7 +468,7 @@ func (iacb *IncidentAlertCreateBulk) Save(ctx context.Context) ([]*IncidentAlert
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, iacb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -476,8 +476,8 @@ func (iacb *IncidentAlertCreateBulk) Save(ctx context.Context) ([]*IncidentAlert
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (iacb *IncidentAlertCreateBulk) SaveX(ctx context.Context) []*IncidentAlert {
-	v, err := iacb.Save(ctx)
+func (_c *IncidentAlertCreateBulk) SaveX(ctx context.Context) []*IncidentAlert {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -485,14 +485,14 @@ func (iacb *IncidentAlertCreateBulk) SaveX(ctx context.Context) []*IncidentAlert
 }
 
 // Exec executes the query.
-func (iacb *IncidentAlertCreateBulk) Exec(ctx context.Context) error {
-	_, err := iacb.Save(ctx)
+func (_c *IncidentAlertCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iacb *IncidentAlertCreateBulk) ExecX(ctx context.Context) {
-	if err := iacb.Exec(ctx); err != nil {
+func (_c *IncidentAlertCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

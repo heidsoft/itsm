@@ -21,319 +21,319 @@ type ReleaseCreate struct {
 }
 
 // SetReleaseNumber sets the "release_number" field.
-func (rc *ReleaseCreate) SetReleaseNumber(s string) *ReleaseCreate {
-	rc.mutation.SetReleaseNumber(s)
-	return rc
+func (_c *ReleaseCreate) SetReleaseNumber(v string) *ReleaseCreate {
+	_c.mutation.SetReleaseNumber(v)
+	return _c
 }
 
 // SetTitle sets the "title" field.
-func (rc *ReleaseCreate) SetTitle(s string) *ReleaseCreate {
-	rc.mutation.SetTitle(s)
-	return rc
+func (_c *ReleaseCreate) SetTitle(v string) *ReleaseCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (rc *ReleaseCreate) SetDescription(s string) *ReleaseCreate {
-	rc.mutation.SetDescription(s)
-	return rc
+func (_c *ReleaseCreate) SetDescription(v string) *ReleaseCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableDescription(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetDescription(*s)
+func (_c *ReleaseCreate) SetNillableDescription(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetType sets the "type" field.
-func (rc *ReleaseCreate) SetType(s string) *ReleaseCreate {
-	rc.mutation.SetType(s)
-	return rc
+func (_c *ReleaseCreate) SetType(v string) *ReleaseCreate {
+	_c.mutation.SetType(v)
+	return _c
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableType(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetType(*s)
+func (_c *ReleaseCreate) SetNillableType(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetType(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (rc *ReleaseCreate) SetStatus(s string) *ReleaseCreate {
-	rc.mutation.SetStatus(s)
-	return rc
+func (_c *ReleaseCreate) SetStatus(v string) *ReleaseCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableStatus(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetStatus(*s)
+func (_c *ReleaseCreate) SetNillableStatus(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetSeverity sets the "severity" field.
-func (rc *ReleaseCreate) SetSeverity(s string) *ReleaseCreate {
-	rc.mutation.SetSeverity(s)
-	return rc
+func (_c *ReleaseCreate) SetSeverity(v string) *ReleaseCreate {
+	_c.mutation.SetSeverity(v)
+	return _c
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableSeverity(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetSeverity(*s)
+func (_c *ReleaseCreate) SetNillableSeverity(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetSeverity(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetEnvironment sets the "environment" field.
-func (rc *ReleaseCreate) SetEnvironment(s string) *ReleaseCreate {
-	rc.mutation.SetEnvironment(s)
-	return rc
+func (_c *ReleaseCreate) SetEnvironment(v string) *ReleaseCreate {
+	_c.mutation.SetEnvironment(v)
+	return _c
 }
 
 // SetNillableEnvironment sets the "environment" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableEnvironment(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetEnvironment(*s)
+func (_c *ReleaseCreate) SetNillableEnvironment(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetEnvironment(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetChangeID sets the "change_id" field.
-func (rc *ReleaseCreate) SetChangeID(i int) *ReleaseCreate {
-	rc.mutation.SetChangeID(i)
-	return rc
+func (_c *ReleaseCreate) SetChangeID(v int) *ReleaseCreate {
+	_c.mutation.SetChangeID(v)
+	return _c
 }
 
 // SetNillableChangeID sets the "change_id" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableChangeID(i *int) *ReleaseCreate {
-	if i != nil {
-		rc.SetChangeID(*i)
+func (_c *ReleaseCreate) SetNillableChangeID(v *int) *ReleaseCreate {
+	if v != nil {
+		_c.SetChangeID(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetOwnerID sets the "owner_id" field.
-func (rc *ReleaseCreate) SetOwnerID(i int) *ReleaseCreate {
-	rc.mutation.SetOwnerID(i)
-	return rc
+func (_c *ReleaseCreate) SetOwnerID(v int) *ReleaseCreate {
+	_c.mutation.SetOwnerID(v)
+	return _c
 }
 
 // SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableOwnerID(i *int) *ReleaseCreate {
-	if i != nil {
-		rc.SetOwnerID(*i)
+func (_c *ReleaseCreate) SetNillableOwnerID(v *int) *ReleaseCreate {
+	if v != nil {
+		_c.SetOwnerID(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (rc *ReleaseCreate) SetCreatedBy(i int) *ReleaseCreate {
-	rc.mutation.SetCreatedBy(i)
-	return rc
+func (_c *ReleaseCreate) SetCreatedBy(v int) *ReleaseCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (rc *ReleaseCreate) SetTenantID(i int) *ReleaseCreate {
-	rc.mutation.SetTenantID(i)
-	return rc
+func (_c *ReleaseCreate) SetTenantID(v int) *ReleaseCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetPlannedReleaseDate sets the "planned_release_date" field.
-func (rc *ReleaseCreate) SetPlannedReleaseDate(t time.Time) *ReleaseCreate {
-	rc.mutation.SetPlannedReleaseDate(t)
-	return rc
+func (_c *ReleaseCreate) SetPlannedReleaseDate(v time.Time) *ReleaseCreate {
+	_c.mutation.SetPlannedReleaseDate(v)
+	return _c
 }
 
 // SetNillablePlannedReleaseDate sets the "planned_release_date" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillablePlannedReleaseDate(t *time.Time) *ReleaseCreate {
-	if t != nil {
-		rc.SetPlannedReleaseDate(*t)
+func (_c *ReleaseCreate) SetNillablePlannedReleaseDate(v *time.Time) *ReleaseCreate {
+	if v != nil {
+		_c.SetPlannedReleaseDate(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetActualReleaseDate sets the "actual_release_date" field.
-func (rc *ReleaseCreate) SetActualReleaseDate(t time.Time) *ReleaseCreate {
-	rc.mutation.SetActualReleaseDate(t)
-	return rc
+func (_c *ReleaseCreate) SetActualReleaseDate(v time.Time) *ReleaseCreate {
+	_c.mutation.SetActualReleaseDate(v)
+	return _c
 }
 
 // SetNillableActualReleaseDate sets the "actual_release_date" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableActualReleaseDate(t *time.Time) *ReleaseCreate {
-	if t != nil {
-		rc.SetActualReleaseDate(*t)
+func (_c *ReleaseCreate) SetNillableActualReleaseDate(v *time.Time) *ReleaseCreate {
+	if v != nil {
+		_c.SetActualReleaseDate(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetPlannedStartDate sets the "planned_start_date" field.
-func (rc *ReleaseCreate) SetPlannedStartDate(t time.Time) *ReleaseCreate {
-	rc.mutation.SetPlannedStartDate(t)
-	return rc
+func (_c *ReleaseCreate) SetPlannedStartDate(v time.Time) *ReleaseCreate {
+	_c.mutation.SetPlannedStartDate(v)
+	return _c
 }
 
 // SetNillablePlannedStartDate sets the "planned_start_date" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillablePlannedStartDate(t *time.Time) *ReleaseCreate {
-	if t != nil {
-		rc.SetPlannedStartDate(*t)
+func (_c *ReleaseCreate) SetNillablePlannedStartDate(v *time.Time) *ReleaseCreate {
+	if v != nil {
+		_c.SetPlannedStartDate(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetPlannedEndDate sets the "planned_end_date" field.
-func (rc *ReleaseCreate) SetPlannedEndDate(t time.Time) *ReleaseCreate {
-	rc.mutation.SetPlannedEndDate(t)
-	return rc
+func (_c *ReleaseCreate) SetPlannedEndDate(v time.Time) *ReleaseCreate {
+	_c.mutation.SetPlannedEndDate(v)
+	return _c
 }
 
 // SetNillablePlannedEndDate sets the "planned_end_date" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillablePlannedEndDate(t *time.Time) *ReleaseCreate {
-	if t != nil {
-		rc.SetPlannedEndDate(*t)
+func (_c *ReleaseCreate) SetNillablePlannedEndDate(v *time.Time) *ReleaseCreate {
+	if v != nil {
+		_c.SetPlannedEndDate(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetReleaseNotes sets the "release_notes" field.
-func (rc *ReleaseCreate) SetReleaseNotes(s string) *ReleaseCreate {
-	rc.mutation.SetReleaseNotes(s)
-	return rc
+func (_c *ReleaseCreate) SetReleaseNotes(v string) *ReleaseCreate {
+	_c.mutation.SetReleaseNotes(v)
+	return _c
 }
 
 // SetNillableReleaseNotes sets the "release_notes" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableReleaseNotes(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetReleaseNotes(*s)
+func (_c *ReleaseCreate) SetNillableReleaseNotes(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetReleaseNotes(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetRollbackProcedure sets the "rollback_procedure" field.
-func (rc *ReleaseCreate) SetRollbackProcedure(s string) *ReleaseCreate {
-	rc.mutation.SetRollbackProcedure(s)
-	return rc
+func (_c *ReleaseCreate) SetRollbackProcedure(v string) *ReleaseCreate {
+	_c.mutation.SetRollbackProcedure(v)
+	return _c
 }
 
 // SetNillableRollbackProcedure sets the "rollback_procedure" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableRollbackProcedure(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetRollbackProcedure(*s)
+func (_c *ReleaseCreate) SetNillableRollbackProcedure(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetRollbackProcedure(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetValidationCriteria sets the "validation_criteria" field.
-func (rc *ReleaseCreate) SetValidationCriteria(s string) *ReleaseCreate {
-	rc.mutation.SetValidationCriteria(s)
-	return rc
+func (_c *ReleaseCreate) SetValidationCriteria(v string) *ReleaseCreate {
+	_c.mutation.SetValidationCriteria(v)
+	return _c
 }
 
 // SetNillableValidationCriteria sets the "validation_criteria" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableValidationCriteria(s *string) *ReleaseCreate {
-	if s != nil {
-		rc.SetValidationCriteria(*s)
+func (_c *ReleaseCreate) SetNillableValidationCriteria(v *string) *ReleaseCreate {
+	if v != nil {
+		_c.SetValidationCriteria(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetAffectedSystems sets the "affected_systems" field.
-func (rc *ReleaseCreate) SetAffectedSystems(s []string) *ReleaseCreate {
-	rc.mutation.SetAffectedSystems(s)
-	return rc
+func (_c *ReleaseCreate) SetAffectedSystems(v []string) *ReleaseCreate {
+	_c.mutation.SetAffectedSystems(v)
+	return _c
 }
 
 // SetAffectedComponents sets the "affected_components" field.
-func (rc *ReleaseCreate) SetAffectedComponents(s []string) *ReleaseCreate {
-	rc.mutation.SetAffectedComponents(s)
-	return rc
+func (_c *ReleaseCreate) SetAffectedComponents(v []string) *ReleaseCreate {
+	_c.mutation.SetAffectedComponents(v)
+	return _c
 }
 
 // SetDeploymentSteps sets the "deployment_steps" field.
-func (rc *ReleaseCreate) SetDeploymentSteps(s []string) *ReleaseCreate {
-	rc.mutation.SetDeploymentSteps(s)
-	return rc
+func (_c *ReleaseCreate) SetDeploymentSteps(v []string) *ReleaseCreate {
+	_c.mutation.SetDeploymentSteps(v)
+	return _c
 }
 
 // SetTags sets the "tags" field.
-func (rc *ReleaseCreate) SetTags(s []string) *ReleaseCreate {
-	rc.mutation.SetTags(s)
-	return rc
+func (_c *ReleaseCreate) SetTags(v []string) *ReleaseCreate {
+	_c.mutation.SetTags(v)
+	return _c
 }
 
 // SetIsEmergency sets the "is_emergency" field.
-func (rc *ReleaseCreate) SetIsEmergency(b bool) *ReleaseCreate {
-	rc.mutation.SetIsEmergency(b)
-	return rc
+func (_c *ReleaseCreate) SetIsEmergency(v bool) *ReleaseCreate {
+	_c.mutation.SetIsEmergency(v)
+	return _c
 }
 
 // SetNillableIsEmergency sets the "is_emergency" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableIsEmergency(b *bool) *ReleaseCreate {
-	if b != nil {
-		rc.SetIsEmergency(*b)
+func (_c *ReleaseCreate) SetNillableIsEmergency(v *bool) *ReleaseCreate {
+	if v != nil {
+		_c.SetIsEmergency(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetRequiresApproval sets the "requires_approval" field.
-func (rc *ReleaseCreate) SetRequiresApproval(b bool) *ReleaseCreate {
-	rc.mutation.SetRequiresApproval(b)
-	return rc
+func (_c *ReleaseCreate) SetRequiresApproval(v bool) *ReleaseCreate {
+	_c.mutation.SetRequiresApproval(v)
+	return _c
 }
 
 // SetNillableRequiresApproval sets the "requires_approval" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableRequiresApproval(b *bool) *ReleaseCreate {
-	if b != nil {
-		rc.SetRequiresApproval(*b)
+func (_c *ReleaseCreate) SetNillableRequiresApproval(v *bool) *ReleaseCreate {
+	if v != nil {
+		_c.SetRequiresApproval(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (rc *ReleaseCreate) SetCreatedAt(t time.Time) *ReleaseCreate {
-	rc.mutation.SetCreatedAt(t)
-	return rc
+func (_c *ReleaseCreate) SetCreatedAt(v time.Time) *ReleaseCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableCreatedAt(t *time.Time) *ReleaseCreate {
-	if t != nil {
-		rc.SetCreatedAt(*t)
+func (_c *ReleaseCreate) SetNillableCreatedAt(v *time.Time) *ReleaseCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return rc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (rc *ReleaseCreate) SetUpdatedAt(t time.Time) *ReleaseCreate {
-	rc.mutation.SetUpdatedAt(t)
-	return rc
+func (_c *ReleaseCreate) SetUpdatedAt(v time.Time) *ReleaseCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (rc *ReleaseCreate) SetNillableUpdatedAt(t *time.Time) *ReleaseCreate {
-	if t != nil {
-		rc.SetUpdatedAt(*t)
+func (_c *ReleaseCreate) SetNillableUpdatedAt(v *time.Time) *ReleaseCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return rc
+	return _c
 }
 
 // Mutation returns the ReleaseMutation object of the builder.
-func (rc *ReleaseCreate) Mutation() *ReleaseMutation {
-	return rc.mutation
+func (_c *ReleaseCreate) Mutation() *ReleaseMutation {
+	return _c.mutation
 }
 
 // Save creates the Release in the database.
-func (rc *ReleaseCreate) Save(ctx context.Context) (*Release, error) {
-	rc.defaults()
-	return withHooks(ctx, rc.sqlSave, rc.mutation, rc.hooks)
+func (_c *ReleaseCreate) Save(ctx context.Context) (*Release, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (rc *ReleaseCreate) SaveX(ctx context.Context) *Release {
-	v, err := rc.Save(ctx)
+func (_c *ReleaseCreate) SaveX(ctx context.Context) *Release {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -341,121 +341,121 @@ func (rc *ReleaseCreate) SaveX(ctx context.Context) *Release {
 }
 
 // Exec executes the query.
-func (rc *ReleaseCreate) Exec(ctx context.Context) error {
-	_, err := rc.Save(ctx)
+func (_c *ReleaseCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rc *ReleaseCreate) ExecX(ctx context.Context) {
-	if err := rc.Exec(ctx); err != nil {
+func (_c *ReleaseCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (rc *ReleaseCreate) defaults() {
-	if _, ok := rc.mutation.GetType(); !ok {
+func (_c *ReleaseCreate) defaults() {
+	if _, ok := _c.mutation.GetType(); !ok {
 		v := release.DefaultType
-		rc.mutation.SetType(v)
+		_c.mutation.SetType(v)
 	}
-	if _, ok := rc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := release.DefaultStatus
-		rc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := rc.mutation.Severity(); !ok {
+	if _, ok := _c.mutation.Severity(); !ok {
 		v := release.DefaultSeverity
-		rc.mutation.SetSeverity(v)
+		_c.mutation.SetSeverity(v)
 	}
-	if _, ok := rc.mutation.Environment(); !ok {
+	if _, ok := _c.mutation.Environment(); !ok {
 		v := release.DefaultEnvironment
-		rc.mutation.SetEnvironment(v)
+		_c.mutation.SetEnvironment(v)
 	}
-	if _, ok := rc.mutation.IsEmergency(); !ok {
+	if _, ok := _c.mutation.IsEmergency(); !ok {
 		v := release.DefaultIsEmergency
-		rc.mutation.SetIsEmergency(v)
+		_c.mutation.SetIsEmergency(v)
 	}
-	if _, ok := rc.mutation.RequiresApproval(); !ok {
+	if _, ok := _c.mutation.RequiresApproval(); !ok {
 		v := release.DefaultRequiresApproval
-		rc.mutation.SetRequiresApproval(v)
+		_c.mutation.SetRequiresApproval(v)
 	}
-	if _, ok := rc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := release.DefaultCreatedAt()
-		rc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := rc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := release.DefaultUpdatedAt()
-		rc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (rc *ReleaseCreate) check() error {
-	if _, ok := rc.mutation.ReleaseNumber(); !ok {
+func (_c *ReleaseCreate) check() error {
+	if _, ok := _c.mutation.ReleaseNumber(); !ok {
 		return &ValidationError{Name: "release_number", err: errors.New(`ent: missing required field "Release.release_number"`)}
 	}
-	if v, ok := rc.mutation.ReleaseNumber(); ok {
+	if v, ok := _c.mutation.ReleaseNumber(); ok {
 		if err := release.ReleaseNumberValidator(v); err != nil {
 			return &ValidationError{Name: "release_number", err: fmt.Errorf(`ent: validator failed for field "Release.release_number": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.Title(); !ok {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "Release.title"`)}
 	}
-	if v, ok := rc.mutation.Title(); ok {
+	if v, ok := _c.mutation.Title(); ok {
 		if err := release.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Release.title": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "Release.type"`)}
 	}
-	if _, ok := rc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Release.status"`)}
 	}
-	if _, ok := rc.mutation.Severity(); !ok {
+	if _, ok := _c.mutation.Severity(); !ok {
 		return &ValidationError{Name: "severity", err: errors.New(`ent: missing required field "Release.severity"`)}
 	}
-	if _, ok := rc.mutation.Environment(); !ok {
+	if _, ok := _c.mutation.Environment(); !ok {
 		return &ValidationError{Name: "environment", err: errors.New(`ent: missing required field "Release.environment"`)}
 	}
-	if _, ok := rc.mutation.CreatedBy(); !ok {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "Release.created_by"`)}
 	}
-	if v, ok := rc.mutation.CreatedBy(); ok {
+	if v, ok := _c.mutation.CreatedBy(); ok {
 		if err := release.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Release.created_by": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Release.tenant_id"`)}
 	}
-	if v, ok := rc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := release.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Release.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := rc.mutation.IsEmergency(); !ok {
+	if _, ok := _c.mutation.IsEmergency(); !ok {
 		return &ValidationError{Name: "is_emergency", err: errors.New(`ent: missing required field "Release.is_emergency"`)}
 	}
-	if _, ok := rc.mutation.RequiresApproval(); !ok {
+	if _, ok := _c.mutation.RequiresApproval(); !ok {
 		return &ValidationError{Name: "requires_approval", err: errors.New(`ent: missing required field "Release.requires_approval"`)}
 	}
-	if _, ok := rc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Release.created_at"`)}
 	}
-	if _, ok := rc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Release.updated_at"`)}
 	}
 	return nil
 }
 
-func (rc *ReleaseCreate) sqlSave(ctx context.Context) (*Release, error) {
-	if err := rc.check(); err != nil {
+func (_c *ReleaseCreate) sqlSave(ctx context.Context) (*Release, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := rc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, rc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -463,117 +463,117 @@ func (rc *ReleaseCreate) sqlSave(ctx context.Context) (*Release, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	rc.mutation.id = &_node.ID
-	rc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (rc *ReleaseCreate) createSpec() (*Release, *sqlgraph.CreateSpec) {
+func (_c *ReleaseCreate) createSpec() (*Release, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Release{config: rc.config}
+		_node = &Release{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(release.Table, sqlgraph.NewFieldSpec(release.FieldID, field.TypeInt))
 	)
-	if value, ok := rc.mutation.ReleaseNumber(); ok {
+	if value, ok := _c.mutation.ReleaseNumber(); ok {
 		_spec.SetField(release.FieldReleaseNumber, field.TypeString, value)
 		_node.ReleaseNumber = value
 	}
-	if value, ok := rc.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(release.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := rc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(release.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := rc.mutation.GetType(); ok {
+	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(release.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := rc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(release.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := rc.mutation.Severity(); ok {
+	if value, ok := _c.mutation.Severity(); ok {
 		_spec.SetField(release.FieldSeverity, field.TypeString, value)
 		_node.Severity = value
 	}
-	if value, ok := rc.mutation.Environment(); ok {
+	if value, ok := _c.mutation.Environment(); ok {
 		_spec.SetField(release.FieldEnvironment, field.TypeString, value)
 		_node.Environment = value
 	}
-	if value, ok := rc.mutation.ChangeID(); ok {
+	if value, ok := _c.mutation.ChangeID(); ok {
 		_spec.SetField(release.FieldChangeID, field.TypeInt, value)
 		_node.ChangeID = &value
 	}
-	if value, ok := rc.mutation.OwnerID(); ok {
+	if value, ok := _c.mutation.OwnerID(); ok {
 		_spec.SetField(release.FieldOwnerID, field.TypeInt, value)
 		_node.OwnerID = &value
 	}
-	if value, ok := rc.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(release.FieldCreatedBy, field.TypeInt, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := rc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(release.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := rc.mutation.PlannedReleaseDate(); ok {
+	if value, ok := _c.mutation.PlannedReleaseDate(); ok {
 		_spec.SetField(release.FieldPlannedReleaseDate, field.TypeTime, value)
 		_node.PlannedReleaseDate = value
 	}
-	if value, ok := rc.mutation.ActualReleaseDate(); ok {
+	if value, ok := _c.mutation.ActualReleaseDate(); ok {
 		_spec.SetField(release.FieldActualReleaseDate, field.TypeTime, value)
 		_node.ActualReleaseDate = value
 	}
-	if value, ok := rc.mutation.PlannedStartDate(); ok {
+	if value, ok := _c.mutation.PlannedStartDate(); ok {
 		_spec.SetField(release.FieldPlannedStartDate, field.TypeTime, value)
 		_node.PlannedStartDate = value
 	}
-	if value, ok := rc.mutation.PlannedEndDate(); ok {
+	if value, ok := _c.mutation.PlannedEndDate(); ok {
 		_spec.SetField(release.FieldPlannedEndDate, field.TypeTime, value)
 		_node.PlannedEndDate = value
 	}
-	if value, ok := rc.mutation.ReleaseNotes(); ok {
+	if value, ok := _c.mutation.ReleaseNotes(); ok {
 		_spec.SetField(release.FieldReleaseNotes, field.TypeString, value)
 		_node.ReleaseNotes = value
 	}
-	if value, ok := rc.mutation.RollbackProcedure(); ok {
+	if value, ok := _c.mutation.RollbackProcedure(); ok {
 		_spec.SetField(release.FieldRollbackProcedure, field.TypeString, value)
 		_node.RollbackProcedure = value
 	}
-	if value, ok := rc.mutation.ValidationCriteria(); ok {
+	if value, ok := _c.mutation.ValidationCriteria(); ok {
 		_spec.SetField(release.FieldValidationCriteria, field.TypeString, value)
 		_node.ValidationCriteria = value
 	}
-	if value, ok := rc.mutation.AffectedSystems(); ok {
+	if value, ok := _c.mutation.AffectedSystems(); ok {
 		_spec.SetField(release.FieldAffectedSystems, field.TypeJSON, value)
 		_node.AffectedSystems = value
 	}
-	if value, ok := rc.mutation.AffectedComponents(); ok {
+	if value, ok := _c.mutation.AffectedComponents(); ok {
 		_spec.SetField(release.FieldAffectedComponents, field.TypeJSON, value)
 		_node.AffectedComponents = value
 	}
-	if value, ok := rc.mutation.DeploymentSteps(); ok {
+	if value, ok := _c.mutation.DeploymentSteps(); ok {
 		_spec.SetField(release.FieldDeploymentSteps, field.TypeJSON, value)
 		_node.DeploymentSteps = value
 	}
-	if value, ok := rc.mutation.Tags(); ok {
+	if value, ok := _c.mutation.Tags(); ok {
 		_spec.SetField(release.FieldTags, field.TypeJSON, value)
 		_node.Tags = value
 	}
-	if value, ok := rc.mutation.IsEmergency(); ok {
+	if value, ok := _c.mutation.IsEmergency(); ok {
 		_spec.SetField(release.FieldIsEmergency, field.TypeBool, value)
 		_node.IsEmergency = value
 	}
-	if value, ok := rc.mutation.RequiresApproval(); ok {
+	if value, ok := _c.mutation.RequiresApproval(); ok {
 		_spec.SetField(release.FieldRequiresApproval, field.TypeBool, value)
 		_node.RequiresApproval = value
 	}
-	if value, ok := rc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(release.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := rc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(release.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -588,16 +588,16 @@ type ReleaseCreateBulk struct {
 }
 
 // Save creates the Release entities in the database.
-func (rcb *ReleaseCreateBulk) Save(ctx context.Context) ([]*Release, error) {
-	if rcb.err != nil {
-		return nil, rcb.err
+func (_c *ReleaseCreateBulk) Save(ctx context.Context) ([]*Release, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(rcb.builders))
-	nodes := make([]*Release, len(rcb.builders))
-	mutators := make([]Mutator, len(rcb.builders))
-	for i := range rcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Release, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := rcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ReleaseMutation)
@@ -611,11 +611,11 @@ func (rcb *ReleaseCreateBulk) Save(ctx context.Context) ([]*Release, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, rcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, rcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -639,7 +639,7 @@ func (rcb *ReleaseCreateBulk) Save(ctx context.Context) ([]*Release, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, rcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -647,8 +647,8 @@ func (rcb *ReleaseCreateBulk) Save(ctx context.Context) ([]*Release, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (rcb *ReleaseCreateBulk) SaveX(ctx context.Context) []*Release {
-	v, err := rcb.Save(ctx)
+func (_c *ReleaseCreateBulk) SaveX(ctx context.Context) []*Release {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -656,14 +656,14 @@ func (rcb *ReleaseCreateBulk) SaveX(ctx context.Context) []*Release {
 }
 
 // Exec executes the query.
-func (rcb *ReleaseCreateBulk) Exec(ctx context.Context) error {
-	_, err := rcb.Save(ctx)
+func (_c *ReleaseCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rcb *ReleaseCreateBulk) ExecX(ctx context.Context) {
-	if err := rcb.Exec(ctx); err != nil {
+func (_c *ReleaseCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

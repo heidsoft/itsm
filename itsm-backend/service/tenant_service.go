@@ -45,7 +45,7 @@ func (s *TenantService) CreateTenant(ctx context.Context, req *dto.CreateTenantR
 		SetName(req.Name).
 		SetCode(req.Code).
 		SetNillableDomain(req.Domain).
-		SetType(req.Type).
+		SetType(tenant.Type(req.Type)).
 		SetStatus("active").
 		SetNillableExpiresAt(req.ExpiresAt).
 		Save(ctx)
@@ -101,7 +101,7 @@ func (s *TenantService) ListTenants(ctx context.Context, req *dto.ListTenantsReq
 
 	// 类型过滤
 	if req.Type != "" {
-		query = query.Where(tenant.TypeEQ(req.Type))
+		query = query.Where(tenant.TypeEQ(tenant.Type(req.Type)))
 	}
 
 	// 搜索过滤
@@ -175,7 +175,7 @@ func (s *TenantService) UpdateTenant(ctx context.Context, tenantID int, req *dto
 		update = update.SetNillableDomain(req.Domain)
 	}
 	if req.Type != nil && *req.Type != "" {
-		update = update.SetType(*req.Type)
+		update = update.SetType(tenant.Type(*req.Type))
 	}
 	if req.Status != nil && *req.Status != "" {
 		update = update.SetStatus(*req.Status)

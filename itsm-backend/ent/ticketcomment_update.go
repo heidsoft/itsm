@@ -26,180 +26,180 @@ type TicketCommentUpdate struct {
 }
 
 // Where appends a list predicates to the TicketCommentUpdate builder.
-func (tcu *TicketCommentUpdate) Where(ps ...predicate.TicketComment) *TicketCommentUpdate {
-	tcu.mutation.Where(ps...)
-	return tcu
+func (_u *TicketCommentUpdate) Where(ps ...predicate.TicketComment) *TicketCommentUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (tcu *TicketCommentUpdate) SetTicketID(i int) *TicketCommentUpdate {
-	tcu.mutation.SetTicketID(i)
-	return tcu
+func (_u *TicketCommentUpdate) SetTicketID(v int) *TicketCommentUpdate {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (tcu *TicketCommentUpdate) SetNillableTicketID(i *int) *TicketCommentUpdate {
-	if i != nil {
-		tcu.SetTicketID(*i)
+func (_u *TicketCommentUpdate) SetNillableTicketID(v *int) *TicketCommentUpdate {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return tcu
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (tcu *TicketCommentUpdate) SetUserID(i int) *TicketCommentUpdate {
-	tcu.mutation.SetUserID(i)
-	return tcu
+func (_u *TicketCommentUpdate) SetUserID(v int) *TicketCommentUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (tcu *TicketCommentUpdate) SetNillableUserID(i *int) *TicketCommentUpdate {
-	if i != nil {
-		tcu.SetUserID(*i)
+func (_u *TicketCommentUpdate) SetNillableUserID(v *int) *TicketCommentUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return tcu
+	return _u
 }
 
 // SetContent sets the "content" field.
-func (tcu *TicketCommentUpdate) SetContent(s string) *TicketCommentUpdate {
-	tcu.mutation.SetContent(s)
-	return tcu
+func (_u *TicketCommentUpdate) SetContent(v string) *TicketCommentUpdate {
+	_u.mutation.SetContent(v)
+	return _u
 }
 
 // SetNillableContent sets the "content" field if the given value is not nil.
-func (tcu *TicketCommentUpdate) SetNillableContent(s *string) *TicketCommentUpdate {
-	if s != nil {
-		tcu.SetContent(*s)
+func (_u *TicketCommentUpdate) SetNillableContent(v *string) *TicketCommentUpdate {
+	if v != nil {
+		_u.SetContent(*v)
 	}
-	return tcu
+	return _u
 }
 
 // SetIsInternal sets the "is_internal" field.
-func (tcu *TicketCommentUpdate) SetIsInternal(b bool) *TicketCommentUpdate {
-	tcu.mutation.SetIsInternal(b)
-	return tcu
+func (_u *TicketCommentUpdate) SetIsInternal(v bool) *TicketCommentUpdate {
+	_u.mutation.SetIsInternal(v)
+	return _u
 }
 
 // SetNillableIsInternal sets the "is_internal" field if the given value is not nil.
-func (tcu *TicketCommentUpdate) SetNillableIsInternal(b *bool) *TicketCommentUpdate {
-	if b != nil {
-		tcu.SetIsInternal(*b)
+func (_u *TicketCommentUpdate) SetNillableIsInternal(v *bool) *TicketCommentUpdate {
+	if v != nil {
+		_u.SetIsInternal(*v)
 	}
-	return tcu
+	return _u
 }
 
 // SetMentions sets the "mentions" field.
-func (tcu *TicketCommentUpdate) SetMentions(i []int) *TicketCommentUpdate {
-	tcu.mutation.SetMentions(i)
-	return tcu
+func (_u *TicketCommentUpdate) SetMentions(v []int) *TicketCommentUpdate {
+	_u.mutation.SetMentions(v)
+	return _u
 }
 
-// AppendMentions appends i to the "mentions" field.
-func (tcu *TicketCommentUpdate) AppendMentions(i []int) *TicketCommentUpdate {
-	tcu.mutation.AppendMentions(i)
-	return tcu
+// AppendMentions appends value to the "mentions" field.
+func (_u *TicketCommentUpdate) AppendMentions(v []int) *TicketCommentUpdate {
+	_u.mutation.AppendMentions(v)
+	return _u
 }
 
 // ClearMentions clears the value of the "mentions" field.
-func (tcu *TicketCommentUpdate) ClearMentions() *TicketCommentUpdate {
-	tcu.mutation.ClearMentions()
-	return tcu
+func (_u *TicketCommentUpdate) ClearMentions() *TicketCommentUpdate {
+	_u.mutation.ClearMentions()
+	return _u
 }
 
 // SetAttachments sets the "attachments" field.
-func (tcu *TicketCommentUpdate) SetAttachments(i []int) *TicketCommentUpdate {
-	tcu.mutation.SetAttachments(i)
-	return tcu
+func (_u *TicketCommentUpdate) SetAttachments(v []int) *TicketCommentUpdate {
+	_u.mutation.SetAttachments(v)
+	return _u
 }
 
-// AppendAttachments appends i to the "attachments" field.
-func (tcu *TicketCommentUpdate) AppendAttachments(i []int) *TicketCommentUpdate {
-	tcu.mutation.AppendAttachments(i)
-	return tcu
+// AppendAttachments appends value to the "attachments" field.
+func (_u *TicketCommentUpdate) AppendAttachments(v []int) *TicketCommentUpdate {
+	_u.mutation.AppendAttachments(v)
+	return _u
 }
 
 // ClearAttachments clears the value of the "attachments" field.
-func (tcu *TicketCommentUpdate) ClearAttachments() *TicketCommentUpdate {
-	tcu.mutation.ClearAttachments()
-	return tcu
+func (_u *TicketCommentUpdate) ClearAttachments() *TicketCommentUpdate {
+	_u.mutation.ClearAttachments()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tcu *TicketCommentUpdate) SetTenantID(i int) *TicketCommentUpdate {
-	tcu.mutation.ResetTenantID()
-	tcu.mutation.SetTenantID(i)
-	return tcu
+func (_u *TicketCommentUpdate) SetTenantID(v int) *TicketCommentUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tcu *TicketCommentUpdate) SetNillableTenantID(i *int) *TicketCommentUpdate {
-	if i != nil {
-		tcu.SetTenantID(*i)
+func (_u *TicketCommentUpdate) SetNillableTenantID(v *int) *TicketCommentUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tcu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tcu *TicketCommentUpdate) AddTenantID(i int) *TicketCommentUpdate {
-	tcu.mutation.AddTenantID(i)
-	return tcu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketCommentUpdate) AddTenantID(v int) *TicketCommentUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tcu *TicketCommentUpdate) SetCreatedAt(t time.Time) *TicketCommentUpdate {
-	tcu.mutation.SetCreatedAt(t)
-	return tcu
+func (_u *TicketCommentUpdate) SetCreatedAt(v time.Time) *TicketCommentUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tcu *TicketCommentUpdate) SetNillableCreatedAt(t *time.Time) *TicketCommentUpdate {
-	if t != nil {
-		tcu.SetCreatedAt(*t)
+func (_u *TicketCommentUpdate) SetNillableCreatedAt(v *time.Time) *TicketCommentUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tcu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tcu *TicketCommentUpdate) SetUpdatedAt(t time.Time) *TicketCommentUpdate {
-	tcu.mutation.SetUpdatedAt(t)
-	return tcu
+func (_u *TicketCommentUpdate) SetUpdatedAt(v time.Time) *TicketCommentUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (tcu *TicketCommentUpdate) SetTicket(t *Ticket) *TicketCommentUpdate {
-	return tcu.SetTicketID(t.ID)
+func (_u *TicketCommentUpdate) SetTicket(v *Ticket) *TicketCommentUpdate {
+	return _u.SetTicketID(v.ID)
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (tcu *TicketCommentUpdate) SetUser(u *User) *TicketCommentUpdate {
-	return tcu.SetUserID(u.ID)
+func (_u *TicketCommentUpdate) SetUser(v *User) *TicketCommentUpdate {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the TicketCommentMutation object of the builder.
-func (tcu *TicketCommentUpdate) Mutation() *TicketCommentMutation {
-	return tcu.mutation
+func (_u *TicketCommentUpdate) Mutation() *TicketCommentMutation {
+	return _u.mutation
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (tcu *TicketCommentUpdate) ClearTicket() *TicketCommentUpdate {
-	tcu.mutation.ClearTicket()
-	return tcu
+func (_u *TicketCommentUpdate) ClearTicket() *TicketCommentUpdate {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (tcu *TicketCommentUpdate) ClearUser() *TicketCommentUpdate {
-	tcu.mutation.ClearUser()
-	return tcu
+func (_u *TicketCommentUpdate) ClearUser() *TicketCommentUpdate {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (tcu *TicketCommentUpdate) Save(ctx context.Context) (int, error) {
-	tcu.defaults()
-	return withHooks(ctx, tcu.sqlSave, tcu.mutation, tcu.hooks)
+func (_u *TicketCommentUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tcu *TicketCommentUpdate) SaveX(ctx context.Context) int {
-	affected, err := tcu.Save(ctx)
+func (_u *TicketCommentUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -207,110 +207,110 @@ func (tcu *TicketCommentUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (tcu *TicketCommentUpdate) Exec(ctx context.Context) error {
-	_, err := tcu.Save(ctx)
+func (_u *TicketCommentUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcu *TicketCommentUpdate) ExecX(ctx context.Context) {
-	if err := tcu.Exec(ctx); err != nil {
+func (_u *TicketCommentUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tcu *TicketCommentUpdate) defaults() {
-	if _, ok := tcu.mutation.UpdatedAt(); !ok {
+func (_u *TicketCommentUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ticketcomment.UpdateDefaultUpdatedAt()
-		tcu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tcu *TicketCommentUpdate) check() error {
-	if v, ok := tcu.mutation.TicketID(); ok {
+func (_u *TicketCommentUpdate) check() error {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := ticketcomment.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "TicketComment.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := tcu.mutation.UserID(); ok {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := ticketcomment.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "TicketComment.user_id": %w`, err)}
 		}
 	}
-	if v, ok := tcu.mutation.Content(); ok {
+	if v, ok := _u.mutation.Content(); ok {
 		if err := ticketcomment.ContentValidator(v); err != nil {
 			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "TicketComment.content": %w`, err)}
 		}
 	}
-	if v, ok := tcu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketcomment.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketComment.tenant_id": %w`, err)}
 		}
 	}
-	if tcu.mutation.TicketCleared() && len(tcu.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketComment.ticket"`)
 	}
-	if tcu.mutation.UserCleared() && len(tcu.mutation.UserIDs()) > 0 {
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketComment.user"`)
 	}
 	return nil
 }
 
-func (tcu *TicketCommentUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := tcu.check(); err != nil {
-		return n, err
+func (_u *TicketCommentUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketcomment.Table, ticketcomment.Columns, sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt))
-	if ps := tcu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tcu.mutation.Content(); ok {
+	if value, ok := _u.mutation.Content(); ok {
 		_spec.SetField(ticketcomment.FieldContent, field.TypeString, value)
 	}
-	if value, ok := tcu.mutation.IsInternal(); ok {
+	if value, ok := _u.mutation.IsInternal(); ok {
 		_spec.SetField(ticketcomment.FieldIsInternal, field.TypeBool, value)
 	}
-	if value, ok := tcu.mutation.Mentions(); ok {
+	if value, ok := _u.mutation.Mentions(); ok {
 		_spec.SetField(ticketcomment.FieldMentions, field.TypeJSON, value)
 	}
-	if value, ok := tcu.mutation.AppendedMentions(); ok {
+	if value, ok := _u.mutation.AppendedMentions(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketcomment.FieldMentions, value)
 		})
 	}
-	if tcu.mutation.MentionsCleared() {
+	if _u.mutation.MentionsCleared() {
 		_spec.ClearField(ticketcomment.FieldMentions, field.TypeJSON)
 	}
-	if value, ok := tcu.mutation.Attachments(); ok {
+	if value, ok := _u.mutation.Attachments(); ok {
 		_spec.SetField(ticketcomment.FieldAttachments, field.TypeJSON, value)
 	}
-	if value, ok := tcu.mutation.AppendedAttachments(); ok {
+	if value, ok := _u.mutation.AppendedAttachments(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketcomment.FieldAttachments, value)
 		})
 	}
-	if tcu.mutation.AttachmentsCleared() {
+	if _u.mutation.AttachmentsCleared() {
 		_spec.ClearField(ticketcomment.FieldAttachments, field.TypeJSON)
 	}
-	if value, ok := tcu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketcomment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tcu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketcomment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tcu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketcomment.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tcu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketcomment.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if tcu.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -323,7 +323,7 @@ func (tcu *TicketCommentUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tcu.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -339,7 +339,7 @@ func (tcu *TicketCommentUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tcu.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -352,7 +352,7 @@ func (tcu *TicketCommentUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tcu.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -368,7 +368,7 @@ func (tcu *TicketCommentUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, tcu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketcomment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -376,8 +376,8 @@ func (tcu *TicketCommentUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	tcu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // TicketCommentUpdateOne is the builder for updating a single TicketComment entity.
@@ -389,187 +389,187 @@ type TicketCommentUpdateOne struct {
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (tcuo *TicketCommentUpdateOne) SetTicketID(i int) *TicketCommentUpdateOne {
-	tcuo.mutation.SetTicketID(i)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetTicketID(v int) *TicketCommentUpdateOne {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (tcuo *TicketCommentUpdateOne) SetNillableTicketID(i *int) *TicketCommentUpdateOne {
-	if i != nil {
-		tcuo.SetTicketID(*i)
+func (_u *TicketCommentUpdateOne) SetNillableTicketID(v *int) *TicketCommentUpdateOne {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (tcuo *TicketCommentUpdateOne) SetUserID(i int) *TicketCommentUpdateOne {
-	tcuo.mutation.SetUserID(i)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetUserID(v int) *TicketCommentUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (tcuo *TicketCommentUpdateOne) SetNillableUserID(i *int) *TicketCommentUpdateOne {
-	if i != nil {
-		tcuo.SetUserID(*i)
+func (_u *TicketCommentUpdateOne) SetNillableUserID(v *int) *TicketCommentUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // SetContent sets the "content" field.
-func (tcuo *TicketCommentUpdateOne) SetContent(s string) *TicketCommentUpdateOne {
-	tcuo.mutation.SetContent(s)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetContent(v string) *TicketCommentUpdateOne {
+	_u.mutation.SetContent(v)
+	return _u
 }
 
 // SetNillableContent sets the "content" field if the given value is not nil.
-func (tcuo *TicketCommentUpdateOne) SetNillableContent(s *string) *TicketCommentUpdateOne {
-	if s != nil {
-		tcuo.SetContent(*s)
+func (_u *TicketCommentUpdateOne) SetNillableContent(v *string) *TicketCommentUpdateOne {
+	if v != nil {
+		_u.SetContent(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // SetIsInternal sets the "is_internal" field.
-func (tcuo *TicketCommentUpdateOne) SetIsInternal(b bool) *TicketCommentUpdateOne {
-	tcuo.mutation.SetIsInternal(b)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetIsInternal(v bool) *TicketCommentUpdateOne {
+	_u.mutation.SetIsInternal(v)
+	return _u
 }
 
 // SetNillableIsInternal sets the "is_internal" field if the given value is not nil.
-func (tcuo *TicketCommentUpdateOne) SetNillableIsInternal(b *bool) *TicketCommentUpdateOne {
-	if b != nil {
-		tcuo.SetIsInternal(*b)
+func (_u *TicketCommentUpdateOne) SetNillableIsInternal(v *bool) *TicketCommentUpdateOne {
+	if v != nil {
+		_u.SetIsInternal(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // SetMentions sets the "mentions" field.
-func (tcuo *TicketCommentUpdateOne) SetMentions(i []int) *TicketCommentUpdateOne {
-	tcuo.mutation.SetMentions(i)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetMentions(v []int) *TicketCommentUpdateOne {
+	_u.mutation.SetMentions(v)
+	return _u
 }
 
-// AppendMentions appends i to the "mentions" field.
-func (tcuo *TicketCommentUpdateOne) AppendMentions(i []int) *TicketCommentUpdateOne {
-	tcuo.mutation.AppendMentions(i)
-	return tcuo
+// AppendMentions appends value to the "mentions" field.
+func (_u *TicketCommentUpdateOne) AppendMentions(v []int) *TicketCommentUpdateOne {
+	_u.mutation.AppendMentions(v)
+	return _u
 }
 
 // ClearMentions clears the value of the "mentions" field.
-func (tcuo *TicketCommentUpdateOne) ClearMentions() *TicketCommentUpdateOne {
-	tcuo.mutation.ClearMentions()
-	return tcuo
+func (_u *TicketCommentUpdateOne) ClearMentions() *TicketCommentUpdateOne {
+	_u.mutation.ClearMentions()
+	return _u
 }
 
 // SetAttachments sets the "attachments" field.
-func (tcuo *TicketCommentUpdateOne) SetAttachments(i []int) *TicketCommentUpdateOne {
-	tcuo.mutation.SetAttachments(i)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetAttachments(v []int) *TicketCommentUpdateOne {
+	_u.mutation.SetAttachments(v)
+	return _u
 }
 
-// AppendAttachments appends i to the "attachments" field.
-func (tcuo *TicketCommentUpdateOne) AppendAttachments(i []int) *TicketCommentUpdateOne {
-	tcuo.mutation.AppendAttachments(i)
-	return tcuo
+// AppendAttachments appends value to the "attachments" field.
+func (_u *TicketCommentUpdateOne) AppendAttachments(v []int) *TicketCommentUpdateOne {
+	_u.mutation.AppendAttachments(v)
+	return _u
 }
 
 // ClearAttachments clears the value of the "attachments" field.
-func (tcuo *TicketCommentUpdateOne) ClearAttachments() *TicketCommentUpdateOne {
-	tcuo.mutation.ClearAttachments()
-	return tcuo
+func (_u *TicketCommentUpdateOne) ClearAttachments() *TicketCommentUpdateOne {
+	_u.mutation.ClearAttachments()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tcuo *TicketCommentUpdateOne) SetTenantID(i int) *TicketCommentUpdateOne {
-	tcuo.mutation.ResetTenantID()
-	tcuo.mutation.SetTenantID(i)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetTenantID(v int) *TicketCommentUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (tcuo *TicketCommentUpdateOne) SetNillableTenantID(i *int) *TicketCommentUpdateOne {
-	if i != nil {
-		tcuo.SetTenantID(*i)
+func (_u *TicketCommentUpdateOne) SetNillableTenantID(v *int) *TicketCommentUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return tcuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (tcuo *TicketCommentUpdateOne) AddTenantID(i int) *TicketCommentUpdateOne {
-	tcuo.mutation.AddTenantID(i)
-	return tcuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *TicketCommentUpdateOne) AddTenantID(v int) *TicketCommentUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tcuo *TicketCommentUpdateOne) SetCreatedAt(t time.Time) *TicketCommentUpdateOne {
-	tcuo.mutation.SetCreatedAt(t)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetCreatedAt(v time.Time) *TicketCommentUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tcuo *TicketCommentUpdateOne) SetNillableCreatedAt(t *time.Time) *TicketCommentUpdateOne {
-	if t != nil {
-		tcuo.SetCreatedAt(*t)
+func (_u *TicketCommentUpdateOne) SetNillableCreatedAt(v *time.Time) *TicketCommentUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return tcuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tcuo *TicketCommentUpdateOne) SetUpdatedAt(t time.Time) *TicketCommentUpdateOne {
-	tcuo.mutation.SetUpdatedAt(t)
-	return tcuo
+func (_u *TicketCommentUpdateOne) SetUpdatedAt(v time.Time) *TicketCommentUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (tcuo *TicketCommentUpdateOne) SetTicket(t *Ticket) *TicketCommentUpdateOne {
-	return tcuo.SetTicketID(t.ID)
+func (_u *TicketCommentUpdateOne) SetTicket(v *Ticket) *TicketCommentUpdateOne {
+	return _u.SetTicketID(v.ID)
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (tcuo *TicketCommentUpdateOne) SetUser(u *User) *TicketCommentUpdateOne {
-	return tcuo.SetUserID(u.ID)
+func (_u *TicketCommentUpdateOne) SetUser(v *User) *TicketCommentUpdateOne {
+	return _u.SetUserID(v.ID)
 }
 
 // Mutation returns the TicketCommentMutation object of the builder.
-func (tcuo *TicketCommentUpdateOne) Mutation() *TicketCommentMutation {
-	return tcuo.mutation
+func (_u *TicketCommentUpdateOne) Mutation() *TicketCommentMutation {
+	return _u.mutation
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (tcuo *TicketCommentUpdateOne) ClearTicket() *TicketCommentUpdateOne {
-	tcuo.mutation.ClearTicket()
-	return tcuo
+func (_u *TicketCommentUpdateOne) ClearTicket() *TicketCommentUpdateOne {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // ClearUser clears the "user" edge to the User entity.
-func (tcuo *TicketCommentUpdateOne) ClearUser() *TicketCommentUpdateOne {
-	tcuo.mutation.ClearUser()
-	return tcuo
+func (_u *TicketCommentUpdateOne) ClearUser() *TicketCommentUpdateOne {
+	_u.mutation.ClearUser()
+	return _u
 }
 
 // Where appends a list predicates to the TicketCommentUpdate builder.
-func (tcuo *TicketCommentUpdateOne) Where(ps ...predicate.TicketComment) *TicketCommentUpdateOne {
-	tcuo.mutation.Where(ps...)
-	return tcuo
+func (_u *TicketCommentUpdateOne) Where(ps ...predicate.TicketComment) *TicketCommentUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (tcuo *TicketCommentUpdateOne) Select(field string, fields ...string) *TicketCommentUpdateOne {
-	tcuo.fields = append([]string{field}, fields...)
-	return tcuo
+func (_u *TicketCommentUpdateOne) Select(field string, fields ...string) *TicketCommentUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated TicketComment entity.
-func (tcuo *TicketCommentUpdateOne) Save(ctx context.Context) (*TicketComment, error) {
-	tcuo.defaults()
-	return withHooks(ctx, tcuo.sqlSave, tcuo.mutation, tcuo.hooks)
+func (_u *TicketCommentUpdateOne) Save(ctx context.Context) (*TicketComment, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tcuo *TicketCommentUpdateOne) SaveX(ctx context.Context) *TicketComment {
-	node, err := tcuo.Save(ctx)
+func (_u *TicketCommentUpdateOne) SaveX(ctx context.Context) *TicketComment {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -577,68 +577,68 @@ func (tcuo *TicketCommentUpdateOne) SaveX(ctx context.Context) *TicketComment {
 }
 
 // Exec executes the query on the entity.
-func (tcuo *TicketCommentUpdateOne) Exec(ctx context.Context) error {
-	_, err := tcuo.Save(ctx)
+func (_u *TicketCommentUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcuo *TicketCommentUpdateOne) ExecX(ctx context.Context) {
-	if err := tcuo.Exec(ctx); err != nil {
+func (_u *TicketCommentUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tcuo *TicketCommentUpdateOne) defaults() {
-	if _, ok := tcuo.mutation.UpdatedAt(); !ok {
+func (_u *TicketCommentUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ticketcomment.UpdateDefaultUpdatedAt()
-		tcuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tcuo *TicketCommentUpdateOne) check() error {
-	if v, ok := tcuo.mutation.TicketID(); ok {
+func (_u *TicketCommentUpdateOne) check() error {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := ticketcomment.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "TicketComment.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := tcuo.mutation.UserID(); ok {
+	if v, ok := _u.mutation.UserID(); ok {
 		if err := ticketcomment.UserIDValidator(v); err != nil {
 			return &ValidationError{Name: "user_id", err: fmt.Errorf(`ent: validator failed for field "TicketComment.user_id": %w`, err)}
 		}
 	}
-	if v, ok := tcuo.mutation.Content(); ok {
+	if v, ok := _u.mutation.Content(); ok {
 		if err := ticketcomment.ContentValidator(v); err != nil {
 			return &ValidationError{Name: "content", err: fmt.Errorf(`ent: validator failed for field "TicketComment.content": %w`, err)}
 		}
 	}
-	if v, ok := tcuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ticketcomment.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketComment.tenant_id": %w`, err)}
 		}
 	}
-	if tcuo.mutation.TicketCleared() && len(tcuo.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketComment.ticket"`)
 	}
-	if tcuo.mutation.UserCleared() && len(tcuo.mutation.UserIDs()) > 0 {
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "TicketComment.user"`)
 	}
 	return nil
 }
 
-func (tcuo *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketComment, err error) {
-	if err := tcuo.check(); err != nil {
+func (_u *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketComment, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ticketcomment.Table, ticketcomment.Columns, sqlgraph.NewFieldSpec(ticketcomment.FieldID, field.TypeInt))
-	id, ok := tcuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "TicketComment.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := tcuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketcomment.FieldID)
 		for _, f := range fields {
@@ -650,54 +650,54 @@ func (tcuo *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketC
 			}
 		}
 	}
-	if ps := tcuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := tcuo.mutation.Content(); ok {
+	if value, ok := _u.mutation.Content(); ok {
 		_spec.SetField(ticketcomment.FieldContent, field.TypeString, value)
 	}
-	if value, ok := tcuo.mutation.IsInternal(); ok {
+	if value, ok := _u.mutation.IsInternal(); ok {
 		_spec.SetField(ticketcomment.FieldIsInternal, field.TypeBool, value)
 	}
-	if value, ok := tcuo.mutation.Mentions(); ok {
+	if value, ok := _u.mutation.Mentions(); ok {
 		_spec.SetField(ticketcomment.FieldMentions, field.TypeJSON, value)
 	}
-	if value, ok := tcuo.mutation.AppendedMentions(); ok {
+	if value, ok := _u.mutation.AppendedMentions(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketcomment.FieldMentions, value)
 		})
 	}
-	if tcuo.mutation.MentionsCleared() {
+	if _u.mutation.MentionsCleared() {
 		_spec.ClearField(ticketcomment.FieldMentions, field.TypeJSON)
 	}
-	if value, ok := tcuo.mutation.Attachments(); ok {
+	if value, ok := _u.mutation.Attachments(); ok {
 		_spec.SetField(ticketcomment.FieldAttachments, field.TypeJSON, value)
 	}
-	if value, ok := tcuo.mutation.AppendedAttachments(); ok {
+	if value, ok := _u.mutation.AppendedAttachments(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, ticketcomment.FieldAttachments, value)
 		})
 	}
-	if tcuo.mutation.AttachmentsCleared() {
+	if _u.mutation.AttachmentsCleared() {
 		_spec.ClearField(ticketcomment.FieldAttachments, field.TypeJSON)
 	}
-	if value, ok := tcuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ticketcomment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tcuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ticketcomment.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := tcuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketcomment.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := tcuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketcomment.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if tcuo.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -710,7 +710,7 @@ func (tcuo *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketC
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tcuo.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -726,7 +726,7 @@ func (tcuo *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketC
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if tcuo.mutation.UserCleared() {
+	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -739,7 +739,7 @@ func (tcuo *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketC
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := tcuo.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -755,10 +755,10 @@ func (tcuo *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketC
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &TicketComment{config: tcuo.config}
+	_node = &TicketComment{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, tcuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ticketcomment.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -766,6 +766,6 @@ func (tcuo *TicketCommentUpdateOne) sqlSave(ctx context.Context) (_node *TicketC
 		}
 		return nil, err
 	}
-	tcuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

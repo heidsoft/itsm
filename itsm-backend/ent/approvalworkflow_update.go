@@ -25,236 +25,236 @@ type ApprovalWorkflowUpdate struct {
 }
 
 // Where appends a list predicates to the ApprovalWorkflowUpdate builder.
-func (awu *ApprovalWorkflowUpdate) Where(ps ...predicate.ApprovalWorkflow) *ApprovalWorkflowUpdate {
-	awu.mutation.Where(ps...)
-	return awu
+func (_u *ApprovalWorkflowUpdate) Where(ps ...predicate.ApprovalWorkflow) *ApprovalWorkflowUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (awu *ApprovalWorkflowUpdate) SetName(s string) *ApprovalWorkflowUpdate {
-	awu.mutation.SetName(s)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetName(v string) *ApprovalWorkflowUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableName(s *string) *ApprovalWorkflowUpdate {
-	if s != nil {
-		awu.SetName(*s)
+func (_u *ApprovalWorkflowUpdate) SetNillableName(v *string) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return awu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (awu *ApprovalWorkflowUpdate) SetDescription(s string) *ApprovalWorkflowUpdate {
-	awu.mutation.SetDescription(s)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetDescription(v string) *ApprovalWorkflowUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableDescription(s *string) *ApprovalWorkflowUpdate {
-	if s != nil {
-		awu.SetDescription(*s)
+func (_u *ApprovalWorkflowUpdate) SetNillableDescription(v *string) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return awu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (awu *ApprovalWorkflowUpdate) ClearDescription() *ApprovalWorkflowUpdate {
-	awu.mutation.ClearDescription()
-	return awu
+func (_u *ApprovalWorkflowUpdate) ClearDescription() *ApprovalWorkflowUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (awu *ApprovalWorkflowUpdate) SetTicketType(s string) *ApprovalWorkflowUpdate {
-	awu.mutation.SetTicketType(s)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetTicketType(v string) *ApprovalWorkflowUpdate {
+	_u.mutation.SetTicketType(v)
+	return _u
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableTicketType(s *string) *ApprovalWorkflowUpdate {
-	if s != nil {
-		awu.SetTicketType(*s)
+func (_u *ApprovalWorkflowUpdate) SetNillableTicketType(v *string) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetTicketType(*v)
 	}
-	return awu
+	return _u
 }
 
 // ClearTicketType clears the value of the "ticket_type" field.
-func (awu *ApprovalWorkflowUpdate) ClearTicketType() *ApprovalWorkflowUpdate {
-	awu.mutation.ClearTicketType()
-	return awu
+func (_u *ApprovalWorkflowUpdate) ClearTicketType() *ApprovalWorkflowUpdate {
+	_u.mutation.ClearTicketType()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (awu *ApprovalWorkflowUpdate) SetPriority(s string) *ApprovalWorkflowUpdate {
-	awu.mutation.SetPriority(s)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetPriority(v string) *ApprovalWorkflowUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillablePriority(s *string) *ApprovalWorkflowUpdate {
-	if s != nil {
-		awu.SetPriority(*s)
+func (_u *ApprovalWorkflowUpdate) SetNillablePriority(v *string) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return awu
+	return _u
 }
 
 // ClearPriority clears the value of the "priority" field.
-func (awu *ApprovalWorkflowUpdate) ClearPriority() *ApprovalWorkflowUpdate {
-	awu.mutation.ClearPriority()
-	return awu
+func (_u *ApprovalWorkflowUpdate) ClearPriority() *ApprovalWorkflowUpdate {
+	_u.mutation.ClearPriority()
+	return _u
 }
 
 // SetNodes sets the "nodes" field.
-func (awu *ApprovalWorkflowUpdate) SetNodes(m []map[string]interface{}) *ApprovalWorkflowUpdate {
-	awu.mutation.SetNodes(m)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetNodes(v []map[string]interface{}) *ApprovalWorkflowUpdate {
+	_u.mutation.SetNodes(v)
+	return _u
 }
 
-// AppendNodes appends m to the "nodes" field.
-func (awu *ApprovalWorkflowUpdate) AppendNodes(m []map[string]interface{}) *ApprovalWorkflowUpdate {
-	awu.mutation.AppendNodes(m)
-	return awu
+// AppendNodes appends value to the "nodes" field.
+func (_u *ApprovalWorkflowUpdate) AppendNodes(v []map[string]interface{}) *ApprovalWorkflowUpdate {
+	_u.mutation.AppendNodes(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (awu *ApprovalWorkflowUpdate) SetStatus(s string) *ApprovalWorkflowUpdate {
-	awu.mutation.SetStatus(s)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetStatus(v string) *ApprovalWorkflowUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableStatus(s *string) *ApprovalWorkflowUpdate {
-	if s != nil {
-		awu.SetStatus(*s)
+func (_u *ApprovalWorkflowUpdate) SetNillableStatus(v *string) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return awu
+	return _u
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (awu *ApprovalWorkflowUpdate) SetCompletedAt(t time.Time) *ApprovalWorkflowUpdate {
-	awu.mutation.SetCompletedAt(t)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetCompletedAt(v time.Time) *ApprovalWorkflowUpdate {
+	_u.mutation.SetCompletedAt(v)
+	return _u
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableCompletedAt(t *time.Time) *ApprovalWorkflowUpdate {
-	if t != nil {
-		awu.SetCompletedAt(*t)
+func (_u *ApprovalWorkflowUpdate) SetNillableCompletedAt(v *time.Time) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetCompletedAt(*v)
 	}
-	return awu
+	return _u
 }
 
 // ClearCompletedAt clears the value of the "completed_at" field.
-func (awu *ApprovalWorkflowUpdate) ClearCompletedAt() *ApprovalWorkflowUpdate {
-	awu.mutation.ClearCompletedAt()
-	return awu
+func (_u *ApprovalWorkflowUpdate) ClearCompletedAt() *ApprovalWorkflowUpdate {
+	_u.mutation.ClearCompletedAt()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (awu *ApprovalWorkflowUpdate) SetIsActive(b bool) *ApprovalWorkflowUpdate {
-	awu.mutation.SetIsActive(b)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetIsActive(v bool) *ApprovalWorkflowUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableIsActive(b *bool) *ApprovalWorkflowUpdate {
-	if b != nil {
-		awu.SetIsActive(*b)
+func (_u *ApprovalWorkflowUpdate) SetNillableIsActive(v *bool) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return awu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (awu *ApprovalWorkflowUpdate) SetTenantID(i int) *ApprovalWorkflowUpdate {
-	awu.mutation.ResetTenantID()
-	awu.mutation.SetTenantID(i)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetTenantID(v int) *ApprovalWorkflowUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableTenantID(i *int) *ApprovalWorkflowUpdate {
-	if i != nil {
-		awu.SetTenantID(*i)
+func (_u *ApprovalWorkflowUpdate) SetNillableTenantID(v *int) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return awu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (awu *ApprovalWorkflowUpdate) AddTenantID(i int) *ApprovalWorkflowUpdate {
-	awu.mutation.AddTenantID(i)
-	return awu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ApprovalWorkflowUpdate) AddTenantID(v int) *ApprovalWorkflowUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (awu *ApprovalWorkflowUpdate) SetCreatedAt(t time.Time) *ApprovalWorkflowUpdate {
-	awu.mutation.SetCreatedAt(t)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetCreatedAt(v time.Time) *ApprovalWorkflowUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (awu *ApprovalWorkflowUpdate) SetNillableCreatedAt(t *time.Time) *ApprovalWorkflowUpdate {
-	if t != nil {
-		awu.SetCreatedAt(*t)
+func (_u *ApprovalWorkflowUpdate) SetNillableCreatedAt(v *time.Time) *ApprovalWorkflowUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return awu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (awu *ApprovalWorkflowUpdate) SetUpdatedAt(t time.Time) *ApprovalWorkflowUpdate {
-	awu.mutation.SetUpdatedAt(t)
-	return awu
+func (_u *ApprovalWorkflowUpdate) SetUpdatedAt(v time.Time) *ApprovalWorkflowUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
-func (awu *ApprovalWorkflowUpdate) AddApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdate {
-	awu.mutation.AddApprovalRecordIDs(ids...)
-	return awu
+func (_u *ApprovalWorkflowUpdate) AddApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdate {
+	_u.mutation.AddApprovalRecordIDs(ids...)
+	return _u
 }
 
 // AddApprovalRecords adds the "approval_records" edges to the ApprovalRecord entity.
-func (awu *ApprovalWorkflowUpdate) AddApprovalRecords(a ...*ApprovalRecord) *ApprovalWorkflowUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *ApprovalWorkflowUpdate) AddApprovalRecords(v ...*ApprovalRecord) *ApprovalWorkflowUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return awu.AddApprovalRecordIDs(ids...)
+	return _u.AddApprovalRecordIDs(ids...)
 }
 
 // Mutation returns the ApprovalWorkflowMutation object of the builder.
-func (awu *ApprovalWorkflowUpdate) Mutation() *ApprovalWorkflowMutation {
-	return awu.mutation
+func (_u *ApprovalWorkflowUpdate) Mutation() *ApprovalWorkflowMutation {
+	return _u.mutation
 }
 
 // ClearApprovalRecords clears all "approval_records" edges to the ApprovalRecord entity.
-func (awu *ApprovalWorkflowUpdate) ClearApprovalRecords() *ApprovalWorkflowUpdate {
-	awu.mutation.ClearApprovalRecords()
-	return awu
+func (_u *ApprovalWorkflowUpdate) ClearApprovalRecords() *ApprovalWorkflowUpdate {
+	_u.mutation.ClearApprovalRecords()
+	return _u
 }
 
 // RemoveApprovalRecordIDs removes the "approval_records" edge to ApprovalRecord entities by IDs.
-func (awu *ApprovalWorkflowUpdate) RemoveApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdate {
-	awu.mutation.RemoveApprovalRecordIDs(ids...)
-	return awu
+func (_u *ApprovalWorkflowUpdate) RemoveApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdate {
+	_u.mutation.RemoveApprovalRecordIDs(ids...)
+	return _u
 }
 
 // RemoveApprovalRecords removes "approval_records" edges to ApprovalRecord entities.
-func (awu *ApprovalWorkflowUpdate) RemoveApprovalRecords(a ...*ApprovalRecord) *ApprovalWorkflowUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *ApprovalWorkflowUpdate) RemoveApprovalRecords(v ...*ApprovalRecord) *ApprovalWorkflowUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return awu.RemoveApprovalRecordIDs(ids...)
+	return _u.RemoveApprovalRecordIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (awu *ApprovalWorkflowUpdate) Save(ctx context.Context) (int, error) {
-	awu.defaults()
-	return withHooks(ctx, awu.sqlSave, awu.mutation, awu.hooks)
+func (_u *ApprovalWorkflowUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (awu *ApprovalWorkflowUpdate) SaveX(ctx context.Context) int {
-	affected, err := awu.Save(ctx)
+func (_u *ApprovalWorkflowUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -262,34 +262,34 @@ func (awu *ApprovalWorkflowUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (awu *ApprovalWorkflowUpdate) Exec(ctx context.Context) error {
-	_, err := awu.Save(ctx)
+func (_u *ApprovalWorkflowUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (awu *ApprovalWorkflowUpdate) ExecX(ctx context.Context) {
-	if err := awu.Exec(ctx); err != nil {
+func (_u *ApprovalWorkflowUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (awu *ApprovalWorkflowUpdate) defaults() {
-	if _, ok := awu.mutation.UpdatedAt(); !ok {
+func (_u *ApprovalWorkflowUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := approvalworkflow.UpdateDefaultUpdatedAt()
-		awu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (awu *ApprovalWorkflowUpdate) check() error {
-	if v, ok := awu.mutation.Name(); ok {
+func (_u *ApprovalWorkflowUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := approvalworkflow.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApprovalWorkflow.name": %w`, err)}
 		}
 	}
-	if v, ok := awu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := approvalworkflow.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalWorkflow.tenant_id": %w`, err)}
 		}
@@ -297,72 +297,72 @@ func (awu *ApprovalWorkflowUpdate) check() error {
 	return nil
 }
 
-func (awu *ApprovalWorkflowUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := awu.check(); err != nil {
-		return n, err
+func (_u *ApprovalWorkflowUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(approvalworkflow.Table, approvalworkflow.Columns, sqlgraph.NewFieldSpec(approvalworkflow.FieldID, field.TypeInt))
-	if ps := awu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := awu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(approvalworkflow.FieldName, field.TypeString, value)
 	}
-	if value, ok := awu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(approvalworkflow.FieldDescription, field.TypeString, value)
 	}
-	if awu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(approvalworkflow.FieldDescription, field.TypeString)
 	}
-	if value, ok := awu.mutation.TicketType(); ok {
+	if value, ok := _u.mutation.TicketType(); ok {
 		_spec.SetField(approvalworkflow.FieldTicketType, field.TypeString, value)
 	}
-	if awu.mutation.TicketTypeCleared() {
+	if _u.mutation.TicketTypeCleared() {
 		_spec.ClearField(approvalworkflow.FieldTicketType, field.TypeString)
 	}
-	if value, ok := awu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(approvalworkflow.FieldPriority, field.TypeString, value)
 	}
-	if awu.mutation.PriorityCleared() {
+	if _u.mutation.PriorityCleared() {
 		_spec.ClearField(approvalworkflow.FieldPriority, field.TypeString)
 	}
-	if value, ok := awu.mutation.Nodes(); ok {
+	if value, ok := _u.mutation.Nodes(); ok {
 		_spec.SetField(approvalworkflow.FieldNodes, field.TypeJSON, value)
 	}
-	if value, ok := awu.mutation.AppendedNodes(); ok {
+	if value, ok := _u.mutation.AppendedNodes(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, approvalworkflow.FieldNodes, value)
 		})
 	}
-	if value, ok := awu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(approvalworkflow.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := awu.mutation.CompletedAt(); ok {
+	if value, ok := _u.mutation.CompletedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldCompletedAt, field.TypeTime, value)
 	}
-	if awu.mutation.CompletedAtCleared() {
+	if _u.mutation.CompletedAtCleared() {
 		_spec.ClearField(approvalworkflow.FieldCompletedAt, field.TypeTime)
 	}
-	if value, ok := awu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(approvalworkflow.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := awu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(approvalworkflow.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := awu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(approvalworkflow.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := awu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := awu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if awu.mutation.ApprovalRecordsCleared() {
+	if _u.mutation.ApprovalRecordsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -375,7 +375,7 @@ func (awu *ApprovalWorkflowUpdate) sqlSave(ctx context.Context) (n int, err erro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := awu.mutation.RemovedApprovalRecordsIDs(); len(nodes) > 0 && !awu.mutation.ApprovalRecordsCleared() {
+	if nodes := _u.mutation.RemovedApprovalRecordsIDs(); len(nodes) > 0 && !_u.mutation.ApprovalRecordsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -391,7 +391,7 @@ func (awu *ApprovalWorkflowUpdate) sqlSave(ctx context.Context) (n int, err erro
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := awu.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -407,7 +407,7 @@ func (awu *ApprovalWorkflowUpdate) sqlSave(ctx context.Context) (n int, err erro
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, awu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{approvalworkflow.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -415,8 +415,8 @@ func (awu *ApprovalWorkflowUpdate) sqlSave(ctx context.Context) (n int, err erro
 		}
 		return 0, err
 	}
-	awu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ApprovalWorkflowUpdateOne is the builder for updating a single ApprovalWorkflow entity.
@@ -428,243 +428,243 @@ type ApprovalWorkflowUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetName(s string) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetName(s)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetName(v string) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableName(s *string) *ApprovalWorkflowUpdateOne {
-	if s != nil {
-		awuo.SetName(*s)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableName(v *string) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return awuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetDescription(s string) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetDescription(s)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetDescription(v string) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableDescription(s *string) *ApprovalWorkflowUpdateOne {
-	if s != nil {
-		awuo.SetDescription(*s)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableDescription(v *string) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return awuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (awuo *ApprovalWorkflowUpdateOne) ClearDescription() *ApprovalWorkflowUpdateOne {
-	awuo.mutation.ClearDescription()
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) ClearDescription() *ApprovalWorkflowUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetTicketType(s string) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetTicketType(s)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetTicketType(v string) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetTicketType(v)
+	return _u
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableTicketType(s *string) *ApprovalWorkflowUpdateOne {
-	if s != nil {
-		awuo.SetTicketType(*s)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableTicketType(v *string) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetTicketType(*v)
 	}
-	return awuo
+	return _u
 }
 
 // ClearTicketType clears the value of the "ticket_type" field.
-func (awuo *ApprovalWorkflowUpdateOne) ClearTicketType() *ApprovalWorkflowUpdateOne {
-	awuo.mutation.ClearTicketType()
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) ClearTicketType() *ApprovalWorkflowUpdateOne {
+	_u.mutation.ClearTicketType()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetPriority(s string) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetPriority(s)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetPriority(v string) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillablePriority(s *string) *ApprovalWorkflowUpdateOne {
-	if s != nil {
-		awuo.SetPriority(*s)
+func (_u *ApprovalWorkflowUpdateOne) SetNillablePriority(v *string) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return awuo
+	return _u
 }
 
 // ClearPriority clears the value of the "priority" field.
-func (awuo *ApprovalWorkflowUpdateOne) ClearPriority() *ApprovalWorkflowUpdateOne {
-	awuo.mutation.ClearPriority()
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) ClearPriority() *ApprovalWorkflowUpdateOne {
+	_u.mutation.ClearPriority()
+	return _u
 }
 
 // SetNodes sets the "nodes" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetNodes(m []map[string]interface{}) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetNodes(m)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetNodes(v []map[string]interface{}) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetNodes(v)
+	return _u
 }
 
-// AppendNodes appends m to the "nodes" field.
-func (awuo *ApprovalWorkflowUpdateOne) AppendNodes(m []map[string]interface{}) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.AppendNodes(m)
-	return awuo
+// AppendNodes appends value to the "nodes" field.
+func (_u *ApprovalWorkflowUpdateOne) AppendNodes(v []map[string]interface{}) *ApprovalWorkflowUpdateOne {
+	_u.mutation.AppendNodes(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetStatus(s string) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetStatus(s)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetStatus(v string) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableStatus(s *string) *ApprovalWorkflowUpdateOne {
-	if s != nil {
-		awuo.SetStatus(*s)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableStatus(v *string) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return awuo
+	return _u
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetCompletedAt(t time.Time) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetCompletedAt(t)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetCompletedAt(v time.Time) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetCompletedAt(v)
+	return _u
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableCompletedAt(t *time.Time) *ApprovalWorkflowUpdateOne {
-	if t != nil {
-		awuo.SetCompletedAt(*t)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableCompletedAt(v *time.Time) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetCompletedAt(*v)
 	}
-	return awuo
+	return _u
 }
 
 // ClearCompletedAt clears the value of the "completed_at" field.
-func (awuo *ApprovalWorkflowUpdateOne) ClearCompletedAt() *ApprovalWorkflowUpdateOne {
-	awuo.mutation.ClearCompletedAt()
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) ClearCompletedAt() *ApprovalWorkflowUpdateOne {
+	_u.mutation.ClearCompletedAt()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetIsActive(b bool) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetIsActive(b)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetIsActive(v bool) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableIsActive(b *bool) *ApprovalWorkflowUpdateOne {
-	if b != nil {
-		awuo.SetIsActive(*b)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableIsActive(v *bool) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return awuo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetTenantID(i int) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.ResetTenantID()
-	awuo.mutation.SetTenantID(i)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetTenantID(v int) *ApprovalWorkflowUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableTenantID(i *int) *ApprovalWorkflowUpdateOne {
-	if i != nil {
-		awuo.SetTenantID(*i)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableTenantID(v *int) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return awuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (awuo *ApprovalWorkflowUpdateOne) AddTenantID(i int) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.AddTenantID(i)
-	return awuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ApprovalWorkflowUpdateOne) AddTenantID(v int) *ApprovalWorkflowUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetCreatedAt(t time.Time) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetCreatedAt(t)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetCreatedAt(v time.Time) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (awuo *ApprovalWorkflowUpdateOne) SetNillableCreatedAt(t *time.Time) *ApprovalWorkflowUpdateOne {
-	if t != nil {
-		awuo.SetCreatedAt(*t)
+func (_u *ApprovalWorkflowUpdateOne) SetNillableCreatedAt(v *time.Time) *ApprovalWorkflowUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return awuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (awuo *ApprovalWorkflowUpdateOne) SetUpdatedAt(t time.Time) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.SetUpdatedAt(t)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) SetUpdatedAt(v time.Time) *ApprovalWorkflowUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddApprovalRecordIDs adds the "approval_records" edge to the ApprovalRecord entity by IDs.
-func (awuo *ApprovalWorkflowUpdateOne) AddApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.AddApprovalRecordIDs(ids...)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) AddApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdateOne {
+	_u.mutation.AddApprovalRecordIDs(ids...)
+	return _u
 }
 
 // AddApprovalRecords adds the "approval_records" edges to the ApprovalRecord entity.
-func (awuo *ApprovalWorkflowUpdateOne) AddApprovalRecords(a ...*ApprovalRecord) *ApprovalWorkflowUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *ApprovalWorkflowUpdateOne) AddApprovalRecords(v ...*ApprovalRecord) *ApprovalWorkflowUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return awuo.AddApprovalRecordIDs(ids...)
+	return _u.AddApprovalRecordIDs(ids...)
 }
 
 // Mutation returns the ApprovalWorkflowMutation object of the builder.
-func (awuo *ApprovalWorkflowUpdateOne) Mutation() *ApprovalWorkflowMutation {
-	return awuo.mutation
+func (_u *ApprovalWorkflowUpdateOne) Mutation() *ApprovalWorkflowMutation {
+	return _u.mutation
 }
 
 // ClearApprovalRecords clears all "approval_records" edges to the ApprovalRecord entity.
-func (awuo *ApprovalWorkflowUpdateOne) ClearApprovalRecords() *ApprovalWorkflowUpdateOne {
-	awuo.mutation.ClearApprovalRecords()
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) ClearApprovalRecords() *ApprovalWorkflowUpdateOne {
+	_u.mutation.ClearApprovalRecords()
+	return _u
 }
 
 // RemoveApprovalRecordIDs removes the "approval_records" edge to ApprovalRecord entities by IDs.
-func (awuo *ApprovalWorkflowUpdateOne) RemoveApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.RemoveApprovalRecordIDs(ids...)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) RemoveApprovalRecordIDs(ids ...int) *ApprovalWorkflowUpdateOne {
+	_u.mutation.RemoveApprovalRecordIDs(ids...)
+	return _u
 }
 
 // RemoveApprovalRecords removes "approval_records" edges to ApprovalRecord entities.
-func (awuo *ApprovalWorkflowUpdateOne) RemoveApprovalRecords(a ...*ApprovalRecord) *ApprovalWorkflowUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_u *ApprovalWorkflowUpdateOne) RemoveApprovalRecords(v ...*ApprovalRecord) *ApprovalWorkflowUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return awuo.RemoveApprovalRecordIDs(ids...)
+	return _u.RemoveApprovalRecordIDs(ids...)
 }
 
 // Where appends a list predicates to the ApprovalWorkflowUpdate builder.
-func (awuo *ApprovalWorkflowUpdateOne) Where(ps ...predicate.ApprovalWorkflow) *ApprovalWorkflowUpdateOne {
-	awuo.mutation.Where(ps...)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) Where(ps ...predicate.ApprovalWorkflow) *ApprovalWorkflowUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (awuo *ApprovalWorkflowUpdateOne) Select(field string, fields ...string) *ApprovalWorkflowUpdateOne {
-	awuo.fields = append([]string{field}, fields...)
-	return awuo
+func (_u *ApprovalWorkflowUpdateOne) Select(field string, fields ...string) *ApprovalWorkflowUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ApprovalWorkflow entity.
-func (awuo *ApprovalWorkflowUpdateOne) Save(ctx context.Context) (*ApprovalWorkflow, error) {
-	awuo.defaults()
-	return withHooks(ctx, awuo.sqlSave, awuo.mutation, awuo.hooks)
+func (_u *ApprovalWorkflowUpdateOne) Save(ctx context.Context) (*ApprovalWorkflow, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (awuo *ApprovalWorkflowUpdateOne) SaveX(ctx context.Context) *ApprovalWorkflow {
-	node, err := awuo.Save(ctx)
+func (_u *ApprovalWorkflowUpdateOne) SaveX(ctx context.Context) *ApprovalWorkflow {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -672,34 +672,34 @@ func (awuo *ApprovalWorkflowUpdateOne) SaveX(ctx context.Context) *ApprovalWorkf
 }
 
 // Exec executes the query on the entity.
-func (awuo *ApprovalWorkflowUpdateOne) Exec(ctx context.Context) error {
-	_, err := awuo.Save(ctx)
+func (_u *ApprovalWorkflowUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (awuo *ApprovalWorkflowUpdateOne) ExecX(ctx context.Context) {
-	if err := awuo.Exec(ctx); err != nil {
+func (_u *ApprovalWorkflowUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (awuo *ApprovalWorkflowUpdateOne) defaults() {
-	if _, ok := awuo.mutation.UpdatedAt(); !ok {
+func (_u *ApprovalWorkflowUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := approvalworkflow.UpdateDefaultUpdatedAt()
-		awuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (awuo *ApprovalWorkflowUpdateOne) check() error {
-	if v, ok := awuo.mutation.Name(); ok {
+func (_u *ApprovalWorkflowUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := approvalworkflow.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApprovalWorkflow.name": %w`, err)}
 		}
 	}
-	if v, ok := awuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := approvalworkflow.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ApprovalWorkflow.tenant_id": %w`, err)}
 		}
@@ -707,17 +707,17 @@ func (awuo *ApprovalWorkflowUpdateOne) check() error {
 	return nil
 }
 
-func (awuo *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *ApprovalWorkflow, err error) {
-	if err := awuo.check(); err != nil {
+func (_u *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *ApprovalWorkflow, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(approvalworkflow.Table, approvalworkflow.Columns, sqlgraph.NewFieldSpec(approvalworkflow.FieldID, field.TypeInt))
-	id, ok := awuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ApprovalWorkflow.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := awuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, approvalworkflow.FieldID)
 		for _, f := range fields {
@@ -729,67 +729,67 @@ func (awuo *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Appr
 			}
 		}
 	}
-	if ps := awuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := awuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(approvalworkflow.FieldName, field.TypeString, value)
 	}
-	if value, ok := awuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(approvalworkflow.FieldDescription, field.TypeString, value)
 	}
-	if awuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(approvalworkflow.FieldDescription, field.TypeString)
 	}
-	if value, ok := awuo.mutation.TicketType(); ok {
+	if value, ok := _u.mutation.TicketType(); ok {
 		_spec.SetField(approvalworkflow.FieldTicketType, field.TypeString, value)
 	}
-	if awuo.mutation.TicketTypeCleared() {
+	if _u.mutation.TicketTypeCleared() {
 		_spec.ClearField(approvalworkflow.FieldTicketType, field.TypeString)
 	}
-	if value, ok := awuo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(approvalworkflow.FieldPriority, field.TypeString, value)
 	}
-	if awuo.mutation.PriorityCleared() {
+	if _u.mutation.PriorityCleared() {
 		_spec.ClearField(approvalworkflow.FieldPriority, field.TypeString)
 	}
-	if value, ok := awuo.mutation.Nodes(); ok {
+	if value, ok := _u.mutation.Nodes(); ok {
 		_spec.SetField(approvalworkflow.FieldNodes, field.TypeJSON, value)
 	}
-	if value, ok := awuo.mutation.AppendedNodes(); ok {
+	if value, ok := _u.mutation.AppendedNodes(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, approvalworkflow.FieldNodes, value)
 		})
 	}
-	if value, ok := awuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(approvalworkflow.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := awuo.mutation.CompletedAt(); ok {
+	if value, ok := _u.mutation.CompletedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldCompletedAt, field.TypeTime, value)
 	}
-	if awuo.mutation.CompletedAtCleared() {
+	if _u.mutation.CompletedAtCleared() {
 		_spec.ClearField(approvalworkflow.FieldCompletedAt, field.TypeTime)
 	}
-	if value, ok := awuo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(approvalworkflow.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := awuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(approvalworkflow.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := awuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(approvalworkflow.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := awuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := awuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(approvalworkflow.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if awuo.mutation.ApprovalRecordsCleared() {
+	if _u.mutation.ApprovalRecordsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -802,7 +802,7 @@ func (awuo *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Appr
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := awuo.mutation.RemovedApprovalRecordsIDs(); len(nodes) > 0 && !awuo.mutation.ApprovalRecordsCleared() {
+	if nodes := _u.mutation.RemovedApprovalRecordsIDs(); len(nodes) > 0 && !_u.mutation.ApprovalRecordsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -818,7 +818,7 @@ func (awuo *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Appr
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := awuo.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ApprovalRecordsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -834,10 +834,10 @@ func (awuo *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Appr
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &ApprovalWorkflow{config: awuo.config}
+	_node = &ApprovalWorkflow{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, awuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{approvalworkflow.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -845,6 +845,6 @@ func (awuo *ApprovalWorkflowUpdateOne) sqlSave(ctx context.Context) (_node *Appr
 		}
 		return nil, err
 	}
-	awuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

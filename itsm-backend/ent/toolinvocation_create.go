@@ -22,204 +22,204 @@ type ToolInvocationCreate struct {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tic *ToolInvocationCreate) SetCreatedAt(t time.Time) *ToolInvocationCreate {
-	tic.mutation.SetCreatedAt(t)
-	return tic
+func (_c *ToolInvocationCreate) SetCreatedAt(v time.Time) *ToolInvocationCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableCreatedAt(t *time.Time) *ToolInvocationCreate {
-	if t != nil {
-		tic.SetCreatedAt(*t)
+func (_c *ToolInvocationCreate) SetNillableCreatedAt(v *time.Time) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetConversationID sets the "conversation_id" field.
-func (tic *ToolInvocationCreate) SetConversationID(i int) *ToolInvocationCreate {
-	tic.mutation.SetConversationID(i)
-	return tic
+func (_c *ToolInvocationCreate) SetConversationID(v int) *ToolInvocationCreate {
+	_c.mutation.SetConversationID(v)
+	return _c
 }
 
 // SetToolName sets the "tool_name" field.
-func (tic *ToolInvocationCreate) SetToolName(s string) *ToolInvocationCreate {
-	tic.mutation.SetToolName(s)
-	return tic
+func (_c *ToolInvocationCreate) SetToolName(v string) *ToolInvocationCreate {
+	_c.mutation.SetToolName(v)
+	return _c
 }
 
 // SetArguments sets the "arguments" field.
-func (tic *ToolInvocationCreate) SetArguments(s string) *ToolInvocationCreate {
-	tic.mutation.SetArguments(s)
-	return tic
+func (_c *ToolInvocationCreate) SetArguments(v string) *ToolInvocationCreate {
+	_c.mutation.SetArguments(v)
+	return _c
 }
 
 // SetNillableArguments sets the "arguments" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableArguments(s *string) *ToolInvocationCreate {
-	if s != nil {
-		tic.SetArguments(*s)
+func (_c *ToolInvocationCreate) SetNillableArguments(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetArguments(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetResult sets the "result" field.
-func (tic *ToolInvocationCreate) SetResult(s string) *ToolInvocationCreate {
-	tic.mutation.SetResult(s)
-	return tic
+func (_c *ToolInvocationCreate) SetResult(v string) *ToolInvocationCreate {
+	_c.mutation.SetResult(v)
+	return _c
 }
 
 // SetNillableResult sets the "result" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableResult(s *string) *ToolInvocationCreate {
-	if s != nil {
-		tic.SetResult(*s)
+func (_c *ToolInvocationCreate) SetNillableResult(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetResult(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (tic *ToolInvocationCreate) SetStatus(s string) *ToolInvocationCreate {
-	tic.mutation.SetStatus(s)
-	return tic
+func (_c *ToolInvocationCreate) SetStatus(v string) *ToolInvocationCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableStatus(s *string) *ToolInvocationCreate {
-	if s != nil {
-		tic.SetStatus(*s)
+func (_c *ToolInvocationCreate) SetNillableStatus(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetRequestID sets the "request_id" field.
-func (tic *ToolInvocationCreate) SetRequestID(s string) *ToolInvocationCreate {
-	tic.mutation.SetRequestID(s)
-	return tic
+func (_c *ToolInvocationCreate) SetRequestID(v string) *ToolInvocationCreate {
+	_c.mutation.SetRequestID(v)
+	return _c
 }
 
 // SetNillableRequestID sets the "request_id" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableRequestID(s *string) *ToolInvocationCreate {
-	if s != nil {
-		tic.SetRequestID(*s)
+func (_c *ToolInvocationCreate) SetNillableRequestID(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetRequestID(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetNeedsApproval sets the "needs_approval" field.
-func (tic *ToolInvocationCreate) SetNeedsApproval(b bool) *ToolInvocationCreate {
-	tic.mutation.SetNeedsApproval(b)
-	return tic
+func (_c *ToolInvocationCreate) SetNeedsApproval(v bool) *ToolInvocationCreate {
+	_c.mutation.SetNeedsApproval(v)
+	return _c
 }
 
 // SetNillableNeedsApproval sets the "needs_approval" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableNeedsApproval(b *bool) *ToolInvocationCreate {
-	if b != nil {
-		tic.SetNeedsApproval(*b)
+func (_c *ToolInvocationCreate) SetNillableNeedsApproval(v *bool) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetNeedsApproval(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetApprovalState sets the "approval_state" field.
-func (tic *ToolInvocationCreate) SetApprovalState(s string) *ToolInvocationCreate {
-	tic.mutation.SetApprovalState(s)
-	return tic
+func (_c *ToolInvocationCreate) SetApprovalState(v string) *ToolInvocationCreate {
+	_c.mutation.SetApprovalState(v)
+	return _c
 }
 
 // SetNillableApprovalState sets the "approval_state" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableApprovalState(s *string) *ToolInvocationCreate {
-	if s != nil {
-		tic.SetApprovalState(*s)
+func (_c *ToolInvocationCreate) SetNillableApprovalState(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetApprovalState(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetApprovalReason sets the "approval_reason" field.
-func (tic *ToolInvocationCreate) SetApprovalReason(s string) *ToolInvocationCreate {
-	tic.mutation.SetApprovalReason(s)
-	return tic
+func (_c *ToolInvocationCreate) SetApprovalReason(v string) *ToolInvocationCreate {
+	_c.mutation.SetApprovalReason(v)
+	return _c
 }
 
 // SetNillableApprovalReason sets the "approval_reason" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableApprovalReason(s *string) *ToolInvocationCreate {
-	if s != nil {
-		tic.SetApprovalReason(*s)
+func (_c *ToolInvocationCreate) SetNillableApprovalReason(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetApprovalReason(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetApprovedBy sets the "approved_by" field.
-func (tic *ToolInvocationCreate) SetApprovedBy(i int) *ToolInvocationCreate {
-	tic.mutation.SetApprovedBy(i)
-	return tic
+func (_c *ToolInvocationCreate) SetApprovedBy(v int) *ToolInvocationCreate {
+	_c.mutation.SetApprovedBy(v)
+	return _c
 }
 
 // SetNillableApprovedBy sets the "approved_by" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableApprovedBy(i *int) *ToolInvocationCreate {
-	if i != nil {
-		tic.SetApprovedBy(*i)
+func (_c *ToolInvocationCreate) SetNillableApprovedBy(v *int) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetApprovedBy(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetApprovedAt sets the "approved_at" field.
-func (tic *ToolInvocationCreate) SetApprovedAt(t time.Time) *ToolInvocationCreate {
-	tic.mutation.SetApprovedAt(t)
-	return tic
+func (_c *ToolInvocationCreate) SetApprovedAt(v time.Time) *ToolInvocationCreate {
+	_c.mutation.SetApprovedAt(v)
+	return _c
 }
 
 // SetNillableApprovedAt sets the "approved_at" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableApprovedAt(t *time.Time) *ToolInvocationCreate {
-	if t != nil {
-		tic.SetApprovedAt(*t)
+func (_c *ToolInvocationCreate) SetNillableApprovedAt(v *time.Time) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetApprovedAt(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetDryRun sets the "dry_run" field.
-func (tic *ToolInvocationCreate) SetDryRun(b bool) *ToolInvocationCreate {
-	tic.mutation.SetDryRun(b)
-	return tic
+func (_c *ToolInvocationCreate) SetDryRun(v bool) *ToolInvocationCreate {
+	_c.mutation.SetDryRun(v)
+	return _c
 }
 
 // SetNillableDryRun sets the "dry_run" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableDryRun(b *bool) *ToolInvocationCreate {
-	if b != nil {
-		tic.SetDryRun(*b)
+func (_c *ToolInvocationCreate) SetNillableDryRun(v *bool) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetDryRun(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetError sets the "error" field.
-func (tic *ToolInvocationCreate) SetError(s string) *ToolInvocationCreate {
-	tic.mutation.SetError(s)
-	return tic
+func (_c *ToolInvocationCreate) SetError(v string) *ToolInvocationCreate {
+	_c.mutation.SetError(v)
+	return _c
 }
 
 // SetNillableError sets the "error" field if the given value is not nil.
-func (tic *ToolInvocationCreate) SetNillableError(s *string) *ToolInvocationCreate {
-	if s != nil {
-		tic.SetError(*s)
+func (_c *ToolInvocationCreate) SetNillableError(v *string) *ToolInvocationCreate {
+	if v != nil {
+		_c.SetError(*v)
 	}
-	return tic
+	return _c
 }
 
 // SetConversation sets the "conversation" edge to the Conversation entity.
-func (tic *ToolInvocationCreate) SetConversation(c *Conversation) *ToolInvocationCreate {
-	return tic.SetConversationID(c.ID)
+func (_c *ToolInvocationCreate) SetConversation(v *Conversation) *ToolInvocationCreate {
+	return _c.SetConversationID(v.ID)
 }
 
 // Mutation returns the ToolInvocationMutation object of the builder.
-func (tic *ToolInvocationCreate) Mutation() *ToolInvocationMutation {
-	return tic.mutation
+func (_c *ToolInvocationCreate) Mutation() *ToolInvocationMutation {
+	return _c.mutation
 }
 
 // Save creates the ToolInvocation in the database.
-func (tic *ToolInvocationCreate) Save(ctx context.Context) (*ToolInvocation, error) {
-	tic.defaults()
-	return withHooks(ctx, tic.sqlSave, tic.mutation, tic.hooks)
+func (_c *ToolInvocationCreate) Save(ctx context.Context) (*ToolInvocation, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tic *ToolInvocationCreate) SaveX(ctx context.Context) *ToolInvocation {
-	v, err := tic.Save(ctx)
+func (_c *ToolInvocationCreate) SaveX(ctx context.Context) *ToolInvocation {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -227,91 +227,91 @@ func (tic *ToolInvocationCreate) SaveX(ctx context.Context) *ToolInvocation {
 }
 
 // Exec executes the query.
-func (tic *ToolInvocationCreate) Exec(ctx context.Context) error {
-	_, err := tic.Save(ctx)
+func (_c *ToolInvocationCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tic *ToolInvocationCreate) ExecX(ctx context.Context) {
-	if err := tic.Exec(ctx); err != nil {
+func (_c *ToolInvocationCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tic *ToolInvocationCreate) defaults() {
-	if _, ok := tic.mutation.CreatedAt(); !ok {
+func (_c *ToolInvocationCreate) defaults() {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := toolinvocation.DefaultCreatedAt()
-		tic.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := tic.mutation.Arguments(); !ok {
+	if _, ok := _c.mutation.Arguments(); !ok {
 		v := toolinvocation.DefaultArguments
-		tic.mutation.SetArguments(v)
+		_c.mutation.SetArguments(v)
 	}
-	if _, ok := tic.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := toolinvocation.DefaultStatus
-		tic.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := tic.mutation.NeedsApproval(); !ok {
+	if _, ok := _c.mutation.NeedsApproval(); !ok {
 		v := toolinvocation.DefaultNeedsApproval
-		tic.mutation.SetNeedsApproval(v)
+		_c.mutation.SetNeedsApproval(v)
 	}
-	if _, ok := tic.mutation.ApprovalState(); !ok {
+	if _, ok := _c.mutation.ApprovalState(); !ok {
 		v := toolinvocation.DefaultApprovalState
-		tic.mutation.SetApprovalState(v)
+		_c.mutation.SetApprovalState(v)
 	}
-	if _, ok := tic.mutation.ApprovalReason(); !ok {
+	if _, ok := _c.mutation.ApprovalReason(); !ok {
 		v := toolinvocation.DefaultApprovalReason
-		tic.mutation.SetApprovalReason(v)
+		_c.mutation.SetApprovalReason(v)
 	}
-	if _, ok := tic.mutation.DryRun(); !ok {
+	if _, ok := _c.mutation.DryRun(); !ok {
 		v := toolinvocation.DefaultDryRun
-		tic.mutation.SetDryRun(v)
+		_c.mutation.SetDryRun(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tic *ToolInvocationCreate) check() error {
-	if _, ok := tic.mutation.CreatedAt(); !ok {
+func (_c *ToolInvocationCreate) check() error {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ToolInvocation.created_at"`)}
 	}
-	if _, ok := tic.mutation.ConversationID(); !ok {
+	if _, ok := _c.mutation.ConversationID(); !ok {
 		return &ValidationError{Name: "conversation_id", err: errors.New(`ent: missing required field "ToolInvocation.conversation_id"`)}
 	}
-	if _, ok := tic.mutation.ToolName(); !ok {
+	if _, ok := _c.mutation.ToolName(); !ok {
 		return &ValidationError{Name: "tool_name", err: errors.New(`ent: missing required field "ToolInvocation.tool_name"`)}
 	}
-	if _, ok := tic.mutation.Arguments(); !ok {
+	if _, ok := _c.mutation.Arguments(); !ok {
 		return &ValidationError{Name: "arguments", err: errors.New(`ent: missing required field "ToolInvocation.arguments"`)}
 	}
-	if _, ok := tic.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ToolInvocation.status"`)}
 	}
-	if _, ok := tic.mutation.NeedsApproval(); !ok {
+	if _, ok := _c.mutation.NeedsApproval(); !ok {
 		return &ValidationError{Name: "needs_approval", err: errors.New(`ent: missing required field "ToolInvocation.needs_approval"`)}
 	}
-	if _, ok := tic.mutation.ApprovalState(); !ok {
+	if _, ok := _c.mutation.ApprovalState(); !ok {
 		return &ValidationError{Name: "approval_state", err: errors.New(`ent: missing required field "ToolInvocation.approval_state"`)}
 	}
-	if _, ok := tic.mutation.ApprovalReason(); !ok {
+	if _, ok := _c.mutation.ApprovalReason(); !ok {
 		return &ValidationError{Name: "approval_reason", err: errors.New(`ent: missing required field "ToolInvocation.approval_reason"`)}
 	}
-	if _, ok := tic.mutation.DryRun(); !ok {
+	if _, ok := _c.mutation.DryRun(); !ok {
 		return &ValidationError{Name: "dry_run", err: errors.New(`ent: missing required field "ToolInvocation.dry_run"`)}
 	}
-	if len(tic.mutation.ConversationIDs()) == 0 {
+	if len(_c.mutation.ConversationIDs()) == 0 {
 		return &ValidationError{Name: "conversation", err: errors.New(`ent: missing required edge "ToolInvocation.conversation"`)}
 	}
 	return nil
 }
 
-func (tic *ToolInvocationCreate) sqlSave(ctx context.Context) (*ToolInvocation, error) {
-	if err := tic.check(); err != nil {
+func (_c *ToolInvocationCreate) sqlSave(ctx context.Context) (*ToolInvocation, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tic.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tic.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -319,69 +319,69 @@ func (tic *ToolInvocationCreate) sqlSave(ctx context.Context) (*ToolInvocation, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tic.mutation.id = &_node.ID
-	tic.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tic *ToolInvocationCreate) createSpec() (*ToolInvocation, *sqlgraph.CreateSpec) {
+func (_c *ToolInvocationCreate) createSpec() (*ToolInvocation, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ToolInvocation{config: tic.config}
+		_node = &ToolInvocation{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(toolinvocation.Table, sqlgraph.NewFieldSpec(toolinvocation.FieldID, field.TypeInt))
 	)
-	if value, ok := tic.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(toolinvocation.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := tic.mutation.ToolName(); ok {
+	if value, ok := _c.mutation.ToolName(); ok {
 		_spec.SetField(toolinvocation.FieldToolName, field.TypeString, value)
 		_node.ToolName = value
 	}
-	if value, ok := tic.mutation.Arguments(); ok {
+	if value, ok := _c.mutation.Arguments(); ok {
 		_spec.SetField(toolinvocation.FieldArguments, field.TypeString, value)
 		_node.Arguments = value
 	}
-	if value, ok := tic.mutation.Result(); ok {
+	if value, ok := _c.mutation.Result(); ok {
 		_spec.SetField(toolinvocation.FieldResult, field.TypeString, value)
 		_node.Result = &value
 	}
-	if value, ok := tic.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(toolinvocation.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := tic.mutation.RequestID(); ok {
+	if value, ok := _c.mutation.RequestID(); ok {
 		_spec.SetField(toolinvocation.FieldRequestID, field.TypeString, value)
 		_node.RequestID = value
 	}
-	if value, ok := tic.mutation.NeedsApproval(); ok {
+	if value, ok := _c.mutation.NeedsApproval(); ok {
 		_spec.SetField(toolinvocation.FieldNeedsApproval, field.TypeBool, value)
 		_node.NeedsApproval = value
 	}
-	if value, ok := tic.mutation.ApprovalState(); ok {
+	if value, ok := _c.mutation.ApprovalState(); ok {
 		_spec.SetField(toolinvocation.FieldApprovalState, field.TypeString, value)
 		_node.ApprovalState = value
 	}
-	if value, ok := tic.mutation.ApprovalReason(); ok {
+	if value, ok := _c.mutation.ApprovalReason(); ok {
 		_spec.SetField(toolinvocation.FieldApprovalReason, field.TypeString, value)
 		_node.ApprovalReason = value
 	}
-	if value, ok := tic.mutation.ApprovedBy(); ok {
+	if value, ok := _c.mutation.ApprovedBy(); ok {
 		_spec.SetField(toolinvocation.FieldApprovedBy, field.TypeInt, value)
 		_node.ApprovedBy = value
 	}
-	if value, ok := tic.mutation.ApprovedAt(); ok {
+	if value, ok := _c.mutation.ApprovedAt(); ok {
 		_spec.SetField(toolinvocation.FieldApprovedAt, field.TypeTime, value)
 		_node.ApprovedAt = value
 	}
-	if value, ok := tic.mutation.DryRun(); ok {
+	if value, ok := _c.mutation.DryRun(); ok {
 		_spec.SetField(toolinvocation.FieldDryRun, field.TypeBool, value)
 		_node.DryRun = value
 	}
-	if value, ok := tic.mutation.Error(); ok {
+	if value, ok := _c.mutation.Error(); ok {
 		_spec.SetField(toolinvocation.FieldError, field.TypeString, value)
 		_node.Error = &value
 	}
-	if nodes := tic.mutation.ConversationIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ConversationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -409,16 +409,16 @@ type ToolInvocationCreateBulk struct {
 }
 
 // Save creates the ToolInvocation entities in the database.
-func (ticb *ToolInvocationCreateBulk) Save(ctx context.Context) ([]*ToolInvocation, error) {
-	if ticb.err != nil {
-		return nil, ticb.err
+func (_c *ToolInvocationCreateBulk) Save(ctx context.Context) ([]*ToolInvocation, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(ticb.builders))
-	nodes := make([]*ToolInvocation, len(ticb.builders))
-	mutators := make([]Mutator, len(ticb.builders))
-	for i := range ticb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ToolInvocation, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := ticb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ToolInvocationMutation)
@@ -432,11 +432,11 @@ func (ticb *ToolInvocationCreateBulk) Save(ctx context.Context) ([]*ToolInvocati
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, ticb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, ticb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -460,7 +460,7 @@ func (ticb *ToolInvocationCreateBulk) Save(ctx context.Context) ([]*ToolInvocati
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, ticb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -468,8 +468,8 @@ func (ticb *ToolInvocationCreateBulk) Save(ctx context.Context) ([]*ToolInvocati
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (ticb *ToolInvocationCreateBulk) SaveX(ctx context.Context) []*ToolInvocation {
-	v, err := ticb.Save(ctx)
+func (_c *ToolInvocationCreateBulk) SaveX(ctx context.Context) []*ToolInvocation {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -477,14 +477,14 @@ func (ticb *ToolInvocationCreateBulk) SaveX(ctx context.Context) []*ToolInvocati
 }
 
 // Exec executes the query.
-func (ticb *ToolInvocationCreateBulk) Exec(ctx context.Context) error {
-	_, err := ticb.Save(ctx)
+func (_c *ToolInvocationCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ticb *ToolInvocationCreateBulk) ExecX(ctx context.Context) {
-	if err := ticb.Exec(ctx); err != nil {
+func (_c *ToolInvocationCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

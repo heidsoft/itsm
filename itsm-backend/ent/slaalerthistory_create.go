@@ -23,163 +23,163 @@ type SLAAlertHistoryCreate struct {
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (sahc *SLAAlertHistoryCreate) SetTicketID(i int) *SLAAlertHistoryCreate {
-	sahc.mutation.SetTicketID(i)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetTicketID(v int) *SLAAlertHistoryCreate {
+	_c.mutation.SetTicketID(v)
+	return _c
 }
 
 // SetTicketNumber sets the "ticket_number" field.
-func (sahc *SLAAlertHistoryCreate) SetTicketNumber(s string) *SLAAlertHistoryCreate {
-	sahc.mutation.SetTicketNumber(s)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetTicketNumber(v string) *SLAAlertHistoryCreate {
+	_c.mutation.SetTicketNumber(v)
+	return _c
 }
 
 // SetTicketTitle sets the "ticket_title" field.
-func (sahc *SLAAlertHistoryCreate) SetTicketTitle(s string) *SLAAlertHistoryCreate {
-	sahc.mutation.SetTicketTitle(s)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetTicketTitle(v string) *SLAAlertHistoryCreate {
+	_c.mutation.SetTicketTitle(v)
+	return _c
 }
 
 // SetAlertRuleID sets the "alert_rule_id" field.
-func (sahc *SLAAlertHistoryCreate) SetAlertRuleID(i int) *SLAAlertHistoryCreate {
-	sahc.mutation.SetAlertRuleID(i)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetAlertRuleID(v int) *SLAAlertHistoryCreate {
+	_c.mutation.SetAlertRuleID(v)
+	return _c
 }
 
 // SetAlertRuleName sets the "alert_rule_name" field.
-func (sahc *SLAAlertHistoryCreate) SetAlertRuleName(s string) *SLAAlertHistoryCreate {
-	sahc.mutation.SetAlertRuleName(s)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetAlertRuleName(v string) *SLAAlertHistoryCreate {
+	_c.mutation.SetAlertRuleName(v)
+	return _c
 }
 
 // SetAlertLevel sets the "alert_level" field.
-func (sahc *SLAAlertHistoryCreate) SetAlertLevel(s string) *SLAAlertHistoryCreate {
-	sahc.mutation.SetAlertLevel(s)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetAlertLevel(v string) *SLAAlertHistoryCreate {
+	_c.mutation.SetAlertLevel(v)
+	return _c
 }
 
 // SetNillableAlertLevel sets the "alert_level" field if the given value is not nil.
-func (sahc *SLAAlertHistoryCreate) SetNillableAlertLevel(s *string) *SLAAlertHistoryCreate {
-	if s != nil {
-		sahc.SetAlertLevel(*s)
+func (_c *SLAAlertHistoryCreate) SetNillableAlertLevel(v *string) *SLAAlertHistoryCreate {
+	if v != nil {
+		_c.SetAlertLevel(*v)
 	}
-	return sahc
+	return _c
 }
 
 // SetThresholdPercentage sets the "threshold_percentage" field.
-func (sahc *SLAAlertHistoryCreate) SetThresholdPercentage(i int) *SLAAlertHistoryCreate {
-	sahc.mutation.SetThresholdPercentage(i)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetThresholdPercentage(v int) *SLAAlertHistoryCreate {
+	_c.mutation.SetThresholdPercentage(v)
+	return _c
 }
 
 // SetNillableThresholdPercentage sets the "threshold_percentage" field if the given value is not nil.
-func (sahc *SLAAlertHistoryCreate) SetNillableThresholdPercentage(i *int) *SLAAlertHistoryCreate {
-	if i != nil {
-		sahc.SetThresholdPercentage(*i)
+func (_c *SLAAlertHistoryCreate) SetNillableThresholdPercentage(v *int) *SLAAlertHistoryCreate {
+	if v != nil {
+		_c.SetThresholdPercentage(*v)
 	}
-	return sahc
+	return _c
 }
 
 // SetActualPercentage sets the "actual_percentage" field.
-func (sahc *SLAAlertHistoryCreate) SetActualPercentage(f float64) *SLAAlertHistoryCreate {
-	sahc.mutation.SetActualPercentage(f)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetActualPercentage(v float64) *SLAAlertHistoryCreate {
+	_c.mutation.SetActualPercentage(v)
+	return _c
 }
 
 // SetNillableActualPercentage sets the "actual_percentage" field if the given value is not nil.
-func (sahc *SLAAlertHistoryCreate) SetNillableActualPercentage(f *float64) *SLAAlertHistoryCreate {
-	if f != nil {
-		sahc.SetActualPercentage(*f)
+func (_c *SLAAlertHistoryCreate) SetNillableActualPercentage(v *float64) *SLAAlertHistoryCreate {
+	if v != nil {
+		_c.SetActualPercentage(*v)
 	}
-	return sahc
+	return _c
 }
 
 // SetNotificationSent sets the "notification_sent" field.
-func (sahc *SLAAlertHistoryCreate) SetNotificationSent(b bool) *SLAAlertHistoryCreate {
-	sahc.mutation.SetNotificationSent(b)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetNotificationSent(v bool) *SLAAlertHistoryCreate {
+	_c.mutation.SetNotificationSent(v)
+	return _c
 }
 
 // SetNillableNotificationSent sets the "notification_sent" field if the given value is not nil.
-func (sahc *SLAAlertHistoryCreate) SetNillableNotificationSent(b *bool) *SLAAlertHistoryCreate {
-	if b != nil {
-		sahc.SetNotificationSent(*b)
+func (_c *SLAAlertHistoryCreate) SetNillableNotificationSent(v *bool) *SLAAlertHistoryCreate {
+	if v != nil {
+		_c.SetNotificationSent(*v)
 	}
-	return sahc
+	return _c
 }
 
 // SetEscalationLevel sets the "escalation_level" field.
-func (sahc *SLAAlertHistoryCreate) SetEscalationLevel(i int) *SLAAlertHistoryCreate {
-	sahc.mutation.SetEscalationLevel(i)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetEscalationLevel(v int) *SLAAlertHistoryCreate {
+	_c.mutation.SetEscalationLevel(v)
+	return _c
 }
 
 // SetNillableEscalationLevel sets the "escalation_level" field if the given value is not nil.
-func (sahc *SLAAlertHistoryCreate) SetNillableEscalationLevel(i *int) *SLAAlertHistoryCreate {
-	if i != nil {
-		sahc.SetEscalationLevel(*i)
+func (_c *SLAAlertHistoryCreate) SetNillableEscalationLevel(v *int) *SLAAlertHistoryCreate {
+	if v != nil {
+		_c.SetEscalationLevel(*v)
 	}
-	return sahc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (sahc *SLAAlertHistoryCreate) SetTenantID(i int) *SLAAlertHistoryCreate {
-	sahc.mutation.SetTenantID(i)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetTenantID(v int) *SLAAlertHistoryCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (sahc *SLAAlertHistoryCreate) SetCreatedAt(t time.Time) *SLAAlertHistoryCreate {
-	sahc.mutation.SetCreatedAt(t)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetCreatedAt(v time.Time) *SLAAlertHistoryCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (sahc *SLAAlertHistoryCreate) SetNillableCreatedAt(t *time.Time) *SLAAlertHistoryCreate {
-	if t != nil {
-		sahc.SetCreatedAt(*t)
+func (_c *SLAAlertHistoryCreate) SetNillableCreatedAt(v *time.Time) *SLAAlertHistoryCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return sahc
+	return _c
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (sahc *SLAAlertHistoryCreate) SetResolvedAt(t time.Time) *SLAAlertHistoryCreate {
-	sahc.mutation.SetResolvedAt(t)
-	return sahc
+func (_c *SLAAlertHistoryCreate) SetResolvedAt(v time.Time) *SLAAlertHistoryCreate {
+	_c.mutation.SetResolvedAt(v)
+	return _c
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (sahc *SLAAlertHistoryCreate) SetNillableResolvedAt(t *time.Time) *SLAAlertHistoryCreate {
-	if t != nil {
-		sahc.SetResolvedAt(*t)
+func (_c *SLAAlertHistoryCreate) SetNillableResolvedAt(v *time.Time) *SLAAlertHistoryCreate {
+	if v != nil {
+		_c.SetResolvedAt(*v)
 	}
-	return sahc
+	return _c
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (sahc *SLAAlertHistoryCreate) SetTicket(t *Ticket) *SLAAlertHistoryCreate {
-	return sahc.SetTicketID(t.ID)
+func (_c *SLAAlertHistoryCreate) SetTicket(v *Ticket) *SLAAlertHistoryCreate {
+	return _c.SetTicketID(v.ID)
 }
 
 // SetAlertRule sets the "alert_rule" edge to the SLAAlertRule entity.
-func (sahc *SLAAlertHistoryCreate) SetAlertRule(s *SLAAlertRule) *SLAAlertHistoryCreate {
-	return sahc.SetAlertRuleID(s.ID)
+func (_c *SLAAlertHistoryCreate) SetAlertRule(v *SLAAlertRule) *SLAAlertHistoryCreate {
+	return _c.SetAlertRuleID(v.ID)
 }
 
 // Mutation returns the SLAAlertHistoryMutation object of the builder.
-func (sahc *SLAAlertHistoryCreate) Mutation() *SLAAlertHistoryMutation {
-	return sahc.mutation
+func (_c *SLAAlertHistoryCreate) Mutation() *SLAAlertHistoryMutation {
+	return _c.mutation
 }
 
 // Save creates the SLAAlertHistory in the database.
-func (sahc *SLAAlertHistoryCreate) Save(ctx context.Context) (*SLAAlertHistory, error) {
-	sahc.defaults()
-	return withHooks(ctx, sahc.sqlSave, sahc.mutation, sahc.hooks)
+func (_c *SLAAlertHistoryCreate) Save(ctx context.Context) (*SLAAlertHistory, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (sahc *SLAAlertHistoryCreate) SaveX(ctx context.Context) *SLAAlertHistory {
-	v, err := sahc.Save(ctx)
+func (_c *SLAAlertHistoryCreate) SaveX(ctx context.Context) *SLAAlertHistory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -187,129 +187,129 @@ func (sahc *SLAAlertHistoryCreate) SaveX(ctx context.Context) *SLAAlertHistory {
 }
 
 // Exec executes the query.
-func (sahc *SLAAlertHistoryCreate) Exec(ctx context.Context) error {
-	_, err := sahc.Save(ctx)
+func (_c *SLAAlertHistoryCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sahc *SLAAlertHistoryCreate) ExecX(ctx context.Context) {
-	if err := sahc.Exec(ctx); err != nil {
+func (_c *SLAAlertHistoryCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (sahc *SLAAlertHistoryCreate) defaults() {
-	if _, ok := sahc.mutation.AlertLevel(); !ok {
+func (_c *SLAAlertHistoryCreate) defaults() {
+	if _, ok := _c.mutation.AlertLevel(); !ok {
 		v := slaalerthistory.DefaultAlertLevel
-		sahc.mutation.SetAlertLevel(v)
+		_c.mutation.SetAlertLevel(v)
 	}
-	if _, ok := sahc.mutation.ThresholdPercentage(); !ok {
+	if _, ok := _c.mutation.ThresholdPercentage(); !ok {
 		v := slaalerthistory.DefaultThresholdPercentage
-		sahc.mutation.SetThresholdPercentage(v)
+		_c.mutation.SetThresholdPercentage(v)
 	}
-	if _, ok := sahc.mutation.ActualPercentage(); !ok {
+	if _, ok := _c.mutation.ActualPercentage(); !ok {
 		v := slaalerthistory.DefaultActualPercentage
-		sahc.mutation.SetActualPercentage(v)
+		_c.mutation.SetActualPercentage(v)
 	}
-	if _, ok := sahc.mutation.NotificationSent(); !ok {
+	if _, ok := _c.mutation.NotificationSent(); !ok {
 		v := slaalerthistory.DefaultNotificationSent
-		sahc.mutation.SetNotificationSent(v)
+		_c.mutation.SetNotificationSent(v)
 	}
-	if _, ok := sahc.mutation.EscalationLevel(); !ok {
+	if _, ok := _c.mutation.EscalationLevel(); !ok {
 		v := slaalerthistory.DefaultEscalationLevel
-		sahc.mutation.SetEscalationLevel(v)
+		_c.mutation.SetEscalationLevel(v)
 	}
-	if _, ok := sahc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := slaalerthistory.DefaultCreatedAt()
-		sahc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (sahc *SLAAlertHistoryCreate) check() error {
-	if _, ok := sahc.mutation.TicketID(); !ok {
+func (_c *SLAAlertHistoryCreate) check() error {
+	if _, ok := _c.mutation.TicketID(); !ok {
 		return &ValidationError{Name: "ticket_id", err: errors.New(`ent: missing required field "SLAAlertHistory.ticket_id"`)}
 	}
-	if v, ok := sahc.mutation.TicketID(); ok {
+	if v, ok := _c.mutation.TicketID(); ok {
 		if err := slaalerthistory.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertHistory.ticket_id": %w`, err)}
 		}
 	}
-	if _, ok := sahc.mutation.TicketNumber(); !ok {
+	if _, ok := _c.mutation.TicketNumber(); !ok {
 		return &ValidationError{Name: "ticket_number", err: errors.New(`ent: missing required field "SLAAlertHistory.ticket_number"`)}
 	}
-	if v, ok := sahc.mutation.TicketNumber(); ok {
+	if v, ok := _c.mutation.TicketNumber(); ok {
 		if err := slaalerthistory.TicketNumberValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_number", err: fmt.Errorf(`ent: validator failed for field "SLAAlertHistory.ticket_number": %w`, err)}
 		}
 	}
-	if _, ok := sahc.mutation.TicketTitle(); !ok {
+	if _, ok := _c.mutation.TicketTitle(); !ok {
 		return &ValidationError{Name: "ticket_title", err: errors.New(`ent: missing required field "SLAAlertHistory.ticket_title"`)}
 	}
-	if v, ok := sahc.mutation.TicketTitle(); ok {
+	if v, ok := _c.mutation.TicketTitle(); ok {
 		if err := slaalerthistory.TicketTitleValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_title", err: fmt.Errorf(`ent: validator failed for field "SLAAlertHistory.ticket_title": %w`, err)}
 		}
 	}
-	if _, ok := sahc.mutation.AlertRuleID(); !ok {
+	if _, ok := _c.mutation.AlertRuleID(); !ok {
 		return &ValidationError{Name: "alert_rule_id", err: errors.New(`ent: missing required field "SLAAlertHistory.alert_rule_id"`)}
 	}
-	if v, ok := sahc.mutation.AlertRuleID(); ok {
+	if v, ok := _c.mutation.AlertRuleID(); ok {
 		if err := slaalerthistory.AlertRuleIDValidator(v); err != nil {
 			return &ValidationError{Name: "alert_rule_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertHistory.alert_rule_id": %w`, err)}
 		}
 	}
-	if _, ok := sahc.mutation.AlertRuleName(); !ok {
+	if _, ok := _c.mutation.AlertRuleName(); !ok {
 		return &ValidationError{Name: "alert_rule_name", err: errors.New(`ent: missing required field "SLAAlertHistory.alert_rule_name"`)}
 	}
-	if v, ok := sahc.mutation.AlertRuleName(); ok {
+	if v, ok := _c.mutation.AlertRuleName(); ok {
 		if err := slaalerthistory.AlertRuleNameValidator(v); err != nil {
 			return &ValidationError{Name: "alert_rule_name", err: fmt.Errorf(`ent: validator failed for field "SLAAlertHistory.alert_rule_name": %w`, err)}
 		}
 	}
-	if _, ok := sahc.mutation.AlertLevel(); !ok {
+	if _, ok := _c.mutation.AlertLevel(); !ok {
 		return &ValidationError{Name: "alert_level", err: errors.New(`ent: missing required field "SLAAlertHistory.alert_level"`)}
 	}
-	if _, ok := sahc.mutation.ThresholdPercentage(); !ok {
+	if _, ok := _c.mutation.ThresholdPercentage(); !ok {
 		return &ValidationError{Name: "threshold_percentage", err: errors.New(`ent: missing required field "SLAAlertHistory.threshold_percentage"`)}
 	}
-	if _, ok := sahc.mutation.ActualPercentage(); !ok {
+	if _, ok := _c.mutation.ActualPercentage(); !ok {
 		return &ValidationError{Name: "actual_percentage", err: errors.New(`ent: missing required field "SLAAlertHistory.actual_percentage"`)}
 	}
-	if _, ok := sahc.mutation.NotificationSent(); !ok {
+	if _, ok := _c.mutation.NotificationSent(); !ok {
 		return &ValidationError{Name: "notification_sent", err: errors.New(`ent: missing required field "SLAAlertHistory.notification_sent"`)}
 	}
-	if _, ok := sahc.mutation.EscalationLevel(); !ok {
+	if _, ok := _c.mutation.EscalationLevel(); !ok {
 		return &ValidationError{Name: "escalation_level", err: errors.New(`ent: missing required field "SLAAlertHistory.escalation_level"`)}
 	}
-	if _, ok := sahc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "SLAAlertHistory.tenant_id"`)}
 	}
-	if v, ok := sahc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := slaalerthistory.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAAlertHistory.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := sahc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "SLAAlertHistory.created_at"`)}
 	}
-	if len(sahc.mutation.TicketIDs()) == 0 {
+	if len(_c.mutation.TicketIDs()) == 0 {
 		return &ValidationError{Name: "ticket", err: errors.New(`ent: missing required edge "SLAAlertHistory.ticket"`)}
 	}
-	if len(sahc.mutation.AlertRuleIDs()) == 0 {
+	if len(_c.mutation.AlertRuleIDs()) == 0 {
 		return &ValidationError{Name: "alert_rule", err: errors.New(`ent: missing required edge "SLAAlertHistory.alert_rule"`)}
 	}
 	return nil
 }
 
-func (sahc *SLAAlertHistoryCreate) sqlSave(ctx context.Context) (*SLAAlertHistory, error) {
-	if err := sahc.check(); err != nil {
+func (_c *SLAAlertHistoryCreate) sqlSave(ctx context.Context) (*SLAAlertHistory, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := sahc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, sahc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -317,61 +317,61 @@ func (sahc *SLAAlertHistoryCreate) sqlSave(ctx context.Context) (*SLAAlertHistor
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	sahc.mutation.id = &_node.ID
-	sahc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (sahc *SLAAlertHistoryCreate) createSpec() (*SLAAlertHistory, *sqlgraph.CreateSpec) {
+func (_c *SLAAlertHistoryCreate) createSpec() (*SLAAlertHistory, *sqlgraph.CreateSpec) {
 	var (
-		_node = &SLAAlertHistory{config: sahc.config}
+		_node = &SLAAlertHistory{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(slaalerthistory.Table, sqlgraph.NewFieldSpec(slaalerthistory.FieldID, field.TypeInt))
 	)
-	if value, ok := sahc.mutation.TicketNumber(); ok {
+	if value, ok := _c.mutation.TicketNumber(); ok {
 		_spec.SetField(slaalerthistory.FieldTicketNumber, field.TypeString, value)
 		_node.TicketNumber = value
 	}
-	if value, ok := sahc.mutation.TicketTitle(); ok {
+	if value, ok := _c.mutation.TicketTitle(); ok {
 		_spec.SetField(slaalerthistory.FieldTicketTitle, field.TypeString, value)
 		_node.TicketTitle = value
 	}
-	if value, ok := sahc.mutation.AlertRuleName(); ok {
+	if value, ok := _c.mutation.AlertRuleName(); ok {
 		_spec.SetField(slaalerthistory.FieldAlertRuleName, field.TypeString, value)
 		_node.AlertRuleName = value
 	}
-	if value, ok := sahc.mutation.AlertLevel(); ok {
+	if value, ok := _c.mutation.AlertLevel(); ok {
 		_spec.SetField(slaalerthistory.FieldAlertLevel, field.TypeString, value)
 		_node.AlertLevel = value
 	}
-	if value, ok := sahc.mutation.ThresholdPercentage(); ok {
+	if value, ok := _c.mutation.ThresholdPercentage(); ok {
 		_spec.SetField(slaalerthistory.FieldThresholdPercentage, field.TypeInt, value)
 		_node.ThresholdPercentage = value
 	}
-	if value, ok := sahc.mutation.ActualPercentage(); ok {
+	if value, ok := _c.mutation.ActualPercentage(); ok {
 		_spec.SetField(slaalerthistory.FieldActualPercentage, field.TypeFloat64, value)
 		_node.ActualPercentage = value
 	}
-	if value, ok := sahc.mutation.NotificationSent(); ok {
+	if value, ok := _c.mutation.NotificationSent(); ok {
 		_spec.SetField(slaalerthistory.FieldNotificationSent, field.TypeBool, value)
 		_node.NotificationSent = value
 	}
-	if value, ok := sahc.mutation.EscalationLevel(); ok {
+	if value, ok := _c.mutation.EscalationLevel(); ok {
 		_spec.SetField(slaalerthistory.FieldEscalationLevel, field.TypeInt, value)
 		_node.EscalationLevel = value
 	}
-	if value, ok := sahc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(slaalerthistory.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := sahc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(slaalerthistory.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := sahc.mutation.ResolvedAt(); ok {
+	if value, ok := _c.mutation.ResolvedAt(); ok {
 		_spec.SetField(slaalerthistory.FieldResolvedAt, field.TypeTime, value)
 		_node.ResolvedAt = value
 	}
-	if nodes := sahc.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -388,7 +388,7 @@ func (sahc *SLAAlertHistoryCreate) createSpec() (*SLAAlertHistory, *sqlgraph.Cre
 		_node.TicketID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := sahc.mutation.AlertRuleIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.AlertRuleIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -416,16 +416,16 @@ type SLAAlertHistoryCreateBulk struct {
 }
 
 // Save creates the SLAAlertHistory entities in the database.
-func (sahcb *SLAAlertHistoryCreateBulk) Save(ctx context.Context) ([]*SLAAlertHistory, error) {
-	if sahcb.err != nil {
-		return nil, sahcb.err
+func (_c *SLAAlertHistoryCreateBulk) Save(ctx context.Context) ([]*SLAAlertHistory, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(sahcb.builders))
-	nodes := make([]*SLAAlertHistory, len(sahcb.builders))
-	mutators := make([]Mutator, len(sahcb.builders))
-	for i := range sahcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*SLAAlertHistory, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := sahcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SLAAlertHistoryMutation)
@@ -439,11 +439,11 @@ func (sahcb *SLAAlertHistoryCreateBulk) Save(ctx context.Context) ([]*SLAAlertHi
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, sahcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, sahcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -467,7 +467,7 @@ func (sahcb *SLAAlertHistoryCreateBulk) Save(ctx context.Context) ([]*SLAAlertHi
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, sahcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -475,8 +475,8 @@ func (sahcb *SLAAlertHistoryCreateBulk) Save(ctx context.Context) ([]*SLAAlertHi
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (sahcb *SLAAlertHistoryCreateBulk) SaveX(ctx context.Context) []*SLAAlertHistory {
-	v, err := sahcb.Save(ctx)
+func (_c *SLAAlertHistoryCreateBulk) SaveX(ctx context.Context) []*SLAAlertHistory {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -484,14 +484,14 @@ func (sahcb *SLAAlertHistoryCreateBulk) SaveX(ctx context.Context) []*SLAAlertHi
 }
 
 // Exec executes the query.
-func (sahcb *SLAAlertHistoryCreateBulk) Exec(ctx context.Context) error {
-	_, err := sahcb.Save(ctx)
+func (_c *SLAAlertHistoryCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sahcb *SLAAlertHistoryCreateBulk) ExecX(ctx context.Context) {
-	if err := sahcb.Exec(ctx); err != nil {
+func (_c *SLAAlertHistoryCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

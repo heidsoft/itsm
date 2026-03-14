@@ -21,147 +21,147 @@ type CIAttributeDefinitionCreate struct {
 }
 
 // SetName sets the "name" field.
-func (cadc *CIAttributeDefinitionCreate) SetName(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetName(s)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetName(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDisplayName sets the "display_name" field.
-func (cadc *CIAttributeDefinitionCreate) SetDisplayName(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetDisplayName(s)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetDisplayName(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetDisplayName(v)
+	return _c
 }
 
 // SetType sets the "type" field.
-func (cadc *CIAttributeDefinitionCreate) SetType(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetType(s)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetType(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetType(v)
+	return _c
 }
 
 // SetRequired sets the "required" field.
-func (cadc *CIAttributeDefinitionCreate) SetRequired(b bool) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetRequired(b)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetRequired(v bool) *CIAttributeDefinitionCreate {
+	_c.mutation.SetRequired(v)
+	return _c
 }
 
 // SetNillableRequired sets the "required" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableRequired(b *bool) *CIAttributeDefinitionCreate {
-	if b != nil {
-		cadc.SetRequired(*b)
+func (_c *CIAttributeDefinitionCreate) SetNillableRequired(v *bool) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetRequired(*v)
 	}
-	return cadc
+	return _c
 }
 
 // SetUnique sets the "unique" field.
-func (cadc *CIAttributeDefinitionCreate) SetUnique(b bool) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetUnique(b)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetUnique(v bool) *CIAttributeDefinitionCreate {
+	_c.mutation.SetUnique(v)
+	return _c
 }
 
 // SetNillableUnique sets the "unique" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableUnique(b *bool) *CIAttributeDefinitionCreate {
-	if b != nil {
-		cadc.SetUnique(*b)
+func (_c *CIAttributeDefinitionCreate) SetNillableUnique(v *bool) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetUnique(*v)
 	}
-	return cadc
+	return _c
 }
 
 // SetDefaultValue sets the "default_value" field.
-func (cadc *CIAttributeDefinitionCreate) SetDefaultValue(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetDefaultValue(s)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetDefaultValue(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetDefaultValue(v)
+	return _c
 }
 
 // SetNillableDefaultValue sets the "default_value" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableDefaultValue(s *string) *CIAttributeDefinitionCreate {
-	if s != nil {
-		cadc.SetDefaultValue(*s)
+func (_c *CIAttributeDefinitionCreate) SetNillableDefaultValue(v *string) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetDefaultValue(*v)
 	}
-	return cadc
+	return _c
 }
 
 // SetValidationRules sets the "validation_rules" field.
-func (cadc *CIAttributeDefinitionCreate) SetValidationRules(s string) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetValidationRules(s)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetValidationRules(v string) *CIAttributeDefinitionCreate {
+	_c.mutation.SetValidationRules(v)
+	return _c
 }
 
 // SetNillableValidationRules sets the "validation_rules" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableValidationRules(s *string) *CIAttributeDefinitionCreate {
-	if s != nil {
-		cadc.SetValidationRules(*s)
+func (_c *CIAttributeDefinitionCreate) SetNillableValidationRules(v *string) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetValidationRules(*v)
 	}
-	return cadc
+	return _c
 }
 
 // SetCiTypeID sets the "ci_type_id" field.
-func (cadc *CIAttributeDefinitionCreate) SetCiTypeID(i int) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetCiTypeID(i)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetCiTypeID(v int) *CIAttributeDefinitionCreate {
+	_c.mutation.SetCiTypeID(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cadc *CIAttributeDefinitionCreate) SetTenantID(i int) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetTenantID(i)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetTenantID(v int) *CIAttributeDefinitionCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (cadc *CIAttributeDefinitionCreate) SetIsActive(b bool) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetIsActive(b)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetIsActive(v bool) *CIAttributeDefinitionCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableIsActive(b *bool) *CIAttributeDefinitionCreate {
-	if b != nil {
-		cadc.SetIsActive(*b)
+func (_c *CIAttributeDefinitionCreate) SetNillableIsActive(v *bool) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return cadc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cadc *CIAttributeDefinitionCreate) SetCreatedAt(t time.Time) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetCreatedAt(t)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetCreatedAt(v time.Time) *CIAttributeDefinitionCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableCreatedAt(t *time.Time) *CIAttributeDefinitionCreate {
-	if t != nil {
-		cadc.SetCreatedAt(*t)
+func (_c *CIAttributeDefinitionCreate) SetNillableCreatedAt(v *time.Time) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return cadc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cadc *CIAttributeDefinitionCreate) SetUpdatedAt(t time.Time) *CIAttributeDefinitionCreate {
-	cadc.mutation.SetUpdatedAt(t)
-	return cadc
+func (_c *CIAttributeDefinitionCreate) SetUpdatedAt(v time.Time) *CIAttributeDefinitionCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (cadc *CIAttributeDefinitionCreate) SetNillableUpdatedAt(t *time.Time) *CIAttributeDefinitionCreate {
-	if t != nil {
-		cadc.SetUpdatedAt(*t)
+func (_c *CIAttributeDefinitionCreate) SetNillableUpdatedAt(v *time.Time) *CIAttributeDefinitionCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return cadc
+	return _c
 }
 
 // Mutation returns the CIAttributeDefinitionMutation object of the builder.
-func (cadc *CIAttributeDefinitionCreate) Mutation() *CIAttributeDefinitionMutation {
-	return cadc.mutation
+func (_c *CIAttributeDefinitionCreate) Mutation() *CIAttributeDefinitionMutation {
+	return _c.mutation
 }
 
 // Save creates the CIAttributeDefinition in the database.
-func (cadc *CIAttributeDefinitionCreate) Save(ctx context.Context) (*CIAttributeDefinition, error) {
-	cadc.defaults()
-	return withHooks(ctx, cadc.sqlSave, cadc.mutation, cadc.hooks)
+func (_c *CIAttributeDefinitionCreate) Save(ctx context.Context) (*CIAttributeDefinition, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (cadc *CIAttributeDefinitionCreate) SaveX(ctx context.Context) *CIAttributeDefinition {
-	v, err := cadc.Save(ctx)
+func (_c *CIAttributeDefinitionCreate) SaveX(ctx context.Context) *CIAttributeDefinition {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -169,108 +169,108 @@ func (cadc *CIAttributeDefinitionCreate) SaveX(ctx context.Context) *CIAttribute
 }
 
 // Exec executes the query.
-func (cadc *CIAttributeDefinitionCreate) Exec(ctx context.Context) error {
-	_, err := cadc.Save(ctx)
+func (_c *CIAttributeDefinitionCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cadc *CIAttributeDefinitionCreate) ExecX(ctx context.Context) {
-	if err := cadc.Exec(ctx); err != nil {
+func (_c *CIAttributeDefinitionCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cadc *CIAttributeDefinitionCreate) defaults() {
-	if _, ok := cadc.mutation.Required(); !ok {
+func (_c *CIAttributeDefinitionCreate) defaults() {
+	if _, ok := _c.mutation.Required(); !ok {
 		v := ciattributedefinition.DefaultRequired
-		cadc.mutation.SetRequired(v)
+		_c.mutation.SetRequired(v)
 	}
-	if _, ok := cadc.mutation.Unique(); !ok {
+	if _, ok := _c.mutation.Unique(); !ok {
 		v := ciattributedefinition.DefaultUnique
-		cadc.mutation.SetUnique(v)
+		_c.mutation.SetUnique(v)
 	}
-	if _, ok := cadc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := ciattributedefinition.DefaultIsActive
-		cadc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := cadc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := ciattributedefinition.DefaultCreatedAt()
-		cadc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := cadc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := ciattributedefinition.DefaultUpdatedAt()
-		cadc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cadc *CIAttributeDefinitionCreate) check() error {
-	if _, ok := cadc.mutation.Name(); !ok {
+func (_c *CIAttributeDefinitionCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "CIAttributeDefinition.name"`)}
 	}
-	if v, ok := cadc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := ciattributedefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.name": %w`, err)}
 		}
 	}
-	if _, ok := cadc.mutation.DisplayName(); !ok {
+	if _, ok := _c.mutation.DisplayName(); !ok {
 		return &ValidationError{Name: "display_name", err: errors.New(`ent: missing required field "CIAttributeDefinition.display_name"`)}
 	}
-	if v, ok := cadc.mutation.DisplayName(); ok {
+	if v, ok := _c.mutation.DisplayName(); ok {
 		if err := ciattributedefinition.DisplayNameValidator(v); err != nil {
 			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.display_name": %w`, err)}
 		}
 	}
-	if _, ok := cadc.mutation.GetType(); !ok {
+	if _, ok := _c.mutation.GetType(); !ok {
 		return &ValidationError{Name: "type", err: errors.New(`ent: missing required field "CIAttributeDefinition.type"`)}
 	}
-	if v, ok := cadc.mutation.GetType(); ok {
+	if v, ok := _c.mutation.GetType(); ok {
 		if err := ciattributedefinition.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.type": %w`, err)}
 		}
 	}
-	if _, ok := cadc.mutation.Required(); !ok {
+	if _, ok := _c.mutation.Required(); !ok {
 		return &ValidationError{Name: "required", err: errors.New(`ent: missing required field "CIAttributeDefinition.required"`)}
 	}
-	if _, ok := cadc.mutation.Unique(); !ok {
+	if _, ok := _c.mutation.Unique(); !ok {
 		return &ValidationError{Name: "unique", err: errors.New(`ent: missing required field "CIAttributeDefinition.unique"`)}
 	}
-	if _, ok := cadc.mutation.CiTypeID(); !ok {
+	if _, ok := _c.mutation.CiTypeID(); !ok {
 		return &ValidationError{Name: "ci_type_id", err: errors.New(`ent: missing required field "CIAttributeDefinition.ci_type_id"`)}
 	}
-	if v, ok := cadc.mutation.CiTypeID(); ok {
+	if v, ok := _c.mutation.CiTypeID(); ok {
 		if err := ciattributedefinition.CiTypeIDValidator(v); err != nil {
 			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.ci_type_id": %w`, err)}
 		}
 	}
-	if _, ok := cadc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "CIAttributeDefinition.tenant_id"`)}
 	}
-	if v, ok := cadc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := ciattributedefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := cadc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "CIAttributeDefinition.is_active"`)}
 	}
-	if _, ok := cadc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "CIAttributeDefinition.created_at"`)}
 	}
-	if _, ok := cadc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "CIAttributeDefinition.updated_at"`)}
 	}
 	return nil
 }
 
-func (cadc *CIAttributeDefinitionCreate) sqlSave(ctx context.Context) (*CIAttributeDefinition, error) {
-	if err := cadc.check(); err != nil {
+func (_c *CIAttributeDefinitionCreate) sqlSave(ctx context.Context) (*CIAttributeDefinition, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := cadc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, cadc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -278,61 +278,61 @@ func (cadc *CIAttributeDefinitionCreate) sqlSave(ctx context.Context) (*CIAttrib
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	cadc.mutation.id = &_node.ID
-	cadc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (cadc *CIAttributeDefinitionCreate) createSpec() (*CIAttributeDefinition, *sqlgraph.CreateSpec) {
+func (_c *CIAttributeDefinitionCreate) createSpec() (*CIAttributeDefinition, *sqlgraph.CreateSpec) {
 	var (
-		_node = &CIAttributeDefinition{config: cadc.config}
+		_node = &CIAttributeDefinition{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ciattributedefinition.Table, sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt))
 	)
-	if value, ok := cadc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(ciattributedefinition.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := cadc.mutation.DisplayName(); ok {
+	if value, ok := _c.mutation.DisplayName(); ok {
 		_spec.SetField(ciattributedefinition.FieldDisplayName, field.TypeString, value)
 		_node.DisplayName = value
 	}
-	if value, ok := cadc.mutation.GetType(); ok {
+	if value, ok := _c.mutation.GetType(); ok {
 		_spec.SetField(ciattributedefinition.FieldType, field.TypeString, value)
 		_node.Type = value
 	}
-	if value, ok := cadc.mutation.Required(); ok {
+	if value, ok := _c.mutation.Required(); ok {
 		_spec.SetField(ciattributedefinition.FieldRequired, field.TypeBool, value)
 		_node.Required = value
 	}
-	if value, ok := cadc.mutation.Unique(); ok {
+	if value, ok := _c.mutation.Unique(); ok {
 		_spec.SetField(ciattributedefinition.FieldUnique, field.TypeBool, value)
 		_node.Unique = value
 	}
-	if value, ok := cadc.mutation.DefaultValue(); ok {
+	if value, ok := _c.mutation.DefaultValue(); ok {
 		_spec.SetField(ciattributedefinition.FieldDefaultValue, field.TypeString, value)
 		_node.DefaultValue = value
 	}
-	if value, ok := cadc.mutation.ValidationRules(); ok {
+	if value, ok := _c.mutation.ValidationRules(); ok {
 		_spec.SetField(ciattributedefinition.FieldValidationRules, field.TypeString, value)
 		_node.ValidationRules = value
 	}
-	if value, ok := cadc.mutation.CiTypeID(); ok {
+	if value, ok := _c.mutation.CiTypeID(); ok {
 		_spec.SetField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
 		_node.CiTypeID = value
 	}
-	if value, ok := cadc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := cadc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(ciattributedefinition.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := cadc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := cadc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -347,16 +347,16 @@ type CIAttributeDefinitionCreateBulk struct {
 }
 
 // Save creates the CIAttributeDefinition entities in the database.
-func (cadcb *CIAttributeDefinitionCreateBulk) Save(ctx context.Context) ([]*CIAttributeDefinition, error) {
-	if cadcb.err != nil {
-		return nil, cadcb.err
+func (_c *CIAttributeDefinitionCreateBulk) Save(ctx context.Context) ([]*CIAttributeDefinition, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(cadcb.builders))
-	nodes := make([]*CIAttributeDefinition, len(cadcb.builders))
-	mutators := make([]Mutator, len(cadcb.builders))
-	for i := range cadcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*CIAttributeDefinition, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := cadcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*CIAttributeDefinitionMutation)
@@ -370,11 +370,11 @@ func (cadcb *CIAttributeDefinitionCreateBulk) Save(ctx context.Context) ([]*CIAt
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, cadcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, cadcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -398,7 +398,7 @@ func (cadcb *CIAttributeDefinitionCreateBulk) Save(ctx context.Context) ([]*CIAt
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, cadcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -406,8 +406,8 @@ func (cadcb *CIAttributeDefinitionCreateBulk) Save(ctx context.Context) ([]*CIAt
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cadcb *CIAttributeDefinitionCreateBulk) SaveX(ctx context.Context) []*CIAttributeDefinition {
-	v, err := cadcb.Save(ctx)
+func (_c *CIAttributeDefinitionCreateBulk) SaveX(ctx context.Context) []*CIAttributeDefinition {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -415,14 +415,14 @@ func (cadcb *CIAttributeDefinitionCreateBulk) SaveX(ctx context.Context) []*CIAt
 }
 
 // Exec executes the query.
-func (cadcb *CIAttributeDefinitionCreateBulk) Exec(ctx context.Context) error {
-	_, err := cadcb.Save(ctx)
+func (_c *CIAttributeDefinitionCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cadcb *CIAttributeDefinitionCreateBulk) ExecX(ctx context.Context) {
-	if err := cadcb.Exec(ctx); err != nil {
+func (_c *CIAttributeDefinitionCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -189,7 +189,7 @@ func (*ConfigurationItem) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ConfigurationItem fields.
-func (ci *ConfigurationItem) assignValues(columns []string, values []any) error {
+func (_m *ConfigurationItem) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -200,108 +200,108 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ci.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case configurationitem.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ci.Name = value.String
+				_m.Name = value.String
 			}
 		case configurationitem.FieldCiTypeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
 			} else if value.Valid {
-				ci.CiTypeID = int(value.Int64)
+				_m.CiTypeID = int(value.Int64)
 			}
 		case configurationitem.FieldCiType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_type", values[i])
 			} else if value.Valid {
-				ci.CiType = value.String
+				_m.CiType = value.String
 			}
 		case configurationitem.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				ci.Status = value.String
+				_m.Status = value.String
 			}
 		case configurationitem.FieldEnvironment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field environment", values[i])
 			} else if value.Valid {
-				ci.Environment = value.String
+				_m.Environment = value.String
 			}
 		case configurationitem.FieldCriticality:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field criticality", values[i])
 			} else if value.Valid {
-				ci.Criticality = value.String
+				_m.Criticality = value.String
 			}
 		case configurationitem.FieldAssetTag:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field asset_tag", values[i])
 			} else if value.Valid {
-				ci.AssetTag = value.String
+				_m.AssetTag = value.String
 			}
 		case configurationitem.FieldSerialNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field serial_number", values[i])
 			} else if value.Valid {
-				ci.SerialNumber = value.String
+				_m.SerialNumber = value.String
 			}
 		case configurationitem.FieldModel:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field model", values[i])
 			} else if value.Valid {
-				ci.Model = value.String
+				_m.Model = value.String
 			}
 		case configurationitem.FieldVendor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field vendor", values[i])
 			} else if value.Valid {
-				ci.Vendor = value.String
+				_m.Vendor = value.String
 			}
 		case configurationitem.FieldLocation:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field location", values[i])
 			} else if value.Valid {
-				ci.Location = value.String
+				_m.Location = value.String
 			}
 		case configurationitem.FieldAssignedTo:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field assigned_to", values[i])
 			} else if value.Valid {
-				ci.AssignedTo = value.String
+				_m.AssignedTo = value.String
 			}
 		case configurationitem.FieldOwnedBy:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field owned_by", values[i])
 			} else if value.Valid {
-				ci.OwnedBy = value.String
+				_m.OwnedBy = value.String
 			}
 		case configurationitem.FieldDiscoverySource:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field discovery_source", values[i])
 			} else if value.Valid {
-				ci.DiscoverySource = value.String
+				_m.DiscoverySource = value.String
 			}
 		case configurationitem.FieldLastDiscovered:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field last_discovered", values[i])
 			} else if value.Valid {
-				ci.LastDiscovered = value.Time
+				_m.LastDiscovered = value.Time
 			}
 		case configurationitem.FieldSource:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field source", values[i])
 			} else if value.Valid {
-				ci.Source = value.String
+				_m.Source = value.String
 			}
 		case configurationitem.FieldAttributes:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field attributes", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ci.Attributes); err != nil {
+				if err := json.Unmarshal(*value, &_m.Attributes); err != nil {
 					return fmt.Errorf("unmarshal field attributes: %w", err)
 				}
 			}
@@ -309,43 +309,43 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_provider", values[i])
 			} else if value.Valid {
-				ci.CloudProvider = value.String
+				_m.CloudProvider = value.String
 			}
 		case configurationitem.FieldCloudAccountID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_account_id", values[i])
 			} else if value.Valid {
-				ci.CloudAccountID = value.String
+				_m.CloudAccountID = value.String
 			}
 		case configurationitem.FieldCloudRegion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_region", values[i])
 			} else if value.Valid {
-				ci.CloudRegion = value.String
+				_m.CloudRegion = value.String
 			}
 		case configurationitem.FieldCloudZone:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_zone", values[i])
 			} else if value.Valid {
-				ci.CloudZone = value.String
+				_m.CloudZone = value.String
 			}
 		case configurationitem.FieldCloudResourceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_resource_id", values[i])
 			} else if value.Valid {
-				ci.CloudResourceID = value.String
+				_m.CloudResourceID = value.String
 			}
 		case configurationitem.FieldCloudResourceType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_resource_type", values[i])
 			} else if value.Valid {
-				ci.CloudResourceType = value.String
+				_m.CloudResourceType = value.String
 			}
 		case configurationitem.FieldCloudMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ci.CloudMetadata); err != nil {
+				if err := json.Unmarshal(*value, &_m.CloudMetadata); err != nil {
 					return fmt.Errorf("unmarshal field cloud_metadata: %w", err)
 				}
 			}
@@ -353,7 +353,7 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_tags", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ci.CloudTags); err != nil {
+				if err := json.Unmarshal(*value, &_m.CloudTags); err != nil {
 					return fmt.Errorf("unmarshal field cloud_tags: %w", err)
 				}
 			}
@@ -361,7 +361,7 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_metrics", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ci.CloudMetrics); err != nil {
+				if err := json.Unmarshal(*value, &_m.CloudMetrics); err != nil {
 					return fmt.Errorf("unmarshal field cloud_metrics: %w", err)
 				}
 			}
@@ -369,40 +369,40 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_sync_time", values[i])
 			} else if value.Valid {
-				ci.CloudSyncTime = value.Time
+				_m.CloudSyncTime = value.Time
 			}
 		case configurationitem.FieldCloudSyncStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_sync_status", values[i])
 			} else if value.Valid {
-				ci.CloudSyncStatus = value.String
+				_m.CloudSyncStatus = value.String
 			}
 		case configurationitem.FieldCloudResourceRefID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_resource_ref_id", values[i])
 			} else if value.Valid {
-				ci.CloudResourceRefID = int(value.Int64)
+				_m.CloudResourceRefID = int(value.Int64)
 			}
 		case configurationitem.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ci.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case configurationitem.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ci.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case configurationitem.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ci.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ci.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -410,158 +410,158 @@ func (ci *ConfigurationItem) assignValues(columns []string, values []any) error 
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ConfigurationItem.
 // This includes values selected through modifiers, order, etc.
-func (ci *ConfigurationItem) Value(name string) (ent.Value, error) {
-	return ci.selectValues.Get(name)
+func (_m *ConfigurationItem) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryCiTypeRef queries the "ci_type_ref" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryCiTypeRef() *CITypeQuery {
-	return NewConfigurationItemClient(ci.config).QueryCiTypeRef(ci)
+func (_m *ConfigurationItem) QueryCiTypeRef() *CITypeQuery {
+	return NewConfigurationItemClient(_m.config).QueryCiTypeRef(_m)
 }
 
 // QueryCloudResourceRef queries the "cloud_resource_ref" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryCloudResourceRef() *CloudResourceQuery {
-	return NewConfigurationItemClient(ci.config).QueryCloudResourceRef(ci)
+func (_m *ConfigurationItem) QueryCloudResourceRef() *CloudResourceQuery {
+	return NewConfigurationItemClient(_m.config).QueryCloudResourceRef(_m)
 }
 
 // QueryTickets queries the "tickets" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryTickets() *TicketQuery {
-	return NewConfigurationItemClient(ci.config).QueryTickets(ci)
+func (_m *ConfigurationItem) QueryTickets() *TicketQuery {
+	return NewConfigurationItemClient(_m.config).QueryTickets(_m)
 }
 
 // QueryIncidents queries the "incidents" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryIncidents() *IncidentQuery {
-	return NewConfigurationItemClient(ci.config).QueryIncidents(ci)
+func (_m *ConfigurationItem) QueryIncidents() *IncidentQuery {
+	return NewConfigurationItemClient(_m.config).QueryIncidents(_m)
 }
 
 // QueryOutgoingRelations queries the "outgoing_relations" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryOutgoingRelations() *CIRelationshipQuery {
-	return NewConfigurationItemClient(ci.config).QueryOutgoingRelations(ci)
+func (_m *ConfigurationItem) QueryOutgoingRelations() *CIRelationshipQuery {
+	return NewConfigurationItemClient(_m.config).QueryOutgoingRelations(_m)
 }
 
 // QueryIncomingRelations queries the "incoming_relations" edge of the ConfigurationItem entity.
-func (ci *ConfigurationItem) QueryIncomingRelations() *CIRelationshipQuery {
-	return NewConfigurationItemClient(ci.config).QueryIncomingRelations(ci)
+func (_m *ConfigurationItem) QueryIncomingRelations() *CIRelationshipQuery {
+	return NewConfigurationItemClient(_m.config).QueryIncomingRelations(_m)
 }
 
 // Update returns a builder for updating this ConfigurationItem.
 // Note that you need to call ConfigurationItem.Unwrap() before calling this method if this ConfigurationItem
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ci *ConfigurationItem) Update() *ConfigurationItemUpdateOne {
-	return NewConfigurationItemClient(ci.config).UpdateOne(ci)
+func (_m *ConfigurationItem) Update() *ConfigurationItemUpdateOne {
+	return NewConfigurationItemClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ConfigurationItem entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ci *ConfigurationItem) Unwrap() *ConfigurationItem {
-	_tx, ok := ci.config.driver.(*txDriver)
+func (_m *ConfigurationItem) Unwrap() *ConfigurationItem {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ConfigurationItem is not a transactional entity")
 	}
-	ci.config.driver = _tx.drv
-	return ci
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ci *ConfigurationItem) String() string {
+func (_m *ConfigurationItem) String() string {
 	var builder strings.Builder
 	builder.WriteString("ConfigurationItem(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ci.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(ci.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("ci_type_id=")
-	builder.WriteString(fmt.Sprintf("%v", ci.CiTypeID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CiTypeID))
 	builder.WriteString(", ")
 	builder.WriteString("ci_type=")
-	builder.WriteString(ci.CiType)
+	builder.WriteString(_m.CiType)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(ci.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("environment=")
-	builder.WriteString(ci.Environment)
+	builder.WriteString(_m.Environment)
 	builder.WriteString(", ")
 	builder.WriteString("criticality=")
-	builder.WriteString(ci.Criticality)
+	builder.WriteString(_m.Criticality)
 	builder.WriteString(", ")
 	builder.WriteString("asset_tag=")
-	builder.WriteString(ci.AssetTag)
+	builder.WriteString(_m.AssetTag)
 	builder.WriteString(", ")
 	builder.WriteString("serial_number=")
-	builder.WriteString(ci.SerialNumber)
+	builder.WriteString(_m.SerialNumber)
 	builder.WriteString(", ")
 	builder.WriteString("model=")
-	builder.WriteString(ci.Model)
+	builder.WriteString(_m.Model)
 	builder.WriteString(", ")
 	builder.WriteString("vendor=")
-	builder.WriteString(ci.Vendor)
+	builder.WriteString(_m.Vendor)
 	builder.WriteString(", ")
 	builder.WriteString("location=")
-	builder.WriteString(ci.Location)
+	builder.WriteString(_m.Location)
 	builder.WriteString(", ")
 	builder.WriteString("assigned_to=")
-	builder.WriteString(ci.AssignedTo)
+	builder.WriteString(_m.AssignedTo)
 	builder.WriteString(", ")
 	builder.WriteString("owned_by=")
-	builder.WriteString(ci.OwnedBy)
+	builder.WriteString(_m.OwnedBy)
 	builder.WriteString(", ")
 	builder.WriteString("discovery_source=")
-	builder.WriteString(ci.DiscoverySource)
+	builder.WriteString(_m.DiscoverySource)
 	builder.WriteString(", ")
 	builder.WriteString("last_discovered=")
-	builder.WriteString(ci.LastDiscovered.Format(time.ANSIC))
+	builder.WriteString(_m.LastDiscovered.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("source=")
-	builder.WriteString(ci.Source)
+	builder.WriteString(_m.Source)
 	builder.WriteString(", ")
 	builder.WriteString("attributes=")
-	builder.WriteString(fmt.Sprintf("%v", ci.Attributes))
+	builder.WriteString(fmt.Sprintf("%v", _m.Attributes))
 	builder.WriteString(", ")
 	builder.WriteString("cloud_provider=")
-	builder.WriteString(ci.CloudProvider)
+	builder.WriteString(_m.CloudProvider)
 	builder.WriteString(", ")
 	builder.WriteString("cloud_account_id=")
-	builder.WriteString(ci.CloudAccountID)
+	builder.WriteString(_m.CloudAccountID)
 	builder.WriteString(", ")
 	builder.WriteString("cloud_region=")
-	builder.WriteString(ci.CloudRegion)
+	builder.WriteString(_m.CloudRegion)
 	builder.WriteString(", ")
 	builder.WriteString("cloud_zone=")
-	builder.WriteString(ci.CloudZone)
+	builder.WriteString(_m.CloudZone)
 	builder.WriteString(", ")
 	builder.WriteString("cloud_resource_id=")
-	builder.WriteString(ci.CloudResourceID)
+	builder.WriteString(_m.CloudResourceID)
 	builder.WriteString(", ")
 	builder.WriteString("cloud_resource_type=")
-	builder.WriteString(ci.CloudResourceType)
+	builder.WriteString(_m.CloudResourceType)
 	builder.WriteString(", ")
 	builder.WriteString("cloud_metadata=")
-	builder.WriteString(fmt.Sprintf("%v", ci.CloudMetadata))
+	builder.WriteString(fmt.Sprintf("%v", _m.CloudMetadata))
 	builder.WriteString(", ")
 	builder.WriteString("cloud_tags=")
-	builder.WriteString(fmt.Sprintf("%v", ci.CloudTags))
+	builder.WriteString(fmt.Sprintf("%v", _m.CloudTags))
 	builder.WriteString(", ")
 	builder.WriteString("cloud_metrics=")
-	builder.WriteString(fmt.Sprintf("%v", ci.CloudMetrics))
+	builder.WriteString(fmt.Sprintf("%v", _m.CloudMetrics))
 	builder.WriteString(", ")
 	builder.WriteString("cloud_sync_time=")
-	builder.WriteString(ci.CloudSyncTime.Format(time.ANSIC))
+	builder.WriteString(_m.CloudSyncTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("cloud_sync_status=")
-	builder.WriteString(ci.CloudSyncStatus)
+	builder.WriteString(_m.CloudSyncStatus)
 	builder.WriteString(", ")
 	builder.WriteString("cloud_resource_ref_id=")
-	builder.WriteString(fmt.Sprintf("%v", ci.CloudResourceRefID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CloudResourceRefID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ci.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ci.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ci.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

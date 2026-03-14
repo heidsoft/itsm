@@ -22,136 +22,136 @@ type DiscoverySourceCreate struct {
 }
 
 // SetName sets the "name" field.
-func (dsc *DiscoverySourceCreate) SetName(s string) *DiscoverySourceCreate {
-	dsc.mutation.SetName(s)
-	return dsc
+func (_c *DiscoverySourceCreate) SetName(v string) *DiscoverySourceCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetSourceType sets the "source_type" field.
-func (dsc *DiscoverySourceCreate) SetSourceType(s string) *DiscoverySourceCreate {
-	dsc.mutation.SetSourceType(s)
-	return dsc
+func (_c *DiscoverySourceCreate) SetSourceType(v string) *DiscoverySourceCreate {
+	_c.mutation.SetSourceType(v)
+	return _c
 }
 
 // SetProvider sets the "provider" field.
-func (dsc *DiscoverySourceCreate) SetProvider(s string) *DiscoverySourceCreate {
-	dsc.mutation.SetProvider(s)
-	return dsc
+func (_c *DiscoverySourceCreate) SetProvider(v string) *DiscoverySourceCreate {
+	_c.mutation.SetProvider(v)
+	return _c
 }
 
 // SetNillableProvider sets the "provider" field if the given value is not nil.
-func (dsc *DiscoverySourceCreate) SetNillableProvider(s *string) *DiscoverySourceCreate {
-	if s != nil {
-		dsc.SetProvider(*s)
+func (_c *DiscoverySourceCreate) SetNillableProvider(v *string) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetProvider(*v)
 	}
-	return dsc
+	return _c
 }
 
 // SetEnabled sets the "enabled" field.
-func (dsc *DiscoverySourceCreate) SetEnabled(b bool) *DiscoverySourceCreate {
-	dsc.mutation.SetEnabled(b)
-	return dsc
+func (_c *DiscoverySourceCreate) SetEnabled(v bool) *DiscoverySourceCreate {
+	_c.mutation.SetEnabled(v)
+	return _c
 }
 
 // SetNillableEnabled sets the "enabled" field if the given value is not nil.
-func (dsc *DiscoverySourceCreate) SetNillableEnabled(b *bool) *DiscoverySourceCreate {
-	if b != nil {
-		dsc.SetEnabled(*b)
+func (_c *DiscoverySourceCreate) SetNillableEnabled(v *bool) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetEnabled(*v)
 	}
-	return dsc
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (dsc *DiscoverySourceCreate) SetDescription(s string) *DiscoverySourceCreate {
-	dsc.mutation.SetDescription(s)
-	return dsc
+func (_c *DiscoverySourceCreate) SetDescription(v string) *DiscoverySourceCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (dsc *DiscoverySourceCreate) SetNillableDescription(s *string) *DiscoverySourceCreate {
-	if s != nil {
-		dsc.SetDescription(*s)
+func (_c *DiscoverySourceCreate) SetNillableDescription(v *string) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return dsc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (dsc *DiscoverySourceCreate) SetTenantID(i int) *DiscoverySourceCreate {
-	dsc.mutation.SetTenantID(i)
-	return dsc
+func (_c *DiscoverySourceCreate) SetTenantID(v int) *DiscoverySourceCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (dsc *DiscoverySourceCreate) SetNillableTenantID(i *int) *DiscoverySourceCreate {
-	if i != nil {
-		dsc.SetTenantID(*i)
+func (_c *DiscoverySourceCreate) SetNillableTenantID(v *int) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetTenantID(*v)
 	}
-	return dsc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (dsc *DiscoverySourceCreate) SetCreatedAt(t time.Time) *DiscoverySourceCreate {
-	dsc.mutation.SetCreatedAt(t)
-	return dsc
+func (_c *DiscoverySourceCreate) SetCreatedAt(v time.Time) *DiscoverySourceCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (dsc *DiscoverySourceCreate) SetNillableCreatedAt(t *time.Time) *DiscoverySourceCreate {
-	if t != nil {
-		dsc.SetCreatedAt(*t)
+func (_c *DiscoverySourceCreate) SetNillableCreatedAt(v *time.Time) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return dsc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (dsc *DiscoverySourceCreate) SetUpdatedAt(t time.Time) *DiscoverySourceCreate {
-	dsc.mutation.SetUpdatedAt(t)
-	return dsc
+func (_c *DiscoverySourceCreate) SetUpdatedAt(v time.Time) *DiscoverySourceCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (dsc *DiscoverySourceCreate) SetNillableUpdatedAt(t *time.Time) *DiscoverySourceCreate {
-	if t != nil {
-		dsc.SetUpdatedAt(*t)
+func (_c *DiscoverySourceCreate) SetNillableUpdatedAt(v *time.Time) *DiscoverySourceCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return dsc
+	return _c
 }
 
 // SetID sets the "id" field.
-func (dsc *DiscoverySourceCreate) SetID(s string) *DiscoverySourceCreate {
-	dsc.mutation.SetID(s)
-	return dsc
+func (_c *DiscoverySourceCreate) SetID(v string) *DiscoverySourceCreate {
+	_c.mutation.SetID(v)
+	return _c
 }
 
 // AddJobIDs adds the "jobs" edge to the DiscoveryJob entity by IDs.
-func (dsc *DiscoverySourceCreate) AddJobIDs(ids ...int) *DiscoverySourceCreate {
-	dsc.mutation.AddJobIDs(ids...)
-	return dsc
+func (_c *DiscoverySourceCreate) AddJobIDs(ids ...int) *DiscoverySourceCreate {
+	_c.mutation.AddJobIDs(ids...)
+	return _c
 }
 
 // AddJobs adds the "jobs" edges to the DiscoveryJob entity.
-func (dsc *DiscoverySourceCreate) AddJobs(d ...*DiscoveryJob) *DiscoverySourceCreate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_c *DiscoverySourceCreate) AddJobs(v ...*DiscoveryJob) *DiscoverySourceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return dsc.AddJobIDs(ids...)
+	return _c.AddJobIDs(ids...)
 }
 
 // Mutation returns the DiscoverySourceMutation object of the builder.
-func (dsc *DiscoverySourceCreate) Mutation() *DiscoverySourceMutation {
-	return dsc.mutation
+func (_c *DiscoverySourceCreate) Mutation() *DiscoverySourceMutation {
+	return _c.mutation
 }
 
 // Save creates the DiscoverySource in the database.
-func (dsc *DiscoverySourceCreate) Save(ctx context.Context) (*DiscoverySource, error) {
-	dsc.defaults()
-	return withHooks(ctx, dsc.sqlSave, dsc.mutation, dsc.hooks)
+func (_c *DiscoverySourceCreate) Save(ctx context.Context) (*DiscoverySource, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (dsc *DiscoverySourceCreate) SaveX(ctx context.Context) *DiscoverySource {
-	v, err := dsc.Save(ctx)
+func (_c *DiscoverySourceCreate) SaveX(ctx context.Context) *DiscoverySource {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,67 +159,67 @@ func (dsc *DiscoverySourceCreate) SaveX(ctx context.Context) *DiscoverySource {
 }
 
 // Exec executes the query.
-func (dsc *DiscoverySourceCreate) Exec(ctx context.Context) error {
-	_, err := dsc.Save(ctx)
+func (_c *DiscoverySourceCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dsc *DiscoverySourceCreate) ExecX(ctx context.Context) {
-	if err := dsc.Exec(ctx); err != nil {
+func (_c *DiscoverySourceCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (dsc *DiscoverySourceCreate) defaults() {
-	if _, ok := dsc.mutation.Enabled(); !ok {
+func (_c *DiscoverySourceCreate) defaults() {
+	if _, ok := _c.mutation.Enabled(); !ok {
 		v := discoverysource.DefaultEnabled
-		dsc.mutation.SetEnabled(v)
+		_c.mutation.SetEnabled(v)
 	}
-	if _, ok := dsc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := discoverysource.DefaultCreatedAt()
-		dsc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := dsc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := discoverysource.DefaultUpdatedAt()
-		dsc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (dsc *DiscoverySourceCreate) check() error {
-	if _, ok := dsc.mutation.Name(); !ok {
+func (_c *DiscoverySourceCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "DiscoverySource.name"`)}
 	}
-	if v, ok := dsc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := discoverysource.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.name": %w`, err)}
 		}
 	}
-	if _, ok := dsc.mutation.SourceType(); !ok {
+	if _, ok := _c.mutation.SourceType(); !ok {
 		return &ValidationError{Name: "source_type", err: errors.New(`ent: missing required field "DiscoverySource.source_type"`)}
 	}
-	if v, ok := dsc.mutation.SourceType(); ok {
+	if v, ok := _c.mutation.SourceType(); ok {
 		if err := discoverysource.SourceTypeValidator(v); err != nil {
 			return &ValidationError{Name: "source_type", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.source_type": %w`, err)}
 		}
 	}
-	if _, ok := dsc.mutation.Enabled(); !ok {
+	if _, ok := _c.mutation.Enabled(); !ok {
 		return &ValidationError{Name: "enabled", err: errors.New(`ent: missing required field "DiscoverySource.enabled"`)}
 	}
-	if v, ok := dsc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := discoverysource.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := dsc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "DiscoverySource.created_at"`)}
 	}
-	if _, ok := dsc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "DiscoverySource.updated_at"`)}
 	}
-	if v, ok := dsc.mutation.ID(); ok {
+	if v, ok := _c.mutation.ID(); ok {
 		if err := discoverysource.IDValidator(v); err != nil {
 			return &ValidationError{Name: "id", err: fmt.Errorf(`ent: validator failed for field "DiscoverySource.id": %w`, err)}
 		}
@@ -227,12 +227,12 @@ func (dsc *DiscoverySourceCreate) check() error {
 	return nil
 }
 
-func (dsc *DiscoverySourceCreate) sqlSave(ctx context.Context) (*DiscoverySource, error) {
-	if err := dsc.check(); err != nil {
+func (_c *DiscoverySourceCreate) sqlSave(ctx context.Context) (*DiscoverySource, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := dsc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, dsc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -245,53 +245,53 @@ func (dsc *DiscoverySourceCreate) sqlSave(ctx context.Context) (*DiscoverySource
 			return nil, fmt.Errorf("unexpected DiscoverySource.ID type: %T", _spec.ID.Value)
 		}
 	}
-	dsc.mutation.id = &_node.ID
-	dsc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (dsc *DiscoverySourceCreate) createSpec() (*DiscoverySource, *sqlgraph.CreateSpec) {
+func (_c *DiscoverySourceCreate) createSpec() (*DiscoverySource, *sqlgraph.CreateSpec) {
 	var (
-		_node = &DiscoverySource{config: dsc.config}
+		_node = &DiscoverySource{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(discoverysource.Table, sqlgraph.NewFieldSpec(discoverysource.FieldID, field.TypeString))
 	)
-	if id, ok := dsc.mutation.ID(); ok {
+	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = id
 	}
-	if value, ok := dsc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(discoverysource.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := dsc.mutation.SourceType(); ok {
+	if value, ok := _c.mutation.SourceType(); ok {
 		_spec.SetField(discoverysource.FieldSourceType, field.TypeString, value)
 		_node.SourceType = value
 	}
-	if value, ok := dsc.mutation.Provider(); ok {
+	if value, ok := _c.mutation.Provider(); ok {
 		_spec.SetField(discoverysource.FieldProvider, field.TypeString, value)
 		_node.Provider = value
 	}
-	if value, ok := dsc.mutation.Enabled(); ok {
+	if value, ok := _c.mutation.Enabled(); ok {
 		_spec.SetField(discoverysource.FieldEnabled, field.TypeBool, value)
 		_node.Enabled = value
 	}
-	if value, ok := dsc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(discoverysource.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := dsc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(discoverysource.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := dsc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(discoverysource.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := dsc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoverysource.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := dsc.mutation.JobsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.JobsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -318,16 +318,16 @@ type DiscoverySourceCreateBulk struct {
 }
 
 // Save creates the DiscoverySource entities in the database.
-func (dscb *DiscoverySourceCreateBulk) Save(ctx context.Context) ([]*DiscoverySource, error) {
-	if dscb.err != nil {
-		return nil, dscb.err
+func (_c *DiscoverySourceCreateBulk) Save(ctx context.Context) ([]*DiscoverySource, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(dscb.builders))
-	nodes := make([]*DiscoverySource, len(dscb.builders))
-	mutators := make([]Mutator, len(dscb.builders))
-	for i := range dscb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*DiscoverySource, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := dscb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*DiscoverySourceMutation)
@@ -341,11 +341,11 @@ func (dscb *DiscoverySourceCreateBulk) Save(ctx context.Context) ([]*DiscoverySo
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, dscb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, dscb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -365,7 +365,7 @@ func (dscb *DiscoverySourceCreateBulk) Save(ctx context.Context) ([]*DiscoverySo
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, dscb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -373,8 +373,8 @@ func (dscb *DiscoverySourceCreateBulk) Save(ctx context.Context) ([]*DiscoverySo
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (dscb *DiscoverySourceCreateBulk) SaveX(ctx context.Context) []*DiscoverySource {
-	v, err := dscb.Save(ctx)
+func (_c *DiscoverySourceCreateBulk) SaveX(ctx context.Context) []*DiscoverySource {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -382,14 +382,14 @@ func (dscb *DiscoverySourceCreateBulk) SaveX(ctx context.Context) []*DiscoverySo
 }
 
 // Exec executes the query.
-func (dscb *DiscoverySourceCreateBulk) Exec(ctx context.Context) error {
-	_, err := dscb.Save(ctx)
+func (_c *DiscoverySourceCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dscb *DiscoverySourceCreateBulk) ExecX(ctx context.Context) {
-	if err := dscb.Exec(ctx); err != nil {
+func (_c *DiscoverySourceCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

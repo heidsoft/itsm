@@ -28,40 +28,40 @@ type AssetLicenseQuery struct {
 }
 
 // Where adds a new predicate for the AssetLicenseQuery builder.
-func (alq *AssetLicenseQuery) Where(ps ...predicate.AssetLicense) *AssetLicenseQuery {
-	alq.predicates = append(alq.predicates, ps...)
-	return alq
+func (_q *AssetLicenseQuery) Where(ps ...predicate.AssetLicense) *AssetLicenseQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (alq *AssetLicenseQuery) Limit(limit int) *AssetLicenseQuery {
-	alq.ctx.Limit = &limit
-	return alq
+func (_q *AssetLicenseQuery) Limit(limit int) *AssetLicenseQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (alq *AssetLicenseQuery) Offset(offset int) *AssetLicenseQuery {
-	alq.ctx.Offset = &offset
-	return alq
+func (_q *AssetLicenseQuery) Offset(offset int) *AssetLicenseQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (alq *AssetLicenseQuery) Unique(unique bool) *AssetLicenseQuery {
-	alq.ctx.Unique = &unique
-	return alq
+func (_q *AssetLicenseQuery) Unique(unique bool) *AssetLicenseQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (alq *AssetLicenseQuery) Order(o ...assetlicense.OrderOption) *AssetLicenseQuery {
-	alq.order = append(alq.order, o...)
-	return alq
+func (_q *AssetLicenseQuery) Order(o ...assetlicense.OrderOption) *AssetLicenseQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // First returns the first AssetLicense entity from the query.
 // Returns a *NotFoundError when no AssetLicense was found.
-func (alq *AssetLicenseQuery) First(ctx context.Context) (*AssetLicense, error) {
-	nodes, err := alq.Limit(1).All(setContextOp(ctx, alq.ctx, ent.OpQueryFirst))
+func (_q *AssetLicenseQuery) First(ctx context.Context) (*AssetLicense, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +72,8 @@ func (alq *AssetLicenseQuery) First(ctx context.Context) (*AssetLicense, error) 
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (alq *AssetLicenseQuery) FirstX(ctx context.Context) *AssetLicense {
-	node, err := alq.First(ctx)
+func (_q *AssetLicenseQuery) FirstX(ctx context.Context) *AssetLicense {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -82,9 +82,9 @@ func (alq *AssetLicenseQuery) FirstX(ctx context.Context) *AssetLicense {
 
 // FirstID returns the first AssetLicense ID from the query.
 // Returns a *NotFoundError when no AssetLicense ID was found.
-func (alq *AssetLicenseQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *AssetLicenseQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = alq.Limit(1).IDs(setContextOp(ctx, alq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -95,8 +95,8 @@ func (alq *AssetLicenseQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (alq *AssetLicenseQuery) FirstIDX(ctx context.Context) int {
-	id, err := alq.FirstID(ctx)
+func (_q *AssetLicenseQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,8 +106,8 @@ func (alq *AssetLicenseQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single AssetLicense entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one AssetLicense entity is found.
 // Returns a *NotFoundError when no AssetLicense entities are found.
-func (alq *AssetLicenseQuery) Only(ctx context.Context) (*AssetLicense, error) {
-	nodes, err := alq.Limit(2).All(setContextOp(ctx, alq.ctx, ent.OpQueryOnly))
+func (_q *AssetLicenseQuery) Only(ctx context.Context) (*AssetLicense, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +122,8 @@ func (alq *AssetLicenseQuery) Only(ctx context.Context) (*AssetLicense, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (alq *AssetLicenseQuery) OnlyX(ctx context.Context) *AssetLicense {
-	node, err := alq.Only(ctx)
+func (_q *AssetLicenseQuery) OnlyX(ctx context.Context) *AssetLicense {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,9 +133,9 @@ func (alq *AssetLicenseQuery) OnlyX(ctx context.Context) *AssetLicense {
 // OnlyID is like Only, but returns the only AssetLicense ID in the query.
 // Returns a *NotSingularError when more than one AssetLicense ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (alq *AssetLicenseQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *AssetLicenseQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = alq.Limit(2).IDs(setContextOp(ctx, alq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -150,8 +150,8 @@ func (alq *AssetLicenseQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (alq *AssetLicenseQuery) OnlyIDX(ctx context.Context) int {
-	id, err := alq.OnlyID(ctx)
+func (_q *AssetLicenseQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,18 +159,18 @@ func (alq *AssetLicenseQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of AssetLicenses.
-func (alq *AssetLicenseQuery) All(ctx context.Context) ([]*AssetLicense, error) {
-	ctx = setContextOp(ctx, alq.ctx, ent.OpQueryAll)
-	if err := alq.prepareQuery(ctx); err != nil {
+func (_q *AssetLicenseQuery) All(ctx context.Context) ([]*AssetLicense, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*AssetLicense, *AssetLicenseQuery]()
-	return withInterceptors[[]*AssetLicense](ctx, alq, qr, alq.inters)
+	return withInterceptors[[]*AssetLicense](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (alq *AssetLicenseQuery) AllX(ctx context.Context) []*AssetLicense {
-	nodes, err := alq.All(ctx)
+func (_q *AssetLicenseQuery) AllX(ctx context.Context) []*AssetLicense {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -178,20 +178,20 @@ func (alq *AssetLicenseQuery) AllX(ctx context.Context) []*AssetLicense {
 }
 
 // IDs executes the query and returns a list of AssetLicense IDs.
-func (alq *AssetLicenseQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if alq.ctx.Unique == nil && alq.path != nil {
-		alq.Unique(true)
+func (_q *AssetLicenseQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, alq.ctx, ent.OpQueryIDs)
-	if err = alq.Select(assetlicense.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(assetlicense.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (alq *AssetLicenseQuery) IDsX(ctx context.Context) []int {
-	ids, err := alq.IDs(ctx)
+func (_q *AssetLicenseQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -199,17 +199,17 @@ func (alq *AssetLicenseQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (alq *AssetLicenseQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, alq.ctx, ent.OpQueryCount)
-	if err := alq.prepareQuery(ctx); err != nil {
+func (_q *AssetLicenseQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, alq, querierCount[*AssetLicenseQuery](), alq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*AssetLicenseQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (alq *AssetLicenseQuery) CountX(ctx context.Context) int {
-	count, err := alq.Count(ctx)
+func (_q *AssetLicenseQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -217,9 +217,9 @@ func (alq *AssetLicenseQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (alq *AssetLicenseQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, alq.ctx, ent.OpQueryExist)
-	switch _, err := alq.FirstID(ctx); {
+func (_q *AssetLicenseQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -230,8 +230,8 @@ func (alq *AssetLicenseQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (alq *AssetLicenseQuery) ExistX(ctx context.Context) bool {
-	exist, err := alq.Exist(ctx)
+func (_q *AssetLicenseQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,19 +240,19 @@ func (alq *AssetLicenseQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the AssetLicenseQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (alq *AssetLicenseQuery) Clone() *AssetLicenseQuery {
-	if alq == nil {
+func (_q *AssetLicenseQuery) Clone() *AssetLicenseQuery {
+	if _q == nil {
 		return nil
 	}
 	return &AssetLicenseQuery{
-		config:     alq.config,
-		ctx:        alq.ctx.Clone(),
-		order:      append([]assetlicense.OrderOption{}, alq.order...),
-		inters:     append([]Interceptor{}, alq.inters...),
-		predicates: append([]predicate.AssetLicense{}, alq.predicates...),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]assetlicense.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.AssetLicense{}, _q.predicates...),
 		// clone intermediate query.
-		sql:  alq.sql.Clone(),
-		path: alq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
@@ -270,10 +270,10 @@ func (alq *AssetLicenseQuery) Clone() *AssetLicenseQuery {
 //		GroupBy(assetlicense.FieldLicenseKey).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (alq *AssetLicenseQuery) GroupBy(field string, fields ...string) *AssetLicenseGroupBy {
-	alq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &AssetLicenseGroupBy{build: alq}
-	grbuild.flds = &alq.ctx.Fields
+func (_q *AssetLicenseQuery) GroupBy(field string, fields ...string) *AssetLicenseGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &AssetLicenseGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = assetlicense.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -291,62 +291,62 @@ func (alq *AssetLicenseQuery) GroupBy(field string, fields ...string) *AssetLice
 //	client.AssetLicense.Query().
 //		Select(assetlicense.FieldLicenseKey).
 //		Scan(ctx, &v)
-func (alq *AssetLicenseQuery) Select(fields ...string) *AssetLicenseSelect {
-	alq.ctx.Fields = append(alq.ctx.Fields, fields...)
-	sbuild := &AssetLicenseSelect{AssetLicenseQuery: alq}
+func (_q *AssetLicenseQuery) Select(fields ...string) *AssetLicenseSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &AssetLicenseSelect{AssetLicenseQuery: _q}
 	sbuild.label = assetlicense.Label
-	sbuild.flds, sbuild.scan = &alq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a AssetLicenseSelect configured with the given aggregations.
-func (alq *AssetLicenseQuery) Aggregate(fns ...AggregateFunc) *AssetLicenseSelect {
-	return alq.Select().Aggregate(fns...)
+func (_q *AssetLicenseQuery) Aggregate(fns ...AggregateFunc) *AssetLicenseSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (alq *AssetLicenseQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range alq.inters {
+func (_q *AssetLicenseQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, alq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range alq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !assetlicense.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if alq.path != nil {
-		prev, err := alq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		alq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (alq *AssetLicenseQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*AssetLicense, error) {
+func (_q *AssetLicenseQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*AssetLicense, error) {
 	var (
 		nodes = []*AssetLicense{}
-		_spec = alq.querySpec()
+		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*AssetLicense).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &AssetLicense{config: alq.config}
+		node := &AssetLicense{config: _q.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, alq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
@@ -355,24 +355,24 @@ func (alq *AssetLicenseQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	return nodes, nil
 }
 
-func (alq *AssetLicenseQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := alq.querySpec()
-	_spec.Node.Columns = alq.ctx.Fields
-	if len(alq.ctx.Fields) > 0 {
-		_spec.Unique = alq.ctx.Unique != nil && *alq.ctx.Unique
+func (_q *AssetLicenseQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, alq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (alq *AssetLicenseQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *AssetLicenseQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(assetlicense.Table, assetlicense.Columns, sqlgraph.NewFieldSpec(assetlicense.FieldID, field.TypeInt))
-	_spec.From = alq.sql
-	if unique := alq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if alq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := alq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, assetlicense.FieldID)
 		for i := range fields {
@@ -381,20 +381,20 @@ func (alq *AssetLicenseQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := alq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := alq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := alq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := alq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -404,33 +404,33 @@ func (alq *AssetLicenseQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (alq *AssetLicenseQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(alq.driver.Dialect())
+func (_q *AssetLicenseQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(assetlicense.Table)
-	columns := alq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = assetlicense.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if alq.sql != nil {
-		selector = alq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if alq.ctx.Unique != nil && *alq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range alq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range alq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := alq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := alq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -443,41 +443,41 @@ type AssetLicenseGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (algb *AssetLicenseGroupBy) Aggregate(fns ...AggregateFunc) *AssetLicenseGroupBy {
-	algb.fns = append(algb.fns, fns...)
-	return algb
+func (_g *AssetLicenseGroupBy) Aggregate(fns ...AggregateFunc) *AssetLicenseGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (algb *AssetLicenseGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, algb.build.ctx, ent.OpQueryGroupBy)
-	if err := algb.build.prepareQuery(ctx); err != nil {
+func (_g *AssetLicenseGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*AssetLicenseQuery, *AssetLicenseGroupBy](ctx, algb.build, algb, algb.build.inters, v)
+	return scanWithInterceptors[*AssetLicenseQuery, *AssetLicenseGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (algb *AssetLicenseGroupBy) sqlScan(ctx context.Context, root *AssetLicenseQuery, v any) error {
+func (_g *AssetLicenseGroupBy) sqlScan(ctx context.Context, root *AssetLicenseQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(algb.fns))
-	for _, fn := range algb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*algb.flds)+len(algb.fns))
-		for _, f := range *algb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*algb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := algb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -491,27 +491,27 @@ type AssetLicenseSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (als *AssetLicenseSelect) Aggregate(fns ...AggregateFunc) *AssetLicenseSelect {
-	als.fns = append(als.fns, fns...)
-	return als
+func (_s *AssetLicenseSelect) Aggregate(fns ...AggregateFunc) *AssetLicenseSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (als *AssetLicenseSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, als.ctx, ent.OpQuerySelect)
-	if err := als.prepareQuery(ctx); err != nil {
+func (_s *AssetLicenseSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*AssetLicenseQuery, *AssetLicenseSelect](ctx, als.AssetLicenseQuery, als, als.inters, v)
+	return scanWithInterceptors[*AssetLicenseQuery, *AssetLicenseSelect](ctx, _s.AssetLicenseQuery, _s, _s.inters, v)
 }
 
-func (als *AssetLicenseSelect) sqlScan(ctx context.Context, root *AssetLicenseQuery, v any) error {
+func (_s *AssetLicenseSelect) sqlScan(ctx context.Context, root *AssetLicenseQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(als.fns))
-	for _, fn := range als.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*als.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -519,7 +519,7 @@ func (als *AssetLicenseSelect) sqlScan(ctx context.Context, root *AssetLicenseQu
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := als.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

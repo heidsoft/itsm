@@ -21,137 +21,137 @@ type SystemConfigCreate struct {
 }
 
 // SetKey sets the "key" field.
-func (scc *SystemConfigCreate) SetKey(s string) *SystemConfigCreate {
-	scc.mutation.SetKey(s)
-	return scc
+func (_c *SystemConfigCreate) SetKey(v string) *SystemConfigCreate {
+	_c.mutation.SetKey(v)
+	return _c
 }
 
 // SetValue sets the "value" field.
-func (scc *SystemConfigCreate) SetValue(s string) *SystemConfigCreate {
-	scc.mutation.SetValue(s)
-	return scc
+func (_c *SystemConfigCreate) SetValue(v string) *SystemConfigCreate {
+	_c.mutation.SetValue(v)
+	return _c
 }
 
 // SetNillableValue sets the "value" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableValue(s *string) *SystemConfigCreate {
-	if s != nil {
-		scc.SetValue(*s)
+func (_c *SystemConfigCreate) SetNillableValue(v *string) *SystemConfigCreate {
+	if v != nil {
+		_c.SetValue(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetValueType sets the "value_type" field.
-func (scc *SystemConfigCreate) SetValueType(s string) *SystemConfigCreate {
-	scc.mutation.SetValueType(s)
-	return scc
+func (_c *SystemConfigCreate) SetValueType(v string) *SystemConfigCreate {
+	_c.mutation.SetValueType(v)
+	return _c
 }
 
 // SetNillableValueType sets the "value_type" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableValueType(s *string) *SystemConfigCreate {
-	if s != nil {
-		scc.SetValueType(*s)
+func (_c *SystemConfigCreate) SetNillableValueType(v *string) *SystemConfigCreate {
+	if v != nil {
+		_c.SetValueType(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (scc *SystemConfigCreate) SetCategory(s string) *SystemConfigCreate {
-	scc.mutation.SetCategory(s)
-	return scc
+func (_c *SystemConfigCreate) SetCategory(v string) *SystemConfigCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableCategory(s *string) *SystemConfigCreate {
-	if s != nil {
-		scc.SetCategory(*s)
+func (_c *SystemConfigCreate) SetNillableCategory(v *string) *SystemConfigCreate {
+	if v != nil {
+		_c.SetCategory(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (scc *SystemConfigCreate) SetDescription(s string) *SystemConfigCreate {
-	scc.mutation.SetDescription(s)
-	return scc
+func (_c *SystemConfigCreate) SetDescription(v string) *SystemConfigCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableDescription(s *string) *SystemConfigCreate {
-	if s != nil {
-		scc.SetDescription(*s)
+func (_c *SystemConfigCreate) SetNillableDescription(v *string) *SystemConfigCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (scc *SystemConfigCreate) SetCreatedBy(s string) *SystemConfigCreate {
-	scc.mutation.SetCreatedBy(s)
-	return scc
+func (_c *SystemConfigCreate) SetCreatedBy(v string) *SystemConfigCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableCreatedBy(s *string) *SystemConfigCreate {
-	if s != nil {
-		scc.SetCreatedBy(*s)
+func (_c *SystemConfigCreate) SetNillableCreatedBy(v *string) *SystemConfigCreate {
+	if v != nil {
+		_c.SetCreatedBy(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (scc *SystemConfigCreate) SetTenantID(i int) *SystemConfigCreate {
-	scc.mutation.SetTenantID(i)
-	return scc
+func (_c *SystemConfigCreate) SetTenantID(v int) *SystemConfigCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableTenantID(i *int) *SystemConfigCreate {
-	if i != nil {
-		scc.SetTenantID(*i)
+func (_c *SystemConfigCreate) SetNillableTenantID(v *int) *SystemConfigCreate {
+	if v != nil {
+		_c.SetTenantID(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (scc *SystemConfigCreate) SetCreatedAt(t time.Time) *SystemConfigCreate {
-	scc.mutation.SetCreatedAt(t)
-	return scc
+func (_c *SystemConfigCreate) SetCreatedAt(v time.Time) *SystemConfigCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableCreatedAt(t *time.Time) *SystemConfigCreate {
-	if t != nil {
-		scc.SetCreatedAt(*t)
+func (_c *SystemConfigCreate) SetNillableCreatedAt(v *time.Time) *SystemConfigCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (scc *SystemConfigCreate) SetUpdatedAt(t time.Time) *SystemConfigCreate {
-	scc.mutation.SetUpdatedAt(t)
-	return scc
+func (_c *SystemConfigCreate) SetUpdatedAt(v time.Time) *SystemConfigCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (scc *SystemConfigCreate) SetNillableUpdatedAt(t *time.Time) *SystemConfigCreate {
-	if t != nil {
-		scc.SetUpdatedAt(*t)
+func (_c *SystemConfigCreate) SetNillableUpdatedAt(v *time.Time) *SystemConfigCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return scc
+	return _c
 }
 
 // Mutation returns the SystemConfigMutation object of the builder.
-func (scc *SystemConfigCreate) Mutation() *SystemConfigMutation {
-	return scc.mutation
+func (_c *SystemConfigCreate) Mutation() *SystemConfigMutation {
+	return _c.mutation
 }
 
 // Save creates the SystemConfig in the database.
-func (scc *SystemConfigCreate) Save(ctx context.Context) (*SystemConfig, error) {
-	scc.defaults()
-	return withHooks(ctx, scc.sqlSave, scc.mutation, scc.hooks)
+func (_c *SystemConfigCreate) Save(ctx context.Context) (*SystemConfig, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (scc *SystemConfigCreate) SaveX(ctx context.Context) *SystemConfig {
-	v, err := scc.Save(ctx)
+func (_c *SystemConfigCreate) SaveX(ctx context.Context) *SystemConfig {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,69 +159,69 @@ func (scc *SystemConfigCreate) SaveX(ctx context.Context) *SystemConfig {
 }
 
 // Exec executes the query.
-func (scc *SystemConfigCreate) Exec(ctx context.Context) error {
-	_, err := scc.Save(ctx)
+func (_c *SystemConfigCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (scc *SystemConfigCreate) ExecX(ctx context.Context) {
-	if err := scc.Exec(ctx); err != nil {
+func (_c *SystemConfigCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (scc *SystemConfigCreate) defaults() {
-	if _, ok := scc.mutation.ValueType(); !ok {
+func (_c *SystemConfigCreate) defaults() {
+	if _, ok := _c.mutation.ValueType(); !ok {
 		v := systemconfig.DefaultValueType
-		scc.mutation.SetValueType(v)
+		_c.mutation.SetValueType(v)
 	}
-	if _, ok := scc.mutation.Category(); !ok {
+	if _, ok := _c.mutation.Category(); !ok {
 		v := systemconfig.DefaultCategory
-		scc.mutation.SetCategory(v)
+		_c.mutation.SetCategory(v)
 	}
-	if _, ok := scc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := systemconfig.DefaultCreatedAt()
-		scc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := scc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := systemconfig.DefaultUpdatedAt()
-		scc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (scc *SystemConfigCreate) check() error {
-	if _, ok := scc.mutation.Key(); !ok {
+func (_c *SystemConfigCreate) check() error {
+	if _, ok := _c.mutation.Key(); !ok {
 		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "SystemConfig.key"`)}
 	}
-	if v, ok := scc.mutation.Key(); ok {
+	if v, ok := _c.mutation.Key(); ok {
 		if err := systemconfig.KeyValidator(v); err != nil {
 			return &ValidationError{Name: "key", err: fmt.Errorf(`ent: validator failed for field "SystemConfig.key": %w`, err)}
 		}
 	}
-	if _, ok := scc.mutation.ValueType(); !ok {
+	if _, ok := _c.mutation.ValueType(); !ok {
 		return &ValidationError{Name: "value_type", err: errors.New(`ent: missing required field "SystemConfig.value_type"`)}
 	}
-	if _, ok := scc.mutation.Category(); !ok {
+	if _, ok := _c.mutation.Category(); !ok {
 		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "SystemConfig.category"`)}
 	}
-	if _, ok := scc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "SystemConfig.created_at"`)}
 	}
-	if _, ok := scc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "SystemConfig.updated_at"`)}
 	}
 	return nil
 }
 
-func (scc *SystemConfigCreate) sqlSave(ctx context.Context) (*SystemConfig, error) {
-	if err := scc.check(); err != nil {
+func (_c *SystemConfigCreate) sqlSave(ctx context.Context) (*SystemConfig, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := scc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, scc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -229,49 +229,49 @@ func (scc *SystemConfigCreate) sqlSave(ctx context.Context) (*SystemConfig, erro
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	scc.mutation.id = &_node.ID
-	scc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (scc *SystemConfigCreate) createSpec() (*SystemConfig, *sqlgraph.CreateSpec) {
+func (_c *SystemConfigCreate) createSpec() (*SystemConfig, *sqlgraph.CreateSpec) {
 	var (
-		_node = &SystemConfig{config: scc.config}
+		_node = &SystemConfig{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(systemconfig.Table, sqlgraph.NewFieldSpec(systemconfig.FieldID, field.TypeInt))
 	)
-	if value, ok := scc.mutation.Key(); ok {
+	if value, ok := _c.mutation.Key(); ok {
 		_spec.SetField(systemconfig.FieldKey, field.TypeString, value)
 		_node.Key = value
 	}
-	if value, ok := scc.mutation.Value(); ok {
+	if value, ok := _c.mutation.Value(); ok {
 		_spec.SetField(systemconfig.FieldValue, field.TypeString, value)
 		_node.Value = value
 	}
-	if value, ok := scc.mutation.ValueType(); ok {
+	if value, ok := _c.mutation.ValueType(); ok {
 		_spec.SetField(systemconfig.FieldValueType, field.TypeString, value)
 		_node.ValueType = value
 	}
-	if value, ok := scc.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(systemconfig.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := scc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(systemconfig.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := scc.mutation.CreatedBy(); ok {
+	if value, ok := _c.mutation.CreatedBy(); ok {
 		_spec.SetField(systemconfig.FieldCreatedBy, field.TypeString, value)
 		_node.CreatedBy = value
 	}
-	if value, ok := scc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(systemconfig.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := scc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(systemconfig.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := scc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(systemconfig.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -286,16 +286,16 @@ type SystemConfigCreateBulk struct {
 }
 
 // Save creates the SystemConfig entities in the database.
-func (sccb *SystemConfigCreateBulk) Save(ctx context.Context) ([]*SystemConfig, error) {
-	if sccb.err != nil {
-		return nil, sccb.err
+func (_c *SystemConfigCreateBulk) Save(ctx context.Context) ([]*SystemConfig, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(sccb.builders))
-	nodes := make([]*SystemConfig, len(sccb.builders))
-	mutators := make([]Mutator, len(sccb.builders))
-	for i := range sccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*SystemConfig, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := sccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*SystemConfigMutation)
@@ -309,11 +309,11 @@ func (sccb *SystemConfigCreateBulk) Save(ctx context.Context) ([]*SystemConfig, 
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, sccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, sccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -337,7 +337,7 @@ func (sccb *SystemConfigCreateBulk) Save(ctx context.Context) ([]*SystemConfig, 
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, sccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -345,8 +345,8 @@ func (sccb *SystemConfigCreateBulk) Save(ctx context.Context) ([]*SystemConfig, 
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (sccb *SystemConfigCreateBulk) SaveX(ctx context.Context) []*SystemConfig {
-	v, err := sccb.Save(ctx)
+func (_c *SystemConfigCreateBulk) SaveX(ctx context.Context) []*SystemConfig {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -354,14 +354,14 @@ func (sccb *SystemConfigCreateBulk) SaveX(ctx context.Context) []*SystemConfig {
 }
 
 // Exec executes the query.
-func (sccb *SystemConfigCreateBulk) Exec(ctx context.Context) error {
-	_, err := sccb.Save(ctx)
+func (_c *SystemConfigCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sccb *SystemConfigCreateBulk) ExecX(ctx context.Context) {
-	if err := sccb.Exec(ctx); err != nil {
+func (_c *SystemConfigCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

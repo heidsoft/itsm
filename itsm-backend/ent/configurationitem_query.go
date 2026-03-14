@@ -40,44 +40,44 @@ type ConfigurationItemQuery struct {
 }
 
 // Where adds a new predicate for the ConfigurationItemQuery builder.
-func (ciq *ConfigurationItemQuery) Where(ps ...predicate.ConfigurationItem) *ConfigurationItemQuery {
-	ciq.predicates = append(ciq.predicates, ps...)
-	return ciq
+func (_q *ConfigurationItemQuery) Where(ps ...predicate.ConfigurationItem) *ConfigurationItemQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (ciq *ConfigurationItemQuery) Limit(limit int) *ConfigurationItemQuery {
-	ciq.ctx.Limit = &limit
-	return ciq
+func (_q *ConfigurationItemQuery) Limit(limit int) *ConfigurationItemQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (ciq *ConfigurationItemQuery) Offset(offset int) *ConfigurationItemQuery {
-	ciq.ctx.Offset = &offset
-	return ciq
+func (_q *ConfigurationItemQuery) Offset(offset int) *ConfigurationItemQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (ciq *ConfigurationItemQuery) Unique(unique bool) *ConfigurationItemQuery {
-	ciq.ctx.Unique = &unique
-	return ciq
+func (_q *ConfigurationItemQuery) Unique(unique bool) *ConfigurationItemQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (ciq *ConfigurationItemQuery) Order(o ...configurationitem.OrderOption) *ConfigurationItemQuery {
-	ciq.order = append(ciq.order, o...)
-	return ciq
+func (_q *ConfigurationItemQuery) Order(o ...configurationitem.OrderOption) *ConfigurationItemQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryCiTypeRef chains the current query on the "ci_type_ref" edge.
-func (ciq *ConfigurationItemQuery) QueryCiTypeRef() *CITypeQuery {
-	query := (&CITypeClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) QueryCiTypeRef() *CITypeQuery {
+	query := (&CITypeClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ciq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -86,20 +86,20 @@ func (ciq *ConfigurationItemQuery) QueryCiTypeRef() *CITypeQuery {
 			sqlgraph.To(citype.Table, citype.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, configurationitem.CiTypeRefTable, configurationitem.CiTypeRefColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryCloudResourceRef chains the current query on the "cloud_resource_ref" edge.
-func (ciq *ConfigurationItemQuery) QueryCloudResourceRef() *CloudResourceQuery {
-	query := (&CloudResourceClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) QueryCloudResourceRef() *CloudResourceQuery {
+	query := (&CloudResourceClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ciq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -108,20 +108,20 @@ func (ciq *ConfigurationItemQuery) QueryCloudResourceRef() *CloudResourceQuery {
 			sqlgraph.To(cloudresource.Table, cloudresource.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, configurationitem.CloudResourceRefTable, configurationitem.CloudResourceRefColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryTickets chains the current query on the "tickets" edge.
-func (ciq *ConfigurationItemQuery) QueryTickets() *TicketQuery {
-	query := (&TicketClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) QueryTickets() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ciq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -130,20 +130,20 @@ func (ciq *ConfigurationItemQuery) QueryTickets() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.TicketsTable, configurationitem.TicketsPrimaryKey...),
 		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryIncidents chains the current query on the "incidents" edge.
-func (ciq *ConfigurationItemQuery) QueryIncidents() *IncidentQuery {
-	query := (&IncidentClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) QueryIncidents() *IncidentQuery {
+	query := (&IncidentClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ciq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -152,20 +152,20 @@ func (ciq *ConfigurationItemQuery) QueryIncidents() *IncidentQuery {
 			sqlgraph.To(incident.Table, incident.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, configurationitem.IncidentsTable, configurationitem.IncidentsPrimaryKey...),
 		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryOutgoingRelations chains the current query on the "outgoing_relations" edge.
-func (ciq *ConfigurationItemQuery) QueryOutgoingRelations() *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) QueryOutgoingRelations() *CIRelationshipQuery {
+	query := (&CIRelationshipClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ciq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -174,20 +174,20 @@ func (ciq *ConfigurationItemQuery) QueryOutgoingRelations() *CIRelationshipQuery
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.OutgoingRelationsTable, configurationitem.OutgoingRelationsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryIncomingRelations chains the current query on the "incoming_relations" edge.
-func (ciq *ConfigurationItemQuery) QueryIncomingRelations() *CIRelationshipQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) QueryIncomingRelations() *CIRelationshipQuery {
+	query := (&CIRelationshipClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := ciq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := ciq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -196,7 +196,7 @@ func (ciq *ConfigurationItemQuery) QueryIncomingRelations() *CIRelationshipQuery
 			sqlgraph.To(cirelationship.Table, cirelationship.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, configurationitem.IncomingRelationsTable, configurationitem.IncomingRelationsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(ciq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -204,8 +204,8 @@ func (ciq *ConfigurationItemQuery) QueryIncomingRelations() *CIRelationshipQuery
 
 // First returns the first ConfigurationItem entity from the query.
 // Returns a *NotFoundError when no ConfigurationItem was found.
-func (ciq *ConfigurationItemQuery) First(ctx context.Context) (*ConfigurationItem, error) {
-	nodes, err := ciq.Limit(1).All(setContextOp(ctx, ciq.ctx, ent.OpQueryFirst))
+func (_q *ConfigurationItemQuery) First(ctx context.Context) (*ConfigurationItem, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -216,8 +216,8 @@ func (ciq *ConfigurationItemQuery) First(ctx context.Context) (*ConfigurationIte
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) FirstX(ctx context.Context) *ConfigurationItem {
-	node, err := ciq.First(ctx)
+func (_q *ConfigurationItemQuery) FirstX(ctx context.Context) *ConfigurationItem {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -226,9 +226,9 @@ func (ciq *ConfigurationItemQuery) FirstX(ctx context.Context) *ConfigurationIte
 
 // FirstID returns the first ConfigurationItem ID from the query.
 // Returns a *NotFoundError when no ConfigurationItem ID was found.
-func (ciq *ConfigurationItemQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *ConfigurationItemQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ciq.Limit(1).IDs(setContextOp(ctx, ciq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -239,8 +239,8 @@ func (ciq *ConfigurationItemQuery) FirstID(ctx context.Context) (id int, err err
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) FirstIDX(ctx context.Context) int {
-	id, err := ciq.FirstID(ctx)
+func (_q *ConfigurationItemQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -250,8 +250,8 @@ func (ciq *ConfigurationItemQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single ConfigurationItem entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one ConfigurationItem entity is found.
 // Returns a *NotFoundError when no ConfigurationItem entities are found.
-func (ciq *ConfigurationItemQuery) Only(ctx context.Context) (*ConfigurationItem, error) {
-	nodes, err := ciq.Limit(2).All(setContextOp(ctx, ciq.ctx, ent.OpQueryOnly))
+func (_q *ConfigurationItemQuery) Only(ctx context.Context) (*ConfigurationItem, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -266,8 +266,8 @@ func (ciq *ConfigurationItemQuery) Only(ctx context.Context) (*ConfigurationItem
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) OnlyX(ctx context.Context) *ConfigurationItem {
-	node, err := ciq.Only(ctx)
+func (_q *ConfigurationItemQuery) OnlyX(ctx context.Context) *ConfigurationItem {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -277,9 +277,9 @@ func (ciq *ConfigurationItemQuery) OnlyX(ctx context.Context) *ConfigurationItem
 // OnlyID is like Only, but returns the only ConfigurationItem ID in the query.
 // Returns a *NotSingularError when more than one ConfigurationItem ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (ciq *ConfigurationItemQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *ConfigurationItemQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = ciq.Limit(2).IDs(setContextOp(ctx, ciq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -294,8 +294,8 @@ func (ciq *ConfigurationItemQuery) OnlyID(ctx context.Context) (id int, err erro
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) OnlyIDX(ctx context.Context) int {
-	id, err := ciq.OnlyID(ctx)
+func (_q *ConfigurationItemQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -303,18 +303,18 @@ func (ciq *ConfigurationItemQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of ConfigurationItems.
-func (ciq *ConfigurationItemQuery) All(ctx context.Context) ([]*ConfigurationItem, error) {
-	ctx = setContextOp(ctx, ciq.ctx, ent.OpQueryAll)
-	if err := ciq.prepareQuery(ctx); err != nil {
+func (_q *ConfigurationItemQuery) All(ctx context.Context) ([]*ConfigurationItem, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*ConfigurationItem, *ConfigurationItemQuery]()
-	return withInterceptors[[]*ConfigurationItem](ctx, ciq, qr, ciq.inters)
+	return withInterceptors[[]*ConfigurationItem](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) AllX(ctx context.Context) []*ConfigurationItem {
-	nodes, err := ciq.All(ctx)
+func (_q *ConfigurationItemQuery) AllX(ctx context.Context) []*ConfigurationItem {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -322,20 +322,20 @@ func (ciq *ConfigurationItemQuery) AllX(ctx context.Context) []*ConfigurationIte
 }
 
 // IDs executes the query and returns a list of ConfigurationItem IDs.
-func (ciq *ConfigurationItemQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if ciq.ctx.Unique == nil && ciq.path != nil {
-		ciq.Unique(true)
+func (_q *ConfigurationItemQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, ciq.ctx, ent.OpQueryIDs)
-	if err = ciq.Select(configurationitem.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(configurationitem.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) IDsX(ctx context.Context) []int {
-	ids, err := ciq.IDs(ctx)
+func (_q *ConfigurationItemQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -343,17 +343,17 @@ func (ciq *ConfigurationItemQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (ciq *ConfigurationItemQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, ciq.ctx, ent.OpQueryCount)
-	if err := ciq.prepareQuery(ctx); err != nil {
+func (_q *ConfigurationItemQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, ciq, querierCount[*ConfigurationItemQuery](), ciq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*ConfigurationItemQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) CountX(ctx context.Context) int {
-	count, err := ciq.Count(ctx)
+func (_q *ConfigurationItemQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -361,9 +361,9 @@ func (ciq *ConfigurationItemQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (ciq *ConfigurationItemQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, ciq.ctx, ent.OpQueryExist)
-	switch _, err := ciq.FirstID(ctx); {
+func (_q *ConfigurationItemQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -374,8 +374,8 @@ func (ciq *ConfigurationItemQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (ciq *ConfigurationItemQuery) ExistX(ctx context.Context) bool {
-	exist, err := ciq.Exist(ctx)
+func (_q *ConfigurationItemQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -384,92 +384,92 @@ func (ciq *ConfigurationItemQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the ConfigurationItemQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (ciq *ConfigurationItemQuery) Clone() *ConfigurationItemQuery {
-	if ciq == nil {
+func (_q *ConfigurationItemQuery) Clone() *ConfigurationItemQuery {
+	if _q == nil {
 		return nil
 	}
 	return &ConfigurationItemQuery{
-		config:                ciq.config,
-		ctx:                   ciq.ctx.Clone(),
-		order:                 append([]configurationitem.OrderOption{}, ciq.order...),
-		inters:                append([]Interceptor{}, ciq.inters...),
-		predicates:            append([]predicate.ConfigurationItem{}, ciq.predicates...),
-		withCiTypeRef:         ciq.withCiTypeRef.Clone(),
-		withCloudResourceRef:  ciq.withCloudResourceRef.Clone(),
-		withTickets:           ciq.withTickets.Clone(),
-		withIncidents:         ciq.withIncidents.Clone(),
-		withOutgoingRelations: ciq.withOutgoingRelations.Clone(),
-		withIncomingRelations: ciq.withIncomingRelations.Clone(),
+		config:                _q.config,
+		ctx:                   _q.ctx.Clone(),
+		order:                 append([]configurationitem.OrderOption{}, _q.order...),
+		inters:                append([]Interceptor{}, _q.inters...),
+		predicates:            append([]predicate.ConfigurationItem{}, _q.predicates...),
+		withCiTypeRef:         _q.withCiTypeRef.Clone(),
+		withCloudResourceRef:  _q.withCloudResourceRef.Clone(),
+		withTickets:           _q.withTickets.Clone(),
+		withIncidents:         _q.withIncidents.Clone(),
+		withOutgoingRelations: _q.withOutgoingRelations.Clone(),
+		withIncomingRelations: _q.withIncomingRelations.Clone(),
 		// clone intermediate query.
-		sql:  ciq.sql.Clone(),
-		path: ciq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithCiTypeRef tells the query-builder to eager-load the nodes that are connected to
 // the "ci_type_ref" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithCiTypeRef(opts ...func(*CITypeQuery)) *ConfigurationItemQuery {
-	query := (&CITypeClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) WithCiTypeRef(opts ...func(*CITypeQuery)) *ConfigurationItemQuery {
+	query := (&CITypeClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withCiTypeRef = query
-	return ciq
+	_q.withCiTypeRef = query
+	return _q
 }
 
 // WithCloudResourceRef tells the query-builder to eager-load the nodes that are connected to
 // the "cloud_resource_ref" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithCloudResourceRef(opts ...func(*CloudResourceQuery)) *ConfigurationItemQuery {
-	query := (&CloudResourceClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) WithCloudResourceRef(opts ...func(*CloudResourceQuery)) *ConfigurationItemQuery {
+	query := (&CloudResourceClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withCloudResourceRef = query
-	return ciq
+	_q.withCloudResourceRef = query
+	return _q
 }
 
 // WithTickets tells the query-builder to eager-load the nodes that are connected to
 // the "tickets" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithTickets(opts ...func(*TicketQuery)) *ConfigurationItemQuery {
-	query := (&TicketClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) WithTickets(opts ...func(*TicketQuery)) *ConfigurationItemQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withTickets = query
-	return ciq
+	_q.withTickets = query
+	return _q
 }
 
 // WithIncidents tells the query-builder to eager-load the nodes that are connected to
 // the "incidents" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithIncidents(opts ...func(*IncidentQuery)) *ConfigurationItemQuery {
-	query := (&IncidentClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) WithIncidents(opts ...func(*IncidentQuery)) *ConfigurationItemQuery {
+	query := (&IncidentClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withIncidents = query
-	return ciq
+	_q.withIncidents = query
+	return _q
 }
 
 // WithOutgoingRelations tells the query-builder to eager-load the nodes that are connected to
 // the "outgoing_relations" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithOutgoingRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) WithOutgoingRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
+	query := (&CIRelationshipClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withOutgoingRelations = query
-	return ciq
+	_q.withOutgoingRelations = query
+	return _q
 }
 
 // WithIncomingRelations tells the query-builder to eager-load the nodes that are connected to
 // the "incoming_relations" edge. The optional arguments are used to configure the query builder of the edge.
-func (ciq *ConfigurationItemQuery) WithIncomingRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
-	query := (&CIRelationshipClient{config: ciq.config}).Query()
+func (_q *ConfigurationItemQuery) WithIncomingRelations(opts ...func(*CIRelationshipQuery)) *ConfigurationItemQuery {
+	query := (&CIRelationshipClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	ciq.withIncomingRelations = query
-	return ciq
+	_q.withIncomingRelations = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -486,10 +486,10 @@ func (ciq *ConfigurationItemQuery) WithIncomingRelations(opts ...func(*CIRelatio
 //		GroupBy(configurationitem.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (ciq *ConfigurationItemQuery) GroupBy(field string, fields ...string) *ConfigurationItemGroupBy {
-	ciq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &ConfigurationItemGroupBy{build: ciq}
-	grbuild.flds = &ciq.ctx.Fields
+func (_q *ConfigurationItemQuery) GroupBy(field string, fields ...string) *ConfigurationItemGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &ConfigurationItemGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = configurationitem.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -507,63 +507,63 @@ func (ciq *ConfigurationItemQuery) GroupBy(field string, fields ...string) *Conf
 //	client.ConfigurationItem.Query().
 //		Select(configurationitem.FieldName).
 //		Scan(ctx, &v)
-func (ciq *ConfigurationItemQuery) Select(fields ...string) *ConfigurationItemSelect {
-	ciq.ctx.Fields = append(ciq.ctx.Fields, fields...)
-	sbuild := &ConfigurationItemSelect{ConfigurationItemQuery: ciq}
+func (_q *ConfigurationItemQuery) Select(fields ...string) *ConfigurationItemSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &ConfigurationItemSelect{ConfigurationItemQuery: _q}
 	sbuild.label = configurationitem.Label
-	sbuild.flds, sbuild.scan = &ciq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a ConfigurationItemSelect configured with the given aggregations.
-func (ciq *ConfigurationItemQuery) Aggregate(fns ...AggregateFunc) *ConfigurationItemSelect {
-	return ciq.Select().Aggregate(fns...)
+func (_q *ConfigurationItemQuery) Aggregate(fns ...AggregateFunc) *ConfigurationItemSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (ciq *ConfigurationItemQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range ciq.inters {
+func (_q *ConfigurationItemQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, ciq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range ciq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !configurationitem.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if ciq.path != nil {
-		prev, err := ciq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		ciq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ConfigurationItem, error) {
+func (_q *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*ConfigurationItem, error) {
 	var (
 		nodes       = []*ConfigurationItem{}
-		_spec       = ciq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [6]bool{
-			ciq.withCiTypeRef != nil,
-			ciq.withCloudResourceRef != nil,
-			ciq.withTickets != nil,
-			ciq.withIncidents != nil,
-			ciq.withOutgoingRelations != nil,
-			ciq.withIncomingRelations != nil,
+			_q.withCiTypeRef != nil,
+			_q.withCloudResourceRef != nil,
+			_q.withTickets != nil,
+			_q.withIncidents != nil,
+			_q.withOutgoingRelations != nil,
+			_q.withIncomingRelations != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*ConfigurationItem).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &ConfigurationItem{config: ciq.config}
+		node := &ConfigurationItem{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -571,40 +571,40 @@ func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, ciq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := ciq.withCiTypeRef; query != nil {
-		if err := ciq.loadCiTypeRef(ctx, query, nodes, nil,
+	if query := _q.withCiTypeRef; query != nil {
+		if err := _q.loadCiTypeRef(ctx, query, nodes, nil,
 			func(n *ConfigurationItem, e *CIType) { n.Edges.CiTypeRef = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := ciq.withCloudResourceRef; query != nil {
-		if err := ciq.loadCloudResourceRef(ctx, query, nodes, nil,
+	if query := _q.withCloudResourceRef; query != nil {
+		if err := _q.loadCloudResourceRef(ctx, query, nodes, nil,
 			func(n *ConfigurationItem, e *CloudResource) { n.Edges.CloudResourceRef = e }); err != nil {
 			return nil, err
 		}
 	}
-	if query := ciq.withTickets; query != nil {
-		if err := ciq.loadTickets(ctx, query, nodes,
+	if query := _q.withTickets; query != nil {
+		if err := _q.loadTickets(ctx, query, nodes,
 			func(n *ConfigurationItem) { n.Edges.Tickets = []*Ticket{} },
 			func(n *ConfigurationItem, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := ciq.withIncidents; query != nil {
-		if err := ciq.loadIncidents(ctx, query, nodes,
+	if query := _q.withIncidents; query != nil {
+		if err := _q.loadIncidents(ctx, query, nodes,
 			func(n *ConfigurationItem) { n.Edges.Incidents = []*Incident{} },
 			func(n *ConfigurationItem, e *Incident) { n.Edges.Incidents = append(n.Edges.Incidents, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := ciq.withOutgoingRelations; query != nil {
-		if err := ciq.loadOutgoingRelations(ctx, query, nodes,
+	if query := _q.withOutgoingRelations; query != nil {
+		if err := _q.loadOutgoingRelations(ctx, query, nodes,
 			func(n *ConfigurationItem) { n.Edges.OutgoingRelations = []*CIRelationship{} },
 			func(n *ConfigurationItem, e *CIRelationship) {
 				n.Edges.OutgoingRelations = append(n.Edges.OutgoingRelations, e)
@@ -612,8 +612,8 @@ func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 			return nil, err
 		}
 	}
-	if query := ciq.withIncomingRelations; query != nil {
-		if err := ciq.loadIncomingRelations(ctx, query, nodes,
+	if query := _q.withIncomingRelations; query != nil {
+		if err := _q.loadIncomingRelations(ctx, query, nodes,
 			func(n *ConfigurationItem) { n.Edges.IncomingRelations = []*CIRelationship{} },
 			func(n *ConfigurationItem, e *CIRelationship) {
 				n.Edges.IncomingRelations = append(n.Edges.IncomingRelations, e)
@@ -624,7 +624,7 @@ func (ciq *ConfigurationItemQuery) sqlAll(ctx context.Context, hooks ...queryHoo
 	return nodes, nil
 }
 
-func (ciq *ConfigurationItemQuery) loadCiTypeRef(ctx context.Context, query *CITypeQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIType)) error {
+func (_q *ConfigurationItemQuery) loadCiTypeRef(ctx context.Context, query *CITypeQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIType)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ConfigurationItem)
 	for i := range nodes {
@@ -653,7 +653,7 @@ func (ciq *ConfigurationItemQuery) loadCiTypeRef(ctx context.Context, query *CIT
 	}
 	return nil
 }
-func (ciq *ConfigurationItemQuery) loadCloudResourceRef(ctx context.Context, query *CloudResourceQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CloudResource)) error {
+func (_q *ConfigurationItemQuery) loadCloudResourceRef(ctx context.Context, query *CloudResourceQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CloudResource)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*ConfigurationItem)
 	for i := range nodes {
@@ -682,7 +682,7 @@ func (ciq *ConfigurationItemQuery) loadCloudResourceRef(ctx context.Context, que
 	}
 	return nil
 }
-func (ciq *ConfigurationItemQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Ticket)) error {
+func (_q *ConfigurationItemQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Ticket)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*ConfigurationItem)
 	nids := make(map[int]map[*ConfigurationItem]struct{})
@@ -743,7 +743,7 @@ func (ciq *ConfigurationItemQuery) loadTickets(ctx context.Context, query *Ticke
 	}
 	return nil
 }
-func (ciq *ConfigurationItemQuery) loadIncidents(ctx context.Context, query *IncidentQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Incident)) error {
+func (_q *ConfigurationItemQuery) loadIncidents(ctx context.Context, query *IncidentQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *Incident)) error {
 	edgeIDs := make([]driver.Value, len(nodes))
 	byID := make(map[int]*ConfigurationItem)
 	nids := make(map[int]map[*ConfigurationItem]struct{})
@@ -804,7 +804,7 @@ func (ciq *ConfigurationItemQuery) loadIncidents(ctx context.Context, query *Inc
 	}
 	return nil
 }
-func (ciq *ConfigurationItemQuery) loadOutgoingRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
+func (_q *ConfigurationItemQuery) loadOutgoingRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ConfigurationItem)
 	for i := range nodes {
@@ -834,7 +834,7 @@ func (ciq *ConfigurationItemQuery) loadOutgoingRelations(ctx context.Context, qu
 	}
 	return nil
 }
-func (ciq *ConfigurationItemQuery) loadIncomingRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
+func (_q *ConfigurationItemQuery) loadIncomingRelations(ctx context.Context, query *CIRelationshipQuery, nodes []*ConfigurationItem, init func(*ConfigurationItem), assign func(*ConfigurationItem, *CIRelationship)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*ConfigurationItem)
 	for i := range nodes {
@@ -865,24 +865,24 @@ func (ciq *ConfigurationItemQuery) loadIncomingRelations(ctx context.Context, qu
 	return nil
 }
 
-func (ciq *ConfigurationItemQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := ciq.querySpec()
-	_spec.Node.Columns = ciq.ctx.Fields
-	if len(ciq.ctx.Fields) > 0 {
-		_spec.Unique = ciq.ctx.Unique != nil && *ciq.ctx.Unique
+func (_q *ConfigurationItemQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, ciq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (ciq *ConfigurationItemQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *ConfigurationItemQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(configurationitem.Table, configurationitem.Columns, sqlgraph.NewFieldSpec(configurationitem.FieldID, field.TypeInt))
-	_spec.From = ciq.sql
-	if unique := ciq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if ciq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := ciq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, configurationitem.FieldID)
 		for i := range fields {
@@ -890,27 +890,27 @@ func (ciq *ConfigurationItemQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if ciq.withCiTypeRef != nil {
+		if _q.withCiTypeRef != nil {
 			_spec.Node.AddColumnOnce(configurationitem.FieldCiTypeID)
 		}
-		if ciq.withCloudResourceRef != nil {
+		if _q.withCloudResourceRef != nil {
 			_spec.Node.AddColumnOnce(configurationitem.FieldCloudResourceRefID)
 		}
 	}
-	if ps := ciq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := ciq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := ciq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := ciq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -920,33 +920,33 @@ func (ciq *ConfigurationItemQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (ciq *ConfigurationItemQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(ciq.driver.Dialect())
+func (_q *ConfigurationItemQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(configurationitem.Table)
-	columns := ciq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = configurationitem.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if ciq.sql != nil {
-		selector = ciq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if ciq.ctx.Unique != nil && *ciq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range ciq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range ciq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := ciq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := ciq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -959,41 +959,41 @@ type ConfigurationItemGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (cigb *ConfigurationItemGroupBy) Aggregate(fns ...AggregateFunc) *ConfigurationItemGroupBy {
-	cigb.fns = append(cigb.fns, fns...)
-	return cigb
+func (_g *ConfigurationItemGroupBy) Aggregate(fns ...AggregateFunc) *ConfigurationItemGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cigb *ConfigurationItemGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cigb.build.ctx, ent.OpQueryGroupBy)
-	if err := cigb.build.prepareQuery(ctx); err != nil {
+func (_g *ConfigurationItemGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ConfigurationItemQuery, *ConfigurationItemGroupBy](ctx, cigb.build, cigb, cigb.build.inters, v)
+	return scanWithInterceptors[*ConfigurationItemQuery, *ConfigurationItemGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (cigb *ConfigurationItemGroupBy) sqlScan(ctx context.Context, root *ConfigurationItemQuery, v any) error {
+func (_g *ConfigurationItemGroupBy) sqlScan(ctx context.Context, root *ConfigurationItemQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(cigb.fns))
-	for _, fn := range cigb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*cigb.flds)+len(cigb.fns))
-		for _, f := range *cigb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*cigb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cigb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -1007,27 +1007,27 @@ type ConfigurationItemSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (cis *ConfigurationItemSelect) Aggregate(fns ...AggregateFunc) *ConfigurationItemSelect {
-	cis.fns = append(cis.fns, fns...)
-	return cis
+func (_s *ConfigurationItemSelect) Aggregate(fns ...AggregateFunc) *ConfigurationItemSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cis *ConfigurationItemSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cis.ctx, ent.OpQuerySelect)
-	if err := cis.prepareQuery(ctx); err != nil {
+func (_s *ConfigurationItemSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*ConfigurationItemQuery, *ConfigurationItemSelect](ctx, cis.ConfigurationItemQuery, cis, cis.inters, v)
+	return scanWithInterceptors[*ConfigurationItemQuery, *ConfigurationItemSelect](ctx, _s.ConfigurationItemQuery, _s, _s.inters, v)
 }
 
-func (cis *ConfigurationItemSelect) sqlScan(ctx context.Context, root *ConfigurationItemQuery, v any) error {
+func (_s *ConfigurationItemSelect) sqlScan(ctx context.Context, root *ConfigurationItemQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(cis.fns))
-	for _, fn := range cis.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*cis.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -1035,7 +1035,7 @@ func (cis *ConfigurationItemSelect) sqlScan(ctx context.Context, root *Configura
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cis.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

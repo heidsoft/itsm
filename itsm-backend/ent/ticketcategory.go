@@ -139,7 +139,7 @@ func (*TicketCategory) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketCategory fields.
-func (tc *TicketCategory) assignValues(columns []string, values []any) error {
+func (_m *TicketCategory) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -150,81 +150,81 @@ func (tc *TicketCategory) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			tc.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ticketcategory.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				tc.Name = value.String
+				_m.Name = value.String
 			}
 		case ticketcategory.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				tc.Description = value.String
+				_m.Description = value.String
 			}
 		case ticketcategory.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				tc.Code = value.String
+				_m.Code = value.String
 			}
 		case ticketcategory.FieldParentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field parent_id", values[i])
 			} else if value.Valid {
-				tc.ParentID = int(value.Int64)
+				_m.ParentID = int(value.Int64)
 			}
 		case ticketcategory.FieldLevel:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field level", values[i])
 			} else if value.Valid {
-				tc.Level = int(value.Int64)
+				_m.Level = int(value.Int64)
 			}
 		case ticketcategory.FieldSortOrder:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field sort_order", values[i])
 			} else if value.Valid {
-				tc.SortOrder = int(value.Int64)
+				_m.SortOrder = int(value.Int64)
 			}
 		case ticketcategory.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				tc.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case ticketcategory.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				tc.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ticketcategory.FieldDepartmentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field department_id", values[i])
 			} else if value.Valid {
-				tc.DepartmentID = int(value.Int64)
+				_m.DepartmentID = int(value.Int64)
 			}
 		case ticketcategory.FieldWorkflowID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field workflow_id", values[i])
 			} else if value.Valid {
-				tc.WorkflowID = int(value.Int64)
+				_m.WorkflowID = int(value.Int64)
 			}
 		case ticketcategory.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tc.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case ticketcategory.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				tc.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			tc.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -232,93 +232,93 @@ func (tc *TicketCategory) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketCategory.
 // This includes values selected through modifiers, order, etc.
-func (tc *TicketCategory) Value(name string) (ent.Value, error) {
-	return tc.selectValues.Get(name)
+func (_m *TicketCategory) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTickets queries the "tickets" edge of the TicketCategory entity.
-func (tc *TicketCategory) QueryTickets() *TicketQuery {
-	return NewTicketCategoryClient(tc.config).QueryTickets(tc)
+func (_m *TicketCategory) QueryTickets() *TicketQuery {
+	return NewTicketCategoryClient(_m.config).QueryTickets(_m)
 }
 
 // QueryChildren queries the "children" edge of the TicketCategory entity.
-func (tc *TicketCategory) QueryChildren() *TicketCategoryQuery {
-	return NewTicketCategoryClient(tc.config).QueryChildren(tc)
+func (_m *TicketCategory) QueryChildren() *TicketCategoryQuery {
+	return NewTicketCategoryClient(_m.config).QueryChildren(_m)
 }
 
 // QueryParent queries the "parent" edge of the TicketCategory entity.
-func (tc *TicketCategory) QueryParent() *TicketCategoryQuery {
-	return NewTicketCategoryClient(tc.config).QueryParent(tc)
+func (_m *TicketCategory) QueryParent() *TicketCategoryQuery {
+	return NewTicketCategoryClient(_m.config).QueryParent(_m)
 }
 
 // QueryDepartment queries the "department" edge of the TicketCategory entity.
-func (tc *TicketCategory) QueryDepartment() *DepartmentQuery {
-	return NewTicketCategoryClient(tc.config).QueryDepartment(tc)
+func (_m *TicketCategory) QueryDepartment() *DepartmentQuery {
+	return NewTicketCategoryClient(_m.config).QueryDepartment(_m)
 }
 
 // QueryWorkflow queries the "workflow" edge of the TicketCategory entity.
-func (tc *TicketCategory) QueryWorkflow() *WorkflowQuery {
-	return NewTicketCategoryClient(tc.config).QueryWorkflow(tc)
+func (_m *TicketCategory) QueryWorkflow() *WorkflowQuery {
+	return NewTicketCategoryClient(_m.config).QueryWorkflow(_m)
 }
 
 // Update returns a builder for updating this TicketCategory.
 // Note that you need to call TicketCategory.Unwrap() before calling this method if this TicketCategory
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tc *TicketCategory) Update() *TicketCategoryUpdateOne {
-	return NewTicketCategoryClient(tc.config).UpdateOne(tc)
+func (_m *TicketCategory) Update() *TicketCategoryUpdateOne {
+	return NewTicketCategoryClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketCategory entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tc *TicketCategory) Unwrap() *TicketCategory {
-	_tx, ok := tc.config.driver.(*txDriver)
+func (_m *TicketCategory) Unwrap() *TicketCategory {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketCategory is not a transactional entity")
 	}
-	tc.config.driver = _tx.drv
-	return tc
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tc *TicketCategory) String() string {
+func (_m *TicketCategory) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketCategory(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tc.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(tc.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(tc.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("code=")
-	builder.WriteString(tc.Code)
+	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
 	builder.WriteString("parent_id=")
-	builder.WriteString(fmt.Sprintf("%v", tc.ParentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ParentID))
 	builder.WriteString(", ")
 	builder.WriteString("level=")
-	builder.WriteString(fmt.Sprintf("%v", tc.Level))
+	builder.WriteString(fmt.Sprintf("%v", _m.Level))
 	builder.WriteString(", ")
 	builder.WriteString("sort_order=")
-	builder.WriteString(fmt.Sprintf("%v", tc.SortOrder))
+	builder.WriteString(fmt.Sprintf("%v", _m.SortOrder))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", tc.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", tc.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("department_id=")
-	builder.WriteString(fmt.Sprintf("%v", tc.DepartmentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.DepartmentID))
 	builder.WriteString(", ")
 	builder.WriteString("workflow_id=")
-	builder.WriteString(fmt.Sprintf("%v", tc.WorkflowID))
+	builder.WriteString(fmt.Sprintf("%v", _m.WorkflowID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tc.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(tc.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

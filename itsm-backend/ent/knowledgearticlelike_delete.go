@@ -20,56 +20,56 @@ type KnowledgeArticleLikeDelete struct {
 }
 
 // Where appends a list predicates to the KnowledgeArticleLikeDelete builder.
-func (kald *KnowledgeArticleLikeDelete) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeDelete {
-	kald.mutation.Where(ps...)
-	return kald
+func (_d *KnowledgeArticleLikeDelete) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (kald *KnowledgeArticleLikeDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, kald.sqlExec, kald.mutation, kald.hooks)
+func (_d *KnowledgeArticleLikeDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kald *KnowledgeArticleLikeDelete) ExecX(ctx context.Context) int {
-	n, err := kald.Exec(ctx)
+func (_d *KnowledgeArticleLikeDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (kald *KnowledgeArticleLikeDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *KnowledgeArticleLikeDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(knowledgearticlelike.Table, sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt))
-	if ps := kald.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, kald.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	kald.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // KnowledgeArticleLikeDeleteOne is the builder for deleting a single KnowledgeArticleLike entity.
 type KnowledgeArticleLikeDeleteOne struct {
-	kald *KnowledgeArticleLikeDelete
+	_d *KnowledgeArticleLikeDelete
 }
 
 // Where appends a list predicates to the KnowledgeArticleLikeDelete builder.
-func (kaldo *KnowledgeArticleLikeDeleteOne) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeDeleteOne {
-	kaldo.kald.mutation.Where(ps...)
-	return kaldo
+func (_d *KnowledgeArticleLikeDeleteOne) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (kaldo *KnowledgeArticleLikeDeleteOne) Exec(ctx context.Context) error {
-	n, err := kaldo.kald.Exec(ctx)
+func (_d *KnowledgeArticleLikeDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (kaldo *KnowledgeArticleLikeDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kaldo *KnowledgeArticleLikeDeleteOne) ExecX(ctx context.Context) {
-	if err := kaldo.Exec(ctx); err != nil {
+func (_d *KnowledgeArticleLikeDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

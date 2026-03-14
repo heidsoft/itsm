@@ -25,384 +25,384 @@ type SLAViolationUpdate struct {
 }
 
 // Where appends a list predicates to the SLAViolationUpdate builder.
-func (svu *SLAViolationUpdate) Where(ps ...predicate.SLAViolation) *SLAViolationUpdate {
-	svu.mutation.Where(ps...)
-	return svu
+func (_u *SLAViolationUpdate) Where(ps ...predicate.SLAViolation) *SLAViolationUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (svu *SLAViolationUpdate) SetCreatedBy(i int) *SLAViolationUpdate {
-	svu.mutation.ResetCreatedBy()
-	svu.mutation.SetCreatedBy(i)
-	return svu
+func (_u *SLAViolationUpdate) SetCreatedBy(v int) *SLAViolationUpdate {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableCreatedBy(i *int) *SLAViolationUpdate {
-	if i != nil {
-		svu.SetCreatedBy(*i)
+func (_u *SLAViolationUpdate) SetNillableCreatedBy(v *int) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return svu
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (svu *SLAViolationUpdate) AddCreatedBy(i int) *SLAViolationUpdate {
-	svu.mutation.AddCreatedBy(i)
-	return svu
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *SLAViolationUpdate) AddCreatedBy(v int) *SLAViolationUpdate {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
-func (svu *SLAViolationUpdate) SetSLADefinitionID(i int) *SLAViolationUpdate {
-	svu.mutation.SetSLADefinitionID(i)
-	return svu
+func (_u *SLAViolationUpdate) SetSLADefinitionID(v int) *SLAViolationUpdate {
+	_u.mutation.SetSLADefinitionID(v)
+	return _u
 }
 
 // SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableSLADefinitionID(i *int) *SLAViolationUpdate {
-	if i != nil {
-		svu.SetSLADefinitionID(*i)
+func (_u *SLAViolationUpdate) SetNillableSLADefinitionID(v *int) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetSLADefinitionID(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (svu *SLAViolationUpdate) SetTicketType(s string) *SLAViolationUpdate {
-	svu.mutation.SetTicketType(s)
-	return svu
+func (_u *SLAViolationUpdate) SetTicketType(v string) *SLAViolationUpdate {
+	_u.mutation.SetTicketType(v)
+	return _u
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableTicketType(s *string) *SLAViolationUpdate {
-	if s != nil {
-		svu.SetTicketType(*s)
+func (_u *SLAViolationUpdate) SetNillableTicketType(v *string) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetTicketType(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetSLAName sets the "sla_name" field.
-func (svu *SLAViolationUpdate) SetSLAName(s string) *SLAViolationUpdate {
-	svu.mutation.SetSLAName(s)
-	return svu
+func (_u *SLAViolationUpdate) SetSLAName(v string) *SLAViolationUpdate {
+	_u.mutation.SetSLAName(v)
+	return _u
 }
 
 // SetNillableSLAName sets the "sla_name" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableSLAName(s *string) *SLAViolationUpdate {
-	if s != nil {
-		svu.SetSLAName(*s)
+func (_u *SLAViolationUpdate) SetNillableSLAName(v *string) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetSLAName(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (svu *SLAViolationUpdate) SetTicketID(i int) *SLAViolationUpdate {
-	svu.mutation.SetTicketID(i)
-	return svu
+func (_u *SLAViolationUpdate) SetTicketID(v int) *SLAViolationUpdate {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableTicketID(i *int) *SLAViolationUpdate {
-	if i != nil {
-		svu.SetTicketID(*i)
+func (_u *SLAViolationUpdate) SetNillableTicketID(v *int) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetViolationType sets the "violation_type" field.
-func (svu *SLAViolationUpdate) SetViolationType(s string) *SLAViolationUpdate {
-	svu.mutation.SetViolationType(s)
-	return svu
+func (_u *SLAViolationUpdate) SetViolationType(v string) *SLAViolationUpdate {
+	_u.mutation.SetViolationType(v)
+	return _u
 }
 
 // SetNillableViolationType sets the "violation_type" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableViolationType(s *string) *SLAViolationUpdate {
-	if s != nil {
-		svu.SetViolationType(*s)
+func (_u *SLAViolationUpdate) SetNillableViolationType(v *string) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetViolationType(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetViolationTime sets the "violation_time" field.
-func (svu *SLAViolationUpdate) SetViolationTime(t time.Time) *SLAViolationUpdate {
-	svu.mutation.SetViolationTime(t)
-	return svu
+func (_u *SLAViolationUpdate) SetViolationTime(v time.Time) *SLAViolationUpdate {
+	_u.mutation.SetViolationTime(v)
+	return _u
 }
 
 // SetNillableViolationTime sets the "violation_time" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableViolationTime(t *time.Time) *SLAViolationUpdate {
-	if t != nil {
-		svu.SetViolationTime(*t)
+func (_u *SLAViolationUpdate) SetNillableViolationTime(v *time.Time) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetViolationTime(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetViolationOccurredAt sets the "violation_occurred_at" field.
-func (svu *SLAViolationUpdate) SetViolationOccurredAt(t time.Time) *SLAViolationUpdate {
-	svu.mutation.SetViolationOccurredAt(t)
-	return svu
+func (_u *SLAViolationUpdate) SetViolationOccurredAt(v time.Time) *SLAViolationUpdate {
+	_u.mutation.SetViolationOccurredAt(v)
+	return _u
 }
 
 // SetNillableViolationOccurredAt sets the "violation_occurred_at" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableViolationOccurredAt(t *time.Time) *SLAViolationUpdate {
-	if t != nil {
-		svu.SetViolationOccurredAt(*t)
+func (_u *SLAViolationUpdate) SetNillableViolationOccurredAt(v *time.Time) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetViolationOccurredAt(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetExpectedTime sets the "expected_time" field.
-func (svu *SLAViolationUpdate) SetExpectedTime(i int) *SLAViolationUpdate {
-	svu.mutation.ResetExpectedTime()
-	svu.mutation.SetExpectedTime(i)
-	return svu
+func (_u *SLAViolationUpdate) SetExpectedTime(v int) *SLAViolationUpdate {
+	_u.mutation.ResetExpectedTime()
+	_u.mutation.SetExpectedTime(v)
+	return _u
 }
 
 // SetNillableExpectedTime sets the "expected_time" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableExpectedTime(i *int) *SLAViolationUpdate {
-	if i != nil {
-		svu.SetExpectedTime(*i)
+func (_u *SLAViolationUpdate) SetNillableExpectedTime(v *int) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetExpectedTime(*v)
 	}
-	return svu
+	return _u
 }
 
-// AddExpectedTime adds i to the "expected_time" field.
-func (svu *SLAViolationUpdate) AddExpectedTime(i int) *SLAViolationUpdate {
-	svu.mutation.AddExpectedTime(i)
-	return svu
+// AddExpectedTime adds value to the "expected_time" field.
+func (_u *SLAViolationUpdate) AddExpectedTime(v int) *SLAViolationUpdate {
+	_u.mutation.AddExpectedTime(v)
+	return _u
 }
 
 // ClearExpectedTime clears the value of the "expected_time" field.
-func (svu *SLAViolationUpdate) ClearExpectedTime() *SLAViolationUpdate {
-	svu.mutation.ClearExpectedTime()
-	return svu
+func (_u *SLAViolationUpdate) ClearExpectedTime() *SLAViolationUpdate {
+	_u.mutation.ClearExpectedTime()
+	return _u
 }
 
 // SetActualTime sets the "actual_time" field.
-func (svu *SLAViolationUpdate) SetActualTime(i int) *SLAViolationUpdate {
-	svu.mutation.ResetActualTime()
-	svu.mutation.SetActualTime(i)
-	return svu
+func (_u *SLAViolationUpdate) SetActualTime(v int) *SLAViolationUpdate {
+	_u.mutation.ResetActualTime()
+	_u.mutation.SetActualTime(v)
+	return _u
 }
 
 // SetNillableActualTime sets the "actual_time" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableActualTime(i *int) *SLAViolationUpdate {
-	if i != nil {
-		svu.SetActualTime(*i)
+func (_u *SLAViolationUpdate) SetNillableActualTime(v *int) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetActualTime(*v)
 	}
-	return svu
+	return _u
 }
 
-// AddActualTime adds i to the "actual_time" field.
-func (svu *SLAViolationUpdate) AddActualTime(i int) *SLAViolationUpdate {
-	svu.mutation.AddActualTime(i)
-	return svu
+// AddActualTime adds value to the "actual_time" field.
+func (_u *SLAViolationUpdate) AddActualTime(v int) *SLAViolationUpdate {
+	_u.mutation.AddActualTime(v)
+	return _u
 }
 
 // ClearActualTime clears the value of the "actual_time" field.
-func (svu *SLAViolationUpdate) ClearActualTime() *SLAViolationUpdate {
-	svu.mutation.ClearActualTime()
-	return svu
+func (_u *SLAViolationUpdate) ClearActualTime() *SLAViolationUpdate {
+	_u.mutation.ClearActualTime()
+	return _u
 }
 
 // SetOverdueMinutes sets the "overdue_minutes" field.
-func (svu *SLAViolationUpdate) SetOverdueMinutes(i int) *SLAViolationUpdate {
-	svu.mutation.ResetOverdueMinutes()
-	svu.mutation.SetOverdueMinutes(i)
-	return svu
+func (_u *SLAViolationUpdate) SetOverdueMinutes(v int) *SLAViolationUpdate {
+	_u.mutation.ResetOverdueMinutes()
+	_u.mutation.SetOverdueMinutes(v)
+	return _u
 }
 
 // SetNillableOverdueMinutes sets the "overdue_minutes" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableOverdueMinutes(i *int) *SLAViolationUpdate {
-	if i != nil {
-		svu.SetOverdueMinutes(*i)
+func (_u *SLAViolationUpdate) SetNillableOverdueMinutes(v *int) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetOverdueMinutes(*v)
 	}
-	return svu
+	return _u
 }
 
-// AddOverdueMinutes adds i to the "overdue_minutes" field.
-func (svu *SLAViolationUpdate) AddOverdueMinutes(i int) *SLAViolationUpdate {
-	svu.mutation.AddOverdueMinutes(i)
-	return svu
+// AddOverdueMinutes adds value to the "overdue_minutes" field.
+func (_u *SLAViolationUpdate) AddOverdueMinutes(v int) *SLAViolationUpdate {
+	_u.mutation.AddOverdueMinutes(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (svu *SLAViolationUpdate) SetStatus(s string) *SLAViolationUpdate {
-	svu.mutation.SetStatus(s)
-	return svu
+func (_u *SLAViolationUpdate) SetStatus(v string) *SLAViolationUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableStatus(s *string) *SLAViolationUpdate {
-	if s != nil {
-		svu.SetStatus(*s)
+func (_u *SLAViolationUpdate) SetNillableStatus(v *string) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (svu *SLAViolationUpdate) SetDescription(s string) *SLAViolationUpdate {
-	svu.mutation.SetDescription(s)
-	return svu
+func (_u *SLAViolationUpdate) SetDescription(v string) *SLAViolationUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableDescription(s *string) *SLAViolationUpdate {
-	if s != nil {
-		svu.SetDescription(*s)
+func (_u *SLAViolationUpdate) SetNillableDescription(v *string) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return svu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (svu *SLAViolationUpdate) ClearDescription() *SLAViolationUpdate {
-	svu.mutation.ClearDescription()
-	return svu
+func (_u *SLAViolationUpdate) ClearDescription() *SLAViolationUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (svu *SLAViolationUpdate) SetSeverity(s string) *SLAViolationUpdate {
-	svu.mutation.SetSeverity(s)
-	return svu
+func (_u *SLAViolationUpdate) SetSeverity(v string) *SLAViolationUpdate {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableSeverity(s *string) *SLAViolationUpdate {
-	if s != nil {
-		svu.SetSeverity(*s)
+func (_u *SLAViolationUpdate) SetNillableSeverity(v *string) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetIsResolved sets the "is_resolved" field.
-func (svu *SLAViolationUpdate) SetIsResolved(b bool) *SLAViolationUpdate {
-	svu.mutation.SetIsResolved(b)
-	return svu
+func (_u *SLAViolationUpdate) SetIsResolved(v bool) *SLAViolationUpdate {
+	_u.mutation.SetIsResolved(v)
+	return _u
 }
 
 // SetNillableIsResolved sets the "is_resolved" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableIsResolved(b *bool) *SLAViolationUpdate {
-	if b != nil {
-		svu.SetIsResolved(*b)
+func (_u *SLAViolationUpdate) SetNillableIsResolved(v *bool) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetIsResolved(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (svu *SLAViolationUpdate) SetResolvedAt(t time.Time) *SLAViolationUpdate {
-	svu.mutation.SetResolvedAt(t)
-	return svu
+func (_u *SLAViolationUpdate) SetResolvedAt(v time.Time) *SLAViolationUpdate {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableResolvedAt(t *time.Time) *SLAViolationUpdate {
-	if t != nil {
-		svu.SetResolvedAt(*t)
+func (_u *SLAViolationUpdate) SetNillableResolvedAt(v *time.Time) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return svu
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (svu *SLAViolationUpdate) ClearResolvedAt() *SLAViolationUpdate {
-	svu.mutation.ClearResolvedAt()
-	return svu
+func (_u *SLAViolationUpdate) ClearResolvedAt() *SLAViolationUpdate {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetResolutionNotes sets the "resolution_notes" field.
-func (svu *SLAViolationUpdate) SetResolutionNotes(s string) *SLAViolationUpdate {
-	svu.mutation.SetResolutionNotes(s)
-	return svu
+func (_u *SLAViolationUpdate) SetResolutionNotes(v string) *SLAViolationUpdate {
+	_u.mutation.SetResolutionNotes(v)
+	return _u
 }
 
 // SetNillableResolutionNotes sets the "resolution_notes" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableResolutionNotes(s *string) *SLAViolationUpdate {
-	if s != nil {
-		svu.SetResolutionNotes(*s)
+func (_u *SLAViolationUpdate) SetNillableResolutionNotes(v *string) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetResolutionNotes(*v)
 	}
-	return svu
+	return _u
 }
 
 // ClearResolutionNotes clears the value of the "resolution_notes" field.
-func (svu *SLAViolationUpdate) ClearResolutionNotes() *SLAViolationUpdate {
-	svu.mutation.ClearResolutionNotes()
-	return svu
+func (_u *SLAViolationUpdate) ClearResolutionNotes() *SLAViolationUpdate {
+	_u.mutation.ClearResolutionNotes()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (svu *SLAViolationUpdate) SetTenantID(i int) *SLAViolationUpdate {
-	svu.mutation.ResetTenantID()
-	svu.mutation.SetTenantID(i)
-	return svu
+func (_u *SLAViolationUpdate) SetTenantID(v int) *SLAViolationUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableTenantID(i *int) *SLAViolationUpdate {
-	if i != nil {
-		svu.SetTenantID(*i)
+func (_u *SLAViolationUpdate) SetNillableTenantID(v *int) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return svu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (svu *SLAViolationUpdate) AddTenantID(i int) *SLAViolationUpdate {
-	svu.mutation.AddTenantID(i)
-	return svu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLAViolationUpdate) AddTenantID(v int) *SLAViolationUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (svu *SLAViolationUpdate) SetCreatedAt(t time.Time) *SLAViolationUpdate {
-	svu.mutation.SetCreatedAt(t)
-	return svu
+func (_u *SLAViolationUpdate) SetCreatedAt(v time.Time) *SLAViolationUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (svu *SLAViolationUpdate) SetNillableCreatedAt(t *time.Time) *SLAViolationUpdate {
-	if t != nil {
-		svu.SetCreatedAt(*t)
+func (_u *SLAViolationUpdate) SetNillableCreatedAt(v *time.Time) *SLAViolationUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return svu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (svu *SLAViolationUpdate) SetUpdatedAt(t time.Time) *SLAViolationUpdate {
-	svu.mutation.SetUpdatedAt(t)
-	return svu
+func (_u *SLAViolationUpdate) SetUpdatedAt(v time.Time) *SLAViolationUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
-func (svu *SLAViolationUpdate) SetSLADefinition(s *SLADefinition) *SLAViolationUpdate {
-	return svu.SetSLADefinitionID(s.ID)
+func (_u *SLAViolationUpdate) SetSLADefinition(v *SLADefinition) *SLAViolationUpdate {
+	return _u.SetSLADefinitionID(v.ID)
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (svu *SLAViolationUpdate) SetTicket(t *Ticket) *SLAViolationUpdate {
-	return svu.SetTicketID(t.ID)
+func (_u *SLAViolationUpdate) SetTicket(v *Ticket) *SLAViolationUpdate {
+	return _u.SetTicketID(v.ID)
 }
 
 // Mutation returns the SLAViolationMutation object of the builder.
-func (svu *SLAViolationUpdate) Mutation() *SLAViolationMutation {
-	return svu.mutation
+func (_u *SLAViolationUpdate) Mutation() *SLAViolationMutation {
+	return _u.mutation
 }
 
 // ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
-func (svu *SLAViolationUpdate) ClearSLADefinition() *SLAViolationUpdate {
-	svu.mutation.ClearSLADefinition()
-	return svu
+func (_u *SLAViolationUpdate) ClearSLADefinition() *SLAViolationUpdate {
+	_u.mutation.ClearSLADefinition()
+	return _u
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (svu *SLAViolationUpdate) ClearTicket() *SLAViolationUpdate {
-	svu.mutation.ClearTicket()
-	return svu
+func (_u *SLAViolationUpdate) ClearTicket() *SLAViolationUpdate {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (svu *SLAViolationUpdate) Save(ctx context.Context) (int, error) {
-	svu.defaults()
-	return withHooks(ctx, svu.sqlSave, svu.mutation, svu.hooks)
+func (_u *SLAViolationUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (svu *SLAViolationUpdate) SaveX(ctx context.Context) int {
-	affected, err := svu.Save(ctx)
+func (_u *SLAViolationUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -410,154 +410,154 @@ func (svu *SLAViolationUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (svu *SLAViolationUpdate) Exec(ctx context.Context) error {
-	_, err := svu.Save(ctx)
+func (_u *SLAViolationUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (svu *SLAViolationUpdate) ExecX(ctx context.Context) {
-	if err := svu.Exec(ctx); err != nil {
+func (_u *SLAViolationUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (svu *SLAViolationUpdate) defaults() {
-	if _, ok := svu.mutation.UpdatedAt(); !ok {
+func (_u *SLAViolationUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := slaviolation.UpdateDefaultUpdatedAt()
-		svu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (svu *SLAViolationUpdate) check() error {
-	if v, ok := svu.mutation.SLADefinitionID(); ok {
+func (_u *SLAViolationUpdate) check() error {
+	if v, ok := _u.mutation.SLADefinitionID(); ok {
 		if err := slaviolation.SLADefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "sla_definition_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.sla_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := svu.mutation.TicketID(); ok {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := slaviolation.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := svu.mutation.ViolationType(); ok {
+	if v, ok := _u.mutation.ViolationType(); ok {
 		if err := slaviolation.ViolationTypeValidator(v); err != nil {
 			return &ValidationError{Name: "violation_type", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.violation_type": %w`, err)}
 		}
 	}
-	if v, ok := svu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := slaviolation.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.tenant_id": %w`, err)}
 		}
 	}
-	if svu.mutation.SLADefinitionCleared() && len(svu.mutation.SLADefinitionIDs()) > 0 {
+	if _u.mutation.SLADefinitionCleared() && len(_u.mutation.SLADefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "SLAViolation.sla_definition"`)
 	}
-	if svu.mutation.TicketCleared() && len(svu.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "SLAViolation.ticket"`)
 	}
 	return nil
 }
 
-func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := svu.check(); err != nil {
-		return n, err
+func (_u *SLAViolationUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(slaviolation.Table, slaviolation.Columns, sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt))
-	if ps := svu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := svu.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(slaviolation.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(slaviolation.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.TicketType(); ok {
+	if value, ok := _u.mutation.TicketType(); ok {
 		_spec.SetField(slaviolation.FieldTicketType, field.TypeString, value)
 	}
-	if value, ok := svu.mutation.SLAName(); ok {
+	if value, ok := _u.mutation.SLAName(); ok {
 		_spec.SetField(slaviolation.FieldSLAName, field.TypeString, value)
 	}
-	if value, ok := svu.mutation.ViolationType(); ok {
+	if value, ok := _u.mutation.ViolationType(); ok {
 		_spec.SetField(slaviolation.FieldViolationType, field.TypeString, value)
 	}
-	if value, ok := svu.mutation.ViolationTime(); ok {
+	if value, ok := _u.mutation.ViolationTime(); ok {
 		_spec.SetField(slaviolation.FieldViolationTime, field.TypeTime, value)
 	}
-	if value, ok := svu.mutation.ViolationOccurredAt(); ok {
+	if value, ok := _u.mutation.ViolationOccurredAt(); ok {
 		_spec.SetField(slaviolation.FieldViolationOccurredAt, field.TypeTime, value)
 	}
-	if value, ok := svu.mutation.ExpectedTime(); ok {
+	if value, ok := _u.mutation.ExpectedTime(); ok {
 		_spec.SetField(slaviolation.FieldExpectedTime, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.AddedExpectedTime(); ok {
+	if value, ok := _u.mutation.AddedExpectedTime(); ok {
 		_spec.AddField(slaviolation.FieldExpectedTime, field.TypeInt, value)
 	}
-	if svu.mutation.ExpectedTimeCleared() {
+	if _u.mutation.ExpectedTimeCleared() {
 		_spec.ClearField(slaviolation.FieldExpectedTime, field.TypeInt)
 	}
-	if value, ok := svu.mutation.ActualTime(); ok {
+	if value, ok := _u.mutation.ActualTime(); ok {
 		_spec.SetField(slaviolation.FieldActualTime, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.AddedActualTime(); ok {
+	if value, ok := _u.mutation.AddedActualTime(); ok {
 		_spec.AddField(slaviolation.FieldActualTime, field.TypeInt, value)
 	}
-	if svu.mutation.ActualTimeCleared() {
+	if _u.mutation.ActualTimeCleared() {
 		_spec.ClearField(slaviolation.FieldActualTime, field.TypeInt)
 	}
-	if value, ok := svu.mutation.OverdueMinutes(); ok {
+	if value, ok := _u.mutation.OverdueMinutes(); ok {
 		_spec.SetField(slaviolation.FieldOverdueMinutes, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.AddedOverdueMinutes(); ok {
+	if value, ok := _u.mutation.AddedOverdueMinutes(); ok {
 		_spec.AddField(slaviolation.FieldOverdueMinutes, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(slaviolation.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := svu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(slaviolation.FieldDescription, field.TypeString, value)
 	}
-	if svu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(slaviolation.FieldDescription, field.TypeString)
 	}
-	if value, ok := svu.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(slaviolation.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := svu.mutation.IsResolved(); ok {
+	if value, ok := _u.mutation.IsResolved(); ok {
 		_spec.SetField(slaviolation.FieldIsResolved, field.TypeBool, value)
 	}
-	if value, ok := svu.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(slaviolation.FieldResolvedAt, field.TypeTime, value)
 	}
-	if svu.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(slaviolation.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := svu.mutation.ResolutionNotes(); ok {
+	if value, ok := _u.mutation.ResolutionNotes(); ok {
 		_spec.SetField(slaviolation.FieldResolutionNotes, field.TypeString, value)
 	}
-	if svu.mutation.ResolutionNotesCleared() {
+	if _u.mutation.ResolutionNotesCleared() {
 		_spec.ClearField(slaviolation.FieldResolutionNotes, field.TypeString)
 	}
-	if value, ok := svu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(slaviolation.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(slaviolation.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := svu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(slaviolation.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := svu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaviolation.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if svu.mutation.SLADefinitionCleared() {
+	if _u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -570,7 +570,7 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := svu.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -586,7 +586,7 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if svu.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -599,7 +599,7 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := svu.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -615,7 +615,7 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, svu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{slaviolation.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -623,8 +623,8 @@ func (svu *SLAViolationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	svu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // SLAViolationUpdateOne is the builder for updating a single SLAViolation entity.
@@ -636,391 +636,391 @@ type SLAViolationUpdateOne struct {
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (svuo *SLAViolationUpdateOne) SetCreatedBy(i int) *SLAViolationUpdateOne {
-	svuo.mutation.ResetCreatedBy()
-	svuo.mutation.SetCreatedBy(i)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetCreatedBy(v int) *SLAViolationUpdateOne {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableCreatedBy(i *int) *SLAViolationUpdateOne {
-	if i != nil {
-		svuo.SetCreatedBy(*i)
+func (_u *SLAViolationUpdateOne) SetNillableCreatedBy(v *int) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return svuo
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (svuo *SLAViolationUpdateOne) AddCreatedBy(i int) *SLAViolationUpdateOne {
-	svuo.mutation.AddCreatedBy(i)
-	return svuo
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *SLAViolationUpdateOne) AddCreatedBy(v int) *SLAViolationUpdateOne {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetSLADefinitionID sets the "sla_definition_id" field.
-func (svuo *SLAViolationUpdateOne) SetSLADefinitionID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.SetSLADefinitionID(i)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetSLADefinitionID(v int) *SLAViolationUpdateOne {
+	_u.mutation.SetSLADefinitionID(v)
+	return _u
 }
 
 // SetNillableSLADefinitionID sets the "sla_definition_id" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableSLADefinitionID(i *int) *SLAViolationUpdateOne {
-	if i != nil {
-		svuo.SetSLADefinitionID(*i)
+func (_u *SLAViolationUpdateOne) SetNillableSLADefinitionID(v *int) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetSLADefinitionID(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (svuo *SLAViolationUpdateOne) SetTicketType(s string) *SLAViolationUpdateOne {
-	svuo.mutation.SetTicketType(s)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetTicketType(v string) *SLAViolationUpdateOne {
+	_u.mutation.SetTicketType(v)
+	return _u
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableTicketType(s *string) *SLAViolationUpdateOne {
-	if s != nil {
-		svuo.SetTicketType(*s)
+func (_u *SLAViolationUpdateOne) SetNillableTicketType(v *string) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetTicketType(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetSLAName sets the "sla_name" field.
-func (svuo *SLAViolationUpdateOne) SetSLAName(s string) *SLAViolationUpdateOne {
-	svuo.mutation.SetSLAName(s)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetSLAName(v string) *SLAViolationUpdateOne {
+	_u.mutation.SetSLAName(v)
+	return _u
 }
 
 // SetNillableSLAName sets the "sla_name" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableSLAName(s *string) *SLAViolationUpdateOne {
-	if s != nil {
-		svuo.SetSLAName(*s)
+func (_u *SLAViolationUpdateOne) SetNillableSLAName(v *string) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetSLAName(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetTicketID sets the "ticket_id" field.
-func (svuo *SLAViolationUpdateOne) SetTicketID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.SetTicketID(i)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetTicketID(v int) *SLAViolationUpdateOne {
+	_u.mutation.SetTicketID(v)
+	return _u
 }
 
 // SetNillableTicketID sets the "ticket_id" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableTicketID(i *int) *SLAViolationUpdateOne {
-	if i != nil {
-		svuo.SetTicketID(*i)
+func (_u *SLAViolationUpdateOne) SetNillableTicketID(v *int) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetTicketID(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetViolationType sets the "violation_type" field.
-func (svuo *SLAViolationUpdateOne) SetViolationType(s string) *SLAViolationUpdateOne {
-	svuo.mutation.SetViolationType(s)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetViolationType(v string) *SLAViolationUpdateOne {
+	_u.mutation.SetViolationType(v)
+	return _u
 }
 
 // SetNillableViolationType sets the "violation_type" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableViolationType(s *string) *SLAViolationUpdateOne {
-	if s != nil {
-		svuo.SetViolationType(*s)
+func (_u *SLAViolationUpdateOne) SetNillableViolationType(v *string) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetViolationType(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetViolationTime sets the "violation_time" field.
-func (svuo *SLAViolationUpdateOne) SetViolationTime(t time.Time) *SLAViolationUpdateOne {
-	svuo.mutation.SetViolationTime(t)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetViolationTime(v time.Time) *SLAViolationUpdateOne {
+	_u.mutation.SetViolationTime(v)
+	return _u
 }
 
 // SetNillableViolationTime sets the "violation_time" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableViolationTime(t *time.Time) *SLAViolationUpdateOne {
-	if t != nil {
-		svuo.SetViolationTime(*t)
+func (_u *SLAViolationUpdateOne) SetNillableViolationTime(v *time.Time) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetViolationTime(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetViolationOccurredAt sets the "violation_occurred_at" field.
-func (svuo *SLAViolationUpdateOne) SetViolationOccurredAt(t time.Time) *SLAViolationUpdateOne {
-	svuo.mutation.SetViolationOccurredAt(t)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetViolationOccurredAt(v time.Time) *SLAViolationUpdateOne {
+	_u.mutation.SetViolationOccurredAt(v)
+	return _u
 }
 
 // SetNillableViolationOccurredAt sets the "violation_occurred_at" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableViolationOccurredAt(t *time.Time) *SLAViolationUpdateOne {
-	if t != nil {
-		svuo.SetViolationOccurredAt(*t)
+func (_u *SLAViolationUpdateOne) SetNillableViolationOccurredAt(v *time.Time) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetViolationOccurredAt(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetExpectedTime sets the "expected_time" field.
-func (svuo *SLAViolationUpdateOne) SetExpectedTime(i int) *SLAViolationUpdateOne {
-	svuo.mutation.ResetExpectedTime()
-	svuo.mutation.SetExpectedTime(i)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetExpectedTime(v int) *SLAViolationUpdateOne {
+	_u.mutation.ResetExpectedTime()
+	_u.mutation.SetExpectedTime(v)
+	return _u
 }
 
 // SetNillableExpectedTime sets the "expected_time" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableExpectedTime(i *int) *SLAViolationUpdateOne {
-	if i != nil {
-		svuo.SetExpectedTime(*i)
+func (_u *SLAViolationUpdateOne) SetNillableExpectedTime(v *int) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetExpectedTime(*v)
 	}
-	return svuo
+	return _u
 }
 
-// AddExpectedTime adds i to the "expected_time" field.
-func (svuo *SLAViolationUpdateOne) AddExpectedTime(i int) *SLAViolationUpdateOne {
-	svuo.mutation.AddExpectedTime(i)
-	return svuo
+// AddExpectedTime adds value to the "expected_time" field.
+func (_u *SLAViolationUpdateOne) AddExpectedTime(v int) *SLAViolationUpdateOne {
+	_u.mutation.AddExpectedTime(v)
+	return _u
 }
 
 // ClearExpectedTime clears the value of the "expected_time" field.
-func (svuo *SLAViolationUpdateOne) ClearExpectedTime() *SLAViolationUpdateOne {
-	svuo.mutation.ClearExpectedTime()
-	return svuo
+func (_u *SLAViolationUpdateOne) ClearExpectedTime() *SLAViolationUpdateOne {
+	_u.mutation.ClearExpectedTime()
+	return _u
 }
 
 // SetActualTime sets the "actual_time" field.
-func (svuo *SLAViolationUpdateOne) SetActualTime(i int) *SLAViolationUpdateOne {
-	svuo.mutation.ResetActualTime()
-	svuo.mutation.SetActualTime(i)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetActualTime(v int) *SLAViolationUpdateOne {
+	_u.mutation.ResetActualTime()
+	_u.mutation.SetActualTime(v)
+	return _u
 }
 
 // SetNillableActualTime sets the "actual_time" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableActualTime(i *int) *SLAViolationUpdateOne {
-	if i != nil {
-		svuo.SetActualTime(*i)
+func (_u *SLAViolationUpdateOne) SetNillableActualTime(v *int) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetActualTime(*v)
 	}
-	return svuo
+	return _u
 }
 
-// AddActualTime adds i to the "actual_time" field.
-func (svuo *SLAViolationUpdateOne) AddActualTime(i int) *SLAViolationUpdateOne {
-	svuo.mutation.AddActualTime(i)
-	return svuo
+// AddActualTime adds value to the "actual_time" field.
+func (_u *SLAViolationUpdateOne) AddActualTime(v int) *SLAViolationUpdateOne {
+	_u.mutation.AddActualTime(v)
+	return _u
 }
 
 // ClearActualTime clears the value of the "actual_time" field.
-func (svuo *SLAViolationUpdateOne) ClearActualTime() *SLAViolationUpdateOne {
-	svuo.mutation.ClearActualTime()
-	return svuo
+func (_u *SLAViolationUpdateOne) ClearActualTime() *SLAViolationUpdateOne {
+	_u.mutation.ClearActualTime()
+	return _u
 }
 
 // SetOverdueMinutes sets the "overdue_minutes" field.
-func (svuo *SLAViolationUpdateOne) SetOverdueMinutes(i int) *SLAViolationUpdateOne {
-	svuo.mutation.ResetOverdueMinutes()
-	svuo.mutation.SetOverdueMinutes(i)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetOverdueMinutes(v int) *SLAViolationUpdateOne {
+	_u.mutation.ResetOverdueMinutes()
+	_u.mutation.SetOverdueMinutes(v)
+	return _u
 }
 
 // SetNillableOverdueMinutes sets the "overdue_minutes" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableOverdueMinutes(i *int) *SLAViolationUpdateOne {
-	if i != nil {
-		svuo.SetOverdueMinutes(*i)
+func (_u *SLAViolationUpdateOne) SetNillableOverdueMinutes(v *int) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetOverdueMinutes(*v)
 	}
-	return svuo
+	return _u
 }
 
-// AddOverdueMinutes adds i to the "overdue_minutes" field.
-func (svuo *SLAViolationUpdateOne) AddOverdueMinutes(i int) *SLAViolationUpdateOne {
-	svuo.mutation.AddOverdueMinutes(i)
-	return svuo
+// AddOverdueMinutes adds value to the "overdue_minutes" field.
+func (_u *SLAViolationUpdateOne) AddOverdueMinutes(v int) *SLAViolationUpdateOne {
+	_u.mutation.AddOverdueMinutes(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (svuo *SLAViolationUpdateOne) SetStatus(s string) *SLAViolationUpdateOne {
-	svuo.mutation.SetStatus(s)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetStatus(v string) *SLAViolationUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableStatus(s *string) *SLAViolationUpdateOne {
-	if s != nil {
-		svuo.SetStatus(*s)
+func (_u *SLAViolationUpdateOne) SetNillableStatus(v *string) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (svuo *SLAViolationUpdateOne) SetDescription(s string) *SLAViolationUpdateOne {
-	svuo.mutation.SetDescription(s)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetDescription(v string) *SLAViolationUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableDescription(s *string) *SLAViolationUpdateOne {
-	if s != nil {
-		svuo.SetDescription(*s)
+func (_u *SLAViolationUpdateOne) SetNillableDescription(v *string) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return svuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (svuo *SLAViolationUpdateOne) ClearDescription() *SLAViolationUpdateOne {
-	svuo.mutation.ClearDescription()
-	return svuo
+func (_u *SLAViolationUpdateOne) ClearDescription() *SLAViolationUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetSeverity sets the "severity" field.
-func (svuo *SLAViolationUpdateOne) SetSeverity(s string) *SLAViolationUpdateOne {
-	svuo.mutation.SetSeverity(s)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetSeverity(v string) *SLAViolationUpdateOne {
+	_u.mutation.SetSeverity(v)
+	return _u
 }
 
 // SetNillableSeverity sets the "severity" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableSeverity(s *string) *SLAViolationUpdateOne {
-	if s != nil {
-		svuo.SetSeverity(*s)
+func (_u *SLAViolationUpdateOne) SetNillableSeverity(v *string) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetSeverity(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetIsResolved sets the "is_resolved" field.
-func (svuo *SLAViolationUpdateOne) SetIsResolved(b bool) *SLAViolationUpdateOne {
-	svuo.mutation.SetIsResolved(b)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetIsResolved(v bool) *SLAViolationUpdateOne {
+	_u.mutation.SetIsResolved(v)
+	return _u
 }
 
 // SetNillableIsResolved sets the "is_resolved" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableIsResolved(b *bool) *SLAViolationUpdateOne {
-	if b != nil {
-		svuo.SetIsResolved(*b)
+func (_u *SLAViolationUpdateOne) SetNillableIsResolved(v *bool) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetIsResolved(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetResolvedAt sets the "resolved_at" field.
-func (svuo *SLAViolationUpdateOne) SetResolvedAt(t time.Time) *SLAViolationUpdateOne {
-	svuo.mutation.SetResolvedAt(t)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetResolvedAt(v time.Time) *SLAViolationUpdateOne {
+	_u.mutation.SetResolvedAt(v)
+	return _u
 }
 
 // SetNillableResolvedAt sets the "resolved_at" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableResolvedAt(t *time.Time) *SLAViolationUpdateOne {
-	if t != nil {
-		svuo.SetResolvedAt(*t)
+func (_u *SLAViolationUpdateOne) SetNillableResolvedAt(v *time.Time) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetResolvedAt(*v)
 	}
-	return svuo
+	return _u
 }
 
 // ClearResolvedAt clears the value of the "resolved_at" field.
-func (svuo *SLAViolationUpdateOne) ClearResolvedAt() *SLAViolationUpdateOne {
-	svuo.mutation.ClearResolvedAt()
-	return svuo
+func (_u *SLAViolationUpdateOne) ClearResolvedAt() *SLAViolationUpdateOne {
+	_u.mutation.ClearResolvedAt()
+	return _u
 }
 
 // SetResolutionNotes sets the "resolution_notes" field.
-func (svuo *SLAViolationUpdateOne) SetResolutionNotes(s string) *SLAViolationUpdateOne {
-	svuo.mutation.SetResolutionNotes(s)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetResolutionNotes(v string) *SLAViolationUpdateOne {
+	_u.mutation.SetResolutionNotes(v)
+	return _u
 }
 
 // SetNillableResolutionNotes sets the "resolution_notes" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableResolutionNotes(s *string) *SLAViolationUpdateOne {
-	if s != nil {
-		svuo.SetResolutionNotes(*s)
+func (_u *SLAViolationUpdateOne) SetNillableResolutionNotes(v *string) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetResolutionNotes(*v)
 	}
-	return svuo
+	return _u
 }
 
 // ClearResolutionNotes clears the value of the "resolution_notes" field.
-func (svuo *SLAViolationUpdateOne) ClearResolutionNotes() *SLAViolationUpdateOne {
-	svuo.mutation.ClearResolutionNotes()
-	return svuo
+func (_u *SLAViolationUpdateOne) ClearResolutionNotes() *SLAViolationUpdateOne {
+	_u.mutation.ClearResolutionNotes()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (svuo *SLAViolationUpdateOne) SetTenantID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.ResetTenantID()
-	svuo.mutation.SetTenantID(i)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetTenantID(v int) *SLAViolationUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableTenantID(i *int) *SLAViolationUpdateOne {
-	if i != nil {
-		svuo.SetTenantID(*i)
+func (_u *SLAViolationUpdateOne) SetNillableTenantID(v *int) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return svuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (svuo *SLAViolationUpdateOne) AddTenantID(i int) *SLAViolationUpdateOne {
-	svuo.mutation.AddTenantID(i)
-	return svuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLAViolationUpdateOne) AddTenantID(v int) *SLAViolationUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (svuo *SLAViolationUpdateOne) SetCreatedAt(t time.Time) *SLAViolationUpdateOne {
-	svuo.mutation.SetCreatedAt(t)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetCreatedAt(v time.Time) *SLAViolationUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (svuo *SLAViolationUpdateOne) SetNillableCreatedAt(t *time.Time) *SLAViolationUpdateOne {
-	if t != nil {
-		svuo.SetCreatedAt(*t)
+func (_u *SLAViolationUpdateOne) SetNillableCreatedAt(v *time.Time) *SLAViolationUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return svuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (svuo *SLAViolationUpdateOne) SetUpdatedAt(t time.Time) *SLAViolationUpdateOne {
-	svuo.mutation.SetUpdatedAt(t)
-	return svuo
+func (_u *SLAViolationUpdateOne) SetUpdatedAt(v time.Time) *SLAViolationUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetSLADefinition sets the "sla_definition" edge to the SLADefinition entity.
-func (svuo *SLAViolationUpdateOne) SetSLADefinition(s *SLADefinition) *SLAViolationUpdateOne {
-	return svuo.SetSLADefinitionID(s.ID)
+func (_u *SLAViolationUpdateOne) SetSLADefinition(v *SLADefinition) *SLAViolationUpdateOne {
+	return _u.SetSLADefinitionID(v.ID)
 }
 
 // SetTicket sets the "ticket" edge to the Ticket entity.
-func (svuo *SLAViolationUpdateOne) SetTicket(t *Ticket) *SLAViolationUpdateOne {
-	return svuo.SetTicketID(t.ID)
+func (_u *SLAViolationUpdateOne) SetTicket(v *Ticket) *SLAViolationUpdateOne {
+	return _u.SetTicketID(v.ID)
 }
 
 // Mutation returns the SLAViolationMutation object of the builder.
-func (svuo *SLAViolationUpdateOne) Mutation() *SLAViolationMutation {
-	return svuo.mutation
+func (_u *SLAViolationUpdateOne) Mutation() *SLAViolationMutation {
+	return _u.mutation
 }
 
 // ClearSLADefinition clears the "sla_definition" edge to the SLADefinition entity.
-func (svuo *SLAViolationUpdateOne) ClearSLADefinition() *SLAViolationUpdateOne {
-	svuo.mutation.ClearSLADefinition()
-	return svuo
+func (_u *SLAViolationUpdateOne) ClearSLADefinition() *SLAViolationUpdateOne {
+	_u.mutation.ClearSLADefinition()
+	return _u
 }
 
 // ClearTicket clears the "ticket" edge to the Ticket entity.
-func (svuo *SLAViolationUpdateOne) ClearTicket() *SLAViolationUpdateOne {
-	svuo.mutation.ClearTicket()
-	return svuo
+func (_u *SLAViolationUpdateOne) ClearTicket() *SLAViolationUpdateOne {
+	_u.mutation.ClearTicket()
+	return _u
 }
 
 // Where appends a list predicates to the SLAViolationUpdate builder.
-func (svuo *SLAViolationUpdateOne) Where(ps ...predicate.SLAViolation) *SLAViolationUpdateOne {
-	svuo.mutation.Where(ps...)
-	return svuo
+func (_u *SLAViolationUpdateOne) Where(ps ...predicate.SLAViolation) *SLAViolationUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (svuo *SLAViolationUpdateOne) Select(field string, fields ...string) *SLAViolationUpdateOne {
-	svuo.fields = append([]string{field}, fields...)
-	return svuo
+func (_u *SLAViolationUpdateOne) Select(field string, fields ...string) *SLAViolationUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated SLAViolation entity.
-func (svuo *SLAViolationUpdateOne) Save(ctx context.Context) (*SLAViolation, error) {
-	svuo.defaults()
-	return withHooks(ctx, svuo.sqlSave, svuo.mutation, svuo.hooks)
+func (_u *SLAViolationUpdateOne) Save(ctx context.Context) (*SLAViolation, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (svuo *SLAViolationUpdateOne) SaveX(ctx context.Context) *SLAViolation {
-	node, err := svuo.Save(ctx)
+func (_u *SLAViolationUpdateOne) SaveX(ctx context.Context) *SLAViolation {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1028,68 +1028,68 @@ func (svuo *SLAViolationUpdateOne) SaveX(ctx context.Context) *SLAViolation {
 }
 
 // Exec executes the query on the entity.
-func (svuo *SLAViolationUpdateOne) Exec(ctx context.Context) error {
-	_, err := svuo.Save(ctx)
+func (_u *SLAViolationUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (svuo *SLAViolationUpdateOne) ExecX(ctx context.Context) {
-	if err := svuo.Exec(ctx); err != nil {
+func (_u *SLAViolationUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (svuo *SLAViolationUpdateOne) defaults() {
-	if _, ok := svuo.mutation.UpdatedAt(); !ok {
+func (_u *SLAViolationUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := slaviolation.UpdateDefaultUpdatedAt()
-		svuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (svuo *SLAViolationUpdateOne) check() error {
-	if v, ok := svuo.mutation.SLADefinitionID(); ok {
+func (_u *SLAViolationUpdateOne) check() error {
+	if v, ok := _u.mutation.SLADefinitionID(); ok {
 		if err := slaviolation.SLADefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "sla_definition_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.sla_definition_id": %w`, err)}
 		}
 	}
-	if v, ok := svuo.mutation.TicketID(); ok {
+	if v, ok := _u.mutation.TicketID(); ok {
 		if err := slaviolation.TicketIDValidator(v); err != nil {
 			return &ValidationError{Name: "ticket_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.ticket_id": %w`, err)}
 		}
 	}
-	if v, ok := svuo.mutation.ViolationType(); ok {
+	if v, ok := _u.mutation.ViolationType(); ok {
 		if err := slaviolation.ViolationTypeValidator(v); err != nil {
 			return &ValidationError{Name: "violation_type", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.violation_type": %w`, err)}
 		}
 	}
-	if v, ok := svuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := slaviolation.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAViolation.tenant_id": %w`, err)}
 		}
 	}
-	if svuo.mutation.SLADefinitionCleared() && len(svuo.mutation.SLADefinitionIDs()) > 0 {
+	if _u.mutation.SLADefinitionCleared() && len(_u.mutation.SLADefinitionIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "SLAViolation.sla_definition"`)
 	}
-	if svuo.mutation.TicketCleared() && len(svuo.mutation.TicketIDs()) > 0 {
+	if _u.mutation.TicketCleared() && len(_u.mutation.TicketIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "SLAViolation.ticket"`)
 	}
 	return nil
 }
 
-func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViolation, err error) {
-	if err := svuo.check(); err != nil {
+func (_u *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViolation, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(slaviolation.Table, slaviolation.Columns, sqlgraph.NewFieldSpec(slaviolation.FieldID, field.TypeInt))
-	id, ok := svuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "SLAViolation.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := svuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slaviolation.FieldID)
 		for _, f := range fields {
@@ -1101,98 +1101,98 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 			}
 		}
 	}
-	if ps := svuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := svuo.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(slaviolation.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(slaviolation.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.TicketType(); ok {
+	if value, ok := _u.mutation.TicketType(); ok {
 		_spec.SetField(slaviolation.FieldTicketType, field.TypeString, value)
 	}
-	if value, ok := svuo.mutation.SLAName(); ok {
+	if value, ok := _u.mutation.SLAName(); ok {
 		_spec.SetField(slaviolation.FieldSLAName, field.TypeString, value)
 	}
-	if value, ok := svuo.mutation.ViolationType(); ok {
+	if value, ok := _u.mutation.ViolationType(); ok {
 		_spec.SetField(slaviolation.FieldViolationType, field.TypeString, value)
 	}
-	if value, ok := svuo.mutation.ViolationTime(); ok {
+	if value, ok := _u.mutation.ViolationTime(); ok {
 		_spec.SetField(slaviolation.FieldViolationTime, field.TypeTime, value)
 	}
-	if value, ok := svuo.mutation.ViolationOccurredAt(); ok {
+	if value, ok := _u.mutation.ViolationOccurredAt(); ok {
 		_spec.SetField(slaviolation.FieldViolationOccurredAt, field.TypeTime, value)
 	}
-	if value, ok := svuo.mutation.ExpectedTime(); ok {
+	if value, ok := _u.mutation.ExpectedTime(); ok {
 		_spec.SetField(slaviolation.FieldExpectedTime, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.AddedExpectedTime(); ok {
+	if value, ok := _u.mutation.AddedExpectedTime(); ok {
 		_spec.AddField(slaviolation.FieldExpectedTime, field.TypeInt, value)
 	}
-	if svuo.mutation.ExpectedTimeCleared() {
+	if _u.mutation.ExpectedTimeCleared() {
 		_spec.ClearField(slaviolation.FieldExpectedTime, field.TypeInt)
 	}
-	if value, ok := svuo.mutation.ActualTime(); ok {
+	if value, ok := _u.mutation.ActualTime(); ok {
 		_spec.SetField(slaviolation.FieldActualTime, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.AddedActualTime(); ok {
+	if value, ok := _u.mutation.AddedActualTime(); ok {
 		_spec.AddField(slaviolation.FieldActualTime, field.TypeInt, value)
 	}
-	if svuo.mutation.ActualTimeCleared() {
+	if _u.mutation.ActualTimeCleared() {
 		_spec.ClearField(slaviolation.FieldActualTime, field.TypeInt)
 	}
-	if value, ok := svuo.mutation.OverdueMinutes(); ok {
+	if value, ok := _u.mutation.OverdueMinutes(); ok {
 		_spec.SetField(slaviolation.FieldOverdueMinutes, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.AddedOverdueMinutes(); ok {
+	if value, ok := _u.mutation.AddedOverdueMinutes(); ok {
 		_spec.AddField(slaviolation.FieldOverdueMinutes, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(slaviolation.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := svuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(slaviolation.FieldDescription, field.TypeString, value)
 	}
-	if svuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(slaviolation.FieldDescription, field.TypeString)
 	}
-	if value, ok := svuo.mutation.Severity(); ok {
+	if value, ok := _u.mutation.Severity(); ok {
 		_spec.SetField(slaviolation.FieldSeverity, field.TypeString, value)
 	}
-	if value, ok := svuo.mutation.IsResolved(); ok {
+	if value, ok := _u.mutation.IsResolved(); ok {
 		_spec.SetField(slaviolation.FieldIsResolved, field.TypeBool, value)
 	}
-	if value, ok := svuo.mutation.ResolvedAt(); ok {
+	if value, ok := _u.mutation.ResolvedAt(); ok {
 		_spec.SetField(slaviolation.FieldResolvedAt, field.TypeTime, value)
 	}
-	if svuo.mutation.ResolvedAtCleared() {
+	if _u.mutation.ResolvedAtCleared() {
 		_spec.ClearField(slaviolation.FieldResolvedAt, field.TypeTime)
 	}
-	if value, ok := svuo.mutation.ResolutionNotes(); ok {
+	if value, ok := _u.mutation.ResolutionNotes(); ok {
 		_spec.SetField(slaviolation.FieldResolutionNotes, field.TypeString, value)
 	}
-	if svuo.mutation.ResolutionNotesCleared() {
+	if _u.mutation.ResolutionNotesCleared() {
 		_spec.ClearField(slaviolation.FieldResolutionNotes, field.TypeString)
 	}
-	if value, ok := svuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(slaviolation.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(slaviolation.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := svuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(slaviolation.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := svuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(slaviolation.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if svuo.mutation.SLADefinitionCleared() {
+	if _u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1205,7 +1205,7 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := svuo.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1221,7 +1221,7 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if svuo.mutation.TicketCleared() {
+	if _u.mutation.TicketCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1234,7 +1234,7 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := svuo.mutation.TicketIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -1250,10 +1250,10 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &SLAViolation{config: svuo.config}
+	_node = &SLAViolation{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, svuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{slaviolation.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1261,6 +1261,6 @@ func (svuo *SLAViolationUpdateOne) sqlSave(ctx context.Context) (_node *SLAViola
 		}
 		return nil, err
 	}
-	svuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

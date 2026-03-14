@@ -20,56 +20,56 @@ type ServiceRequestDelete struct {
 }
 
 // Where appends a list predicates to the ServiceRequestDelete builder.
-func (srd *ServiceRequestDelete) Where(ps ...predicate.ServiceRequest) *ServiceRequestDelete {
-	srd.mutation.Where(ps...)
-	return srd
+func (_d *ServiceRequestDelete) Where(ps ...predicate.ServiceRequest) *ServiceRequestDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (srd *ServiceRequestDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, srd.sqlExec, srd.mutation, srd.hooks)
+func (_d *ServiceRequestDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (srd *ServiceRequestDelete) ExecX(ctx context.Context) int {
-	n, err := srd.Exec(ctx)
+func (_d *ServiceRequestDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (srd *ServiceRequestDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *ServiceRequestDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(servicerequest.Table, sqlgraph.NewFieldSpec(servicerequest.FieldID, field.TypeInt))
-	if ps := srd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, srd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	srd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // ServiceRequestDeleteOne is the builder for deleting a single ServiceRequest entity.
 type ServiceRequestDeleteOne struct {
-	srd *ServiceRequestDelete
+	_d *ServiceRequestDelete
 }
 
 // Where appends a list predicates to the ServiceRequestDelete builder.
-func (srdo *ServiceRequestDeleteOne) Where(ps ...predicate.ServiceRequest) *ServiceRequestDeleteOne {
-	srdo.srd.mutation.Where(ps...)
-	return srdo
+func (_d *ServiceRequestDeleteOne) Where(ps ...predicate.ServiceRequest) *ServiceRequestDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (srdo *ServiceRequestDeleteOne) Exec(ctx context.Context) error {
-	n, err := srdo.srd.Exec(ctx)
+func (_d *ServiceRequestDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (srdo *ServiceRequestDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (srdo *ServiceRequestDeleteOne) ExecX(ctx context.Context) {
-	if err := srdo.Exec(ctx); err != nil {
+func (_d *ServiceRequestDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

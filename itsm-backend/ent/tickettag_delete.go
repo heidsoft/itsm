@@ -20,56 +20,56 @@ type TicketTagDelete struct {
 }
 
 // Where appends a list predicates to the TicketTagDelete builder.
-func (ttd *TicketTagDelete) Where(ps ...predicate.TicketTag) *TicketTagDelete {
-	ttd.mutation.Where(ps...)
-	return ttd
+func (_d *TicketTagDelete) Where(ps ...predicate.TicketTag) *TicketTagDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ttd *TicketTagDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ttd.sqlExec, ttd.mutation, ttd.hooks)
+func (_d *TicketTagDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttd *TicketTagDelete) ExecX(ctx context.Context) int {
-	n, err := ttd.Exec(ctx)
+func (_d *TicketTagDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ttd *TicketTagDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *TicketTagDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(tickettag.Table, sqlgraph.NewFieldSpec(tickettag.FieldID, field.TypeInt))
-	if ps := ttd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ttd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ttd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // TicketTagDeleteOne is the builder for deleting a single TicketTag entity.
 type TicketTagDeleteOne struct {
-	ttd *TicketTagDelete
+	_d *TicketTagDelete
 }
 
 // Where appends a list predicates to the TicketTagDelete builder.
-func (ttdo *TicketTagDeleteOne) Where(ps ...predicate.TicketTag) *TicketTagDeleteOne {
-	ttdo.ttd.mutation.Where(ps...)
-	return ttdo
+func (_d *TicketTagDeleteOne) Where(ps ...predicate.TicketTag) *TicketTagDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (ttdo *TicketTagDeleteOne) Exec(ctx context.Context) error {
-	n, err := ttdo.ttd.Exec(ctx)
+func (_d *TicketTagDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (ttdo *TicketTagDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ttdo *TicketTagDeleteOne) ExecX(ctx context.Context) {
-	if err := ttdo.Exec(ctx); err != nil {
+func (_d *TicketTagDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

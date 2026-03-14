@@ -23,129 +23,129 @@ type ProcessVersionChangelogCreate struct {
 }
 
 // SetProcessDefinitionID sets the "process_definition_id" field.
-func (pvcc *ProcessVersionChangelogCreate) SetProcessDefinitionID(i int) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetProcessDefinitionID(i)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetProcessDefinitionID(v int) *ProcessVersionChangelogCreate {
+	_c.mutation.SetProcessDefinitionID(v)
+	return _c
 }
 
 // SetVersion sets the "version" field.
-func (pvcc *ProcessVersionChangelogCreate) SetVersion(s string) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetVersion(s)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetVersion(v string) *ProcessVersionChangelogCreate {
+	_c.mutation.SetVersion(v)
+	return _c
 }
 
 // SetChangeLog sets the "change_log" field.
-func (pvcc *ProcessVersionChangelogCreate) SetChangeLog(s string) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetChangeLog(s)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetChangeLog(v string) *ProcessVersionChangelogCreate {
+	_c.mutation.SetChangeLog(v)
+	return _c
 }
 
 // SetChangeDetails sets the "change_details" field.
-func (pvcc *ProcessVersionChangelogCreate) SetChangeDetails(m []map[string]interface{}) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetChangeDetails(m)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetChangeDetails(v []map[string]interface{}) *ProcessVersionChangelogCreate {
+	_c.mutation.SetChangeDetails(v)
+	return _c
 }
 
 // SetChangeType sets the "change_type" field.
-func (pvcc *ProcessVersionChangelogCreate) SetChangeType(s string) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetChangeType(s)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetChangeType(v string) *ProcessVersionChangelogCreate {
+	_c.mutation.SetChangeType(v)
+	return _c
 }
 
 // SetNillableChangeType sets the "change_type" field if the given value is not nil.
-func (pvcc *ProcessVersionChangelogCreate) SetNillableChangeType(s *string) *ProcessVersionChangelogCreate {
-	if s != nil {
-		pvcc.SetChangeType(*s)
+func (_c *ProcessVersionChangelogCreate) SetNillableChangeType(v *string) *ProcessVersionChangelogCreate {
+	if v != nil {
+		_c.SetChangeType(*v)
 	}
-	return pvcc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (pvcc *ProcessVersionChangelogCreate) SetCreatedBy(i int) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetCreatedBy(i)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetCreatedBy(v int) *ProcessVersionChangelogCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (pvcc *ProcessVersionChangelogCreate) SetNillableCreatedBy(i *int) *ProcessVersionChangelogCreate {
-	if i != nil {
-		pvcc.SetCreatedBy(*i)
+func (_c *ProcessVersionChangelogCreate) SetNillableCreatedBy(v *int) *ProcessVersionChangelogCreate {
+	if v != nil {
+		_c.SetCreatedBy(*v)
 	}
-	return pvcc
+	return _c
 }
 
 // SetCreatedByName sets the "created_by_name" field.
-func (pvcc *ProcessVersionChangelogCreate) SetCreatedByName(s string) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetCreatedByName(s)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetCreatedByName(v string) *ProcessVersionChangelogCreate {
+	_c.mutation.SetCreatedByName(v)
+	return _c
 }
 
 // SetNillableCreatedByName sets the "created_by_name" field if the given value is not nil.
-func (pvcc *ProcessVersionChangelogCreate) SetNillableCreatedByName(s *string) *ProcessVersionChangelogCreate {
-	if s != nil {
-		pvcc.SetCreatedByName(*s)
+func (_c *ProcessVersionChangelogCreate) SetNillableCreatedByName(v *string) *ProcessVersionChangelogCreate {
+	if v != nil {
+		_c.SetCreatedByName(*v)
 	}
-	return pvcc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pvcc *ProcessVersionChangelogCreate) SetTenantID(i int) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetTenantID(i)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetTenantID(v int) *ProcessVersionChangelogCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pvcc *ProcessVersionChangelogCreate) SetCreatedAt(t time.Time) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetCreatedAt(t)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetCreatedAt(v time.Time) *ProcessVersionChangelogCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pvcc *ProcessVersionChangelogCreate) SetNillableCreatedAt(t *time.Time) *ProcessVersionChangelogCreate {
-	if t != nil {
-		pvcc.SetCreatedAt(*t)
+func (_c *ProcessVersionChangelogCreate) SetNillableCreatedAt(v *time.Time) *ProcessVersionChangelogCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return pvcc
+	return _c
 }
 
 // SetProcessDefinition sets the "process_definition" edge to the ProcessDefinition entity.
-func (pvcc *ProcessVersionChangelogCreate) SetProcessDefinition(p *ProcessDefinition) *ProcessVersionChangelogCreate {
-	return pvcc.SetProcessDefinitionID(p.ID)
+func (_c *ProcessVersionChangelogCreate) SetProcessDefinition(v *ProcessDefinition) *ProcessVersionChangelogCreate {
+	return _c.SetProcessDefinitionID(v.ID)
 }
 
 // SetUserID sets the "user" edge to the User entity by ID.
-func (pvcc *ProcessVersionChangelogCreate) SetUserID(id int) *ProcessVersionChangelogCreate {
-	pvcc.mutation.SetUserID(id)
-	return pvcc
+func (_c *ProcessVersionChangelogCreate) SetUserID(id int) *ProcessVersionChangelogCreate {
+	_c.mutation.SetUserID(id)
+	return _c
 }
 
 // SetNillableUserID sets the "user" edge to the User entity by ID if the given value is not nil.
-func (pvcc *ProcessVersionChangelogCreate) SetNillableUserID(id *int) *ProcessVersionChangelogCreate {
+func (_c *ProcessVersionChangelogCreate) SetNillableUserID(id *int) *ProcessVersionChangelogCreate {
 	if id != nil {
-		pvcc = pvcc.SetUserID(*id)
+		_c = _c.SetUserID(*id)
 	}
-	return pvcc
+	return _c
 }
 
 // SetUser sets the "user" edge to the User entity.
-func (pvcc *ProcessVersionChangelogCreate) SetUser(u *User) *ProcessVersionChangelogCreate {
-	return pvcc.SetUserID(u.ID)
+func (_c *ProcessVersionChangelogCreate) SetUser(v *User) *ProcessVersionChangelogCreate {
+	return _c.SetUserID(v.ID)
 }
 
 // Mutation returns the ProcessVersionChangelogMutation object of the builder.
-func (pvcc *ProcessVersionChangelogCreate) Mutation() *ProcessVersionChangelogMutation {
-	return pvcc.mutation
+func (_c *ProcessVersionChangelogCreate) Mutation() *ProcessVersionChangelogMutation {
+	return _c.mutation
 }
 
 // Save creates the ProcessVersionChangelog in the database.
-func (pvcc *ProcessVersionChangelogCreate) Save(ctx context.Context) (*ProcessVersionChangelog, error) {
-	pvcc.defaults()
-	return withHooks(ctx, pvcc.sqlSave, pvcc.mutation, pvcc.hooks)
+func (_c *ProcessVersionChangelogCreate) Save(ctx context.Context) (*ProcessVersionChangelog, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (pvcc *ProcessVersionChangelogCreate) SaveX(ctx context.Context) *ProcessVersionChangelog {
-	v, err := pvcc.Save(ctx)
+func (_c *ProcessVersionChangelogCreate) SaveX(ctx context.Context) *ProcessVersionChangelog {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -153,87 +153,87 @@ func (pvcc *ProcessVersionChangelogCreate) SaveX(ctx context.Context) *ProcessVe
 }
 
 // Exec executes the query.
-func (pvcc *ProcessVersionChangelogCreate) Exec(ctx context.Context) error {
-	_, err := pvcc.Save(ctx)
+func (_c *ProcessVersionChangelogCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvcc *ProcessVersionChangelogCreate) ExecX(ctx context.Context) {
-	if err := pvcc.Exec(ctx); err != nil {
+func (_c *ProcessVersionChangelogCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pvcc *ProcessVersionChangelogCreate) defaults() {
-	if _, ok := pvcc.mutation.ChangeType(); !ok {
+func (_c *ProcessVersionChangelogCreate) defaults() {
+	if _, ok := _c.mutation.ChangeType(); !ok {
 		v := processversionchangelog.DefaultChangeType
-		pvcc.mutation.SetChangeType(v)
+		_c.mutation.SetChangeType(v)
 	}
-	if _, ok := pvcc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := processversionchangelog.DefaultCreatedAt()
-		pvcc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pvcc *ProcessVersionChangelogCreate) check() error {
-	if _, ok := pvcc.mutation.ProcessDefinitionID(); !ok {
+func (_c *ProcessVersionChangelogCreate) check() error {
+	if _, ok := _c.mutation.ProcessDefinitionID(); !ok {
 		return &ValidationError{Name: "process_definition_id", err: errors.New(`ent: missing required field "ProcessVersionChangelog.process_definition_id"`)}
 	}
-	if v, ok := pvcc.mutation.ProcessDefinitionID(); ok {
+	if v, ok := _c.mutation.ProcessDefinitionID(); ok {
 		if err := processversionchangelog.ProcessDefinitionIDValidator(v); err != nil {
 			return &ValidationError{Name: "process_definition_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.process_definition_id": %w`, err)}
 		}
 	}
-	if _, ok := pvcc.mutation.Version(); !ok {
+	if _, ok := _c.mutation.Version(); !ok {
 		return &ValidationError{Name: "version", err: errors.New(`ent: missing required field "ProcessVersionChangelog.version"`)}
 	}
-	if v, ok := pvcc.mutation.Version(); ok {
+	if v, ok := _c.mutation.Version(); ok {
 		if err := processversionchangelog.VersionValidator(v); err != nil {
 			return &ValidationError{Name: "version", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.version": %w`, err)}
 		}
 	}
-	if _, ok := pvcc.mutation.ChangeLog(); !ok {
+	if _, ok := _c.mutation.ChangeLog(); !ok {
 		return &ValidationError{Name: "change_log", err: errors.New(`ent: missing required field "ProcessVersionChangelog.change_log"`)}
 	}
-	if v, ok := pvcc.mutation.ChangeLog(); ok {
+	if v, ok := _c.mutation.ChangeLog(); ok {
 		if err := processversionchangelog.ChangeLogValidator(v); err != nil {
 			return &ValidationError{Name: "change_log", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.change_log": %w`, err)}
 		}
 	}
-	if _, ok := pvcc.mutation.ChangeType(); !ok {
+	if _, ok := _c.mutation.ChangeType(); !ok {
 		return &ValidationError{Name: "change_type", err: errors.New(`ent: missing required field "ProcessVersionChangelog.change_type"`)}
 	}
-	if v, ok := pvcc.mutation.CreatedBy(); ok {
+	if v, ok := _c.mutation.CreatedBy(); ok {
 		if err := processversionchangelog.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.created_by": %w`, err)}
 		}
 	}
-	if _, ok := pvcc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ProcessVersionChangelog.tenant_id"`)}
 	}
-	if v, ok := pvcc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := processversionchangelog.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ProcessVersionChangelog.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := pvcc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ProcessVersionChangelog.created_at"`)}
 	}
-	if len(pvcc.mutation.ProcessDefinitionIDs()) == 0 {
+	if len(_c.mutation.ProcessDefinitionIDs()) == 0 {
 		return &ValidationError{Name: "process_definition", err: errors.New(`ent: missing required edge "ProcessVersionChangelog.process_definition"`)}
 	}
 	return nil
 }
 
-func (pvcc *ProcessVersionChangelogCreate) sqlSave(ctx context.Context) (*ProcessVersionChangelog, error) {
-	if err := pvcc.check(); err != nil {
+func (_c *ProcessVersionChangelogCreate) sqlSave(ctx context.Context) (*ProcessVersionChangelog, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := pvcc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, pvcc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -241,45 +241,45 @@ func (pvcc *ProcessVersionChangelogCreate) sqlSave(ctx context.Context) (*Proces
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	pvcc.mutation.id = &_node.ID
-	pvcc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (pvcc *ProcessVersionChangelogCreate) createSpec() (*ProcessVersionChangelog, *sqlgraph.CreateSpec) {
+func (_c *ProcessVersionChangelogCreate) createSpec() (*ProcessVersionChangelog, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ProcessVersionChangelog{config: pvcc.config}
+		_node = &ProcessVersionChangelog{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(processversionchangelog.Table, sqlgraph.NewFieldSpec(processversionchangelog.FieldID, field.TypeInt))
 	)
-	if value, ok := pvcc.mutation.Version(); ok {
+	if value, ok := _c.mutation.Version(); ok {
 		_spec.SetField(processversionchangelog.FieldVersion, field.TypeString, value)
 		_node.Version = value
 	}
-	if value, ok := pvcc.mutation.ChangeLog(); ok {
+	if value, ok := _c.mutation.ChangeLog(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeLog, field.TypeString, value)
 		_node.ChangeLog = value
 	}
-	if value, ok := pvcc.mutation.ChangeDetails(); ok {
+	if value, ok := _c.mutation.ChangeDetails(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeDetails, field.TypeJSON, value)
 		_node.ChangeDetails = value
 	}
-	if value, ok := pvcc.mutation.ChangeType(); ok {
+	if value, ok := _c.mutation.ChangeType(); ok {
 		_spec.SetField(processversionchangelog.FieldChangeType, field.TypeString, value)
 		_node.ChangeType = value
 	}
-	if value, ok := pvcc.mutation.CreatedByName(); ok {
+	if value, ok := _c.mutation.CreatedByName(); ok {
 		_spec.SetField(processversionchangelog.FieldCreatedByName, field.TypeString, value)
 		_node.CreatedByName = value
 	}
-	if value, ok := pvcc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(processversionchangelog.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := pvcc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(processversionchangelog.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if nodes := pvcc.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProcessDefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -296,7 +296,7 @@ func (pvcc *ProcessVersionChangelogCreate) createSpec() (*ProcessVersionChangelo
 		_node.ProcessDefinitionID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := pvcc.mutation.UserIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -324,16 +324,16 @@ type ProcessVersionChangelogCreateBulk struct {
 }
 
 // Save creates the ProcessVersionChangelog entities in the database.
-func (pvccb *ProcessVersionChangelogCreateBulk) Save(ctx context.Context) ([]*ProcessVersionChangelog, error) {
-	if pvccb.err != nil {
-		return nil, pvccb.err
+func (_c *ProcessVersionChangelogCreateBulk) Save(ctx context.Context) ([]*ProcessVersionChangelog, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(pvccb.builders))
-	nodes := make([]*ProcessVersionChangelog, len(pvccb.builders))
-	mutators := make([]Mutator, len(pvccb.builders))
-	for i := range pvccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ProcessVersionChangelog, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := pvccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ProcessVersionChangelogMutation)
@@ -347,11 +347,11 @@ func (pvccb *ProcessVersionChangelogCreateBulk) Save(ctx context.Context) ([]*Pr
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, pvccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, pvccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -375,7 +375,7 @@ func (pvccb *ProcessVersionChangelogCreateBulk) Save(ctx context.Context) ([]*Pr
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, pvccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -383,8 +383,8 @@ func (pvccb *ProcessVersionChangelogCreateBulk) Save(ctx context.Context) ([]*Pr
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pvccb *ProcessVersionChangelogCreateBulk) SaveX(ctx context.Context) []*ProcessVersionChangelog {
-	v, err := pvccb.Save(ctx)
+func (_c *ProcessVersionChangelogCreateBulk) SaveX(ctx context.Context) []*ProcessVersionChangelog {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -392,14 +392,14 @@ func (pvccb *ProcessVersionChangelogCreateBulk) SaveX(ctx context.Context) []*Pr
 }
 
 // Exec executes the query.
-func (pvccb *ProcessVersionChangelogCreateBulk) Exec(ctx context.Context) error {
-	_, err := pvccb.Save(ctx)
+func (_c *ProcessVersionChangelogCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pvccb *ProcessVersionChangelogCreateBulk) ExecX(ctx context.Context) {
-	if err := pvccb.Exec(ctx); err != nil {
+func (_c *ProcessVersionChangelogCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

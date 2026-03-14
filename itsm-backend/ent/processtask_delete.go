@@ -20,56 +20,56 @@ type ProcessTaskDelete struct {
 }
 
 // Where appends a list predicates to the ProcessTaskDelete builder.
-func (ptd *ProcessTaskDelete) Where(ps ...predicate.ProcessTask) *ProcessTaskDelete {
-	ptd.mutation.Where(ps...)
-	return ptd
+func (_d *ProcessTaskDelete) Where(ps ...predicate.ProcessTask) *ProcessTaskDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ptd *ProcessTaskDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ptd.sqlExec, ptd.mutation, ptd.hooks)
+func (_d *ProcessTaskDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptd *ProcessTaskDelete) ExecX(ctx context.Context) int {
-	n, err := ptd.Exec(ctx)
+func (_d *ProcessTaskDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ptd *ProcessTaskDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *ProcessTaskDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(processtask.Table, sqlgraph.NewFieldSpec(processtask.FieldID, field.TypeInt))
-	if ps := ptd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ptd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ptd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // ProcessTaskDeleteOne is the builder for deleting a single ProcessTask entity.
 type ProcessTaskDeleteOne struct {
-	ptd *ProcessTaskDelete
+	_d *ProcessTaskDelete
 }
 
 // Where appends a list predicates to the ProcessTaskDelete builder.
-func (ptdo *ProcessTaskDeleteOne) Where(ps ...predicate.ProcessTask) *ProcessTaskDeleteOne {
-	ptdo.ptd.mutation.Where(ps...)
-	return ptdo
+func (_d *ProcessTaskDeleteOne) Where(ps ...predicate.ProcessTask) *ProcessTaskDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (ptdo *ProcessTaskDeleteOne) Exec(ctx context.Context) error {
-	n, err := ptdo.ptd.Exec(ctx)
+func (_d *ProcessTaskDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (ptdo *ProcessTaskDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ptdo *ProcessTaskDeleteOne) ExecX(ctx context.Context) {
-	if err := ptdo.Exec(ctx); err != nil {
+func (_d *ProcessTaskDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

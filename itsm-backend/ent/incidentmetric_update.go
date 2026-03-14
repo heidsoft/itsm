@@ -24,198 +24,198 @@ type IncidentMetricUpdate struct {
 }
 
 // Where appends a list predicates to the IncidentMetricUpdate builder.
-func (imu *IncidentMetricUpdate) Where(ps ...predicate.IncidentMetric) *IncidentMetricUpdate {
-	imu.mutation.Where(ps...)
-	return imu
+func (_u *IncidentMetricUpdate) Where(ps ...predicate.IncidentMetric) *IncidentMetricUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (imu *IncidentMetricUpdate) SetIncidentID(i int) *IncidentMetricUpdate {
-	imu.mutation.SetIncidentID(i)
-	return imu
+func (_u *IncidentMetricUpdate) SetIncidentID(v int) *IncidentMetricUpdate {
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableIncidentID(i *int) *IncidentMetricUpdate {
-	if i != nil {
-		imu.SetIncidentID(*i)
+func (_u *IncidentMetricUpdate) SetNillableIncidentID(v *int) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return imu
+	return _u
 }
 
 // SetMetricType sets the "metric_type" field.
-func (imu *IncidentMetricUpdate) SetMetricType(s string) *IncidentMetricUpdate {
-	imu.mutation.SetMetricType(s)
-	return imu
+func (_u *IncidentMetricUpdate) SetMetricType(v string) *IncidentMetricUpdate {
+	_u.mutation.SetMetricType(v)
+	return _u
 }
 
 // SetNillableMetricType sets the "metric_type" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableMetricType(s *string) *IncidentMetricUpdate {
-	if s != nil {
-		imu.SetMetricType(*s)
+func (_u *IncidentMetricUpdate) SetNillableMetricType(v *string) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetMetricType(*v)
 	}
-	return imu
+	return _u
 }
 
 // SetMetricName sets the "metric_name" field.
-func (imu *IncidentMetricUpdate) SetMetricName(s string) *IncidentMetricUpdate {
-	imu.mutation.SetMetricName(s)
-	return imu
+func (_u *IncidentMetricUpdate) SetMetricName(v string) *IncidentMetricUpdate {
+	_u.mutation.SetMetricName(v)
+	return _u
 }
 
 // SetNillableMetricName sets the "metric_name" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableMetricName(s *string) *IncidentMetricUpdate {
-	if s != nil {
-		imu.SetMetricName(*s)
+func (_u *IncidentMetricUpdate) SetNillableMetricName(v *string) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetMetricName(*v)
 	}
-	return imu
+	return _u
 }
 
 // SetMetricValue sets the "metric_value" field.
-func (imu *IncidentMetricUpdate) SetMetricValue(f float64) *IncidentMetricUpdate {
-	imu.mutation.ResetMetricValue()
-	imu.mutation.SetMetricValue(f)
-	return imu
+func (_u *IncidentMetricUpdate) SetMetricValue(v float64) *IncidentMetricUpdate {
+	_u.mutation.ResetMetricValue()
+	_u.mutation.SetMetricValue(v)
+	return _u
 }
 
 // SetNillableMetricValue sets the "metric_value" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableMetricValue(f *float64) *IncidentMetricUpdate {
-	if f != nil {
-		imu.SetMetricValue(*f)
+func (_u *IncidentMetricUpdate) SetNillableMetricValue(v *float64) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetMetricValue(*v)
 	}
-	return imu
+	return _u
 }
 
-// AddMetricValue adds f to the "metric_value" field.
-func (imu *IncidentMetricUpdate) AddMetricValue(f float64) *IncidentMetricUpdate {
-	imu.mutation.AddMetricValue(f)
-	return imu
+// AddMetricValue adds value to the "metric_value" field.
+func (_u *IncidentMetricUpdate) AddMetricValue(v float64) *IncidentMetricUpdate {
+	_u.mutation.AddMetricValue(v)
+	return _u
 }
 
 // SetUnit sets the "unit" field.
-func (imu *IncidentMetricUpdate) SetUnit(s string) *IncidentMetricUpdate {
-	imu.mutation.SetUnit(s)
-	return imu
+func (_u *IncidentMetricUpdate) SetUnit(v string) *IncidentMetricUpdate {
+	_u.mutation.SetUnit(v)
+	return _u
 }
 
 // SetNillableUnit sets the "unit" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableUnit(s *string) *IncidentMetricUpdate {
-	if s != nil {
-		imu.SetUnit(*s)
+func (_u *IncidentMetricUpdate) SetNillableUnit(v *string) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetUnit(*v)
 	}
-	return imu
+	return _u
 }
 
 // ClearUnit clears the value of the "unit" field.
-func (imu *IncidentMetricUpdate) ClearUnit() *IncidentMetricUpdate {
-	imu.mutation.ClearUnit()
-	return imu
+func (_u *IncidentMetricUpdate) ClearUnit() *IncidentMetricUpdate {
+	_u.mutation.ClearUnit()
+	return _u
 }
 
 // SetMeasuredAt sets the "measured_at" field.
-func (imu *IncidentMetricUpdate) SetMeasuredAt(t time.Time) *IncidentMetricUpdate {
-	imu.mutation.SetMeasuredAt(t)
-	return imu
+func (_u *IncidentMetricUpdate) SetMeasuredAt(v time.Time) *IncidentMetricUpdate {
+	_u.mutation.SetMeasuredAt(v)
+	return _u
 }
 
 // SetNillableMeasuredAt sets the "measured_at" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableMeasuredAt(t *time.Time) *IncidentMetricUpdate {
-	if t != nil {
-		imu.SetMeasuredAt(*t)
+func (_u *IncidentMetricUpdate) SetNillableMeasuredAt(v *time.Time) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetMeasuredAt(*v)
 	}
-	return imu
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (imu *IncidentMetricUpdate) SetTags(m map[string]string) *IncidentMetricUpdate {
-	imu.mutation.SetTags(m)
-	return imu
+func (_u *IncidentMetricUpdate) SetTags(v map[string]string) *IncidentMetricUpdate {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (imu *IncidentMetricUpdate) ClearTags() *IncidentMetricUpdate {
-	imu.mutation.ClearTags()
-	return imu
+func (_u *IncidentMetricUpdate) ClearTags() *IncidentMetricUpdate {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (imu *IncidentMetricUpdate) SetMetadata(m map[string]interface{}) *IncidentMetricUpdate {
-	imu.mutation.SetMetadata(m)
-	return imu
+func (_u *IncidentMetricUpdate) SetMetadata(v map[string]interface{}) *IncidentMetricUpdate {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (imu *IncidentMetricUpdate) ClearMetadata() *IncidentMetricUpdate {
-	imu.mutation.ClearMetadata()
-	return imu
+func (_u *IncidentMetricUpdate) ClearMetadata() *IncidentMetricUpdate {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (imu *IncidentMetricUpdate) SetTenantID(i int) *IncidentMetricUpdate {
-	imu.mutation.ResetTenantID()
-	imu.mutation.SetTenantID(i)
-	return imu
+func (_u *IncidentMetricUpdate) SetTenantID(v int) *IncidentMetricUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableTenantID(i *int) *IncidentMetricUpdate {
-	if i != nil {
-		imu.SetTenantID(*i)
+func (_u *IncidentMetricUpdate) SetNillableTenantID(v *int) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return imu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (imu *IncidentMetricUpdate) AddTenantID(i int) *IncidentMetricUpdate {
-	imu.mutation.AddTenantID(i)
-	return imu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentMetricUpdate) AddTenantID(v int) *IncidentMetricUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (imu *IncidentMetricUpdate) SetCreatedAt(t time.Time) *IncidentMetricUpdate {
-	imu.mutation.SetCreatedAt(t)
-	return imu
+func (_u *IncidentMetricUpdate) SetCreatedAt(v time.Time) *IncidentMetricUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (imu *IncidentMetricUpdate) SetNillableCreatedAt(t *time.Time) *IncidentMetricUpdate {
-	if t != nil {
-		imu.SetCreatedAt(*t)
+func (_u *IncidentMetricUpdate) SetNillableCreatedAt(v *time.Time) *IncidentMetricUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return imu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (imu *IncidentMetricUpdate) SetUpdatedAt(t time.Time) *IncidentMetricUpdate {
-	imu.mutation.SetUpdatedAt(t)
-	return imu
+func (_u *IncidentMetricUpdate) SetUpdatedAt(v time.Time) *IncidentMetricUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (imu *IncidentMetricUpdate) SetIncident(i *Incident) *IncidentMetricUpdate {
-	return imu.SetIncidentID(i.ID)
+func (_u *IncidentMetricUpdate) SetIncident(v *Incident) *IncidentMetricUpdate {
+	return _u.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentMetricMutation object of the builder.
-func (imu *IncidentMetricUpdate) Mutation() *IncidentMetricMutation {
-	return imu.mutation
+func (_u *IncidentMetricUpdate) Mutation() *IncidentMetricMutation {
+	return _u.mutation
 }
 
 // ClearIncident clears the "incident" edge to the Incident entity.
-func (imu *IncidentMetricUpdate) ClearIncident() *IncidentMetricUpdate {
-	imu.mutation.ClearIncident()
-	return imu
+func (_u *IncidentMetricUpdate) ClearIncident() *IncidentMetricUpdate {
+	_u.mutation.ClearIncident()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (imu *IncidentMetricUpdate) Save(ctx context.Context) (int, error) {
-	imu.defaults()
-	return withHooks(ctx, imu.sqlSave, imu.mutation, imu.hooks)
+func (_u *IncidentMetricUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (imu *IncidentMetricUpdate) SaveX(ctx context.Context) int {
-	affected, err := imu.Save(ctx)
+func (_u *IncidentMetricUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,112 +223,112 @@ func (imu *IncidentMetricUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (imu *IncidentMetricUpdate) Exec(ctx context.Context) error {
-	_, err := imu.Save(ctx)
+func (_u *IncidentMetricUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (imu *IncidentMetricUpdate) ExecX(ctx context.Context) {
-	if err := imu.Exec(ctx); err != nil {
+func (_u *IncidentMetricUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (imu *IncidentMetricUpdate) defaults() {
-	if _, ok := imu.mutation.UpdatedAt(); !ok {
+func (_u *IncidentMetricUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentmetric.UpdateDefaultUpdatedAt()
-		imu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (imu *IncidentMetricUpdate) check() error {
-	if v, ok := imu.mutation.IncidentID(); ok {
+func (_u *IncidentMetricUpdate) check() error {
+	if v, ok := _u.mutation.IncidentID(); ok {
 		if err := incidentmetric.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.incident_id": %w`, err)}
 		}
 	}
-	if v, ok := imu.mutation.MetricType(); ok {
+	if v, ok := _u.mutation.MetricType(); ok {
 		if err := incidentmetric.MetricTypeValidator(v); err != nil {
 			return &ValidationError{Name: "metric_type", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.metric_type": %w`, err)}
 		}
 	}
-	if v, ok := imu.mutation.MetricName(); ok {
+	if v, ok := _u.mutation.MetricName(); ok {
 		if err := incidentmetric.MetricNameValidator(v); err != nil {
 			return &ValidationError{Name: "metric_name", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.metric_name": %w`, err)}
 		}
 	}
-	if v, ok := imu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentmetric.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.tenant_id": %w`, err)}
 		}
 	}
-	if imu.mutation.IncidentCleared() && len(imu.mutation.IncidentIDs()) > 0 {
+	if _u.mutation.IncidentCleared() && len(_u.mutation.IncidentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentMetric.incident"`)
 	}
 	return nil
 }
 
-func (imu *IncidentMetricUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := imu.check(); err != nil {
-		return n, err
+func (_u *IncidentMetricUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentmetric.Table, incidentmetric.Columns, sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt))
-	if ps := imu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := imu.mutation.MetricType(); ok {
+	if value, ok := _u.mutation.MetricType(); ok {
 		_spec.SetField(incidentmetric.FieldMetricType, field.TypeString, value)
 	}
-	if value, ok := imu.mutation.MetricName(); ok {
+	if value, ok := _u.mutation.MetricName(); ok {
 		_spec.SetField(incidentmetric.FieldMetricName, field.TypeString, value)
 	}
-	if value, ok := imu.mutation.MetricValue(); ok {
+	if value, ok := _u.mutation.MetricValue(); ok {
 		_spec.SetField(incidentmetric.FieldMetricValue, field.TypeFloat64, value)
 	}
-	if value, ok := imu.mutation.AddedMetricValue(); ok {
+	if value, ok := _u.mutation.AddedMetricValue(); ok {
 		_spec.AddField(incidentmetric.FieldMetricValue, field.TypeFloat64, value)
 	}
-	if value, ok := imu.mutation.Unit(); ok {
+	if value, ok := _u.mutation.Unit(); ok {
 		_spec.SetField(incidentmetric.FieldUnit, field.TypeString, value)
 	}
-	if imu.mutation.UnitCleared() {
+	if _u.mutation.UnitCleared() {
 		_spec.ClearField(incidentmetric.FieldUnit, field.TypeString)
 	}
-	if value, ok := imu.mutation.MeasuredAt(); ok {
+	if value, ok := _u.mutation.MeasuredAt(); ok {
 		_spec.SetField(incidentmetric.FieldMeasuredAt, field.TypeTime, value)
 	}
-	if value, ok := imu.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(incidentmetric.FieldTags, field.TypeJSON, value)
 	}
-	if imu.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(incidentmetric.FieldTags, field.TypeJSON)
 	}
-	if value, ok := imu.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incidentmetric.FieldMetadata, field.TypeJSON, value)
 	}
-	if imu.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incidentmetric.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := imu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentmetric.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := imu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentmetric.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := imu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentmetric.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := imu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentmetric.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if imu.mutation.IncidentCleared() {
+	if _u.mutation.IncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -341,7 +341,7 @@ func (imu *IncidentMetricUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := imu.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -357,7 +357,7 @@ func (imu *IncidentMetricUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, imu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentmetric.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -365,8 +365,8 @@ func (imu *IncidentMetricUpdate) sqlSave(ctx context.Context) (n int, err error)
 		}
 		return 0, err
 	}
-	imu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // IncidentMetricUpdateOne is the builder for updating a single IncidentMetric entity.
@@ -378,205 +378,205 @@ type IncidentMetricUpdateOne struct {
 }
 
 // SetIncidentID sets the "incident_id" field.
-func (imuo *IncidentMetricUpdateOne) SetIncidentID(i int) *IncidentMetricUpdateOne {
-	imuo.mutation.SetIncidentID(i)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetIncidentID(v int) *IncidentMetricUpdateOne {
+	_u.mutation.SetIncidentID(v)
+	return _u
 }
 
 // SetNillableIncidentID sets the "incident_id" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableIncidentID(i *int) *IncidentMetricUpdateOne {
-	if i != nil {
-		imuo.SetIncidentID(*i)
+func (_u *IncidentMetricUpdateOne) SetNillableIncidentID(v *int) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetIncidentID(*v)
 	}
-	return imuo
+	return _u
 }
 
 // SetMetricType sets the "metric_type" field.
-func (imuo *IncidentMetricUpdateOne) SetMetricType(s string) *IncidentMetricUpdateOne {
-	imuo.mutation.SetMetricType(s)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetMetricType(v string) *IncidentMetricUpdateOne {
+	_u.mutation.SetMetricType(v)
+	return _u
 }
 
 // SetNillableMetricType sets the "metric_type" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableMetricType(s *string) *IncidentMetricUpdateOne {
-	if s != nil {
-		imuo.SetMetricType(*s)
+func (_u *IncidentMetricUpdateOne) SetNillableMetricType(v *string) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetMetricType(*v)
 	}
-	return imuo
+	return _u
 }
 
 // SetMetricName sets the "metric_name" field.
-func (imuo *IncidentMetricUpdateOne) SetMetricName(s string) *IncidentMetricUpdateOne {
-	imuo.mutation.SetMetricName(s)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetMetricName(v string) *IncidentMetricUpdateOne {
+	_u.mutation.SetMetricName(v)
+	return _u
 }
 
 // SetNillableMetricName sets the "metric_name" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableMetricName(s *string) *IncidentMetricUpdateOne {
-	if s != nil {
-		imuo.SetMetricName(*s)
+func (_u *IncidentMetricUpdateOne) SetNillableMetricName(v *string) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetMetricName(*v)
 	}
-	return imuo
+	return _u
 }
 
 // SetMetricValue sets the "metric_value" field.
-func (imuo *IncidentMetricUpdateOne) SetMetricValue(f float64) *IncidentMetricUpdateOne {
-	imuo.mutation.ResetMetricValue()
-	imuo.mutation.SetMetricValue(f)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetMetricValue(v float64) *IncidentMetricUpdateOne {
+	_u.mutation.ResetMetricValue()
+	_u.mutation.SetMetricValue(v)
+	return _u
 }
 
 // SetNillableMetricValue sets the "metric_value" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableMetricValue(f *float64) *IncidentMetricUpdateOne {
-	if f != nil {
-		imuo.SetMetricValue(*f)
+func (_u *IncidentMetricUpdateOne) SetNillableMetricValue(v *float64) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetMetricValue(*v)
 	}
-	return imuo
+	return _u
 }
 
-// AddMetricValue adds f to the "metric_value" field.
-func (imuo *IncidentMetricUpdateOne) AddMetricValue(f float64) *IncidentMetricUpdateOne {
-	imuo.mutation.AddMetricValue(f)
-	return imuo
+// AddMetricValue adds value to the "metric_value" field.
+func (_u *IncidentMetricUpdateOne) AddMetricValue(v float64) *IncidentMetricUpdateOne {
+	_u.mutation.AddMetricValue(v)
+	return _u
 }
 
 // SetUnit sets the "unit" field.
-func (imuo *IncidentMetricUpdateOne) SetUnit(s string) *IncidentMetricUpdateOne {
-	imuo.mutation.SetUnit(s)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetUnit(v string) *IncidentMetricUpdateOne {
+	_u.mutation.SetUnit(v)
+	return _u
 }
 
 // SetNillableUnit sets the "unit" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableUnit(s *string) *IncidentMetricUpdateOne {
-	if s != nil {
-		imuo.SetUnit(*s)
+func (_u *IncidentMetricUpdateOne) SetNillableUnit(v *string) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetUnit(*v)
 	}
-	return imuo
+	return _u
 }
 
 // ClearUnit clears the value of the "unit" field.
-func (imuo *IncidentMetricUpdateOne) ClearUnit() *IncidentMetricUpdateOne {
-	imuo.mutation.ClearUnit()
-	return imuo
+func (_u *IncidentMetricUpdateOne) ClearUnit() *IncidentMetricUpdateOne {
+	_u.mutation.ClearUnit()
+	return _u
 }
 
 // SetMeasuredAt sets the "measured_at" field.
-func (imuo *IncidentMetricUpdateOne) SetMeasuredAt(t time.Time) *IncidentMetricUpdateOne {
-	imuo.mutation.SetMeasuredAt(t)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetMeasuredAt(v time.Time) *IncidentMetricUpdateOne {
+	_u.mutation.SetMeasuredAt(v)
+	return _u
 }
 
 // SetNillableMeasuredAt sets the "measured_at" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableMeasuredAt(t *time.Time) *IncidentMetricUpdateOne {
-	if t != nil {
-		imuo.SetMeasuredAt(*t)
+func (_u *IncidentMetricUpdateOne) SetNillableMeasuredAt(v *time.Time) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetMeasuredAt(*v)
 	}
-	return imuo
+	return _u
 }
 
 // SetTags sets the "tags" field.
-func (imuo *IncidentMetricUpdateOne) SetTags(m map[string]string) *IncidentMetricUpdateOne {
-	imuo.mutation.SetTags(m)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetTags(v map[string]string) *IncidentMetricUpdateOne {
+	_u.mutation.SetTags(v)
+	return _u
 }
 
 // ClearTags clears the value of the "tags" field.
-func (imuo *IncidentMetricUpdateOne) ClearTags() *IncidentMetricUpdateOne {
-	imuo.mutation.ClearTags()
-	return imuo
+func (_u *IncidentMetricUpdateOne) ClearTags() *IncidentMetricUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // SetMetadata sets the "metadata" field.
-func (imuo *IncidentMetricUpdateOne) SetMetadata(m map[string]interface{}) *IncidentMetricUpdateOne {
-	imuo.mutation.SetMetadata(m)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetMetadata(v map[string]interface{}) *IncidentMetricUpdateOne {
+	_u.mutation.SetMetadata(v)
+	return _u
 }
 
 // ClearMetadata clears the value of the "metadata" field.
-func (imuo *IncidentMetricUpdateOne) ClearMetadata() *IncidentMetricUpdateOne {
-	imuo.mutation.ClearMetadata()
-	return imuo
+func (_u *IncidentMetricUpdateOne) ClearMetadata() *IncidentMetricUpdateOne {
+	_u.mutation.ClearMetadata()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (imuo *IncidentMetricUpdateOne) SetTenantID(i int) *IncidentMetricUpdateOne {
-	imuo.mutation.ResetTenantID()
-	imuo.mutation.SetTenantID(i)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetTenantID(v int) *IncidentMetricUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableTenantID(i *int) *IncidentMetricUpdateOne {
-	if i != nil {
-		imuo.SetTenantID(*i)
+func (_u *IncidentMetricUpdateOne) SetNillableTenantID(v *int) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return imuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (imuo *IncidentMetricUpdateOne) AddTenantID(i int) *IncidentMetricUpdateOne {
-	imuo.mutation.AddTenantID(i)
-	return imuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *IncidentMetricUpdateOne) AddTenantID(v int) *IncidentMetricUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (imuo *IncidentMetricUpdateOne) SetCreatedAt(t time.Time) *IncidentMetricUpdateOne {
-	imuo.mutation.SetCreatedAt(t)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetCreatedAt(v time.Time) *IncidentMetricUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (imuo *IncidentMetricUpdateOne) SetNillableCreatedAt(t *time.Time) *IncidentMetricUpdateOne {
-	if t != nil {
-		imuo.SetCreatedAt(*t)
+func (_u *IncidentMetricUpdateOne) SetNillableCreatedAt(v *time.Time) *IncidentMetricUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return imuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (imuo *IncidentMetricUpdateOne) SetUpdatedAt(t time.Time) *IncidentMetricUpdateOne {
-	imuo.mutation.SetUpdatedAt(t)
-	return imuo
+func (_u *IncidentMetricUpdateOne) SetUpdatedAt(v time.Time) *IncidentMetricUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetIncident sets the "incident" edge to the Incident entity.
-func (imuo *IncidentMetricUpdateOne) SetIncident(i *Incident) *IncidentMetricUpdateOne {
-	return imuo.SetIncidentID(i.ID)
+func (_u *IncidentMetricUpdateOne) SetIncident(v *Incident) *IncidentMetricUpdateOne {
+	return _u.SetIncidentID(v.ID)
 }
 
 // Mutation returns the IncidentMetricMutation object of the builder.
-func (imuo *IncidentMetricUpdateOne) Mutation() *IncidentMetricMutation {
-	return imuo.mutation
+func (_u *IncidentMetricUpdateOne) Mutation() *IncidentMetricMutation {
+	return _u.mutation
 }
 
 // ClearIncident clears the "incident" edge to the Incident entity.
-func (imuo *IncidentMetricUpdateOne) ClearIncident() *IncidentMetricUpdateOne {
-	imuo.mutation.ClearIncident()
-	return imuo
+func (_u *IncidentMetricUpdateOne) ClearIncident() *IncidentMetricUpdateOne {
+	_u.mutation.ClearIncident()
+	return _u
 }
 
 // Where appends a list predicates to the IncidentMetricUpdate builder.
-func (imuo *IncidentMetricUpdateOne) Where(ps ...predicate.IncidentMetric) *IncidentMetricUpdateOne {
-	imuo.mutation.Where(ps...)
-	return imuo
+func (_u *IncidentMetricUpdateOne) Where(ps ...predicate.IncidentMetric) *IncidentMetricUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (imuo *IncidentMetricUpdateOne) Select(field string, fields ...string) *IncidentMetricUpdateOne {
-	imuo.fields = append([]string{field}, fields...)
-	return imuo
+func (_u *IncidentMetricUpdateOne) Select(field string, fields ...string) *IncidentMetricUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated IncidentMetric entity.
-func (imuo *IncidentMetricUpdateOne) Save(ctx context.Context) (*IncidentMetric, error) {
-	imuo.defaults()
-	return withHooks(ctx, imuo.sqlSave, imuo.mutation, imuo.hooks)
+func (_u *IncidentMetricUpdateOne) Save(ctx context.Context) (*IncidentMetric, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (imuo *IncidentMetricUpdateOne) SaveX(ctx context.Context) *IncidentMetric {
-	node, err := imuo.Save(ctx)
+func (_u *IncidentMetricUpdateOne) SaveX(ctx context.Context) *IncidentMetric {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -584,65 +584,65 @@ func (imuo *IncidentMetricUpdateOne) SaveX(ctx context.Context) *IncidentMetric 
 }
 
 // Exec executes the query on the entity.
-func (imuo *IncidentMetricUpdateOne) Exec(ctx context.Context) error {
-	_, err := imuo.Save(ctx)
+func (_u *IncidentMetricUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (imuo *IncidentMetricUpdateOne) ExecX(ctx context.Context) {
-	if err := imuo.Exec(ctx); err != nil {
+func (_u *IncidentMetricUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (imuo *IncidentMetricUpdateOne) defaults() {
-	if _, ok := imuo.mutation.UpdatedAt(); !ok {
+func (_u *IncidentMetricUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := incidentmetric.UpdateDefaultUpdatedAt()
-		imuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (imuo *IncidentMetricUpdateOne) check() error {
-	if v, ok := imuo.mutation.IncidentID(); ok {
+func (_u *IncidentMetricUpdateOne) check() error {
+	if v, ok := _u.mutation.IncidentID(); ok {
 		if err := incidentmetric.IncidentIDValidator(v); err != nil {
 			return &ValidationError{Name: "incident_id", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.incident_id": %w`, err)}
 		}
 	}
-	if v, ok := imuo.mutation.MetricType(); ok {
+	if v, ok := _u.mutation.MetricType(); ok {
 		if err := incidentmetric.MetricTypeValidator(v); err != nil {
 			return &ValidationError{Name: "metric_type", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.metric_type": %w`, err)}
 		}
 	}
-	if v, ok := imuo.mutation.MetricName(); ok {
+	if v, ok := _u.mutation.MetricName(); ok {
 		if err := incidentmetric.MetricNameValidator(v); err != nil {
 			return &ValidationError{Name: "metric_name", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.metric_name": %w`, err)}
 		}
 	}
-	if v, ok := imuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := incidentmetric.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "IncidentMetric.tenant_id": %w`, err)}
 		}
 	}
-	if imuo.mutation.IncidentCleared() && len(imuo.mutation.IncidentIDs()) > 0 {
+	if _u.mutation.IncidentCleared() && len(_u.mutation.IncidentIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "IncidentMetric.incident"`)
 	}
 	return nil
 }
 
-func (imuo *IncidentMetricUpdateOne) sqlSave(ctx context.Context) (_node *IncidentMetric, err error) {
-	if err := imuo.check(); err != nil {
+func (_u *IncidentMetricUpdateOne) sqlSave(ctx context.Context) (_node *IncidentMetric, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(incidentmetric.Table, incidentmetric.Columns, sqlgraph.NewFieldSpec(incidentmetric.FieldID, field.TypeInt))
-	id, ok := imuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "IncidentMetric.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := imuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, incidentmetric.FieldID)
 		for _, f := range fields {
@@ -654,59 +654,59 @@ func (imuo *IncidentMetricUpdateOne) sqlSave(ctx context.Context) (_node *Incide
 			}
 		}
 	}
-	if ps := imuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := imuo.mutation.MetricType(); ok {
+	if value, ok := _u.mutation.MetricType(); ok {
 		_spec.SetField(incidentmetric.FieldMetricType, field.TypeString, value)
 	}
-	if value, ok := imuo.mutation.MetricName(); ok {
+	if value, ok := _u.mutation.MetricName(); ok {
 		_spec.SetField(incidentmetric.FieldMetricName, field.TypeString, value)
 	}
-	if value, ok := imuo.mutation.MetricValue(); ok {
+	if value, ok := _u.mutation.MetricValue(); ok {
 		_spec.SetField(incidentmetric.FieldMetricValue, field.TypeFloat64, value)
 	}
-	if value, ok := imuo.mutation.AddedMetricValue(); ok {
+	if value, ok := _u.mutation.AddedMetricValue(); ok {
 		_spec.AddField(incidentmetric.FieldMetricValue, field.TypeFloat64, value)
 	}
-	if value, ok := imuo.mutation.Unit(); ok {
+	if value, ok := _u.mutation.Unit(); ok {
 		_spec.SetField(incidentmetric.FieldUnit, field.TypeString, value)
 	}
-	if imuo.mutation.UnitCleared() {
+	if _u.mutation.UnitCleared() {
 		_spec.ClearField(incidentmetric.FieldUnit, field.TypeString)
 	}
-	if value, ok := imuo.mutation.MeasuredAt(); ok {
+	if value, ok := _u.mutation.MeasuredAt(); ok {
 		_spec.SetField(incidentmetric.FieldMeasuredAt, field.TypeTime, value)
 	}
-	if value, ok := imuo.mutation.Tags(); ok {
+	if value, ok := _u.mutation.Tags(); ok {
 		_spec.SetField(incidentmetric.FieldTags, field.TypeJSON, value)
 	}
-	if imuo.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		_spec.ClearField(incidentmetric.FieldTags, field.TypeJSON)
 	}
-	if value, ok := imuo.mutation.Metadata(); ok {
+	if value, ok := _u.mutation.Metadata(); ok {
 		_spec.SetField(incidentmetric.FieldMetadata, field.TypeJSON, value)
 	}
-	if imuo.mutation.MetadataCleared() {
+	if _u.mutation.MetadataCleared() {
 		_spec.ClearField(incidentmetric.FieldMetadata, field.TypeJSON)
 	}
-	if value, ok := imuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(incidentmetric.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := imuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(incidentmetric.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := imuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(incidentmetric.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := imuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(incidentmetric.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if imuo.mutation.IncidentCleared() {
+	if _u.mutation.IncidentCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -719,7 +719,7 @@ func (imuo *IncidentMetricUpdateOne) sqlSave(ctx context.Context) (_node *Incide
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := imuo.mutation.IncidentIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.IncidentIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -735,10 +735,10 @@ func (imuo *IncidentMetricUpdateOne) sqlSave(ctx context.Context) (_node *Incide
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &IncidentMetric{config: imuo.config}
+	_node = &IncidentMetric{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, imuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{incidentmetric.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -746,6 +746,6 @@ func (imuo *IncidentMetricUpdateOne) sqlSave(ctx context.Context) (_node *Incide
 		}
 		return nil, err
 	}
-	imuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

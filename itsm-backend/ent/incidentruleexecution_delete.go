@@ -20,56 +20,56 @@ type IncidentRuleExecutionDelete struct {
 }
 
 // Where appends a list predicates to the IncidentRuleExecutionDelete builder.
-func (ired *IncidentRuleExecutionDelete) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionDelete {
-	ired.mutation.Where(ps...)
-	return ired
+func (_d *IncidentRuleExecutionDelete) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (ired *IncidentRuleExecutionDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, ired.sqlExec, ired.mutation, ired.hooks)
+func (_d *IncidentRuleExecutionDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (ired *IncidentRuleExecutionDelete) ExecX(ctx context.Context) int {
-	n, err := ired.Exec(ctx)
+func (_d *IncidentRuleExecutionDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (ired *IncidentRuleExecutionDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *IncidentRuleExecutionDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(incidentruleexecution.Table, sqlgraph.NewFieldSpec(incidentruleexecution.FieldID, field.TypeInt))
-	if ps := ired.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, ired.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	ired.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // IncidentRuleExecutionDeleteOne is the builder for deleting a single IncidentRuleExecution entity.
 type IncidentRuleExecutionDeleteOne struct {
-	ired *IncidentRuleExecutionDelete
+	_d *IncidentRuleExecutionDelete
 }
 
 // Where appends a list predicates to the IncidentRuleExecutionDelete builder.
-func (iredo *IncidentRuleExecutionDeleteOne) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionDeleteOne {
-	iredo.ired.mutation.Where(ps...)
-	return iredo
+func (_d *IncidentRuleExecutionDeleteOne) Where(ps ...predicate.IncidentRuleExecution) *IncidentRuleExecutionDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (iredo *IncidentRuleExecutionDeleteOne) Exec(ctx context.Context) error {
-	n, err := iredo.ired.Exec(ctx)
+func (_d *IncidentRuleExecutionDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (iredo *IncidentRuleExecutionDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (iredo *IncidentRuleExecutionDeleteOne) ExecX(ctx context.Context) {
-	if err := iredo.Exec(ctx); err != nil {
+func (_d *IncidentRuleExecutionDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

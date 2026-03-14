@@ -92,7 +92,7 @@ func (*IncidentRule) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the IncidentRule fields.
-func (ir *IncidentRule) assignValues(columns []string, values []any) error {
+func (_m *IncidentRule) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -103,30 +103,30 @@ func (ir *IncidentRule) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ir.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case incidentrule.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				ir.Name = value.String
+				_m.Name = value.String
 			}
 		case incidentrule.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				ir.Description = value.String
+				_m.Description = value.String
 			}
 		case incidentrule.FieldRuleType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field rule_type", values[i])
 			} else if value.Valid {
-				ir.RuleType = value.String
+				_m.RuleType = value.String
 			}
 		case incidentrule.FieldConditions:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field conditions", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ir.Conditions); err != nil {
+				if err := json.Unmarshal(*value, &_m.Conditions); err != nil {
 					return fmt.Errorf("unmarshal field conditions: %w", err)
 				}
 			}
@@ -134,7 +134,7 @@ func (ir *IncidentRule) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field actions", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ir.Actions); err != nil {
+				if err := json.Unmarshal(*value, &_m.Actions); err != nil {
 					return fmt.Errorf("unmarshal field actions: %w", err)
 				}
 			}
@@ -142,31 +142,31 @@ func (ir *IncidentRule) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				ir.Priority = value.String
+				_m.Priority = value.String
 			}
 		case incidentrule.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				ir.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case incidentrule.FieldExecutionCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field execution_count", values[i])
 			} else if value.Valid {
-				ir.ExecutionCount = int(value.Int64)
+				_m.ExecutionCount = int(value.Int64)
 			}
 		case incidentrule.FieldLastExecutedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field last_executed_at", values[i])
 			} else if value.Valid {
-				ir.LastExecutedAt = value.Time
+				_m.LastExecutedAt = value.Time
 			}
 		case incidentrule.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ir.Metadata); err != nil {
+				if err := json.Unmarshal(*value, &_m.Metadata); err != nil {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
 				}
 			}
@@ -174,22 +174,22 @@ func (ir *IncidentRule) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ir.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case incidentrule.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ir.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case incidentrule.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ir.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ir.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -197,76 +197,76 @@ func (ir *IncidentRule) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the IncidentRule.
 // This includes values selected through modifiers, order, etc.
-func (ir *IncidentRule) Value(name string) (ent.Value, error) {
-	return ir.selectValues.Get(name)
+func (_m *IncidentRule) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryRuleExecutions queries the "rule_executions" edge of the IncidentRule entity.
-func (ir *IncidentRule) QueryRuleExecutions() *IncidentRuleExecutionQuery {
-	return NewIncidentRuleClient(ir.config).QueryRuleExecutions(ir)
+func (_m *IncidentRule) QueryRuleExecutions() *IncidentRuleExecutionQuery {
+	return NewIncidentRuleClient(_m.config).QueryRuleExecutions(_m)
 }
 
 // Update returns a builder for updating this IncidentRule.
 // Note that you need to call IncidentRule.Unwrap() before calling this method if this IncidentRule
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ir *IncidentRule) Update() *IncidentRuleUpdateOne {
-	return NewIncidentRuleClient(ir.config).UpdateOne(ir)
+func (_m *IncidentRule) Update() *IncidentRuleUpdateOne {
+	return NewIncidentRuleClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the IncidentRule entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ir *IncidentRule) Unwrap() *IncidentRule {
-	_tx, ok := ir.config.driver.(*txDriver)
+func (_m *IncidentRule) Unwrap() *IncidentRule {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: IncidentRule is not a transactional entity")
 	}
-	ir.config.driver = _tx.drv
-	return ir
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ir *IncidentRule) String() string {
+func (_m *IncidentRule) String() string {
 	var builder strings.Builder
 	builder.WriteString("IncidentRule(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ir.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(ir.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(ir.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("rule_type=")
-	builder.WriteString(ir.RuleType)
+	builder.WriteString(_m.RuleType)
 	builder.WriteString(", ")
 	builder.WriteString("conditions=")
-	builder.WriteString(fmt.Sprintf("%v", ir.Conditions))
+	builder.WriteString(fmt.Sprintf("%v", _m.Conditions))
 	builder.WriteString(", ")
 	builder.WriteString("actions=")
-	builder.WriteString(fmt.Sprintf("%v", ir.Actions))
+	builder.WriteString(fmt.Sprintf("%v", _m.Actions))
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(ir.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", ir.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("execution_count=")
-	builder.WriteString(fmt.Sprintf("%v", ir.ExecutionCount))
+	builder.WriteString(fmt.Sprintf("%v", _m.ExecutionCount))
 	builder.WriteString(", ")
 	builder.WriteString("last_executed_at=")
-	builder.WriteString(ir.LastExecutedAt.Format(time.ANSIC))
+	builder.WriteString(_m.LastExecutedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
-	builder.WriteString(fmt.Sprintf("%v", ir.Metadata))
+	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ir.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ir.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ir.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

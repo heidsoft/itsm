@@ -80,7 +80,7 @@ func (*TicketTag) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the TicketTag fields.
-func (tt *TicketTag) assignValues(columns []string, values []any) error {
+func (_m *TicketTag) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -91,58 +91,58 @@ func (tt *TicketTag) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			tt.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case tickettag.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				tt.Name = value.String
+				_m.Name = value.String
 			}
 		case tickettag.FieldColor:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field color", values[i])
 			} else if value.Valid {
-				tt.Color = value.String
+				_m.Color = value.String
 			}
 		case tickettag.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				tt.Description = value.String
+				_m.Description = value.String
 			}
 		case tickettag.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				tt.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case tickettag.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				tt.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case tickettag.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				tt.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case tickettag.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				tt.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case tickettag.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field ticket_tags", value)
 			} else if value.Valid {
-				tt.ticket_tags = new(int)
-				*tt.ticket_tags = int(value.Int64)
+				_m.ticket_tags = new(int)
+				*_m.ticket_tags = int(value.Int64)
 			}
 		default:
-			tt.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -150,58 +150,58 @@ func (tt *TicketTag) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the TicketTag.
 // This includes values selected through modifiers, order, etc.
-func (tt *TicketTag) Value(name string) (ent.Value, error) {
-	return tt.selectValues.Get(name)
+func (_m *TicketTag) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTickets queries the "tickets" edge of the TicketTag entity.
-func (tt *TicketTag) QueryTickets() *TicketQuery {
-	return NewTicketTagClient(tt.config).QueryTickets(tt)
+func (_m *TicketTag) QueryTickets() *TicketQuery {
+	return NewTicketTagClient(_m.config).QueryTickets(_m)
 }
 
 // Update returns a builder for updating this TicketTag.
 // Note that you need to call TicketTag.Unwrap() before calling this method if this TicketTag
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (tt *TicketTag) Update() *TicketTagUpdateOne {
-	return NewTicketTagClient(tt.config).UpdateOne(tt)
+func (_m *TicketTag) Update() *TicketTagUpdateOne {
+	return NewTicketTagClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the TicketTag entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (tt *TicketTag) Unwrap() *TicketTag {
-	_tx, ok := tt.config.driver.(*txDriver)
+func (_m *TicketTag) Unwrap() *TicketTag {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: TicketTag is not a transactional entity")
 	}
-	tt.config.driver = _tx.drv
-	return tt
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (tt *TicketTag) String() string {
+func (_m *TicketTag) String() string {
 	var builder strings.Builder
 	builder.WriteString("TicketTag(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", tt.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(tt.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("color=")
-	builder.WriteString(tt.Color)
+	builder.WriteString(_m.Color)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(tt.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", tt.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", tt.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(tt.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(tt.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

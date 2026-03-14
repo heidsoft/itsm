@@ -88,7 +88,7 @@ func (*KnowledgeArticle) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the KnowledgeArticle fields.
-func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
+func (_m *KnowledgeArticle) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -99,82 +99,82 @@ func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ka.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case knowledgearticle.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				ka.Title = value.String
+				_m.Title = value.String
 			}
 		case knowledgearticle.FieldContent:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value.Valid {
-				ka.Content = value.String
+				_m.Content = value.String
 			}
 		case knowledgearticle.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				ka.Category = value.String
+				_m.Category = value.String
 			}
 		case knowledgearticle.FieldTags:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
 			} else if value.Valid {
-				ka.Tags = value.String
+				_m.Tags = value.String
 			}
 		case knowledgearticle.FieldAuthorID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field author_id", values[i])
 			} else if value.Valid {
-				ka.AuthorID = int(value.Int64)
+				_m.AuthorID = int(value.Int64)
 			}
 		case knowledgearticle.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ka.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case knowledgearticle.FieldIsPublished:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_published", values[i])
 			} else if value.Valid {
-				ka.IsPublished = value.Bool
+				_m.IsPublished = value.Bool
 			}
 		case knowledgearticle.FieldViewCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field view_count", values[i])
 			} else if value.Valid {
-				ka.ViewCount = int(value.Int64)
+				_m.ViewCount = int(value.Int64)
 			}
 		case knowledgearticle.FieldLikeCount:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field like_count", values[i])
 			} else if value.Valid {
-				ka.LikeCount = int(value.Int64)
+				_m.LikeCount = int(value.Int64)
 			}
 		case knowledgearticle.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ka.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case knowledgearticle.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ka.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		case knowledgearticle.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for edge-field known_error_knowledge_articles", value)
 			} else if value.Valid {
-				ka.known_error_knowledge_articles = new(int)
-				*ka.known_error_knowledge_articles = int(value.Int64)
+				_m.known_error_knowledge_articles = new(int)
+				*_m.known_error_knowledge_articles = int(value.Int64)
 			}
 		default:
-			ka.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -182,70 +182,70 @@ func (ka *KnowledgeArticle) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the KnowledgeArticle.
 // This includes values selected through modifiers, order, etc.
-func (ka *KnowledgeArticle) Value(name string) (ent.Value, error) {
-	return ka.selectValues.Get(name)
+func (_m *KnowledgeArticle) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryUserLikes queries the "user_likes" edge of the KnowledgeArticle entity.
-func (ka *KnowledgeArticle) QueryUserLikes() *KnowledgeArticleLikeQuery {
-	return NewKnowledgeArticleClient(ka.config).QueryUserLikes(ka)
+func (_m *KnowledgeArticle) QueryUserLikes() *KnowledgeArticleLikeQuery {
+	return NewKnowledgeArticleClient(_m.config).QueryUserLikes(_m)
 }
 
 // Update returns a builder for updating this KnowledgeArticle.
 // Note that you need to call KnowledgeArticle.Unwrap() before calling this method if this KnowledgeArticle
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ka *KnowledgeArticle) Update() *KnowledgeArticleUpdateOne {
-	return NewKnowledgeArticleClient(ka.config).UpdateOne(ka)
+func (_m *KnowledgeArticle) Update() *KnowledgeArticleUpdateOne {
+	return NewKnowledgeArticleClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the KnowledgeArticle entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ka *KnowledgeArticle) Unwrap() *KnowledgeArticle {
-	_tx, ok := ka.config.driver.(*txDriver)
+func (_m *KnowledgeArticle) Unwrap() *KnowledgeArticle {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: KnowledgeArticle is not a transactional entity")
 	}
-	ka.config.driver = _tx.drv
-	return ka
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ka *KnowledgeArticle) String() string {
+func (_m *KnowledgeArticle) String() string {
 	var builder strings.Builder
 	builder.WriteString("KnowledgeArticle(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ka.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("title=")
-	builder.WriteString(ka.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteString(", ")
 	builder.WriteString("content=")
-	builder.WriteString(ka.Content)
+	builder.WriteString(_m.Content)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(ka.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("tags=")
-	builder.WriteString(ka.Tags)
+	builder.WriteString(_m.Tags)
 	builder.WriteString(", ")
 	builder.WriteString("author_id=")
-	builder.WriteString(fmt.Sprintf("%v", ka.AuthorID))
+	builder.WriteString(fmt.Sprintf("%v", _m.AuthorID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ka.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("is_published=")
-	builder.WriteString(fmt.Sprintf("%v", ka.IsPublished))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsPublished))
 	builder.WriteString(", ")
 	builder.WriteString("view_count=")
-	builder.WriteString(fmt.Sprintf("%v", ka.ViewCount))
+	builder.WriteString(fmt.Sprintf("%v", _m.ViewCount))
 	builder.WriteString(", ")
 	builder.WriteString("like_count=")
-	builder.WriteString(fmt.Sprintf("%v", ka.LikeCount))
+	builder.WriteString(fmt.Sprintf("%v", _m.LikeCount))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ka.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ka.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

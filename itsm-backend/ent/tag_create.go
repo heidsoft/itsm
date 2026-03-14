@@ -26,168 +26,168 @@ type TagCreate struct {
 }
 
 // SetName sets the "name" field.
-func (tc *TagCreate) SetName(s string) *TagCreate {
-	tc.mutation.SetName(s)
-	return tc
+func (_c *TagCreate) SetName(v string) *TagCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetCode sets the "code" field.
-func (tc *TagCreate) SetCode(s string) *TagCreate {
-	tc.mutation.SetCode(s)
-	return tc
+func (_c *TagCreate) SetCode(v string) *TagCreate {
+	_c.mutation.SetCode(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (tc *TagCreate) SetDescription(s string) *TagCreate {
-	tc.mutation.SetDescription(s)
-	return tc
+func (_c *TagCreate) SetDescription(v string) *TagCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tc *TagCreate) SetNillableDescription(s *string) *TagCreate {
-	if s != nil {
-		tc.SetDescription(*s)
+func (_c *TagCreate) SetNillableDescription(v *string) *TagCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return tc
+	return _c
 }
 
 // SetColor sets the "color" field.
-func (tc *TagCreate) SetColor(s string) *TagCreate {
-	tc.mutation.SetColor(s)
-	return tc
+func (_c *TagCreate) SetColor(v string) *TagCreate {
+	_c.mutation.SetColor(v)
+	return _c
 }
 
 // SetNillableColor sets the "color" field if the given value is not nil.
-func (tc *TagCreate) SetNillableColor(s *string) *TagCreate {
-	if s != nil {
-		tc.SetColor(*s)
+func (_c *TagCreate) SetNillableColor(v *string) *TagCreate {
+	if v != nil {
+		_c.SetColor(*v)
 	}
-	return tc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tc *TagCreate) SetTenantID(i int) *TagCreate {
-	tc.mutation.SetTenantID(i)
-	return tc
+func (_c *TagCreate) SetTenantID(v int) *TagCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tc *TagCreate) SetCreatedAt(t time.Time) *TagCreate {
-	tc.mutation.SetCreatedAt(t)
-	return tc
+func (_c *TagCreate) SetCreatedAt(v time.Time) *TagCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tc *TagCreate) SetNillableCreatedAt(t *time.Time) *TagCreate {
-	if t != nil {
-		tc.SetCreatedAt(*t)
+func (_c *TagCreate) SetNillableCreatedAt(v *time.Time) *TagCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tc *TagCreate) SetUpdatedAt(t time.Time) *TagCreate {
-	tc.mutation.SetUpdatedAt(t)
-	return tc
+func (_c *TagCreate) SetUpdatedAt(v time.Time) *TagCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (tc *TagCreate) SetNillableUpdatedAt(t *time.Time) *TagCreate {
-	if t != nil {
-		tc.SetUpdatedAt(*t)
+func (_c *TagCreate) SetNillableUpdatedAt(v *time.Time) *TagCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return tc
+	return _c
 }
 
 // AddProjectIDs adds the "projects" edge to the Project entity by IDs.
-func (tc *TagCreate) AddProjectIDs(ids ...int) *TagCreate {
-	tc.mutation.AddProjectIDs(ids...)
-	return tc
+func (_c *TagCreate) AddProjectIDs(ids ...int) *TagCreate {
+	_c.mutation.AddProjectIDs(ids...)
+	return _c
 }
 
 // AddProjects adds the "projects" edges to the Project entity.
-func (tc *TagCreate) AddProjects(p ...*Project) *TagCreate {
-	ids := make([]int, len(p))
-	for i := range p {
-		ids[i] = p[i].ID
+func (_c *TagCreate) AddProjects(v ...*Project) *TagCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tc.AddProjectIDs(ids...)
+	return _c.AddProjectIDs(ids...)
 }
 
 // AddApplicationIDs adds the "applications" edge to the Application entity by IDs.
-func (tc *TagCreate) AddApplicationIDs(ids ...int) *TagCreate {
-	tc.mutation.AddApplicationIDs(ids...)
-	return tc
+func (_c *TagCreate) AddApplicationIDs(ids ...int) *TagCreate {
+	_c.mutation.AddApplicationIDs(ids...)
+	return _c
 }
 
 // AddApplications adds the "applications" edges to the Application entity.
-func (tc *TagCreate) AddApplications(a ...*Application) *TagCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+func (_c *TagCreate) AddApplications(v ...*Application) *TagCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tc.AddApplicationIDs(ids...)
+	return _c.AddApplicationIDs(ids...)
 }
 
 // AddMicroserviceIDs adds the "microservices" edge to the Microservice entity by IDs.
-func (tc *TagCreate) AddMicroserviceIDs(ids ...int) *TagCreate {
-	tc.mutation.AddMicroserviceIDs(ids...)
-	return tc
+func (_c *TagCreate) AddMicroserviceIDs(ids ...int) *TagCreate {
+	_c.mutation.AddMicroserviceIDs(ids...)
+	return _c
 }
 
 // AddMicroservices adds the "microservices" edges to the Microservice entity.
-func (tc *TagCreate) AddMicroservices(m ...*Microservice) *TagCreate {
-	ids := make([]int, len(m))
-	for i := range m {
-		ids[i] = m[i].ID
+func (_c *TagCreate) AddMicroservices(v ...*Microservice) *TagCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tc.AddMicroserviceIDs(ids...)
+	return _c.AddMicroserviceIDs(ids...)
 }
 
 // AddDepartmentIDs adds the "departments" edge to the Department entity by IDs.
-func (tc *TagCreate) AddDepartmentIDs(ids ...int) *TagCreate {
-	tc.mutation.AddDepartmentIDs(ids...)
-	return tc
+func (_c *TagCreate) AddDepartmentIDs(ids ...int) *TagCreate {
+	_c.mutation.AddDepartmentIDs(ids...)
+	return _c
 }
 
 // AddDepartments adds the "departments" edges to the Department entity.
-func (tc *TagCreate) AddDepartments(d ...*Department) *TagCreate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_c *TagCreate) AddDepartments(v ...*Department) *TagCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tc.AddDepartmentIDs(ids...)
+	return _c.AddDepartmentIDs(ids...)
 }
 
 // AddTeamIDs adds the "teams" edge to the Team entity by IDs.
-func (tc *TagCreate) AddTeamIDs(ids ...int) *TagCreate {
-	tc.mutation.AddTeamIDs(ids...)
-	return tc
+func (_c *TagCreate) AddTeamIDs(ids ...int) *TagCreate {
+	_c.mutation.AddTeamIDs(ids...)
+	return _c
 }
 
 // AddTeams adds the "teams" edges to the Team entity.
-func (tc *TagCreate) AddTeams(t ...*Team) *TagCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_c *TagCreate) AddTeams(v ...*Team) *TagCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return tc.AddTeamIDs(ids...)
+	return _c.AddTeamIDs(ids...)
 }
 
 // Mutation returns the TagMutation object of the builder.
-func (tc *TagCreate) Mutation() *TagMutation {
-	return tc.mutation
+func (_c *TagCreate) Mutation() *TagMutation {
+	return _c.mutation
 }
 
 // Save creates the Tag in the database.
-func (tc *TagCreate) Save(ctx context.Context) (*Tag, error) {
-	tc.defaults()
-	return withHooks(ctx, tc.sqlSave, tc.mutation, tc.hooks)
+func (_c *TagCreate) Save(ctx context.Context) (*Tag, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tc *TagCreate) SaveX(ctx context.Context) *Tag {
-	v, err := tc.Save(ctx)
+func (_c *TagCreate) SaveX(ctx context.Context) *Tag {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -195,78 +195,78 @@ func (tc *TagCreate) SaveX(ctx context.Context) *Tag {
 }
 
 // Exec executes the query.
-func (tc *TagCreate) Exec(ctx context.Context) error {
-	_, err := tc.Save(ctx)
+func (_c *TagCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tc *TagCreate) ExecX(ctx context.Context) {
-	if err := tc.Exec(ctx); err != nil {
+func (_c *TagCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tc *TagCreate) defaults() {
-	if _, ok := tc.mutation.Color(); !ok {
+func (_c *TagCreate) defaults() {
+	if _, ok := _c.mutation.Color(); !ok {
 		v := tag.DefaultColor
-		tc.mutation.SetColor(v)
+		_c.mutation.SetColor(v)
 	}
-	if _, ok := tc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := tag.DefaultCreatedAt()
-		tc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := tc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := tag.DefaultUpdatedAt()
-		tc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tc *TagCreate) check() error {
-	if _, ok := tc.mutation.Name(); !ok {
+func (_c *TagCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Tag.name"`)}
 	}
-	if v, ok := tc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := tag.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Tag.name": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.Code(); !ok {
+	if _, ok := _c.mutation.Code(); !ok {
 		return &ValidationError{Name: "code", err: errors.New(`ent: missing required field "Tag.code"`)}
 	}
-	if v, ok := tc.mutation.Code(); ok {
+	if v, ok := _c.mutation.Code(); ok {
 		if err := tag.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Tag.code": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.Color(); !ok {
+	if _, ok := _c.mutation.Color(); !ok {
 		return &ValidationError{Name: "color", err: errors.New(`ent: missing required field "Tag.color"`)}
 	}
-	if _, ok := tc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "Tag.tenant_id"`)}
 	}
-	if v, ok := tc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := tag.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Tag.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := tc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Tag.created_at"`)}
 	}
-	if _, ok := tc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Tag.updated_at"`)}
 	}
 	return nil
 }
 
-func (tc *TagCreate) sqlSave(ctx context.Context) (*Tag, error) {
-	if err := tc.check(); err != nil {
+func (_c *TagCreate) sqlSave(ctx context.Context) (*Tag, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -274,45 +274,45 @@ func (tc *TagCreate) sqlSave(ctx context.Context) (*Tag, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tc.mutation.id = &_node.ID
-	tc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
+func (_c *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Tag{config: tc.config}
+		_node = &Tag{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(tag.Table, sqlgraph.NewFieldSpec(tag.FieldID, field.TypeInt))
 	)
-	if value, ok := tc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(tag.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tc.mutation.Code(); ok {
+	if value, ok := _c.mutation.Code(); ok {
 		_spec.SetField(tag.FieldCode, field.TypeString, value)
 		_node.Code = value
 	}
-	if value, ok := tc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(tag.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := tc.mutation.Color(); ok {
+	if value, ok := _c.mutation.Color(); ok {
 		_spec.SetField(tag.FieldColor, field.TypeString, value)
 		_node.Color = value
 	}
-	if value, ok := tc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(tag.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := tc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(tag.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := tc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(tag.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := tc.mutation.ProjectsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ProjectsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -328,7 +328,7 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.ApplicationsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.ApplicationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -344,7 +344,7 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.MicroservicesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.MicroservicesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -360,7 +360,7 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.DepartmentsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.DepartmentsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -376,7 +376,7 @@ func (tc *TagCreate) createSpec() (*Tag, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := tc.mutation.TeamsIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.TeamsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: true,
@@ -403,16 +403,16 @@ type TagCreateBulk struct {
 }
 
 // Save creates the Tag entities in the database.
-func (tcb *TagCreateBulk) Save(ctx context.Context) ([]*Tag, error) {
-	if tcb.err != nil {
-		return nil, tcb.err
+func (_c *TagCreateBulk) Save(ctx context.Context) ([]*Tag, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tcb.builders))
-	nodes := make([]*Tag, len(tcb.builders))
-	mutators := make([]Mutator, len(tcb.builders))
-	for i := range tcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*Tag, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TagMutation)
@@ -426,11 +426,11 @@ func (tcb *TagCreateBulk) Save(ctx context.Context) ([]*Tag, error) {
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -454,7 +454,7 @@ func (tcb *TagCreateBulk) Save(ctx context.Context) ([]*Tag, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -462,8 +462,8 @@ func (tcb *TagCreateBulk) Save(ctx context.Context) ([]*Tag, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tcb *TagCreateBulk) SaveX(ctx context.Context) []*Tag {
-	v, err := tcb.Save(ctx)
+func (_c *TagCreateBulk) SaveX(ctx context.Context) []*Tag {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -471,14 +471,14 @@ func (tcb *TagCreateBulk) SaveX(ctx context.Context) []*Tag {
 }
 
 // Exec executes the query.
-func (tcb *TagCreateBulk) Exec(ctx context.Context) error {
-	_, err := tcb.Save(ctx)
+func (_c *TagCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tcb *TagCreateBulk) ExecX(ctx context.Context) {
-	if err := tcb.Exec(ctx); err != nil {
+func (_c *TagCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

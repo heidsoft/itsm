@@ -22,128 +22,128 @@ type TicketViewCreate struct {
 }
 
 // SetName sets the "name" field.
-func (tvc *TicketViewCreate) SetName(s string) *TicketViewCreate {
-	tvc.mutation.SetName(s)
-	return tvc
+func (_c *TicketViewCreate) SetName(v string) *TicketViewCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (tvc *TicketViewCreate) SetDescription(s string) *TicketViewCreate {
-	tvc.mutation.SetDescription(s)
-	return tvc
+func (_c *TicketViewCreate) SetDescription(v string) *TicketViewCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tvc *TicketViewCreate) SetNillableDescription(s *string) *TicketViewCreate {
-	if s != nil {
-		tvc.SetDescription(*s)
+func (_c *TicketViewCreate) SetNillableDescription(v *string) *TicketViewCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return tvc
+	return _c
 }
 
 // SetFilters sets the "filters" field.
-func (tvc *TicketViewCreate) SetFilters(m map[string]interface{}) *TicketViewCreate {
-	tvc.mutation.SetFilters(m)
-	return tvc
+func (_c *TicketViewCreate) SetFilters(v map[string]interface{}) *TicketViewCreate {
+	_c.mutation.SetFilters(v)
+	return _c
 }
 
 // SetColumns sets the "columns" field.
-func (tvc *TicketViewCreate) SetColumns(s []string) *TicketViewCreate {
-	tvc.mutation.SetColumns(s)
-	return tvc
+func (_c *TicketViewCreate) SetColumns(v []string) *TicketViewCreate {
+	_c.mutation.SetColumns(v)
+	return _c
 }
 
 // SetSortConfig sets the "sort_config" field.
-func (tvc *TicketViewCreate) SetSortConfig(m map[string]interface{}) *TicketViewCreate {
-	tvc.mutation.SetSortConfig(m)
-	return tvc
+func (_c *TicketViewCreate) SetSortConfig(v map[string]interface{}) *TicketViewCreate {
+	_c.mutation.SetSortConfig(v)
+	return _c
 }
 
 // SetGroupConfig sets the "group_config" field.
-func (tvc *TicketViewCreate) SetGroupConfig(m map[string]interface{}) *TicketViewCreate {
-	tvc.mutation.SetGroupConfig(m)
-	return tvc
+func (_c *TicketViewCreate) SetGroupConfig(v map[string]interface{}) *TicketViewCreate {
+	_c.mutation.SetGroupConfig(v)
+	return _c
 }
 
 // SetIsShared sets the "is_shared" field.
-func (tvc *TicketViewCreate) SetIsShared(b bool) *TicketViewCreate {
-	tvc.mutation.SetIsShared(b)
-	return tvc
+func (_c *TicketViewCreate) SetIsShared(v bool) *TicketViewCreate {
+	_c.mutation.SetIsShared(v)
+	return _c
 }
 
 // SetNillableIsShared sets the "is_shared" field if the given value is not nil.
-func (tvc *TicketViewCreate) SetNillableIsShared(b *bool) *TicketViewCreate {
-	if b != nil {
-		tvc.SetIsShared(*b)
+func (_c *TicketViewCreate) SetNillableIsShared(v *bool) *TicketViewCreate {
+	if v != nil {
+		_c.SetIsShared(*v)
 	}
-	return tvc
+	return _c
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (tvc *TicketViewCreate) SetCreatedBy(i int) *TicketViewCreate {
-	tvc.mutation.SetCreatedBy(i)
-	return tvc
+func (_c *TicketViewCreate) SetCreatedBy(v int) *TicketViewCreate {
+	_c.mutation.SetCreatedBy(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tvc *TicketViewCreate) SetTenantID(i int) *TicketViewCreate {
-	tvc.mutation.SetTenantID(i)
-	return tvc
+func (_c *TicketViewCreate) SetTenantID(v int) *TicketViewCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tvc *TicketViewCreate) SetCreatedAt(t time.Time) *TicketViewCreate {
-	tvc.mutation.SetCreatedAt(t)
-	return tvc
+func (_c *TicketViewCreate) SetCreatedAt(v time.Time) *TicketViewCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tvc *TicketViewCreate) SetNillableCreatedAt(t *time.Time) *TicketViewCreate {
-	if t != nil {
-		tvc.SetCreatedAt(*t)
+func (_c *TicketViewCreate) SetNillableCreatedAt(v *time.Time) *TicketViewCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tvc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tvc *TicketViewCreate) SetUpdatedAt(t time.Time) *TicketViewCreate {
-	tvc.mutation.SetUpdatedAt(t)
-	return tvc
+func (_c *TicketViewCreate) SetUpdatedAt(v time.Time) *TicketViewCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (tvc *TicketViewCreate) SetNillableUpdatedAt(t *time.Time) *TicketViewCreate {
-	if t != nil {
-		tvc.SetUpdatedAt(*t)
+func (_c *TicketViewCreate) SetNillableUpdatedAt(v *time.Time) *TicketViewCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return tvc
+	return _c
 }
 
 // SetCreatorID sets the "creator" edge to the User entity by ID.
-func (tvc *TicketViewCreate) SetCreatorID(id int) *TicketViewCreate {
-	tvc.mutation.SetCreatorID(id)
-	return tvc
+func (_c *TicketViewCreate) SetCreatorID(id int) *TicketViewCreate {
+	_c.mutation.SetCreatorID(id)
+	return _c
 }
 
 // SetCreator sets the "creator" edge to the User entity.
-func (tvc *TicketViewCreate) SetCreator(u *User) *TicketViewCreate {
-	return tvc.SetCreatorID(u.ID)
+func (_c *TicketViewCreate) SetCreator(v *User) *TicketViewCreate {
+	return _c.SetCreatorID(v.ID)
 }
 
 // Mutation returns the TicketViewMutation object of the builder.
-func (tvc *TicketViewCreate) Mutation() *TicketViewMutation {
-	return tvc.mutation
+func (_c *TicketViewCreate) Mutation() *TicketViewMutation {
+	return _c.mutation
 }
 
 // Save creates the TicketView in the database.
-func (tvc *TicketViewCreate) Save(ctx context.Context) (*TicketView, error) {
-	tvc.defaults()
-	return withHooks(ctx, tvc.sqlSave, tvc.mutation, tvc.hooks)
+func (_c *TicketViewCreate) Save(ctx context.Context) (*TicketView, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tvc *TicketViewCreate) SaveX(ctx context.Context) *TicketView {
-	v, err := tvc.Save(ctx)
+func (_c *TicketViewCreate) SaveX(ctx context.Context) *TicketView {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -151,81 +151,81 @@ func (tvc *TicketViewCreate) SaveX(ctx context.Context) *TicketView {
 }
 
 // Exec executes the query.
-func (tvc *TicketViewCreate) Exec(ctx context.Context) error {
-	_, err := tvc.Save(ctx)
+func (_c *TicketViewCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tvc *TicketViewCreate) ExecX(ctx context.Context) {
-	if err := tvc.Exec(ctx); err != nil {
+func (_c *TicketViewCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tvc *TicketViewCreate) defaults() {
-	if _, ok := tvc.mutation.IsShared(); !ok {
+func (_c *TicketViewCreate) defaults() {
+	if _, ok := _c.mutation.IsShared(); !ok {
 		v := ticketview.DefaultIsShared
-		tvc.mutation.SetIsShared(v)
+		_c.mutation.SetIsShared(v)
 	}
-	if _, ok := tvc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := ticketview.DefaultCreatedAt()
-		tvc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := tvc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := ticketview.DefaultUpdatedAt()
-		tvc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tvc *TicketViewCreate) check() error {
-	if _, ok := tvc.mutation.Name(); !ok {
+func (_c *TicketViewCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "TicketView.name"`)}
 	}
-	if v, ok := tvc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := ticketview.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketView.name": %w`, err)}
 		}
 	}
-	if _, ok := tvc.mutation.IsShared(); !ok {
+	if _, ok := _c.mutation.IsShared(); !ok {
 		return &ValidationError{Name: "is_shared", err: errors.New(`ent: missing required field "TicketView.is_shared"`)}
 	}
-	if _, ok := tvc.mutation.CreatedBy(); !ok {
+	if _, ok := _c.mutation.CreatedBy(); !ok {
 		return &ValidationError{Name: "created_by", err: errors.New(`ent: missing required field "TicketView.created_by"`)}
 	}
-	if v, ok := tvc.mutation.CreatedBy(); ok {
+	if v, ok := _c.mutation.CreatedBy(); ok {
 		if err := ticketview.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "TicketView.created_by": %w`, err)}
 		}
 	}
-	if _, ok := tvc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketView.tenant_id"`)}
 	}
-	if v, ok := tvc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := ticketview.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketView.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := tvc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketView.created_at"`)}
 	}
-	if _, ok := tvc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "TicketView.updated_at"`)}
 	}
-	if len(tvc.mutation.CreatorIDs()) == 0 {
+	if len(_c.mutation.CreatorIDs()) == 0 {
 		return &ValidationError{Name: "creator", err: errors.New(`ent: missing required edge "TicketView.creator"`)}
 	}
 	return nil
 }
 
-func (tvc *TicketViewCreate) sqlSave(ctx context.Context) (*TicketView, error) {
-	if err := tvc.check(); err != nil {
+func (_c *TicketViewCreate) sqlSave(ctx context.Context) (*TicketView, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tvc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tvc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -233,57 +233,57 @@ func (tvc *TicketViewCreate) sqlSave(ctx context.Context) (*TicketView, error) {
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tvc.mutation.id = &_node.ID
-	tvc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tvc *TicketViewCreate) createSpec() (*TicketView, *sqlgraph.CreateSpec) {
+func (_c *TicketViewCreate) createSpec() (*TicketView, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TicketView{config: tvc.config}
+		_node = &TicketView{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ticketview.Table, sqlgraph.NewFieldSpec(ticketview.FieldID, field.TypeInt))
 	)
-	if value, ok := tvc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(ticketview.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tvc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(ticketview.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := tvc.mutation.Filters(); ok {
+	if value, ok := _c.mutation.Filters(); ok {
 		_spec.SetField(ticketview.FieldFilters, field.TypeJSON, value)
 		_node.Filters = value
 	}
-	if value, ok := tvc.mutation.Columns(); ok {
+	if value, ok := _c.mutation.Columns(); ok {
 		_spec.SetField(ticketview.FieldColumns, field.TypeJSON, value)
 		_node.Columns = value
 	}
-	if value, ok := tvc.mutation.SortConfig(); ok {
+	if value, ok := _c.mutation.SortConfig(); ok {
 		_spec.SetField(ticketview.FieldSortConfig, field.TypeJSON, value)
 		_node.SortConfig = value
 	}
-	if value, ok := tvc.mutation.GroupConfig(); ok {
+	if value, ok := _c.mutation.GroupConfig(); ok {
 		_spec.SetField(ticketview.FieldGroupConfig, field.TypeJSON, value)
 		_node.GroupConfig = value
 	}
-	if value, ok := tvc.mutation.IsShared(); ok {
+	if value, ok := _c.mutation.IsShared(); ok {
 		_spec.SetField(ticketview.FieldIsShared, field.TypeBool, value)
 		_node.IsShared = value
 	}
-	if value, ok := tvc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticketview.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := tvc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketview.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := tvc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketview.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := tvc.mutation.CreatorIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.CreatorIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: false,
@@ -311,16 +311,16 @@ type TicketViewCreateBulk struct {
 }
 
 // Save creates the TicketView entities in the database.
-func (tvcb *TicketViewCreateBulk) Save(ctx context.Context) ([]*TicketView, error) {
-	if tvcb.err != nil {
-		return nil, tvcb.err
+func (_c *TicketViewCreateBulk) Save(ctx context.Context) ([]*TicketView, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tvcb.builders))
-	nodes := make([]*TicketView, len(tvcb.builders))
-	mutators := make([]Mutator, len(tvcb.builders))
-	for i := range tvcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TicketView, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tvcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketViewMutation)
@@ -334,11 +334,11 @@ func (tvcb *TicketViewCreateBulk) Save(ctx context.Context) ([]*TicketView, erro
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tvcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tvcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -362,7 +362,7 @@ func (tvcb *TicketViewCreateBulk) Save(ctx context.Context) ([]*TicketView, erro
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tvcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -370,8 +370,8 @@ func (tvcb *TicketViewCreateBulk) Save(ctx context.Context) ([]*TicketView, erro
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tvcb *TicketViewCreateBulk) SaveX(ctx context.Context) []*TicketView {
-	v, err := tvcb.Save(ctx)
+func (_c *TicketViewCreateBulk) SaveX(ctx context.Context) []*TicketView {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -379,14 +379,14 @@ func (tvcb *TicketViewCreateBulk) SaveX(ctx context.Context) []*TicketView {
 }
 
 // Exec executes the query.
-func (tvcb *TicketViewCreateBulk) Exec(ctx context.Context) error {
-	_, err := tvcb.Save(ctx)
+func (_c *TicketViewCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tvcb *TicketViewCreateBulk) ExecX(ctx context.Context) {
-	if err := tvcb.Exec(ctx); err != nil {
+func (_c *TicketViewCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -132,7 +132,7 @@ func (*ProcessDefinition) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ProcessDefinition fields.
-func (pd *ProcessDefinition) assignValues(columns []string, values []any) error {
+func (_m *ProcessDefinition) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -143,42 +143,42 @@ func (pd *ProcessDefinition) assignValues(columns []string, values []any) error 
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			pd.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case processdefinition.FieldKey:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field key", values[i])
 			} else if value.Valid {
-				pd.Key = value.String
+				_m.Key = value.String
 			}
 		case processdefinition.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				pd.Name = value.String
+				_m.Name = value.String
 			}
 		case processdefinition.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				pd.Description = value.String
+				_m.Description = value.String
 			}
 		case processdefinition.FieldVersion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field version", values[i])
 			} else if value.Valid {
-				pd.Version = value.String
+				_m.Version = value.String
 			}
 		case processdefinition.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field category", values[i])
 			} else if value.Valid {
-				pd.Category = value.String
+				_m.Category = value.String
 			}
 		case processdefinition.FieldBpmnXML:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field bpmn_xml", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pd.BpmnXML); err != nil {
+				if err := json.Unmarshal(*value, &_m.BpmnXML); err != nil {
 					return fmt.Errorf("unmarshal field bpmn_xml: %w", err)
 				}
 			}
@@ -186,7 +186,7 @@ func (pd *ProcessDefinition) assignValues(columns []string, values []any) error 
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field process_variables", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &pd.ProcessVariables); err != nil {
+				if err := json.Unmarshal(*value, &_m.ProcessVariables); err != nil {
 					return fmt.Errorf("unmarshal field process_variables: %w", err)
 				}
 			}
@@ -194,52 +194,52 @@ func (pd *ProcessDefinition) assignValues(columns []string, values []any) error 
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				pd.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case processdefinition.FieldIsLatest:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_latest", values[i])
 			} else if value.Valid {
-				pd.IsLatest = value.Bool
+				_m.IsLatest = value.Bool
 			}
 		case processdefinition.FieldDeploymentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field deployment_id", values[i])
 			} else if value.Valid {
-				pd.DeploymentID = int(value.Int64)
+				_m.DeploymentID = int(value.Int64)
 			}
 		case processdefinition.FieldDeploymentName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field deployment_name", values[i])
 			} else if value.Valid {
-				pd.DeploymentName = value.String
+				_m.DeploymentName = value.String
 			}
 		case processdefinition.FieldDeployedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field deployed_at", values[i])
 			} else if value.Valid {
-				pd.DeployedAt = value.Time
+				_m.DeployedAt = value.Time
 			}
 		case processdefinition.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				pd.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case processdefinition.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				pd.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case processdefinition.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				pd.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			pd.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -247,97 +247,97 @@ func (pd *ProcessDefinition) assignValues(columns []string, values []any) error 
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ProcessDefinition.
 // This includes values selected through modifiers, order, etc.
-func (pd *ProcessDefinition) Value(name string) (ent.Value, error) {
-	return pd.selectValues.Get(name)
+func (_m *ProcessDefinition) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryProcessInstances queries the "process_instances" edge of the ProcessDefinition entity.
-func (pd *ProcessDefinition) QueryProcessInstances() *ProcessInstanceQuery {
-	return NewProcessDefinitionClient(pd.config).QueryProcessInstances(pd)
+func (_m *ProcessDefinition) QueryProcessInstances() *ProcessInstanceQuery {
+	return NewProcessDefinitionClient(_m.config).QueryProcessInstances(_m)
 }
 
 // QueryBindings queries the "bindings" edge of the ProcessDefinition entity.
-func (pd *ProcessDefinition) QueryBindings() *ProcessBindingQuery {
-	return NewProcessDefinitionClient(pd.config).QueryBindings(pd)
+func (_m *ProcessDefinition) QueryBindings() *ProcessBindingQuery {
+	return NewProcessDefinitionClient(_m.config).QueryBindings(_m)
 }
 
 // QueryVersionChangelogs queries the "version_changelogs" edge of the ProcessDefinition entity.
-func (pd *ProcessDefinition) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
-	return NewProcessDefinitionClient(pd.config).QueryVersionChangelogs(pd)
+func (_m *ProcessDefinition) QueryVersionChangelogs() *ProcessVersionChangelogQuery {
+	return NewProcessDefinitionClient(_m.config).QueryVersionChangelogs(_m)
 }
 
 // QueryDeployment queries the "deployment" edge of the ProcessDefinition entity.
-func (pd *ProcessDefinition) QueryDeployment() *ProcessDeploymentQuery {
-	return NewProcessDefinitionClient(pd.config).QueryDeployment(pd)
+func (_m *ProcessDefinition) QueryDeployment() *ProcessDeploymentQuery {
+	return NewProcessDefinitionClient(_m.config).QueryDeployment(_m)
 }
 
 // Update returns a builder for updating this ProcessDefinition.
 // Note that you need to call ProcessDefinition.Unwrap() before calling this method if this ProcessDefinition
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (pd *ProcessDefinition) Update() *ProcessDefinitionUpdateOne {
-	return NewProcessDefinitionClient(pd.config).UpdateOne(pd)
+func (_m *ProcessDefinition) Update() *ProcessDefinitionUpdateOne {
+	return NewProcessDefinitionClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ProcessDefinition entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (pd *ProcessDefinition) Unwrap() *ProcessDefinition {
-	_tx, ok := pd.config.driver.(*txDriver)
+func (_m *ProcessDefinition) Unwrap() *ProcessDefinition {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ProcessDefinition is not a transactional entity")
 	}
-	pd.config.driver = _tx.drv
-	return pd
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (pd *ProcessDefinition) String() string {
+func (_m *ProcessDefinition) String() string {
 	var builder strings.Builder
 	builder.WriteString("ProcessDefinition(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", pd.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("key=")
-	builder.WriteString(pd.Key)
+	builder.WriteString(_m.Key)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
-	builder.WriteString(pd.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(pd.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("version=")
-	builder.WriteString(pd.Version)
+	builder.WriteString(_m.Version)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
-	builder.WriteString(pd.Category)
+	builder.WriteString(_m.Category)
 	builder.WriteString(", ")
 	builder.WriteString("bpmn_xml=")
-	builder.WriteString(fmt.Sprintf("%v", pd.BpmnXML))
+	builder.WriteString(fmt.Sprintf("%v", _m.BpmnXML))
 	builder.WriteString(", ")
 	builder.WriteString("process_variables=")
-	builder.WriteString(fmt.Sprintf("%v", pd.ProcessVariables))
+	builder.WriteString(fmt.Sprintf("%v", _m.ProcessVariables))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", pd.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("is_latest=")
-	builder.WriteString(fmt.Sprintf("%v", pd.IsLatest))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsLatest))
 	builder.WriteString(", ")
 	builder.WriteString("deployment_id=")
-	builder.WriteString(fmt.Sprintf("%v", pd.DeploymentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.DeploymentID))
 	builder.WriteString(", ")
 	builder.WriteString("deployment_name=")
-	builder.WriteString(pd.DeploymentName)
+	builder.WriteString(_m.DeploymentName)
 	builder.WriteString(", ")
 	builder.WriteString("deployed_at=")
-	builder.WriteString(pd.DeployedAt.Format(time.ANSIC))
+	builder.WriteString(_m.DeployedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", pd.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(pd.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(pd.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

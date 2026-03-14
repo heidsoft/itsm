@@ -24,178 +24,178 @@ type PermissionUpdate struct {
 }
 
 // Where appends a list predicates to the PermissionUpdate builder.
-func (pu *PermissionUpdate) Where(ps ...predicate.Permission) *PermissionUpdate {
-	pu.mutation.Where(ps...)
-	return pu
+func (_u *PermissionUpdate) Where(ps ...predicate.Permission) *PermissionUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetCode sets the "code" field.
-func (pu *PermissionUpdate) SetCode(s string) *PermissionUpdate {
-	pu.mutation.SetCode(s)
-	return pu
+func (_u *PermissionUpdate) SetCode(v string) *PermissionUpdate {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableCode(s *string) *PermissionUpdate {
-	if s != nil {
-		pu.SetCode(*s)
+func (_u *PermissionUpdate) SetNillableCode(v *string) *PermissionUpdate {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetName sets the "name" field.
-func (pu *PermissionUpdate) SetName(s string) *PermissionUpdate {
-	pu.mutation.SetName(s)
-	return pu
+func (_u *PermissionUpdate) SetName(v string) *PermissionUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableName(s *string) *PermissionUpdate {
-	if s != nil {
-		pu.SetName(*s)
+func (_u *PermissionUpdate) SetNillableName(v *string) *PermissionUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (pu *PermissionUpdate) SetDescription(s string) *PermissionUpdate {
-	pu.mutation.SetDescription(s)
-	return pu
+func (_u *PermissionUpdate) SetDescription(v string) *PermissionUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableDescription(s *string) *PermissionUpdate {
-	if s != nil {
-		pu.SetDescription(*s)
+func (_u *PermissionUpdate) SetNillableDescription(v *string) *PermissionUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return pu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (pu *PermissionUpdate) ClearDescription() *PermissionUpdate {
-	pu.mutation.ClearDescription()
-	return pu
+func (_u *PermissionUpdate) ClearDescription() *PermissionUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetResource sets the "resource" field.
-func (pu *PermissionUpdate) SetResource(s string) *PermissionUpdate {
-	pu.mutation.SetResource(s)
-	return pu
+func (_u *PermissionUpdate) SetResource(v string) *PermissionUpdate {
+	_u.mutation.SetResource(v)
+	return _u
 }
 
 // SetNillableResource sets the "resource" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableResource(s *string) *PermissionUpdate {
-	if s != nil {
-		pu.SetResource(*s)
+func (_u *PermissionUpdate) SetNillableResource(v *string) *PermissionUpdate {
+	if v != nil {
+		_u.SetResource(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (pu *PermissionUpdate) SetAction(s string) *PermissionUpdate {
-	pu.mutation.SetAction(s)
-	return pu
+func (_u *PermissionUpdate) SetAction(v string) *PermissionUpdate {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableAction(s *string) *PermissionUpdate {
-	if s != nil {
-		pu.SetAction(*s)
+func (_u *PermissionUpdate) SetNillableAction(v *string) *PermissionUpdate {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (pu *PermissionUpdate) SetTenantID(i int) *PermissionUpdate {
-	pu.mutation.ResetTenantID()
-	pu.mutation.SetTenantID(i)
-	return pu
+func (_u *PermissionUpdate) SetTenantID(v int) *PermissionUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableTenantID(i *int) *PermissionUpdate {
-	if i != nil {
-		pu.SetTenantID(*i)
+func (_u *PermissionUpdate) SetNillableTenantID(v *int) *PermissionUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return pu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (pu *PermissionUpdate) AddTenantID(i int) *PermissionUpdate {
-	pu.mutation.AddTenantID(i)
-	return pu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *PermissionUpdate) AddTenantID(v int) *PermissionUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (pu *PermissionUpdate) SetCreatedAt(t time.Time) *PermissionUpdate {
-	pu.mutation.SetCreatedAt(t)
-	return pu
+func (_u *PermissionUpdate) SetCreatedAt(v time.Time) *PermissionUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (pu *PermissionUpdate) SetNillableCreatedAt(t *time.Time) *PermissionUpdate {
-	if t != nil {
-		pu.SetCreatedAt(*t)
+func (_u *PermissionUpdate) SetNillableCreatedAt(v *time.Time) *PermissionUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return pu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (pu *PermissionUpdate) SetUpdatedAt(t time.Time) *PermissionUpdate {
-	pu.mutation.SetUpdatedAt(t)
-	return pu
+func (_u *PermissionUpdate) SetUpdatedAt(v time.Time) *PermissionUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (pu *PermissionUpdate) AddRoleIDs(ids ...int) *PermissionUpdate {
-	pu.mutation.AddRoleIDs(ids...)
-	return pu
+func (_u *PermissionUpdate) AddRoleIDs(ids ...int) *PermissionUpdate {
+	_u.mutation.AddRoleIDs(ids...)
+	return _u
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
-func (pu *PermissionUpdate) AddRoles(r ...*Role) *PermissionUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+func (_u *PermissionUpdate) AddRoles(v ...*Role) *PermissionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pu.AddRoleIDs(ids...)
+	return _u.AddRoleIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
-func (pu *PermissionUpdate) Mutation() *PermissionMutation {
-	return pu.mutation
+func (_u *PermissionUpdate) Mutation() *PermissionMutation {
+	return _u.mutation
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
-func (pu *PermissionUpdate) ClearRoles() *PermissionUpdate {
-	pu.mutation.ClearRoles()
-	return pu
+func (_u *PermissionUpdate) ClearRoles() *PermissionUpdate {
+	_u.mutation.ClearRoles()
+	return _u
 }
 
 // RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (pu *PermissionUpdate) RemoveRoleIDs(ids ...int) *PermissionUpdate {
-	pu.mutation.RemoveRoleIDs(ids...)
-	return pu
+func (_u *PermissionUpdate) RemoveRoleIDs(ids ...int) *PermissionUpdate {
+	_u.mutation.RemoveRoleIDs(ids...)
+	return _u
 }
 
 // RemoveRoles removes "roles" edges to Role entities.
-func (pu *PermissionUpdate) RemoveRoles(r ...*Role) *PermissionUpdate {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+func (_u *PermissionUpdate) RemoveRoles(v ...*Role) *PermissionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return pu.RemoveRoleIDs(ids...)
+	return _u.RemoveRoleIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (pu *PermissionUpdate) Save(ctx context.Context) (int, error) {
-	pu.defaults()
-	return withHooks(ctx, pu.sqlSave, pu.mutation, pu.hooks)
+func (_u *PermissionUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (pu *PermissionUpdate) SaveX(ctx context.Context) int {
-	affected, err := pu.Save(ctx)
+func (_u *PermissionUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -203,49 +203,49 @@ func (pu *PermissionUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (pu *PermissionUpdate) Exec(ctx context.Context) error {
-	_, err := pu.Save(ctx)
+func (_u *PermissionUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (pu *PermissionUpdate) ExecX(ctx context.Context) {
-	if err := pu.Exec(ctx); err != nil {
+func (_u *PermissionUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (pu *PermissionUpdate) defaults() {
-	if _, ok := pu.mutation.UpdatedAt(); !ok {
+func (_u *PermissionUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := permission.UpdateDefaultUpdatedAt()
-		pu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (pu *PermissionUpdate) check() error {
-	if v, ok := pu.mutation.Code(); ok {
+func (_u *PermissionUpdate) check() error {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := permission.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Permission.code": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.Name(); ok {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := permission.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Permission.name": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.Resource(); ok {
+	if v, ok := _u.mutation.Resource(); ok {
 		if err := permission.ResourceValidator(v); err != nil {
 			return &ValidationError{Name: "resource", err: fmt.Errorf(`ent: validator failed for field "Permission.resource": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.Action(); ok {
+	if v, ok := _u.mutation.Action(); ok {
 		if err := permission.ActionValidator(v); err != nil {
 			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "Permission.action": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := permission.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Permission.tenant_id": %w`, err)}
 		}
@@ -253,49 +253,49 @@ func (pu *PermissionUpdate) check() error {
 	return nil
 }
 
-func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := pu.check(); err != nil {
-		return n, err
+func (_u *PermissionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(permission.Table, permission.Columns, sqlgraph.NewFieldSpec(permission.FieldID, field.TypeInt))
-	if ps := pu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := pu.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(permission.FieldCode, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)
 	}
-	if pu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(permission.FieldDescription, field.TypeString)
 	}
-	if value, ok := pu.mutation.Resource(); ok {
+	if value, ok := _u.mutation.Resource(); ok {
 		_spec.SetField(permission.FieldResource, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(permission.FieldAction, field.TypeString, value)
 	}
-	if value, ok := pu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(permission.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(permission.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(permission.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := pu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(permission.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if pu.mutation.RolesCleared() {
+	if _u.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -308,7 +308,7 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RemovedRolesIDs(); len(nodes) > 0 && !pu.mutation.RolesCleared() {
+	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -324,7 +324,7 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := pu.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -340,7 +340,7 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, pu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{permission.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -348,8 +348,8 @@ func (pu *PermissionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	pu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // PermissionUpdateOne is the builder for updating a single Permission entity.
@@ -361,185 +361,185 @@ type PermissionUpdateOne struct {
 }
 
 // SetCode sets the "code" field.
-func (puo *PermissionUpdateOne) SetCode(s string) *PermissionUpdateOne {
-	puo.mutation.SetCode(s)
-	return puo
+func (_u *PermissionUpdateOne) SetCode(v string) *PermissionUpdateOne {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableCode(s *string) *PermissionUpdateOne {
-	if s != nil {
-		puo.SetCode(*s)
+func (_u *PermissionUpdateOne) SetNillableCode(v *string) *PermissionUpdateOne {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetName sets the "name" field.
-func (puo *PermissionUpdateOne) SetName(s string) *PermissionUpdateOne {
-	puo.mutation.SetName(s)
-	return puo
+func (_u *PermissionUpdateOne) SetName(v string) *PermissionUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableName(s *string) *PermissionUpdateOne {
-	if s != nil {
-		puo.SetName(*s)
+func (_u *PermissionUpdateOne) SetNillableName(v *string) *PermissionUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (puo *PermissionUpdateOne) SetDescription(s string) *PermissionUpdateOne {
-	puo.mutation.SetDescription(s)
-	return puo
+func (_u *PermissionUpdateOne) SetDescription(v string) *PermissionUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableDescription(s *string) *PermissionUpdateOne {
-	if s != nil {
-		puo.SetDescription(*s)
+func (_u *PermissionUpdateOne) SetNillableDescription(v *string) *PermissionUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return puo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (puo *PermissionUpdateOne) ClearDescription() *PermissionUpdateOne {
-	puo.mutation.ClearDescription()
-	return puo
+func (_u *PermissionUpdateOne) ClearDescription() *PermissionUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetResource sets the "resource" field.
-func (puo *PermissionUpdateOne) SetResource(s string) *PermissionUpdateOne {
-	puo.mutation.SetResource(s)
-	return puo
+func (_u *PermissionUpdateOne) SetResource(v string) *PermissionUpdateOne {
+	_u.mutation.SetResource(v)
+	return _u
 }
 
 // SetNillableResource sets the "resource" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableResource(s *string) *PermissionUpdateOne {
-	if s != nil {
-		puo.SetResource(*s)
+func (_u *PermissionUpdateOne) SetNillableResource(v *string) *PermissionUpdateOne {
+	if v != nil {
+		_u.SetResource(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetAction sets the "action" field.
-func (puo *PermissionUpdateOne) SetAction(s string) *PermissionUpdateOne {
-	puo.mutation.SetAction(s)
-	return puo
+func (_u *PermissionUpdateOne) SetAction(v string) *PermissionUpdateOne {
+	_u.mutation.SetAction(v)
+	return _u
 }
 
 // SetNillableAction sets the "action" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableAction(s *string) *PermissionUpdateOne {
-	if s != nil {
-		puo.SetAction(*s)
+func (_u *PermissionUpdateOne) SetNillableAction(v *string) *PermissionUpdateOne {
+	if v != nil {
+		_u.SetAction(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (puo *PermissionUpdateOne) SetTenantID(i int) *PermissionUpdateOne {
-	puo.mutation.ResetTenantID()
-	puo.mutation.SetTenantID(i)
-	return puo
+func (_u *PermissionUpdateOne) SetTenantID(v int) *PermissionUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableTenantID(i *int) *PermissionUpdateOne {
-	if i != nil {
-		puo.SetTenantID(*i)
+func (_u *PermissionUpdateOne) SetNillableTenantID(v *int) *PermissionUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return puo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (puo *PermissionUpdateOne) AddTenantID(i int) *PermissionUpdateOne {
-	puo.mutation.AddTenantID(i)
-	return puo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *PermissionUpdateOne) AddTenantID(v int) *PermissionUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (puo *PermissionUpdateOne) SetCreatedAt(t time.Time) *PermissionUpdateOne {
-	puo.mutation.SetCreatedAt(t)
-	return puo
+func (_u *PermissionUpdateOne) SetCreatedAt(v time.Time) *PermissionUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (puo *PermissionUpdateOne) SetNillableCreatedAt(t *time.Time) *PermissionUpdateOne {
-	if t != nil {
-		puo.SetCreatedAt(*t)
+func (_u *PermissionUpdateOne) SetNillableCreatedAt(v *time.Time) *PermissionUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return puo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (puo *PermissionUpdateOne) SetUpdatedAt(t time.Time) *PermissionUpdateOne {
-	puo.mutation.SetUpdatedAt(t)
-	return puo
+func (_u *PermissionUpdateOne) SetUpdatedAt(v time.Time) *PermissionUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddRoleIDs adds the "roles" edge to the Role entity by IDs.
-func (puo *PermissionUpdateOne) AddRoleIDs(ids ...int) *PermissionUpdateOne {
-	puo.mutation.AddRoleIDs(ids...)
-	return puo
+func (_u *PermissionUpdateOne) AddRoleIDs(ids ...int) *PermissionUpdateOne {
+	_u.mutation.AddRoleIDs(ids...)
+	return _u
 }
 
 // AddRoles adds the "roles" edges to the Role entity.
-func (puo *PermissionUpdateOne) AddRoles(r ...*Role) *PermissionUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+func (_u *PermissionUpdateOne) AddRoles(v ...*Role) *PermissionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return puo.AddRoleIDs(ids...)
+	return _u.AddRoleIDs(ids...)
 }
 
 // Mutation returns the PermissionMutation object of the builder.
-func (puo *PermissionUpdateOne) Mutation() *PermissionMutation {
-	return puo.mutation
+func (_u *PermissionUpdateOne) Mutation() *PermissionMutation {
+	return _u.mutation
 }
 
 // ClearRoles clears all "roles" edges to the Role entity.
-func (puo *PermissionUpdateOne) ClearRoles() *PermissionUpdateOne {
-	puo.mutation.ClearRoles()
-	return puo
+func (_u *PermissionUpdateOne) ClearRoles() *PermissionUpdateOne {
+	_u.mutation.ClearRoles()
+	return _u
 }
 
 // RemoveRoleIDs removes the "roles" edge to Role entities by IDs.
-func (puo *PermissionUpdateOne) RemoveRoleIDs(ids ...int) *PermissionUpdateOne {
-	puo.mutation.RemoveRoleIDs(ids...)
-	return puo
+func (_u *PermissionUpdateOne) RemoveRoleIDs(ids ...int) *PermissionUpdateOne {
+	_u.mutation.RemoveRoleIDs(ids...)
+	return _u
 }
 
 // RemoveRoles removes "roles" edges to Role entities.
-func (puo *PermissionUpdateOne) RemoveRoles(r ...*Role) *PermissionUpdateOne {
-	ids := make([]int, len(r))
-	for i := range r {
-		ids[i] = r[i].ID
+func (_u *PermissionUpdateOne) RemoveRoles(v ...*Role) *PermissionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return puo.RemoveRoleIDs(ids...)
+	return _u.RemoveRoleIDs(ids...)
 }
 
 // Where appends a list predicates to the PermissionUpdate builder.
-func (puo *PermissionUpdateOne) Where(ps ...predicate.Permission) *PermissionUpdateOne {
-	puo.mutation.Where(ps...)
-	return puo
+func (_u *PermissionUpdateOne) Where(ps ...predicate.Permission) *PermissionUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (puo *PermissionUpdateOne) Select(field string, fields ...string) *PermissionUpdateOne {
-	puo.fields = append([]string{field}, fields...)
-	return puo
+func (_u *PermissionUpdateOne) Select(field string, fields ...string) *PermissionUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Permission entity.
-func (puo *PermissionUpdateOne) Save(ctx context.Context) (*Permission, error) {
-	puo.defaults()
-	return withHooks(ctx, puo.sqlSave, puo.mutation, puo.hooks)
+func (_u *PermissionUpdateOne) Save(ctx context.Context) (*Permission, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (puo *PermissionUpdateOne) SaveX(ctx context.Context) *Permission {
-	node, err := puo.Save(ctx)
+func (_u *PermissionUpdateOne) SaveX(ctx context.Context) *Permission {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -547,49 +547,49 @@ func (puo *PermissionUpdateOne) SaveX(ctx context.Context) *Permission {
 }
 
 // Exec executes the query on the entity.
-func (puo *PermissionUpdateOne) Exec(ctx context.Context) error {
-	_, err := puo.Save(ctx)
+func (_u *PermissionUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (puo *PermissionUpdateOne) ExecX(ctx context.Context) {
-	if err := puo.Exec(ctx); err != nil {
+func (_u *PermissionUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (puo *PermissionUpdateOne) defaults() {
-	if _, ok := puo.mutation.UpdatedAt(); !ok {
+func (_u *PermissionUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := permission.UpdateDefaultUpdatedAt()
-		puo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (puo *PermissionUpdateOne) check() error {
-	if v, ok := puo.mutation.Code(); ok {
+func (_u *PermissionUpdateOne) check() error {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := permission.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Permission.code": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.Name(); ok {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := permission.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Permission.name": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.Resource(); ok {
+	if v, ok := _u.mutation.Resource(); ok {
 		if err := permission.ResourceValidator(v); err != nil {
 			return &ValidationError{Name: "resource", err: fmt.Errorf(`ent: validator failed for field "Permission.resource": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.Action(); ok {
+	if v, ok := _u.mutation.Action(); ok {
 		if err := permission.ActionValidator(v); err != nil {
 			return &ValidationError{Name: "action", err: fmt.Errorf(`ent: validator failed for field "Permission.action": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := permission.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Permission.tenant_id": %w`, err)}
 		}
@@ -597,17 +597,17 @@ func (puo *PermissionUpdateOne) check() error {
 	return nil
 }
 
-func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission, err error) {
-	if err := puo.check(); err != nil {
+func (_u *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(permission.Table, permission.Columns, sqlgraph.NewFieldSpec(permission.FieldID, field.TypeInt))
-	id, ok := puo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Permission.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := puo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, permission.FieldID)
 		for _, f := range fields {
@@ -619,44 +619,44 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 			}
 		}
 	}
-	if ps := puo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := puo.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(permission.FieldCode, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(permission.FieldName, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(permission.FieldDescription, field.TypeString, value)
 	}
-	if puo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(permission.FieldDescription, field.TypeString)
 	}
-	if value, ok := puo.mutation.Resource(); ok {
+	if value, ok := _u.mutation.Resource(); ok {
 		_spec.SetField(permission.FieldResource, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.Action(); ok {
+	if value, ok := _u.mutation.Action(); ok {
 		_spec.SetField(permission.FieldAction, field.TypeString, value)
 	}
-	if value, ok := puo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(permission.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(permission.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(permission.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := puo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(permission.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if puo.mutation.RolesCleared() {
+	if _u.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -669,7 +669,7 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RemovedRolesIDs(); len(nodes) > 0 && !puo.mutation.RolesCleared() {
+	if nodes := _u.mutation.RemovedRolesIDs(); len(nodes) > 0 && !_u.mutation.RolesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -685,7 +685,7 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := puo.mutation.RolesIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.RolesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -701,10 +701,10 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Permission{config: puo.config}
+	_node = &Permission{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, puo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{permission.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -712,6 +712,6 @@ func (puo *PermissionUpdateOne) sqlSave(ctx context.Context) (_node *Permission,
 		}
 		return nil, err
 	}
-	puo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

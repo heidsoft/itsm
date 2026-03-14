@@ -94,7 +94,7 @@ func (*DiscoveryJob) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the DiscoveryJob fields.
-func (dj *DiscoveryJob) assignValues(columns []string, values []any) error {
+func (_m *DiscoveryJob) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -105,36 +105,36 @@ func (dj *DiscoveryJob) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			dj.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case discoveryjob.FieldSourceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field source_id", values[i])
 			} else if value.Valid {
-				dj.SourceID = value.String
+				_m.SourceID = value.String
 			}
 		case discoveryjob.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				dj.Status = value.String
+				_m.Status = value.String
 			}
 		case discoveryjob.FieldStartedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field started_at", values[i])
 			} else if value.Valid {
-				dj.StartedAt = value.Time
+				_m.StartedAt = value.Time
 			}
 		case discoveryjob.FieldFinishedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field finished_at", values[i])
 			} else if value.Valid {
-				dj.FinishedAt = value.Time
+				_m.FinishedAt = value.Time
 			}
 		case discoveryjob.FieldSummary:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field summary", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &dj.Summary); err != nil {
+				if err := json.Unmarshal(*value, &_m.Summary); err != nil {
 					return fmt.Errorf("unmarshal field summary: %w", err)
 				}
 			}
@@ -142,22 +142,22 @@ func (dj *DiscoveryJob) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				dj.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case discoveryjob.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				dj.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case discoveryjob.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				dj.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			dj.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -165,66 +165,66 @@ func (dj *DiscoveryJob) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the DiscoveryJob.
 // This includes values selected through modifiers, order, etc.
-func (dj *DiscoveryJob) Value(name string) (ent.Value, error) {
-	return dj.selectValues.Get(name)
+func (_m *DiscoveryJob) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QuerySource queries the "source" edge of the DiscoveryJob entity.
-func (dj *DiscoveryJob) QuerySource() *DiscoverySourceQuery {
-	return NewDiscoveryJobClient(dj.config).QuerySource(dj)
+func (_m *DiscoveryJob) QuerySource() *DiscoverySourceQuery {
+	return NewDiscoveryJobClient(_m.config).QuerySource(_m)
 }
 
 // QueryResults queries the "results" edge of the DiscoveryJob entity.
-func (dj *DiscoveryJob) QueryResults() *DiscoveryResultQuery {
-	return NewDiscoveryJobClient(dj.config).QueryResults(dj)
+func (_m *DiscoveryJob) QueryResults() *DiscoveryResultQuery {
+	return NewDiscoveryJobClient(_m.config).QueryResults(_m)
 }
 
 // Update returns a builder for updating this DiscoveryJob.
 // Note that you need to call DiscoveryJob.Unwrap() before calling this method if this DiscoveryJob
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (dj *DiscoveryJob) Update() *DiscoveryJobUpdateOne {
-	return NewDiscoveryJobClient(dj.config).UpdateOne(dj)
+func (_m *DiscoveryJob) Update() *DiscoveryJobUpdateOne {
+	return NewDiscoveryJobClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the DiscoveryJob entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (dj *DiscoveryJob) Unwrap() *DiscoveryJob {
-	_tx, ok := dj.config.driver.(*txDriver)
+func (_m *DiscoveryJob) Unwrap() *DiscoveryJob {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: DiscoveryJob is not a transactional entity")
 	}
-	dj.config.driver = _tx.drv
-	return dj
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (dj *DiscoveryJob) String() string {
+func (_m *DiscoveryJob) String() string {
 	var builder strings.Builder
 	builder.WriteString("DiscoveryJob(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", dj.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("source_id=")
-	builder.WriteString(dj.SourceID)
+	builder.WriteString(_m.SourceID)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(dj.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("started_at=")
-	builder.WriteString(dj.StartedAt.Format(time.ANSIC))
+	builder.WriteString(_m.StartedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("finished_at=")
-	builder.WriteString(dj.FinishedAt.Format(time.ANSIC))
+	builder.WriteString(_m.FinishedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("summary=")
-	builder.WriteString(fmt.Sprintf("%v", dj.Summary))
+	builder.WriteString(fmt.Sprintf("%v", _m.Summary))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", dj.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(dj.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(dj.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

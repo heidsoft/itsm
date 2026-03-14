@@ -23,115 +23,115 @@ type PasswordResetTokenUpdate struct {
 }
 
 // Where appends a list predicates to the PasswordResetTokenUpdate builder.
-func (prtu *PasswordResetTokenUpdate) Where(ps ...predicate.PasswordResetToken) *PasswordResetTokenUpdate {
-	prtu.mutation.Where(ps...)
-	return prtu
+func (_u *PasswordResetTokenUpdate) Where(ps ...predicate.PasswordResetToken) *PasswordResetTokenUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetUserID sets the "user_id" field.
-func (prtu *PasswordResetTokenUpdate) SetUserID(i int) *PasswordResetTokenUpdate {
-	prtu.mutation.ResetUserID()
-	prtu.mutation.SetUserID(i)
-	return prtu
+func (_u *PasswordResetTokenUpdate) SetUserID(v int) *PasswordResetTokenUpdate {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (prtu *PasswordResetTokenUpdate) SetNillableUserID(i *int) *PasswordResetTokenUpdate {
-	if i != nil {
-		prtu.SetUserID(*i)
+func (_u *PasswordResetTokenUpdate) SetNillableUserID(v *int) *PasswordResetTokenUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return prtu
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (prtu *PasswordResetTokenUpdate) AddUserID(i int) *PasswordResetTokenUpdate {
-	prtu.mutation.AddUserID(i)
-	return prtu
+// AddUserID adds value to the "user_id" field.
+func (_u *PasswordResetTokenUpdate) AddUserID(v int) *PasswordResetTokenUpdate {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // SetEmail sets the "email" field.
-func (prtu *PasswordResetTokenUpdate) SetEmail(s string) *PasswordResetTokenUpdate {
-	prtu.mutation.SetEmail(s)
-	return prtu
+func (_u *PasswordResetTokenUpdate) SetEmail(v string) *PasswordResetTokenUpdate {
+	_u.mutation.SetEmail(v)
+	return _u
 }
 
 // SetNillableEmail sets the "email" field if the given value is not nil.
-func (prtu *PasswordResetTokenUpdate) SetNillableEmail(s *string) *PasswordResetTokenUpdate {
-	if s != nil {
-		prtu.SetEmail(*s)
+func (_u *PasswordResetTokenUpdate) SetNillableEmail(v *string) *PasswordResetTokenUpdate {
+	if v != nil {
+		_u.SetEmail(*v)
 	}
-	return prtu
+	return _u
 }
 
 // SetToken sets the "token" field.
-func (prtu *PasswordResetTokenUpdate) SetToken(s string) *PasswordResetTokenUpdate {
-	prtu.mutation.SetToken(s)
-	return prtu
+func (_u *PasswordResetTokenUpdate) SetToken(v string) *PasswordResetTokenUpdate {
+	_u.mutation.SetToken(v)
+	return _u
 }
 
 // SetNillableToken sets the "token" field if the given value is not nil.
-func (prtu *PasswordResetTokenUpdate) SetNillableToken(s *string) *PasswordResetTokenUpdate {
-	if s != nil {
-		prtu.SetToken(*s)
+func (_u *PasswordResetTokenUpdate) SetNillableToken(v *string) *PasswordResetTokenUpdate {
+	if v != nil {
+		_u.SetToken(*v)
 	}
-	return prtu
+	return _u
 }
 
 // SetExpiresAt sets the "expires_at" field.
-func (prtu *PasswordResetTokenUpdate) SetExpiresAt(t time.Time) *PasswordResetTokenUpdate {
-	prtu.mutation.SetExpiresAt(t)
-	return prtu
+func (_u *PasswordResetTokenUpdate) SetExpiresAt(v time.Time) *PasswordResetTokenUpdate {
+	_u.mutation.SetExpiresAt(v)
+	return _u
 }
 
 // SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
-func (prtu *PasswordResetTokenUpdate) SetNillableExpiresAt(t *time.Time) *PasswordResetTokenUpdate {
-	if t != nil {
-		prtu.SetExpiresAt(*t)
+func (_u *PasswordResetTokenUpdate) SetNillableExpiresAt(v *time.Time) *PasswordResetTokenUpdate {
+	if v != nil {
+		_u.SetExpiresAt(*v)
 	}
-	return prtu
+	return _u
 }
 
 // SetUsed sets the "used" field.
-func (prtu *PasswordResetTokenUpdate) SetUsed(b bool) *PasswordResetTokenUpdate {
-	prtu.mutation.SetUsed(b)
-	return prtu
+func (_u *PasswordResetTokenUpdate) SetUsed(v bool) *PasswordResetTokenUpdate {
+	_u.mutation.SetUsed(v)
+	return _u
 }
 
 // SetNillableUsed sets the "used" field if the given value is not nil.
-func (prtu *PasswordResetTokenUpdate) SetNillableUsed(b *bool) *PasswordResetTokenUpdate {
-	if b != nil {
-		prtu.SetUsed(*b)
+func (_u *PasswordResetTokenUpdate) SetNillableUsed(v *bool) *PasswordResetTokenUpdate {
+	if v != nil {
+		_u.SetUsed(*v)
 	}
-	return prtu
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (prtu *PasswordResetTokenUpdate) SetCreatedAt(t time.Time) *PasswordResetTokenUpdate {
-	prtu.mutation.SetCreatedAt(t)
-	return prtu
+func (_u *PasswordResetTokenUpdate) SetCreatedAt(v time.Time) *PasswordResetTokenUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (prtu *PasswordResetTokenUpdate) SetNillableCreatedAt(t *time.Time) *PasswordResetTokenUpdate {
-	if t != nil {
-		prtu.SetCreatedAt(*t)
+func (_u *PasswordResetTokenUpdate) SetNillableCreatedAt(v *time.Time) *PasswordResetTokenUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return prtu
+	return _u
 }
 
 // Mutation returns the PasswordResetTokenMutation object of the builder.
-func (prtu *PasswordResetTokenUpdate) Mutation() *PasswordResetTokenMutation {
-	return prtu.mutation
+func (_u *PasswordResetTokenUpdate) Mutation() *PasswordResetTokenMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (prtu *PasswordResetTokenUpdate) Save(ctx context.Context) (int, error) {
-	return withHooks(ctx, prtu.sqlSave, prtu.mutation, prtu.hooks)
+func (_u *PasswordResetTokenUpdate) Save(ctx context.Context) (int, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (prtu *PasswordResetTokenUpdate) SaveX(ctx context.Context) int {
-	affected, err := prtu.Save(ctx)
+func (_u *PasswordResetTokenUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -139,21 +139,21 @@ func (prtu *PasswordResetTokenUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (prtu *PasswordResetTokenUpdate) Exec(ctx context.Context) error {
-	_, err := prtu.Save(ctx)
+func (_u *PasswordResetTokenUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prtu *PasswordResetTokenUpdate) ExecX(ctx context.Context) {
-	if err := prtu.Exec(ctx); err != nil {
+func (_u *PasswordResetTokenUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (prtu *PasswordResetTokenUpdate) check() error {
-	if v, ok := prtu.mutation.Token(); ok {
+func (_u *PasswordResetTokenUpdate) check() error {
+	if v, ok := _u.mutation.Token(); ok {
 		if err := passwordresettoken.TokenValidator(v); err != nil {
 			return &ValidationError{Name: "token", err: fmt.Errorf(`ent: validator failed for field "PasswordResetToken.token": %w`, err)}
 		}
@@ -161,40 +161,40 @@ func (prtu *PasswordResetTokenUpdate) check() error {
 	return nil
 }
 
-func (prtu *PasswordResetTokenUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := prtu.check(); err != nil {
-		return n, err
+func (_u *PasswordResetTokenUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(passwordresettoken.Table, passwordresettoken.Columns, sqlgraph.NewFieldSpec(passwordresettoken.FieldID, field.TypeInt))
-	if ps := prtu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := prtu.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(passwordresettoken.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := prtu.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(passwordresettoken.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := prtu.mutation.Email(); ok {
+	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(passwordresettoken.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := prtu.mutation.Token(); ok {
+	if value, ok := _u.mutation.Token(); ok {
 		_spec.SetField(passwordresettoken.FieldToken, field.TypeString, value)
 	}
-	if value, ok := prtu.mutation.ExpiresAt(); ok {
+	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(passwordresettoken.FieldExpiresAt, field.TypeTime, value)
 	}
-	if value, ok := prtu.mutation.Used(); ok {
+	if value, ok := _u.mutation.Used(); ok {
 		_spec.SetField(passwordresettoken.FieldUsed, field.TypeBool, value)
 	}
-	if value, ok := prtu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(passwordresettoken.FieldCreatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, prtu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{passwordresettoken.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -202,8 +202,8 @@ func (prtu *PasswordResetTokenUpdate) sqlSave(ctx context.Context) (n int, err e
 		}
 		return 0, err
 	}
-	prtu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // PasswordResetTokenUpdateOne is the builder for updating a single PasswordResetToken entity.
@@ -215,122 +215,122 @@ type PasswordResetTokenUpdateOne struct {
 }
 
 // SetUserID sets the "user_id" field.
-func (prtuo *PasswordResetTokenUpdateOne) SetUserID(i int) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.ResetUserID()
-	prtuo.mutation.SetUserID(i)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) SetUserID(v int) *PasswordResetTokenUpdateOne {
+	_u.mutation.ResetUserID()
+	_u.mutation.SetUserID(v)
+	return _u
 }
 
 // SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (prtuo *PasswordResetTokenUpdateOne) SetNillableUserID(i *int) *PasswordResetTokenUpdateOne {
-	if i != nil {
-		prtuo.SetUserID(*i)
+func (_u *PasswordResetTokenUpdateOne) SetNillableUserID(v *int) *PasswordResetTokenUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
 	}
-	return prtuo
+	return _u
 }
 
-// AddUserID adds i to the "user_id" field.
-func (prtuo *PasswordResetTokenUpdateOne) AddUserID(i int) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.AddUserID(i)
-	return prtuo
+// AddUserID adds value to the "user_id" field.
+func (_u *PasswordResetTokenUpdateOne) AddUserID(v int) *PasswordResetTokenUpdateOne {
+	_u.mutation.AddUserID(v)
+	return _u
 }
 
 // SetEmail sets the "email" field.
-func (prtuo *PasswordResetTokenUpdateOne) SetEmail(s string) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.SetEmail(s)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) SetEmail(v string) *PasswordResetTokenUpdateOne {
+	_u.mutation.SetEmail(v)
+	return _u
 }
 
 // SetNillableEmail sets the "email" field if the given value is not nil.
-func (prtuo *PasswordResetTokenUpdateOne) SetNillableEmail(s *string) *PasswordResetTokenUpdateOne {
-	if s != nil {
-		prtuo.SetEmail(*s)
+func (_u *PasswordResetTokenUpdateOne) SetNillableEmail(v *string) *PasswordResetTokenUpdateOne {
+	if v != nil {
+		_u.SetEmail(*v)
 	}
-	return prtuo
+	return _u
 }
 
 // SetToken sets the "token" field.
-func (prtuo *PasswordResetTokenUpdateOne) SetToken(s string) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.SetToken(s)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) SetToken(v string) *PasswordResetTokenUpdateOne {
+	_u.mutation.SetToken(v)
+	return _u
 }
 
 // SetNillableToken sets the "token" field if the given value is not nil.
-func (prtuo *PasswordResetTokenUpdateOne) SetNillableToken(s *string) *PasswordResetTokenUpdateOne {
-	if s != nil {
-		prtuo.SetToken(*s)
+func (_u *PasswordResetTokenUpdateOne) SetNillableToken(v *string) *PasswordResetTokenUpdateOne {
+	if v != nil {
+		_u.SetToken(*v)
 	}
-	return prtuo
+	return _u
 }
 
 // SetExpiresAt sets the "expires_at" field.
-func (prtuo *PasswordResetTokenUpdateOne) SetExpiresAt(t time.Time) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.SetExpiresAt(t)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) SetExpiresAt(v time.Time) *PasswordResetTokenUpdateOne {
+	_u.mutation.SetExpiresAt(v)
+	return _u
 }
 
 // SetNillableExpiresAt sets the "expires_at" field if the given value is not nil.
-func (prtuo *PasswordResetTokenUpdateOne) SetNillableExpiresAt(t *time.Time) *PasswordResetTokenUpdateOne {
-	if t != nil {
-		prtuo.SetExpiresAt(*t)
+func (_u *PasswordResetTokenUpdateOne) SetNillableExpiresAt(v *time.Time) *PasswordResetTokenUpdateOne {
+	if v != nil {
+		_u.SetExpiresAt(*v)
 	}
-	return prtuo
+	return _u
 }
 
 // SetUsed sets the "used" field.
-func (prtuo *PasswordResetTokenUpdateOne) SetUsed(b bool) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.SetUsed(b)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) SetUsed(v bool) *PasswordResetTokenUpdateOne {
+	_u.mutation.SetUsed(v)
+	return _u
 }
 
 // SetNillableUsed sets the "used" field if the given value is not nil.
-func (prtuo *PasswordResetTokenUpdateOne) SetNillableUsed(b *bool) *PasswordResetTokenUpdateOne {
-	if b != nil {
-		prtuo.SetUsed(*b)
+func (_u *PasswordResetTokenUpdateOne) SetNillableUsed(v *bool) *PasswordResetTokenUpdateOne {
+	if v != nil {
+		_u.SetUsed(*v)
 	}
-	return prtuo
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (prtuo *PasswordResetTokenUpdateOne) SetCreatedAt(t time.Time) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.SetCreatedAt(t)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) SetCreatedAt(v time.Time) *PasswordResetTokenUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (prtuo *PasswordResetTokenUpdateOne) SetNillableCreatedAt(t *time.Time) *PasswordResetTokenUpdateOne {
-	if t != nil {
-		prtuo.SetCreatedAt(*t)
+func (_u *PasswordResetTokenUpdateOne) SetNillableCreatedAt(v *time.Time) *PasswordResetTokenUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return prtuo
+	return _u
 }
 
 // Mutation returns the PasswordResetTokenMutation object of the builder.
-func (prtuo *PasswordResetTokenUpdateOne) Mutation() *PasswordResetTokenMutation {
-	return prtuo.mutation
+func (_u *PasswordResetTokenUpdateOne) Mutation() *PasswordResetTokenMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the PasswordResetTokenUpdate builder.
-func (prtuo *PasswordResetTokenUpdateOne) Where(ps ...predicate.PasswordResetToken) *PasswordResetTokenUpdateOne {
-	prtuo.mutation.Where(ps...)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) Where(ps ...predicate.PasswordResetToken) *PasswordResetTokenUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (prtuo *PasswordResetTokenUpdateOne) Select(field string, fields ...string) *PasswordResetTokenUpdateOne {
-	prtuo.fields = append([]string{field}, fields...)
-	return prtuo
+func (_u *PasswordResetTokenUpdateOne) Select(field string, fields ...string) *PasswordResetTokenUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated PasswordResetToken entity.
-func (prtuo *PasswordResetTokenUpdateOne) Save(ctx context.Context) (*PasswordResetToken, error) {
-	return withHooks(ctx, prtuo.sqlSave, prtuo.mutation, prtuo.hooks)
+func (_u *PasswordResetTokenUpdateOne) Save(ctx context.Context) (*PasswordResetToken, error) {
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (prtuo *PasswordResetTokenUpdateOne) SaveX(ctx context.Context) *PasswordResetToken {
-	node, err := prtuo.Save(ctx)
+func (_u *PasswordResetTokenUpdateOne) SaveX(ctx context.Context) *PasswordResetToken {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -338,21 +338,21 @@ func (prtuo *PasswordResetTokenUpdateOne) SaveX(ctx context.Context) *PasswordRe
 }
 
 // Exec executes the query on the entity.
-func (prtuo *PasswordResetTokenUpdateOne) Exec(ctx context.Context) error {
-	_, err := prtuo.Save(ctx)
+func (_u *PasswordResetTokenUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (prtuo *PasswordResetTokenUpdateOne) ExecX(ctx context.Context) {
-	if err := prtuo.Exec(ctx); err != nil {
+func (_u *PasswordResetTokenUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (prtuo *PasswordResetTokenUpdateOne) check() error {
-	if v, ok := prtuo.mutation.Token(); ok {
+func (_u *PasswordResetTokenUpdateOne) check() error {
+	if v, ok := _u.mutation.Token(); ok {
 		if err := passwordresettoken.TokenValidator(v); err != nil {
 			return &ValidationError{Name: "token", err: fmt.Errorf(`ent: validator failed for field "PasswordResetToken.token": %w`, err)}
 		}
@@ -360,17 +360,17 @@ func (prtuo *PasswordResetTokenUpdateOne) check() error {
 	return nil
 }
 
-func (prtuo *PasswordResetTokenUpdateOne) sqlSave(ctx context.Context) (_node *PasswordResetToken, err error) {
-	if err := prtuo.check(); err != nil {
+func (_u *PasswordResetTokenUpdateOne) sqlSave(ctx context.Context) (_node *PasswordResetToken, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(passwordresettoken.Table, passwordresettoken.Columns, sqlgraph.NewFieldSpec(passwordresettoken.FieldID, field.TypeInt))
-	id, ok := prtuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "PasswordResetToken.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := prtuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, passwordresettoken.FieldID)
 		for _, f := range fields {
@@ -382,38 +382,38 @@ func (prtuo *PasswordResetTokenUpdateOne) sqlSave(ctx context.Context) (_node *P
 			}
 		}
 	}
-	if ps := prtuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := prtuo.mutation.UserID(); ok {
+	if value, ok := _u.mutation.UserID(); ok {
 		_spec.SetField(passwordresettoken.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := prtuo.mutation.AddedUserID(); ok {
+	if value, ok := _u.mutation.AddedUserID(); ok {
 		_spec.AddField(passwordresettoken.FieldUserID, field.TypeInt, value)
 	}
-	if value, ok := prtuo.mutation.Email(); ok {
+	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(passwordresettoken.FieldEmail, field.TypeString, value)
 	}
-	if value, ok := prtuo.mutation.Token(); ok {
+	if value, ok := _u.mutation.Token(); ok {
 		_spec.SetField(passwordresettoken.FieldToken, field.TypeString, value)
 	}
-	if value, ok := prtuo.mutation.ExpiresAt(); ok {
+	if value, ok := _u.mutation.ExpiresAt(); ok {
 		_spec.SetField(passwordresettoken.FieldExpiresAt, field.TypeTime, value)
 	}
-	if value, ok := prtuo.mutation.Used(); ok {
+	if value, ok := _u.mutation.Used(); ok {
 		_spec.SetField(passwordresettoken.FieldUsed, field.TypeBool, value)
 	}
-	if value, ok := prtuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(passwordresettoken.FieldCreatedAt, field.TypeTime, value)
 	}
-	_node = &PasswordResetToken{config: prtuo.config}
+	_node = &PasswordResetToken{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, prtuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{passwordresettoken.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -421,6 +421,6 @@ func (prtuo *PasswordResetTokenUpdateOne) sqlSave(ctx context.Context) (_node *P
 		}
 		return nil, err
 	}
-	prtuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

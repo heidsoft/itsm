@@ -3,9 +3,11 @@
 package tenant
 
 import (
+	"fmt"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 const (
@@ -23,14 +25,34 @@ const (
 	FieldType = "type"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldParentTenantID holds the string denoting the parent_tenant_id field in the database.
+	FieldParentTenantID = "parent_tenant_id"
+	// FieldMspProviderID holds the string denoting the msp_provider_id field in the database.
+	FieldMspProviderID = "msp_provider_id"
 	// FieldExpiresAt holds the string denoting the expires_at field in the database.
 	FieldExpiresAt = "expires_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// EdgeUsers holds the string denoting the users edge name in mutations.
+	EdgeUsers = "users"
+	// EdgeMspCustomerAllocations holds the string denoting the msp_customer_allocations edge name in mutations.
+	EdgeMspCustomerAllocations = "msp_customer_allocations"
 	// Table holds the table name of the tenant in the database.
 	Table = "tenants"
+	// UsersTable is the table that holds the users relation/edge.
+	UsersTable = "users"
+	// UsersInverseTable is the table name for the User entity.
+	// It exists in this package in order to avoid circular dependency with the "user" package.
+	UsersInverseTable = "users"
+	// UsersColumn is the table column denoting the users relation/edge.
+	UsersColumn = "tenant_id"
+	// MspCustomerAllocationsTable is the table that holds the msp_customer_allocations relation/edge. The primary key declared below.
+	MspCustomerAllocationsTable = "tenant_msp_customer_allocations"
+	// MspCustomerAllocationsInverseTable is the table name for the MSPAllocation entity.
+	// It exists in this package in order to avoid circular dependency with the "mspallocation" package.
+	MspCustomerAllocationsInverseTable = "msp_allocations"
 )
 
 // Columns holds all SQL columns for tenant fields.
@@ -41,10 +63,18 @@ var Columns = []string{
 	FieldDomain,
 	FieldType,
 	FieldStatus,
+	FieldParentTenantID,
+	FieldMspProviderID,
 	FieldExpiresAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
+
+var (
+	// MspCustomerAllocationsPrimaryKey and MspCustomerAllocationsColumn2 are the table columns denoting the
+	// primary key for the msp_customer_allocations relation (M2M).
+	MspCustomerAllocationsPrimaryKey = []string{"tenant_id", "msp_allocation_id"}
+)
 
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
@@ -61,8 +91,6 @@ var (
 	NameValidator func(string) error
 	// CodeValidator is a validator for the "code" field. It is called by the builders before save.
 	CodeValidator func(string) error
-	// DefaultType holds the default value on creation for the "type" field.
-	DefaultType string
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus string
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -72,6 +100,33 @@ var (
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
 )
+
+// Type defines the type for the "type" enum field.
+type Type string
+
+// TypeStandard is the default value of the Type enum.
+const DefaultType = TypeStandard
+
+// Type values.
+const (
+	TypeStandard Type = "standard"
+	TypeMsp      Type = "msp"
+	TypeCustomer Type = "customer"
+)
+
+func (_type Type) String() string {
+	return string(_type)
+}
+
+// TypeValidator is a validator for the "type" field enum values. It is called by the builders before save.
+func TypeValidator(_type Type) error {
+	switch _type {
+	case TypeStandard, TypeMsp, TypeCustomer:
+		return nil
+	default:
+		return fmt.Errorf("tenant: invalid enum value for type field: %q", _type)
+	}
+}
 
 // OrderOption defines the ordering options for the Tenant queries.
 type OrderOption func(*sql.Selector)
@@ -106,6 +161,16 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldStatus, opts...).ToFunc()
 }
 
+// ByParentTenantID orders the results by the parent_tenant_id field.
+func ByParentTenantID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldParentTenantID, opts...).ToFunc()
+}
+
+// ByMspProviderID orders the results by the msp_provider_id field.
+func ByMspProviderID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMspProviderID, opts...).ToFunc()
+}
+
 // ByExpiresAt orders the results by the expires_at field.
 func ByExpiresAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldExpiresAt, opts...).ToFunc()
@@ -119,4 +184,46 @@ func ByCreatedAt(opts ...sql.OrderTermOption) OrderOption {
 // ByUpdatedAt orders the results by the updated_at field.
 func ByUpdatedAt(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUpdatedAt, opts...).ToFunc()
+}
+
+// ByUsersCount orders the results by users count.
+func ByUsersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUsersStep(), opts...)
+	}
+}
+
+// ByUsers orders the results by users terms.
+func ByUsers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUsersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByMspCustomerAllocationsCount orders the results by msp_customer_allocations count.
+func ByMspCustomerAllocationsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMspCustomerAllocationsStep(), opts...)
+	}
+}
+
+// ByMspCustomerAllocations orders the results by msp_customer_allocations terms.
+func ByMspCustomerAllocations(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMspCustomerAllocationsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+func newUsersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UsersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
+	)
+}
+func newMspCustomerAllocationsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MspCustomerAllocationsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2M, false, MspCustomerAllocationsTable, MspCustomerAllocationsPrimaryKey...),
+	)
 }

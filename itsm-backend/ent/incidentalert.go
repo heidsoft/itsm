@@ -99,7 +99,7 @@ func (*IncidentAlert) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the IncidentAlert fields.
-func (ia *IncidentAlert) assignValues(columns []string, values []any) error {
+func (_m *IncidentAlert) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -110,48 +110,48 @@ func (ia *IncidentAlert) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ia.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case incidentalert.FieldIncidentID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field incident_id", values[i])
 			} else if value.Valid {
-				ia.IncidentID = int(value.Int64)
+				_m.IncidentID = int(value.Int64)
 			}
 		case incidentalert.FieldAlertType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_type", values[i])
 			} else if value.Valid {
-				ia.AlertType = value.String
+				_m.AlertType = value.String
 			}
 		case incidentalert.FieldAlertName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_name", values[i])
 			} else if value.Valid {
-				ia.AlertName = value.String
+				_m.AlertName = value.String
 			}
 		case incidentalert.FieldMessage:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field message", values[i])
 			} else if value.Valid {
-				ia.Message = value.String
+				_m.Message = value.String
 			}
 		case incidentalert.FieldSeverity:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field severity", values[i])
 			} else if value.Valid {
-				ia.Severity = value.String
+				_m.Severity = value.String
 			}
 		case incidentalert.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				ia.Status = value.String
+				_m.Status = value.String
 			}
 		case incidentalert.FieldChannels:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field channels", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ia.Channels); err != nil {
+				if err := json.Unmarshal(*value, &_m.Channels); err != nil {
 					return fmt.Errorf("unmarshal field channels: %w", err)
 				}
 			}
@@ -159,7 +159,7 @@ func (ia *IncidentAlert) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field recipients", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ia.Recipients); err != nil {
+				if err := json.Unmarshal(*value, &_m.Recipients); err != nil {
 					return fmt.Errorf("unmarshal field recipients: %w", err)
 				}
 			}
@@ -167,31 +167,31 @@ func (ia *IncidentAlert) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field triggered_at", values[i])
 			} else if value.Valid {
-				ia.TriggeredAt = value.Time
+				_m.TriggeredAt = value.Time
 			}
 		case incidentalert.FieldAcknowledgedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field acknowledged_at", values[i])
 			} else if value.Valid {
-				ia.AcknowledgedAt = value.Time
+				_m.AcknowledgedAt = value.Time
 			}
 		case incidentalert.FieldResolvedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
 			} else if value.Valid {
-				ia.ResolvedAt = value.Time
+				_m.ResolvedAt = value.Time
 			}
 		case incidentalert.FieldAcknowledgedBy:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field acknowledged_by", values[i])
 			} else if value.Valid {
-				ia.AcknowledgedBy = int(value.Int64)
+				_m.AcknowledgedBy = int(value.Int64)
 			}
 		case incidentalert.FieldMetadata:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ia.Metadata); err != nil {
+				if err := json.Unmarshal(*value, &_m.Metadata); err != nil {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
 				}
 			}
@@ -199,22 +199,22 @@ func (ia *IncidentAlert) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ia.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case incidentalert.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ia.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case incidentalert.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ia.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ia.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -222,85 +222,85 @@ func (ia *IncidentAlert) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the IncidentAlert.
 // This includes values selected through modifiers, order, etc.
-func (ia *IncidentAlert) Value(name string) (ent.Value, error) {
-	return ia.selectValues.Get(name)
+func (_m *IncidentAlert) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryIncident queries the "incident" edge of the IncidentAlert entity.
-func (ia *IncidentAlert) QueryIncident() *IncidentQuery {
-	return NewIncidentAlertClient(ia.config).QueryIncident(ia)
+func (_m *IncidentAlert) QueryIncident() *IncidentQuery {
+	return NewIncidentAlertClient(_m.config).QueryIncident(_m)
 }
 
 // Update returns a builder for updating this IncidentAlert.
 // Note that you need to call IncidentAlert.Unwrap() before calling this method if this IncidentAlert
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ia *IncidentAlert) Update() *IncidentAlertUpdateOne {
-	return NewIncidentAlertClient(ia.config).UpdateOne(ia)
+func (_m *IncidentAlert) Update() *IncidentAlertUpdateOne {
+	return NewIncidentAlertClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the IncidentAlert entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ia *IncidentAlert) Unwrap() *IncidentAlert {
-	_tx, ok := ia.config.driver.(*txDriver)
+func (_m *IncidentAlert) Unwrap() *IncidentAlert {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: IncidentAlert is not a transactional entity")
 	}
-	ia.config.driver = _tx.drv
-	return ia
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ia *IncidentAlert) String() string {
+func (_m *IncidentAlert) String() string {
 	var builder strings.Builder
 	builder.WriteString("IncidentAlert(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ia.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("incident_id=")
-	builder.WriteString(fmt.Sprintf("%v", ia.IncidentID))
+	builder.WriteString(fmt.Sprintf("%v", _m.IncidentID))
 	builder.WriteString(", ")
 	builder.WriteString("alert_type=")
-	builder.WriteString(ia.AlertType)
+	builder.WriteString(_m.AlertType)
 	builder.WriteString(", ")
 	builder.WriteString("alert_name=")
-	builder.WriteString(ia.AlertName)
+	builder.WriteString(_m.AlertName)
 	builder.WriteString(", ")
 	builder.WriteString("message=")
-	builder.WriteString(ia.Message)
+	builder.WriteString(_m.Message)
 	builder.WriteString(", ")
 	builder.WriteString("severity=")
-	builder.WriteString(ia.Severity)
+	builder.WriteString(_m.Severity)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(ia.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("channels=")
-	builder.WriteString(fmt.Sprintf("%v", ia.Channels))
+	builder.WriteString(fmt.Sprintf("%v", _m.Channels))
 	builder.WriteString(", ")
 	builder.WriteString("recipients=")
-	builder.WriteString(fmt.Sprintf("%v", ia.Recipients))
+	builder.WriteString(fmt.Sprintf("%v", _m.Recipients))
 	builder.WriteString(", ")
 	builder.WriteString("triggered_at=")
-	builder.WriteString(ia.TriggeredAt.Format(time.ANSIC))
+	builder.WriteString(_m.TriggeredAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("acknowledged_at=")
-	builder.WriteString(ia.AcknowledgedAt.Format(time.ANSIC))
+	builder.WriteString(_m.AcknowledgedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("resolved_at=")
-	builder.WriteString(ia.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ResolvedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("acknowledged_by=")
-	builder.WriteString(fmt.Sprintf("%v", ia.AcknowledgedBy))
+	builder.WriteString(fmt.Sprintf("%v", _m.AcknowledgedBy))
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
-	builder.WriteString(fmt.Sprintf("%v", ia.Metadata))
+	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ia.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ia.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ia.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

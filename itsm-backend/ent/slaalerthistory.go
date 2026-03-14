@@ -108,7 +108,7 @@ func (*SLAAlertHistory) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the SLAAlertHistory fields.
-func (sah *SLAAlertHistory) assignValues(columns []string, values []any) error {
+func (_m *SLAAlertHistory) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -119,87 +119,87 @@ func (sah *SLAAlertHistory) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sah.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case slaalerthistory.FieldTicketID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_id", values[i])
 			} else if value.Valid {
-				sah.TicketID = int(value.Int64)
+				_m.TicketID = int(value.Int64)
 			}
 		case slaalerthistory.FieldTicketNumber:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_number", values[i])
 			} else if value.Valid {
-				sah.TicketNumber = value.String
+				_m.TicketNumber = value.String
 			}
 		case slaalerthistory.FieldTicketTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_title", values[i])
 			} else if value.Valid {
-				sah.TicketTitle = value.String
+				_m.TicketTitle = value.String
 			}
 		case slaalerthistory.FieldAlertRuleID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_rule_id", values[i])
 			} else if value.Valid {
-				sah.AlertRuleID = int(value.Int64)
+				_m.AlertRuleID = int(value.Int64)
 			}
 		case slaalerthistory.FieldAlertRuleName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_rule_name", values[i])
 			} else if value.Valid {
-				sah.AlertRuleName = value.String
+				_m.AlertRuleName = value.String
 			}
 		case slaalerthistory.FieldAlertLevel:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_level", values[i])
 			} else if value.Valid {
-				sah.AlertLevel = value.String
+				_m.AlertLevel = value.String
 			}
 		case slaalerthistory.FieldThresholdPercentage:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field threshold_percentage", values[i])
 			} else if value.Valid {
-				sah.ThresholdPercentage = int(value.Int64)
+				_m.ThresholdPercentage = int(value.Int64)
 			}
 		case slaalerthistory.FieldActualPercentage:
 			if value, ok := values[i].(*sql.NullFloat64); !ok {
 				return fmt.Errorf("unexpected type %T for field actual_percentage", values[i])
 			} else if value.Valid {
-				sah.ActualPercentage = value.Float64
+				_m.ActualPercentage = value.Float64
 			}
 		case slaalerthistory.FieldNotificationSent:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field notification_sent", values[i])
 			} else if value.Valid {
-				sah.NotificationSent = value.Bool
+				_m.NotificationSent = value.Bool
 			}
 		case slaalerthistory.FieldEscalationLevel:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field escalation_level", values[i])
 			} else if value.Valid {
-				sah.EscalationLevel = int(value.Int64)
+				_m.EscalationLevel = int(value.Int64)
 			}
 		case slaalerthistory.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sah.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case slaalerthistory.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sah.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case slaalerthistory.FieldResolvedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field resolved_at", values[i])
 			} else if value.Valid {
-				sah.ResolvedAt = value.Time
+				_m.ResolvedAt = value.Time
 			}
 		default:
-			sah.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -207,81 +207,81 @@ func (sah *SLAAlertHistory) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the SLAAlertHistory.
 // This includes values selected through modifiers, order, etc.
-func (sah *SLAAlertHistory) Value(name string) (ent.Value, error) {
-	return sah.selectValues.Get(name)
+func (_m *SLAAlertHistory) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryTicket queries the "ticket" edge of the SLAAlertHistory entity.
-func (sah *SLAAlertHistory) QueryTicket() *TicketQuery {
-	return NewSLAAlertHistoryClient(sah.config).QueryTicket(sah)
+func (_m *SLAAlertHistory) QueryTicket() *TicketQuery {
+	return NewSLAAlertHistoryClient(_m.config).QueryTicket(_m)
 }
 
 // QueryAlertRule queries the "alert_rule" edge of the SLAAlertHistory entity.
-func (sah *SLAAlertHistory) QueryAlertRule() *SLAAlertRuleQuery {
-	return NewSLAAlertHistoryClient(sah.config).QueryAlertRule(sah)
+func (_m *SLAAlertHistory) QueryAlertRule() *SLAAlertRuleQuery {
+	return NewSLAAlertHistoryClient(_m.config).QueryAlertRule(_m)
 }
 
 // Update returns a builder for updating this SLAAlertHistory.
 // Note that you need to call SLAAlertHistory.Unwrap() before calling this method if this SLAAlertHistory
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sah *SLAAlertHistory) Update() *SLAAlertHistoryUpdateOne {
-	return NewSLAAlertHistoryClient(sah.config).UpdateOne(sah)
+func (_m *SLAAlertHistory) Update() *SLAAlertHistoryUpdateOne {
+	return NewSLAAlertHistoryClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the SLAAlertHistory entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sah *SLAAlertHistory) Unwrap() *SLAAlertHistory {
-	_tx, ok := sah.config.driver.(*txDriver)
+func (_m *SLAAlertHistory) Unwrap() *SLAAlertHistory {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: SLAAlertHistory is not a transactional entity")
 	}
-	sah.config.driver = _tx.drv
-	return sah
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sah *SLAAlertHistory) String() string {
+func (_m *SLAAlertHistory) String() string {
 	var builder strings.Builder
 	builder.WriteString("SLAAlertHistory(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sah.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("ticket_id=")
-	builder.WriteString(fmt.Sprintf("%v", sah.TicketID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TicketID))
 	builder.WriteString(", ")
 	builder.WriteString("ticket_number=")
-	builder.WriteString(sah.TicketNumber)
+	builder.WriteString(_m.TicketNumber)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_title=")
-	builder.WriteString(sah.TicketTitle)
+	builder.WriteString(_m.TicketTitle)
 	builder.WriteString(", ")
 	builder.WriteString("alert_rule_id=")
-	builder.WriteString(fmt.Sprintf("%v", sah.AlertRuleID))
+	builder.WriteString(fmt.Sprintf("%v", _m.AlertRuleID))
 	builder.WriteString(", ")
 	builder.WriteString("alert_rule_name=")
-	builder.WriteString(sah.AlertRuleName)
+	builder.WriteString(_m.AlertRuleName)
 	builder.WriteString(", ")
 	builder.WriteString("alert_level=")
-	builder.WriteString(sah.AlertLevel)
+	builder.WriteString(_m.AlertLevel)
 	builder.WriteString(", ")
 	builder.WriteString("threshold_percentage=")
-	builder.WriteString(fmt.Sprintf("%v", sah.ThresholdPercentage))
+	builder.WriteString(fmt.Sprintf("%v", _m.ThresholdPercentage))
 	builder.WriteString(", ")
 	builder.WriteString("actual_percentage=")
-	builder.WriteString(fmt.Sprintf("%v", sah.ActualPercentage))
+	builder.WriteString(fmt.Sprintf("%v", _m.ActualPercentage))
 	builder.WriteString(", ")
 	builder.WriteString("notification_sent=")
-	builder.WriteString(fmt.Sprintf("%v", sah.NotificationSent))
+	builder.WriteString(fmt.Sprintf("%v", _m.NotificationSent))
 	builder.WriteString(", ")
 	builder.WriteString("escalation_level=")
-	builder.WriteString(fmt.Sprintf("%v", sah.EscalationLevel))
+	builder.WriteString(fmt.Sprintf("%v", _m.EscalationLevel))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sah.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sah.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("resolved_at=")
-	builder.WriteString(sah.ResolvedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ResolvedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

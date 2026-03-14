@@ -20,56 +20,56 @@ type RelationshipTypeDelete struct {
 }
 
 // Where appends a list predicates to the RelationshipTypeDelete builder.
-func (rtd *RelationshipTypeDelete) Where(ps ...predicate.RelationshipType) *RelationshipTypeDelete {
-	rtd.mutation.Where(ps...)
-	return rtd
+func (_d *RelationshipTypeDelete) Where(ps ...predicate.RelationshipType) *RelationshipTypeDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (rtd *RelationshipTypeDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, rtd.sqlExec, rtd.mutation, rtd.hooks)
+func (_d *RelationshipTypeDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rtd *RelationshipTypeDelete) ExecX(ctx context.Context) int {
-	n, err := rtd.Exec(ctx)
+func (_d *RelationshipTypeDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (rtd *RelationshipTypeDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *RelationshipTypeDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(relationshiptype.Table, sqlgraph.NewFieldSpec(relationshiptype.FieldID, field.TypeInt))
-	if ps := rtd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, rtd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	rtd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // RelationshipTypeDeleteOne is the builder for deleting a single RelationshipType entity.
 type RelationshipTypeDeleteOne struct {
-	rtd *RelationshipTypeDelete
+	_d *RelationshipTypeDelete
 }
 
 // Where appends a list predicates to the RelationshipTypeDelete builder.
-func (rtdo *RelationshipTypeDeleteOne) Where(ps ...predicate.RelationshipType) *RelationshipTypeDeleteOne {
-	rtdo.rtd.mutation.Where(ps...)
-	return rtdo
+func (_d *RelationshipTypeDeleteOne) Where(ps ...predicate.RelationshipType) *RelationshipTypeDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (rtdo *RelationshipTypeDeleteOne) Exec(ctx context.Context) error {
-	n, err := rtdo.rtd.Exec(ctx)
+func (_d *RelationshipTypeDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (rtdo *RelationshipTypeDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (rtdo *RelationshipTypeDeleteOne) ExecX(ctx context.Context) {
-	if err := rtdo.Exec(ctx); err != nil {
+func (_d *RelationshipTypeDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

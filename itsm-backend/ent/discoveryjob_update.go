@@ -25,193 +25,193 @@ type DiscoveryJobUpdate struct {
 }
 
 // Where appends a list predicates to the DiscoveryJobUpdate builder.
-func (dju *DiscoveryJobUpdate) Where(ps ...predicate.DiscoveryJob) *DiscoveryJobUpdate {
-	dju.mutation.Where(ps...)
-	return dju
+func (_u *DiscoveryJobUpdate) Where(ps ...predicate.DiscoveryJob) *DiscoveryJobUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetSourceID sets the "source_id" field.
-func (dju *DiscoveryJobUpdate) SetSourceID(s string) *DiscoveryJobUpdate {
-	dju.mutation.SetSourceID(s)
-	return dju
+func (_u *DiscoveryJobUpdate) SetSourceID(v string) *DiscoveryJobUpdate {
+	_u.mutation.SetSourceID(v)
+	return _u
 }
 
 // SetNillableSourceID sets the "source_id" field if the given value is not nil.
-func (dju *DiscoveryJobUpdate) SetNillableSourceID(s *string) *DiscoveryJobUpdate {
-	if s != nil {
-		dju.SetSourceID(*s)
+func (_u *DiscoveryJobUpdate) SetNillableSourceID(v *string) *DiscoveryJobUpdate {
+	if v != nil {
+		_u.SetSourceID(*v)
 	}
-	return dju
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (dju *DiscoveryJobUpdate) SetStatus(s string) *DiscoveryJobUpdate {
-	dju.mutation.SetStatus(s)
-	return dju
+func (_u *DiscoveryJobUpdate) SetStatus(v string) *DiscoveryJobUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (dju *DiscoveryJobUpdate) SetNillableStatus(s *string) *DiscoveryJobUpdate {
-	if s != nil {
-		dju.SetStatus(*s)
+func (_u *DiscoveryJobUpdate) SetNillableStatus(v *string) *DiscoveryJobUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return dju
+	return _u
 }
 
 // SetStartedAt sets the "started_at" field.
-func (dju *DiscoveryJobUpdate) SetStartedAt(t time.Time) *DiscoveryJobUpdate {
-	dju.mutation.SetStartedAt(t)
-	return dju
+func (_u *DiscoveryJobUpdate) SetStartedAt(v time.Time) *DiscoveryJobUpdate {
+	_u.mutation.SetStartedAt(v)
+	return _u
 }
 
 // SetNillableStartedAt sets the "started_at" field if the given value is not nil.
-func (dju *DiscoveryJobUpdate) SetNillableStartedAt(t *time.Time) *DiscoveryJobUpdate {
-	if t != nil {
-		dju.SetStartedAt(*t)
+func (_u *DiscoveryJobUpdate) SetNillableStartedAt(v *time.Time) *DiscoveryJobUpdate {
+	if v != nil {
+		_u.SetStartedAt(*v)
 	}
-	return dju
+	return _u
 }
 
 // ClearStartedAt clears the value of the "started_at" field.
-func (dju *DiscoveryJobUpdate) ClearStartedAt() *DiscoveryJobUpdate {
-	dju.mutation.ClearStartedAt()
-	return dju
+func (_u *DiscoveryJobUpdate) ClearStartedAt() *DiscoveryJobUpdate {
+	_u.mutation.ClearStartedAt()
+	return _u
 }
 
 // SetFinishedAt sets the "finished_at" field.
-func (dju *DiscoveryJobUpdate) SetFinishedAt(t time.Time) *DiscoveryJobUpdate {
-	dju.mutation.SetFinishedAt(t)
-	return dju
+func (_u *DiscoveryJobUpdate) SetFinishedAt(v time.Time) *DiscoveryJobUpdate {
+	_u.mutation.SetFinishedAt(v)
+	return _u
 }
 
 // SetNillableFinishedAt sets the "finished_at" field if the given value is not nil.
-func (dju *DiscoveryJobUpdate) SetNillableFinishedAt(t *time.Time) *DiscoveryJobUpdate {
-	if t != nil {
-		dju.SetFinishedAt(*t)
+func (_u *DiscoveryJobUpdate) SetNillableFinishedAt(v *time.Time) *DiscoveryJobUpdate {
+	if v != nil {
+		_u.SetFinishedAt(*v)
 	}
-	return dju
+	return _u
 }
 
 // ClearFinishedAt clears the value of the "finished_at" field.
-func (dju *DiscoveryJobUpdate) ClearFinishedAt() *DiscoveryJobUpdate {
-	dju.mutation.ClearFinishedAt()
-	return dju
+func (_u *DiscoveryJobUpdate) ClearFinishedAt() *DiscoveryJobUpdate {
+	_u.mutation.ClearFinishedAt()
+	return _u
 }
 
 // SetSummary sets the "summary" field.
-func (dju *DiscoveryJobUpdate) SetSummary(m map[string]interface{}) *DiscoveryJobUpdate {
-	dju.mutation.SetSummary(m)
-	return dju
+func (_u *DiscoveryJobUpdate) SetSummary(v map[string]interface{}) *DiscoveryJobUpdate {
+	_u.mutation.SetSummary(v)
+	return _u
 }
 
 // ClearSummary clears the value of the "summary" field.
-func (dju *DiscoveryJobUpdate) ClearSummary() *DiscoveryJobUpdate {
-	dju.mutation.ClearSummary()
-	return dju
+func (_u *DiscoveryJobUpdate) ClearSummary() *DiscoveryJobUpdate {
+	_u.mutation.ClearSummary()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (dju *DiscoveryJobUpdate) SetTenantID(i int) *DiscoveryJobUpdate {
-	dju.mutation.ResetTenantID()
-	dju.mutation.SetTenantID(i)
-	return dju
+func (_u *DiscoveryJobUpdate) SetTenantID(v int) *DiscoveryJobUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (dju *DiscoveryJobUpdate) SetNillableTenantID(i *int) *DiscoveryJobUpdate {
-	if i != nil {
-		dju.SetTenantID(*i)
+func (_u *DiscoveryJobUpdate) SetNillableTenantID(v *int) *DiscoveryJobUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return dju
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (dju *DiscoveryJobUpdate) AddTenantID(i int) *DiscoveryJobUpdate {
-	dju.mutation.AddTenantID(i)
-	return dju
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DiscoveryJobUpdate) AddTenantID(v int) *DiscoveryJobUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (dju *DiscoveryJobUpdate) SetCreatedAt(t time.Time) *DiscoveryJobUpdate {
-	dju.mutation.SetCreatedAt(t)
-	return dju
+func (_u *DiscoveryJobUpdate) SetCreatedAt(v time.Time) *DiscoveryJobUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (dju *DiscoveryJobUpdate) SetNillableCreatedAt(t *time.Time) *DiscoveryJobUpdate {
-	if t != nil {
-		dju.SetCreatedAt(*t)
+func (_u *DiscoveryJobUpdate) SetNillableCreatedAt(v *time.Time) *DiscoveryJobUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return dju
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (dju *DiscoveryJobUpdate) SetUpdatedAt(t time.Time) *DiscoveryJobUpdate {
-	dju.mutation.SetUpdatedAt(t)
-	return dju
+func (_u *DiscoveryJobUpdate) SetUpdatedAt(v time.Time) *DiscoveryJobUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetSource sets the "source" edge to the DiscoverySource entity.
-func (dju *DiscoveryJobUpdate) SetSource(d *DiscoverySource) *DiscoveryJobUpdate {
-	return dju.SetSourceID(d.ID)
+func (_u *DiscoveryJobUpdate) SetSource(v *DiscoverySource) *DiscoveryJobUpdate {
+	return _u.SetSourceID(v.ID)
 }
 
 // AddResultIDs adds the "results" edge to the DiscoveryResult entity by IDs.
-func (dju *DiscoveryJobUpdate) AddResultIDs(ids ...int) *DiscoveryJobUpdate {
-	dju.mutation.AddResultIDs(ids...)
-	return dju
+func (_u *DiscoveryJobUpdate) AddResultIDs(ids ...int) *DiscoveryJobUpdate {
+	_u.mutation.AddResultIDs(ids...)
+	return _u
 }
 
 // AddResults adds the "results" edges to the DiscoveryResult entity.
-func (dju *DiscoveryJobUpdate) AddResults(d ...*DiscoveryResult) *DiscoveryJobUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoveryJobUpdate) AddResults(v ...*DiscoveryResult) *DiscoveryJobUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return dju.AddResultIDs(ids...)
+	return _u.AddResultIDs(ids...)
 }
 
 // Mutation returns the DiscoveryJobMutation object of the builder.
-func (dju *DiscoveryJobUpdate) Mutation() *DiscoveryJobMutation {
-	return dju.mutation
+func (_u *DiscoveryJobUpdate) Mutation() *DiscoveryJobMutation {
+	return _u.mutation
 }
 
 // ClearSource clears the "source" edge to the DiscoverySource entity.
-func (dju *DiscoveryJobUpdate) ClearSource() *DiscoveryJobUpdate {
-	dju.mutation.ClearSource()
-	return dju
+func (_u *DiscoveryJobUpdate) ClearSource() *DiscoveryJobUpdate {
+	_u.mutation.ClearSource()
+	return _u
 }
 
 // ClearResults clears all "results" edges to the DiscoveryResult entity.
-func (dju *DiscoveryJobUpdate) ClearResults() *DiscoveryJobUpdate {
-	dju.mutation.ClearResults()
-	return dju
+func (_u *DiscoveryJobUpdate) ClearResults() *DiscoveryJobUpdate {
+	_u.mutation.ClearResults()
+	return _u
 }
 
 // RemoveResultIDs removes the "results" edge to DiscoveryResult entities by IDs.
-func (dju *DiscoveryJobUpdate) RemoveResultIDs(ids ...int) *DiscoveryJobUpdate {
-	dju.mutation.RemoveResultIDs(ids...)
-	return dju
+func (_u *DiscoveryJobUpdate) RemoveResultIDs(ids ...int) *DiscoveryJobUpdate {
+	_u.mutation.RemoveResultIDs(ids...)
+	return _u
 }
 
 // RemoveResults removes "results" edges to DiscoveryResult entities.
-func (dju *DiscoveryJobUpdate) RemoveResults(d ...*DiscoveryResult) *DiscoveryJobUpdate {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoveryJobUpdate) RemoveResults(v ...*DiscoveryResult) *DiscoveryJobUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return dju.RemoveResultIDs(ids...)
+	return _u.RemoveResultIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (dju *DiscoveryJobUpdate) Save(ctx context.Context) (int, error) {
-	dju.defaults()
-	return withHooks(ctx, dju.sqlSave, dju.mutation, dju.hooks)
+func (_u *DiscoveryJobUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (dju *DiscoveryJobUpdate) SaveX(ctx context.Context) int {
-	affected, err := dju.Save(ctx)
+func (_u *DiscoveryJobUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -219,90 +219,90 @@ func (dju *DiscoveryJobUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (dju *DiscoveryJobUpdate) Exec(ctx context.Context) error {
-	_, err := dju.Save(ctx)
+func (_u *DiscoveryJobUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (dju *DiscoveryJobUpdate) ExecX(ctx context.Context) {
-	if err := dju.Exec(ctx); err != nil {
+func (_u *DiscoveryJobUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (dju *DiscoveryJobUpdate) defaults() {
-	if _, ok := dju.mutation.UpdatedAt(); !ok {
+func (_u *DiscoveryJobUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := discoveryjob.UpdateDefaultUpdatedAt()
-		dju.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (dju *DiscoveryJobUpdate) check() error {
-	if v, ok := dju.mutation.SourceID(); ok {
+func (_u *DiscoveryJobUpdate) check() error {
+	if v, ok := _u.mutation.SourceID(); ok {
 		if err := discoveryjob.SourceIDValidator(v); err != nil {
 			return &ValidationError{Name: "source_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.source_id": %w`, err)}
 		}
 	}
-	if v, ok := dju.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoveryjob.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.tenant_id": %w`, err)}
 		}
 	}
-	if dju.mutation.SourceCleared() && len(dju.mutation.SourceIDs()) > 0 {
+	if _u.mutation.SourceCleared() && len(_u.mutation.SourceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "DiscoveryJob.source"`)
 	}
 	return nil
 }
 
-func (dju *DiscoveryJobUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := dju.check(); err != nil {
-		return n, err
+func (_u *DiscoveryJobUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(discoveryjob.Table, discoveryjob.Columns, sqlgraph.NewFieldSpec(discoveryjob.FieldID, field.TypeInt))
-	if ps := dju.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := dju.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(discoveryjob.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := dju.mutation.StartedAt(); ok {
+	if value, ok := _u.mutation.StartedAt(); ok {
 		_spec.SetField(discoveryjob.FieldStartedAt, field.TypeTime, value)
 	}
-	if dju.mutation.StartedAtCleared() {
+	if _u.mutation.StartedAtCleared() {
 		_spec.ClearField(discoveryjob.FieldStartedAt, field.TypeTime)
 	}
-	if value, ok := dju.mutation.FinishedAt(); ok {
+	if value, ok := _u.mutation.FinishedAt(); ok {
 		_spec.SetField(discoveryjob.FieldFinishedAt, field.TypeTime, value)
 	}
-	if dju.mutation.FinishedAtCleared() {
+	if _u.mutation.FinishedAtCleared() {
 		_spec.ClearField(discoveryjob.FieldFinishedAt, field.TypeTime)
 	}
-	if value, ok := dju.mutation.Summary(); ok {
+	if value, ok := _u.mutation.Summary(); ok {
 		_spec.SetField(discoveryjob.FieldSummary, field.TypeJSON, value)
 	}
-	if dju.mutation.SummaryCleared() {
+	if _u.mutation.SummaryCleared() {
 		_spec.ClearField(discoveryjob.FieldSummary, field.TypeJSON)
 	}
-	if value, ok := dju.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoveryjob.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := dju.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoveryjob.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := dju.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoveryjob.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := dju.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoveryjob.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if dju.mutation.SourceCleared() {
+	if _u.mutation.SourceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -315,7 +315,7 @@ func (dju *DiscoveryJobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dju.mutation.SourceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SourceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -331,7 +331,7 @@ func (dju *DiscoveryJobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if dju.mutation.ResultsCleared() {
+	if _u.mutation.ResultsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -344,7 +344,7 @@ func (dju *DiscoveryJobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dju.mutation.RemovedResultsIDs(); len(nodes) > 0 && !dju.mutation.ResultsCleared() {
+	if nodes := _u.mutation.RemovedResultsIDs(); len(nodes) > 0 && !_u.mutation.ResultsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -360,7 +360,7 @@ func (dju *DiscoveryJobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := dju.mutation.ResultsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ResultsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -376,7 +376,7 @@ func (dju *DiscoveryJobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, dju.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{discoveryjob.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -384,8 +384,8 @@ func (dju *DiscoveryJobUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	dju.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // DiscoveryJobUpdateOne is the builder for updating a single DiscoveryJob entity.
@@ -397,200 +397,200 @@ type DiscoveryJobUpdateOne struct {
 }
 
 // SetSourceID sets the "source_id" field.
-func (djuo *DiscoveryJobUpdateOne) SetSourceID(s string) *DiscoveryJobUpdateOne {
-	djuo.mutation.SetSourceID(s)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetSourceID(v string) *DiscoveryJobUpdateOne {
+	_u.mutation.SetSourceID(v)
+	return _u
 }
 
 // SetNillableSourceID sets the "source_id" field if the given value is not nil.
-func (djuo *DiscoveryJobUpdateOne) SetNillableSourceID(s *string) *DiscoveryJobUpdateOne {
-	if s != nil {
-		djuo.SetSourceID(*s)
+func (_u *DiscoveryJobUpdateOne) SetNillableSourceID(v *string) *DiscoveryJobUpdateOne {
+	if v != nil {
+		_u.SetSourceID(*v)
 	}
-	return djuo
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (djuo *DiscoveryJobUpdateOne) SetStatus(s string) *DiscoveryJobUpdateOne {
-	djuo.mutation.SetStatus(s)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetStatus(v string) *DiscoveryJobUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (djuo *DiscoveryJobUpdateOne) SetNillableStatus(s *string) *DiscoveryJobUpdateOne {
-	if s != nil {
-		djuo.SetStatus(*s)
+func (_u *DiscoveryJobUpdateOne) SetNillableStatus(v *string) *DiscoveryJobUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return djuo
+	return _u
 }
 
 // SetStartedAt sets the "started_at" field.
-func (djuo *DiscoveryJobUpdateOne) SetStartedAt(t time.Time) *DiscoveryJobUpdateOne {
-	djuo.mutation.SetStartedAt(t)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetStartedAt(v time.Time) *DiscoveryJobUpdateOne {
+	_u.mutation.SetStartedAt(v)
+	return _u
 }
 
 // SetNillableStartedAt sets the "started_at" field if the given value is not nil.
-func (djuo *DiscoveryJobUpdateOne) SetNillableStartedAt(t *time.Time) *DiscoveryJobUpdateOne {
-	if t != nil {
-		djuo.SetStartedAt(*t)
+func (_u *DiscoveryJobUpdateOne) SetNillableStartedAt(v *time.Time) *DiscoveryJobUpdateOne {
+	if v != nil {
+		_u.SetStartedAt(*v)
 	}
-	return djuo
+	return _u
 }
 
 // ClearStartedAt clears the value of the "started_at" field.
-func (djuo *DiscoveryJobUpdateOne) ClearStartedAt() *DiscoveryJobUpdateOne {
-	djuo.mutation.ClearStartedAt()
-	return djuo
+func (_u *DiscoveryJobUpdateOne) ClearStartedAt() *DiscoveryJobUpdateOne {
+	_u.mutation.ClearStartedAt()
+	return _u
 }
 
 // SetFinishedAt sets the "finished_at" field.
-func (djuo *DiscoveryJobUpdateOne) SetFinishedAt(t time.Time) *DiscoveryJobUpdateOne {
-	djuo.mutation.SetFinishedAt(t)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetFinishedAt(v time.Time) *DiscoveryJobUpdateOne {
+	_u.mutation.SetFinishedAt(v)
+	return _u
 }
 
 // SetNillableFinishedAt sets the "finished_at" field if the given value is not nil.
-func (djuo *DiscoveryJobUpdateOne) SetNillableFinishedAt(t *time.Time) *DiscoveryJobUpdateOne {
-	if t != nil {
-		djuo.SetFinishedAt(*t)
+func (_u *DiscoveryJobUpdateOne) SetNillableFinishedAt(v *time.Time) *DiscoveryJobUpdateOne {
+	if v != nil {
+		_u.SetFinishedAt(*v)
 	}
-	return djuo
+	return _u
 }
 
 // ClearFinishedAt clears the value of the "finished_at" field.
-func (djuo *DiscoveryJobUpdateOne) ClearFinishedAt() *DiscoveryJobUpdateOne {
-	djuo.mutation.ClearFinishedAt()
-	return djuo
+func (_u *DiscoveryJobUpdateOne) ClearFinishedAt() *DiscoveryJobUpdateOne {
+	_u.mutation.ClearFinishedAt()
+	return _u
 }
 
 // SetSummary sets the "summary" field.
-func (djuo *DiscoveryJobUpdateOne) SetSummary(m map[string]interface{}) *DiscoveryJobUpdateOne {
-	djuo.mutation.SetSummary(m)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetSummary(v map[string]interface{}) *DiscoveryJobUpdateOne {
+	_u.mutation.SetSummary(v)
+	return _u
 }
 
 // ClearSummary clears the value of the "summary" field.
-func (djuo *DiscoveryJobUpdateOne) ClearSummary() *DiscoveryJobUpdateOne {
-	djuo.mutation.ClearSummary()
-	return djuo
+func (_u *DiscoveryJobUpdateOne) ClearSummary() *DiscoveryJobUpdateOne {
+	_u.mutation.ClearSummary()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (djuo *DiscoveryJobUpdateOne) SetTenantID(i int) *DiscoveryJobUpdateOne {
-	djuo.mutation.ResetTenantID()
-	djuo.mutation.SetTenantID(i)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetTenantID(v int) *DiscoveryJobUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (djuo *DiscoveryJobUpdateOne) SetNillableTenantID(i *int) *DiscoveryJobUpdateOne {
-	if i != nil {
-		djuo.SetTenantID(*i)
+func (_u *DiscoveryJobUpdateOne) SetNillableTenantID(v *int) *DiscoveryJobUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return djuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (djuo *DiscoveryJobUpdateOne) AddTenantID(i int) *DiscoveryJobUpdateOne {
-	djuo.mutation.AddTenantID(i)
-	return djuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *DiscoveryJobUpdateOne) AddTenantID(v int) *DiscoveryJobUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (djuo *DiscoveryJobUpdateOne) SetCreatedAt(t time.Time) *DiscoveryJobUpdateOne {
-	djuo.mutation.SetCreatedAt(t)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetCreatedAt(v time.Time) *DiscoveryJobUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (djuo *DiscoveryJobUpdateOne) SetNillableCreatedAt(t *time.Time) *DiscoveryJobUpdateOne {
-	if t != nil {
-		djuo.SetCreatedAt(*t)
+func (_u *DiscoveryJobUpdateOne) SetNillableCreatedAt(v *time.Time) *DiscoveryJobUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return djuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (djuo *DiscoveryJobUpdateOne) SetUpdatedAt(t time.Time) *DiscoveryJobUpdateOne {
-	djuo.mutation.SetUpdatedAt(t)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) SetUpdatedAt(v time.Time) *DiscoveryJobUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetSource sets the "source" edge to the DiscoverySource entity.
-func (djuo *DiscoveryJobUpdateOne) SetSource(d *DiscoverySource) *DiscoveryJobUpdateOne {
-	return djuo.SetSourceID(d.ID)
+func (_u *DiscoveryJobUpdateOne) SetSource(v *DiscoverySource) *DiscoveryJobUpdateOne {
+	return _u.SetSourceID(v.ID)
 }
 
 // AddResultIDs adds the "results" edge to the DiscoveryResult entity by IDs.
-func (djuo *DiscoveryJobUpdateOne) AddResultIDs(ids ...int) *DiscoveryJobUpdateOne {
-	djuo.mutation.AddResultIDs(ids...)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) AddResultIDs(ids ...int) *DiscoveryJobUpdateOne {
+	_u.mutation.AddResultIDs(ids...)
+	return _u
 }
 
 // AddResults adds the "results" edges to the DiscoveryResult entity.
-func (djuo *DiscoveryJobUpdateOne) AddResults(d ...*DiscoveryResult) *DiscoveryJobUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoveryJobUpdateOne) AddResults(v ...*DiscoveryResult) *DiscoveryJobUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return djuo.AddResultIDs(ids...)
+	return _u.AddResultIDs(ids...)
 }
 
 // Mutation returns the DiscoveryJobMutation object of the builder.
-func (djuo *DiscoveryJobUpdateOne) Mutation() *DiscoveryJobMutation {
-	return djuo.mutation
+func (_u *DiscoveryJobUpdateOne) Mutation() *DiscoveryJobMutation {
+	return _u.mutation
 }
 
 // ClearSource clears the "source" edge to the DiscoverySource entity.
-func (djuo *DiscoveryJobUpdateOne) ClearSource() *DiscoveryJobUpdateOne {
-	djuo.mutation.ClearSource()
-	return djuo
+func (_u *DiscoveryJobUpdateOne) ClearSource() *DiscoveryJobUpdateOne {
+	_u.mutation.ClearSource()
+	return _u
 }
 
 // ClearResults clears all "results" edges to the DiscoveryResult entity.
-func (djuo *DiscoveryJobUpdateOne) ClearResults() *DiscoveryJobUpdateOne {
-	djuo.mutation.ClearResults()
-	return djuo
+func (_u *DiscoveryJobUpdateOne) ClearResults() *DiscoveryJobUpdateOne {
+	_u.mutation.ClearResults()
+	return _u
 }
 
 // RemoveResultIDs removes the "results" edge to DiscoveryResult entities by IDs.
-func (djuo *DiscoveryJobUpdateOne) RemoveResultIDs(ids ...int) *DiscoveryJobUpdateOne {
-	djuo.mutation.RemoveResultIDs(ids...)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) RemoveResultIDs(ids ...int) *DiscoveryJobUpdateOne {
+	_u.mutation.RemoveResultIDs(ids...)
+	return _u
 }
 
 // RemoveResults removes "results" edges to DiscoveryResult entities.
-func (djuo *DiscoveryJobUpdateOne) RemoveResults(d ...*DiscoveryResult) *DiscoveryJobUpdateOne {
-	ids := make([]int, len(d))
-	for i := range d {
-		ids[i] = d[i].ID
+func (_u *DiscoveryJobUpdateOne) RemoveResults(v ...*DiscoveryResult) *DiscoveryJobUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return djuo.RemoveResultIDs(ids...)
+	return _u.RemoveResultIDs(ids...)
 }
 
 // Where appends a list predicates to the DiscoveryJobUpdate builder.
-func (djuo *DiscoveryJobUpdateOne) Where(ps ...predicate.DiscoveryJob) *DiscoveryJobUpdateOne {
-	djuo.mutation.Where(ps...)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) Where(ps ...predicate.DiscoveryJob) *DiscoveryJobUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (djuo *DiscoveryJobUpdateOne) Select(field string, fields ...string) *DiscoveryJobUpdateOne {
-	djuo.fields = append([]string{field}, fields...)
-	return djuo
+func (_u *DiscoveryJobUpdateOne) Select(field string, fields ...string) *DiscoveryJobUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated DiscoveryJob entity.
-func (djuo *DiscoveryJobUpdateOne) Save(ctx context.Context) (*DiscoveryJob, error) {
-	djuo.defaults()
-	return withHooks(ctx, djuo.sqlSave, djuo.mutation, djuo.hooks)
+func (_u *DiscoveryJobUpdateOne) Save(ctx context.Context) (*DiscoveryJob, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (djuo *DiscoveryJobUpdateOne) SaveX(ctx context.Context) *DiscoveryJob {
-	node, err := djuo.Save(ctx)
+func (_u *DiscoveryJobUpdateOne) SaveX(ctx context.Context) *DiscoveryJob {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -598,55 +598,55 @@ func (djuo *DiscoveryJobUpdateOne) SaveX(ctx context.Context) *DiscoveryJob {
 }
 
 // Exec executes the query on the entity.
-func (djuo *DiscoveryJobUpdateOne) Exec(ctx context.Context) error {
-	_, err := djuo.Save(ctx)
+func (_u *DiscoveryJobUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (djuo *DiscoveryJobUpdateOne) ExecX(ctx context.Context) {
-	if err := djuo.Exec(ctx); err != nil {
+func (_u *DiscoveryJobUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (djuo *DiscoveryJobUpdateOne) defaults() {
-	if _, ok := djuo.mutation.UpdatedAt(); !ok {
+func (_u *DiscoveryJobUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := discoveryjob.UpdateDefaultUpdatedAt()
-		djuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (djuo *DiscoveryJobUpdateOne) check() error {
-	if v, ok := djuo.mutation.SourceID(); ok {
+func (_u *DiscoveryJobUpdateOne) check() error {
+	if v, ok := _u.mutation.SourceID(); ok {
 		if err := discoveryjob.SourceIDValidator(v); err != nil {
 			return &ValidationError{Name: "source_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.source_id": %w`, err)}
 		}
 	}
-	if v, ok := djuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := discoveryjob.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "DiscoveryJob.tenant_id": %w`, err)}
 		}
 	}
-	if djuo.mutation.SourceCleared() && len(djuo.mutation.SourceIDs()) > 0 {
+	if _u.mutation.SourceCleared() && len(_u.mutation.SourceIDs()) > 0 {
 		return errors.New(`ent: clearing a required unique edge "DiscoveryJob.source"`)
 	}
 	return nil
 }
 
-func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *DiscoveryJob, err error) {
-	if err := djuo.check(); err != nil {
+func (_u *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *DiscoveryJob, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(discoveryjob.Table, discoveryjob.Columns, sqlgraph.NewFieldSpec(discoveryjob.FieldID, field.TypeInt))
-	id, ok := djuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "DiscoveryJob.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := djuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, discoveryjob.FieldID)
 		for _, f := range fields {
@@ -658,47 +658,47 @@ func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *Discover
 			}
 		}
 	}
-	if ps := djuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := djuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(discoveryjob.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := djuo.mutation.StartedAt(); ok {
+	if value, ok := _u.mutation.StartedAt(); ok {
 		_spec.SetField(discoveryjob.FieldStartedAt, field.TypeTime, value)
 	}
-	if djuo.mutation.StartedAtCleared() {
+	if _u.mutation.StartedAtCleared() {
 		_spec.ClearField(discoveryjob.FieldStartedAt, field.TypeTime)
 	}
-	if value, ok := djuo.mutation.FinishedAt(); ok {
+	if value, ok := _u.mutation.FinishedAt(); ok {
 		_spec.SetField(discoveryjob.FieldFinishedAt, field.TypeTime, value)
 	}
-	if djuo.mutation.FinishedAtCleared() {
+	if _u.mutation.FinishedAtCleared() {
 		_spec.ClearField(discoveryjob.FieldFinishedAt, field.TypeTime)
 	}
-	if value, ok := djuo.mutation.Summary(); ok {
+	if value, ok := _u.mutation.Summary(); ok {
 		_spec.SetField(discoveryjob.FieldSummary, field.TypeJSON, value)
 	}
-	if djuo.mutation.SummaryCleared() {
+	if _u.mutation.SummaryCleared() {
 		_spec.ClearField(discoveryjob.FieldSummary, field.TypeJSON)
 	}
-	if value, ok := djuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(discoveryjob.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := djuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(discoveryjob.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := djuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(discoveryjob.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := djuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(discoveryjob.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if djuo.mutation.SourceCleared() {
+	if _u.mutation.SourceCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -711,7 +711,7 @@ func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *Discover
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := djuo.mutation.SourceIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SourceIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -727,7 +727,7 @@ func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *Discover
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if djuo.mutation.ResultsCleared() {
+	if _u.mutation.ResultsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -740,7 +740,7 @@ func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *Discover
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := djuo.mutation.RemovedResultsIDs(); len(nodes) > 0 && !djuo.mutation.ResultsCleared() {
+	if nodes := _u.mutation.RemovedResultsIDs(); len(nodes) > 0 && !_u.mutation.ResultsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -756,7 +756,7 @@ func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *Discover
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := djuo.mutation.ResultsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ResultsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -772,10 +772,10 @@ func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *Discover
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &DiscoveryJob{config: djuo.config}
+	_node = &DiscoveryJob{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, djuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{discoveryjob.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -783,6 +783,6 @@ func (djuo *DiscoveryJobUpdateOne) sqlSave(ctx context.Context) (_node *Discover
 		}
 		return nil, err
 	}
-	djuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

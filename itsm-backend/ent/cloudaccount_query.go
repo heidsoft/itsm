@@ -31,44 +31,44 @@ type CloudAccountQuery struct {
 }
 
 // Where adds a new predicate for the CloudAccountQuery builder.
-func (caq *CloudAccountQuery) Where(ps ...predicate.CloudAccount) *CloudAccountQuery {
-	caq.predicates = append(caq.predicates, ps...)
-	return caq
+func (_q *CloudAccountQuery) Where(ps ...predicate.CloudAccount) *CloudAccountQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (caq *CloudAccountQuery) Limit(limit int) *CloudAccountQuery {
-	caq.ctx.Limit = &limit
-	return caq
+func (_q *CloudAccountQuery) Limit(limit int) *CloudAccountQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (caq *CloudAccountQuery) Offset(offset int) *CloudAccountQuery {
-	caq.ctx.Offset = &offset
-	return caq
+func (_q *CloudAccountQuery) Offset(offset int) *CloudAccountQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (caq *CloudAccountQuery) Unique(unique bool) *CloudAccountQuery {
-	caq.ctx.Unique = &unique
-	return caq
+func (_q *CloudAccountQuery) Unique(unique bool) *CloudAccountQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (caq *CloudAccountQuery) Order(o ...cloudaccount.OrderOption) *CloudAccountQuery {
-	caq.order = append(caq.order, o...)
-	return caq
+func (_q *CloudAccountQuery) Order(o ...cloudaccount.OrderOption) *CloudAccountQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryResources chains the current query on the "resources" edge.
-func (caq *CloudAccountQuery) QueryResources() *CloudResourceQuery {
-	query := (&CloudResourceClient{config: caq.config}).Query()
+func (_q *CloudAccountQuery) QueryResources() *CloudResourceQuery {
+	query := (&CloudResourceClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := caq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := caq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -77,7 +77,7 @@ func (caq *CloudAccountQuery) QueryResources() *CloudResourceQuery {
 			sqlgraph.To(cloudresource.Table, cloudresource.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, cloudaccount.ResourcesTable, cloudaccount.ResourcesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(caq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -85,8 +85,8 @@ func (caq *CloudAccountQuery) QueryResources() *CloudResourceQuery {
 
 // First returns the first CloudAccount entity from the query.
 // Returns a *NotFoundError when no CloudAccount was found.
-func (caq *CloudAccountQuery) First(ctx context.Context) (*CloudAccount, error) {
-	nodes, err := caq.Limit(1).All(setContextOp(ctx, caq.ctx, ent.OpQueryFirst))
+func (_q *CloudAccountQuery) First(ctx context.Context) (*CloudAccount, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +97,8 @@ func (caq *CloudAccountQuery) First(ctx context.Context) (*CloudAccount, error) 
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (caq *CloudAccountQuery) FirstX(ctx context.Context) *CloudAccount {
-	node, err := caq.First(ctx)
+func (_q *CloudAccountQuery) FirstX(ctx context.Context) *CloudAccount {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -107,9 +107,9 @@ func (caq *CloudAccountQuery) FirstX(ctx context.Context) *CloudAccount {
 
 // FirstID returns the first CloudAccount ID from the query.
 // Returns a *NotFoundError when no CloudAccount ID was found.
-func (caq *CloudAccountQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *CloudAccountQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = caq.Limit(1).IDs(setContextOp(ctx, caq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -120,8 +120,8 @@ func (caq *CloudAccountQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (caq *CloudAccountQuery) FirstIDX(ctx context.Context) int {
-	id, err := caq.FirstID(ctx)
+func (_q *CloudAccountQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -131,8 +131,8 @@ func (caq *CloudAccountQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single CloudAccount entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one CloudAccount entity is found.
 // Returns a *NotFoundError when no CloudAccount entities are found.
-func (caq *CloudAccountQuery) Only(ctx context.Context) (*CloudAccount, error) {
-	nodes, err := caq.Limit(2).All(setContextOp(ctx, caq.ctx, ent.OpQueryOnly))
+func (_q *CloudAccountQuery) Only(ctx context.Context) (*CloudAccount, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,8 @@ func (caq *CloudAccountQuery) Only(ctx context.Context) (*CloudAccount, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (caq *CloudAccountQuery) OnlyX(ctx context.Context) *CloudAccount {
-	node, err := caq.Only(ctx)
+func (_q *CloudAccountQuery) OnlyX(ctx context.Context) *CloudAccount {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -158,9 +158,9 @@ func (caq *CloudAccountQuery) OnlyX(ctx context.Context) *CloudAccount {
 // OnlyID is like Only, but returns the only CloudAccount ID in the query.
 // Returns a *NotSingularError when more than one CloudAccount ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (caq *CloudAccountQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *CloudAccountQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = caq.Limit(2).IDs(setContextOp(ctx, caq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -175,8 +175,8 @@ func (caq *CloudAccountQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (caq *CloudAccountQuery) OnlyIDX(ctx context.Context) int {
-	id, err := caq.OnlyID(ctx)
+func (_q *CloudAccountQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -184,18 +184,18 @@ func (caq *CloudAccountQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of CloudAccounts.
-func (caq *CloudAccountQuery) All(ctx context.Context) ([]*CloudAccount, error) {
-	ctx = setContextOp(ctx, caq.ctx, ent.OpQueryAll)
-	if err := caq.prepareQuery(ctx); err != nil {
+func (_q *CloudAccountQuery) All(ctx context.Context) ([]*CloudAccount, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*CloudAccount, *CloudAccountQuery]()
-	return withInterceptors[[]*CloudAccount](ctx, caq, qr, caq.inters)
+	return withInterceptors[[]*CloudAccount](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (caq *CloudAccountQuery) AllX(ctx context.Context) []*CloudAccount {
-	nodes, err := caq.All(ctx)
+func (_q *CloudAccountQuery) AllX(ctx context.Context) []*CloudAccount {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -203,20 +203,20 @@ func (caq *CloudAccountQuery) AllX(ctx context.Context) []*CloudAccount {
 }
 
 // IDs executes the query and returns a list of CloudAccount IDs.
-func (caq *CloudAccountQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if caq.ctx.Unique == nil && caq.path != nil {
-		caq.Unique(true)
+func (_q *CloudAccountQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, caq.ctx, ent.OpQueryIDs)
-	if err = caq.Select(cloudaccount.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(cloudaccount.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (caq *CloudAccountQuery) IDsX(ctx context.Context) []int {
-	ids, err := caq.IDs(ctx)
+func (_q *CloudAccountQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -224,17 +224,17 @@ func (caq *CloudAccountQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (caq *CloudAccountQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, caq.ctx, ent.OpQueryCount)
-	if err := caq.prepareQuery(ctx); err != nil {
+func (_q *CloudAccountQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, caq, querierCount[*CloudAccountQuery](), caq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*CloudAccountQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (caq *CloudAccountQuery) CountX(ctx context.Context) int {
-	count, err := caq.Count(ctx)
+func (_q *CloudAccountQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -242,9 +242,9 @@ func (caq *CloudAccountQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (caq *CloudAccountQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, caq.ctx, ent.OpQueryExist)
-	switch _, err := caq.FirstID(ctx); {
+func (_q *CloudAccountQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -255,8 +255,8 @@ func (caq *CloudAccountQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (caq *CloudAccountQuery) ExistX(ctx context.Context) bool {
-	exist, err := caq.Exist(ctx)
+func (_q *CloudAccountQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -265,32 +265,32 @@ func (caq *CloudAccountQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the CloudAccountQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (caq *CloudAccountQuery) Clone() *CloudAccountQuery {
-	if caq == nil {
+func (_q *CloudAccountQuery) Clone() *CloudAccountQuery {
+	if _q == nil {
 		return nil
 	}
 	return &CloudAccountQuery{
-		config:        caq.config,
-		ctx:           caq.ctx.Clone(),
-		order:         append([]cloudaccount.OrderOption{}, caq.order...),
-		inters:        append([]Interceptor{}, caq.inters...),
-		predicates:    append([]predicate.CloudAccount{}, caq.predicates...),
-		withResources: caq.withResources.Clone(),
+		config:        _q.config,
+		ctx:           _q.ctx.Clone(),
+		order:         append([]cloudaccount.OrderOption{}, _q.order...),
+		inters:        append([]Interceptor{}, _q.inters...),
+		predicates:    append([]predicate.CloudAccount{}, _q.predicates...),
+		withResources: _q.withResources.Clone(),
 		// clone intermediate query.
-		sql:  caq.sql.Clone(),
-		path: caq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithResources tells the query-builder to eager-load the nodes that are connected to
 // the "resources" edge. The optional arguments are used to configure the query builder of the edge.
-func (caq *CloudAccountQuery) WithResources(opts ...func(*CloudResourceQuery)) *CloudAccountQuery {
-	query := (&CloudResourceClient{config: caq.config}).Query()
+func (_q *CloudAccountQuery) WithResources(opts ...func(*CloudResourceQuery)) *CloudAccountQuery {
+	query := (&CloudResourceClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	caq.withResources = query
-	return caq
+	_q.withResources = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -307,10 +307,10 @@ func (caq *CloudAccountQuery) WithResources(opts ...func(*CloudResourceQuery)) *
 //		GroupBy(cloudaccount.FieldProvider).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (caq *CloudAccountQuery) GroupBy(field string, fields ...string) *CloudAccountGroupBy {
-	caq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &CloudAccountGroupBy{build: caq}
-	grbuild.flds = &caq.ctx.Fields
+func (_q *CloudAccountQuery) GroupBy(field string, fields ...string) *CloudAccountGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &CloudAccountGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = cloudaccount.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -328,58 +328,58 @@ func (caq *CloudAccountQuery) GroupBy(field string, fields ...string) *CloudAcco
 //	client.CloudAccount.Query().
 //		Select(cloudaccount.FieldProvider).
 //		Scan(ctx, &v)
-func (caq *CloudAccountQuery) Select(fields ...string) *CloudAccountSelect {
-	caq.ctx.Fields = append(caq.ctx.Fields, fields...)
-	sbuild := &CloudAccountSelect{CloudAccountQuery: caq}
+func (_q *CloudAccountQuery) Select(fields ...string) *CloudAccountSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &CloudAccountSelect{CloudAccountQuery: _q}
 	sbuild.label = cloudaccount.Label
-	sbuild.flds, sbuild.scan = &caq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a CloudAccountSelect configured with the given aggregations.
-func (caq *CloudAccountQuery) Aggregate(fns ...AggregateFunc) *CloudAccountSelect {
-	return caq.Select().Aggregate(fns...)
+func (_q *CloudAccountQuery) Aggregate(fns ...AggregateFunc) *CloudAccountSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (caq *CloudAccountQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range caq.inters {
+func (_q *CloudAccountQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, caq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range caq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !cloudaccount.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if caq.path != nil {
-		prev, err := caq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		caq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (caq *CloudAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CloudAccount, error) {
+func (_q *CloudAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*CloudAccount, error) {
 	var (
 		nodes       = []*CloudAccount{}
-		_spec       = caq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			caq.withResources != nil,
+			_q.withResources != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*CloudAccount).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &CloudAccount{config: caq.config}
+		node := &CloudAccount{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -387,14 +387,14 @@ func (caq *CloudAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, caq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := caq.withResources; query != nil {
-		if err := caq.loadResources(ctx, query, nodes,
+	if query := _q.withResources; query != nil {
+		if err := _q.loadResources(ctx, query, nodes,
 			func(n *CloudAccount) { n.Edges.Resources = []*CloudResource{} },
 			func(n *CloudAccount, e *CloudResource) { n.Edges.Resources = append(n.Edges.Resources, e) }); err != nil {
 			return nil, err
@@ -403,7 +403,7 @@ func (caq *CloudAccountQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([
 	return nodes, nil
 }
 
-func (caq *CloudAccountQuery) loadResources(ctx context.Context, query *CloudResourceQuery, nodes []*CloudAccount, init func(*CloudAccount), assign func(*CloudAccount, *CloudResource)) error {
+func (_q *CloudAccountQuery) loadResources(ctx context.Context, query *CloudResourceQuery, nodes []*CloudAccount, init func(*CloudAccount), assign func(*CloudAccount, *CloudResource)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*CloudAccount)
 	for i := range nodes {
@@ -434,24 +434,24 @@ func (caq *CloudAccountQuery) loadResources(ctx context.Context, query *CloudRes
 	return nil
 }
 
-func (caq *CloudAccountQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := caq.querySpec()
-	_spec.Node.Columns = caq.ctx.Fields
-	if len(caq.ctx.Fields) > 0 {
-		_spec.Unique = caq.ctx.Unique != nil && *caq.ctx.Unique
+func (_q *CloudAccountQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, caq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (caq *CloudAccountQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *CloudAccountQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(cloudaccount.Table, cloudaccount.Columns, sqlgraph.NewFieldSpec(cloudaccount.FieldID, field.TypeInt))
-	_spec.From = caq.sql
-	if unique := caq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if caq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := caq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, cloudaccount.FieldID)
 		for i := range fields {
@@ -460,20 +460,20 @@ func (caq *CloudAccountQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := caq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := caq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := caq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := caq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (caq *CloudAccountQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (caq *CloudAccountQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(caq.driver.Dialect())
+func (_q *CloudAccountQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(cloudaccount.Table)
-	columns := caq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = cloudaccount.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if caq.sql != nil {
-		selector = caq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if caq.ctx.Unique != nil && *caq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range caq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range caq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := caq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := caq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type CloudAccountGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (cagb *CloudAccountGroupBy) Aggregate(fns ...AggregateFunc) *CloudAccountGroupBy {
-	cagb.fns = append(cagb.fns, fns...)
-	return cagb
+func (_g *CloudAccountGroupBy) Aggregate(fns ...AggregateFunc) *CloudAccountGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cagb *CloudAccountGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cagb.build.ctx, ent.OpQueryGroupBy)
-	if err := cagb.build.prepareQuery(ctx); err != nil {
+func (_g *CloudAccountGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CloudAccountQuery, *CloudAccountGroupBy](ctx, cagb.build, cagb, cagb.build.inters, v)
+	return scanWithInterceptors[*CloudAccountQuery, *CloudAccountGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (cagb *CloudAccountGroupBy) sqlScan(ctx context.Context, root *CloudAccountQuery, v any) error {
+func (_g *CloudAccountGroupBy) sqlScan(ctx context.Context, root *CloudAccountQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(cagb.fns))
-	for _, fn := range cagb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*cagb.flds)+len(cagb.fns))
-		for _, f := range *cagb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*cagb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cagb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type CloudAccountSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (cas *CloudAccountSelect) Aggregate(fns ...AggregateFunc) *CloudAccountSelect {
-	cas.fns = append(cas.fns, fns...)
-	return cas
+func (_s *CloudAccountSelect) Aggregate(fns ...AggregateFunc) *CloudAccountSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (cas *CloudAccountSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, cas.ctx, ent.OpQuerySelect)
-	if err := cas.prepareQuery(ctx); err != nil {
+func (_s *CloudAccountSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CloudAccountQuery, *CloudAccountSelect](ctx, cas.CloudAccountQuery, cas, cas.inters, v)
+	return scanWithInterceptors[*CloudAccountQuery, *CloudAccountSelect](ctx, _s.CloudAccountQuery, _s, _s.inters, v)
 }
 
-func (cas *CloudAccountSelect) sqlScan(ctx context.Context, root *CloudAccountQuery, v any) error {
+func (_s *CloudAccountSelect) sqlScan(ctx context.Context, root *CloudAccountQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(cas.fns))
-	for _, fn := range cas.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*cas.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (cas *CloudAccountSelect) sqlScan(ctx context.Context, root *CloudAccountQu
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := cas.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

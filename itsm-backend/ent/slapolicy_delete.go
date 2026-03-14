@@ -20,56 +20,56 @@ type SLAPolicyDelete struct {
 }
 
 // Where appends a list predicates to the SLAPolicyDelete builder.
-func (spd *SLAPolicyDelete) Where(ps ...predicate.SLAPolicy) *SLAPolicyDelete {
-	spd.mutation.Where(ps...)
-	return spd
+func (_d *SLAPolicyDelete) Where(ps ...predicate.SLAPolicy) *SLAPolicyDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (spd *SLAPolicyDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, spd.sqlExec, spd.mutation, spd.hooks)
+func (_d *SLAPolicyDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (spd *SLAPolicyDelete) ExecX(ctx context.Context) int {
-	n, err := spd.Exec(ctx)
+func (_d *SLAPolicyDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (spd *SLAPolicyDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *SLAPolicyDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(slapolicy.Table, sqlgraph.NewFieldSpec(slapolicy.FieldID, field.TypeInt))
-	if ps := spd.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, spd.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	spd.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // SLAPolicyDeleteOne is the builder for deleting a single SLAPolicy entity.
 type SLAPolicyDeleteOne struct {
-	spd *SLAPolicyDelete
+	_d *SLAPolicyDelete
 }
 
 // Where appends a list predicates to the SLAPolicyDelete builder.
-func (spdo *SLAPolicyDeleteOne) Where(ps ...predicate.SLAPolicy) *SLAPolicyDeleteOne {
-	spdo.spd.mutation.Where(ps...)
-	return spdo
+func (_d *SLAPolicyDeleteOne) Where(ps ...predicate.SLAPolicy) *SLAPolicyDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (spdo *SLAPolicyDeleteOne) Exec(ctx context.Context) error {
-	n, err := spdo.spd.Exec(ctx)
+func (_d *SLAPolicyDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (spdo *SLAPolicyDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (spdo *SLAPolicyDeleteOne) ExecX(ctx context.Context) {
-	if err := spdo.Exec(ctx); err != nil {
+func (_d *SLAPolicyDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

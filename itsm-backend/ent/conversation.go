@@ -80,7 +80,7 @@ func (*Conversation) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Conversation fields.
-func (c *Conversation) assignValues(columns []string, values []any) error {
+func (_m *Conversation) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -91,33 +91,33 @@ func (c *Conversation) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			c.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case conversation.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				c.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case conversation.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				c.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case conversation.FieldUserID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field user_id", values[i])
 			} else if value.Valid {
-				c.UserID = int(value.Int64)
+				_m.UserID = int(value.Int64)
 			}
 		case conversation.FieldTitle:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field title", values[i])
 			} else if value.Valid {
-				c.Title = value.String
+				_m.Title = value.String
 			}
 		default:
-			c.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -125,54 +125,54 @@ func (c *Conversation) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Conversation.
 // This includes values selected through modifiers, order, etc.
-func (c *Conversation) Value(name string) (ent.Value, error) {
-	return c.selectValues.Get(name)
+func (_m *Conversation) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryMessages queries the "messages" edge of the Conversation entity.
-func (c *Conversation) QueryMessages() *MessageQuery {
-	return NewConversationClient(c.config).QueryMessages(c)
+func (_m *Conversation) QueryMessages() *MessageQuery {
+	return NewConversationClient(_m.config).QueryMessages(_m)
 }
 
 // QueryToolInvocations queries the "tool_invocations" edge of the Conversation entity.
-func (c *Conversation) QueryToolInvocations() *ToolInvocationQuery {
-	return NewConversationClient(c.config).QueryToolInvocations(c)
+func (_m *Conversation) QueryToolInvocations() *ToolInvocationQuery {
+	return NewConversationClient(_m.config).QueryToolInvocations(_m)
 }
 
 // Update returns a builder for updating this Conversation.
 // Note that you need to call Conversation.Unwrap() before calling this method if this Conversation
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (c *Conversation) Update() *ConversationUpdateOne {
-	return NewConversationClient(c.config).UpdateOne(c)
+func (_m *Conversation) Update() *ConversationUpdateOne {
+	return NewConversationClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Conversation entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (c *Conversation) Unwrap() *Conversation {
-	_tx, ok := c.config.driver.(*txDriver)
+func (_m *Conversation) Unwrap() *Conversation {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Conversation is not a transactional entity")
 	}
-	c.config.driver = _tx.drv
-	return c
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (c *Conversation) String() string {
+func (_m *Conversation) String() string {
 	var builder strings.Builder
 	builder.WriteString("Conversation(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", c.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
-	builder.WriteString(c.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", c.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", c.UserID))
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteString(", ")
 	builder.WriteString("title=")
-	builder.WriteString(c.Title)
+	builder.WriteString(_m.Title)
 	builder.WriteByte(')')
 	return builder.String()
 }

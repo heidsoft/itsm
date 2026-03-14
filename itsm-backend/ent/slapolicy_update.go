@@ -25,361 +25,361 @@ type SLAPolicyUpdate struct {
 }
 
 // Where appends a list predicates to the SLAPolicyUpdate builder.
-func (spu *SLAPolicyUpdate) Where(ps ...predicate.SLAPolicy) *SLAPolicyUpdate {
-	spu.mutation.Where(ps...)
-	return spu
+func (_u *SLAPolicyUpdate) Where(ps ...predicate.SLAPolicy) *SLAPolicyUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (spu *SLAPolicyUpdate) SetName(s string) *SLAPolicyUpdate {
-	spu.mutation.SetName(s)
-	return spu
+func (_u *SLAPolicyUpdate) SetName(v string) *SLAPolicyUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableName(s *string) *SLAPolicyUpdate {
-	if s != nil {
-		spu.SetName(*s)
+func (_u *SLAPolicyUpdate) SetNillableName(v *string) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return spu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (spu *SLAPolicyUpdate) SetDescription(s string) *SLAPolicyUpdate {
-	spu.mutation.SetDescription(s)
-	return spu
+func (_u *SLAPolicyUpdate) SetDescription(v string) *SLAPolicyUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableDescription(s *string) *SLAPolicyUpdate {
-	if s != nil {
-		spu.SetDescription(*s)
+func (_u *SLAPolicyUpdate) SetNillableDescription(v *string) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return spu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (spu *SLAPolicyUpdate) ClearDescription() *SLAPolicyUpdate {
-	spu.mutation.ClearDescription()
-	return spu
+func (_u *SLAPolicyUpdate) ClearDescription() *SLAPolicyUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetCustomerTier sets the "customer_tier" field.
-func (spu *SLAPolicyUpdate) SetCustomerTier(s string) *SLAPolicyUpdate {
-	spu.mutation.SetCustomerTier(s)
-	return spu
+func (_u *SLAPolicyUpdate) SetCustomerTier(v string) *SLAPolicyUpdate {
+	_u.mutation.SetCustomerTier(v)
+	return _u
 }
 
 // SetNillableCustomerTier sets the "customer_tier" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableCustomerTier(s *string) *SLAPolicyUpdate {
-	if s != nil {
-		spu.SetCustomerTier(*s)
+func (_u *SLAPolicyUpdate) SetNillableCustomerTier(v *string) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetCustomerTier(*v)
 	}
-	return spu
+	return _u
 }
 
 // ClearCustomerTier clears the value of the "customer_tier" field.
-func (spu *SLAPolicyUpdate) ClearCustomerTier() *SLAPolicyUpdate {
-	spu.mutation.ClearCustomerTier()
-	return spu
+func (_u *SLAPolicyUpdate) ClearCustomerTier() *SLAPolicyUpdate {
+	_u.mutation.ClearCustomerTier()
+	return _u
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (spu *SLAPolicyUpdate) SetTicketType(s string) *SLAPolicyUpdate {
-	spu.mutation.SetTicketType(s)
-	return spu
+func (_u *SLAPolicyUpdate) SetTicketType(v string) *SLAPolicyUpdate {
+	_u.mutation.SetTicketType(v)
+	return _u
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableTicketType(s *string) *SLAPolicyUpdate {
-	if s != nil {
-		spu.SetTicketType(*s)
+func (_u *SLAPolicyUpdate) SetNillableTicketType(v *string) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetTicketType(*v)
 	}
-	return spu
+	return _u
 }
 
 // ClearTicketType clears the value of the "ticket_type" field.
-func (spu *SLAPolicyUpdate) ClearTicketType() *SLAPolicyUpdate {
-	spu.mutation.ClearTicketType()
-	return spu
+func (_u *SLAPolicyUpdate) ClearTicketType() *SLAPolicyUpdate {
+	_u.mutation.ClearTicketType()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (spu *SLAPolicyUpdate) SetPriority(s string) *SLAPolicyUpdate {
-	spu.mutation.SetPriority(s)
-	return spu
+func (_u *SLAPolicyUpdate) SetPriority(v string) *SLAPolicyUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillablePriority(s *string) *SLAPolicyUpdate {
-	if s != nil {
-		spu.SetPriority(*s)
+func (_u *SLAPolicyUpdate) SetNillablePriority(v *string) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return spu
+	return _u
 }
 
 // ClearPriority clears the value of the "priority" field.
-func (spu *SLAPolicyUpdate) ClearPriority() *SLAPolicyUpdate {
-	spu.mutation.ClearPriority()
-	return spu
+func (_u *SLAPolicyUpdate) ClearPriority() *SLAPolicyUpdate {
+	_u.mutation.ClearPriority()
+	return _u
 }
 
 // SetResponseTimeMinutes sets the "response_time_minutes" field.
-func (spu *SLAPolicyUpdate) SetResponseTimeMinutes(i int) *SLAPolicyUpdate {
-	spu.mutation.ResetResponseTimeMinutes()
-	spu.mutation.SetResponseTimeMinutes(i)
-	return spu
+func (_u *SLAPolicyUpdate) SetResponseTimeMinutes(v int) *SLAPolicyUpdate {
+	_u.mutation.ResetResponseTimeMinutes()
+	_u.mutation.SetResponseTimeMinutes(v)
+	return _u
 }
 
 // SetNillableResponseTimeMinutes sets the "response_time_minutes" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableResponseTimeMinutes(i *int) *SLAPolicyUpdate {
-	if i != nil {
-		spu.SetResponseTimeMinutes(*i)
+func (_u *SLAPolicyUpdate) SetNillableResponseTimeMinutes(v *int) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetResponseTimeMinutes(*v)
 	}
-	return spu
+	return _u
 }
 
-// AddResponseTimeMinutes adds i to the "response_time_minutes" field.
-func (spu *SLAPolicyUpdate) AddResponseTimeMinutes(i int) *SLAPolicyUpdate {
-	spu.mutation.AddResponseTimeMinutes(i)
-	return spu
+// AddResponseTimeMinutes adds value to the "response_time_minutes" field.
+func (_u *SLAPolicyUpdate) AddResponseTimeMinutes(v int) *SLAPolicyUpdate {
+	_u.mutation.AddResponseTimeMinutes(v)
+	return _u
 }
 
 // SetResolutionTimeMinutes sets the "resolution_time_minutes" field.
-func (spu *SLAPolicyUpdate) SetResolutionTimeMinutes(i int) *SLAPolicyUpdate {
-	spu.mutation.ResetResolutionTimeMinutes()
-	spu.mutation.SetResolutionTimeMinutes(i)
-	return spu
+func (_u *SLAPolicyUpdate) SetResolutionTimeMinutes(v int) *SLAPolicyUpdate {
+	_u.mutation.ResetResolutionTimeMinutes()
+	_u.mutation.SetResolutionTimeMinutes(v)
+	return _u
 }
 
 // SetNillableResolutionTimeMinutes sets the "resolution_time_minutes" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableResolutionTimeMinutes(i *int) *SLAPolicyUpdate {
-	if i != nil {
-		spu.SetResolutionTimeMinutes(*i)
+func (_u *SLAPolicyUpdate) SetNillableResolutionTimeMinutes(v *int) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetResolutionTimeMinutes(*v)
 	}
-	return spu
+	return _u
 }
 
-// AddResolutionTimeMinutes adds i to the "resolution_time_minutes" field.
-func (spu *SLAPolicyUpdate) AddResolutionTimeMinutes(i int) *SLAPolicyUpdate {
-	spu.mutation.AddResolutionTimeMinutes(i)
-	return spu
+// AddResolutionTimeMinutes adds value to the "resolution_time_minutes" field.
+func (_u *SLAPolicyUpdate) AddResolutionTimeMinutes(v int) *SLAPolicyUpdate {
+	_u.mutation.AddResolutionTimeMinutes(v)
+	return _u
 }
 
 // SetBusinessHours sets the "business_hours" field.
-func (spu *SLAPolicyUpdate) SetBusinessHours(m map[string]interface{}) *SLAPolicyUpdate {
-	spu.mutation.SetBusinessHours(m)
-	return spu
+func (_u *SLAPolicyUpdate) SetBusinessHours(v map[string]interface{}) *SLAPolicyUpdate {
+	_u.mutation.SetBusinessHours(v)
+	return _u
 }
 
 // ClearBusinessHours clears the value of the "business_hours" field.
-func (spu *SLAPolicyUpdate) ClearBusinessHours() *SLAPolicyUpdate {
-	spu.mutation.ClearBusinessHours()
-	return spu
+func (_u *SLAPolicyUpdate) ClearBusinessHours() *SLAPolicyUpdate {
+	_u.mutation.ClearBusinessHours()
+	return _u
 }
 
 // SetExcludeWeekends sets the "exclude_weekends" field.
-func (spu *SLAPolicyUpdate) SetExcludeWeekends(b bool) *SLAPolicyUpdate {
-	spu.mutation.SetExcludeWeekends(b)
-	return spu
+func (_u *SLAPolicyUpdate) SetExcludeWeekends(v bool) *SLAPolicyUpdate {
+	_u.mutation.SetExcludeWeekends(v)
+	return _u
 }
 
 // SetNillableExcludeWeekends sets the "exclude_weekends" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableExcludeWeekends(b *bool) *SLAPolicyUpdate {
-	if b != nil {
-		spu.SetExcludeWeekends(*b)
+func (_u *SLAPolicyUpdate) SetNillableExcludeWeekends(v *bool) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetExcludeWeekends(*v)
 	}
-	return spu
+	return _u
 }
 
 // SetExcludeHolidays sets the "exclude_holidays" field.
-func (spu *SLAPolicyUpdate) SetExcludeHolidays(b bool) *SLAPolicyUpdate {
-	spu.mutation.SetExcludeHolidays(b)
-	return spu
+func (_u *SLAPolicyUpdate) SetExcludeHolidays(v bool) *SLAPolicyUpdate {
+	_u.mutation.SetExcludeHolidays(v)
+	return _u
 }
 
 // SetNillableExcludeHolidays sets the "exclude_holidays" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableExcludeHolidays(b *bool) *SLAPolicyUpdate {
-	if b != nil {
-		spu.SetExcludeHolidays(*b)
+func (_u *SLAPolicyUpdate) SetNillableExcludeHolidays(v *bool) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetExcludeHolidays(*v)
 	}
-	return spu
+	return _u
 }
 
 // SetEscalationRules sets the "escalation_rules" field.
-func (spu *SLAPolicyUpdate) SetEscalationRules(m map[string]interface{}) *SLAPolicyUpdate {
-	spu.mutation.SetEscalationRules(m)
-	return spu
+func (_u *SLAPolicyUpdate) SetEscalationRules(v map[string]interface{}) *SLAPolicyUpdate {
+	_u.mutation.SetEscalationRules(v)
+	return _u
 }
 
 // ClearEscalationRules clears the value of the "escalation_rules" field.
-func (spu *SLAPolicyUpdate) ClearEscalationRules() *SLAPolicyUpdate {
-	spu.mutation.ClearEscalationRules()
-	return spu
+func (_u *SLAPolicyUpdate) ClearEscalationRules() *SLAPolicyUpdate {
+	_u.mutation.ClearEscalationRules()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (spu *SLAPolicyUpdate) SetIsActive(b bool) *SLAPolicyUpdate {
-	spu.mutation.SetIsActive(b)
-	return spu
+func (_u *SLAPolicyUpdate) SetIsActive(v bool) *SLAPolicyUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableIsActive(b *bool) *SLAPolicyUpdate {
-	if b != nil {
-		spu.SetIsActive(*b)
+func (_u *SLAPolicyUpdate) SetNillableIsActive(v *bool) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return spu
+	return _u
 }
 
 // SetPriorityScore sets the "priority_score" field.
-func (spu *SLAPolicyUpdate) SetPriorityScore(i int) *SLAPolicyUpdate {
-	spu.mutation.ResetPriorityScore()
-	spu.mutation.SetPriorityScore(i)
-	return spu
+func (_u *SLAPolicyUpdate) SetPriorityScore(v int) *SLAPolicyUpdate {
+	_u.mutation.ResetPriorityScore()
+	_u.mutation.SetPriorityScore(v)
+	return _u
 }
 
 // SetNillablePriorityScore sets the "priority_score" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillablePriorityScore(i *int) *SLAPolicyUpdate {
-	if i != nil {
-		spu.SetPriorityScore(*i)
+func (_u *SLAPolicyUpdate) SetNillablePriorityScore(v *int) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetPriorityScore(*v)
 	}
-	return spu
+	return _u
 }
 
-// AddPriorityScore adds i to the "priority_score" field.
-func (spu *SLAPolicyUpdate) AddPriorityScore(i int) *SLAPolicyUpdate {
-	spu.mutation.AddPriorityScore(i)
-	return spu
+// AddPriorityScore adds value to the "priority_score" field.
+func (_u *SLAPolicyUpdate) AddPriorityScore(v int) *SLAPolicyUpdate {
+	_u.mutation.AddPriorityScore(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (spu *SLAPolicyUpdate) SetTenantID(i int) *SLAPolicyUpdate {
-	spu.mutation.ResetTenantID()
-	spu.mutation.SetTenantID(i)
-	return spu
+func (_u *SLAPolicyUpdate) SetTenantID(v int) *SLAPolicyUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableTenantID(i *int) *SLAPolicyUpdate {
-	if i != nil {
-		spu.SetTenantID(*i)
+func (_u *SLAPolicyUpdate) SetNillableTenantID(v *int) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return spu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (spu *SLAPolicyUpdate) AddTenantID(i int) *SLAPolicyUpdate {
-	spu.mutation.AddTenantID(i)
-	return spu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLAPolicyUpdate) AddTenantID(v int) *SLAPolicyUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (spu *SLAPolicyUpdate) SetCreatedAt(t time.Time) *SLAPolicyUpdate {
-	spu.mutation.SetCreatedAt(t)
-	return spu
+func (_u *SLAPolicyUpdate) SetCreatedAt(v time.Time) *SLAPolicyUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (spu *SLAPolicyUpdate) SetNillableCreatedAt(t *time.Time) *SLAPolicyUpdate {
-	if t != nil {
-		spu.SetCreatedAt(*t)
+func (_u *SLAPolicyUpdate) SetNillableCreatedAt(v *time.Time) *SLAPolicyUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return spu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (spu *SLAPolicyUpdate) SetUpdatedAt(t time.Time) *SLAPolicyUpdate {
-	spu.mutation.SetUpdatedAt(t)
-	return spu
+func (_u *SLAPolicyUpdate) SetUpdatedAt(v time.Time) *SLAPolicyUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddSLADefinitionIDs adds the "sla_definition" edge to the SLADefinition entity by IDs.
-func (spu *SLAPolicyUpdate) AddSLADefinitionIDs(ids ...int) *SLAPolicyUpdate {
-	spu.mutation.AddSLADefinitionIDs(ids...)
-	return spu
+func (_u *SLAPolicyUpdate) AddSLADefinitionIDs(ids ...int) *SLAPolicyUpdate {
+	_u.mutation.AddSLADefinitionIDs(ids...)
+	return _u
 }
 
 // AddSLADefinition adds the "sla_definition" edges to the SLADefinition entity.
-func (spu *SLAPolicyUpdate) AddSLADefinition(s ...*SLADefinition) *SLAPolicyUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAPolicyUpdate) AddSLADefinition(v ...*SLADefinition) *SLAPolicyUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spu.AddSLADefinitionIDs(ids...)
+	return _u.AddSLADefinitionIDs(ids...)
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (spu *SLAPolicyUpdate) AddTicketIDs(ids ...int) *SLAPolicyUpdate {
-	spu.mutation.AddTicketIDs(ids...)
-	return spu
+func (_u *SLAPolicyUpdate) AddTicketIDs(ids ...int) *SLAPolicyUpdate {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (spu *SLAPolicyUpdate) AddTickets(t ...*Ticket) *SLAPolicyUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLAPolicyUpdate) AddTickets(v ...*Ticket) *SLAPolicyUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spu.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // Mutation returns the SLAPolicyMutation object of the builder.
-func (spu *SLAPolicyUpdate) Mutation() *SLAPolicyMutation {
-	return spu.mutation
+func (_u *SLAPolicyUpdate) Mutation() *SLAPolicyMutation {
+	return _u.mutation
 }
 
 // ClearSLADefinition clears all "sla_definition" edges to the SLADefinition entity.
-func (spu *SLAPolicyUpdate) ClearSLADefinition() *SLAPolicyUpdate {
-	spu.mutation.ClearSLADefinition()
-	return spu
+func (_u *SLAPolicyUpdate) ClearSLADefinition() *SLAPolicyUpdate {
+	_u.mutation.ClearSLADefinition()
+	return _u
 }
 
 // RemoveSLADefinitionIDs removes the "sla_definition" edge to SLADefinition entities by IDs.
-func (spu *SLAPolicyUpdate) RemoveSLADefinitionIDs(ids ...int) *SLAPolicyUpdate {
-	spu.mutation.RemoveSLADefinitionIDs(ids...)
-	return spu
+func (_u *SLAPolicyUpdate) RemoveSLADefinitionIDs(ids ...int) *SLAPolicyUpdate {
+	_u.mutation.RemoveSLADefinitionIDs(ids...)
+	return _u
 }
 
 // RemoveSLADefinition removes "sla_definition" edges to SLADefinition entities.
-func (spu *SLAPolicyUpdate) RemoveSLADefinition(s ...*SLADefinition) *SLAPolicyUpdate {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAPolicyUpdate) RemoveSLADefinition(v ...*SLADefinition) *SLAPolicyUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spu.RemoveSLADefinitionIDs(ids...)
+	return _u.RemoveSLADefinitionIDs(ids...)
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (spu *SLAPolicyUpdate) ClearTickets() *SLAPolicyUpdate {
-	spu.mutation.ClearTickets()
-	return spu
+func (_u *SLAPolicyUpdate) ClearTickets() *SLAPolicyUpdate {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (spu *SLAPolicyUpdate) RemoveTicketIDs(ids ...int) *SLAPolicyUpdate {
-	spu.mutation.RemoveTicketIDs(ids...)
-	return spu
+func (_u *SLAPolicyUpdate) RemoveTicketIDs(ids ...int) *SLAPolicyUpdate {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (spu *SLAPolicyUpdate) RemoveTickets(t ...*Ticket) *SLAPolicyUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLAPolicyUpdate) RemoveTickets(v ...*Ticket) *SLAPolicyUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spu.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (spu *SLAPolicyUpdate) Save(ctx context.Context) (int, error) {
-	spu.defaults()
-	return withHooks(ctx, spu.sqlSave, spu.mutation, spu.hooks)
+func (_u *SLAPolicyUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (spu *SLAPolicyUpdate) SaveX(ctx context.Context) int {
-	affected, err := spu.Save(ctx)
+func (_u *SLAPolicyUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -387,44 +387,44 @@ func (spu *SLAPolicyUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (spu *SLAPolicyUpdate) Exec(ctx context.Context) error {
-	_, err := spu.Save(ctx)
+func (_u *SLAPolicyUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (spu *SLAPolicyUpdate) ExecX(ctx context.Context) {
-	if err := spu.Exec(ctx); err != nil {
+func (_u *SLAPolicyUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (spu *SLAPolicyUpdate) defaults() {
-	if _, ok := spu.mutation.UpdatedAt(); !ok {
+func (_u *SLAPolicyUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := slapolicy.UpdateDefaultUpdatedAt()
-		spu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (spu *SLAPolicyUpdate) check() error {
-	if v, ok := spu.mutation.Name(); ok {
+func (_u *SLAPolicyUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := slapolicy.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.name": %w`, err)}
 		}
 	}
-	if v, ok := spu.mutation.ResponseTimeMinutes(); ok {
+	if v, ok := _u.mutation.ResponseTimeMinutes(); ok {
 		if err := slapolicy.ResponseTimeMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "response_time_minutes", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.response_time_minutes": %w`, err)}
 		}
 	}
-	if v, ok := spu.mutation.ResolutionTimeMinutes(); ok {
+	if v, ok := _u.mutation.ResolutionTimeMinutes(); ok {
 		if err := slapolicy.ResolutionTimeMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "resolution_time_minutes", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.resolution_time_minutes": %w`, err)}
 		}
 	}
-	if v, ok := spu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := slapolicy.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.tenant_id": %w`, err)}
 		}
@@ -432,97 +432,97 @@ func (spu *SLAPolicyUpdate) check() error {
 	return nil
 }
 
-func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := spu.check(); err != nil {
-		return n, err
+func (_u *SLAPolicyUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(slapolicy.Table, slapolicy.Columns, sqlgraph.NewFieldSpec(slapolicy.FieldID, field.TypeInt))
-	if ps := spu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := spu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(slapolicy.FieldName, field.TypeString, value)
 	}
-	if value, ok := spu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(slapolicy.FieldDescription, field.TypeString, value)
 	}
-	if spu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(slapolicy.FieldDescription, field.TypeString)
 	}
-	if value, ok := spu.mutation.CustomerTier(); ok {
+	if value, ok := _u.mutation.CustomerTier(); ok {
 		_spec.SetField(slapolicy.FieldCustomerTier, field.TypeString, value)
 	}
-	if spu.mutation.CustomerTierCleared() {
+	if _u.mutation.CustomerTierCleared() {
 		_spec.ClearField(slapolicy.FieldCustomerTier, field.TypeString)
 	}
-	if value, ok := spu.mutation.TicketType(); ok {
+	if value, ok := _u.mutation.TicketType(); ok {
 		_spec.SetField(slapolicy.FieldTicketType, field.TypeString, value)
 	}
-	if spu.mutation.TicketTypeCleared() {
+	if _u.mutation.TicketTypeCleared() {
 		_spec.ClearField(slapolicy.FieldTicketType, field.TypeString)
 	}
-	if value, ok := spu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(slapolicy.FieldPriority, field.TypeString, value)
 	}
-	if spu.mutation.PriorityCleared() {
+	if _u.mutation.PriorityCleared() {
 		_spec.ClearField(slapolicy.FieldPriority, field.TypeString)
 	}
-	if value, ok := spu.mutation.ResponseTimeMinutes(); ok {
+	if value, ok := _u.mutation.ResponseTimeMinutes(); ok {
 		_spec.SetField(slapolicy.FieldResponseTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.AddedResponseTimeMinutes(); ok {
+	if value, ok := _u.mutation.AddedResponseTimeMinutes(); ok {
 		_spec.AddField(slapolicy.FieldResponseTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.ResolutionTimeMinutes(); ok {
+	if value, ok := _u.mutation.ResolutionTimeMinutes(); ok {
 		_spec.SetField(slapolicy.FieldResolutionTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.AddedResolutionTimeMinutes(); ok {
+	if value, ok := _u.mutation.AddedResolutionTimeMinutes(); ok {
 		_spec.AddField(slapolicy.FieldResolutionTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.BusinessHours(); ok {
+	if value, ok := _u.mutation.BusinessHours(); ok {
 		_spec.SetField(slapolicy.FieldBusinessHours, field.TypeJSON, value)
 	}
-	if spu.mutation.BusinessHoursCleared() {
+	if _u.mutation.BusinessHoursCleared() {
 		_spec.ClearField(slapolicy.FieldBusinessHours, field.TypeJSON)
 	}
-	if value, ok := spu.mutation.ExcludeWeekends(); ok {
+	if value, ok := _u.mutation.ExcludeWeekends(); ok {
 		_spec.SetField(slapolicy.FieldExcludeWeekends, field.TypeBool, value)
 	}
-	if value, ok := spu.mutation.ExcludeHolidays(); ok {
+	if value, ok := _u.mutation.ExcludeHolidays(); ok {
 		_spec.SetField(slapolicy.FieldExcludeHolidays, field.TypeBool, value)
 	}
-	if value, ok := spu.mutation.EscalationRules(); ok {
+	if value, ok := _u.mutation.EscalationRules(); ok {
 		_spec.SetField(slapolicy.FieldEscalationRules, field.TypeJSON, value)
 	}
-	if spu.mutation.EscalationRulesCleared() {
+	if _u.mutation.EscalationRulesCleared() {
 		_spec.ClearField(slapolicy.FieldEscalationRules, field.TypeJSON)
 	}
-	if value, ok := spu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(slapolicy.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := spu.mutation.PriorityScore(); ok {
+	if value, ok := _u.mutation.PriorityScore(); ok {
 		_spec.SetField(slapolicy.FieldPriorityScore, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.AddedPriorityScore(); ok {
+	if value, ok := _u.mutation.AddedPriorityScore(); ok {
 		_spec.AddField(slapolicy.FieldPriorityScore, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(slapolicy.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(slapolicy.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := spu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(slapolicy.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := spu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(slapolicy.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if spu.mutation.SLADefinitionCleared() {
+	if _u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -535,7 +535,7 @@ func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spu.mutation.RemovedSLADefinitionIDs(); len(nodes) > 0 && !spu.mutation.SLADefinitionCleared() {
+	if nodes := _u.mutation.RemovedSLADefinitionIDs(); len(nodes) > 0 && !_u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -551,7 +551,7 @@ func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spu.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -567,7 +567,7 @@ func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if spu.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -580,7 +580,7 @@ func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spu.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !spu.mutation.TicketsCleared() {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -596,7 +596,7 @@ func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spu.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -612,7 +612,7 @@ func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, spu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{slapolicy.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -620,8 +620,8 @@ func (spu *SLAPolicyUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	spu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // SLAPolicyUpdateOne is the builder for updating a single SLAPolicy entity.
@@ -633,368 +633,368 @@ type SLAPolicyUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (spuo *SLAPolicyUpdateOne) SetName(s string) *SLAPolicyUpdateOne {
-	spuo.mutation.SetName(s)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetName(v string) *SLAPolicyUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableName(s *string) *SLAPolicyUpdateOne {
-	if s != nil {
-		spuo.SetName(*s)
+func (_u *SLAPolicyUpdateOne) SetNillableName(v *string) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return spuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (spuo *SLAPolicyUpdateOne) SetDescription(s string) *SLAPolicyUpdateOne {
-	spuo.mutation.SetDescription(s)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetDescription(v string) *SLAPolicyUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableDescription(s *string) *SLAPolicyUpdateOne {
-	if s != nil {
-		spuo.SetDescription(*s)
+func (_u *SLAPolicyUpdateOne) SetNillableDescription(v *string) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return spuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (spuo *SLAPolicyUpdateOne) ClearDescription() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearDescription()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearDescription() *SLAPolicyUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetCustomerTier sets the "customer_tier" field.
-func (spuo *SLAPolicyUpdateOne) SetCustomerTier(s string) *SLAPolicyUpdateOne {
-	spuo.mutation.SetCustomerTier(s)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetCustomerTier(v string) *SLAPolicyUpdateOne {
+	_u.mutation.SetCustomerTier(v)
+	return _u
 }
 
 // SetNillableCustomerTier sets the "customer_tier" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableCustomerTier(s *string) *SLAPolicyUpdateOne {
-	if s != nil {
-		spuo.SetCustomerTier(*s)
+func (_u *SLAPolicyUpdateOne) SetNillableCustomerTier(v *string) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetCustomerTier(*v)
 	}
-	return spuo
+	return _u
 }
 
 // ClearCustomerTier clears the value of the "customer_tier" field.
-func (spuo *SLAPolicyUpdateOne) ClearCustomerTier() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearCustomerTier()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearCustomerTier() *SLAPolicyUpdateOne {
+	_u.mutation.ClearCustomerTier()
+	return _u
 }
 
 // SetTicketType sets the "ticket_type" field.
-func (spuo *SLAPolicyUpdateOne) SetTicketType(s string) *SLAPolicyUpdateOne {
-	spuo.mutation.SetTicketType(s)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetTicketType(v string) *SLAPolicyUpdateOne {
+	_u.mutation.SetTicketType(v)
+	return _u
 }
 
 // SetNillableTicketType sets the "ticket_type" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableTicketType(s *string) *SLAPolicyUpdateOne {
-	if s != nil {
-		spuo.SetTicketType(*s)
+func (_u *SLAPolicyUpdateOne) SetNillableTicketType(v *string) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetTicketType(*v)
 	}
-	return spuo
+	return _u
 }
 
 // ClearTicketType clears the value of the "ticket_type" field.
-func (spuo *SLAPolicyUpdateOne) ClearTicketType() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearTicketType()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearTicketType() *SLAPolicyUpdateOne {
+	_u.mutation.ClearTicketType()
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (spuo *SLAPolicyUpdateOne) SetPriority(s string) *SLAPolicyUpdateOne {
-	spuo.mutation.SetPriority(s)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetPriority(v string) *SLAPolicyUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillablePriority(s *string) *SLAPolicyUpdateOne {
-	if s != nil {
-		spuo.SetPriority(*s)
+func (_u *SLAPolicyUpdateOne) SetNillablePriority(v *string) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return spuo
+	return _u
 }
 
 // ClearPriority clears the value of the "priority" field.
-func (spuo *SLAPolicyUpdateOne) ClearPriority() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearPriority()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearPriority() *SLAPolicyUpdateOne {
+	_u.mutation.ClearPriority()
+	return _u
 }
 
 // SetResponseTimeMinutes sets the "response_time_minutes" field.
-func (spuo *SLAPolicyUpdateOne) SetResponseTimeMinutes(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.ResetResponseTimeMinutes()
-	spuo.mutation.SetResponseTimeMinutes(i)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetResponseTimeMinutes(v int) *SLAPolicyUpdateOne {
+	_u.mutation.ResetResponseTimeMinutes()
+	_u.mutation.SetResponseTimeMinutes(v)
+	return _u
 }
 
 // SetNillableResponseTimeMinutes sets the "response_time_minutes" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableResponseTimeMinutes(i *int) *SLAPolicyUpdateOne {
-	if i != nil {
-		spuo.SetResponseTimeMinutes(*i)
+func (_u *SLAPolicyUpdateOne) SetNillableResponseTimeMinutes(v *int) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetResponseTimeMinutes(*v)
 	}
-	return spuo
+	return _u
 }
 
-// AddResponseTimeMinutes adds i to the "response_time_minutes" field.
-func (spuo *SLAPolicyUpdateOne) AddResponseTimeMinutes(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.AddResponseTimeMinutes(i)
-	return spuo
+// AddResponseTimeMinutes adds value to the "response_time_minutes" field.
+func (_u *SLAPolicyUpdateOne) AddResponseTimeMinutes(v int) *SLAPolicyUpdateOne {
+	_u.mutation.AddResponseTimeMinutes(v)
+	return _u
 }
 
 // SetResolutionTimeMinutes sets the "resolution_time_minutes" field.
-func (spuo *SLAPolicyUpdateOne) SetResolutionTimeMinutes(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.ResetResolutionTimeMinutes()
-	spuo.mutation.SetResolutionTimeMinutes(i)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetResolutionTimeMinutes(v int) *SLAPolicyUpdateOne {
+	_u.mutation.ResetResolutionTimeMinutes()
+	_u.mutation.SetResolutionTimeMinutes(v)
+	return _u
 }
 
 // SetNillableResolutionTimeMinutes sets the "resolution_time_minutes" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableResolutionTimeMinutes(i *int) *SLAPolicyUpdateOne {
-	if i != nil {
-		spuo.SetResolutionTimeMinutes(*i)
+func (_u *SLAPolicyUpdateOne) SetNillableResolutionTimeMinutes(v *int) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetResolutionTimeMinutes(*v)
 	}
-	return spuo
+	return _u
 }
 
-// AddResolutionTimeMinutes adds i to the "resolution_time_minutes" field.
-func (spuo *SLAPolicyUpdateOne) AddResolutionTimeMinutes(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.AddResolutionTimeMinutes(i)
-	return spuo
+// AddResolutionTimeMinutes adds value to the "resolution_time_minutes" field.
+func (_u *SLAPolicyUpdateOne) AddResolutionTimeMinutes(v int) *SLAPolicyUpdateOne {
+	_u.mutation.AddResolutionTimeMinutes(v)
+	return _u
 }
 
 // SetBusinessHours sets the "business_hours" field.
-func (spuo *SLAPolicyUpdateOne) SetBusinessHours(m map[string]interface{}) *SLAPolicyUpdateOne {
-	spuo.mutation.SetBusinessHours(m)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetBusinessHours(v map[string]interface{}) *SLAPolicyUpdateOne {
+	_u.mutation.SetBusinessHours(v)
+	return _u
 }
 
 // ClearBusinessHours clears the value of the "business_hours" field.
-func (spuo *SLAPolicyUpdateOne) ClearBusinessHours() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearBusinessHours()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearBusinessHours() *SLAPolicyUpdateOne {
+	_u.mutation.ClearBusinessHours()
+	return _u
 }
 
 // SetExcludeWeekends sets the "exclude_weekends" field.
-func (spuo *SLAPolicyUpdateOne) SetExcludeWeekends(b bool) *SLAPolicyUpdateOne {
-	spuo.mutation.SetExcludeWeekends(b)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetExcludeWeekends(v bool) *SLAPolicyUpdateOne {
+	_u.mutation.SetExcludeWeekends(v)
+	return _u
 }
 
 // SetNillableExcludeWeekends sets the "exclude_weekends" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableExcludeWeekends(b *bool) *SLAPolicyUpdateOne {
-	if b != nil {
-		spuo.SetExcludeWeekends(*b)
+func (_u *SLAPolicyUpdateOne) SetNillableExcludeWeekends(v *bool) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetExcludeWeekends(*v)
 	}
-	return spuo
+	return _u
 }
 
 // SetExcludeHolidays sets the "exclude_holidays" field.
-func (spuo *SLAPolicyUpdateOne) SetExcludeHolidays(b bool) *SLAPolicyUpdateOne {
-	spuo.mutation.SetExcludeHolidays(b)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetExcludeHolidays(v bool) *SLAPolicyUpdateOne {
+	_u.mutation.SetExcludeHolidays(v)
+	return _u
 }
 
 // SetNillableExcludeHolidays sets the "exclude_holidays" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableExcludeHolidays(b *bool) *SLAPolicyUpdateOne {
-	if b != nil {
-		spuo.SetExcludeHolidays(*b)
+func (_u *SLAPolicyUpdateOne) SetNillableExcludeHolidays(v *bool) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetExcludeHolidays(*v)
 	}
-	return spuo
+	return _u
 }
 
 // SetEscalationRules sets the "escalation_rules" field.
-func (spuo *SLAPolicyUpdateOne) SetEscalationRules(m map[string]interface{}) *SLAPolicyUpdateOne {
-	spuo.mutation.SetEscalationRules(m)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetEscalationRules(v map[string]interface{}) *SLAPolicyUpdateOne {
+	_u.mutation.SetEscalationRules(v)
+	return _u
 }
 
 // ClearEscalationRules clears the value of the "escalation_rules" field.
-func (spuo *SLAPolicyUpdateOne) ClearEscalationRules() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearEscalationRules()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearEscalationRules() *SLAPolicyUpdateOne {
+	_u.mutation.ClearEscalationRules()
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (spuo *SLAPolicyUpdateOne) SetIsActive(b bool) *SLAPolicyUpdateOne {
-	spuo.mutation.SetIsActive(b)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetIsActive(v bool) *SLAPolicyUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableIsActive(b *bool) *SLAPolicyUpdateOne {
-	if b != nil {
-		spuo.SetIsActive(*b)
+func (_u *SLAPolicyUpdateOne) SetNillableIsActive(v *bool) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return spuo
+	return _u
 }
 
 // SetPriorityScore sets the "priority_score" field.
-func (spuo *SLAPolicyUpdateOne) SetPriorityScore(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.ResetPriorityScore()
-	spuo.mutation.SetPriorityScore(i)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetPriorityScore(v int) *SLAPolicyUpdateOne {
+	_u.mutation.ResetPriorityScore()
+	_u.mutation.SetPriorityScore(v)
+	return _u
 }
 
 // SetNillablePriorityScore sets the "priority_score" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillablePriorityScore(i *int) *SLAPolicyUpdateOne {
-	if i != nil {
-		spuo.SetPriorityScore(*i)
+func (_u *SLAPolicyUpdateOne) SetNillablePriorityScore(v *int) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetPriorityScore(*v)
 	}
-	return spuo
+	return _u
 }
 
-// AddPriorityScore adds i to the "priority_score" field.
-func (spuo *SLAPolicyUpdateOne) AddPriorityScore(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.AddPriorityScore(i)
-	return spuo
+// AddPriorityScore adds value to the "priority_score" field.
+func (_u *SLAPolicyUpdateOne) AddPriorityScore(v int) *SLAPolicyUpdateOne {
+	_u.mutation.AddPriorityScore(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (spuo *SLAPolicyUpdateOne) SetTenantID(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.ResetTenantID()
-	spuo.mutation.SetTenantID(i)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetTenantID(v int) *SLAPolicyUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableTenantID(i *int) *SLAPolicyUpdateOne {
-	if i != nil {
-		spuo.SetTenantID(*i)
+func (_u *SLAPolicyUpdateOne) SetNillableTenantID(v *int) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return spuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (spuo *SLAPolicyUpdateOne) AddTenantID(i int) *SLAPolicyUpdateOne {
-	spuo.mutation.AddTenantID(i)
-	return spuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *SLAPolicyUpdateOne) AddTenantID(v int) *SLAPolicyUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (spuo *SLAPolicyUpdateOne) SetCreatedAt(t time.Time) *SLAPolicyUpdateOne {
-	spuo.mutation.SetCreatedAt(t)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetCreatedAt(v time.Time) *SLAPolicyUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (spuo *SLAPolicyUpdateOne) SetNillableCreatedAt(t *time.Time) *SLAPolicyUpdateOne {
-	if t != nil {
-		spuo.SetCreatedAt(*t)
+func (_u *SLAPolicyUpdateOne) SetNillableCreatedAt(v *time.Time) *SLAPolicyUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return spuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (spuo *SLAPolicyUpdateOne) SetUpdatedAt(t time.Time) *SLAPolicyUpdateOne {
-	spuo.mutation.SetUpdatedAt(t)
-	return spuo
+func (_u *SLAPolicyUpdateOne) SetUpdatedAt(v time.Time) *SLAPolicyUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // AddSLADefinitionIDs adds the "sla_definition" edge to the SLADefinition entity by IDs.
-func (spuo *SLAPolicyUpdateOne) AddSLADefinitionIDs(ids ...int) *SLAPolicyUpdateOne {
-	spuo.mutation.AddSLADefinitionIDs(ids...)
-	return spuo
+func (_u *SLAPolicyUpdateOne) AddSLADefinitionIDs(ids ...int) *SLAPolicyUpdateOne {
+	_u.mutation.AddSLADefinitionIDs(ids...)
+	return _u
 }
 
 // AddSLADefinition adds the "sla_definition" edges to the SLADefinition entity.
-func (spuo *SLAPolicyUpdateOne) AddSLADefinition(s ...*SLADefinition) *SLAPolicyUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAPolicyUpdateOne) AddSLADefinition(v ...*SLADefinition) *SLAPolicyUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spuo.AddSLADefinitionIDs(ids...)
+	return _u.AddSLADefinitionIDs(ids...)
 }
 
 // AddTicketIDs adds the "tickets" edge to the Ticket entity by IDs.
-func (spuo *SLAPolicyUpdateOne) AddTicketIDs(ids ...int) *SLAPolicyUpdateOne {
-	spuo.mutation.AddTicketIDs(ids...)
-	return spuo
+func (_u *SLAPolicyUpdateOne) AddTicketIDs(ids ...int) *SLAPolicyUpdateOne {
+	_u.mutation.AddTicketIDs(ids...)
+	return _u
 }
 
 // AddTickets adds the "tickets" edges to the Ticket entity.
-func (spuo *SLAPolicyUpdateOne) AddTickets(t ...*Ticket) *SLAPolicyUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLAPolicyUpdateOne) AddTickets(v ...*Ticket) *SLAPolicyUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spuo.AddTicketIDs(ids...)
+	return _u.AddTicketIDs(ids...)
 }
 
 // Mutation returns the SLAPolicyMutation object of the builder.
-func (spuo *SLAPolicyUpdateOne) Mutation() *SLAPolicyMutation {
-	return spuo.mutation
+func (_u *SLAPolicyUpdateOne) Mutation() *SLAPolicyMutation {
+	return _u.mutation
 }
 
 // ClearSLADefinition clears all "sla_definition" edges to the SLADefinition entity.
-func (spuo *SLAPolicyUpdateOne) ClearSLADefinition() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearSLADefinition()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearSLADefinition() *SLAPolicyUpdateOne {
+	_u.mutation.ClearSLADefinition()
+	return _u
 }
 
 // RemoveSLADefinitionIDs removes the "sla_definition" edge to SLADefinition entities by IDs.
-func (spuo *SLAPolicyUpdateOne) RemoveSLADefinitionIDs(ids ...int) *SLAPolicyUpdateOne {
-	spuo.mutation.RemoveSLADefinitionIDs(ids...)
-	return spuo
+func (_u *SLAPolicyUpdateOne) RemoveSLADefinitionIDs(ids ...int) *SLAPolicyUpdateOne {
+	_u.mutation.RemoveSLADefinitionIDs(ids...)
+	return _u
 }
 
 // RemoveSLADefinition removes "sla_definition" edges to SLADefinition entities.
-func (spuo *SLAPolicyUpdateOne) RemoveSLADefinition(s ...*SLADefinition) *SLAPolicyUpdateOne {
-	ids := make([]int, len(s))
-	for i := range s {
-		ids[i] = s[i].ID
+func (_u *SLAPolicyUpdateOne) RemoveSLADefinition(v ...*SLADefinition) *SLAPolicyUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spuo.RemoveSLADefinitionIDs(ids...)
+	return _u.RemoveSLADefinitionIDs(ids...)
 }
 
 // ClearTickets clears all "tickets" edges to the Ticket entity.
-func (spuo *SLAPolicyUpdateOne) ClearTickets() *SLAPolicyUpdateOne {
-	spuo.mutation.ClearTickets()
-	return spuo
+func (_u *SLAPolicyUpdateOne) ClearTickets() *SLAPolicyUpdateOne {
+	_u.mutation.ClearTickets()
+	return _u
 }
 
 // RemoveTicketIDs removes the "tickets" edge to Ticket entities by IDs.
-func (spuo *SLAPolicyUpdateOne) RemoveTicketIDs(ids ...int) *SLAPolicyUpdateOne {
-	spuo.mutation.RemoveTicketIDs(ids...)
-	return spuo
+func (_u *SLAPolicyUpdateOne) RemoveTicketIDs(ids ...int) *SLAPolicyUpdateOne {
+	_u.mutation.RemoveTicketIDs(ids...)
+	return _u
 }
 
 // RemoveTickets removes "tickets" edges to Ticket entities.
-func (spuo *SLAPolicyUpdateOne) RemoveTickets(t ...*Ticket) *SLAPolicyUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *SLAPolicyUpdateOne) RemoveTickets(v ...*Ticket) *SLAPolicyUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return spuo.RemoveTicketIDs(ids...)
+	return _u.RemoveTicketIDs(ids...)
 }
 
 // Where appends a list predicates to the SLAPolicyUpdate builder.
-func (spuo *SLAPolicyUpdateOne) Where(ps ...predicate.SLAPolicy) *SLAPolicyUpdateOne {
-	spuo.mutation.Where(ps...)
-	return spuo
+func (_u *SLAPolicyUpdateOne) Where(ps ...predicate.SLAPolicy) *SLAPolicyUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (spuo *SLAPolicyUpdateOne) Select(field string, fields ...string) *SLAPolicyUpdateOne {
-	spuo.fields = append([]string{field}, fields...)
-	return spuo
+func (_u *SLAPolicyUpdateOne) Select(field string, fields ...string) *SLAPolicyUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated SLAPolicy entity.
-func (spuo *SLAPolicyUpdateOne) Save(ctx context.Context) (*SLAPolicy, error) {
-	spuo.defaults()
-	return withHooks(ctx, spuo.sqlSave, spuo.mutation, spuo.hooks)
+func (_u *SLAPolicyUpdateOne) Save(ctx context.Context) (*SLAPolicy, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (spuo *SLAPolicyUpdateOne) SaveX(ctx context.Context) *SLAPolicy {
-	node, err := spuo.Save(ctx)
+func (_u *SLAPolicyUpdateOne) SaveX(ctx context.Context) *SLAPolicy {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1002,44 +1002,44 @@ func (spuo *SLAPolicyUpdateOne) SaveX(ctx context.Context) *SLAPolicy {
 }
 
 // Exec executes the query on the entity.
-func (spuo *SLAPolicyUpdateOne) Exec(ctx context.Context) error {
-	_, err := spuo.Save(ctx)
+func (_u *SLAPolicyUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (spuo *SLAPolicyUpdateOne) ExecX(ctx context.Context) {
-	if err := spuo.Exec(ctx); err != nil {
+func (_u *SLAPolicyUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (spuo *SLAPolicyUpdateOne) defaults() {
-	if _, ok := spuo.mutation.UpdatedAt(); !ok {
+func (_u *SLAPolicyUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := slapolicy.UpdateDefaultUpdatedAt()
-		spuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (spuo *SLAPolicyUpdateOne) check() error {
-	if v, ok := spuo.mutation.Name(); ok {
+func (_u *SLAPolicyUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := slapolicy.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.name": %w`, err)}
 		}
 	}
-	if v, ok := spuo.mutation.ResponseTimeMinutes(); ok {
+	if v, ok := _u.mutation.ResponseTimeMinutes(); ok {
 		if err := slapolicy.ResponseTimeMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "response_time_minutes", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.response_time_minutes": %w`, err)}
 		}
 	}
-	if v, ok := spuo.mutation.ResolutionTimeMinutes(); ok {
+	if v, ok := _u.mutation.ResolutionTimeMinutes(); ok {
 		if err := slapolicy.ResolutionTimeMinutesValidator(v); err != nil {
 			return &ValidationError{Name: "resolution_time_minutes", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.resolution_time_minutes": %w`, err)}
 		}
 	}
-	if v, ok := spuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := slapolicy.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "SLAPolicy.tenant_id": %w`, err)}
 		}
@@ -1047,17 +1047,17 @@ func (spuo *SLAPolicyUpdateOne) check() error {
 	return nil
 }
 
-func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, err error) {
-	if err := spuo.check(); err != nil {
+func (_u *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(slapolicy.Table, slapolicy.Columns, sqlgraph.NewFieldSpec(slapolicy.FieldID, field.TypeInt))
-	id, ok := spuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "SLAPolicy.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := spuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, slapolicy.FieldID)
 		for _, f := range fields {
@@ -1069,92 +1069,92 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 			}
 		}
 	}
-	if ps := spuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := spuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(slapolicy.FieldName, field.TypeString, value)
 	}
-	if value, ok := spuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(slapolicy.FieldDescription, field.TypeString, value)
 	}
-	if spuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(slapolicy.FieldDescription, field.TypeString)
 	}
-	if value, ok := spuo.mutation.CustomerTier(); ok {
+	if value, ok := _u.mutation.CustomerTier(); ok {
 		_spec.SetField(slapolicy.FieldCustomerTier, field.TypeString, value)
 	}
-	if spuo.mutation.CustomerTierCleared() {
+	if _u.mutation.CustomerTierCleared() {
 		_spec.ClearField(slapolicy.FieldCustomerTier, field.TypeString)
 	}
-	if value, ok := spuo.mutation.TicketType(); ok {
+	if value, ok := _u.mutation.TicketType(); ok {
 		_spec.SetField(slapolicy.FieldTicketType, field.TypeString, value)
 	}
-	if spuo.mutation.TicketTypeCleared() {
+	if _u.mutation.TicketTypeCleared() {
 		_spec.ClearField(slapolicy.FieldTicketType, field.TypeString)
 	}
-	if value, ok := spuo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(slapolicy.FieldPriority, field.TypeString, value)
 	}
-	if spuo.mutation.PriorityCleared() {
+	if _u.mutation.PriorityCleared() {
 		_spec.ClearField(slapolicy.FieldPriority, field.TypeString)
 	}
-	if value, ok := spuo.mutation.ResponseTimeMinutes(); ok {
+	if value, ok := _u.mutation.ResponseTimeMinutes(); ok {
 		_spec.SetField(slapolicy.FieldResponseTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.AddedResponseTimeMinutes(); ok {
+	if value, ok := _u.mutation.AddedResponseTimeMinutes(); ok {
 		_spec.AddField(slapolicy.FieldResponseTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.ResolutionTimeMinutes(); ok {
+	if value, ok := _u.mutation.ResolutionTimeMinutes(); ok {
 		_spec.SetField(slapolicy.FieldResolutionTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.AddedResolutionTimeMinutes(); ok {
+	if value, ok := _u.mutation.AddedResolutionTimeMinutes(); ok {
 		_spec.AddField(slapolicy.FieldResolutionTimeMinutes, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.BusinessHours(); ok {
+	if value, ok := _u.mutation.BusinessHours(); ok {
 		_spec.SetField(slapolicy.FieldBusinessHours, field.TypeJSON, value)
 	}
-	if spuo.mutation.BusinessHoursCleared() {
+	if _u.mutation.BusinessHoursCleared() {
 		_spec.ClearField(slapolicy.FieldBusinessHours, field.TypeJSON)
 	}
-	if value, ok := spuo.mutation.ExcludeWeekends(); ok {
+	if value, ok := _u.mutation.ExcludeWeekends(); ok {
 		_spec.SetField(slapolicy.FieldExcludeWeekends, field.TypeBool, value)
 	}
-	if value, ok := spuo.mutation.ExcludeHolidays(); ok {
+	if value, ok := _u.mutation.ExcludeHolidays(); ok {
 		_spec.SetField(slapolicy.FieldExcludeHolidays, field.TypeBool, value)
 	}
-	if value, ok := spuo.mutation.EscalationRules(); ok {
+	if value, ok := _u.mutation.EscalationRules(); ok {
 		_spec.SetField(slapolicy.FieldEscalationRules, field.TypeJSON, value)
 	}
-	if spuo.mutation.EscalationRulesCleared() {
+	if _u.mutation.EscalationRulesCleared() {
 		_spec.ClearField(slapolicy.FieldEscalationRules, field.TypeJSON)
 	}
-	if value, ok := spuo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(slapolicy.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := spuo.mutation.PriorityScore(); ok {
+	if value, ok := _u.mutation.PriorityScore(); ok {
 		_spec.SetField(slapolicy.FieldPriorityScore, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.AddedPriorityScore(); ok {
+	if value, ok := _u.mutation.AddedPriorityScore(); ok {
 		_spec.AddField(slapolicy.FieldPriorityScore, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(slapolicy.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(slapolicy.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := spuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(slapolicy.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := spuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(slapolicy.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if spuo.mutation.SLADefinitionCleared() {
+	if _u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1167,7 +1167,7 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spuo.mutation.RemovedSLADefinitionIDs(); len(nodes) > 0 && !spuo.mutation.SLADefinitionCleared() {
+	if nodes := _u.mutation.RemovedSLADefinitionIDs(); len(nodes) > 0 && !_u.mutation.SLADefinitionCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1183,7 +1183,7 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spuo.mutation.SLADefinitionIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.SLADefinitionIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1199,7 +1199,7 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if spuo.mutation.TicketsCleared() {
+	if _u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1212,7 +1212,7 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spuo.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !spuo.mutation.TicketsCleared() {
+	if nodes := _u.mutation.RemovedTicketsIDs(); len(nodes) > 0 && !_u.mutation.TicketsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1228,7 +1228,7 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := spuo.mutation.TicketsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TicketsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -1244,10 +1244,10 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &SLAPolicy{config: spuo.config}
+	_node = &SLAPolicy{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, spuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{slapolicy.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1255,6 +1255,6 @@ func (spuo *SLAPolicyUpdateOne) sqlSave(ctx context.Context) (_node *SLAPolicy, 
 		}
 		return nil, err
 	}
-	spuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

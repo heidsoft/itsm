@@ -109,7 +109,7 @@ func (*SLAPolicy) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the SLAPolicy fields.
-func (sp *SLAPolicy) assignValues(columns []string, values []any) error {
+func (_m *SLAPolicy) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -120,54 +120,54 @@ func (sp *SLAPolicy) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sp.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case slapolicy.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				sp.Name = value.String
+				_m.Name = value.String
 			}
 		case slapolicy.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				sp.Description = value.String
+				_m.Description = value.String
 			}
 		case slapolicy.FieldCustomerTier:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field customer_tier", values[i])
 			} else if value.Valid {
-				sp.CustomerTier = value.String
+				_m.CustomerTier = value.String
 			}
 		case slapolicy.FieldTicketType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ticket_type", values[i])
 			} else if value.Valid {
-				sp.TicketType = value.String
+				_m.TicketType = value.String
 			}
 		case slapolicy.FieldPriority:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field priority", values[i])
 			} else if value.Valid {
-				sp.Priority = value.String
+				_m.Priority = value.String
 			}
 		case slapolicy.FieldResponseTimeMinutes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field response_time_minutes", values[i])
 			} else if value.Valid {
-				sp.ResponseTimeMinutes = int(value.Int64)
+				_m.ResponseTimeMinutes = int(value.Int64)
 			}
 		case slapolicy.FieldResolutionTimeMinutes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field resolution_time_minutes", values[i])
 			} else if value.Valid {
-				sp.ResolutionTimeMinutes = int(value.Int64)
+				_m.ResolutionTimeMinutes = int(value.Int64)
 			}
 		case slapolicy.FieldBusinessHours:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field business_hours", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sp.BusinessHours); err != nil {
+				if err := json.Unmarshal(*value, &_m.BusinessHours); err != nil {
 					return fmt.Errorf("unmarshal field business_hours: %w", err)
 				}
 			}
@@ -175,19 +175,19 @@ func (sp *SLAPolicy) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field exclude_weekends", values[i])
 			} else if value.Valid {
-				sp.ExcludeWeekends = value.Bool
+				_m.ExcludeWeekends = value.Bool
 			}
 		case slapolicy.FieldExcludeHolidays:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field exclude_holidays", values[i])
 			} else if value.Valid {
-				sp.ExcludeHolidays = value.Bool
+				_m.ExcludeHolidays = value.Bool
 			}
 		case slapolicy.FieldEscalationRules:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field escalation_rules", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sp.EscalationRules); err != nil {
+				if err := json.Unmarshal(*value, &_m.EscalationRules); err != nil {
 					return fmt.Errorf("unmarshal field escalation_rules: %w", err)
 				}
 			}
@@ -195,34 +195,34 @@ func (sp *SLAPolicy) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				sp.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case slapolicy.FieldPriorityScore:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field priority_score", values[i])
 			} else if value.Valid {
-				sp.PriorityScore = int(value.Int64)
+				_m.PriorityScore = int(value.Int64)
 			}
 		case slapolicy.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sp.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case slapolicy.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sp.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case slapolicy.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				sp.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			sp.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -230,90 +230,90 @@ func (sp *SLAPolicy) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the SLAPolicy.
 // This includes values selected through modifiers, order, etc.
-func (sp *SLAPolicy) Value(name string) (ent.Value, error) {
-	return sp.selectValues.Get(name)
+func (_m *SLAPolicy) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QuerySLADefinition queries the "sla_definition" edge of the SLAPolicy entity.
-func (sp *SLAPolicy) QuerySLADefinition() *SLADefinitionQuery {
-	return NewSLAPolicyClient(sp.config).QuerySLADefinition(sp)
+func (_m *SLAPolicy) QuerySLADefinition() *SLADefinitionQuery {
+	return NewSLAPolicyClient(_m.config).QuerySLADefinition(_m)
 }
 
 // QueryTickets queries the "tickets" edge of the SLAPolicy entity.
-func (sp *SLAPolicy) QueryTickets() *TicketQuery {
-	return NewSLAPolicyClient(sp.config).QueryTickets(sp)
+func (_m *SLAPolicy) QueryTickets() *TicketQuery {
+	return NewSLAPolicyClient(_m.config).QueryTickets(_m)
 }
 
 // Update returns a builder for updating this SLAPolicy.
 // Note that you need to call SLAPolicy.Unwrap() before calling this method if this SLAPolicy
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sp *SLAPolicy) Update() *SLAPolicyUpdateOne {
-	return NewSLAPolicyClient(sp.config).UpdateOne(sp)
+func (_m *SLAPolicy) Update() *SLAPolicyUpdateOne {
+	return NewSLAPolicyClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the SLAPolicy entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sp *SLAPolicy) Unwrap() *SLAPolicy {
-	_tx, ok := sp.config.driver.(*txDriver)
+func (_m *SLAPolicy) Unwrap() *SLAPolicy {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: SLAPolicy is not a transactional entity")
 	}
-	sp.config.driver = _tx.drv
-	return sp
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sp *SLAPolicy) String() string {
+func (_m *SLAPolicy) String() string {
 	var builder strings.Builder
 	builder.WriteString("SLAPolicy(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sp.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(sp.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(sp.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("customer_tier=")
-	builder.WriteString(sp.CustomerTier)
+	builder.WriteString(_m.CustomerTier)
 	builder.WriteString(", ")
 	builder.WriteString("ticket_type=")
-	builder.WriteString(sp.TicketType)
+	builder.WriteString(_m.TicketType)
 	builder.WriteString(", ")
 	builder.WriteString("priority=")
-	builder.WriteString(sp.Priority)
+	builder.WriteString(_m.Priority)
 	builder.WriteString(", ")
 	builder.WriteString("response_time_minutes=")
-	builder.WriteString(fmt.Sprintf("%v", sp.ResponseTimeMinutes))
+	builder.WriteString(fmt.Sprintf("%v", _m.ResponseTimeMinutes))
 	builder.WriteString(", ")
 	builder.WriteString("resolution_time_minutes=")
-	builder.WriteString(fmt.Sprintf("%v", sp.ResolutionTimeMinutes))
+	builder.WriteString(fmt.Sprintf("%v", _m.ResolutionTimeMinutes))
 	builder.WriteString(", ")
 	builder.WriteString("business_hours=")
-	builder.WriteString(fmt.Sprintf("%v", sp.BusinessHours))
+	builder.WriteString(fmt.Sprintf("%v", _m.BusinessHours))
 	builder.WriteString(", ")
 	builder.WriteString("exclude_weekends=")
-	builder.WriteString(fmt.Sprintf("%v", sp.ExcludeWeekends))
+	builder.WriteString(fmt.Sprintf("%v", _m.ExcludeWeekends))
 	builder.WriteString(", ")
 	builder.WriteString("exclude_holidays=")
-	builder.WriteString(fmt.Sprintf("%v", sp.ExcludeHolidays))
+	builder.WriteString(fmt.Sprintf("%v", _m.ExcludeHolidays))
 	builder.WriteString(", ")
 	builder.WriteString("escalation_rules=")
-	builder.WriteString(fmt.Sprintf("%v", sp.EscalationRules))
+	builder.WriteString(fmt.Sprintf("%v", _m.EscalationRules))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", sp.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("priority_score=")
-	builder.WriteString(fmt.Sprintf("%v", sp.PriorityScore))
+	builder.WriteString(fmt.Sprintf("%v", _m.PriorityScore))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sp.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sp.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(sp.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

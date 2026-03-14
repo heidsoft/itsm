@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 )
 
 // ID filters vertices based on their ID field.
@@ -69,14 +70,19 @@ func Domain(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldDomain, v))
 }
 
-// Type applies equality check predicate on the "type" field. It's identical to TypeEQ.
-func Type(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEQ(FieldType, v))
-}
-
 // Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
 func Status(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldStatus, v))
+}
+
+// ParentTenantID applies equality check predicate on the "parent_tenant_id" field. It's identical to ParentTenantIDEQ.
+func ParentTenantID(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldParentTenantID, v))
+}
+
+// MspProviderID applies equality check predicate on the "msp_provider_id" field. It's identical to MspProviderIDEQ.
+func MspProviderID(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldMspProviderID, v))
 }
 
 // ExpiresAt applies equality check predicate on the "expires_at" field. It's identical to ExpiresAtEQ.
@@ -300,68 +306,23 @@ func DomainContainsFold(v string) predicate.Tenant {
 }
 
 // TypeEQ applies the EQ predicate on the "type" field.
-func TypeEQ(v string) predicate.Tenant {
+func TypeEQ(v Type) predicate.Tenant {
 	return predicate.Tenant(sql.FieldEQ(FieldType, v))
 }
 
 // TypeNEQ applies the NEQ predicate on the "type" field.
-func TypeNEQ(v string) predicate.Tenant {
+func TypeNEQ(v Type) predicate.Tenant {
 	return predicate.Tenant(sql.FieldNEQ(FieldType, v))
 }
 
 // TypeIn applies the In predicate on the "type" field.
-func TypeIn(vs ...string) predicate.Tenant {
+func TypeIn(vs ...Type) predicate.Tenant {
 	return predicate.Tenant(sql.FieldIn(FieldType, vs...))
 }
 
 // TypeNotIn applies the NotIn predicate on the "type" field.
-func TypeNotIn(vs ...string) predicate.Tenant {
+func TypeNotIn(vs ...Type) predicate.Tenant {
 	return predicate.Tenant(sql.FieldNotIn(FieldType, vs...))
-}
-
-// TypeGT applies the GT predicate on the "type" field.
-func TypeGT(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldGT(FieldType, v))
-}
-
-// TypeGTE applies the GTE predicate on the "type" field.
-func TypeGTE(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldGTE(FieldType, v))
-}
-
-// TypeLT applies the LT predicate on the "type" field.
-func TypeLT(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldLT(FieldType, v))
-}
-
-// TypeLTE applies the LTE predicate on the "type" field.
-func TypeLTE(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldLTE(FieldType, v))
-}
-
-// TypeContains applies the Contains predicate on the "type" field.
-func TypeContains(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldContains(FieldType, v))
-}
-
-// TypeHasPrefix applies the HasPrefix predicate on the "type" field.
-func TypeHasPrefix(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldHasPrefix(FieldType, v))
-}
-
-// TypeHasSuffix applies the HasSuffix predicate on the "type" field.
-func TypeHasSuffix(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldHasSuffix(FieldType, v))
-}
-
-// TypeEqualFold applies the EqualFold predicate on the "type" field.
-func TypeEqualFold(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldEqualFold(FieldType, v))
-}
-
-// TypeContainsFold applies the ContainsFold predicate on the "type" field.
-func TypeContainsFold(v string) predicate.Tenant {
-	return predicate.Tenant(sql.FieldContainsFold(FieldType, v))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -427,6 +388,106 @@ func StatusEqualFold(v string) predicate.Tenant {
 // StatusContainsFold applies the ContainsFold predicate on the "status" field.
 func StatusContainsFold(v string) predicate.Tenant {
 	return predicate.Tenant(sql.FieldContainsFold(FieldStatus, v))
+}
+
+// ParentTenantIDEQ applies the EQ predicate on the "parent_tenant_id" field.
+func ParentTenantIDEQ(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldParentTenantID, v))
+}
+
+// ParentTenantIDNEQ applies the NEQ predicate on the "parent_tenant_id" field.
+func ParentTenantIDNEQ(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldParentTenantID, v))
+}
+
+// ParentTenantIDIn applies the In predicate on the "parent_tenant_id" field.
+func ParentTenantIDIn(vs ...int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldParentTenantID, vs...))
+}
+
+// ParentTenantIDNotIn applies the NotIn predicate on the "parent_tenant_id" field.
+func ParentTenantIDNotIn(vs ...int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldParentTenantID, vs...))
+}
+
+// ParentTenantIDGT applies the GT predicate on the "parent_tenant_id" field.
+func ParentTenantIDGT(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldParentTenantID, v))
+}
+
+// ParentTenantIDGTE applies the GTE predicate on the "parent_tenant_id" field.
+func ParentTenantIDGTE(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldParentTenantID, v))
+}
+
+// ParentTenantIDLT applies the LT predicate on the "parent_tenant_id" field.
+func ParentTenantIDLT(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldParentTenantID, v))
+}
+
+// ParentTenantIDLTE applies the LTE predicate on the "parent_tenant_id" field.
+func ParentTenantIDLTE(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldParentTenantID, v))
+}
+
+// ParentTenantIDIsNil applies the IsNil predicate on the "parent_tenant_id" field.
+func ParentTenantIDIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldParentTenantID))
+}
+
+// ParentTenantIDNotNil applies the NotNil predicate on the "parent_tenant_id" field.
+func ParentTenantIDNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldParentTenantID))
+}
+
+// MspProviderIDEQ applies the EQ predicate on the "msp_provider_id" field.
+func MspProviderIDEQ(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldEQ(FieldMspProviderID, v))
+}
+
+// MspProviderIDNEQ applies the NEQ predicate on the "msp_provider_id" field.
+func MspProviderIDNEQ(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNEQ(FieldMspProviderID, v))
+}
+
+// MspProviderIDIn applies the In predicate on the "msp_provider_id" field.
+func MspProviderIDIn(vs ...int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldIn(FieldMspProviderID, vs...))
+}
+
+// MspProviderIDNotIn applies the NotIn predicate on the "msp_provider_id" field.
+func MspProviderIDNotIn(vs ...int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotIn(FieldMspProviderID, vs...))
+}
+
+// MspProviderIDGT applies the GT predicate on the "msp_provider_id" field.
+func MspProviderIDGT(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGT(FieldMspProviderID, v))
+}
+
+// MspProviderIDGTE applies the GTE predicate on the "msp_provider_id" field.
+func MspProviderIDGTE(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldGTE(FieldMspProviderID, v))
+}
+
+// MspProviderIDLT applies the LT predicate on the "msp_provider_id" field.
+func MspProviderIDLT(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLT(FieldMspProviderID, v))
+}
+
+// MspProviderIDLTE applies the LTE predicate on the "msp_provider_id" field.
+func MspProviderIDLTE(v int) predicate.Tenant {
+	return predicate.Tenant(sql.FieldLTE(FieldMspProviderID, v))
+}
+
+// MspProviderIDIsNil applies the IsNil predicate on the "msp_provider_id" field.
+func MspProviderIDIsNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldIsNull(FieldMspProviderID))
+}
+
+// MspProviderIDNotNil applies the NotNil predicate on the "msp_provider_id" field.
+func MspProviderIDNotNil() predicate.Tenant {
+	return predicate.Tenant(sql.FieldNotNull(FieldMspProviderID))
 }
 
 // ExpiresAtEQ applies the EQ predicate on the "expires_at" field.
@@ -557,6 +618,52 @@ func UpdatedAtLT(v time.Time) predicate.Tenant {
 // UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
 func UpdatedAtLTE(v time.Time) predicate.Tenant {
 	return predicate.Tenant(sql.FieldLTE(FieldUpdatedAt, v))
+}
+
+// HasUsers applies the HasEdge predicate on the "users" edge.
+func HasUsers() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, UsersTable, UsersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUsersWith applies the HasEdge predicate on the "users" edge with a given conditions (other predicates).
+func HasUsersWith(preds ...predicate.User) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newUsersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMspCustomerAllocations applies the HasEdge predicate on the "msp_customer_allocations" edge.
+func HasMspCustomerAllocations() predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, MspCustomerAllocationsTable, MspCustomerAllocationsPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMspCustomerAllocationsWith applies the HasEdge predicate on the "msp_customer_allocations" edge with a given conditions (other predicates).
+func HasMspCustomerAllocationsWith(preds ...predicate.MSPAllocation) predicate.Tenant {
+	return predicate.Tenant(func(s *sql.Selector) {
+		step := newMspCustomerAllocationsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

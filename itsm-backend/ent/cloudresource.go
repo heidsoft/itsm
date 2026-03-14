@@ -122,7 +122,7 @@ func (*CloudResource) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the CloudResource fields.
-func (cr *CloudResource) assignValues(columns []string, values []any) error {
+func (_m *CloudResource) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -133,54 +133,54 @@ func (cr *CloudResource) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			cr.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case cloudresource.FieldCloudAccountID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field cloud_account_id", values[i])
 			} else if value.Valid {
-				cr.CloudAccountID = int(value.Int64)
+				_m.CloudAccountID = int(value.Int64)
 			}
 		case cloudresource.FieldServiceID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field service_id", values[i])
 			} else if value.Valid {
-				cr.ServiceID = int(value.Int64)
+				_m.ServiceID = int(value.Int64)
 			}
 		case cloudresource.FieldResourceID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_id", values[i])
 			} else if value.Valid {
-				cr.ResourceID = value.String
+				_m.ResourceID = value.String
 			}
 		case cloudresource.FieldResourceName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field resource_name", values[i])
 			} else if value.Valid {
-				cr.ResourceName = value.String
+				_m.ResourceName = value.String
 			}
 		case cloudresource.FieldRegion:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field region", values[i])
 			} else if value.Valid {
-				cr.Region = value.String
+				_m.Region = value.String
 			}
 		case cloudresource.FieldZone:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field zone", values[i])
 			} else if value.Valid {
-				cr.Zone = value.String
+				_m.Zone = value.String
 			}
 		case cloudresource.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				cr.Status = value.String
+				_m.Status = value.String
 			}
 		case cloudresource.FieldTags:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field tags", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &cr.Tags); err != nil {
+				if err := json.Unmarshal(*value, &_m.Tags); err != nil {
 					return fmt.Errorf("unmarshal field tags: %w", err)
 				}
 			}
@@ -188,7 +188,7 @@ func (cr *CloudResource) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field metadata", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &cr.Metadata); err != nil {
+				if err := json.Unmarshal(*value, &_m.Metadata); err != nil {
 					return fmt.Errorf("unmarshal field metadata: %w", err)
 				}
 			}
@@ -196,40 +196,40 @@ func (cr *CloudResource) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field first_seen_at", values[i])
 			} else if value.Valid {
-				cr.FirstSeenAt = value.Time
+				_m.FirstSeenAt = value.Time
 			}
 		case cloudresource.FieldLastSeenAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field last_seen_at", values[i])
 			} else if value.Valid {
-				cr.LastSeenAt = value.Time
+				_m.LastSeenAt = value.Time
 			}
 		case cloudresource.FieldLifecycleState:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field lifecycle_state", values[i])
 			} else if value.Valid {
-				cr.LifecycleState = value.String
+				_m.LifecycleState = value.String
 			}
 		case cloudresource.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				cr.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case cloudresource.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				cr.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case cloudresource.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				cr.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			cr.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -237,92 +237,92 @@ func (cr *CloudResource) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the CloudResource.
 // This includes values selected through modifiers, order, etc.
-func (cr *CloudResource) Value(name string) (ent.Value, error) {
-	return cr.selectValues.Get(name)
+func (_m *CloudResource) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryAccount queries the "account" edge of the CloudResource entity.
-func (cr *CloudResource) QueryAccount() *CloudAccountQuery {
-	return NewCloudResourceClient(cr.config).QueryAccount(cr)
+func (_m *CloudResource) QueryAccount() *CloudAccountQuery {
+	return NewCloudResourceClient(_m.config).QueryAccount(_m)
 }
 
 // QueryService queries the "service" edge of the CloudResource entity.
-func (cr *CloudResource) QueryService() *CloudServiceQuery {
-	return NewCloudResourceClient(cr.config).QueryService(cr)
+func (_m *CloudResource) QueryService() *CloudServiceQuery {
+	return NewCloudResourceClient(_m.config).QueryService(_m)
 }
 
 // QueryCis queries the "cis" edge of the CloudResource entity.
-func (cr *CloudResource) QueryCis() *ConfigurationItemQuery {
-	return NewCloudResourceClient(cr.config).QueryCis(cr)
+func (_m *CloudResource) QueryCis() *ConfigurationItemQuery {
+	return NewCloudResourceClient(_m.config).QueryCis(_m)
 }
 
 // Update returns a builder for updating this CloudResource.
 // Note that you need to call CloudResource.Unwrap() before calling this method if this CloudResource
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (cr *CloudResource) Update() *CloudResourceUpdateOne {
-	return NewCloudResourceClient(cr.config).UpdateOne(cr)
+func (_m *CloudResource) Update() *CloudResourceUpdateOne {
+	return NewCloudResourceClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the CloudResource entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (cr *CloudResource) Unwrap() *CloudResource {
-	_tx, ok := cr.config.driver.(*txDriver)
+func (_m *CloudResource) Unwrap() *CloudResource {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: CloudResource is not a transactional entity")
 	}
-	cr.config.driver = _tx.drv
-	return cr
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (cr *CloudResource) String() string {
+func (_m *CloudResource) String() string {
 	var builder strings.Builder
 	builder.WriteString("CloudResource(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", cr.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("cloud_account_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.CloudAccountID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CloudAccountID))
 	builder.WriteString(", ")
 	builder.WriteString("service_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.ServiceID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ServiceID))
 	builder.WriteString(", ")
 	builder.WriteString("resource_id=")
-	builder.WriteString(cr.ResourceID)
+	builder.WriteString(_m.ResourceID)
 	builder.WriteString(", ")
 	builder.WriteString("resource_name=")
-	builder.WriteString(cr.ResourceName)
+	builder.WriteString(_m.ResourceName)
 	builder.WriteString(", ")
 	builder.WriteString("region=")
-	builder.WriteString(cr.Region)
+	builder.WriteString(_m.Region)
 	builder.WriteString(", ")
 	builder.WriteString("zone=")
-	builder.WriteString(cr.Zone)
+	builder.WriteString(_m.Zone)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(cr.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("tags=")
-	builder.WriteString(fmt.Sprintf("%v", cr.Tags))
+	builder.WriteString(fmt.Sprintf("%v", _m.Tags))
 	builder.WriteString(", ")
 	builder.WriteString("metadata=")
-	builder.WriteString(fmt.Sprintf("%v", cr.Metadata))
+	builder.WriteString(fmt.Sprintf("%v", _m.Metadata))
 	builder.WriteString(", ")
 	builder.WriteString("first_seen_at=")
-	builder.WriteString(cr.FirstSeenAt.Format(time.ANSIC))
+	builder.WriteString(_m.FirstSeenAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("last_seen_at=")
-	builder.WriteString(cr.LastSeenAt.Format(time.ANSIC))
+	builder.WriteString(_m.LastSeenAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("lifecycle_state=")
-	builder.WriteString(cr.LifecycleState)
+	builder.WriteString(_m.LifecycleState)
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", cr.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(cr.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(cr.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -84,7 +84,7 @@ func (*CloudAccount) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the CloudAccount fields.
-func (ca *CloudAccount) assignValues(columns []string, values []any) error {
+func (_m *CloudAccount) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -95,36 +95,36 @@ func (ca *CloudAccount) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			ca.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case cloudaccount.FieldProvider:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field provider", values[i])
 			} else if value.Valid {
-				ca.Provider = value.String
+				_m.Provider = value.String
 			}
 		case cloudaccount.FieldAccountID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field account_id", values[i])
 			} else if value.Valid {
-				ca.AccountID = value.String
+				_m.AccountID = value.String
 			}
 		case cloudaccount.FieldAccountName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field account_name", values[i])
 			} else if value.Valid {
-				ca.AccountName = value.String
+				_m.AccountName = value.String
 			}
 		case cloudaccount.FieldCredentialRef:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field credential_ref", values[i])
 			} else if value.Valid {
-				ca.CredentialRef = value.String
+				_m.CredentialRef = value.String
 			}
 		case cloudaccount.FieldRegionWhitelist:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field region_whitelist", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &ca.RegionWhitelist); err != nil {
+				if err := json.Unmarshal(*value, &_m.RegionWhitelist); err != nil {
 					return fmt.Errorf("unmarshal field region_whitelist: %w", err)
 				}
 			}
@@ -132,28 +132,28 @@ func (ca *CloudAccount) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				ca.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case cloudaccount.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				ca.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case cloudaccount.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				ca.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case cloudaccount.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				ca.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			ca.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -161,64 +161,64 @@ func (ca *CloudAccount) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the CloudAccount.
 // This includes values selected through modifiers, order, etc.
-func (ca *CloudAccount) Value(name string) (ent.Value, error) {
-	return ca.selectValues.Get(name)
+func (_m *CloudAccount) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryResources queries the "resources" edge of the CloudAccount entity.
-func (ca *CloudAccount) QueryResources() *CloudResourceQuery {
-	return NewCloudAccountClient(ca.config).QueryResources(ca)
+func (_m *CloudAccount) QueryResources() *CloudResourceQuery {
+	return NewCloudAccountClient(_m.config).QueryResources(_m)
 }
 
 // Update returns a builder for updating this CloudAccount.
 // Note that you need to call CloudAccount.Unwrap() before calling this method if this CloudAccount
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (ca *CloudAccount) Update() *CloudAccountUpdateOne {
-	return NewCloudAccountClient(ca.config).UpdateOne(ca)
+func (_m *CloudAccount) Update() *CloudAccountUpdateOne {
+	return NewCloudAccountClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the CloudAccount entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (ca *CloudAccount) Unwrap() *CloudAccount {
-	_tx, ok := ca.config.driver.(*txDriver)
+func (_m *CloudAccount) Unwrap() *CloudAccount {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: CloudAccount is not a transactional entity")
 	}
-	ca.config.driver = _tx.drv
-	return ca
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (ca *CloudAccount) String() string {
+func (_m *CloudAccount) String() string {
 	var builder strings.Builder
 	builder.WriteString("CloudAccount(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", ca.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("provider=")
-	builder.WriteString(ca.Provider)
+	builder.WriteString(_m.Provider)
 	builder.WriteString(", ")
 	builder.WriteString("account_id=")
-	builder.WriteString(ca.AccountID)
+	builder.WriteString(_m.AccountID)
 	builder.WriteString(", ")
 	builder.WriteString("account_name=")
-	builder.WriteString(ca.AccountName)
+	builder.WriteString(_m.AccountName)
 	builder.WriteString(", ")
 	builder.WriteString("credential_ref=")
-	builder.WriteString(ca.CredentialRef)
+	builder.WriteString(_m.CredentialRef)
 	builder.WriteString(", ")
 	builder.WriteString("region_whitelist=")
-	builder.WriteString(fmt.Sprintf("%v", ca.RegionWhitelist))
+	builder.WriteString(fmt.Sprintf("%v", _m.RegionWhitelist))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", ca.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", ca.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(ca.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(ca.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

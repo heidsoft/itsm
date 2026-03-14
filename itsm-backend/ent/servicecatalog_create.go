@@ -21,307 +21,307 @@ type ServiceCatalogCreate struct {
 }
 
 // SetName sets the "name" field.
-func (scc *ServiceCatalogCreate) SetName(s string) *ServiceCatalogCreate {
-	scc.mutation.SetName(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetName(v string) *ServiceCatalogCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (scc *ServiceCatalogCreate) SetDescription(s string) *ServiceCatalogCreate {
-	scc.mutation.SetDescription(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetDescription(v string) *ServiceCatalogCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableDescription(s *string) *ServiceCatalogCreate {
-	if s != nil {
-		scc.SetDescription(*s)
+func (_c *ServiceCatalogCreate) SetNillableDescription(v *string) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (scc *ServiceCatalogCreate) SetCategory(s string) *ServiceCatalogCreate {
-	scc.mutation.SetCategory(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetCategory(v string) *ServiceCatalogCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableCategory(s *string) *ServiceCatalogCreate {
-	if s != nil {
-		scc.SetCategory(*s)
+func (_c *ServiceCatalogCreate) SetNillableCategory(v *string) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetCategory(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetIcon sets the "icon" field.
-func (scc *ServiceCatalogCreate) SetIcon(s string) *ServiceCatalogCreate {
-	scc.mutation.SetIcon(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetIcon(v string) *ServiceCatalogCreate {
+	_c.mutation.SetIcon(v)
+	return _c
 }
 
 // SetNillableIcon sets the "icon" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableIcon(s *string) *ServiceCatalogCreate {
-	if s != nil {
-		scc.SetIcon(*s)
+func (_c *ServiceCatalogCreate) SetNillableIcon(v *string) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetIcon(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetServiceType sets the "service_type" field.
-func (scc *ServiceCatalogCreate) SetServiceType(s string) *ServiceCatalogCreate {
-	scc.mutation.SetServiceType(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetServiceType(v string) *ServiceCatalogCreate {
+	_c.mutation.SetServiceType(v)
+	return _c
 }
 
 // SetNillableServiceType sets the "service_type" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableServiceType(s *string) *ServiceCatalogCreate {
-	if s != nil {
-		scc.SetServiceType(*s)
+func (_c *ServiceCatalogCreate) SetNillableServiceType(v *string) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetServiceType(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetPrice sets the "price" field.
-func (scc *ServiceCatalogCreate) SetPrice(f float64) *ServiceCatalogCreate {
-	scc.mutation.SetPrice(f)
-	return scc
+func (_c *ServiceCatalogCreate) SetPrice(v float64) *ServiceCatalogCreate {
+	_c.mutation.SetPrice(v)
+	return _c
 }
 
 // SetNillablePrice sets the "price" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillablePrice(f *float64) *ServiceCatalogCreate {
-	if f != nil {
-		scc.SetPrice(*f)
+func (_c *ServiceCatalogCreate) SetNillablePrice(v *float64) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetPrice(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetDeliveryTime sets the "delivery_time" field.
-func (scc *ServiceCatalogCreate) SetDeliveryTime(i int) *ServiceCatalogCreate {
-	scc.mutation.SetDeliveryTime(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetDeliveryTime(v int) *ServiceCatalogCreate {
+	_c.mutation.SetDeliveryTime(v)
+	return _c
 }
 
 // SetNillableDeliveryTime sets the "delivery_time" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableDeliveryTime(i *int) *ServiceCatalogCreate {
-	if i != nil {
-		scc.SetDeliveryTime(*i)
+func (_c *ServiceCatalogCreate) SetNillableDeliveryTime(v *int) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetDeliveryTime(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetUnit sets the "unit" field.
-func (scc *ServiceCatalogCreate) SetUnit(s string) *ServiceCatalogCreate {
-	scc.mutation.SetUnit(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetUnit(v string) *ServiceCatalogCreate {
+	_c.mutation.SetUnit(v)
+	return _c
 }
 
 // SetNillableUnit sets the "unit" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableUnit(s *string) *ServiceCatalogCreate {
-	if s != nil {
-		scc.SetUnit(*s)
+func (_c *ServiceCatalogCreate) SetNillableUnit(v *string) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetUnit(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetRequiresApproval sets the "requires_approval" field.
-func (scc *ServiceCatalogCreate) SetRequiresApproval(b bool) *ServiceCatalogCreate {
-	scc.mutation.SetRequiresApproval(b)
-	return scc
+func (_c *ServiceCatalogCreate) SetRequiresApproval(v bool) *ServiceCatalogCreate {
+	_c.mutation.SetRequiresApproval(v)
+	return _c
 }
 
 // SetNillableRequiresApproval sets the "requires_approval" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableRequiresApproval(b *bool) *ServiceCatalogCreate {
-	if b != nil {
-		scc.SetRequiresApproval(*b)
+func (_c *ServiceCatalogCreate) SetNillableRequiresApproval(v *bool) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetRequiresApproval(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetApprovalLevel sets the "approval_level" field.
-func (scc *ServiceCatalogCreate) SetApprovalLevel(i int) *ServiceCatalogCreate {
-	scc.mutation.SetApprovalLevel(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetApprovalLevel(v int) *ServiceCatalogCreate {
+	_c.mutation.SetApprovalLevel(v)
+	return _c
 }
 
 // SetNillableApprovalLevel sets the "approval_level" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableApprovalLevel(i *int) *ServiceCatalogCreate {
-	if i != nil {
-		scc.SetApprovalLevel(*i)
+func (_c *ServiceCatalogCreate) SetNillableApprovalLevel(v *int) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetApprovalLevel(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetApprovers sets the "approvers" field.
-func (scc *ServiceCatalogCreate) SetApprovers(i []int) *ServiceCatalogCreate {
-	scc.mutation.SetApprovers(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetApprovers(v []int) *ServiceCatalogCreate {
+	_c.mutation.SetApprovers(v)
+	return _c
 }
 
 // SetSLAResponseTime sets the "sla_response_time" field.
-func (scc *ServiceCatalogCreate) SetSLAResponseTime(i int) *ServiceCatalogCreate {
-	scc.mutation.SetSLAResponseTime(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetSLAResponseTime(v int) *ServiceCatalogCreate {
+	_c.mutation.SetSLAResponseTime(v)
+	return _c
 }
 
 // SetNillableSLAResponseTime sets the "sla_response_time" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableSLAResponseTime(i *int) *ServiceCatalogCreate {
-	if i != nil {
-		scc.SetSLAResponseTime(*i)
+func (_c *ServiceCatalogCreate) SetNillableSLAResponseTime(v *int) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetSLAResponseTime(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetSLAResolutionTime sets the "sla_resolution_time" field.
-func (scc *ServiceCatalogCreate) SetSLAResolutionTime(i int) *ServiceCatalogCreate {
-	scc.mutation.SetSLAResolutionTime(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetSLAResolutionTime(v int) *ServiceCatalogCreate {
+	_c.mutation.SetSLAResolutionTime(v)
+	return _c
 }
 
 // SetNillableSLAResolutionTime sets the "sla_resolution_time" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableSLAResolutionTime(i *int) *ServiceCatalogCreate {
-	if i != nil {
-		scc.SetSLAResolutionTime(*i)
+func (_c *ServiceCatalogCreate) SetNillableSLAResolutionTime(v *int) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetSLAResolutionTime(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetCiTypeID sets the "ci_type_id" field.
-func (scc *ServiceCatalogCreate) SetCiTypeID(i int) *ServiceCatalogCreate {
-	scc.mutation.SetCiTypeID(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetCiTypeID(v int) *ServiceCatalogCreate {
+	_c.mutation.SetCiTypeID(v)
+	return _c
 }
 
 // SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableCiTypeID(i *int) *ServiceCatalogCreate {
-	if i != nil {
-		scc.SetCiTypeID(*i)
+func (_c *ServiceCatalogCreate) SetNillableCiTypeID(v *int) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetCiTypeID(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetCloudServiceID sets the "cloud_service_id" field.
-func (scc *ServiceCatalogCreate) SetCloudServiceID(i int) *ServiceCatalogCreate {
-	scc.mutation.SetCloudServiceID(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetCloudServiceID(v int) *ServiceCatalogCreate {
+	_c.mutation.SetCloudServiceID(v)
+	return _c
 }
 
 // SetNillableCloudServiceID sets the "cloud_service_id" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableCloudServiceID(i *int) *ServiceCatalogCreate {
-	if i != nil {
-		scc.SetCloudServiceID(*i)
+func (_c *ServiceCatalogCreate) SetNillableCloudServiceID(v *int) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetCloudServiceID(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetFormSchema sets the "form_schema" field.
-func (scc *ServiceCatalogCreate) SetFormSchema(m map[string]interface{}) *ServiceCatalogCreate {
-	scc.mutation.SetFormSchema(m)
-	return scc
+func (_c *ServiceCatalogCreate) SetFormSchema(v map[string]interface{}) *ServiceCatalogCreate {
+	_c.mutation.SetFormSchema(v)
+	return _c
 }
 
 // SetAvailableRegions sets the "available_regions" field.
-func (scc *ServiceCatalogCreate) SetAvailableRegions(s []string) *ServiceCatalogCreate {
-	scc.mutation.SetAvailableRegions(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetAvailableRegions(v []string) *ServiceCatalogCreate {
+	_c.mutation.SetAvailableRegions(v)
+	return _c
 }
 
 // SetAvailableSpecs sets the "available_specs" field.
-func (scc *ServiceCatalogCreate) SetAvailableSpecs(s []string) *ServiceCatalogCreate {
-	scc.mutation.SetAvailableSpecs(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetAvailableSpecs(v []string) *ServiceCatalogCreate {
+	_c.mutation.SetAvailableSpecs(v)
+	return _c
 }
 
 // SetStatus sets the "status" field.
-func (scc *ServiceCatalogCreate) SetStatus(s string) *ServiceCatalogCreate {
-	scc.mutation.SetStatus(s)
-	return scc
+func (_c *ServiceCatalogCreate) SetStatus(v string) *ServiceCatalogCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableStatus(s *string) *ServiceCatalogCreate {
-	if s != nil {
-		scc.SetStatus(*s)
+func (_c *ServiceCatalogCreate) SetNillableStatus(v *string) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (scc *ServiceCatalogCreate) SetTenantID(i int) *ServiceCatalogCreate {
-	scc.mutation.SetTenantID(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetTenantID(v int) *ServiceCatalogCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (scc *ServiceCatalogCreate) SetIsActive(b bool) *ServiceCatalogCreate {
-	scc.mutation.SetIsActive(b)
-	return scc
+func (_c *ServiceCatalogCreate) SetIsActive(v bool) *ServiceCatalogCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableIsActive(b *bool) *ServiceCatalogCreate {
-	if b != nil {
-		scc.SetIsActive(*b)
+func (_c *ServiceCatalogCreate) SetNillableIsActive(v *bool) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetSortOrder sets the "sort_order" field.
-func (scc *ServiceCatalogCreate) SetSortOrder(i int) *ServiceCatalogCreate {
-	scc.mutation.SetSortOrder(i)
-	return scc
+func (_c *ServiceCatalogCreate) SetSortOrder(v int) *ServiceCatalogCreate {
+	_c.mutation.SetSortOrder(v)
+	return _c
 }
 
 // SetNillableSortOrder sets the "sort_order" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableSortOrder(i *int) *ServiceCatalogCreate {
-	if i != nil {
-		scc.SetSortOrder(*i)
+func (_c *ServiceCatalogCreate) SetNillableSortOrder(v *int) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetSortOrder(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (scc *ServiceCatalogCreate) SetCreatedAt(t time.Time) *ServiceCatalogCreate {
-	scc.mutation.SetCreatedAt(t)
-	return scc
+func (_c *ServiceCatalogCreate) SetCreatedAt(v time.Time) *ServiceCatalogCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableCreatedAt(t *time.Time) *ServiceCatalogCreate {
-	if t != nil {
-		scc.SetCreatedAt(*t)
+func (_c *ServiceCatalogCreate) SetNillableCreatedAt(v *time.Time) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return scc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (scc *ServiceCatalogCreate) SetUpdatedAt(t time.Time) *ServiceCatalogCreate {
-	scc.mutation.SetUpdatedAt(t)
-	return scc
+func (_c *ServiceCatalogCreate) SetUpdatedAt(v time.Time) *ServiceCatalogCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (scc *ServiceCatalogCreate) SetNillableUpdatedAt(t *time.Time) *ServiceCatalogCreate {
-	if t != nil {
-		scc.SetUpdatedAt(*t)
+func (_c *ServiceCatalogCreate) SetNillableUpdatedAt(v *time.Time) *ServiceCatalogCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return scc
+	return _c
 }
 
 // Mutation returns the ServiceCatalogMutation object of the builder.
-func (scc *ServiceCatalogCreate) Mutation() *ServiceCatalogMutation {
-	return scc.mutation
+func (_c *ServiceCatalogCreate) Mutation() *ServiceCatalogMutation {
+	return _c.mutation
 }
 
 // Save creates the ServiceCatalog in the database.
-func (scc *ServiceCatalogCreate) Save(ctx context.Context) (*ServiceCatalog, error) {
-	scc.defaults()
-	return withHooks(ctx, scc.sqlSave, scc.mutation, scc.hooks)
+func (_c *ServiceCatalogCreate) Save(ctx context.Context) (*ServiceCatalog, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (scc *ServiceCatalogCreate) SaveX(ctx context.Context) *ServiceCatalog {
-	v, err := scc.Save(ctx)
+func (_c *ServiceCatalogCreate) SaveX(ctx context.Context) *ServiceCatalog {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -329,105 +329,105 @@ func (scc *ServiceCatalogCreate) SaveX(ctx context.Context) *ServiceCatalog {
 }
 
 // Exec executes the query.
-func (scc *ServiceCatalogCreate) Exec(ctx context.Context) error {
-	_, err := scc.Save(ctx)
+func (_c *ServiceCatalogCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (scc *ServiceCatalogCreate) ExecX(ctx context.Context) {
-	if err := scc.Exec(ctx); err != nil {
+func (_c *ServiceCatalogCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (scc *ServiceCatalogCreate) defaults() {
-	if _, ok := scc.mutation.ServiceType(); !ok {
+func (_c *ServiceCatalogCreate) defaults() {
+	if _, ok := _c.mutation.ServiceType(); !ok {
 		v := servicecatalog.DefaultServiceType
-		scc.mutation.SetServiceType(v)
+		_c.mutation.SetServiceType(v)
 	}
-	if _, ok := scc.mutation.RequiresApproval(); !ok {
+	if _, ok := _c.mutation.RequiresApproval(); !ok {
 		v := servicecatalog.DefaultRequiresApproval
-		scc.mutation.SetRequiresApproval(v)
+		_c.mutation.SetRequiresApproval(v)
 	}
-	if _, ok := scc.mutation.ApprovalLevel(); !ok {
+	if _, ok := _c.mutation.ApprovalLevel(); !ok {
 		v := servicecatalog.DefaultApprovalLevel
-		scc.mutation.SetApprovalLevel(v)
+		_c.mutation.SetApprovalLevel(v)
 	}
-	if _, ok := scc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := servicecatalog.DefaultStatus
-		scc.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := scc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := servicecatalog.DefaultIsActive
-		scc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := scc.mutation.SortOrder(); !ok {
+	if _, ok := _c.mutation.SortOrder(); !ok {
 		v := servicecatalog.DefaultSortOrder
-		scc.mutation.SetSortOrder(v)
+		_c.mutation.SetSortOrder(v)
 	}
-	if _, ok := scc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := servicecatalog.DefaultCreatedAt()
-		scc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := scc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := servicecatalog.DefaultUpdatedAt()
-		scc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (scc *ServiceCatalogCreate) check() error {
-	if _, ok := scc.mutation.Name(); !ok {
+func (_c *ServiceCatalogCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "ServiceCatalog.name"`)}
 	}
-	if v, ok := scc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := servicecatalog.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.name": %w`, err)}
 		}
 	}
-	if _, ok := scc.mutation.ServiceType(); !ok {
+	if _, ok := _c.mutation.ServiceType(); !ok {
 		return &ValidationError{Name: "service_type", err: errors.New(`ent: missing required field "ServiceCatalog.service_type"`)}
 	}
-	if _, ok := scc.mutation.RequiresApproval(); !ok {
+	if _, ok := _c.mutation.RequiresApproval(); !ok {
 		return &ValidationError{Name: "requires_approval", err: errors.New(`ent: missing required field "ServiceCatalog.requires_approval"`)}
 	}
-	if _, ok := scc.mutation.ApprovalLevel(); !ok {
+	if _, ok := _c.mutation.ApprovalLevel(); !ok {
 		return &ValidationError{Name: "approval_level", err: errors.New(`ent: missing required field "ServiceCatalog.approval_level"`)}
 	}
-	if _, ok := scc.mutation.Status(); !ok {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "ServiceCatalog.status"`)}
 	}
-	if _, ok := scc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "ServiceCatalog.tenant_id"`)}
 	}
-	if v, ok := scc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := servicecatalog.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "ServiceCatalog.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := scc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "ServiceCatalog.is_active"`)}
 	}
-	if _, ok := scc.mutation.SortOrder(); !ok {
+	if _, ok := _c.mutation.SortOrder(); !ok {
 		return &ValidationError{Name: "sort_order", err: errors.New(`ent: missing required field "ServiceCatalog.sort_order"`)}
 	}
-	if _, ok := scc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "ServiceCatalog.created_at"`)}
 	}
-	if _, ok := scc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "ServiceCatalog.updated_at"`)}
 	}
 	return nil
 }
 
-func (scc *ServiceCatalogCreate) sqlSave(ctx context.Context) (*ServiceCatalog, error) {
-	if err := scc.check(); err != nil {
+func (_c *ServiceCatalogCreate) sqlSave(ctx context.Context) (*ServiceCatalog, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := scc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, scc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -435,109 +435,109 @@ func (scc *ServiceCatalogCreate) sqlSave(ctx context.Context) (*ServiceCatalog, 
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	scc.mutation.id = &_node.ID
-	scc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (scc *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.CreateSpec) {
+func (_c *ServiceCatalogCreate) createSpec() (*ServiceCatalog, *sqlgraph.CreateSpec) {
 	var (
-		_node = &ServiceCatalog{config: scc.config}
+		_node = &ServiceCatalog{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(servicecatalog.Table, sqlgraph.NewFieldSpec(servicecatalog.FieldID, field.TypeInt))
 	)
-	if value, ok := scc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(servicecatalog.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := scc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(servicecatalog.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := scc.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(servicecatalog.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := scc.mutation.Icon(); ok {
+	if value, ok := _c.mutation.Icon(); ok {
 		_spec.SetField(servicecatalog.FieldIcon, field.TypeString, value)
 		_node.Icon = value
 	}
-	if value, ok := scc.mutation.ServiceType(); ok {
+	if value, ok := _c.mutation.ServiceType(); ok {
 		_spec.SetField(servicecatalog.FieldServiceType, field.TypeString, value)
 		_node.ServiceType = value
 	}
-	if value, ok := scc.mutation.Price(); ok {
+	if value, ok := _c.mutation.Price(); ok {
 		_spec.SetField(servicecatalog.FieldPrice, field.TypeFloat64, value)
 		_node.Price = value
 	}
-	if value, ok := scc.mutation.DeliveryTime(); ok {
+	if value, ok := _c.mutation.DeliveryTime(); ok {
 		_spec.SetField(servicecatalog.FieldDeliveryTime, field.TypeInt, value)
 		_node.DeliveryTime = value
 	}
-	if value, ok := scc.mutation.Unit(); ok {
+	if value, ok := _c.mutation.Unit(); ok {
 		_spec.SetField(servicecatalog.FieldUnit, field.TypeString, value)
 		_node.Unit = value
 	}
-	if value, ok := scc.mutation.RequiresApproval(); ok {
+	if value, ok := _c.mutation.RequiresApproval(); ok {
 		_spec.SetField(servicecatalog.FieldRequiresApproval, field.TypeBool, value)
 		_node.RequiresApproval = value
 	}
-	if value, ok := scc.mutation.ApprovalLevel(); ok {
+	if value, ok := _c.mutation.ApprovalLevel(); ok {
 		_spec.SetField(servicecatalog.FieldApprovalLevel, field.TypeInt, value)
 		_node.ApprovalLevel = value
 	}
-	if value, ok := scc.mutation.Approvers(); ok {
+	if value, ok := _c.mutation.Approvers(); ok {
 		_spec.SetField(servicecatalog.FieldApprovers, field.TypeJSON, value)
 		_node.Approvers = value
 	}
-	if value, ok := scc.mutation.SLAResponseTime(); ok {
+	if value, ok := _c.mutation.SLAResponseTime(); ok {
 		_spec.SetField(servicecatalog.FieldSLAResponseTime, field.TypeInt, value)
 		_node.SLAResponseTime = value
 	}
-	if value, ok := scc.mutation.SLAResolutionTime(); ok {
+	if value, ok := _c.mutation.SLAResolutionTime(); ok {
 		_spec.SetField(servicecatalog.FieldSLAResolutionTime, field.TypeInt, value)
 		_node.SLAResolutionTime = value
 	}
-	if value, ok := scc.mutation.CiTypeID(); ok {
+	if value, ok := _c.mutation.CiTypeID(); ok {
 		_spec.SetField(servicecatalog.FieldCiTypeID, field.TypeInt, value)
 		_node.CiTypeID = value
 	}
-	if value, ok := scc.mutation.CloudServiceID(); ok {
+	if value, ok := _c.mutation.CloudServiceID(); ok {
 		_spec.SetField(servicecatalog.FieldCloudServiceID, field.TypeInt, value)
 		_node.CloudServiceID = value
 	}
-	if value, ok := scc.mutation.FormSchema(); ok {
+	if value, ok := _c.mutation.FormSchema(); ok {
 		_spec.SetField(servicecatalog.FieldFormSchema, field.TypeJSON, value)
 		_node.FormSchema = value
 	}
-	if value, ok := scc.mutation.AvailableRegions(); ok {
+	if value, ok := _c.mutation.AvailableRegions(); ok {
 		_spec.SetField(servicecatalog.FieldAvailableRegions, field.TypeJSON, value)
 		_node.AvailableRegions = value
 	}
-	if value, ok := scc.mutation.AvailableSpecs(); ok {
+	if value, ok := _c.mutation.AvailableSpecs(); ok {
 		_spec.SetField(servicecatalog.FieldAvailableSpecs, field.TypeJSON, value)
 		_node.AvailableSpecs = value
 	}
-	if value, ok := scc.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(servicecatalog.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := scc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(servicecatalog.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := scc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(servicecatalog.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := scc.mutation.SortOrder(); ok {
+	if value, ok := _c.mutation.SortOrder(); ok {
 		_spec.SetField(servicecatalog.FieldSortOrder, field.TypeInt, value)
 		_node.SortOrder = value
 	}
-	if value, ok := scc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := scc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(servicecatalog.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -552,16 +552,16 @@ type ServiceCatalogCreateBulk struct {
 }
 
 // Save creates the ServiceCatalog entities in the database.
-func (sccb *ServiceCatalogCreateBulk) Save(ctx context.Context) ([]*ServiceCatalog, error) {
-	if sccb.err != nil {
-		return nil, sccb.err
+func (_c *ServiceCatalogCreateBulk) Save(ctx context.Context) ([]*ServiceCatalog, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(sccb.builders))
-	nodes := make([]*ServiceCatalog, len(sccb.builders))
-	mutators := make([]Mutator, len(sccb.builders))
-	for i := range sccb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*ServiceCatalog, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := sccb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ServiceCatalogMutation)
@@ -575,11 +575,11 @@ func (sccb *ServiceCatalogCreateBulk) Save(ctx context.Context) ([]*ServiceCatal
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, sccb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, sccb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -603,7 +603,7 @@ func (sccb *ServiceCatalogCreateBulk) Save(ctx context.Context) ([]*ServiceCatal
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, sccb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -611,8 +611,8 @@ func (sccb *ServiceCatalogCreateBulk) Save(ctx context.Context) ([]*ServiceCatal
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (sccb *ServiceCatalogCreateBulk) SaveX(ctx context.Context) []*ServiceCatalog {
-	v, err := sccb.Save(ctx)
+func (_c *ServiceCatalogCreateBulk) SaveX(ctx context.Context) []*ServiceCatalog {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -620,14 +620,14 @@ func (sccb *ServiceCatalogCreateBulk) SaveX(ctx context.Context) []*ServiceCatal
 }
 
 // Exec executes the query.
-func (sccb *ServiceCatalogCreateBulk) Exec(ctx context.Context) error {
-	_, err := sccb.Save(ctx)
+func (_c *ServiceCatalogCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (sccb *ServiceCatalogCreateBulk) ExecX(ctx context.Context) {
-	if err := sccb.Exec(ctx); err != nil {
+func (_c *ServiceCatalogCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

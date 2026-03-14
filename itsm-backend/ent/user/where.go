@@ -110,6 +110,11 @@ func UpdatedAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldUpdatedAt, v))
 }
 
+// AssignedByMspID applies equality check predicate on the "assigned_by_msp_id" field. It's identical to AssignedByMspIDEQ.
+func AssignedByMspID(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAssignedByMspID, v))
+}
+
 // UsernameEQ applies the EQ predicate on the "username" field.
 func UsernameEQ(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldUsername, v))
@@ -600,26 +605,6 @@ func TenantIDNotIn(vs ...int) predicate.User {
 	return predicate.User(sql.FieldNotIn(FieldTenantID, vs...))
 }
 
-// TenantIDGT applies the GT predicate on the "tenant_id" field.
-func TenantIDGT(v int) predicate.User {
-	return predicate.User(sql.FieldGT(FieldTenantID, v))
-}
-
-// TenantIDGTE applies the GTE predicate on the "tenant_id" field.
-func TenantIDGTE(v int) predicate.User {
-	return predicate.User(sql.FieldGTE(FieldTenantID, v))
-}
-
-// TenantIDLT applies the LT predicate on the "tenant_id" field.
-func TenantIDLT(v int) predicate.User {
-	return predicate.User(sql.FieldLT(FieldTenantID, v))
-}
-
-// TenantIDLTE applies the LTE predicate on the "tenant_id" field.
-func TenantIDLTE(v int) predicate.User {
-	return predicate.User(sql.FieldLTE(FieldTenantID, v))
-}
-
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
 func CreatedAtEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -700,6 +685,86 @@ func UpdatedAtLTE(v time.Time) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldUpdatedAt, v))
 }
 
+// MspRoleEQ applies the EQ predicate on the "msp_role" field.
+func MspRoleEQ(v MspRole) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldMspRole, v))
+}
+
+// MspRoleNEQ applies the NEQ predicate on the "msp_role" field.
+func MspRoleNEQ(v MspRole) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldMspRole, v))
+}
+
+// MspRoleIn applies the In predicate on the "msp_role" field.
+func MspRoleIn(vs ...MspRole) predicate.User {
+	return predicate.User(sql.FieldIn(FieldMspRole, vs...))
+}
+
+// MspRoleNotIn applies the NotIn predicate on the "msp_role" field.
+func MspRoleNotIn(vs ...MspRole) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldMspRole, vs...))
+}
+
+// MspRoleIsNil applies the IsNil predicate on the "msp_role" field.
+func MspRoleIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldMspRole))
+}
+
+// MspRoleNotNil applies the NotNil predicate on the "msp_role" field.
+func MspRoleNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldMspRole))
+}
+
+// AssignedByMspIDEQ applies the EQ predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDEQ(v int) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAssignedByMspID, v))
+}
+
+// AssignedByMspIDNEQ applies the NEQ predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDNEQ(v int) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAssignedByMspID, v))
+}
+
+// AssignedByMspIDIn applies the In predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAssignedByMspID, vs...))
+}
+
+// AssignedByMspIDNotIn applies the NotIn predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDNotIn(vs ...int) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAssignedByMspID, vs...))
+}
+
+// AssignedByMspIDGT applies the GT predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDGT(v int) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAssignedByMspID, v))
+}
+
+// AssignedByMspIDGTE applies the GTE predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDGTE(v int) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAssignedByMspID, v))
+}
+
+// AssignedByMspIDLT applies the LT predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDLT(v int) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAssignedByMspID, v))
+}
+
+// AssignedByMspIDLTE applies the LTE predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDLTE(v int) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAssignedByMspID, v))
+}
+
+// AssignedByMspIDIsNil applies the IsNil predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldAssignedByMspID))
+}
+
+// AssignedByMspIDNotNil applies the NotNil predicate on the "assigned_by_msp_id" field.
+func AssignedByMspIDNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldAssignedByMspID))
+}
+
 // HasDepartmentRef applies the HasEdge predicate on the "department_ref" edge.
 func HasDepartmentRef() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -715,6 +780,29 @@ func HasDepartmentRef() predicate.User {
 func HasDepartmentRefWith(preds ...predicate.Department) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newDepartmentRefStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTenant applies the HasEdge predicate on the "tenant" edge.
+func HasTenant() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, TenantTable, TenantColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTenantWith applies the HasEdge predicate on the "tenant" edge with a given conditions (other predicates).
+func HasTenantWith(preds ...predicate.Tenant) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTenantStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)
@@ -876,6 +964,29 @@ func HasGroups() predicate.User {
 func HasGroupsWith(preds ...predicate.Group) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newGroupsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMspAllocations applies the HasEdge predicate on the "msp_allocations" edge.
+func HasMspAllocations() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MspAllocationsTable, MspAllocationsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMspAllocationsWith applies the HasEdge predicate on the "msp_allocations" edge with a given conditions (other predicates).
+func HasMspAllocationsWith(preds ...predicate.MSPAllocation) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newMspAllocationsStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

@@ -4,9 +4,12 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
+	"itsm-backend/ent/mspallocation"
 	"itsm-backend/ent/predicate"
 	"itsm-backend/ent/tenant"
+	"itsm-backend/ent/user"
 	"math"
 
 	"entgo.io/ent"
@@ -18,50 +21,96 @@ import (
 // TenantQuery is the builder for querying Tenant entities.
 type TenantQuery struct {
 	config
-	ctx        *QueryContext
-	order      []tenant.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Tenant
+	ctx                        *QueryContext
+	order                      []tenant.OrderOption
+	inters                     []Interceptor
+	predicates                 []predicate.Tenant
+	withUsers                  *UserQuery
+	withMspCustomerAllocations *MSPAllocationQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
 // Where adds a new predicate for the TenantQuery builder.
-func (tq *TenantQuery) Where(ps ...predicate.Tenant) *TenantQuery {
-	tq.predicates = append(tq.predicates, ps...)
-	return tq
+func (_q *TenantQuery) Where(ps ...predicate.Tenant) *TenantQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (tq *TenantQuery) Limit(limit int) *TenantQuery {
-	tq.ctx.Limit = &limit
-	return tq
+func (_q *TenantQuery) Limit(limit int) *TenantQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (tq *TenantQuery) Offset(offset int) *TenantQuery {
-	tq.ctx.Offset = &offset
-	return tq
+func (_q *TenantQuery) Offset(offset int) *TenantQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (tq *TenantQuery) Unique(unique bool) *TenantQuery {
-	tq.ctx.Unique = &unique
-	return tq
+func (_q *TenantQuery) Unique(unique bool) *TenantQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (tq *TenantQuery) Order(o ...tenant.OrderOption) *TenantQuery {
-	tq.order = append(tq.order, o...)
-	return tq
+func (_q *TenantQuery) Order(o ...tenant.OrderOption) *TenantQuery {
+	_q.order = append(_q.order, o...)
+	return _q
+}
+
+// QueryUsers chains the current query on the "users" edge.
+func (_q *TenantQuery) QueryUsers() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tenant.UsersTable, tenant.UsersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMspCustomerAllocations chains the current query on the "msp_customer_allocations" edge.
+func (_q *TenantQuery) QueryMspCustomerAllocations() *MSPAllocationQuery {
+	query := (&MSPAllocationClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tenant.Table, tenant.FieldID, selector),
+			sqlgraph.To(mspallocation.Table, mspallocation.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, tenant.MspCustomerAllocationsTable, tenant.MspCustomerAllocationsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Tenant entity from the query.
 // Returns a *NotFoundError when no Tenant was found.
-func (tq *TenantQuery) First(ctx context.Context) (*Tenant, error) {
-	nodes, err := tq.Limit(1).All(setContextOp(ctx, tq.ctx, ent.OpQueryFirst))
+func (_q *TenantQuery) First(ctx context.Context) (*Tenant, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -72,8 +121,8 @@ func (tq *TenantQuery) First(ctx context.Context) (*Tenant, error) {
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (tq *TenantQuery) FirstX(ctx context.Context) *Tenant {
-	node, err := tq.First(ctx)
+func (_q *TenantQuery) FirstX(ctx context.Context) *Tenant {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -82,9 +131,9 @@ func (tq *TenantQuery) FirstX(ctx context.Context) *Tenant {
 
 // FirstID returns the first Tenant ID from the query.
 // Returns a *NotFoundError when no Tenant ID was found.
-func (tq *TenantQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *TenantQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tq.Limit(1).IDs(setContextOp(ctx, tq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -95,8 +144,8 @@ func (tq *TenantQuery) FirstID(ctx context.Context) (id int, err error) {
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tq *TenantQuery) FirstIDX(ctx context.Context) int {
-	id, err := tq.FirstID(ctx)
+func (_q *TenantQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,8 +155,8 @@ func (tq *TenantQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single Tenant entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one Tenant entity is found.
 // Returns a *NotFoundError when no Tenant entities are found.
-func (tq *TenantQuery) Only(ctx context.Context) (*Tenant, error) {
-	nodes, err := tq.Limit(2).All(setContextOp(ctx, tq.ctx, ent.OpQueryOnly))
+func (_q *TenantQuery) Only(ctx context.Context) (*Tenant, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -122,8 +171,8 @@ func (tq *TenantQuery) Only(ctx context.Context) (*Tenant, error) {
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (tq *TenantQuery) OnlyX(ctx context.Context) *Tenant {
-	node, err := tq.Only(ctx)
+func (_q *TenantQuery) OnlyX(ctx context.Context) *Tenant {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -133,9 +182,9 @@ func (tq *TenantQuery) OnlyX(ctx context.Context) *Tenant {
 // OnlyID is like Only, but returns the only Tenant ID in the query.
 // Returns a *NotSingularError when more than one Tenant ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tq *TenantQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *TenantQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tq.Limit(2).IDs(setContextOp(ctx, tq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -150,8 +199,8 @@ func (tq *TenantQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tq *TenantQuery) OnlyIDX(ctx context.Context) int {
-	id, err := tq.OnlyID(ctx)
+func (_q *TenantQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -159,18 +208,18 @@ func (tq *TenantQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of Tenants.
-func (tq *TenantQuery) All(ctx context.Context) ([]*Tenant, error) {
-	ctx = setContextOp(ctx, tq.ctx, ent.OpQueryAll)
-	if err := tq.prepareQuery(ctx); err != nil {
+func (_q *TenantQuery) All(ctx context.Context) ([]*Tenant, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*Tenant, *TenantQuery]()
-	return withInterceptors[[]*Tenant](ctx, tq, qr, tq.inters)
+	return withInterceptors[[]*Tenant](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (tq *TenantQuery) AllX(ctx context.Context) []*Tenant {
-	nodes, err := tq.All(ctx)
+func (_q *TenantQuery) AllX(ctx context.Context) []*Tenant {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -178,20 +227,20 @@ func (tq *TenantQuery) AllX(ctx context.Context) []*Tenant {
 }
 
 // IDs executes the query and returns a list of Tenant IDs.
-func (tq *TenantQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if tq.ctx.Unique == nil && tq.path != nil {
-		tq.Unique(true)
+func (_q *TenantQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, tq.ctx, ent.OpQueryIDs)
-	if err = tq.Select(tenant.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(tenant.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tq *TenantQuery) IDsX(ctx context.Context) []int {
-	ids, err := tq.IDs(ctx)
+func (_q *TenantQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -199,17 +248,17 @@ func (tq *TenantQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (tq *TenantQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, tq.ctx, ent.OpQueryCount)
-	if err := tq.prepareQuery(ctx); err != nil {
+func (_q *TenantQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, tq, querierCount[*TenantQuery](), tq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*TenantQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (tq *TenantQuery) CountX(ctx context.Context) int {
-	count, err := tq.Count(ctx)
+func (_q *TenantQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -217,9 +266,9 @@ func (tq *TenantQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (tq *TenantQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, tq.ctx, ent.OpQueryExist)
-	switch _, err := tq.FirstID(ctx); {
+func (_q *TenantQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -230,8 +279,8 @@ func (tq *TenantQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (tq *TenantQuery) ExistX(ctx context.Context) bool {
-	exist, err := tq.Exist(ctx)
+func (_q *TenantQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -240,20 +289,44 @@ func (tq *TenantQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the TenantQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (tq *TenantQuery) Clone() *TenantQuery {
-	if tq == nil {
+func (_q *TenantQuery) Clone() *TenantQuery {
+	if _q == nil {
 		return nil
 	}
 	return &TenantQuery{
-		config:     tq.config,
-		ctx:        tq.ctx.Clone(),
-		order:      append([]tenant.OrderOption{}, tq.order...),
-		inters:     append([]Interceptor{}, tq.inters...),
-		predicates: append([]predicate.Tenant{}, tq.predicates...),
+		config:                     _q.config,
+		ctx:                        _q.ctx.Clone(),
+		order:                      append([]tenant.OrderOption{}, _q.order...),
+		inters:                     append([]Interceptor{}, _q.inters...),
+		predicates:                 append([]predicate.Tenant{}, _q.predicates...),
+		withUsers:                  _q.withUsers.Clone(),
+		withMspCustomerAllocations: _q.withMspCustomerAllocations.Clone(),
 		// clone intermediate query.
-		sql:  tq.sql.Clone(),
-		path: tq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
+}
+
+// WithUsers tells the query-builder to eager-load the nodes that are connected to
+// the "users" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TenantQuery) WithUsers(opts ...func(*UserQuery)) *TenantQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUsers = query
+	return _q
+}
+
+// WithMspCustomerAllocations tells the query-builder to eager-load the nodes that are connected to
+// the "msp_customer_allocations" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *TenantQuery) WithMspCustomerAllocations(opts ...func(*MSPAllocationQuery)) *TenantQuery {
+	query := (&MSPAllocationClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMspCustomerAllocations = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -270,10 +343,10 @@ func (tq *TenantQuery) Clone() *TenantQuery {
 //		GroupBy(tenant.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (tq *TenantQuery) GroupBy(field string, fields ...string) *TenantGroupBy {
-	tq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &TenantGroupBy{build: tq}
-	grbuild.flds = &tq.ctx.Fields
+func (_q *TenantQuery) GroupBy(field string, fields ...string) *TenantGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &TenantGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = tenant.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -291,88 +364,202 @@ func (tq *TenantQuery) GroupBy(field string, fields ...string) *TenantGroupBy {
 //	client.Tenant.Query().
 //		Select(tenant.FieldName).
 //		Scan(ctx, &v)
-func (tq *TenantQuery) Select(fields ...string) *TenantSelect {
-	tq.ctx.Fields = append(tq.ctx.Fields, fields...)
-	sbuild := &TenantSelect{TenantQuery: tq}
+func (_q *TenantQuery) Select(fields ...string) *TenantSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &TenantSelect{TenantQuery: _q}
 	sbuild.label = tenant.Label
-	sbuild.flds, sbuild.scan = &tq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a TenantSelect configured with the given aggregations.
-func (tq *TenantQuery) Aggregate(fns ...AggregateFunc) *TenantSelect {
-	return tq.Select().Aggregate(fns...)
+func (_q *TenantQuery) Aggregate(fns ...AggregateFunc) *TenantSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (tq *TenantQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range tq.inters {
+func (_q *TenantQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, tq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range tq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !tenant.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if tq.path != nil {
-		prev, err := tq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		tq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (tq *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenant, error) {
+func (_q *TenantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Tenant, error) {
 	var (
-		nodes = []*Tenant{}
-		_spec = tq.querySpec()
+		nodes       = []*Tenant{}
+		_spec       = _q.querySpec()
+		loadedTypes = [2]bool{
+			_q.withUsers != nil,
+			_q.withMspCustomerAllocations != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Tenant).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Tenant{config: tq.config}
+		node := &Tenant{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, tq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withUsers; query != nil {
+		if err := _q.loadUsers(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.Users = []*User{} },
+			func(n *Tenant, e *User) { n.Edges.Users = append(n.Edges.Users, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMspCustomerAllocations; query != nil {
+		if err := _q.loadMspCustomerAllocations(ctx, query, nodes,
+			func(n *Tenant) { n.Edges.MspCustomerAllocations = []*MSPAllocation{} },
+			func(n *Tenant, e *MSPAllocation) {
+				n.Edges.MspCustomerAllocations = append(n.Edges.MspCustomerAllocations, e)
+			}); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
-func (tq *TenantQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := tq.querySpec()
-	_spec.Node.Columns = tq.ctx.Fields
-	if len(tq.ctx.Fields) > 0 {
-		_spec.Unique = tq.ctx.Unique != nil && *tq.ctx.Unique
+func (_q *TenantQuery) loadUsers(ctx context.Context, query *UserQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *User)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[int]*Tenant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
 	}
-	return sqlgraph.CountNodes(ctx, tq.driver, _spec)
+	query.withFKs = true
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(user.FieldTenantID)
+	}
+	query.Where(predicate.User(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(tenant.UsersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.TenantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "tenant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *TenantQuery) loadMspCustomerAllocations(ctx context.Context, query *MSPAllocationQuery, nodes []*Tenant, init func(*Tenant), assign func(*Tenant, *MSPAllocation)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Tenant)
+	nids := make(map[int]map[*Tenant]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(tenant.MspCustomerAllocationsTable)
+		s.Join(joinT).On(s.C(mspallocation.FieldID), joinT.C(tenant.MspCustomerAllocationsPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(tenant.MspCustomerAllocationsPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(tenant.MspCustomerAllocationsPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	qr := QuerierFunc(func(ctx context.Context, q Query) (Value, error) {
+		return query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+			assign := spec.Assign
+			values := spec.ScanValues
+			spec.ScanValues = func(columns []string) ([]any, error) {
+				values, err := values(columns[1:])
+				if err != nil {
+					return nil, err
+				}
+				return append([]any{new(sql.NullInt64)}, values...), nil
+			}
+			spec.Assign = func(columns []string, values []any) error {
+				outValue := int(values[0].(*sql.NullInt64).Int64)
+				inValue := int(values[1].(*sql.NullInt64).Int64)
+				if nids[inValue] == nil {
+					nids[inValue] = map[*Tenant]struct{}{byID[outValue]: {}}
+					return assign(columns[1:], values[1:])
+				}
+				nids[inValue][byID[outValue]] = struct{}{}
+				return nil
+			}
+		})
+	})
+	neighbors, err := withInterceptors[[]*MSPAllocation](ctx, query, qr, query.inters)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "msp_customer_allocations" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
 }
 
-func (tq *TenantQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *TenantQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
+	}
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
+}
+
+func (_q *TenantQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(tenant.Table, tenant.Columns, sqlgraph.NewFieldSpec(tenant.FieldID, field.TypeInt))
-	_spec.From = tq.sql
-	if unique := tq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if tq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := tq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, tenant.FieldID)
 		for i := range fields {
@@ -381,20 +568,20 @@ func (tq *TenantQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := tq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := tq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := tq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := tq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -404,33 +591,33 @@ func (tq *TenantQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (tq *TenantQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(tq.driver.Dialect())
+func (_q *TenantQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(tenant.Table)
-	columns := tq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = tenant.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if tq.sql != nil {
-		selector = tq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if tq.ctx.Unique != nil && *tq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range tq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range tq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := tq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := tq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -443,41 +630,41 @@ type TenantGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (tgb *TenantGroupBy) Aggregate(fns ...AggregateFunc) *TenantGroupBy {
-	tgb.fns = append(tgb.fns, fns...)
-	return tgb
+func (_g *TenantGroupBy) Aggregate(fns ...AggregateFunc) *TenantGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tgb *TenantGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tgb.build.ctx, ent.OpQueryGroupBy)
-	if err := tgb.build.prepareQuery(ctx); err != nil {
+func (_g *TenantGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TenantQuery, *TenantGroupBy](ctx, tgb.build, tgb, tgb.build.inters, v)
+	return scanWithInterceptors[*TenantQuery, *TenantGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (tgb *TenantGroupBy) sqlScan(ctx context.Context, root *TenantQuery, v any) error {
+func (_g *TenantGroupBy) sqlScan(ctx context.Context, root *TenantQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(tgb.fns))
-	for _, fn := range tgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*tgb.flds)+len(tgb.fns))
-		for _, f := range *tgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*tgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -491,27 +678,27 @@ type TenantSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (ts *TenantSelect) Aggregate(fns ...AggregateFunc) *TenantSelect {
-	ts.fns = append(ts.fns, fns...)
-	return ts
+func (_s *TenantSelect) Aggregate(fns ...AggregateFunc) *TenantSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (ts *TenantSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, ts.ctx, ent.OpQuerySelect)
-	if err := ts.prepareQuery(ctx); err != nil {
+func (_s *TenantSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TenantQuery, *TenantSelect](ctx, ts.TenantQuery, ts, ts.inters, v)
+	return scanWithInterceptors[*TenantQuery, *TenantSelect](ctx, _s.TenantQuery, _s, _s.inters, v)
 }
 
-func (ts *TenantSelect) sqlScan(ctx context.Context, root *TenantQuery, v any) error {
+func (_s *TenantSelect) sqlScan(ctx context.Context, root *TenantQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(ts.fns))
-	for _, fn := range ts.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*ts.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -519,7 +706,7 @@ func (ts *TenantSelect) sqlScan(ctx context.Context, root *TenantQuery, v any) e
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := ts.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

@@ -22,164 +22,164 @@ type KnowledgeArticleCreate struct {
 }
 
 // SetTitle sets the "title" field.
-func (kac *KnowledgeArticleCreate) SetTitle(s string) *KnowledgeArticleCreate {
-	kac.mutation.SetTitle(s)
-	return kac
+func (_c *KnowledgeArticleCreate) SetTitle(v string) *KnowledgeArticleCreate {
+	_c.mutation.SetTitle(v)
+	return _c
 }
 
 // SetContent sets the "content" field.
-func (kac *KnowledgeArticleCreate) SetContent(s string) *KnowledgeArticleCreate {
-	kac.mutation.SetContent(s)
-	return kac
+func (_c *KnowledgeArticleCreate) SetContent(v string) *KnowledgeArticleCreate {
+	_c.mutation.SetContent(v)
+	return _c
 }
 
 // SetNillableContent sets the "content" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableContent(s *string) *KnowledgeArticleCreate {
-	if s != nil {
-		kac.SetContent(*s)
+func (_c *KnowledgeArticleCreate) SetNillableContent(v *string) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetContent(*v)
 	}
-	return kac
+	return _c
 }
 
 // SetCategory sets the "category" field.
-func (kac *KnowledgeArticleCreate) SetCategory(s string) *KnowledgeArticleCreate {
-	kac.mutation.SetCategory(s)
-	return kac
+func (_c *KnowledgeArticleCreate) SetCategory(v string) *KnowledgeArticleCreate {
+	_c.mutation.SetCategory(v)
+	return _c
 }
 
 // SetNillableCategory sets the "category" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableCategory(s *string) *KnowledgeArticleCreate {
-	if s != nil {
-		kac.SetCategory(*s)
+func (_c *KnowledgeArticleCreate) SetNillableCategory(v *string) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetCategory(*v)
 	}
-	return kac
+	return _c
 }
 
 // SetTags sets the "tags" field.
-func (kac *KnowledgeArticleCreate) SetTags(s string) *KnowledgeArticleCreate {
-	kac.mutation.SetTags(s)
-	return kac
+func (_c *KnowledgeArticleCreate) SetTags(v string) *KnowledgeArticleCreate {
+	_c.mutation.SetTags(v)
+	return _c
 }
 
 // SetNillableTags sets the "tags" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableTags(s *string) *KnowledgeArticleCreate {
-	if s != nil {
-		kac.SetTags(*s)
+func (_c *KnowledgeArticleCreate) SetNillableTags(v *string) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetTags(*v)
 	}
-	return kac
+	return _c
 }
 
 // SetAuthorID sets the "author_id" field.
-func (kac *KnowledgeArticleCreate) SetAuthorID(i int) *KnowledgeArticleCreate {
-	kac.mutation.SetAuthorID(i)
-	return kac
+func (_c *KnowledgeArticleCreate) SetAuthorID(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetAuthorID(v)
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (kac *KnowledgeArticleCreate) SetTenantID(i int) *KnowledgeArticleCreate {
-	kac.mutation.SetTenantID(i)
-	return kac
+func (_c *KnowledgeArticleCreate) SetTenantID(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetIsPublished sets the "is_published" field.
-func (kac *KnowledgeArticleCreate) SetIsPublished(b bool) *KnowledgeArticleCreate {
-	kac.mutation.SetIsPublished(b)
-	return kac
+func (_c *KnowledgeArticleCreate) SetIsPublished(v bool) *KnowledgeArticleCreate {
+	_c.mutation.SetIsPublished(v)
+	return _c
 }
 
 // SetNillableIsPublished sets the "is_published" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableIsPublished(b *bool) *KnowledgeArticleCreate {
-	if b != nil {
-		kac.SetIsPublished(*b)
+func (_c *KnowledgeArticleCreate) SetNillableIsPublished(v *bool) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetIsPublished(*v)
 	}
-	return kac
+	return _c
 }
 
 // SetViewCount sets the "view_count" field.
-func (kac *KnowledgeArticleCreate) SetViewCount(i int) *KnowledgeArticleCreate {
-	kac.mutation.SetViewCount(i)
-	return kac
+func (_c *KnowledgeArticleCreate) SetViewCount(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetViewCount(v)
+	return _c
 }
 
 // SetNillableViewCount sets the "view_count" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableViewCount(i *int) *KnowledgeArticleCreate {
-	if i != nil {
-		kac.SetViewCount(*i)
+func (_c *KnowledgeArticleCreate) SetNillableViewCount(v *int) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetViewCount(*v)
 	}
-	return kac
+	return _c
 }
 
 // SetLikeCount sets the "like_count" field.
-func (kac *KnowledgeArticleCreate) SetLikeCount(i int) *KnowledgeArticleCreate {
-	kac.mutation.SetLikeCount(i)
-	return kac
+func (_c *KnowledgeArticleCreate) SetLikeCount(v int) *KnowledgeArticleCreate {
+	_c.mutation.SetLikeCount(v)
+	return _c
 }
 
 // SetNillableLikeCount sets the "like_count" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableLikeCount(i *int) *KnowledgeArticleCreate {
-	if i != nil {
-		kac.SetLikeCount(*i)
+func (_c *KnowledgeArticleCreate) SetNillableLikeCount(v *int) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetLikeCount(*v)
 	}
-	return kac
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (kac *KnowledgeArticleCreate) SetCreatedAt(t time.Time) *KnowledgeArticleCreate {
-	kac.mutation.SetCreatedAt(t)
-	return kac
+func (_c *KnowledgeArticleCreate) SetCreatedAt(v time.Time) *KnowledgeArticleCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableCreatedAt(t *time.Time) *KnowledgeArticleCreate {
-	if t != nil {
-		kac.SetCreatedAt(*t)
+func (_c *KnowledgeArticleCreate) SetNillableCreatedAt(v *time.Time) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return kac
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (kac *KnowledgeArticleCreate) SetUpdatedAt(t time.Time) *KnowledgeArticleCreate {
-	kac.mutation.SetUpdatedAt(t)
-	return kac
+func (_c *KnowledgeArticleCreate) SetUpdatedAt(v time.Time) *KnowledgeArticleCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (kac *KnowledgeArticleCreate) SetNillableUpdatedAt(t *time.Time) *KnowledgeArticleCreate {
-	if t != nil {
-		kac.SetUpdatedAt(*t)
+func (_c *KnowledgeArticleCreate) SetNillableUpdatedAt(v *time.Time) *KnowledgeArticleCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return kac
+	return _c
 }
 
 // AddUserLikeIDs adds the "user_likes" edge to the KnowledgeArticleLike entity by IDs.
-func (kac *KnowledgeArticleCreate) AddUserLikeIDs(ids ...int) *KnowledgeArticleCreate {
-	kac.mutation.AddUserLikeIDs(ids...)
-	return kac
+func (_c *KnowledgeArticleCreate) AddUserLikeIDs(ids ...int) *KnowledgeArticleCreate {
+	_c.mutation.AddUserLikeIDs(ids...)
+	return _c
 }
 
 // AddUserLikes adds the "user_likes" edges to the KnowledgeArticleLike entity.
-func (kac *KnowledgeArticleCreate) AddUserLikes(k ...*KnowledgeArticleLike) *KnowledgeArticleCreate {
-	ids := make([]int, len(k))
-	for i := range k {
-		ids[i] = k[i].ID
+func (_c *KnowledgeArticleCreate) AddUserLikes(v ...*KnowledgeArticleLike) *KnowledgeArticleCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return kac.AddUserLikeIDs(ids...)
+	return _c.AddUserLikeIDs(ids...)
 }
 
 // Mutation returns the KnowledgeArticleMutation object of the builder.
-func (kac *KnowledgeArticleCreate) Mutation() *KnowledgeArticleMutation {
-	return kac.mutation
+func (_c *KnowledgeArticleCreate) Mutation() *KnowledgeArticleMutation {
+	return _c.mutation
 }
 
 // Save creates the KnowledgeArticle in the database.
-func (kac *KnowledgeArticleCreate) Save(ctx context.Context) (*KnowledgeArticle, error) {
-	kac.defaults()
-	return withHooks(ctx, kac.sqlSave, kac.mutation, kac.hooks)
+func (_c *KnowledgeArticleCreate) Save(ctx context.Context) (*KnowledgeArticle, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (kac *KnowledgeArticleCreate) SaveX(ctx context.Context) *KnowledgeArticle {
-	v, err := kac.Save(ctx)
+func (_c *KnowledgeArticleCreate) SaveX(ctx context.Context) *KnowledgeArticle {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -187,92 +187,92 @@ func (kac *KnowledgeArticleCreate) SaveX(ctx context.Context) *KnowledgeArticle 
 }
 
 // Exec executes the query.
-func (kac *KnowledgeArticleCreate) Exec(ctx context.Context) error {
-	_, err := kac.Save(ctx)
+func (_c *KnowledgeArticleCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kac *KnowledgeArticleCreate) ExecX(ctx context.Context) {
-	if err := kac.Exec(ctx); err != nil {
+func (_c *KnowledgeArticleCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (kac *KnowledgeArticleCreate) defaults() {
-	if _, ok := kac.mutation.IsPublished(); !ok {
+func (_c *KnowledgeArticleCreate) defaults() {
+	if _, ok := _c.mutation.IsPublished(); !ok {
 		v := knowledgearticle.DefaultIsPublished
-		kac.mutation.SetIsPublished(v)
+		_c.mutation.SetIsPublished(v)
 	}
-	if _, ok := kac.mutation.ViewCount(); !ok {
+	if _, ok := _c.mutation.ViewCount(); !ok {
 		v := knowledgearticle.DefaultViewCount
-		kac.mutation.SetViewCount(v)
+		_c.mutation.SetViewCount(v)
 	}
-	if _, ok := kac.mutation.LikeCount(); !ok {
+	if _, ok := _c.mutation.LikeCount(); !ok {
 		v := knowledgearticle.DefaultLikeCount
-		kac.mutation.SetLikeCount(v)
+		_c.mutation.SetLikeCount(v)
 	}
-	if _, ok := kac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := knowledgearticle.DefaultCreatedAt()
-		kac.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := kac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := knowledgearticle.DefaultUpdatedAt()
-		kac.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (kac *KnowledgeArticleCreate) check() error {
-	if _, ok := kac.mutation.Title(); !ok {
+func (_c *KnowledgeArticleCreate) check() error {
+	if _, ok := _c.mutation.Title(); !ok {
 		return &ValidationError{Name: "title", err: errors.New(`ent: missing required field "KnowledgeArticle.title"`)}
 	}
-	if v, ok := kac.mutation.Title(); ok {
+	if v, ok := _c.mutation.Title(); ok {
 		if err := knowledgearticle.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.title": %w`, err)}
 		}
 	}
-	if _, ok := kac.mutation.AuthorID(); !ok {
+	if _, ok := _c.mutation.AuthorID(); !ok {
 		return &ValidationError{Name: "author_id", err: errors.New(`ent: missing required field "KnowledgeArticle.author_id"`)}
 	}
-	if v, ok := kac.mutation.AuthorID(); ok {
+	if v, ok := _c.mutation.AuthorID(); ok {
 		if err := knowledgearticle.AuthorIDValidator(v); err != nil {
 			return &ValidationError{Name: "author_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.author_id": %w`, err)}
 		}
 	}
-	if _, ok := kac.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "KnowledgeArticle.tenant_id"`)}
 	}
-	if v, ok := kac.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := knowledgearticle.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "KnowledgeArticle.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := kac.mutation.IsPublished(); !ok {
+	if _, ok := _c.mutation.IsPublished(); !ok {
 		return &ValidationError{Name: "is_published", err: errors.New(`ent: missing required field "KnowledgeArticle.is_published"`)}
 	}
-	if _, ok := kac.mutation.ViewCount(); !ok {
+	if _, ok := _c.mutation.ViewCount(); !ok {
 		return &ValidationError{Name: "view_count", err: errors.New(`ent: missing required field "KnowledgeArticle.view_count"`)}
 	}
-	if _, ok := kac.mutation.LikeCount(); !ok {
+	if _, ok := _c.mutation.LikeCount(); !ok {
 		return &ValidationError{Name: "like_count", err: errors.New(`ent: missing required field "KnowledgeArticle.like_count"`)}
 	}
-	if _, ok := kac.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "KnowledgeArticle.created_at"`)}
 	}
-	if _, ok := kac.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "KnowledgeArticle.updated_at"`)}
 	}
 	return nil
 }
 
-func (kac *KnowledgeArticleCreate) sqlSave(ctx context.Context) (*KnowledgeArticle, error) {
-	if err := kac.check(); err != nil {
+func (_c *KnowledgeArticleCreate) sqlSave(ctx context.Context) (*KnowledgeArticle, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := kac.createSpec()
-	if err := sqlgraph.CreateNode(ctx, kac.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -280,61 +280,61 @@ func (kac *KnowledgeArticleCreate) sqlSave(ctx context.Context) (*KnowledgeArtic
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	kac.mutation.id = &_node.ID
-	kac.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (kac *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.CreateSpec) {
+func (_c *KnowledgeArticleCreate) createSpec() (*KnowledgeArticle, *sqlgraph.CreateSpec) {
 	var (
-		_node = &KnowledgeArticle{config: kac.config}
+		_node = &KnowledgeArticle{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(knowledgearticle.Table, sqlgraph.NewFieldSpec(knowledgearticle.FieldID, field.TypeInt))
 	)
-	if value, ok := kac.mutation.Title(); ok {
+	if value, ok := _c.mutation.Title(); ok {
 		_spec.SetField(knowledgearticle.FieldTitle, field.TypeString, value)
 		_node.Title = value
 	}
-	if value, ok := kac.mutation.Content(); ok {
+	if value, ok := _c.mutation.Content(); ok {
 		_spec.SetField(knowledgearticle.FieldContent, field.TypeString, value)
 		_node.Content = value
 	}
-	if value, ok := kac.mutation.Category(); ok {
+	if value, ok := _c.mutation.Category(); ok {
 		_spec.SetField(knowledgearticle.FieldCategory, field.TypeString, value)
 		_node.Category = value
 	}
-	if value, ok := kac.mutation.Tags(); ok {
+	if value, ok := _c.mutation.Tags(); ok {
 		_spec.SetField(knowledgearticle.FieldTags, field.TypeString, value)
 		_node.Tags = value
 	}
-	if value, ok := kac.mutation.AuthorID(); ok {
+	if value, ok := _c.mutation.AuthorID(); ok {
 		_spec.SetField(knowledgearticle.FieldAuthorID, field.TypeInt, value)
 		_node.AuthorID = value
 	}
-	if value, ok := kac.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(knowledgearticle.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := kac.mutation.IsPublished(); ok {
+	if value, ok := _c.mutation.IsPublished(); ok {
 		_spec.SetField(knowledgearticle.FieldIsPublished, field.TypeBool, value)
 		_node.IsPublished = value
 	}
-	if value, ok := kac.mutation.ViewCount(); ok {
+	if value, ok := _c.mutation.ViewCount(); ok {
 		_spec.SetField(knowledgearticle.FieldViewCount, field.TypeInt, value)
 		_node.ViewCount = value
 	}
-	if value, ok := kac.mutation.LikeCount(); ok {
+	if value, ok := _c.mutation.LikeCount(); ok {
 		_spec.SetField(knowledgearticle.FieldLikeCount, field.TypeInt, value)
 		_node.LikeCount = value
 	}
-	if value, ok := kac.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := kac.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(knowledgearticle.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := kac.mutation.UserLikesIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.UserLikesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -361,16 +361,16 @@ type KnowledgeArticleCreateBulk struct {
 }
 
 // Save creates the KnowledgeArticle entities in the database.
-func (kacb *KnowledgeArticleCreateBulk) Save(ctx context.Context) ([]*KnowledgeArticle, error) {
-	if kacb.err != nil {
-		return nil, kacb.err
+func (_c *KnowledgeArticleCreateBulk) Save(ctx context.Context) ([]*KnowledgeArticle, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(kacb.builders))
-	nodes := make([]*KnowledgeArticle, len(kacb.builders))
-	mutators := make([]Mutator, len(kacb.builders))
-	for i := range kacb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*KnowledgeArticle, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := kacb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*KnowledgeArticleMutation)
@@ -384,11 +384,11 @@ func (kacb *KnowledgeArticleCreateBulk) Save(ctx context.Context) ([]*KnowledgeA
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, kacb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, kacb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -412,7 +412,7 @@ func (kacb *KnowledgeArticleCreateBulk) Save(ctx context.Context) ([]*KnowledgeA
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, kacb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -420,8 +420,8 @@ func (kacb *KnowledgeArticleCreateBulk) Save(ctx context.Context) ([]*KnowledgeA
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (kacb *KnowledgeArticleCreateBulk) SaveX(ctx context.Context) []*KnowledgeArticle {
-	v, err := kacb.Save(ctx)
+func (_c *KnowledgeArticleCreateBulk) SaveX(ctx context.Context) []*KnowledgeArticle {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -429,14 +429,14 @@ func (kacb *KnowledgeArticleCreateBulk) SaveX(ctx context.Context) []*KnowledgeA
 }
 
 // Exec executes the query.
-func (kacb *KnowledgeArticleCreateBulk) Exec(ctx context.Context) error {
-	_, err := kacb.Save(ctx)
+func (_c *KnowledgeArticleCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (kacb *KnowledgeArticleCreateBulk) ExecX(ctx context.Context) {
-	if err := kacb.Exec(ctx); err != nil {
+func (_c *KnowledgeArticleCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

@@ -21,141 +21,141 @@ type TicketAssignmentRuleCreate struct {
 }
 
 // SetName sets the "name" field.
-func (tarc *TicketAssignmentRuleCreate) SetName(s string) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetName(s)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetName(v string) *TicketAssignmentRuleCreate {
+	_c.mutation.SetName(v)
+	return _c
 }
 
 // SetDescription sets the "description" field.
-func (tarc *TicketAssignmentRuleCreate) SetDescription(s string) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetDescription(s)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetDescription(v string) *TicketAssignmentRuleCreate {
+	_c.mutation.SetDescription(v)
+	return _c
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (tarc *TicketAssignmentRuleCreate) SetNillableDescription(s *string) *TicketAssignmentRuleCreate {
-	if s != nil {
-		tarc.SetDescription(*s)
+func (_c *TicketAssignmentRuleCreate) SetNillableDescription(v *string) *TicketAssignmentRuleCreate {
+	if v != nil {
+		_c.SetDescription(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetPriority sets the "priority" field.
-func (tarc *TicketAssignmentRuleCreate) SetPriority(i int) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetPriority(i)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetPriority(v int) *TicketAssignmentRuleCreate {
+	_c.mutation.SetPriority(v)
+	return _c
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (tarc *TicketAssignmentRuleCreate) SetNillablePriority(i *int) *TicketAssignmentRuleCreate {
-	if i != nil {
-		tarc.SetPriority(*i)
+func (_c *TicketAssignmentRuleCreate) SetNillablePriority(v *int) *TicketAssignmentRuleCreate {
+	if v != nil {
+		_c.SetPriority(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetConditions sets the "conditions" field.
-func (tarc *TicketAssignmentRuleCreate) SetConditions(m []map[string]interface{}) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetConditions(m)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetConditions(v []map[string]interface{}) *TicketAssignmentRuleCreate {
+	_c.mutation.SetConditions(v)
+	return _c
 }
 
 // SetActions sets the "actions" field.
-func (tarc *TicketAssignmentRuleCreate) SetActions(m map[string]interface{}) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetActions(m)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetActions(v map[string]interface{}) *TicketAssignmentRuleCreate {
+	_c.mutation.SetActions(v)
+	return _c
 }
 
 // SetIsActive sets the "is_active" field.
-func (tarc *TicketAssignmentRuleCreate) SetIsActive(b bool) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetIsActive(b)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetIsActive(v bool) *TicketAssignmentRuleCreate {
+	_c.mutation.SetIsActive(v)
+	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (tarc *TicketAssignmentRuleCreate) SetNillableIsActive(b *bool) *TicketAssignmentRuleCreate {
-	if b != nil {
-		tarc.SetIsActive(*b)
+func (_c *TicketAssignmentRuleCreate) SetNillableIsActive(v *bool) *TicketAssignmentRuleCreate {
+	if v != nil {
+		_c.SetIsActive(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetExecutionCount sets the "execution_count" field.
-func (tarc *TicketAssignmentRuleCreate) SetExecutionCount(i int) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetExecutionCount(i)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetExecutionCount(v int) *TicketAssignmentRuleCreate {
+	_c.mutation.SetExecutionCount(v)
+	return _c
 }
 
 // SetNillableExecutionCount sets the "execution_count" field if the given value is not nil.
-func (tarc *TicketAssignmentRuleCreate) SetNillableExecutionCount(i *int) *TicketAssignmentRuleCreate {
-	if i != nil {
-		tarc.SetExecutionCount(*i)
+func (_c *TicketAssignmentRuleCreate) SetNillableExecutionCount(v *int) *TicketAssignmentRuleCreate {
+	if v != nil {
+		_c.SetExecutionCount(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetLastExecutedAt sets the "last_executed_at" field.
-func (tarc *TicketAssignmentRuleCreate) SetLastExecutedAt(t time.Time) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetLastExecutedAt(t)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetLastExecutedAt(v time.Time) *TicketAssignmentRuleCreate {
+	_c.mutation.SetLastExecutedAt(v)
+	return _c
 }
 
 // SetNillableLastExecutedAt sets the "last_executed_at" field if the given value is not nil.
-func (tarc *TicketAssignmentRuleCreate) SetNillableLastExecutedAt(t *time.Time) *TicketAssignmentRuleCreate {
-	if t != nil {
-		tarc.SetLastExecutedAt(*t)
+func (_c *TicketAssignmentRuleCreate) SetNillableLastExecutedAt(v *time.Time) *TicketAssignmentRuleCreate {
+	if v != nil {
+		_c.SetLastExecutedAt(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (tarc *TicketAssignmentRuleCreate) SetTenantID(i int) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetTenantID(i)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetTenantID(v int) *TicketAssignmentRuleCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (tarc *TicketAssignmentRuleCreate) SetCreatedAt(t time.Time) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetCreatedAt(t)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetCreatedAt(v time.Time) *TicketAssignmentRuleCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (tarc *TicketAssignmentRuleCreate) SetNillableCreatedAt(t *time.Time) *TicketAssignmentRuleCreate {
-	if t != nil {
-		tarc.SetCreatedAt(*t)
+func (_c *TicketAssignmentRuleCreate) SetNillableCreatedAt(v *time.Time) *TicketAssignmentRuleCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return tarc
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (tarc *TicketAssignmentRuleCreate) SetUpdatedAt(t time.Time) *TicketAssignmentRuleCreate {
-	tarc.mutation.SetUpdatedAt(t)
-	return tarc
+func (_c *TicketAssignmentRuleCreate) SetUpdatedAt(v time.Time) *TicketAssignmentRuleCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (tarc *TicketAssignmentRuleCreate) SetNillableUpdatedAt(t *time.Time) *TicketAssignmentRuleCreate {
-	if t != nil {
-		tarc.SetUpdatedAt(*t)
+func (_c *TicketAssignmentRuleCreate) SetNillableUpdatedAt(v *time.Time) *TicketAssignmentRuleCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return tarc
+	return _c
 }
 
 // Mutation returns the TicketAssignmentRuleMutation object of the builder.
-func (tarc *TicketAssignmentRuleCreate) Mutation() *TicketAssignmentRuleMutation {
-	return tarc.mutation
+func (_c *TicketAssignmentRuleCreate) Mutation() *TicketAssignmentRuleMutation {
+	return _c.mutation
 }
 
 // Save creates the TicketAssignmentRule in the database.
-func (tarc *TicketAssignmentRuleCreate) Save(ctx context.Context) (*TicketAssignmentRule, error) {
-	tarc.defaults()
-	return withHooks(ctx, tarc.sqlSave, tarc.mutation, tarc.hooks)
+func (_c *TicketAssignmentRuleCreate) Save(ctx context.Context) (*TicketAssignmentRule, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (tarc *TicketAssignmentRuleCreate) SaveX(ctx context.Context) *TicketAssignmentRule {
-	v, err := tarc.Save(ctx)
+func (_c *TicketAssignmentRuleCreate) SaveX(ctx context.Context) *TicketAssignmentRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -163,84 +163,84 @@ func (tarc *TicketAssignmentRuleCreate) SaveX(ctx context.Context) *TicketAssign
 }
 
 // Exec executes the query.
-func (tarc *TicketAssignmentRuleCreate) Exec(ctx context.Context) error {
-	_, err := tarc.Save(ctx)
+func (_c *TicketAssignmentRuleCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tarc *TicketAssignmentRuleCreate) ExecX(ctx context.Context) {
-	if err := tarc.Exec(ctx); err != nil {
+func (_c *TicketAssignmentRuleCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (tarc *TicketAssignmentRuleCreate) defaults() {
-	if _, ok := tarc.mutation.Priority(); !ok {
+func (_c *TicketAssignmentRuleCreate) defaults() {
+	if _, ok := _c.mutation.Priority(); !ok {
 		v := ticketassignmentrule.DefaultPriority
-		tarc.mutation.SetPriority(v)
+		_c.mutation.SetPriority(v)
 	}
-	if _, ok := tarc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		v := ticketassignmentrule.DefaultIsActive
-		tarc.mutation.SetIsActive(v)
+		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := tarc.mutation.ExecutionCount(); !ok {
+	if _, ok := _c.mutation.ExecutionCount(); !ok {
 		v := ticketassignmentrule.DefaultExecutionCount
-		tarc.mutation.SetExecutionCount(v)
+		_c.mutation.SetExecutionCount(v)
 	}
-	if _, ok := tarc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := ticketassignmentrule.DefaultCreatedAt()
-		tarc.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := tarc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := ticketassignmentrule.DefaultUpdatedAt()
-		tarc.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (tarc *TicketAssignmentRuleCreate) check() error {
-	if _, ok := tarc.mutation.Name(); !ok {
+func (_c *TicketAssignmentRuleCreate) check() error {
+	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "TicketAssignmentRule.name"`)}
 	}
-	if v, ok := tarc.mutation.Name(); ok {
+	if v, ok := _c.mutation.Name(); ok {
 		if err := ticketassignmentrule.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "TicketAssignmentRule.name": %w`, err)}
 		}
 	}
-	if _, ok := tarc.mutation.Priority(); !ok {
+	if _, ok := _c.mutation.Priority(); !ok {
 		return &ValidationError{Name: "priority", err: errors.New(`ent: missing required field "TicketAssignmentRule.priority"`)}
 	}
-	if _, ok := tarc.mutation.IsActive(); !ok {
+	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "TicketAssignmentRule.is_active"`)}
 	}
-	if _, ok := tarc.mutation.ExecutionCount(); !ok {
+	if _, ok := _c.mutation.ExecutionCount(); !ok {
 		return &ValidationError{Name: "execution_count", err: errors.New(`ent: missing required field "TicketAssignmentRule.execution_count"`)}
 	}
-	if _, ok := tarc.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "TicketAssignmentRule.tenant_id"`)}
 	}
-	if v, ok := tarc.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := ticketassignmentrule.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "TicketAssignmentRule.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := tarc.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "TicketAssignmentRule.created_at"`)}
 	}
-	if _, ok := tarc.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "TicketAssignmentRule.updated_at"`)}
 	}
 	return nil
 }
 
-func (tarc *TicketAssignmentRuleCreate) sqlSave(ctx context.Context) (*TicketAssignmentRule, error) {
-	if err := tarc.check(); err != nil {
+func (_c *TicketAssignmentRuleCreate) sqlSave(ctx context.Context) (*TicketAssignmentRule, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := tarc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, tarc.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -248,57 +248,57 @@ func (tarc *TicketAssignmentRuleCreate) sqlSave(ctx context.Context) (*TicketAss
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	tarc.mutation.id = &_node.ID
-	tarc.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (tarc *TicketAssignmentRuleCreate) createSpec() (*TicketAssignmentRule, *sqlgraph.CreateSpec) {
+func (_c *TicketAssignmentRuleCreate) createSpec() (*TicketAssignmentRule, *sqlgraph.CreateSpec) {
 	var (
-		_node = &TicketAssignmentRule{config: tarc.config}
+		_node = &TicketAssignmentRule{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(ticketassignmentrule.Table, sqlgraph.NewFieldSpec(ticketassignmentrule.FieldID, field.TypeInt))
 	)
-	if value, ok := tarc.mutation.Name(); ok {
+	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(ticketassignmentrule.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
-	if value, ok := tarc.mutation.Description(); ok {
+	if value, ok := _c.mutation.Description(); ok {
 		_spec.SetField(ticketassignmentrule.FieldDescription, field.TypeString, value)
 		_node.Description = value
 	}
-	if value, ok := tarc.mutation.Priority(); ok {
+	if value, ok := _c.mutation.Priority(); ok {
 		_spec.SetField(ticketassignmentrule.FieldPriority, field.TypeInt, value)
 		_node.Priority = value
 	}
-	if value, ok := tarc.mutation.Conditions(); ok {
+	if value, ok := _c.mutation.Conditions(); ok {
 		_spec.SetField(ticketassignmentrule.FieldConditions, field.TypeJSON, value)
 		_node.Conditions = value
 	}
-	if value, ok := tarc.mutation.Actions(); ok {
+	if value, ok := _c.mutation.Actions(); ok {
 		_spec.SetField(ticketassignmentrule.FieldActions, field.TypeJSON, value)
 		_node.Actions = value
 	}
-	if value, ok := tarc.mutation.IsActive(); ok {
+	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(ticketassignmentrule.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
-	if value, ok := tarc.mutation.ExecutionCount(); ok {
+	if value, ok := _c.mutation.ExecutionCount(); ok {
 		_spec.SetField(ticketassignmentrule.FieldExecutionCount, field.TypeInt, value)
 		_node.ExecutionCount = value
 	}
-	if value, ok := tarc.mutation.LastExecutedAt(); ok {
+	if value, ok := _c.mutation.LastExecutedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldLastExecutedAt, field.TypeTime, value)
 		_node.LastExecutedAt = value
 	}
-	if value, ok := tarc.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(ticketassignmentrule.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := tarc.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := tarc.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(ticketassignmentrule.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
@@ -313,16 +313,16 @@ type TicketAssignmentRuleCreateBulk struct {
 }
 
 // Save creates the TicketAssignmentRule entities in the database.
-func (tarcb *TicketAssignmentRuleCreateBulk) Save(ctx context.Context) ([]*TicketAssignmentRule, error) {
-	if tarcb.err != nil {
-		return nil, tarcb.err
+func (_c *TicketAssignmentRuleCreateBulk) Save(ctx context.Context) ([]*TicketAssignmentRule, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(tarcb.builders))
-	nodes := make([]*TicketAssignmentRule, len(tarcb.builders))
-	mutators := make([]Mutator, len(tarcb.builders))
-	for i := range tarcb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*TicketAssignmentRule, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := tarcb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TicketAssignmentRuleMutation)
@@ -336,11 +336,11 @@ func (tarcb *TicketAssignmentRuleCreateBulk) Save(ctx context.Context) ([]*Ticke
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, tarcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, tarcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -364,7 +364,7 @@ func (tarcb *TicketAssignmentRuleCreateBulk) Save(ctx context.Context) ([]*Ticke
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, tarcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -372,8 +372,8 @@ func (tarcb *TicketAssignmentRuleCreateBulk) Save(ctx context.Context) ([]*Ticke
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (tarcb *TicketAssignmentRuleCreateBulk) SaveX(ctx context.Context) []*TicketAssignmentRule {
-	v, err := tarcb.Save(ctx)
+func (_c *TicketAssignmentRuleCreateBulk) SaveX(ctx context.Context) []*TicketAssignmentRule {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -381,14 +381,14 @@ func (tarcb *TicketAssignmentRuleCreateBulk) SaveX(ctx context.Context) []*Ticke
 }
 
 // Exec executes the query.
-func (tarcb *TicketAssignmentRuleCreateBulk) Exec(ctx context.Context) error {
-	_, err := tarcb.Save(ctx)
+func (_c *TicketAssignmentRuleCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (tarcb *TicketAssignmentRuleCreateBulk) ExecX(ctx context.Context) {
-	if err := tarcb.Exec(ctx); err != nil {
+func (_c *TicketAssignmentRuleCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

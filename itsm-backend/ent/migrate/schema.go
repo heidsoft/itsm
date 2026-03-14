@@ -277,6 +277,82 @@ var (
 		Columns:    AuditLogsColumns,
 		PrimaryKey: []*schema.Column{AuditLogsColumns[0]},
 	}
+	// BpmnPermissionsColumns holds the columns for the "bpmn_permissions" table.
+	BpmnPermissionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "resource_type", Type: field.TypeString},
+		{Name: "resource_id", Type: field.TypeInt},
+		{Name: "resource_key", Type: field.TypeString, Nullable: true},
+		{Name: "permission_type", Type: field.TypeString},
+		{Name: "principal_type", Type: field.TypeString},
+		{Name: "principal_id", Type: field.TypeInt},
+		{Name: "is_granted", Type: field.TypeBool, Default: true},
+		{Name: "conditions", Type: field.TypeString, Nullable: true},
+		{Name: "field_permissions", Type: field.TypeString, Nullable: true},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+	}
+	// BpmnPermissionsTable holds the schema information for the "bpmn_permissions" table.
+	BpmnPermissionsTable = &schema.Table{
+		Name:       "bpmn_permissions",
+		Columns:    BpmnPermissionsColumns,
+		PrimaryKey: []*schema.Column{BpmnPermissionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "bpmnpermission_resource_type",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[1]},
+			},
+			{
+				Name:    "bpmnpermission_resource_id",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[2]},
+			},
+			{
+				Name:    "bpmnpermission_resource_key",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[3]},
+			},
+			{
+				Name:    "bpmnpermission_permission_type",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[4]},
+			},
+			{
+				Name:    "bpmnpermission_principal_type",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[5]},
+			},
+			{
+				Name:    "bpmnpermission_principal_id",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[6]},
+			},
+			{
+				Name:    "bpmnpermission_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[11]},
+			},
+			{
+				Name:    "bpmnpermission_resource_type_principal_type_principal_id",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[1], BpmnPermissionsColumns[5], BpmnPermissionsColumns[6]},
+			},
+			{
+				Name:    "bpmnpermission_resource_key_principal_type_principal_id",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[3], BpmnPermissionsColumns[5], BpmnPermissionsColumns[6]},
+			},
+			{
+				Name:    "bpmnpermission_tenant_id_principal_id",
+				Unique:  false,
+				Columns: []*schema.Column{BpmnPermissionsColumns[11], BpmnPermissionsColumns[6]},
+			},
+		},
+	}
 	// CiAttributeDefinitionsColumns holds the columns for the "ci_attribute_definitions" table.
 	CiAttributeDefinitionsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1170,6 +1246,29 @@ var (
 		Columns:    KnownErrorsColumns,
 		PrimaryKey: []*schema.Column{KnownErrorsColumns[0]},
 	}
+	// MspAllocationsColumns holds the columns for the "msp_allocations" table.
+	MspAllocationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "role", Type: field.TypeString, Default: "primary"},
+		{Name: "assigned_at", Type: field.TypeTime},
+		{Name: "deassigned_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "msp_user_id", Type: field.TypeInt},
+	}
+	// MspAllocationsTable holds the schema information for the "msp_allocations" table.
+	MspAllocationsTable = &schema.Table{
+		Name:       "msp_allocations",
+		Columns:    MspAllocationsColumns,
+		PrimaryKey: []*schema.Column{MspAllocationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "msp_allocations_users_msp_allocations",
+				Columns:    []*schema.Column{MspAllocationsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// MessagesColumns holds the columns for the "messages" table.
 	MessagesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -1348,6 +1447,99 @@ var (
 				Columns:    []*schema.Column{ProblemsColumns[16]},
 				RefColumns: []*schema.Column{KnownErrorsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// ProcessAuditLogsColumns holds the columns for the "process_audit_logs" table.
+	ProcessAuditLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "process_instance_id", Type: field.TypeInt},
+		{Name: "process_instance_key", Type: field.TypeString},
+		{Name: "process_definition_key", Type: field.TypeString},
+		{Name: "process_definition_id", Type: field.TypeInt},
+		{Name: "activity_id", Type: field.TypeString},
+		{Name: "activity_name", Type: field.TypeString, Nullable: true},
+		{Name: "activity_type", Type: field.TypeString},
+		{Name: "action", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "user_name", Type: field.TypeString, Nullable: true},
+		{Name: "assignee_id", Type: field.TypeInt, Nullable: true},
+		{Name: "assignee_name", Type: field.TypeString, Nullable: true},
+		{Name: "variables_before", Type: field.TypeJSON, Nullable: true},
+		{Name: "variables_after", Type: field.TypeJSON, Nullable: true},
+		{Name: "comment", Type: field.TypeString, Nullable: true},
+		{Name: "ip_address", Type: field.TypeString, Nullable: true},
+		{Name: "user_agent", Type: field.TypeString, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "timestamp", Type: field.TypeTime},
+		{Name: "duration_ms", Type: field.TypeInt, Nullable: true},
+		{Name: "metadata", Type: field.TypeJSON, Nullable: true},
+	}
+	// ProcessAuditLogsTable holds the schema information for the "process_audit_logs" table.
+	ProcessAuditLogsTable = &schema.Table{
+		Name:       "process_audit_logs",
+		Columns:    ProcessAuditLogsColumns,
+		PrimaryKey: []*schema.Column{ProcessAuditLogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "processauditlog_process_instance_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[1]},
+			},
+			{
+				Name:    "processauditlog_process_instance_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[2]},
+			},
+			{
+				Name:    "processauditlog_process_definition_key",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[3]},
+			},
+			{
+				Name:    "processauditlog_activity_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[5]},
+			},
+			{
+				Name:    "processauditlog_activity_type",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[7]},
+			},
+			{
+				Name:    "processauditlog_action",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[8]},
+			},
+			{
+				Name:    "processauditlog_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[9]},
+			},
+			{
+				Name:    "processauditlog_assignee_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[11]},
+			},
+			{
+				Name:    "processauditlog_tenant_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[18]},
+			},
+			{
+				Name:    "processauditlog_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[19]},
+			},
+			{
+				Name:    "processauditlog_process_definition_key_action",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[3], ProcessAuditLogsColumns[8]},
+			},
+			{
+				Name:    "processauditlog_tenant_id_timestamp",
+				Unique:  false,
+				Columns: []*schema.Column{ProcessAuditLogsColumns[18], ProcessAuditLogsColumns[19]},
 			},
 		},
 	}
@@ -2580,8 +2772,10 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "code", Type: field.TypeString, Unique: true},
 		{Name: "domain", Type: field.TypeString, Nullable: true},
-		{Name: "type", Type: field.TypeString, Default: "standard"},
+		{Name: "type", Type: field.TypeEnum, Enums: []string{"standard", "msp", "customer"}, Default: "standard"},
 		{Name: "status", Type: field.TypeString, Default: "active"},
+		{Name: "parent_tenant_id", Type: field.TypeInt, Nullable: true},
+		{Name: "msp_provider_id", Type: field.TypeInt, Nullable: true},
 		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -2615,6 +2809,10 @@ var (
 		{Name: "rated_by", Type: field.TypeInt, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "is_managed_by_msp", Type: field.TypeBool, Default: false},
+		{Name: "msp_provider_id", Type: field.TypeInt, Nullable: true},
+		{Name: "managed_by_user_id", Type: field.TypeInt, Nullable: true},
+		{Name: "msp_ticket_id", Type: field.TypeString, Nullable: true},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "sla_definition_id", Type: field.TypeInt, Nullable: true},
 		{Name: "sla_policy_tickets", Type: field.TypeInt, Nullable: true},
@@ -2631,43 +2829,43 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "tickets_departments_tickets",
-				Columns:    []*schema.Column{TicketsColumns[21]},
+				Columns:    []*schema.Column{TicketsColumns[25]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_sla_definitions_tickets",
-				Columns:    []*schema.Column{TicketsColumns[22]},
+				Columns:    []*schema.Column{TicketsColumns[26]},
 				RefColumns: []*schema.Column{SLADefinitionsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_sla_policies_tickets",
-				Columns:    []*schema.Column{TicketsColumns[23]},
+				Columns:    []*schema.Column{TicketsColumns[27]},
 				RefColumns: []*schema.Column{SLAPoliciesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_tickets_related_tickets",
-				Columns:    []*schema.Column{TicketsColumns[24]},
+				Columns:    []*schema.Column{TicketsColumns[28]},
 				RefColumns: []*schema.Column{TicketsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_categories_tickets",
-				Columns:    []*schema.Column{TicketsColumns[25]},
+				Columns:    []*schema.Column{TicketsColumns[29]},
 				RefColumns: []*schema.Column{TicketCategoriesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_tags_tickets",
-				Columns:    []*schema.Column{TicketsColumns[26]},
+				Columns:    []*schema.Column{TicketsColumns[30]},
 				RefColumns: []*schema.Column{TicketTagsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "tickets_ticket_templates_tickets",
-				Columns:    []*schema.Column{TicketsColumns[27]},
+				Columns:    []*schema.Column{TicketsColumns[31]},
 				RefColumns: []*schema.Column{TicketTemplatesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -3047,12 +3245,14 @@ var (
 		{Name: "phone", Type: field.TypeString, Nullable: true},
 		{Name: "password_hash", Type: field.TypeString},
 		{Name: "active", Type: field.TypeBool, Default: true},
-		{Name: "tenant_id", Type: field.TypeInt},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "msp_role", Type: field.TypeEnum, Nullable: true, Enums: []string{"provider_admin", "provider_agent", "customer_user"}},
+		{Name: "assigned_by_msp_id", Type: field.TypeInt, Nullable: true},
 		{Name: "department_id", Type: field.TypeInt, Nullable: true},
 		{Name: "group_members", Type: field.TypeInt, Nullable: true},
 		{Name: "team_users", Type: field.TypeInt, Nullable: true},
+		{Name: "tenant_id", Type: field.TypeInt},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -3062,21 +3262,27 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "users_departments_users",
-				Columns:    []*schema.Column{UsersColumns[12]},
+				Columns:    []*schema.Column{UsersColumns[13]},
 				RefColumns: []*schema.Column{DepartmentsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_groups_members",
-				Columns:    []*schema.Column{UsersColumns[13]},
+				Columns:    []*schema.Column{UsersColumns[14]},
 				RefColumns: []*schema.Column{GroupsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 			{
 				Symbol:     "users_teams_users",
-				Columns:    []*schema.Column{UsersColumns[14]},
+				Columns:    []*schema.Column{UsersColumns[15]},
 				RefColumns: []*schema.Column{TeamsColumns[0]},
 				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "users_tenants_users",
+				Columns:    []*schema.Column{UsersColumns[16]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.NoAction,
 			},
 		},
 	}
@@ -3410,6 +3616,31 @@ var (
 			},
 		},
 	}
+	// TenantMspCustomerAllocationsColumns holds the columns for the "tenant_msp_customer_allocations" table.
+	TenantMspCustomerAllocationsColumns = []*schema.Column{
+		{Name: "tenant_id", Type: field.TypeInt},
+		{Name: "msp_allocation_id", Type: field.TypeInt},
+	}
+	// TenantMspCustomerAllocationsTable holds the schema information for the "tenant_msp_customer_allocations" table.
+	TenantMspCustomerAllocationsTable = &schema.Table{
+		Name:       "tenant_msp_customer_allocations",
+		Columns:    TenantMspCustomerAllocationsColumns,
+		PrimaryKey: []*schema.Column{TenantMspCustomerAllocationsColumns[0], TenantMspCustomerAllocationsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "tenant_msp_customer_allocations_tenant_id",
+				Columns:    []*schema.Column{TenantMspCustomerAllocationsColumns[0]},
+				RefColumns: []*schema.Column{TenantsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "tenant_msp_customer_allocations_msp_allocation_id",
+				Columns:    []*schema.Column{TenantMspCustomerAllocationsColumns[1]},
+				RefColumns: []*schema.Column{MspAllocationsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// UserRolesColumns holds the columns for the "user_roles" table.
 	UserRolesColumns = []*schema.Column{
 		{Name: "user_id", Type: field.TypeInt},
@@ -3444,6 +3675,7 @@ var (
 		AssetsTable,
 		AssetLicensesTable,
 		AuditLogsTable,
+		BpmnPermissionsTable,
 		CiAttributeDefinitionsTable,
 		CiRelationshipsTable,
 		CiTypesTable,
@@ -3469,6 +3701,7 @@ var (
 		KnowledgeArticlesTable,
 		KnowledgeArticleLikesTable,
 		KnownErrorsTable,
+		MspAllocationsTable,
 		MessagesTable,
 		MicroservicesTable,
 		NotificationsTable,
@@ -3476,6 +3709,7 @@ var (
 		PasswordResetTokensTable,
 		PermissionsTable,
 		ProblemsTable,
+		ProcessAuditLogsTable,
 		ProcessBindingsTable,
 		ProcessDefinitionsTable,
 		ProcessDeploymentsTable,
@@ -3528,6 +3762,7 @@ var (
 		MicroserviceTagsTable,
 		ProjectTagsTable,
 		TeamTagsTable,
+		TenantMspCustomerAllocationsTable,
 		UserRolesTable,
 	}
 )
@@ -3553,6 +3788,7 @@ func init() {
 	IncidentRuleExecutionsTable.ForeignKeys[0].RefTable = IncidentRulesTable
 	KnowledgeArticlesTable.ForeignKeys[0].RefTable = KnownErrorsTable
 	KnowledgeArticleLikesTable.ForeignKeys[0].RefTable = KnowledgeArticlesTable
+	MspAllocationsTable.ForeignKeys[0].RefTable = UsersTable
 	MessagesTable.ForeignKeys[0].RefTable = ConversationsTable
 	MicroservicesTable.ForeignKeys[0].RefTable = ApplicationsTable
 	NotificationPreferencesTable.ForeignKeys[0].RefTable = UsersTable
@@ -3599,6 +3835,7 @@ func init() {
 	UsersTable.ForeignKeys[0].RefTable = DepartmentsTable
 	UsersTable.ForeignKeys[1].RefTable = GroupsTable
 	UsersTable.ForeignKeys[2].RefTable = TeamsTable
+	UsersTable.ForeignKeys[3].RefTable = TenantsTable
 	WorkflowsTable.ForeignKeys[0].RefTable = DepartmentsTable
 	WorkflowInstancesTable.ForeignKeys[0].RefTable = TicketsTable
 	WorkflowInstancesTable.ForeignKeys[1].RefTable = WorkflowsTable
@@ -3620,6 +3857,8 @@ func init() {
 	ProjectTagsTable.ForeignKeys[1].RefTable = TagsTable
 	TeamTagsTable.ForeignKeys[0].RefTable = TeamsTable
 	TeamTagsTable.ForeignKeys[1].RefTable = TagsTable
+	TenantMspCustomerAllocationsTable.ForeignKeys[0].RefTable = TenantsTable
+	TenantMspCustomerAllocationsTable.ForeignKeys[1].RefTable = MspAllocationsTable
 	UserRolesTable.ForeignKeys[0].RefTable = UsersTable
 	UserRolesTable.ForeignKeys[1].RefTable = RolesTable
 }

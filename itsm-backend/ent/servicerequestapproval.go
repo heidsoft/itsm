@@ -79,7 +79,7 @@ func (*ServiceRequestApproval) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the ServiceRequestApproval fields.
-func (sra *ServiceRequestApproval) assignValues(columns []string, values []any) error {
+func (_m *ServiceRequestApproval) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -90,36 +90,36 @@ func (sra *ServiceRequestApproval) assignValues(columns []string, values []any) 
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			sra.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case servicerequestapproval.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				sra.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case servicerequestapproval.FieldServiceRequestID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field service_request_id", values[i])
 			} else if value.Valid {
-				sra.ServiceRequestID = int(value.Int64)
+				_m.ServiceRequestID = int(value.Int64)
 			}
 		case servicerequestapproval.FieldLevel:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field level", values[i])
 			} else if value.Valid {
-				sra.Level = int(value.Int64)
+				_m.Level = int(value.Int64)
 			}
 		case servicerequestapproval.FieldStep:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field step", values[i])
 			} else if value.Valid {
-				sra.Step = value.String
+				_m.Step = value.String
 			}
 		case servicerequestapproval.FieldNode:
 			if value, ok := values[i].(*[]byte); !ok {
 				return fmt.Errorf("unexpected type %T for field node", values[i])
 			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &sra.Node); err != nil {
+				if err := json.Unmarshal(*value, &_m.Node); err != nil {
 					return fmt.Errorf("unmarshal field node: %w", err)
 				}
 			}
@@ -127,78 +127,78 @@ func (sra *ServiceRequestApproval) assignValues(columns []string, values []any) 
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				sra.Status = value.String
+				_m.Status = value.String
 			}
 		case servicerequestapproval.FieldApproverID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field approver_id", values[i])
 			} else if value.Valid {
-				sra.ApproverID = new(int)
-				*sra.ApproverID = int(value.Int64)
+				_m.ApproverID = new(int)
+				*_m.ApproverID = int(value.Int64)
 			}
 		case servicerequestapproval.FieldApproverName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field approver_name", values[i])
 			} else if value.Valid {
-				sra.ApproverName = value.String
+				_m.ApproverName = value.String
 			}
 		case servicerequestapproval.FieldAction:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field action", values[i])
 			} else if value.Valid {
-				sra.Action = value.String
+				_m.Action = value.String
 			}
 		case servicerequestapproval.FieldComment:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field comment", values[i])
 			} else if value.Valid {
-				sra.Comment = value.String
+				_m.Comment = value.String
 			}
 		case servicerequestapproval.FieldTimeoutHours:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field timeout_hours", values[i])
 			} else if value.Valid {
-				sra.TimeoutHours = int(value.Int64)
+				_m.TimeoutHours = int(value.Int64)
 			}
 		case servicerequestapproval.FieldDueAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field due_at", values[i])
 			} else if value.Valid {
-				sra.DueAt = value.Time
+				_m.DueAt = value.Time
 			}
 		case servicerequestapproval.FieldIsEscalated:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_escalated", values[i])
 			} else if value.Valid {
-				sra.IsEscalated = value.Bool
+				_m.IsEscalated = value.Bool
 			}
 		case servicerequestapproval.FieldDelegatedToID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field delegated_to_id", values[i])
 			} else if value.Valid {
-				sra.DelegatedToID = new(int)
-				*sra.DelegatedToID = int(value.Int64)
+				_m.DelegatedToID = new(int)
+				*_m.DelegatedToID = int(value.Int64)
 			}
 		case servicerequestapproval.FieldEscalationReason:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field escalation_reason", values[i])
 			} else if value.Valid {
-				sra.EscalationReason = value.String
+				_m.EscalationReason = value.String
 			}
 		case servicerequestapproval.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				sra.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case servicerequestapproval.FieldProcessedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field processed_at", values[i])
 			} else if value.Valid {
-				sra.ProcessedAt = value.Time
+				_m.ProcessedAt = value.Time
 			}
 		default:
-			sra.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -206,87 +206,87 @@ func (sra *ServiceRequestApproval) assignValues(columns []string, values []any) 
 
 // Value returns the ent.Value that was dynamically selected and assigned to the ServiceRequestApproval.
 // This includes values selected through modifiers, order, etc.
-func (sra *ServiceRequestApproval) Value(name string) (ent.Value, error) {
-	return sra.selectValues.Get(name)
+func (_m *ServiceRequestApproval) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this ServiceRequestApproval.
 // Note that you need to call ServiceRequestApproval.Unwrap() before calling this method if this ServiceRequestApproval
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (sra *ServiceRequestApproval) Update() *ServiceRequestApprovalUpdateOne {
-	return NewServiceRequestApprovalClient(sra.config).UpdateOne(sra)
+func (_m *ServiceRequestApproval) Update() *ServiceRequestApprovalUpdateOne {
+	return NewServiceRequestApprovalClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the ServiceRequestApproval entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (sra *ServiceRequestApproval) Unwrap() *ServiceRequestApproval {
-	_tx, ok := sra.config.driver.(*txDriver)
+func (_m *ServiceRequestApproval) Unwrap() *ServiceRequestApproval {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: ServiceRequestApproval is not a transactional entity")
 	}
-	sra.config.driver = _tx.drv
-	return sra
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (sra *ServiceRequestApproval) String() string {
+func (_m *ServiceRequestApproval) String() string {
 	var builder strings.Builder
 	builder.WriteString("ServiceRequestApproval(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", sra.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", sra.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("service_request_id=")
-	builder.WriteString(fmt.Sprintf("%v", sra.ServiceRequestID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ServiceRequestID))
 	builder.WriteString(", ")
 	builder.WriteString("level=")
-	builder.WriteString(fmt.Sprintf("%v", sra.Level))
+	builder.WriteString(fmt.Sprintf("%v", _m.Level))
 	builder.WriteString(", ")
 	builder.WriteString("step=")
-	builder.WriteString(sra.Step)
+	builder.WriteString(_m.Step)
 	builder.WriteString(", ")
 	builder.WriteString("node=")
-	builder.WriteString(fmt.Sprintf("%v", sra.Node))
+	builder.WriteString(fmt.Sprintf("%v", _m.Node))
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(sra.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
-	if v := sra.ApproverID; v != nil {
+	if v := _m.ApproverID; v != nil {
 		builder.WriteString("approver_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("approver_name=")
-	builder.WriteString(sra.ApproverName)
+	builder.WriteString(_m.ApproverName)
 	builder.WriteString(", ")
 	builder.WriteString("action=")
-	builder.WriteString(sra.Action)
+	builder.WriteString(_m.Action)
 	builder.WriteString(", ")
 	builder.WriteString("comment=")
-	builder.WriteString(sra.Comment)
+	builder.WriteString(_m.Comment)
 	builder.WriteString(", ")
 	builder.WriteString("timeout_hours=")
-	builder.WriteString(fmt.Sprintf("%v", sra.TimeoutHours))
+	builder.WriteString(fmt.Sprintf("%v", _m.TimeoutHours))
 	builder.WriteString(", ")
 	builder.WriteString("due_at=")
-	builder.WriteString(sra.DueAt.Format(time.ANSIC))
+	builder.WriteString(_m.DueAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("is_escalated=")
-	builder.WriteString(fmt.Sprintf("%v", sra.IsEscalated))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsEscalated))
 	builder.WriteString(", ")
-	if v := sra.DelegatedToID; v != nil {
+	if v := _m.DelegatedToID; v != nil {
 		builder.WriteString("delegated_to_id=")
 		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteString(", ")
 	builder.WriteString("escalation_reason=")
-	builder.WriteString(sra.EscalationReason)
+	builder.WriteString(_m.EscalationReason)
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(sra.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("processed_at=")
-	builder.WriteString(sra.ProcessedAt.Format(time.ANSIC))
+	builder.WriteString(_m.ProcessedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

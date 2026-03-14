@@ -66,7 +66,7 @@ func (*CIAttributeDefinition) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the CIAttributeDefinition fields.
-func (cad *CIAttributeDefinition) assignValues(columns []string, values []any) error {
+func (_m *CIAttributeDefinition) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -77,81 +77,81 @@ func (cad *CIAttributeDefinition) assignValues(columns []string, values []any) e
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			cad.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case ciattributedefinition.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				cad.Name = value.String
+				_m.Name = value.String
 			}
 		case ciattributedefinition.FieldDisplayName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field display_name", values[i])
 			} else if value.Valid {
-				cad.DisplayName = value.String
+				_m.DisplayName = value.String
 			}
 		case ciattributedefinition.FieldType:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field type", values[i])
 			} else if value.Valid {
-				cad.Type = value.String
+				_m.Type = value.String
 			}
 		case ciattributedefinition.FieldRequired:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field required", values[i])
 			} else if value.Valid {
-				cad.Required = value.Bool
+				_m.Required = value.Bool
 			}
 		case ciattributedefinition.FieldUnique:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field unique", values[i])
 			} else if value.Valid {
-				cad.Unique = value.Bool
+				_m.Unique = value.Bool
 			}
 		case ciattributedefinition.FieldDefaultValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field default_value", values[i])
 			} else if value.Valid {
-				cad.DefaultValue = value.String
+				_m.DefaultValue = value.String
 			}
 		case ciattributedefinition.FieldValidationRules:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field validation_rules", values[i])
 			} else if value.Valid {
-				cad.ValidationRules = value.String
+				_m.ValidationRules = value.String
 			}
 		case ciattributedefinition.FieldCiTypeID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_type_id", values[i])
 			} else if value.Valid {
-				cad.CiTypeID = int(value.Int64)
+				_m.CiTypeID = int(value.Int64)
 			}
 		case ciattributedefinition.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				cad.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case ciattributedefinition.FieldIsActive:
 			if value, ok := values[i].(*sql.NullBool); !ok {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
-				cad.IsActive = value.Bool
+				_m.IsActive = value.Bool
 			}
 		case ciattributedefinition.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				cad.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case ciattributedefinition.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				cad.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			cad.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -159,68 +159,68 @@ func (cad *CIAttributeDefinition) assignValues(columns []string, values []any) e
 
 // Value returns the ent.Value that was dynamically selected and assigned to the CIAttributeDefinition.
 // This includes values selected through modifiers, order, etc.
-func (cad *CIAttributeDefinition) Value(name string) (ent.Value, error) {
-	return cad.selectValues.Get(name)
+func (_m *CIAttributeDefinition) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // Update returns a builder for updating this CIAttributeDefinition.
 // Note that you need to call CIAttributeDefinition.Unwrap() before calling this method if this CIAttributeDefinition
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (cad *CIAttributeDefinition) Update() *CIAttributeDefinitionUpdateOne {
-	return NewCIAttributeDefinitionClient(cad.config).UpdateOne(cad)
+func (_m *CIAttributeDefinition) Update() *CIAttributeDefinitionUpdateOne {
+	return NewCIAttributeDefinitionClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the CIAttributeDefinition entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (cad *CIAttributeDefinition) Unwrap() *CIAttributeDefinition {
-	_tx, ok := cad.config.driver.(*txDriver)
+func (_m *CIAttributeDefinition) Unwrap() *CIAttributeDefinition {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: CIAttributeDefinition is not a transactional entity")
 	}
-	cad.config.driver = _tx.drv
-	return cad
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (cad *CIAttributeDefinition) String() string {
+func (_m *CIAttributeDefinition) String() string {
 	var builder strings.Builder
 	builder.WriteString("CIAttributeDefinition(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", cad.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(cad.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("display_name=")
-	builder.WriteString(cad.DisplayName)
+	builder.WriteString(_m.DisplayName)
 	builder.WriteString(", ")
 	builder.WriteString("type=")
-	builder.WriteString(cad.Type)
+	builder.WriteString(_m.Type)
 	builder.WriteString(", ")
 	builder.WriteString("required=")
-	builder.WriteString(fmt.Sprintf("%v", cad.Required))
+	builder.WriteString(fmt.Sprintf("%v", _m.Required))
 	builder.WriteString(", ")
 	builder.WriteString("unique=")
-	builder.WriteString(fmt.Sprintf("%v", cad.Unique))
+	builder.WriteString(fmt.Sprintf("%v", _m.Unique))
 	builder.WriteString(", ")
 	builder.WriteString("default_value=")
-	builder.WriteString(cad.DefaultValue)
+	builder.WriteString(_m.DefaultValue)
 	builder.WriteString(", ")
 	builder.WriteString("validation_rules=")
-	builder.WriteString(cad.ValidationRules)
+	builder.WriteString(_m.ValidationRules)
 	builder.WriteString(", ")
 	builder.WriteString("ci_type_id=")
-	builder.WriteString(fmt.Sprintf("%v", cad.CiTypeID))
+	builder.WriteString(fmt.Sprintf("%v", _m.CiTypeID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", cad.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
-	builder.WriteString(fmt.Sprintf("%v", cad.IsActive))
+	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(cad.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(cad.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

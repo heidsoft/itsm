@@ -20,56 +20,56 @@ type WorkflowInstanceDelete struct {
 }
 
 // Where appends a list predicates to the WorkflowInstanceDelete builder.
-func (wid *WorkflowInstanceDelete) Where(ps ...predicate.WorkflowInstance) *WorkflowInstanceDelete {
-	wid.mutation.Where(ps...)
-	return wid
+func (_d *WorkflowInstanceDelete) Where(ps ...predicate.WorkflowInstance) *WorkflowInstanceDelete {
+	_d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (wid *WorkflowInstanceDelete) Exec(ctx context.Context) (int, error) {
-	return withHooks(ctx, wid.sqlExec, wid.mutation, wid.hooks)
+func (_d *WorkflowInstanceDelete) Exec(ctx context.Context) (int, error) {
+	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wid *WorkflowInstanceDelete) ExecX(ctx context.Context) int {
-	n, err := wid.Exec(ctx)
+func (_d *WorkflowInstanceDelete) ExecX(ctx context.Context) int {
+	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
 	}
 	return n
 }
 
-func (wid *WorkflowInstanceDelete) sqlExec(ctx context.Context) (int, error) {
+func (_d *WorkflowInstanceDelete) sqlExec(ctx context.Context) (int, error) {
 	_spec := sqlgraph.NewDeleteSpec(workflowinstance.Table, sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt))
-	if ps := wid.mutation.predicates; len(ps) > 0 {
+	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	affected, err := sqlgraph.DeleteNodes(ctx, wid.driver, _spec)
+	affected, err := sqlgraph.DeleteNodes(ctx, _d.driver, _spec)
 	if err != nil && sqlgraph.IsConstraintError(err) {
 		err = &ConstraintError{msg: err.Error(), wrap: err}
 	}
-	wid.mutation.done = true
+	_d.mutation.done = true
 	return affected, err
 }
 
 // WorkflowInstanceDeleteOne is the builder for deleting a single WorkflowInstance entity.
 type WorkflowInstanceDeleteOne struct {
-	wid *WorkflowInstanceDelete
+	_d *WorkflowInstanceDelete
 }
 
 // Where appends a list predicates to the WorkflowInstanceDelete builder.
-func (wido *WorkflowInstanceDeleteOne) Where(ps ...predicate.WorkflowInstance) *WorkflowInstanceDeleteOne {
-	wido.wid.mutation.Where(ps...)
-	return wido
+func (_d *WorkflowInstanceDeleteOne) Where(ps ...predicate.WorkflowInstance) *WorkflowInstanceDeleteOne {
+	_d._d.mutation.Where(ps...)
+	return _d
 }
 
 // Exec executes the deletion query.
-func (wido *WorkflowInstanceDeleteOne) Exec(ctx context.Context) error {
-	n, err := wido.wid.Exec(ctx)
+func (_d *WorkflowInstanceDeleteOne) Exec(ctx context.Context) error {
+	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
@@ -81,8 +81,8 @@ func (wido *WorkflowInstanceDeleteOne) Exec(ctx context.Context) error {
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wido *WorkflowInstanceDeleteOne) ExecX(ctx context.Context) {
-	if err := wido.Exec(ctx); err != nil {
+func (_d *WorkflowInstanceDeleteOne) ExecX(ctx context.Context) {
+	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

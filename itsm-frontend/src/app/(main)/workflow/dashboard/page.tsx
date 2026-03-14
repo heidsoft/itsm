@@ -15,6 +15,7 @@ import {
   Spin,
   Alert,
 } from 'antd';
+import dayjs, { Dayjs } from 'dayjs';
 import {
   Activity,
   Clock,
@@ -35,9 +36,9 @@ export default function BPMNDashboardPage() {
   const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [dateRange, setDateRange] = useState<[string, string]>([
-    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    new Date().toISOString().split('T')[0],
+  const [dateRange, setDateRange] = useState<[Dayjs, Dayjs]>([
+    dayjs().subtract(7, 'day'),
+    dayjs(),
   ]);
 
   // 默认租户ID
@@ -46,7 +47,7 @@ export default function BPMNDashboardPage() {
   const fetchMetrics = async () => {
     setLoading(true);
     try {
-      const data = await BPMNDashboardApi.getDashboardMetrics(tenantId, dateRange[0], dateRange[1]);
+      const data = await BPMNDashboardApi.getDashboardMetrics(tenantId, dateRange[0].format('YYYY-MM-DD'), dateRange[1].format('YYYY-MM-DD'));
       setMetrics(data);
     } catch (error) {
       console.error('Failed to fetch dashboard metrics:', error);
@@ -145,11 +146,11 @@ export default function BPMNDashboardPage() {
         <Space>
           <RangePicker
             onChange={(dates, dateStrings) => {
-              if (dateStrings[0] && dateStrings[1]) {
-                setDateRange([dateStrings[0], dateStrings[1]]);
+              if (dates && dates[0] && dates[1]) {
+                setDateRange([dates[0], dates[1]]);
               }
             }}
-            defaultValue={[dateRange[0], dateRange[1]]}
+            value={[dateRange[0], dateRange[1]]}
           />
           <Button icon={<RefreshCw size={16} />} onClick={fetchMetrics}>
             {t('common.refresh') || '刷新'}

@@ -99,7 +99,7 @@ func (*Microservice) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Microservice fields.
-func (m *Microservice) assignValues(columns []string, values []any) error {
+func (_m *Microservice) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -110,81 +110,81 @@ func (m *Microservice) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			m.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case microservice.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				m.Name = value.String
+				_m.Name = value.String
 			}
 		case microservice.FieldCode:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field code", values[i])
 			} else if value.Valid {
-				m.Code = value.String
+				_m.Code = value.String
 			}
 		case microservice.FieldDescription:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field description", values[i])
 			} else if value.Valid {
-				m.Description = value.String
+				_m.Description = value.String
 			}
 		case microservice.FieldLanguage:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field language", values[i])
 			} else if value.Valid {
-				m.Language = value.String
+				_m.Language = value.String
 			}
 		case microservice.FieldFramework:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field framework", values[i])
 			} else if value.Valid {
-				m.Framework = value.String
+				_m.Framework = value.String
 			}
 		case microservice.FieldGitRepo:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field git_repo", values[i])
 			} else if value.Valid {
-				m.GitRepo = value.String
+				_m.GitRepo = value.String
 			}
 		case microservice.FieldCiPipeline:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field ci_pipeline", values[i])
 			} else if value.Valid {
-				m.CiPipeline = value.String
+				_m.CiPipeline = value.String
 			}
 		case microservice.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
-				m.Status = value.String
+				_m.Status = value.String
 			}
 		case microservice.FieldApplicationID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field application_id", values[i])
 			} else if value.Valid {
-				m.ApplicationID = int(value.Int64)
+				_m.ApplicationID = int(value.Int64)
 			}
 		case microservice.FieldTenantID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field tenant_id", values[i])
 			} else if value.Valid {
-				m.TenantID = int(value.Int64)
+				_m.TenantID = int(value.Int64)
 			}
 		case microservice.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				m.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case microservice.FieldUpdatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
 			} else if value.Valid {
-				m.UpdatedAt = value.Time
+				_m.UpdatedAt = value.Time
 			}
 		default:
-			m.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -192,78 +192,78 @@ func (m *Microservice) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Microservice.
 // This includes values selected through modifiers, order, etc.
-func (m *Microservice) Value(name string) (ent.Value, error) {
-	return m.selectValues.Get(name)
+func (_m *Microservice) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryApplication queries the "application" edge of the Microservice entity.
-func (m *Microservice) QueryApplication() *ApplicationQuery {
-	return NewMicroserviceClient(m.config).QueryApplication(m)
+func (_m *Microservice) QueryApplication() *ApplicationQuery {
+	return NewMicroserviceClient(_m.config).QueryApplication(_m)
 }
 
 // QueryTags queries the "tags" edge of the Microservice entity.
-func (m *Microservice) QueryTags() *TagQuery {
-	return NewMicroserviceClient(m.config).QueryTags(m)
+func (_m *Microservice) QueryTags() *TagQuery {
+	return NewMicroserviceClient(_m.config).QueryTags(_m)
 }
 
 // Update returns a builder for updating this Microservice.
 // Note that you need to call Microservice.Unwrap() before calling this method if this Microservice
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (m *Microservice) Update() *MicroserviceUpdateOne {
-	return NewMicroserviceClient(m.config).UpdateOne(m)
+func (_m *Microservice) Update() *MicroserviceUpdateOne {
+	return NewMicroserviceClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Microservice entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (m *Microservice) Unwrap() *Microservice {
-	_tx, ok := m.config.driver.(*txDriver)
+func (_m *Microservice) Unwrap() *Microservice {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Microservice is not a transactional entity")
 	}
-	m.config.driver = _tx.drv
-	return m
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (m *Microservice) String() string {
+func (_m *Microservice) String() string {
 	var builder strings.Builder
 	builder.WriteString("Microservice(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", m.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("name=")
-	builder.WriteString(m.Name)
+	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
 	builder.WriteString("code=")
-	builder.WriteString(m.Code)
+	builder.WriteString(_m.Code)
 	builder.WriteString(", ")
 	builder.WriteString("description=")
-	builder.WriteString(m.Description)
+	builder.WriteString(_m.Description)
 	builder.WriteString(", ")
 	builder.WriteString("language=")
-	builder.WriteString(m.Language)
+	builder.WriteString(_m.Language)
 	builder.WriteString(", ")
 	builder.WriteString("framework=")
-	builder.WriteString(m.Framework)
+	builder.WriteString(_m.Framework)
 	builder.WriteString(", ")
 	builder.WriteString("git_repo=")
-	builder.WriteString(m.GitRepo)
+	builder.WriteString(_m.GitRepo)
 	builder.WriteString(", ")
 	builder.WriteString("ci_pipeline=")
-	builder.WriteString(m.CiPipeline)
+	builder.WriteString(_m.CiPipeline)
 	builder.WriteString(", ")
 	builder.WriteString("status=")
-	builder.WriteString(m.Status)
+	builder.WriteString(_m.Status)
 	builder.WriteString(", ")
 	builder.WriteString("application_id=")
-	builder.WriteString(fmt.Sprintf("%v", m.ApplicationID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ApplicationID))
 	builder.WriteString(", ")
 	builder.WriteString("tenant_id=")
-	builder.WriteString(fmt.Sprintf("%v", m.TenantID))
+	builder.WriteString(fmt.Sprintf("%v", _m.TenantID))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
-	builder.WriteString(m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
-	builder.WriteString(m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.UpdatedAt.Format(time.ANSIC))
 	builder.WriteByte(')')
 	return builder.String()
 }

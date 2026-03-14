@@ -25,275 +25,275 @@ type MicroserviceUpdate struct {
 }
 
 // Where appends a list predicates to the MicroserviceUpdate builder.
-func (mu *MicroserviceUpdate) Where(ps ...predicate.Microservice) *MicroserviceUpdate {
-	mu.mutation.Where(ps...)
-	return mu
+func (_u *MicroserviceUpdate) Where(ps ...predicate.Microservice) *MicroserviceUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (mu *MicroserviceUpdate) SetName(s string) *MicroserviceUpdate {
-	mu.mutation.SetName(s)
-	return mu
+func (_u *MicroserviceUpdate) SetName(v string) *MicroserviceUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableName(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetName(*s)
+func (_u *MicroserviceUpdate) SetNillableName(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return mu
+	return _u
 }
 
 // SetCode sets the "code" field.
-func (mu *MicroserviceUpdate) SetCode(s string) *MicroserviceUpdate {
-	mu.mutation.SetCode(s)
-	return mu
+func (_u *MicroserviceUpdate) SetCode(v string) *MicroserviceUpdate {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableCode(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetCode(*s)
+func (_u *MicroserviceUpdate) SetNillableCode(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return mu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (mu *MicroserviceUpdate) SetDescription(s string) *MicroserviceUpdate {
-	mu.mutation.SetDescription(s)
-	return mu
+func (_u *MicroserviceUpdate) SetDescription(v string) *MicroserviceUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableDescription(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetDescription(*s)
+func (_u *MicroserviceUpdate) SetNillableDescription(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return mu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (mu *MicroserviceUpdate) ClearDescription() *MicroserviceUpdate {
-	mu.mutation.ClearDescription()
-	return mu
+func (_u *MicroserviceUpdate) ClearDescription() *MicroserviceUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetLanguage sets the "language" field.
-func (mu *MicroserviceUpdate) SetLanguage(s string) *MicroserviceUpdate {
-	mu.mutation.SetLanguage(s)
-	return mu
+func (_u *MicroserviceUpdate) SetLanguage(v string) *MicroserviceUpdate {
+	_u.mutation.SetLanguage(v)
+	return _u
 }
 
 // SetNillableLanguage sets the "language" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableLanguage(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetLanguage(*s)
+func (_u *MicroserviceUpdate) SetNillableLanguage(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetLanguage(*v)
 	}
-	return mu
+	return _u
 }
 
 // ClearLanguage clears the value of the "language" field.
-func (mu *MicroserviceUpdate) ClearLanguage() *MicroserviceUpdate {
-	mu.mutation.ClearLanguage()
-	return mu
+func (_u *MicroserviceUpdate) ClearLanguage() *MicroserviceUpdate {
+	_u.mutation.ClearLanguage()
+	return _u
 }
 
 // SetFramework sets the "framework" field.
-func (mu *MicroserviceUpdate) SetFramework(s string) *MicroserviceUpdate {
-	mu.mutation.SetFramework(s)
-	return mu
+func (_u *MicroserviceUpdate) SetFramework(v string) *MicroserviceUpdate {
+	_u.mutation.SetFramework(v)
+	return _u
 }
 
 // SetNillableFramework sets the "framework" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableFramework(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetFramework(*s)
+func (_u *MicroserviceUpdate) SetNillableFramework(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetFramework(*v)
 	}
-	return mu
+	return _u
 }
 
 // ClearFramework clears the value of the "framework" field.
-func (mu *MicroserviceUpdate) ClearFramework() *MicroserviceUpdate {
-	mu.mutation.ClearFramework()
-	return mu
+func (_u *MicroserviceUpdate) ClearFramework() *MicroserviceUpdate {
+	_u.mutation.ClearFramework()
+	return _u
 }
 
 // SetGitRepo sets the "git_repo" field.
-func (mu *MicroserviceUpdate) SetGitRepo(s string) *MicroserviceUpdate {
-	mu.mutation.SetGitRepo(s)
-	return mu
+func (_u *MicroserviceUpdate) SetGitRepo(v string) *MicroserviceUpdate {
+	_u.mutation.SetGitRepo(v)
+	return _u
 }
 
 // SetNillableGitRepo sets the "git_repo" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableGitRepo(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetGitRepo(*s)
+func (_u *MicroserviceUpdate) SetNillableGitRepo(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetGitRepo(*v)
 	}
-	return mu
+	return _u
 }
 
 // ClearGitRepo clears the value of the "git_repo" field.
-func (mu *MicroserviceUpdate) ClearGitRepo() *MicroserviceUpdate {
-	mu.mutation.ClearGitRepo()
-	return mu
+func (_u *MicroserviceUpdate) ClearGitRepo() *MicroserviceUpdate {
+	_u.mutation.ClearGitRepo()
+	return _u
 }
 
 // SetCiPipeline sets the "ci_pipeline" field.
-func (mu *MicroserviceUpdate) SetCiPipeline(s string) *MicroserviceUpdate {
-	mu.mutation.SetCiPipeline(s)
-	return mu
+func (_u *MicroserviceUpdate) SetCiPipeline(v string) *MicroserviceUpdate {
+	_u.mutation.SetCiPipeline(v)
+	return _u
 }
 
 // SetNillableCiPipeline sets the "ci_pipeline" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableCiPipeline(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetCiPipeline(*s)
+func (_u *MicroserviceUpdate) SetNillableCiPipeline(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetCiPipeline(*v)
 	}
-	return mu
+	return _u
 }
 
 // ClearCiPipeline clears the value of the "ci_pipeline" field.
-func (mu *MicroserviceUpdate) ClearCiPipeline() *MicroserviceUpdate {
-	mu.mutation.ClearCiPipeline()
-	return mu
+func (_u *MicroserviceUpdate) ClearCiPipeline() *MicroserviceUpdate {
+	_u.mutation.ClearCiPipeline()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (mu *MicroserviceUpdate) SetStatus(s string) *MicroserviceUpdate {
-	mu.mutation.SetStatus(s)
-	return mu
+func (_u *MicroserviceUpdate) SetStatus(v string) *MicroserviceUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableStatus(s *string) *MicroserviceUpdate {
-	if s != nil {
-		mu.SetStatus(*s)
+func (_u *MicroserviceUpdate) SetNillableStatus(v *string) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return mu
+	return _u
 }
 
 // SetApplicationID sets the "application_id" field.
-func (mu *MicroserviceUpdate) SetApplicationID(i int) *MicroserviceUpdate {
-	mu.mutation.SetApplicationID(i)
-	return mu
+func (_u *MicroserviceUpdate) SetApplicationID(v int) *MicroserviceUpdate {
+	_u.mutation.SetApplicationID(v)
+	return _u
 }
 
 // SetNillableApplicationID sets the "application_id" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableApplicationID(i *int) *MicroserviceUpdate {
-	if i != nil {
-		mu.SetApplicationID(*i)
+func (_u *MicroserviceUpdate) SetNillableApplicationID(v *int) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetApplicationID(*v)
 	}
-	return mu
+	return _u
 }
 
 // ClearApplicationID clears the value of the "application_id" field.
-func (mu *MicroserviceUpdate) ClearApplicationID() *MicroserviceUpdate {
-	mu.mutation.ClearApplicationID()
-	return mu
+func (_u *MicroserviceUpdate) ClearApplicationID() *MicroserviceUpdate {
+	_u.mutation.ClearApplicationID()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (mu *MicroserviceUpdate) SetTenantID(i int) *MicroserviceUpdate {
-	mu.mutation.ResetTenantID()
-	mu.mutation.SetTenantID(i)
-	return mu
+func (_u *MicroserviceUpdate) SetTenantID(v int) *MicroserviceUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableTenantID(i *int) *MicroserviceUpdate {
-	if i != nil {
-		mu.SetTenantID(*i)
+func (_u *MicroserviceUpdate) SetNillableTenantID(v *int) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return mu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (mu *MicroserviceUpdate) AddTenantID(i int) *MicroserviceUpdate {
-	mu.mutation.AddTenantID(i)
-	return mu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *MicroserviceUpdate) AddTenantID(v int) *MicroserviceUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (mu *MicroserviceUpdate) SetCreatedAt(t time.Time) *MicroserviceUpdate {
-	mu.mutation.SetCreatedAt(t)
-	return mu
+func (_u *MicroserviceUpdate) SetCreatedAt(v time.Time) *MicroserviceUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (mu *MicroserviceUpdate) SetNillableCreatedAt(t *time.Time) *MicroserviceUpdate {
-	if t != nil {
-		mu.SetCreatedAt(*t)
+func (_u *MicroserviceUpdate) SetNillableCreatedAt(v *time.Time) *MicroserviceUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return mu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (mu *MicroserviceUpdate) SetUpdatedAt(t time.Time) *MicroserviceUpdate {
-	mu.mutation.SetUpdatedAt(t)
-	return mu
+func (_u *MicroserviceUpdate) SetUpdatedAt(v time.Time) *MicroserviceUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetApplication sets the "application" edge to the Application entity.
-func (mu *MicroserviceUpdate) SetApplication(a *Application) *MicroserviceUpdate {
-	return mu.SetApplicationID(a.ID)
+func (_u *MicroserviceUpdate) SetApplication(v *Application) *MicroserviceUpdate {
+	return _u.SetApplicationID(v.ID)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
-func (mu *MicroserviceUpdate) AddTagIDs(ids ...int) *MicroserviceUpdate {
-	mu.mutation.AddTagIDs(ids...)
-	return mu
+func (_u *MicroserviceUpdate) AddTagIDs(ids ...int) *MicroserviceUpdate {
+	_u.mutation.AddTagIDs(ids...)
+	return _u
 }
 
 // AddTags adds the "tags" edges to the Tag entity.
-func (mu *MicroserviceUpdate) AddTags(t ...*Tag) *MicroserviceUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *MicroserviceUpdate) AddTags(v ...*Tag) *MicroserviceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return mu.AddTagIDs(ids...)
+	return _u.AddTagIDs(ids...)
 }
 
 // Mutation returns the MicroserviceMutation object of the builder.
-func (mu *MicroserviceUpdate) Mutation() *MicroserviceMutation {
-	return mu.mutation
+func (_u *MicroserviceUpdate) Mutation() *MicroserviceMutation {
+	return _u.mutation
 }
 
 // ClearApplication clears the "application" edge to the Application entity.
-func (mu *MicroserviceUpdate) ClearApplication() *MicroserviceUpdate {
-	mu.mutation.ClearApplication()
-	return mu
+func (_u *MicroserviceUpdate) ClearApplication() *MicroserviceUpdate {
+	_u.mutation.ClearApplication()
+	return _u
 }
 
 // ClearTags clears all "tags" edges to the Tag entity.
-func (mu *MicroserviceUpdate) ClearTags() *MicroserviceUpdate {
-	mu.mutation.ClearTags()
-	return mu
+func (_u *MicroserviceUpdate) ClearTags() *MicroserviceUpdate {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // RemoveTagIDs removes the "tags" edge to Tag entities by IDs.
-func (mu *MicroserviceUpdate) RemoveTagIDs(ids ...int) *MicroserviceUpdate {
-	mu.mutation.RemoveTagIDs(ids...)
-	return mu
+func (_u *MicroserviceUpdate) RemoveTagIDs(ids ...int) *MicroserviceUpdate {
+	_u.mutation.RemoveTagIDs(ids...)
+	return _u
 }
 
 // RemoveTags removes "tags" edges to Tag entities.
-func (mu *MicroserviceUpdate) RemoveTags(t ...*Tag) *MicroserviceUpdate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *MicroserviceUpdate) RemoveTags(v ...*Tag) *MicroserviceUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return mu.RemoveTagIDs(ids...)
+	return _u.RemoveTagIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (mu *MicroserviceUpdate) Save(ctx context.Context) (int, error) {
-	mu.defaults()
-	return withHooks(ctx, mu.sqlSave, mu.mutation, mu.hooks)
+func (_u *MicroserviceUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (mu *MicroserviceUpdate) SaveX(ctx context.Context) int {
-	affected, err := mu.Save(ctx)
+func (_u *MicroserviceUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -301,39 +301,39 @@ func (mu *MicroserviceUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (mu *MicroserviceUpdate) Exec(ctx context.Context) error {
-	_, err := mu.Save(ctx)
+func (_u *MicroserviceUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (mu *MicroserviceUpdate) ExecX(ctx context.Context) {
-	if err := mu.Exec(ctx); err != nil {
+func (_u *MicroserviceUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (mu *MicroserviceUpdate) defaults() {
-	if _, ok := mu.mutation.UpdatedAt(); !ok {
+func (_u *MicroserviceUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := microservice.UpdateDefaultUpdatedAt()
-		mu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (mu *MicroserviceUpdate) check() error {
-	if v, ok := mu.mutation.Name(); ok {
+func (_u *MicroserviceUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := microservice.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Microservice.name": %w`, err)}
 		}
 	}
-	if v, ok := mu.mutation.Code(); ok {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := microservice.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Microservice.code": %w`, err)}
 		}
 	}
-	if v, ok := mu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := microservice.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Microservice.tenant_id": %w`, err)}
 		}
@@ -341,70 +341,70 @@ func (mu *MicroserviceUpdate) check() error {
 	return nil
 }
 
-func (mu *MicroserviceUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := mu.check(); err != nil {
-		return n, err
+func (_u *MicroserviceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(microservice.Table, microservice.Columns, sqlgraph.NewFieldSpec(microservice.FieldID, field.TypeInt))
-	if ps := mu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := mu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(microservice.FieldName, field.TypeString, value)
 	}
-	if value, ok := mu.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(microservice.FieldCode, field.TypeString, value)
 	}
-	if value, ok := mu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(microservice.FieldDescription, field.TypeString, value)
 	}
-	if mu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(microservice.FieldDescription, field.TypeString)
 	}
-	if value, ok := mu.mutation.Language(); ok {
+	if value, ok := _u.mutation.Language(); ok {
 		_spec.SetField(microservice.FieldLanguage, field.TypeString, value)
 	}
-	if mu.mutation.LanguageCleared() {
+	if _u.mutation.LanguageCleared() {
 		_spec.ClearField(microservice.FieldLanguage, field.TypeString)
 	}
-	if value, ok := mu.mutation.Framework(); ok {
+	if value, ok := _u.mutation.Framework(); ok {
 		_spec.SetField(microservice.FieldFramework, field.TypeString, value)
 	}
-	if mu.mutation.FrameworkCleared() {
+	if _u.mutation.FrameworkCleared() {
 		_spec.ClearField(microservice.FieldFramework, field.TypeString)
 	}
-	if value, ok := mu.mutation.GitRepo(); ok {
+	if value, ok := _u.mutation.GitRepo(); ok {
 		_spec.SetField(microservice.FieldGitRepo, field.TypeString, value)
 	}
-	if mu.mutation.GitRepoCleared() {
+	if _u.mutation.GitRepoCleared() {
 		_spec.ClearField(microservice.FieldGitRepo, field.TypeString)
 	}
-	if value, ok := mu.mutation.CiPipeline(); ok {
+	if value, ok := _u.mutation.CiPipeline(); ok {
 		_spec.SetField(microservice.FieldCiPipeline, field.TypeString, value)
 	}
-	if mu.mutation.CiPipelineCleared() {
+	if _u.mutation.CiPipelineCleared() {
 		_spec.ClearField(microservice.FieldCiPipeline, field.TypeString)
 	}
-	if value, ok := mu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(microservice.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := mu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(microservice.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := mu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(microservice.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := mu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(microservice.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := mu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(microservice.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if mu.mutation.ApplicationCleared() {
+	if _u.mutation.ApplicationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -417,7 +417,7 @@ func (mu *MicroserviceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.ApplicationIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ApplicationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -433,7 +433,7 @@ func (mu *MicroserviceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if mu.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -446,7 +446,7 @@ func (mu *MicroserviceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.RemovedTagsIDs(); len(nodes) > 0 && !mu.mutation.TagsCleared() {
+	if nodes := _u.mutation.RemovedTagsIDs(); len(nodes) > 0 && !_u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -462,7 +462,7 @@ func (mu *MicroserviceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := mu.mutation.TagsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -478,7 +478,7 @@ func (mu *MicroserviceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, mu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{microservice.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -486,8 +486,8 @@ func (mu *MicroserviceUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	mu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // MicroserviceUpdateOne is the builder for updating a single Microservice entity.
@@ -499,282 +499,282 @@ type MicroserviceUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (muo *MicroserviceUpdateOne) SetName(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetName(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetName(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableName(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetName(*s)
+func (_u *MicroserviceUpdateOne) SetNillableName(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return muo
+	return _u
 }
 
 // SetCode sets the "code" field.
-func (muo *MicroserviceUpdateOne) SetCode(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetCode(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetCode(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetCode(v)
+	return _u
 }
 
 // SetNillableCode sets the "code" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableCode(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetCode(*s)
+func (_u *MicroserviceUpdateOne) SetNillableCode(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetCode(*v)
 	}
-	return muo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (muo *MicroserviceUpdateOne) SetDescription(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetDescription(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetDescription(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableDescription(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetDescription(*s)
+func (_u *MicroserviceUpdateOne) SetNillableDescription(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return muo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (muo *MicroserviceUpdateOne) ClearDescription() *MicroserviceUpdateOne {
-	muo.mutation.ClearDescription()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearDescription() *MicroserviceUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetLanguage sets the "language" field.
-func (muo *MicroserviceUpdateOne) SetLanguage(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetLanguage(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetLanguage(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetLanguage(v)
+	return _u
 }
 
 // SetNillableLanguage sets the "language" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableLanguage(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetLanguage(*s)
+func (_u *MicroserviceUpdateOne) SetNillableLanguage(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetLanguage(*v)
 	}
-	return muo
+	return _u
 }
 
 // ClearLanguage clears the value of the "language" field.
-func (muo *MicroserviceUpdateOne) ClearLanguage() *MicroserviceUpdateOne {
-	muo.mutation.ClearLanguage()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearLanguage() *MicroserviceUpdateOne {
+	_u.mutation.ClearLanguage()
+	return _u
 }
 
 // SetFramework sets the "framework" field.
-func (muo *MicroserviceUpdateOne) SetFramework(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetFramework(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetFramework(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetFramework(v)
+	return _u
 }
 
 // SetNillableFramework sets the "framework" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableFramework(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetFramework(*s)
+func (_u *MicroserviceUpdateOne) SetNillableFramework(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetFramework(*v)
 	}
-	return muo
+	return _u
 }
 
 // ClearFramework clears the value of the "framework" field.
-func (muo *MicroserviceUpdateOne) ClearFramework() *MicroserviceUpdateOne {
-	muo.mutation.ClearFramework()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearFramework() *MicroserviceUpdateOne {
+	_u.mutation.ClearFramework()
+	return _u
 }
 
 // SetGitRepo sets the "git_repo" field.
-func (muo *MicroserviceUpdateOne) SetGitRepo(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetGitRepo(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetGitRepo(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetGitRepo(v)
+	return _u
 }
 
 // SetNillableGitRepo sets the "git_repo" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableGitRepo(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetGitRepo(*s)
+func (_u *MicroserviceUpdateOne) SetNillableGitRepo(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetGitRepo(*v)
 	}
-	return muo
+	return _u
 }
 
 // ClearGitRepo clears the value of the "git_repo" field.
-func (muo *MicroserviceUpdateOne) ClearGitRepo() *MicroserviceUpdateOne {
-	muo.mutation.ClearGitRepo()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearGitRepo() *MicroserviceUpdateOne {
+	_u.mutation.ClearGitRepo()
+	return _u
 }
 
 // SetCiPipeline sets the "ci_pipeline" field.
-func (muo *MicroserviceUpdateOne) SetCiPipeline(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetCiPipeline(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetCiPipeline(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetCiPipeline(v)
+	return _u
 }
 
 // SetNillableCiPipeline sets the "ci_pipeline" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableCiPipeline(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetCiPipeline(*s)
+func (_u *MicroserviceUpdateOne) SetNillableCiPipeline(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetCiPipeline(*v)
 	}
-	return muo
+	return _u
 }
 
 // ClearCiPipeline clears the value of the "ci_pipeline" field.
-func (muo *MicroserviceUpdateOne) ClearCiPipeline() *MicroserviceUpdateOne {
-	muo.mutation.ClearCiPipeline()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearCiPipeline() *MicroserviceUpdateOne {
+	_u.mutation.ClearCiPipeline()
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (muo *MicroserviceUpdateOne) SetStatus(s string) *MicroserviceUpdateOne {
-	muo.mutation.SetStatus(s)
-	return muo
+func (_u *MicroserviceUpdateOne) SetStatus(v string) *MicroserviceUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableStatus(s *string) *MicroserviceUpdateOne {
-	if s != nil {
-		muo.SetStatus(*s)
+func (_u *MicroserviceUpdateOne) SetNillableStatus(v *string) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return muo
+	return _u
 }
 
 // SetApplicationID sets the "application_id" field.
-func (muo *MicroserviceUpdateOne) SetApplicationID(i int) *MicroserviceUpdateOne {
-	muo.mutation.SetApplicationID(i)
-	return muo
+func (_u *MicroserviceUpdateOne) SetApplicationID(v int) *MicroserviceUpdateOne {
+	_u.mutation.SetApplicationID(v)
+	return _u
 }
 
 // SetNillableApplicationID sets the "application_id" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableApplicationID(i *int) *MicroserviceUpdateOne {
-	if i != nil {
-		muo.SetApplicationID(*i)
+func (_u *MicroserviceUpdateOne) SetNillableApplicationID(v *int) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetApplicationID(*v)
 	}
-	return muo
+	return _u
 }
 
 // ClearApplicationID clears the value of the "application_id" field.
-func (muo *MicroserviceUpdateOne) ClearApplicationID() *MicroserviceUpdateOne {
-	muo.mutation.ClearApplicationID()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearApplicationID() *MicroserviceUpdateOne {
+	_u.mutation.ClearApplicationID()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (muo *MicroserviceUpdateOne) SetTenantID(i int) *MicroserviceUpdateOne {
-	muo.mutation.ResetTenantID()
-	muo.mutation.SetTenantID(i)
-	return muo
+func (_u *MicroserviceUpdateOne) SetTenantID(v int) *MicroserviceUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableTenantID(i *int) *MicroserviceUpdateOne {
-	if i != nil {
-		muo.SetTenantID(*i)
+func (_u *MicroserviceUpdateOne) SetNillableTenantID(v *int) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return muo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (muo *MicroserviceUpdateOne) AddTenantID(i int) *MicroserviceUpdateOne {
-	muo.mutation.AddTenantID(i)
-	return muo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *MicroserviceUpdateOne) AddTenantID(v int) *MicroserviceUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (muo *MicroserviceUpdateOne) SetCreatedAt(t time.Time) *MicroserviceUpdateOne {
-	muo.mutation.SetCreatedAt(t)
-	return muo
+func (_u *MicroserviceUpdateOne) SetCreatedAt(v time.Time) *MicroserviceUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (muo *MicroserviceUpdateOne) SetNillableCreatedAt(t *time.Time) *MicroserviceUpdateOne {
-	if t != nil {
-		muo.SetCreatedAt(*t)
+func (_u *MicroserviceUpdateOne) SetNillableCreatedAt(v *time.Time) *MicroserviceUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return muo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (muo *MicroserviceUpdateOne) SetUpdatedAt(t time.Time) *MicroserviceUpdateOne {
-	muo.mutation.SetUpdatedAt(t)
-	return muo
+func (_u *MicroserviceUpdateOne) SetUpdatedAt(v time.Time) *MicroserviceUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // SetApplication sets the "application" edge to the Application entity.
-func (muo *MicroserviceUpdateOne) SetApplication(a *Application) *MicroserviceUpdateOne {
-	return muo.SetApplicationID(a.ID)
+func (_u *MicroserviceUpdateOne) SetApplication(v *Application) *MicroserviceUpdateOne {
+	return _u.SetApplicationID(v.ID)
 }
 
 // AddTagIDs adds the "tags" edge to the Tag entity by IDs.
-func (muo *MicroserviceUpdateOne) AddTagIDs(ids ...int) *MicroserviceUpdateOne {
-	muo.mutation.AddTagIDs(ids...)
-	return muo
+func (_u *MicroserviceUpdateOne) AddTagIDs(ids ...int) *MicroserviceUpdateOne {
+	_u.mutation.AddTagIDs(ids...)
+	return _u
 }
 
 // AddTags adds the "tags" edges to the Tag entity.
-func (muo *MicroserviceUpdateOne) AddTags(t ...*Tag) *MicroserviceUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *MicroserviceUpdateOne) AddTags(v ...*Tag) *MicroserviceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return muo.AddTagIDs(ids...)
+	return _u.AddTagIDs(ids...)
 }
 
 // Mutation returns the MicroserviceMutation object of the builder.
-func (muo *MicroserviceUpdateOne) Mutation() *MicroserviceMutation {
-	return muo.mutation
+func (_u *MicroserviceUpdateOne) Mutation() *MicroserviceMutation {
+	return _u.mutation
 }
 
 // ClearApplication clears the "application" edge to the Application entity.
-func (muo *MicroserviceUpdateOne) ClearApplication() *MicroserviceUpdateOne {
-	muo.mutation.ClearApplication()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearApplication() *MicroserviceUpdateOne {
+	_u.mutation.ClearApplication()
+	return _u
 }
 
 // ClearTags clears all "tags" edges to the Tag entity.
-func (muo *MicroserviceUpdateOne) ClearTags() *MicroserviceUpdateOne {
-	muo.mutation.ClearTags()
-	return muo
+func (_u *MicroserviceUpdateOne) ClearTags() *MicroserviceUpdateOne {
+	_u.mutation.ClearTags()
+	return _u
 }
 
 // RemoveTagIDs removes the "tags" edge to Tag entities by IDs.
-func (muo *MicroserviceUpdateOne) RemoveTagIDs(ids ...int) *MicroserviceUpdateOne {
-	muo.mutation.RemoveTagIDs(ids...)
-	return muo
+func (_u *MicroserviceUpdateOne) RemoveTagIDs(ids ...int) *MicroserviceUpdateOne {
+	_u.mutation.RemoveTagIDs(ids...)
+	return _u
 }
 
 // RemoveTags removes "tags" edges to Tag entities.
-func (muo *MicroserviceUpdateOne) RemoveTags(t ...*Tag) *MicroserviceUpdateOne {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+func (_u *MicroserviceUpdateOne) RemoveTags(v ...*Tag) *MicroserviceUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return muo.RemoveTagIDs(ids...)
+	return _u.RemoveTagIDs(ids...)
 }
 
 // Where appends a list predicates to the MicroserviceUpdate builder.
-func (muo *MicroserviceUpdateOne) Where(ps ...predicate.Microservice) *MicroserviceUpdateOne {
-	muo.mutation.Where(ps...)
-	return muo
+func (_u *MicroserviceUpdateOne) Where(ps ...predicate.Microservice) *MicroserviceUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (muo *MicroserviceUpdateOne) Select(field string, fields ...string) *MicroserviceUpdateOne {
-	muo.fields = append([]string{field}, fields...)
-	return muo
+func (_u *MicroserviceUpdateOne) Select(field string, fields ...string) *MicroserviceUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Microservice entity.
-func (muo *MicroserviceUpdateOne) Save(ctx context.Context) (*Microservice, error) {
-	muo.defaults()
-	return withHooks(ctx, muo.sqlSave, muo.mutation, muo.hooks)
+func (_u *MicroserviceUpdateOne) Save(ctx context.Context) (*Microservice, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (muo *MicroserviceUpdateOne) SaveX(ctx context.Context) *Microservice {
-	node, err := muo.Save(ctx)
+func (_u *MicroserviceUpdateOne) SaveX(ctx context.Context) *Microservice {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -782,39 +782,39 @@ func (muo *MicroserviceUpdateOne) SaveX(ctx context.Context) *Microservice {
 }
 
 // Exec executes the query on the entity.
-func (muo *MicroserviceUpdateOne) Exec(ctx context.Context) error {
-	_, err := muo.Save(ctx)
+func (_u *MicroserviceUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (muo *MicroserviceUpdateOne) ExecX(ctx context.Context) {
-	if err := muo.Exec(ctx); err != nil {
+func (_u *MicroserviceUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (muo *MicroserviceUpdateOne) defaults() {
-	if _, ok := muo.mutation.UpdatedAt(); !ok {
+func (_u *MicroserviceUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := microservice.UpdateDefaultUpdatedAt()
-		muo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (muo *MicroserviceUpdateOne) check() error {
-	if v, ok := muo.mutation.Name(); ok {
+func (_u *MicroserviceUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := microservice.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Microservice.name": %w`, err)}
 		}
 	}
-	if v, ok := muo.mutation.Code(); ok {
+	if v, ok := _u.mutation.Code(); ok {
 		if err := microservice.CodeValidator(v); err != nil {
 			return &ValidationError{Name: "code", err: fmt.Errorf(`ent: validator failed for field "Microservice.code": %w`, err)}
 		}
 	}
-	if v, ok := muo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := microservice.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Microservice.tenant_id": %w`, err)}
 		}
@@ -822,17 +822,17 @@ func (muo *MicroserviceUpdateOne) check() error {
 	return nil
 }
 
-func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microservice, err error) {
-	if err := muo.check(); err != nil {
+func (_u *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microservice, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(microservice.Table, microservice.Columns, sqlgraph.NewFieldSpec(microservice.FieldID, field.TypeInt))
-	id, ok := muo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Microservice.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := muo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, microservice.FieldID)
 		for _, f := range fields {
@@ -844,65 +844,65 @@ func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microserv
 			}
 		}
 	}
-	if ps := muo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := muo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(microservice.FieldName, field.TypeString, value)
 	}
-	if value, ok := muo.mutation.Code(); ok {
+	if value, ok := _u.mutation.Code(); ok {
 		_spec.SetField(microservice.FieldCode, field.TypeString, value)
 	}
-	if value, ok := muo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(microservice.FieldDescription, field.TypeString, value)
 	}
-	if muo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(microservice.FieldDescription, field.TypeString)
 	}
-	if value, ok := muo.mutation.Language(); ok {
+	if value, ok := _u.mutation.Language(); ok {
 		_spec.SetField(microservice.FieldLanguage, field.TypeString, value)
 	}
-	if muo.mutation.LanguageCleared() {
+	if _u.mutation.LanguageCleared() {
 		_spec.ClearField(microservice.FieldLanguage, field.TypeString)
 	}
-	if value, ok := muo.mutation.Framework(); ok {
+	if value, ok := _u.mutation.Framework(); ok {
 		_spec.SetField(microservice.FieldFramework, field.TypeString, value)
 	}
-	if muo.mutation.FrameworkCleared() {
+	if _u.mutation.FrameworkCleared() {
 		_spec.ClearField(microservice.FieldFramework, field.TypeString)
 	}
-	if value, ok := muo.mutation.GitRepo(); ok {
+	if value, ok := _u.mutation.GitRepo(); ok {
 		_spec.SetField(microservice.FieldGitRepo, field.TypeString, value)
 	}
-	if muo.mutation.GitRepoCleared() {
+	if _u.mutation.GitRepoCleared() {
 		_spec.ClearField(microservice.FieldGitRepo, field.TypeString)
 	}
-	if value, ok := muo.mutation.CiPipeline(); ok {
+	if value, ok := _u.mutation.CiPipeline(); ok {
 		_spec.SetField(microservice.FieldCiPipeline, field.TypeString, value)
 	}
-	if muo.mutation.CiPipelineCleared() {
+	if _u.mutation.CiPipelineCleared() {
 		_spec.ClearField(microservice.FieldCiPipeline, field.TypeString)
 	}
-	if value, ok := muo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(microservice.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := muo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(microservice.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := muo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(microservice.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := muo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(microservice.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := muo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(microservice.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if muo.mutation.ApplicationCleared() {
+	if _u.mutation.ApplicationCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -915,7 +915,7 @@ func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microserv
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.ApplicationIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.ApplicationIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -931,7 +931,7 @@ func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microserv
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	if muo.mutation.TagsCleared() {
+	if _u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -944,7 +944,7 @@ func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microserv
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.RemovedTagsIDs(); len(nodes) > 0 && !muo.mutation.TagsCleared() {
+	if nodes := _u.mutation.RemovedTagsIDs(); len(nodes) > 0 && !_u.mutation.TagsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -960,7 +960,7 @@ func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microserv
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := muo.mutation.TagsIDs(); len(nodes) > 0 {
+	if nodes := _u.mutation.TagsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2M,
 			Inverse: false,
@@ -976,10 +976,10 @@ func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microserv
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
-	_node = &Microservice{config: muo.config}
+	_node = &Microservice{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, muo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{microservice.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -987,6 +987,6 @@ func (muo *MicroserviceUpdateOne) sqlSave(ctx context.Context) (_node *Microserv
 		}
 		return nil, err
 	}
-	muo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

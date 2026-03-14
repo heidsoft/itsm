@@ -16,6 +16,7 @@ import (
 	"itsm-backend/ent/ticket"
 	"itsm-backend/ent/ticketattachment"
 	"itsm-backend/ent/ticketcomment"
+	"itsm-backend/ent/tenant"
 	"itsm-backend/ent/user"
 
 	"itsm-backend/config"
@@ -34,9 +35,10 @@ type TicketService struct {
 	// 审批服务
 	approvalService *ApprovalService
 	// 子服务
-	lifecycleService  *TicketLifecycleService
-	assignmentService *TicketAssignmentService
-	slaService        *TicketSLAService
+	lifecycleService   *TicketLifecycleService
+	assignmentService  *TicketAssignmentService
+	slaService         *TicketSLAService
+	sequenceService    *SequenceService // Redis 序列服务
 }
 
 func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketService {
@@ -48,6 +50,13 @@ func NewTicketService(client *ent.Client, logger *zap.SugaredLogger) *TicketServ
 	svc.lifecycleService = NewTicketLifecycleService(client, logger)
 	svc.assignmentService = NewTicketAssignmentService(client, logger)
 	svc.slaService = NewTicketSLAService(client, logger)
+	return svc
+}
+
+// NewTicketServiceWithSequence 创建带序列服务的 TicketService
+func NewTicketServiceWithSequence(client *ent.Client, logger *zap.SugaredLogger, sequenceService *SequenceService) *TicketService {
+	svc := NewTicketService(client, logger)
+	svc.sequenceService = sequenceService
 	return svc
 }
 
@@ -184,7 +193,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 		go func() {
 			ctx2, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
-			if err := s.triggerWorkflowForTicket(ctx2, ticket.ID, tenantID); err != nil {
+			if err := s.triggerWorkflowForTicket(ctx2, ticket.ID, tenantID, req.WorkflowDefinitionKey); err != nil {
 				s.logger.Warnw("Workflow trigger failed", "error", err)
 			}
 		}()
@@ -201,7 +210,7 @@ func (s *TicketService) CreateTicket(ctx context.Context, req *dto.CreateTicketR
 	s.logger.Infow("Ticket created (orchestrated)", "ticket_id", ticket.ID)
 	return ticket, nil
 }
-func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID int, tenantID int) error {
+func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID int, tenantID int, workflowDefinitionKey string) error {
 	// 获取工单信息
 	ticket, err := s.client.Ticket.Get(ctx, ticketID)
 	if err != nil {
@@ -220,10 +229,26 @@ func (s *TicketService) triggerWorkflowForTicket(ctx context.Context, ticketID i
 		"assignee_id":   ticket.AssigneeID,
 	}
 
-	// 根据优先级选择不同的流程
-	processKey := "ticket_general_flow"
-	if ticket.Priority == "high" || ticket.Priority == "urgent" {
-		processKey = "ticket_urgent_flow"
+	// 确定使用的工作流：如果传入了workflowDefinitionKey则使用，否则按工单类型和优先级自动选择
+	processKey := workflowDefinitionKey
+	if processKey == "" {
+		// 根据工单类型选择对应的工作流（类型优先于优先级）
+		switch ticket.Type {
+		case "incident":
+			processKey = "incident_emergency_flow"
+		case "problem":
+			processKey = "problem_management_flow"
+		case "change":
+			processKey = "change_normal_flow"
+		case "service_request":
+			processKey = "service_request_flow"
+		default:
+			// 通用工单根据优先级选择
+			processKey = "ticket_general_flow"
+			if ticket.Priority == "high" || ticket.Priority == "urgent" {
+				processKey = "ticket_urgent_flow"
+			}
+		}
 	}
 
 	// 触发流程
@@ -1650,13 +1675,44 @@ func (s *TicketService) parseExcel(data []byte) ([]map[string]interface{}, error
 	return []map[string]interface{}{}, nil
 }
 
-// generateTicketNumber 生成工单编号
+// generateTicketNumber 生成请求编号
+// 优先使用 Redis 序列服务，如果不可用则回退到数据库方案
 func (s *TicketService) generateTicketNumber(ctx context.Context, tenantID int) (string, error) {
-	// 获取当前年份和月份
 	now := time.Now()
 	year := now.Year()
 	month := int(now.Month())
 
+	// 优先使用 Redis 序列服务
+	if s.sequenceService != nil {
+		return s.generateTicketNumberWithRedis(ctx, year, month)
+	}
+
+	// 备用方案：数据库查询
+	return s.generateTicketNumberWithDB(ctx, tenantID, year, month)
+}
+
+// generateTicketNumberWithRedis 使用 Redis INCR 生成请求编号
+func (s *TicketService) generateTicketNumberWithRedis(ctx context.Context, year, month int) (string, error) {
+	// 构造 Redis 键：sequence:req:YYYYMM
+	key := fmt.Sprintf("sequence:req:%d%02d", year, month)
+
+	// 计算本月最后一天作为过期时间
+	expiredAt := time.Date(year, time.Month(month)+1, 1, 0, 0, 0, 0, time.UTC)
+
+	// 获取序列号（带过期时间）
+	seq, err := s.sequenceService.GetNextSequenceWithExpiry(ctx, key, expiredAt)
+	if err != nil {
+		s.logger.Warnw("Redis sequence failed, fallback to DB", "error", err)
+		return "", err
+	}
+
+		// 生成请求编号格式: REQ-YYYYMM-XXXXXX
+	ticketNumber := fmt.Sprintf("REQ-%04d%02d-%06d", year, month, seq)
+	return ticketNumber, nil
+}
+
+// generateTicketNumberWithDB 使用数据库查询生成请求编号（备用方案）
+func (s *TicketService) generateTicketNumberWithDB(ctx context.Context, tenantID, year, month int) (string, error) {
 	// 查询当月的工单数量
 	count, err := s.client.Ticket.Query().
 		Where(
@@ -1669,7 +1725,245 @@ func (s *TicketService) generateTicketNumber(ctx context.Context, tenantID int) 
 		return "", fmt.Errorf("failed to count tickets: %w", err)
 	}
 
-	// 生成工单编号格式: TKT-YYYYMM-XXXXXX
-	ticketNumber := fmt.Sprintf("TKT-%04d%02d-%06d", year, month, count+1)
+	// 生成请求编号格式: REQ-YYYYMM-XXXXXX
+	ticketNumber := fmt.Sprintf("REQ-%04d%02d-%06d", year, month, count+1)
 	return ticketNumber, nil
+}
+
+// ==================== MSP 相关方法 ====================
+
+// GetCustomerTicketsForMSP 获取MSP视角客户工单
+func (s *TicketService) GetCustomerTicketsForMSP(ctx context.Context, userID, customerTenantID int, status *string, page, pageSize int) ([]*ent.Ticket, error) {
+	s.logger.Infow("GetCustomerTicketsForMSP", "user_id", userID, "customer_tenant_id", customerTenantID, "status", status)
+
+	query := s.client.Ticket.Query().Where(ticket.TenantIDEQ(customerTenantID))
+
+	// 过滤条件
+	if status != nil && *status != "" {
+		query = query.Where(ticket.StatusEQ(*status))
+	}
+
+	// 分页
+	if page > 0 {
+		offset := (page - 1) * pageSize
+		query = query.Offset(offset).Limit(pageSize)
+	}
+
+	// 排序
+	query = query.Order(ent.Desc(ticket.FieldCreatedAt))
+
+	tickets, err := query.All(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to get customer tickets for MSP", "error", err)
+		return nil, err
+	}
+
+	return tickets, nil
+}
+
+// AssignMSPTechnician 为工单分配MSP技术员
+func (s *TicketService) AssignMSPTechnician(ctx context.Context, ticketID, customerTenantID, assignerID int) (*ent.Ticket, error) {
+	s.logger.Infow("AssignMSPTechnician", "ticket_id", ticketID, "customer_tenant_id", customerTenantID, "assigner_id", assignerID)
+
+	// 查找工单
+	t, err := s.client.Ticket.Get(ctx, ticketID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("工单不存在")
+		}
+		return nil, err
+	}
+
+	// 验证租户匹配
+	if t.TenantID != customerTenantID {
+		return nil, fmt.Errorf("工单不属于指定客户租户")
+	}
+
+	// 更新工单
+	ticket, err := s.client.Ticket.UpdateOne(t).
+		SetIsManagedByMsp(true).
+		SetManagedByUserID(assignerID).
+		Save(ctx)
+	if err != nil {
+		s.logger.Errorw("Failed to assign MSP technician", "error", err)
+		return nil, fmt.Errorf("分配失败: %w", err)
+	}
+
+	s.logger.Infow("MSP technician assigned", "ticket_id", ticketID, "technician_id", assignerID)
+	return ticket, nil
+}
+
+// GetMSPCustomerReports 获取MSP客户服务报表
+func (s *TicketService) GetMSPCustomerReports(ctx context.Context, startDate, endDate string, customerTenantID *int) ([]dto.MSPCustomerReport, error) {
+	s.logger.Infow("GetMSPCustomerReports", "start_date", startDate, "end_date", endDate, "customer_tenant_id", customerTenantID)
+
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, fmt.Errorf("start_date格式错误: %w", err)
+	}
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, fmt.Errorf("end_date格式错误: %w", err)
+	}
+	end = end.Add(24 * time.Hour) // 包含结束日期
+
+	var reports []dto.MSPCustomerReport
+
+	if customerTenantID != nil {
+		// 单个客户报表
+		tenant, err := s.client.Tenant.Get(ctx, *customerTenantID)
+		if err != nil {
+			return nil, fmt.Errorf("客户租户不存在")
+		}
+
+		report := s.buildCustomerReport(ctx, *customerTenantID, tenant.Name, start, end)
+		reports = append(reports, report)
+	} else {
+		// 所有客户报表 - 需要获取所有客户租户
+		tenants, err := s.client.Tenant.Query().
+			Where(tenant.TypeEQ("customer")).
+			All(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("获取客户列表失败: %w", err)
+		}
+
+		for _, t := range tenants {
+			report := s.buildCustomerReport(ctx, t.ID, t.Name, start, end)
+			reports = append(reports, report)
+		}
+	}
+
+	return reports, nil
+}
+
+// buildCustomerReport 构建客户报表
+func (s *TicketService) buildCustomerReport(ctx context.Context, tenantID int, tenantName string, start, end time.Time) dto.MSPCustomerReport {
+	totalTickets, _ := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.CreatedAtGTE(start),
+			ticket.CreatedAtLT(end),
+		).
+		Count(ctx)
+
+	resolvedTickets, _ := s.client.Ticket.Query().
+		Where(
+			ticket.TenantIDEQ(tenantID),
+			ticket.StatusEQ("resolved"),
+			ticket.CreatedAtGTE(start),
+			ticket.CreatedAtLT(end),
+		).
+		Count(ctx)
+
+	// SLA 合规率（简化计算）
+	var slaComplianceRate float64 = 1.0
+	if totalTickets > 0 {
+		slaComplianceRate = float64(resolvedTickets) / float64(totalTickets)
+	}
+
+	// 平均处理时间（简化计算）
+	var avgHandleTime float64
+	if resolvedTickets > 0 {
+		resolvedTicketList, _ := s.client.Ticket.Query().
+			Where(
+				ticket.TenantIDEQ(tenantID),
+				ticket.StatusEQ("resolved"),
+				ticket.CreatedAtGTE(start),
+				ticket.CreatedAtLT(end),
+			).
+			All(ctx)
+
+		var totalHours float64
+		for _, t := range resolvedTicketList {
+			if !t.ResolvedAt.IsZero() {
+				hours := t.ResolvedAt.Sub(t.CreatedAt).Hours()
+				totalHours += hours
+			}
+		}
+		avgHandleTime = totalHours / float64(resolvedTickets)
+	}
+
+	return dto.MSPCustomerReport{
+		CustomerTenantID:      tenantID,
+		CustomerName:          tenantName,
+		Period:                fmt.Sprintf("%s ~ %s", start.Format("2006-01-02"), end.Format("2006-01-02")),
+		TotalTickets:          totalTickets,
+		ResolvedTickets:       resolvedTickets,
+		MSPHandlingTimeAvg:    avgHandleTime,
+		SLAComplianceRate:     slaComplianceRate,
+	}
+}
+
+// GetMSPPerformanceReports 获取MSP绩效报表
+func (s *TicketService) GetMSPPerformanceReports(ctx context.Context, startDate, endDate string, mspUserID int) ([]dto.MSPPerformanceReport, error) {
+	s.logger.Infow("GetMSPPerformanceReports", "start_date", startDate, "end_date", endDate, "msp_user_id", mspUserID)
+
+	start, err := time.Parse("2006-01-02", startDate)
+	if err != nil {
+		return nil, fmt.Errorf("start_date格式错误: %w", err)
+	}
+	end, err := time.Parse("2006-01-02", endDate)
+	if err != nil {
+		return nil, fmt.Errorf("end_date格式错误: %w", err)
+	}
+	end = end.Add(24 * time.Hour) // 包含结束日期
+
+	// 获取 MSP 用户信息
+	mspUser, err := s.client.User.Get(ctx, mspUserID)
+	if err != nil {
+		return nil, fmt.Errorf("MSP用户不存在")
+	}
+
+	// 统计该 MSP 用户处理的工单
+	totalTickets, _ := s.client.Ticket.Query().
+		Where(
+			ticket.ManagedByUserIDEQ(mspUserID),
+			ticket.CreatedAtGTE(start),
+			ticket.CreatedAtLT(end),
+		).
+		Count(ctx)
+
+	resolvedTickets, _ := s.client.Ticket.Query().
+		Where(
+			ticket.ManagedByUserIDEQ(mspUserID),
+			ticket.StatusEQ("resolved"),
+			ticket.CreatedAtGTE(start),
+			ticket.CreatedAtLT(end),
+		).
+		Count(ctx)
+
+	// 计算平均处理时间
+	var avgHandleTime float64
+	if resolvedTickets > 0 {
+		resolvedTicketList, _ := s.client.Ticket.Query().
+			Where(
+				ticket.ManagedByUserIDEQ(mspUserID),
+				ticket.StatusEQ("resolved"),
+				ticket.CreatedAtGTE(start),
+				ticket.CreatedAtLT(end),
+			).
+			All(ctx)
+
+		var totalHours float64
+		for _, t := range resolvedTicketList {
+			if !t.ResolvedAt.IsZero() {
+				hours := t.ResolvedAt.Sub(t.CreatedAt).Hours()
+				totalHours += hours
+			}
+		}
+		avgHandleTime = totalHours / float64(resolvedTickets)
+	}
+
+	reports := []dto.MSPPerformanceReport{
+		{
+			MSPUserID:      mspUserID,
+			MSPUsername:    mspUser.Name,
+			Period:         fmt.Sprintf("%s ~ %s", start.Format("2006-01-02"), end.Format("2006-01-02")),
+			TotalTickets:   totalTickets,
+			ResolvedTickets: resolvedTickets,
+			AvgHandleTime:  avgHandleTime,
+		},
+	}
+
+	return reports, nil
 }

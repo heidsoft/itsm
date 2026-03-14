@@ -25,173 +25,173 @@ type ApprovalChainUpdate struct {
 }
 
 // Where appends a list predicates to the ApprovalChainUpdate builder.
-func (acu *ApprovalChainUpdate) Where(ps ...predicate.ApprovalChain) *ApprovalChainUpdate {
-	acu.mutation.Where(ps...)
-	return acu
+func (_u *ApprovalChainUpdate) Where(ps ...predicate.ApprovalChain) *ApprovalChainUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (acu *ApprovalChainUpdate) SetName(s string) *ApprovalChainUpdate {
-	acu.mutation.SetName(s)
-	return acu
+func (_u *ApprovalChainUpdate) SetName(v string) *ApprovalChainUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (acu *ApprovalChainUpdate) SetNillableName(s *string) *ApprovalChainUpdate {
-	if s != nil {
-		acu.SetName(*s)
+func (_u *ApprovalChainUpdate) SetNillableName(v *string) *ApprovalChainUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return acu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (acu *ApprovalChainUpdate) SetDescription(s string) *ApprovalChainUpdate {
-	acu.mutation.SetDescription(s)
-	return acu
+func (_u *ApprovalChainUpdate) SetDescription(v string) *ApprovalChainUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (acu *ApprovalChainUpdate) SetNillableDescription(s *string) *ApprovalChainUpdate {
-	if s != nil {
-		acu.SetDescription(*s)
+func (_u *ApprovalChainUpdate) SetNillableDescription(v *string) *ApprovalChainUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return acu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (acu *ApprovalChainUpdate) ClearDescription() *ApprovalChainUpdate {
-	acu.mutation.ClearDescription()
-	return acu
+func (_u *ApprovalChainUpdate) ClearDescription() *ApprovalChainUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetEntityType sets the "entity_type" field.
-func (acu *ApprovalChainUpdate) SetEntityType(s string) *ApprovalChainUpdate {
-	acu.mutation.SetEntityType(s)
-	return acu
+func (_u *ApprovalChainUpdate) SetEntityType(v string) *ApprovalChainUpdate {
+	_u.mutation.SetEntityType(v)
+	return _u
 }
 
 // SetNillableEntityType sets the "entity_type" field if the given value is not nil.
-func (acu *ApprovalChainUpdate) SetNillableEntityType(s *string) *ApprovalChainUpdate {
-	if s != nil {
-		acu.SetEntityType(*s)
+func (_u *ApprovalChainUpdate) SetNillableEntityType(v *string) *ApprovalChainUpdate {
+	if v != nil {
+		_u.SetEntityType(*v)
 	}
-	return acu
+	return _u
 }
 
 // SetChain sets the "chain" field.
-func (acu *ApprovalChainUpdate) SetChain(scs []schema.ApprovalChainStep) *ApprovalChainUpdate {
-	acu.mutation.SetChain(scs)
-	return acu
+func (_u *ApprovalChainUpdate) SetChain(v []schema.ApprovalChainStep) *ApprovalChainUpdate {
+	_u.mutation.SetChain(v)
+	return _u
 }
 
-// AppendChain appends scs to the "chain" field.
-func (acu *ApprovalChainUpdate) AppendChain(scs []schema.ApprovalChainStep) *ApprovalChainUpdate {
-	acu.mutation.AppendChain(scs)
-	return acu
+// AppendChain appends value to the "chain" field.
+func (_u *ApprovalChainUpdate) AppendChain(v []schema.ApprovalChainStep) *ApprovalChainUpdate {
+	_u.mutation.AppendChain(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (acu *ApprovalChainUpdate) SetStatus(s string) *ApprovalChainUpdate {
-	acu.mutation.SetStatus(s)
-	return acu
+func (_u *ApprovalChainUpdate) SetStatus(v string) *ApprovalChainUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (acu *ApprovalChainUpdate) SetNillableStatus(s *string) *ApprovalChainUpdate {
-	if s != nil {
-		acu.SetStatus(*s)
+func (_u *ApprovalChainUpdate) SetNillableStatus(v *string) *ApprovalChainUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return acu
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (acu *ApprovalChainUpdate) SetCreatedBy(i int) *ApprovalChainUpdate {
-	acu.mutation.ResetCreatedBy()
-	acu.mutation.SetCreatedBy(i)
-	return acu
+func (_u *ApprovalChainUpdate) SetCreatedBy(v int) *ApprovalChainUpdate {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (acu *ApprovalChainUpdate) SetNillableCreatedBy(i *int) *ApprovalChainUpdate {
-	if i != nil {
-		acu.SetCreatedBy(*i)
+func (_u *ApprovalChainUpdate) SetNillableCreatedBy(v *int) *ApprovalChainUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return acu
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (acu *ApprovalChainUpdate) AddCreatedBy(i int) *ApprovalChainUpdate {
-	acu.mutation.AddCreatedBy(i)
-	return acu
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ApprovalChainUpdate) AddCreatedBy(v int) *ApprovalChainUpdate {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // ClearCreatedBy clears the value of the "created_by" field.
-func (acu *ApprovalChainUpdate) ClearCreatedBy() *ApprovalChainUpdate {
-	acu.mutation.ClearCreatedBy()
-	return acu
+func (_u *ApprovalChainUpdate) ClearCreatedBy() *ApprovalChainUpdate {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (acu *ApprovalChainUpdate) SetTenantID(i int) *ApprovalChainUpdate {
-	acu.mutation.ResetTenantID()
-	acu.mutation.SetTenantID(i)
-	return acu
+func (_u *ApprovalChainUpdate) SetTenantID(v int) *ApprovalChainUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (acu *ApprovalChainUpdate) SetNillableTenantID(i *int) *ApprovalChainUpdate {
-	if i != nil {
-		acu.SetTenantID(*i)
+func (_u *ApprovalChainUpdate) SetNillableTenantID(v *int) *ApprovalChainUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return acu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (acu *ApprovalChainUpdate) AddTenantID(i int) *ApprovalChainUpdate {
-	acu.mutation.AddTenantID(i)
-	return acu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ApprovalChainUpdate) AddTenantID(v int) *ApprovalChainUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (acu *ApprovalChainUpdate) ClearTenantID() *ApprovalChainUpdate {
-	acu.mutation.ClearTenantID()
-	return acu
+func (_u *ApprovalChainUpdate) ClearTenantID() *ApprovalChainUpdate {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (acu *ApprovalChainUpdate) SetCreatedAt(t time.Time) *ApprovalChainUpdate {
-	acu.mutation.SetCreatedAt(t)
-	return acu
+func (_u *ApprovalChainUpdate) SetCreatedAt(v time.Time) *ApprovalChainUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (acu *ApprovalChainUpdate) SetNillableCreatedAt(t *time.Time) *ApprovalChainUpdate {
-	if t != nil {
-		acu.SetCreatedAt(*t)
+func (_u *ApprovalChainUpdate) SetNillableCreatedAt(v *time.Time) *ApprovalChainUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return acu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (acu *ApprovalChainUpdate) SetUpdatedAt(t time.Time) *ApprovalChainUpdate {
-	acu.mutation.SetUpdatedAt(t)
-	return acu
+func (_u *ApprovalChainUpdate) SetUpdatedAt(v time.Time) *ApprovalChainUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ApprovalChainMutation object of the builder.
-func (acu *ApprovalChainUpdate) Mutation() *ApprovalChainMutation {
-	return acu.mutation
+func (_u *ApprovalChainUpdate) Mutation() *ApprovalChainMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (acu *ApprovalChainUpdate) Save(ctx context.Context) (int, error) {
-	acu.defaults()
-	return withHooks(ctx, acu.sqlSave, acu.mutation, acu.hooks)
+func (_u *ApprovalChainUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (acu *ApprovalChainUpdate) SaveX(ctx context.Context) int {
-	affected, err := acu.Save(ctx)
+func (_u *ApprovalChainUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -199,29 +199,29 @@ func (acu *ApprovalChainUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (acu *ApprovalChainUpdate) Exec(ctx context.Context) error {
-	_, err := acu.Save(ctx)
+func (_u *ApprovalChainUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (acu *ApprovalChainUpdate) ExecX(ctx context.Context) {
-	if err := acu.Exec(ctx); err != nil {
+func (_u *ApprovalChainUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (acu *ApprovalChainUpdate) defaults() {
-	if _, ok := acu.mutation.UpdatedAt(); !ok {
+func (_u *ApprovalChainUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := approvalchain.UpdateDefaultUpdatedAt()
-		acu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (acu *ApprovalChainUpdate) check() error {
-	if v, ok := acu.mutation.Name(); ok {
+func (_u *ApprovalChainUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := approvalchain.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApprovalChain.name": %w`, err)}
 		}
@@ -229,66 +229,66 @@ func (acu *ApprovalChainUpdate) check() error {
 	return nil
 }
 
-func (acu *ApprovalChainUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := acu.check(); err != nil {
-		return n, err
+func (_u *ApprovalChainUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(approvalchain.Table, approvalchain.Columns, sqlgraph.NewFieldSpec(approvalchain.FieldID, field.TypeInt))
-	if ps := acu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := acu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(approvalchain.FieldName, field.TypeString, value)
 	}
-	if value, ok := acu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(approvalchain.FieldDescription, field.TypeString, value)
 	}
-	if acu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(approvalchain.FieldDescription, field.TypeString)
 	}
-	if value, ok := acu.mutation.EntityType(); ok {
+	if value, ok := _u.mutation.EntityType(); ok {
 		_spec.SetField(approvalchain.FieldEntityType, field.TypeString, value)
 	}
-	if value, ok := acu.mutation.Chain(); ok {
+	if value, ok := _u.mutation.Chain(); ok {
 		_spec.SetField(approvalchain.FieldChain, field.TypeJSON, value)
 	}
-	if value, ok := acu.mutation.AppendedChain(); ok {
+	if value, ok := _u.mutation.AppendedChain(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, approvalchain.FieldChain, value)
 		})
 	}
-	if value, ok := acu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(approvalchain.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := acu.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(approvalchain.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := acu.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(approvalchain.FieldCreatedBy, field.TypeInt, value)
 	}
-	if acu.mutation.CreatedByCleared() {
+	if _u.mutation.CreatedByCleared() {
 		_spec.ClearField(approvalchain.FieldCreatedBy, field.TypeInt)
 	}
-	if value, ok := acu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(approvalchain.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := acu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(approvalchain.FieldTenantID, field.TypeInt, value)
 	}
-	if acu.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(approvalchain.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := acu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalchain.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := acu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(approvalchain.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, acu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{approvalchain.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -296,8 +296,8 @@ func (acu *ApprovalChainUpdate) sqlSave(ctx context.Context) (n int, err error) 
 		}
 		return 0, err
 	}
-	acu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ApprovalChainUpdateOne is the builder for updating a single ApprovalChain entity.
@@ -309,180 +309,180 @@ type ApprovalChainUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (acuo *ApprovalChainUpdateOne) SetName(s string) *ApprovalChainUpdateOne {
-	acuo.mutation.SetName(s)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetName(v string) *ApprovalChainUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (acuo *ApprovalChainUpdateOne) SetNillableName(s *string) *ApprovalChainUpdateOne {
-	if s != nil {
-		acuo.SetName(*s)
+func (_u *ApprovalChainUpdateOne) SetNillableName(v *string) *ApprovalChainUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return acuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (acuo *ApprovalChainUpdateOne) SetDescription(s string) *ApprovalChainUpdateOne {
-	acuo.mutation.SetDescription(s)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetDescription(v string) *ApprovalChainUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (acuo *ApprovalChainUpdateOne) SetNillableDescription(s *string) *ApprovalChainUpdateOne {
-	if s != nil {
-		acuo.SetDescription(*s)
+func (_u *ApprovalChainUpdateOne) SetNillableDescription(v *string) *ApprovalChainUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return acuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (acuo *ApprovalChainUpdateOne) ClearDescription() *ApprovalChainUpdateOne {
-	acuo.mutation.ClearDescription()
-	return acuo
+func (_u *ApprovalChainUpdateOne) ClearDescription() *ApprovalChainUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetEntityType sets the "entity_type" field.
-func (acuo *ApprovalChainUpdateOne) SetEntityType(s string) *ApprovalChainUpdateOne {
-	acuo.mutation.SetEntityType(s)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetEntityType(v string) *ApprovalChainUpdateOne {
+	_u.mutation.SetEntityType(v)
+	return _u
 }
 
 // SetNillableEntityType sets the "entity_type" field if the given value is not nil.
-func (acuo *ApprovalChainUpdateOne) SetNillableEntityType(s *string) *ApprovalChainUpdateOne {
-	if s != nil {
-		acuo.SetEntityType(*s)
+func (_u *ApprovalChainUpdateOne) SetNillableEntityType(v *string) *ApprovalChainUpdateOne {
+	if v != nil {
+		_u.SetEntityType(*v)
 	}
-	return acuo
+	return _u
 }
 
 // SetChain sets the "chain" field.
-func (acuo *ApprovalChainUpdateOne) SetChain(scs []schema.ApprovalChainStep) *ApprovalChainUpdateOne {
-	acuo.mutation.SetChain(scs)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetChain(v []schema.ApprovalChainStep) *ApprovalChainUpdateOne {
+	_u.mutation.SetChain(v)
+	return _u
 }
 
-// AppendChain appends scs to the "chain" field.
-func (acuo *ApprovalChainUpdateOne) AppendChain(scs []schema.ApprovalChainStep) *ApprovalChainUpdateOne {
-	acuo.mutation.AppendChain(scs)
-	return acuo
+// AppendChain appends value to the "chain" field.
+func (_u *ApprovalChainUpdateOne) AppendChain(v []schema.ApprovalChainStep) *ApprovalChainUpdateOne {
+	_u.mutation.AppendChain(v)
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (acuo *ApprovalChainUpdateOne) SetStatus(s string) *ApprovalChainUpdateOne {
-	acuo.mutation.SetStatus(s)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetStatus(v string) *ApprovalChainUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (acuo *ApprovalChainUpdateOne) SetNillableStatus(s *string) *ApprovalChainUpdateOne {
-	if s != nil {
-		acuo.SetStatus(*s)
+func (_u *ApprovalChainUpdateOne) SetNillableStatus(v *string) *ApprovalChainUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return acuo
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (acuo *ApprovalChainUpdateOne) SetCreatedBy(i int) *ApprovalChainUpdateOne {
-	acuo.mutation.ResetCreatedBy()
-	acuo.mutation.SetCreatedBy(i)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetCreatedBy(v int) *ApprovalChainUpdateOne {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (acuo *ApprovalChainUpdateOne) SetNillableCreatedBy(i *int) *ApprovalChainUpdateOne {
-	if i != nil {
-		acuo.SetCreatedBy(*i)
+func (_u *ApprovalChainUpdateOne) SetNillableCreatedBy(v *int) *ApprovalChainUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return acuo
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (acuo *ApprovalChainUpdateOne) AddCreatedBy(i int) *ApprovalChainUpdateOne {
-	acuo.mutation.AddCreatedBy(i)
-	return acuo
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ApprovalChainUpdateOne) AddCreatedBy(v int) *ApprovalChainUpdateOne {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // ClearCreatedBy clears the value of the "created_by" field.
-func (acuo *ApprovalChainUpdateOne) ClearCreatedBy() *ApprovalChainUpdateOne {
-	acuo.mutation.ClearCreatedBy()
-	return acuo
+func (_u *ApprovalChainUpdateOne) ClearCreatedBy() *ApprovalChainUpdateOne {
+	_u.mutation.ClearCreatedBy()
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (acuo *ApprovalChainUpdateOne) SetTenantID(i int) *ApprovalChainUpdateOne {
-	acuo.mutation.ResetTenantID()
-	acuo.mutation.SetTenantID(i)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetTenantID(v int) *ApprovalChainUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (acuo *ApprovalChainUpdateOne) SetNillableTenantID(i *int) *ApprovalChainUpdateOne {
-	if i != nil {
-		acuo.SetTenantID(*i)
+func (_u *ApprovalChainUpdateOne) SetNillableTenantID(v *int) *ApprovalChainUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return acuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (acuo *ApprovalChainUpdateOne) AddTenantID(i int) *ApprovalChainUpdateOne {
-	acuo.mutation.AddTenantID(i)
-	return acuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ApprovalChainUpdateOne) AddTenantID(v int) *ApprovalChainUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // ClearTenantID clears the value of the "tenant_id" field.
-func (acuo *ApprovalChainUpdateOne) ClearTenantID() *ApprovalChainUpdateOne {
-	acuo.mutation.ClearTenantID()
-	return acuo
+func (_u *ApprovalChainUpdateOne) ClearTenantID() *ApprovalChainUpdateOne {
+	_u.mutation.ClearTenantID()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (acuo *ApprovalChainUpdateOne) SetCreatedAt(t time.Time) *ApprovalChainUpdateOne {
-	acuo.mutation.SetCreatedAt(t)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetCreatedAt(v time.Time) *ApprovalChainUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (acuo *ApprovalChainUpdateOne) SetNillableCreatedAt(t *time.Time) *ApprovalChainUpdateOne {
-	if t != nil {
-		acuo.SetCreatedAt(*t)
+func (_u *ApprovalChainUpdateOne) SetNillableCreatedAt(v *time.Time) *ApprovalChainUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return acuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (acuo *ApprovalChainUpdateOne) SetUpdatedAt(t time.Time) *ApprovalChainUpdateOne {
-	acuo.mutation.SetUpdatedAt(t)
-	return acuo
+func (_u *ApprovalChainUpdateOne) SetUpdatedAt(v time.Time) *ApprovalChainUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ApprovalChainMutation object of the builder.
-func (acuo *ApprovalChainUpdateOne) Mutation() *ApprovalChainMutation {
-	return acuo.mutation
+func (_u *ApprovalChainUpdateOne) Mutation() *ApprovalChainMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the ApprovalChainUpdate builder.
-func (acuo *ApprovalChainUpdateOne) Where(ps ...predicate.ApprovalChain) *ApprovalChainUpdateOne {
-	acuo.mutation.Where(ps...)
-	return acuo
+func (_u *ApprovalChainUpdateOne) Where(ps ...predicate.ApprovalChain) *ApprovalChainUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (acuo *ApprovalChainUpdateOne) Select(field string, fields ...string) *ApprovalChainUpdateOne {
-	acuo.fields = append([]string{field}, fields...)
-	return acuo
+func (_u *ApprovalChainUpdateOne) Select(field string, fields ...string) *ApprovalChainUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated ApprovalChain entity.
-func (acuo *ApprovalChainUpdateOne) Save(ctx context.Context) (*ApprovalChain, error) {
-	acuo.defaults()
-	return withHooks(ctx, acuo.sqlSave, acuo.mutation, acuo.hooks)
+func (_u *ApprovalChainUpdateOne) Save(ctx context.Context) (*ApprovalChain, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (acuo *ApprovalChainUpdateOne) SaveX(ctx context.Context) *ApprovalChain {
-	node, err := acuo.Save(ctx)
+func (_u *ApprovalChainUpdateOne) SaveX(ctx context.Context) *ApprovalChain {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -490,29 +490,29 @@ func (acuo *ApprovalChainUpdateOne) SaveX(ctx context.Context) *ApprovalChain {
 }
 
 // Exec executes the query on the entity.
-func (acuo *ApprovalChainUpdateOne) Exec(ctx context.Context) error {
-	_, err := acuo.Save(ctx)
+func (_u *ApprovalChainUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (acuo *ApprovalChainUpdateOne) ExecX(ctx context.Context) {
-	if err := acuo.Exec(ctx); err != nil {
+func (_u *ApprovalChainUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (acuo *ApprovalChainUpdateOne) defaults() {
-	if _, ok := acuo.mutation.UpdatedAt(); !ok {
+func (_u *ApprovalChainUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := approvalchain.UpdateDefaultUpdatedAt()
-		acuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (acuo *ApprovalChainUpdateOne) check() error {
-	if v, ok := acuo.mutation.Name(); ok {
+func (_u *ApprovalChainUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := approvalchain.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "ApprovalChain.name": %w`, err)}
 		}
@@ -520,17 +520,17 @@ func (acuo *ApprovalChainUpdateOne) check() error {
 	return nil
 }
 
-func (acuo *ApprovalChainUpdateOne) sqlSave(ctx context.Context) (_node *ApprovalChain, err error) {
-	if err := acuo.check(); err != nil {
+func (_u *ApprovalChainUpdateOne) sqlSave(ctx context.Context) (_node *ApprovalChain, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(approvalchain.Table, approvalchain.Columns, sqlgraph.NewFieldSpec(approvalchain.FieldID, field.TypeInt))
-	id, ok := acuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "ApprovalChain.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := acuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, approvalchain.FieldID)
 		for _, f := range fields {
@@ -542,64 +542,64 @@ func (acuo *ApprovalChainUpdateOne) sqlSave(ctx context.Context) (_node *Approva
 			}
 		}
 	}
-	if ps := acuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := acuo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(approvalchain.FieldName, field.TypeString, value)
 	}
-	if value, ok := acuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(approvalchain.FieldDescription, field.TypeString, value)
 	}
-	if acuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(approvalchain.FieldDescription, field.TypeString)
 	}
-	if value, ok := acuo.mutation.EntityType(); ok {
+	if value, ok := _u.mutation.EntityType(); ok {
 		_spec.SetField(approvalchain.FieldEntityType, field.TypeString, value)
 	}
-	if value, ok := acuo.mutation.Chain(); ok {
+	if value, ok := _u.mutation.Chain(); ok {
 		_spec.SetField(approvalchain.FieldChain, field.TypeJSON, value)
 	}
-	if value, ok := acuo.mutation.AppendedChain(); ok {
+	if value, ok := _u.mutation.AppendedChain(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, approvalchain.FieldChain, value)
 		})
 	}
-	if value, ok := acuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(approvalchain.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := acuo.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(approvalchain.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := acuo.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(approvalchain.FieldCreatedBy, field.TypeInt, value)
 	}
-	if acuo.mutation.CreatedByCleared() {
+	if _u.mutation.CreatedByCleared() {
 		_spec.ClearField(approvalchain.FieldCreatedBy, field.TypeInt)
 	}
-	if value, ok := acuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(approvalchain.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := acuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(approvalchain.FieldTenantID, field.TypeInt, value)
 	}
-	if acuo.mutation.TenantIDCleared() {
+	if _u.mutation.TenantIDCleared() {
 		_spec.ClearField(approvalchain.FieldTenantID, field.TypeInt)
 	}
-	if value, ok := acuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(approvalchain.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := acuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(approvalchain.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &ApprovalChain{config: acuo.config}
+	_node = &ApprovalChain{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, acuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{approvalchain.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -607,6 +607,6 @@ func (acuo *ApprovalChainUpdateOne) sqlSave(ctx context.Context) (_node *Approva
 		}
 		return nil, err
 	}
-	acuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

@@ -30,44 +30,44 @@ type KnowledgeArticleLikeQuery struct {
 }
 
 // Where adds a new predicate for the KnowledgeArticleLikeQuery builder.
-func (kalq *KnowledgeArticleLikeQuery) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeQuery {
-	kalq.predicates = append(kalq.predicates, ps...)
-	return kalq
+func (_q *KnowledgeArticleLikeQuery) Where(ps ...predicate.KnowledgeArticleLike) *KnowledgeArticleLikeQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (kalq *KnowledgeArticleLikeQuery) Limit(limit int) *KnowledgeArticleLikeQuery {
-	kalq.ctx.Limit = &limit
-	return kalq
+func (_q *KnowledgeArticleLikeQuery) Limit(limit int) *KnowledgeArticleLikeQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (kalq *KnowledgeArticleLikeQuery) Offset(offset int) *KnowledgeArticleLikeQuery {
-	kalq.ctx.Offset = &offset
-	return kalq
+func (_q *KnowledgeArticleLikeQuery) Offset(offset int) *KnowledgeArticleLikeQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (kalq *KnowledgeArticleLikeQuery) Unique(unique bool) *KnowledgeArticleLikeQuery {
-	kalq.ctx.Unique = &unique
-	return kalq
+func (_q *KnowledgeArticleLikeQuery) Unique(unique bool) *KnowledgeArticleLikeQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (kalq *KnowledgeArticleLikeQuery) Order(o ...knowledgearticlelike.OrderOption) *KnowledgeArticleLikeQuery {
-	kalq.order = append(kalq.order, o...)
-	return kalq
+func (_q *KnowledgeArticleLikeQuery) Order(o ...knowledgearticlelike.OrderOption) *KnowledgeArticleLikeQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryArticle chains the current query on the "article" edge.
-func (kalq *KnowledgeArticleLikeQuery) QueryArticle() *KnowledgeArticleQuery {
-	query := (&KnowledgeArticleClient{config: kalq.config}).Query()
+func (_q *KnowledgeArticleLikeQuery) QueryArticle() *KnowledgeArticleQuery {
+	query := (&KnowledgeArticleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := kalq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := kalq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (kalq *KnowledgeArticleLikeQuery) QueryArticle() *KnowledgeArticleQuery {
 			sqlgraph.To(knowledgearticle.Table, knowledgearticle.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, knowledgearticlelike.ArticleTable, knowledgearticlelike.ArticleColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(kalq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (kalq *KnowledgeArticleLikeQuery) QueryArticle() *KnowledgeArticleQuery {
 
 // First returns the first KnowledgeArticleLike entity from the query.
 // Returns a *NotFoundError when no KnowledgeArticleLike was found.
-func (kalq *KnowledgeArticleLikeQuery) First(ctx context.Context) (*KnowledgeArticleLike, error) {
-	nodes, err := kalq.Limit(1).All(setContextOp(ctx, kalq.ctx, ent.OpQueryFirst))
+func (_q *KnowledgeArticleLikeQuery) First(ctx context.Context) (*KnowledgeArticleLike, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (kalq *KnowledgeArticleLikeQuery) First(ctx context.Context) (*KnowledgeArt
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) FirstX(ctx context.Context) *KnowledgeArticleLike {
-	node, err := kalq.First(ctx)
+func (_q *KnowledgeArticleLikeQuery) FirstX(ctx context.Context) *KnowledgeArticleLike {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (kalq *KnowledgeArticleLikeQuery) FirstX(ctx context.Context) *KnowledgeArt
 
 // FirstID returns the first KnowledgeArticleLike ID from the query.
 // Returns a *NotFoundError when no KnowledgeArticleLike ID was found.
-func (kalq *KnowledgeArticleLikeQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *KnowledgeArticleLikeQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = kalq.Limit(1).IDs(setContextOp(ctx, kalq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (kalq *KnowledgeArticleLikeQuery) FirstID(ctx context.Context) (id int, err
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) FirstIDX(ctx context.Context) int {
-	id, err := kalq.FirstID(ctx)
+func (_q *KnowledgeArticleLikeQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (kalq *KnowledgeArticleLikeQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single KnowledgeArticleLike entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one KnowledgeArticleLike entity is found.
 // Returns a *NotFoundError when no KnowledgeArticleLike entities are found.
-func (kalq *KnowledgeArticleLikeQuery) Only(ctx context.Context) (*KnowledgeArticleLike, error) {
-	nodes, err := kalq.Limit(2).All(setContextOp(ctx, kalq.ctx, ent.OpQueryOnly))
+func (_q *KnowledgeArticleLikeQuery) Only(ctx context.Context) (*KnowledgeArticleLike, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (kalq *KnowledgeArticleLikeQuery) Only(ctx context.Context) (*KnowledgeArti
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) OnlyX(ctx context.Context) *KnowledgeArticleLike {
-	node, err := kalq.Only(ctx)
+func (_q *KnowledgeArticleLikeQuery) OnlyX(ctx context.Context) *KnowledgeArticleLike {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (kalq *KnowledgeArticleLikeQuery) OnlyX(ctx context.Context) *KnowledgeArti
 // OnlyID is like Only, but returns the only KnowledgeArticleLike ID in the query.
 // Returns a *NotSingularError when more than one KnowledgeArticleLike ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (kalq *KnowledgeArticleLikeQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *KnowledgeArticleLikeQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = kalq.Limit(2).IDs(setContextOp(ctx, kalq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (kalq *KnowledgeArticleLikeQuery) OnlyID(ctx context.Context) (id int, err 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) OnlyIDX(ctx context.Context) int {
-	id, err := kalq.OnlyID(ctx)
+func (_q *KnowledgeArticleLikeQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (kalq *KnowledgeArticleLikeQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of KnowledgeArticleLikes.
-func (kalq *KnowledgeArticleLikeQuery) All(ctx context.Context) ([]*KnowledgeArticleLike, error) {
-	ctx = setContextOp(ctx, kalq.ctx, ent.OpQueryAll)
-	if err := kalq.prepareQuery(ctx); err != nil {
+func (_q *KnowledgeArticleLikeQuery) All(ctx context.Context) ([]*KnowledgeArticleLike, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*KnowledgeArticleLike, *KnowledgeArticleLikeQuery]()
-	return withInterceptors[[]*KnowledgeArticleLike](ctx, kalq, qr, kalq.inters)
+	return withInterceptors[[]*KnowledgeArticleLike](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) AllX(ctx context.Context) []*KnowledgeArticleLike {
-	nodes, err := kalq.All(ctx)
+func (_q *KnowledgeArticleLikeQuery) AllX(ctx context.Context) []*KnowledgeArticleLike {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (kalq *KnowledgeArticleLikeQuery) AllX(ctx context.Context) []*KnowledgeArt
 }
 
 // IDs executes the query and returns a list of KnowledgeArticleLike IDs.
-func (kalq *KnowledgeArticleLikeQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if kalq.ctx.Unique == nil && kalq.path != nil {
-		kalq.Unique(true)
+func (_q *KnowledgeArticleLikeQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, kalq.ctx, ent.OpQueryIDs)
-	if err = kalq.Select(knowledgearticlelike.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(knowledgearticlelike.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) IDsX(ctx context.Context) []int {
-	ids, err := kalq.IDs(ctx)
+func (_q *KnowledgeArticleLikeQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (kalq *KnowledgeArticleLikeQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (kalq *KnowledgeArticleLikeQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, kalq.ctx, ent.OpQueryCount)
-	if err := kalq.prepareQuery(ctx); err != nil {
+func (_q *KnowledgeArticleLikeQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, kalq, querierCount[*KnowledgeArticleLikeQuery](), kalq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*KnowledgeArticleLikeQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) CountX(ctx context.Context) int {
-	count, err := kalq.Count(ctx)
+func (_q *KnowledgeArticleLikeQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (kalq *KnowledgeArticleLikeQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (kalq *KnowledgeArticleLikeQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, kalq.ctx, ent.OpQueryExist)
-	switch _, err := kalq.FirstID(ctx); {
+func (_q *KnowledgeArticleLikeQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (kalq *KnowledgeArticleLikeQuery) Exist(ctx context.Context) (bool, error) 
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (kalq *KnowledgeArticleLikeQuery) ExistX(ctx context.Context) bool {
-	exist, err := kalq.Exist(ctx)
+func (_q *KnowledgeArticleLikeQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (kalq *KnowledgeArticleLikeQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the KnowledgeArticleLikeQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (kalq *KnowledgeArticleLikeQuery) Clone() *KnowledgeArticleLikeQuery {
-	if kalq == nil {
+func (_q *KnowledgeArticleLikeQuery) Clone() *KnowledgeArticleLikeQuery {
+	if _q == nil {
 		return nil
 	}
 	return &KnowledgeArticleLikeQuery{
-		config:      kalq.config,
-		ctx:         kalq.ctx.Clone(),
-		order:       append([]knowledgearticlelike.OrderOption{}, kalq.order...),
-		inters:      append([]Interceptor{}, kalq.inters...),
-		predicates:  append([]predicate.KnowledgeArticleLike{}, kalq.predicates...),
-		withArticle: kalq.withArticle.Clone(),
+		config:      _q.config,
+		ctx:         _q.ctx.Clone(),
+		order:       append([]knowledgearticlelike.OrderOption{}, _q.order...),
+		inters:      append([]Interceptor{}, _q.inters...),
+		predicates:  append([]predicate.KnowledgeArticleLike{}, _q.predicates...),
+		withArticle: _q.withArticle.Clone(),
 		// clone intermediate query.
-		sql:  kalq.sql.Clone(),
-		path: kalq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithArticle tells the query-builder to eager-load the nodes that are connected to
 // the "article" edge. The optional arguments are used to configure the query builder of the edge.
-func (kalq *KnowledgeArticleLikeQuery) WithArticle(opts ...func(*KnowledgeArticleQuery)) *KnowledgeArticleLikeQuery {
-	query := (&KnowledgeArticleClient{config: kalq.config}).Query()
+func (_q *KnowledgeArticleLikeQuery) WithArticle(opts ...func(*KnowledgeArticleQuery)) *KnowledgeArticleLikeQuery {
+	query := (&KnowledgeArticleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	kalq.withArticle = query
-	return kalq
+	_q.withArticle = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (kalq *KnowledgeArticleLikeQuery) WithArticle(opts ...func(*KnowledgeArticl
 //		GroupBy(knowledgearticlelike.FieldArticleID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (kalq *KnowledgeArticleLikeQuery) GroupBy(field string, fields ...string) *KnowledgeArticleLikeGroupBy {
-	kalq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &KnowledgeArticleLikeGroupBy{build: kalq}
-	grbuild.flds = &kalq.ctx.Fields
+func (_q *KnowledgeArticleLikeQuery) GroupBy(field string, fields ...string) *KnowledgeArticleLikeGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &KnowledgeArticleLikeGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = knowledgearticlelike.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (kalq *KnowledgeArticleLikeQuery) GroupBy(field string, fields ...string) *
 //	client.KnowledgeArticleLike.Query().
 //		Select(knowledgearticlelike.FieldArticleID).
 //		Scan(ctx, &v)
-func (kalq *KnowledgeArticleLikeQuery) Select(fields ...string) *KnowledgeArticleLikeSelect {
-	kalq.ctx.Fields = append(kalq.ctx.Fields, fields...)
-	sbuild := &KnowledgeArticleLikeSelect{KnowledgeArticleLikeQuery: kalq}
+func (_q *KnowledgeArticleLikeQuery) Select(fields ...string) *KnowledgeArticleLikeSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &KnowledgeArticleLikeSelect{KnowledgeArticleLikeQuery: _q}
 	sbuild.label = knowledgearticlelike.Label
-	sbuild.flds, sbuild.scan = &kalq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a KnowledgeArticleLikeSelect configured with the given aggregations.
-func (kalq *KnowledgeArticleLikeQuery) Aggregate(fns ...AggregateFunc) *KnowledgeArticleLikeSelect {
-	return kalq.Select().Aggregate(fns...)
+func (_q *KnowledgeArticleLikeQuery) Aggregate(fns ...AggregateFunc) *KnowledgeArticleLikeSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (kalq *KnowledgeArticleLikeQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range kalq.inters {
+func (_q *KnowledgeArticleLikeQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, kalq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range kalq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !knowledgearticlelike.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if kalq.path != nil {
-		prev, err := kalq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		kalq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (kalq *KnowledgeArticleLikeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*KnowledgeArticleLike, error) {
+func (_q *KnowledgeArticleLikeQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*KnowledgeArticleLike, error) {
 	var (
 		nodes       = []*KnowledgeArticleLike{}
-		_spec       = kalq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			kalq.withArticle != nil,
+			_q.withArticle != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*KnowledgeArticleLike).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &KnowledgeArticleLike{config: kalq.config}
+		node := &KnowledgeArticleLike{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (kalq *KnowledgeArticleLikeQuery) sqlAll(ctx context.Context, hooks ...quer
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, kalq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := kalq.withArticle; query != nil {
-		if err := kalq.loadArticle(ctx, query, nodes, nil,
+	if query := _q.withArticle; query != nil {
+		if err := _q.loadArticle(ctx, query, nodes, nil,
 			func(n *KnowledgeArticleLike, e *KnowledgeArticle) { n.Edges.Article = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (kalq *KnowledgeArticleLikeQuery) sqlAll(ctx context.Context, hooks ...quer
 	return nodes, nil
 }
 
-func (kalq *KnowledgeArticleLikeQuery) loadArticle(ctx context.Context, query *KnowledgeArticleQuery, nodes []*KnowledgeArticleLike, init func(*KnowledgeArticleLike), assign func(*KnowledgeArticleLike, *KnowledgeArticle)) error {
+func (_q *KnowledgeArticleLikeQuery) loadArticle(ctx context.Context, query *KnowledgeArticleQuery, nodes []*KnowledgeArticleLike, init func(*KnowledgeArticleLike), assign func(*KnowledgeArticleLike, *KnowledgeArticle)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*KnowledgeArticleLike)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (kalq *KnowledgeArticleLikeQuery) loadArticle(ctx context.Context, query *K
 	return nil
 }
 
-func (kalq *KnowledgeArticleLikeQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := kalq.querySpec()
-	_spec.Node.Columns = kalq.ctx.Fields
-	if len(kalq.ctx.Fields) > 0 {
-		_spec.Unique = kalq.ctx.Unique != nil && *kalq.ctx.Unique
+func (_q *KnowledgeArticleLikeQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, kalq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (kalq *KnowledgeArticleLikeQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *KnowledgeArticleLikeQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(knowledgearticlelike.Table, knowledgearticlelike.Columns, sqlgraph.NewFieldSpec(knowledgearticlelike.FieldID, field.TypeInt))
-	_spec.From = kalq.sql
-	if unique := kalq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if kalq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := kalq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, knowledgearticlelike.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (kalq *KnowledgeArticleLikeQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if kalq.withArticle != nil {
+		if _q.withArticle != nil {
 			_spec.Node.AddColumnOnce(knowledgearticlelike.FieldArticleID)
 		}
 	}
-	if ps := kalq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := kalq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := kalq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := kalq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (kalq *KnowledgeArticleLikeQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (kalq *KnowledgeArticleLikeQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(kalq.driver.Dialect())
+func (_q *KnowledgeArticleLikeQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(knowledgearticlelike.Table)
-	columns := kalq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = knowledgearticlelike.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if kalq.sql != nil {
-		selector = kalq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if kalq.ctx.Unique != nil && *kalq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range kalq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range kalq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := kalq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := kalq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type KnowledgeArticleLikeGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (kalgb *KnowledgeArticleLikeGroupBy) Aggregate(fns ...AggregateFunc) *KnowledgeArticleLikeGroupBy {
-	kalgb.fns = append(kalgb.fns, fns...)
-	return kalgb
+func (_g *KnowledgeArticleLikeGroupBy) Aggregate(fns ...AggregateFunc) *KnowledgeArticleLikeGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (kalgb *KnowledgeArticleLikeGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, kalgb.build.ctx, ent.OpQueryGroupBy)
-	if err := kalgb.build.prepareQuery(ctx); err != nil {
+func (_g *KnowledgeArticleLikeGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*KnowledgeArticleLikeQuery, *KnowledgeArticleLikeGroupBy](ctx, kalgb.build, kalgb, kalgb.build.inters, v)
+	return scanWithInterceptors[*KnowledgeArticleLikeQuery, *KnowledgeArticleLikeGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (kalgb *KnowledgeArticleLikeGroupBy) sqlScan(ctx context.Context, root *KnowledgeArticleLikeQuery, v any) error {
+func (_g *KnowledgeArticleLikeGroupBy) sqlScan(ctx context.Context, root *KnowledgeArticleLikeQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(kalgb.fns))
-	for _, fn := range kalgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*kalgb.flds)+len(kalgb.fns))
-		for _, f := range *kalgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*kalgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := kalgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type KnowledgeArticleLikeSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (kals *KnowledgeArticleLikeSelect) Aggregate(fns ...AggregateFunc) *KnowledgeArticleLikeSelect {
-	kals.fns = append(kals.fns, fns...)
-	return kals
+func (_s *KnowledgeArticleLikeSelect) Aggregate(fns ...AggregateFunc) *KnowledgeArticleLikeSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (kals *KnowledgeArticleLikeSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, kals.ctx, ent.OpQuerySelect)
-	if err := kals.prepareQuery(ctx); err != nil {
+func (_s *KnowledgeArticleLikeSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*KnowledgeArticleLikeQuery, *KnowledgeArticleLikeSelect](ctx, kals.KnowledgeArticleLikeQuery, kals, kals.inters, v)
+	return scanWithInterceptors[*KnowledgeArticleLikeQuery, *KnowledgeArticleLikeSelect](ctx, _s.KnowledgeArticleLikeQuery, _s, _s.inters, v)
 }
 
-func (kals *KnowledgeArticleLikeSelect) sqlScan(ctx context.Context, root *KnowledgeArticleLikeQuery, v any) error {
+func (_s *KnowledgeArticleLikeSelect) sqlScan(ctx context.Context, root *KnowledgeArticleLikeQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(kals.fns))
-	for _, fn := range kals.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*kals.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (kals *KnowledgeArticleLikeSelect) sqlScan(ctx context.Context, root *Knowl
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := kals.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

@@ -23,211 +23,211 @@ type CIAttributeDefinitionUpdate struct {
 }
 
 // Where appends a list predicates to the CIAttributeDefinitionUpdate builder.
-func (cadu *CIAttributeDefinitionUpdate) Where(ps ...predicate.CIAttributeDefinition) *CIAttributeDefinitionUpdate {
-	cadu.mutation.Where(ps...)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) Where(ps ...predicate.CIAttributeDefinition) *CIAttributeDefinitionUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetName sets the "name" field.
-func (cadu *CIAttributeDefinitionUpdate) SetName(s string) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetName(s)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetName(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableName(s *string) *CIAttributeDefinitionUpdate {
-	if s != nil {
-		cadu.SetName(*s)
+func (_u *CIAttributeDefinitionUpdate) SetNillableName(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return cadu
+	return _u
 }
 
 // SetDisplayName sets the "display_name" field.
-func (cadu *CIAttributeDefinitionUpdate) SetDisplayName(s string) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetDisplayName(s)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetDisplayName(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetDisplayName(v)
+	return _u
 }
 
 // SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableDisplayName(s *string) *CIAttributeDefinitionUpdate {
-	if s != nil {
-		cadu.SetDisplayName(*s)
+func (_u *CIAttributeDefinitionUpdate) SetNillableDisplayName(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetDisplayName(*v)
 	}
-	return cadu
+	return _u
 }
 
 // SetType sets the "type" field.
-func (cadu *CIAttributeDefinitionUpdate) SetType(s string) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetType(s)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetType(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableType(s *string) *CIAttributeDefinitionUpdate {
-	if s != nil {
-		cadu.SetType(*s)
+func (_u *CIAttributeDefinitionUpdate) SetNillableType(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return cadu
+	return _u
 }
 
 // SetRequired sets the "required" field.
-func (cadu *CIAttributeDefinitionUpdate) SetRequired(b bool) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetRequired(b)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetRequired(v bool) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetRequired(v)
+	return _u
 }
 
 // SetNillableRequired sets the "required" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableRequired(b *bool) *CIAttributeDefinitionUpdate {
-	if b != nil {
-		cadu.SetRequired(*b)
+func (_u *CIAttributeDefinitionUpdate) SetNillableRequired(v *bool) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetRequired(*v)
 	}
-	return cadu
+	return _u
 }
 
 // SetUnique sets the "unique" field.
-func (cadu *CIAttributeDefinitionUpdate) SetUnique(b bool) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetUnique(b)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetUnique(v bool) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetUnique(v)
+	return _u
 }
 
 // SetNillableUnique sets the "unique" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableUnique(b *bool) *CIAttributeDefinitionUpdate {
-	if b != nil {
-		cadu.SetUnique(*b)
+func (_u *CIAttributeDefinitionUpdate) SetNillableUnique(v *bool) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetUnique(*v)
 	}
-	return cadu
+	return _u
 }
 
 // SetDefaultValue sets the "default_value" field.
-func (cadu *CIAttributeDefinitionUpdate) SetDefaultValue(s string) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetDefaultValue(s)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetDefaultValue(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetDefaultValue(v)
+	return _u
 }
 
 // SetNillableDefaultValue sets the "default_value" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableDefaultValue(s *string) *CIAttributeDefinitionUpdate {
-	if s != nil {
-		cadu.SetDefaultValue(*s)
+func (_u *CIAttributeDefinitionUpdate) SetNillableDefaultValue(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetDefaultValue(*v)
 	}
-	return cadu
+	return _u
 }
 
 // ClearDefaultValue clears the value of the "default_value" field.
-func (cadu *CIAttributeDefinitionUpdate) ClearDefaultValue() *CIAttributeDefinitionUpdate {
-	cadu.mutation.ClearDefaultValue()
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) ClearDefaultValue() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearDefaultValue()
+	return _u
 }
 
 // SetValidationRules sets the "validation_rules" field.
-func (cadu *CIAttributeDefinitionUpdate) SetValidationRules(s string) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetValidationRules(s)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetValidationRules(v string) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetValidationRules(v)
+	return _u
 }
 
 // SetNillableValidationRules sets the "validation_rules" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableValidationRules(s *string) *CIAttributeDefinitionUpdate {
-	if s != nil {
-		cadu.SetValidationRules(*s)
+func (_u *CIAttributeDefinitionUpdate) SetNillableValidationRules(v *string) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetValidationRules(*v)
 	}
-	return cadu
+	return _u
 }
 
 // ClearValidationRules clears the value of the "validation_rules" field.
-func (cadu *CIAttributeDefinitionUpdate) ClearValidationRules() *CIAttributeDefinitionUpdate {
-	cadu.mutation.ClearValidationRules()
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) ClearValidationRules() *CIAttributeDefinitionUpdate {
+	_u.mutation.ClearValidationRules()
+	return _u
 }
 
 // SetCiTypeID sets the "ci_type_id" field.
-func (cadu *CIAttributeDefinitionUpdate) SetCiTypeID(i int) *CIAttributeDefinitionUpdate {
-	cadu.mutation.ResetCiTypeID()
-	cadu.mutation.SetCiTypeID(i)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetCiTypeID(v int) *CIAttributeDefinitionUpdate {
+	_u.mutation.ResetCiTypeID()
+	_u.mutation.SetCiTypeID(v)
+	return _u
 }
 
 // SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableCiTypeID(i *int) *CIAttributeDefinitionUpdate {
-	if i != nil {
-		cadu.SetCiTypeID(*i)
+func (_u *CIAttributeDefinitionUpdate) SetNillableCiTypeID(v *int) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetCiTypeID(*v)
 	}
-	return cadu
+	return _u
 }
 
-// AddCiTypeID adds i to the "ci_type_id" field.
-func (cadu *CIAttributeDefinitionUpdate) AddCiTypeID(i int) *CIAttributeDefinitionUpdate {
-	cadu.mutation.AddCiTypeID(i)
-	return cadu
+// AddCiTypeID adds value to the "ci_type_id" field.
+func (_u *CIAttributeDefinitionUpdate) AddCiTypeID(v int) *CIAttributeDefinitionUpdate {
+	_u.mutation.AddCiTypeID(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cadu *CIAttributeDefinitionUpdate) SetTenantID(i int) *CIAttributeDefinitionUpdate {
-	cadu.mutation.ResetTenantID()
-	cadu.mutation.SetTenantID(i)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetTenantID(v int) *CIAttributeDefinitionUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableTenantID(i *int) *CIAttributeDefinitionUpdate {
-	if i != nil {
-		cadu.SetTenantID(*i)
+func (_u *CIAttributeDefinitionUpdate) SetNillableTenantID(v *int) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cadu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cadu *CIAttributeDefinitionUpdate) AddTenantID(i int) *CIAttributeDefinitionUpdate {
-	cadu.mutation.AddTenantID(i)
-	return cadu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CIAttributeDefinitionUpdate) AddTenantID(v int) *CIAttributeDefinitionUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (cadu *CIAttributeDefinitionUpdate) SetIsActive(b bool) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetIsActive(b)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetIsActive(v bool) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableIsActive(b *bool) *CIAttributeDefinitionUpdate {
-	if b != nil {
-		cadu.SetIsActive(*b)
+func (_u *CIAttributeDefinitionUpdate) SetNillableIsActive(v *bool) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return cadu
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cadu *CIAttributeDefinitionUpdate) SetCreatedAt(t time.Time) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetCreatedAt(t)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetCreatedAt(v time.Time) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cadu *CIAttributeDefinitionUpdate) SetNillableCreatedAt(t *time.Time) *CIAttributeDefinitionUpdate {
-	if t != nil {
-		cadu.SetCreatedAt(*t)
+func (_u *CIAttributeDefinitionUpdate) SetNillableCreatedAt(v *time.Time) *CIAttributeDefinitionUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cadu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cadu *CIAttributeDefinitionUpdate) SetUpdatedAt(t time.Time) *CIAttributeDefinitionUpdate {
-	cadu.mutation.SetUpdatedAt(t)
-	return cadu
+func (_u *CIAttributeDefinitionUpdate) SetUpdatedAt(v time.Time) *CIAttributeDefinitionUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the CIAttributeDefinitionMutation object of the builder.
-func (cadu *CIAttributeDefinitionUpdate) Mutation() *CIAttributeDefinitionMutation {
-	return cadu.mutation
+func (_u *CIAttributeDefinitionUpdate) Mutation() *CIAttributeDefinitionMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (cadu *CIAttributeDefinitionUpdate) Save(ctx context.Context) (int, error) {
-	cadu.defaults()
-	return withHooks(ctx, cadu.sqlSave, cadu.mutation, cadu.hooks)
+func (_u *CIAttributeDefinitionUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cadu *CIAttributeDefinitionUpdate) SaveX(ctx context.Context) int {
-	affected, err := cadu.Save(ctx)
+func (_u *CIAttributeDefinitionUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -235,49 +235,49 @@ func (cadu *CIAttributeDefinitionUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (cadu *CIAttributeDefinitionUpdate) Exec(ctx context.Context) error {
-	_, err := cadu.Save(ctx)
+func (_u *CIAttributeDefinitionUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cadu *CIAttributeDefinitionUpdate) ExecX(ctx context.Context) {
-	if err := cadu.Exec(ctx); err != nil {
+func (_u *CIAttributeDefinitionUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cadu *CIAttributeDefinitionUpdate) defaults() {
-	if _, ok := cadu.mutation.UpdatedAt(); !ok {
+func (_u *CIAttributeDefinitionUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ciattributedefinition.UpdateDefaultUpdatedAt()
-		cadu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cadu *CIAttributeDefinitionUpdate) check() error {
-	if v, ok := cadu.mutation.Name(); ok {
+func (_u *CIAttributeDefinitionUpdate) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := ciattributedefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.name": %w`, err)}
 		}
 	}
-	if v, ok := cadu.mutation.DisplayName(); ok {
+	if v, ok := _u.mutation.DisplayName(); ok {
 		if err := ciattributedefinition.DisplayNameValidator(v); err != nil {
 			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.display_name": %w`, err)}
 		}
 	}
-	if v, ok := cadu.mutation.GetType(); ok {
+	if v, ok := _u.mutation.GetType(); ok {
 		if err := ciattributedefinition.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.type": %w`, err)}
 		}
 	}
-	if v, ok := cadu.mutation.CiTypeID(); ok {
+	if v, ok := _u.mutation.CiTypeID(); ok {
 		if err := ciattributedefinition.CiTypeIDValidator(v); err != nil {
 			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.ci_type_id": %w`, err)}
 		}
 	}
-	if v, ok := cadu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ciattributedefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.tenant_id": %w`, err)}
 		}
@@ -285,67 +285,67 @@ func (cadu *CIAttributeDefinitionUpdate) check() error {
 	return nil
 }
 
-func (cadu *CIAttributeDefinitionUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := cadu.check(); err != nil {
-		return n, err
+func (_u *CIAttributeDefinitionUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ciattributedefinition.Table, ciattributedefinition.Columns, sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt))
-	if ps := cadu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cadu.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(ciattributedefinition.FieldName, field.TypeString, value)
 	}
-	if value, ok := cadu.mutation.DisplayName(); ok {
+	if value, ok := _u.mutation.DisplayName(); ok {
 		_spec.SetField(ciattributedefinition.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := cadu.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ciattributedefinition.FieldType, field.TypeString, value)
 	}
-	if value, ok := cadu.mutation.Required(); ok {
+	if value, ok := _u.mutation.Required(); ok {
 		_spec.SetField(ciattributedefinition.FieldRequired, field.TypeBool, value)
 	}
-	if value, ok := cadu.mutation.Unique(); ok {
+	if value, ok := _u.mutation.Unique(); ok {
 		_spec.SetField(ciattributedefinition.FieldUnique, field.TypeBool, value)
 	}
-	if value, ok := cadu.mutation.DefaultValue(); ok {
+	if value, ok := _u.mutation.DefaultValue(); ok {
 		_spec.SetField(ciattributedefinition.FieldDefaultValue, field.TypeString, value)
 	}
-	if cadu.mutation.DefaultValueCleared() {
+	if _u.mutation.DefaultValueCleared() {
 		_spec.ClearField(ciattributedefinition.FieldDefaultValue, field.TypeString)
 	}
-	if value, ok := cadu.mutation.ValidationRules(); ok {
+	if value, ok := _u.mutation.ValidationRules(); ok {
 		_spec.SetField(ciattributedefinition.FieldValidationRules, field.TypeString, value)
 	}
-	if cadu.mutation.ValidationRulesCleared() {
+	if _u.mutation.ValidationRulesCleared() {
 		_spec.ClearField(ciattributedefinition.FieldValidationRules, field.TypeString)
 	}
-	if value, ok := cadu.mutation.CiTypeID(); ok {
+	if value, ok := _u.mutation.CiTypeID(); ok {
 		_spec.SetField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
 	}
-	if value, ok := cadu.mutation.AddedCiTypeID(); ok {
+	if value, ok := _u.mutation.AddedCiTypeID(); ok {
 		_spec.AddField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
 	}
-	if value, ok := cadu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cadu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cadu.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(ciattributedefinition.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := cadu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cadu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, cadu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ciattributedefinition.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -353,8 +353,8 @@ func (cadu *CIAttributeDefinitionUpdate) sqlSave(ctx context.Context) (n int, er
 		}
 		return 0, err
 	}
-	cadu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // CIAttributeDefinitionUpdateOne is the builder for updating a single CIAttributeDefinition entity.
@@ -366,218 +366,218 @@ type CIAttributeDefinitionUpdateOne struct {
 }
 
 // SetName sets the "name" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetName(s string) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetName(s)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetName(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
 }
 
 // SetNillableName sets the "name" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableName(s *string) *CIAttributeDefinitionUpdateOne {
-	if s != nil {
-		caduo.SetName(*s)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableName(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
 	}
-	return caduo
+	return _u
 }
 
 // SetDisplayName sets the "display_name" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetDisplayName(s string) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetDisplayName(s)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetDisplayName(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetDisplayName(v)
+	return _u
 }
 
 // SetNillableDisplayName sets the "display_name" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableDisplayName(s *string) *CIAttributeDefinitionUpdateOne {
-	if s != nil {
-		caduo.SetDisplayName(*s)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableDisplayName(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDisplayName(*v)
 	}
-	return caduo
+	return _u
 }
 
 // SetType sets the "type" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetType(s string) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetType(s)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetType(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableType(s *string) *CIAttributeDefinitionUpdateOne {
-	if s != nil {
-		caduo.SetType(*s)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableType(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return caduo
+	return _u
 }
 
 // SetRequired sets the "required" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetRequired(b bool) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetRequired(b)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetRequired(v bool) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetRequired(v)
+	return _u
 }
 
 // SetNillableRequired sets the "required" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableRequired(b *bool) *CIAttributeDefinitionUpdateOne {
-	if b != nil {
-		caduo.SetRequired(*b)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableRequired(v *bool) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetRequired(*v)
 	}
-	return caduo
+	return _u
 }
 
 // SetUnique sets the "unique" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetUnique(b bool) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetUnique(b)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetUnique(v bool) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetUnique(v)
+	return _u
 }
 
 // SetNillableUnique sets the "unique" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableUnique(b *bool) *CIAttributeDefinitionUpdateOne {
-	if b != nil {
-		caduo.SetUnique(*b)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableUnique(v *bool) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetUnique(*v)
 	}
-	return caduo
+	return _u
 }
 
 // SetDefaultValue sets the "default_value" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetDefaultValue(s string) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetDefaultValue(s)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetDefaultValue(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetDefaultValue(v)
+	return _u
 }
 
 // SetNillableDefaultValue sets the "default_value" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableDefaultValue(s *string) *CIAttributeDefinitionUpdateOne {
-	if s != nil {
-		caduo.SetDefaultValue(*s)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableDefaultValue(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetDefaultValue(*v)
 	}
-	return caduo
+	return _u
 }
 
 // ClearDefaultValue clears the value of the "default_value" field.
-func (caduo *CIAttributeDefinitionUpdateOne) ClearDefaultValue() *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.ClearDefaultValue()
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) ClearDefaultValue() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearDefaultValue()
+	return _u
 }
 
 // SetValidationRules sets the "validation_rules" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetValidationRules(s string) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetValidationRules(s)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetValidationRules(v string) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetValidationRules(v)
+	return _u
 }
 
 // SetNillableValidationRules sets the "validation_rules" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableValidationRules(s *string) *CIAttributeDefinitionUpdateOne {
-	if s != nil {
-		caduo.SetValidationRules(*s)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableValidationRules(v *string) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetValidationRules(*v)
 	}
-	return caduo
+	return _u
 }
 
 // ClearValidationRules clears the value of the "validation_rules" field.
-func (caduo *CIAttributeDefinitionUpdateOne) ClearValidationRules() *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.ClearValidationRules()
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) ClearValidationRules() *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ClearValidationRules()
+	return _u
 }
 
 // SetCiTypeID sets the "ci_type_id" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetCiTypeID(i int) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.ResetCiTypeID()
-	caduo.mutation.SetCiTypeID(i)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetCiTypeID(v int) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ResetCiTypeID()
+	_u.mutation.SetCiTypeID(v)
+	return _u
 }
 
 // SetNillableCiTypeID sets the "ci_type_id" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableCiTypeID(i *int) *CIAttributeDefinitionUpdateOne {
-	if i != nil {
-		caduo.SetCiTypeID(*i)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableCiTypeID(v *int) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetCiTypeID(*v)
 	}
-	return caduo
+	return _u
 }
 
-// AddCiTypeID adds i to the "ci_type_id" field.
-func (caduo *CIAttributeDefinitionUpdateOne) AddCiTypeID(i int) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.AddCiTypeID(i)
-	return caduo
+// AddCiTypeID adds value to the "ci_type_id" field.
+func (_u *CIAttributeDefinitionUpdateOne) AddCiTypeID(v int) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.AddCiTypeID(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetTenantID(i int) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.ResetTenantID()
-	caduo.mutation.SetTenantID(i)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetTenantID(v int) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableTenantID(i *int) *CIAttributeDefinitionUpdateOne {
-	if i != nil {
-		caduo.SetTenantID(*i)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableTenantID(v *int) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return caduo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (caduo *CIAttributeDefinitionUpdateOne) AddTenantID(i int) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.AddTenantID(i)
-	return caduo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *CIAttributeDefinitionUpdateOne) AddTenantID(v int) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetIsActive sets the "is_active" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetIsActive(b bool) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetIsActive(b)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetIsActive(v bool) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetIsActive(v)
+	return _u
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableIsActive(b *bool) *CIAttributeDefinitionUpdateOne {
-	if b != nil {
-		caduo.SetIsActive(*b)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableIsActive(v *bool) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetIsActive(*v)
 	}
-	return caduo
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetCreatedAt(t time.Time) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetCreatedAt(t)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetCreatedAt(v time.Time) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (caduo *CIAttributeDefinitionUpdateOne) SetNillableCreatedAt(t *time.Time) *CIAttributeDefinitionUpdateOne {
-	if t != nil {
-		caduo.SetCreatedAt(*t)
+func (_u *CIAttributeDefinitionUpdateOne) SetNillableCreatedAt(v *time.Time) *CIAttributeDefinitionUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return caduo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (caduo *CIAttributeDefinitionUpdateOne) SetUpdatedAt(t time.Time) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.SetUpdatedAt(t)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) SetUpdatedAt(v time.Time) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the CIAttributeDefinitionMutation object of the builder.
-func (caduo *CIAttributeDefinitionUpdateOne) Mutation() *CIAttributeDefinitionMutation {
-	return caduo.mutation
+func (_u *CIAttributeDefinitionUpdateOne) Mutation() *CIAttributeDefinitionMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the CIAttributeDefinitionUpdate builder.
-func (caduo *CIAttributeDefinitionUpdateOne) Where(ps ...predicate.CIAttributeDefinition) *CIAttributeDefinitionUpdateOne {
-	caduo.mutation.Where(ps...)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) Where(ps ...predicate.CIAttributeDefinition) *CIAttributeDefinitionUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (caduo *CIAttributeDefinitionUpdateOne) Select(field string, fields ...string) *CIAttributeDefinitionUpdateOne {
-	caduo.fields = append([]string{field}, fields...)
-	return caduo
+func (_u *CIAttributeDefinitionUpdateOne) Select(field string, fields ...string) *CIAttributeDefinitionUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated CIAttributeDefinition entity.
-func (caduo *CIAttributeDefinitionUpdateOne) Save(ctx context.Context) (*CIAttributeDefinition, error) {
-	caduo.defaults()
-	return withHooks(ctx, caduo.sqlSave, caduo.mutation, caduo.hooks)
+func (_u *CIAttributeDefinitionUpdateOne) Save(ctx context.Context) (*CIAttributeDefinition, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (caduo *CIAttributeDefinitionUpdateOne) SaveX(ctx context.Context) *CIAttributeDefinition {
-	node, err := caduo.Save(ctx)
+func (_u *CIAttributeDefinitionUpdateOne) SaveX(ctx context.Context) *CIAttributeDefinition {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -585,49 +585,49 @@ func (caduo *CIAttributeDefinitionUpdateOne) SaveX(ctx context.Context) *CIAttri
 }
 
 // Exec executes the query on the entity.
-func (caduo *CIAttributeDefinitionUpdateOne) Exec(ctx context.Context) error {
-	_, err := caduo.Save(ctx)
+func (_u *CIAttributeDefinitionUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (caduo *CIAttributeDefinitionUpdateOne) ExecX(ctx context.Context) {
-	if err := caduo.Exec(ctx); err != nil {
+func (_u *CIAttributeDefinitionUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (caduo *CIAttributeDefinitionUpdateOne) defaults() {
-	if _, ok := caduo.mutation.UpdatedAt(); !ok {
+func (_u *CIAttributeDefinitionUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := ciattributedefinition.UpdateDefaultUpdatedAt()
-		caduo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (caduo *CIAttributeDefinitionUpdateOne) check() error {
-	if v, ok := caduo.mutation.Name(); ok {
+func (_u *CIAttributeDefinitionUpdateOne) check() error {
+	if v, ok := _u.mutation.Name(); ok {
 		if err := ciattributedefinition.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.name": %w`, err)}
 		}
 	}
-	if v, ok := caduo.mutation.DisplayName(); ok {
+	if v, ok := _u.mutation.DisplayName(); ok {
 		if err := ciattributedefinition.DisplayNameValidator(v); err != nil {
 			return &ValidationError{Name: "display_name", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.display_name": %w`, err)}
 		}
 	}
-	if v, ok := caduo.mutation.GetType(); ok {
+	if v, ok := _u.mutation.GetType(); ok {
 		if err := ciattributedefinition.TypeValidator(v); err != nil {
 			return &ValidationError{Name: "type", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.type": %w`, err)}
 		}
 	}
-	if v, ok := caduo.mutation.CiTypeID(); ok {
+	if v, ok := _u.mutation.CiTypeID(); ok {
 		if err := ciattributedefinition.CiTypeIDValidator(v); err != nil {
 			return &ValidationError{Name: "ci_type_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.ci_type_id": %w`, err)}
 		}
 	}
-	if v, ok := caduo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := ciattributedefinition.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "CIAttributeDefinition.tenant_id": %w`, err)}
 		}
@@ -635,17 +635,17 @@ func (caduo *CIAttributeDefinitionUpdateOne) check() error {
 	return nil
 }
 
-func (caduo *CIAttributeDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *CIAttributeDefinition, err error) {
-	if err := caduo.check(); err != nil {
+func (_u *CIAttributeDefinitionUpdateOne) sqlSave(ctx context.Context) (_node *CIAttributeDefinition, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(ciattributedefinition.Table, ciattributedefinition.Columns, sqlgraph.NewFieldSpec(ciattributedefinition.FieldID, field.TypeInt))
-	id, ok := caduo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "CIAttributeDefinition.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := caduo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ciattributedefinition.FieldID)
 		for _, f := range fields {
@@ -657,65 +657,65 @@ func (caduo *CIAttributeDefinitionUpdateOne) sqlSave(ctx context.Context) (_node
 			}
 		}
 	}
-	if ps := caduo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := caduo.mutation.Name(); ok {
+	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(ciattributedefinition.FieldName, field.TypeString, value)
 	}
-	if value, ok := caduo.mutation.DisplayName(); ok {
+	if value, ok := _u.mutation.DisplayName(); ok {
 		_spec.SetField(ciattributedefinition.FieldDisplayName, field.TypeString, value)
 	}
-	if value, ok := caduo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(ciattributedefinition.FieldType, field.TypeString, value)
 	}
-	if value, ok := caduo.mutation.Required(); ok {
+	if value, ok := _u.mutation.Required(); ok {
 		_spec.SetField(ciattributedefinition.FieldRequired, field.TypeBool, value)
 	}
-	if value, ok := caduo.mutation.Unique(); ok {
+	if value, ok := _u.mutation.Unique(); ok {
 		_spec.SetField(ciattributedefinition.FieldUnique, field.TypeBool, value)
 	}
-	if value, ok := caduo.mutation.DefaultValue(); ok {
+	if value, ok := _u.mutation.DefaultValue(); ok {
 		_spec.SetField(ciattributedefinition.FieldDefaultValue, field.TypeString, value)
 	}
-	if caduo.mutation.DefaultValueCleared() {
+	if _u.mutation.DefaultValueCleared() {
 		_spec.ClearField(ciattributedefinition.FieldDefaultValue, field.TypeString)
 	}
-	if value, ok := caduo.mutation.ValidationRules(); ok {
+	if value, ok := _u.mutation.ValidationRules(); ok {
 		_spec.SetField(ciattributedefinition.FieldValidationRules, field.TypeString, value)
 	}
-	if caduo.mutation.ValidationRulesCleared() {
+	if _u.mutation.ValidationRulesCleared() {
 		_spec.ClearField(ciattributedefinition.FieldValidationRules, field.TypeString)
 	}
-	if value, ok := caduo.mutation.CiTypeID(); ok {
+	if value, ok := _u.mutation.CiTypeID(); ok {
 		_spec.SetField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
 	}
-	if value, ok := caduo.mutation.AddedCiTypeID(); ok {
+	if value, ok := _u.mutation.AddedCiTypeID(); ok {
 		_spec.AddField(ciattributedefinition.FieldCiTypeID, field.TypeInt, value)
 	}
-	if value, ok := caduo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := caduo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(ciattributedefinition.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := caduo.mutation.IsActive(); ok {
+	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(ciattributedefinition.FieldIsActive, field.TypeBool, value)
 	}
-	if value, ok := caduo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := caduo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(ciattributedefinition.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &CIAttributeDefinition{config: caduo.config}
+	_node = &CIAttributeDefinition{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, caduo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{ciattributedefinition.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -723,6 +723,6 @@ func (caduo *CIAttributeDefinitionUpdateOne) sqlSave(ctx context.Context) (_node
 		}
 		return nil, err
 	}
-	caduo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

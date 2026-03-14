@@ -436,6 +436,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
       <div className={styles.mainMenu} style={{ flex: 1, overflowY: 'auto' }}>
         <Menu
           mode="inline"
+          inlineIndent={24}
           selectedKeys={[pathname]}
           className={styles.customMenu}
           items={renderMenuItems(MENU_CONFIG.main)}
@@ -450,6 +451,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           <div className={styles.adminMenu}>
             <Menu
               mode="inline"
+              inlineIndent={24}
               selectedKeys={[pathname]}
               className={styles.customMenu}
               items={renderMenuItems(MENU_CONFIG.admin)}

@@ -30,44 +30,44 @@ type TicketAutomationRuleQuery struct {
 }
 
 // Where adds a new predicate for the TicketAutomationRuleQuery builder.
-func (tarq *TicketAutomationRuleQuery) Where(ps ...predicate.TicketAutomationRule) *TicketAutomationRuleQuery {
-	tarq.predicates = append(tarq.predicates, ps...)
-	return tarq
+func (_q *TicketAutomationRuleQuery) Where(ps ...predicate.TicketAutomationRule) *TicketAutomationRuleQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (tarq *TicketAutomationRuleQuery) Limit(limit int) *TicketAutomationRuleQuery {
-	tarq.ctx.Limit = &limit
-	return tarq
+func (_q *TicketAutomationRuleQuery) Limit(limit int) *TicketAutomationRuleQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (tarq *TicketAutomationRuleQuery) Offset(offset int) *TicketAutomationRuleQuery {
-	tarq.ctx.Offset = &offset
-	return tarq
+func (_q *TicketAutomationRuleQuery) Offset(offset int) *TicketAutomationRuleQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (tarq *TicketAutomationRuleQuery) Unique(unique bool) *TicketAutomationRuleQuery {
-	tarq.ctx.Unique = &unique
-	return tarq
+func (_q *TicketAutomationRuleQuery) Unique(unique bool) *TicketAutomationRuleQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (tarq *TicketAutomationRuleQuery) Order(o ...ticketautomationrule.OrderOption) *TicketAutomationRuleQuery {
-	tarq.order = append(tarq.order, o...)
-	return tarq
+func (_q *TicketAutomationRuleQuery) Order(o ...ticketautomationrule.OrderOption) *TicketAutomationRuleQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryCreator chains the current query on the "creator" edge.
-func (tarq *TicketAutomationRuleQuery) QueryCreator() *UserQuery {
-	query := (&UserClient{config: tarq.config}).Query()
+func (_q *TicketAutomationRuleQuery) QueryCreator() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := tarq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := tarq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (tarq *TicketAutomationRuleQuery) QueryCreator() *UserQuery {
 			sqlgraph.To(user.Table, user.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, false, ticketautomationrule.CreatorTable, ticketautomationrule.CreatorColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(tarq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (tarq *TicketAutomationRuleQuery) QueryCreator() *UserQuery {
 
 // First returns the first TicketAutomationRule entity from the query.
 // Returns a *NotFoundError when no TicketAutomationRule was found.
-func (tarq *TicketAutomationRuleQuery) First(ctx context.Context) (*TicketAutomationRule, error) {
-	nodes, err := tarq.Limit(1).All(setContextOp(ctx, tarq.ctx, ent.OpQueryFirst))
+func (_q *TicketAutomationRuleQuery) First(ctx context.Context) (*TicketAutomationRule, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (tarq *TicketAutomationRuleQuery) First(ctx context.Context) (*TicketAutoma
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) FirstX(ctx context.Context) *TicketAutomationRule {
-	node, err := tarq.First(ctx)
+func (_q *TicketAutomationRuleQuery) FirstX(ctx context.Context) *TicketAutomationRule {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (tarq *TicketAutomationRuleQuery) FirstX(ctx context.Context) *TicketAutoma
 
 // FirstID returns the first TicketAutomationRule ID from the query.
 // Returns a *NotFoundError when no TicketAutomationRule ID was found.
-func (tarq *TicketAutomationRuleQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *TicketAutomationRuleQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tarq.Limit(1).IDs(setContextOp(ctx, tarq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (tarq *TicketAutomationRuleQuery) FirstID(ctx context.Context) (id int, err
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) FirstIDX(ctx context.Context) int {
-	id, err := tarq.FirstID(ctx)
+func (_q *TicketAutomationRuleQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (tarq *TicketAutomationRuleQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single TicketAutomationRule entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one TicketAutomationRule entity is found.
 // Returns a *NotFoundError when no TicketAutomationRule entities are found.
-func (tarq *TicketAutomationRuleQuery) Only(ctx context.Context) (*TicketAutomationRule, error) {
-	nodes, err := tarq.Limit(2).All(setContextOp(ctx, tarq.ctx, ent.OpQueryOnly))
+func (_q *TicketAutomationRuleQuery) Only(ctx context.Context) (*TicketAutomationRule, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (tarq *TicketAutomationRuleQuery) Only(ctx context.Context) (*TicketAutomat
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) OnlyX(ctx context.Context) *TicketAutomationRule {
-	node, err := tarq.Only(ctx)
+func (_q *TicketAutomationRuleQuery) OnlyX(ctx context.Context) *TicketAutomationRule {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (tarq *TicketAutomationRuleQuery) OnlyX(ctx context.Context) *TicketAutomat
 // OnlyID is like Only, but returns the only TicketAutomationRule ID in the query.
 // Returns a *NotSingularError when more than one TicketAutomationRule ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (tarq *TicketAutomationRuleQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *TicketAutomationRuleQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = tarq.Limit(2).IDs(setContextOp(ctx, tarq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (tarq *TicketAutomationRuleQuery) OnlyID(ctx context.Context) (id int, err 
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) OnlyIDX(ctx context.Context) int {
-	id, err := tarq.OnlyID(ctx)
+func (_q *TicketAutomationRuleQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (tarq *TicketAutomationRuleQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of TicketAutomationRules.
-func (tarq *TicketAutomationRuleQuery) All(ctx context.Context) ([]*TicketAutomationRule, error) {
-	ctx = setContextOp(ctx, tarq.ctx, ent.OpQueryAll)
-	if err := tarq.prepareQuery(ctx); err != nil {
+func (_q *TicketAutomationRuleQuery) All(ctx context.Context) ([]*TicketAutomationRule, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*TicketAutomationRule, *TicketAutomationRuleQuery]()
-	return withInterceptors[[]*TicketAutomationRule](ctx, tarq, qr, tarq.inters)
+	return withInterceptors[[]*TicketAutomationRule](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) AllX(ctx context.Context) []*TicketAutomationRule {
-	nodes, err := tarq.All(ctx)
+func (_q *TicketAutomationRuleQuery) AllX(ctx context.Context) []*TicketAutomationRule {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (tarq *TicketAutomationRuleQuery) AllX(ctx context.Context) []*TicketAutoma
 }
 
 // IDs executes the query and returns a list of TicketAutomationRule IDs.
-func (tarq *TicketAutomationRuleQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if tarq.ctx.Unique == nil && tarq.path != nil {
-		tarq.Unique(true)
+func (_q *TicketAutomationRuleQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, tarq.ctx, ent.OpQueryIDs)
-	if err = tarq.Select(ticketautomationrule.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(ticketautomationrule.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) IDsX(ctx context.Context) []int {
-	ids, err := tarq.IDs(ctx)
+func (_q *TicketAutomationRuleQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (tarq *TicketAutomationRuleQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (tarq *TicketAutomationRuleQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, tarq.ctx, ent.OpQueryCount)
-	if err := tarq.prepareQuery(ctx); err != nil {
+func (_q *TicketAutomationRuleQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, tarq, querierCount[*TicketAutomationRuleQuery](), tarq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*TicketAutomationRuleQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) CountX(ctx context.Context) int {
-	count, err := tarq.Count(ctx)
+func (_q *TicketAutomationRuleQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (tarq *TicketAutomationRuleQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (tarq *TicketAutomationRuleQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, tarq.ctx, ent.OpQueryExist)
-	switch _, err := tarq.FirstID(ctx); {
+func (_q *TicketAutomationRuleQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (tarq *TicketAutomationRuleQuery) Exist(ctx context.Context) (bool, error) 
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (tarq *TicketAutomationRuleQuery) ExistX(ctx context.Context) bool {
-	exist, err := tarq.Exist(ctx)
+func (_q *TicketAutomationRuleQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (tarq *TicketAutomationRuleQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the TicketAutomationRuleQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (tarq *TicketAutomationRuleQuery) Clone() *TicketAutomationRuleQuery {
-	if tarq == nil {
+func (_q *TicketAutomationRuleQuery) Clone() *TicketAutomationRuleQuery {
+	if _q == nil {
 		return nil
 	}
 	return &TicketAutomationRuleQuery{
-		config:      tarq.config,
-		ctx:         tarq.ctx.Clone(),
-		order:       append([]ticketautomationrule.OrderOption{}, tarq.order...),
-		inters:      append([]Interceptor{}, tarq.inters...),
-		predicates:  append([]predicate.TicketAutomationRule{}, tarq.predicates...),
-		withCreator: tarq.withCreator.Clone(),
+		config:      _q.config,
+		ctx:         _q.ctx.Clone(),
+		order:       append([]ticketautomationrule.OrderOption{}, _q.order...),
+		inters:      append([]Interceptor{}, _q.inters...),
+		predicates:  append([]predicate.TicketAutomationRule{}, _q.predicates...),
+		withCreator: _q.withCreator.Clone(),
 		// clone intermediate query.
-		sql:  tarq.sql.Clone(),
-		path: tarq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithCreator tells the query-builder to eager-load the nodes that are connected to
 // the "creator" edge. The optional arguments are used to configure the query builder of the edge.
-func (tarq *TicketAutomationRuleQuery) WithCreator(opts ...func(*UserQuery)) *TicketAutomationRuleQuery {
-	query := (&UserClient{config: tarq.config}).Query()
+func (_q *TicketAutomationRuleQuery) WithCreator(opts ...func(*UserQuery)) *TicketAutomationRuleQuery {
+	query := (&UserClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	tarq.withCreator = query
-	return tarq
+	_q.withCreator = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (tarq *TicketAutomationRuleQuery) WithCreator(opts ...func(*UserQuery)) *Ti
 //		GroupBy(ticketautomationrule.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (tarq *TicketAutomationRuleQuery) GroupBy(field string, fields ...string) *TicketAutomationRuleGroupBy {
-	tarq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &TicketAutomationRuleGroupBy{build: tarq}
-	grbuild.flds = &tarq.ctx.Fields
+func (_q *TicketAutomationRuleQuery) GroupBy(field string, fields ...string) *TicketAutomationRuleGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &TicketAutomationRuleGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = ticketautomationrule.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (tarq *TicketAutomationRuleQuery) GroupBy(field string, fields ...string) *
 //	client.TicketAutomationRule.Query().
 //		Select(ticketautomationrule.FieldName).
 //		Scan(ctx, &v)
-func (tarq *TicketAutomationRuleQuery) Select(fields ...string) *TicketAutomationRuleSelect {
-	tarq.ctx.Fields = append(tarq.ctx.Fields, fields...)
-	sbuild := &TicketAutomationRuleSelect{TicketAutomationRuleQuery: tarq}
+func (_q *TicketAutomationRuleQuery) Select(fields ...string) *TicketAutomationRuleSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &TicketAutomationRuleSelect{TicketAutomationRuleQuery: _q}
 	sbuild.label = ticketautomationrule.Label
-	sbuild.flds, sbuild.scan = &tarq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a TicketAutomationRuleSelect configured with the given aggregations.
-func (tarq *TicketAutomationRuleQuery) Aggregate(fns ...AggregateFunc) *TicketAutomationRuleSelect {
-	return tarq.Select().Aggregate(fns...)
+func (_q *TicketAutomationRuleQuery) Aggregate(fns ...AggregateFunc) *TicketAutomationRuleSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (tarq *TicketAutomationRuleQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range tarq.inters {
+func (_q *TicketAutomationRuleQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, tarq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range tarq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !ticketautomationrule.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if tarq.path != nil {
-		prev, err := tarq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		tarq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (tarq *TicketAutomationRuleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketAutomationRule, error) {
+func (_q *TicketAutomationRuleQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*TicketAutomationRule, error) {
 	var (
 		nodes       = []*TicketAutomationRule{}
-		_spec       = tarq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			tarq.withCreator != nil,
+			_q.withCreator != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*TicketAutomationRule).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &TicketAutomationRule{config: tarq.config}
+		node := &TicketAutomationRule{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (tarq *TicketAutomationRuleQuery) sqlAll(ctx context.Context, hooks ...quer
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, tarq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := tarq.withCreator; query != nil {
-		if err := tarq.loadCreator(ctx, query, nodes, nil,
+	if query := _q.withCreator; query != nil {
+		if err := _q.loadCreator(ctx, query, nodes, nil,
 			func(n *TicketAutomationRule, e *User) { n.Edges.Creator = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (tarq *TicketAutomationRuleQuery) sqlAll(ctx context.Context, hooks ...quer
 	return nodes, nil
 }
 
-func (tarq *TicketAutomationRuleQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*TicketAutomationRule, init func(*TicketAutomationRule), assign func(*TicketAutomationRule, *User)) error {
+func (_q *TicketAutomationRuleQuery) loadCreator(ctx context.Context, query *UserQuery, nodes []*TicketAutomationRule, init func(*TicketAutomationRule), assign func(*TicketAutomationRule, *User)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*TicketAutomationRule)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (tarq *TicketAutomationRuleQuery) loadCreator(ctx context.Context, query *U
 	return nil
 }
 
-func (tarq *TicketAutomationRuleQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := tarq.querySpec()
-	_spec.Node.Columns = tarq.ctx.Fields
-	if len(tarq.ctx.Fields) > 0 {
-		_spec.Unique = tarq.ctx.Unique != nil && *tarq.ctx.Unique
+func (_q *TicketAutomationRuleQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, tarq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (tarq *TicketAutomationRuleQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *TicketAutomationRuleQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(ticketautomationrule.Table, ticketautomationrule.Columns, sqlgraph.NewFieldSpec(ticketautomationrule.FieldID, field.TypeInt))
-	_spec.From = tarq.sql
-	if unique := tarq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if tarq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := tarq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, ticketautomationrule.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (tarq *TicketAutomationRuleQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if tarq.withCreator != nil {
+		if _q.withCreator != nil {
 			_spec.Node.AddColumnOnce(ticketautomationrule.FieldCreatedBy)
 		}
 	}
-	if ps := tarq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := tarq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := tarq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := tarq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (tarq *TicketAutomationRuleQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (tarq *TicketAutomationRuleQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(tarq.driver.Dialect())
+func (_q *TicketAutomationRuleQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(ticketautomationrule.Table)
-	columns := tarq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = ticketautomationrule.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if tarq.sql != nil {
-		selector = tarq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if tarq.ctx.Unique != nil && *tarq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range tarq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range tarq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := tarq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := tarq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type TicketAutomationRuleGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (targb *TicketAutomationRuleGroupBy) Aggregate(fns ...AggregateFunc) *TicketAutomationRuleGroupBy {
-	targb.fns = append(targb.fns, fns...)
-	return targb
+func (_g *TicketAutomationRuleGroupBy) Aggregate(fns ...AggregateFunc) *TicketAutomationRuleGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (targb *TicketAutomationRuleGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, targb.build.ctx, ent.OpQueryGroupBy)
-	if err := targb.build.prepareQuery(ctx); err != nil {
+func (_g *TicketAutomationRuleGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketAutomationRuleQuery, *TicketAutomationRuleGroupBy](ctx, targb.build, targb, targb.build.inters, v)
+	return scanWithInterceptors[*TicketAutomationRuleQuery, *TicketAutomationRuleGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (targb *TicketAutomationRuleGroupBy) sqlScan(ctx context.Context, root *TicketAutomationRuleQuery, v any) error {
+func (_g *TicketAutomationRuleGroupBy) sqlScan(ctx context.Context, root *TicketAutomationRuleQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(targb.fns))
-	for _, fn := range targb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*targb.flds)+len(targb.fns))
-		for _, f := range *targb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*targb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := targb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type TicketAutomationRuleSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (tars *TicketAutomationRuleSelect) Aggregate(fns ...AggregateFunc) *TicketAutomationRuleSelect {
-	tars.fns = append(tars.fns, fns...)
-	return tars
+func (_s *TicketAutomationRuleSelect) Aggregate(fns ...AggregateFunc) *TicketAutomationRuleSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (tars *TicketAutomationRuleSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, tars.ctx, ent.OpQuerySelect)
-	if err := tars.prepareQuery(ctx); err != nil {
+func (_s *TicketAutomationRuleSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*TicketAutomationRuleQuery, *TicketAutomationRuleSelect](ctx, tars.TicketAutomationRuleQuery, tars, tars.inters, v)
+	return scanWithInterceptors[*TicketAutomationRuleQuery, *TicketAutomationRuleSelect](ctx, _s.TicketAutomationRuleQuery, _s, _s.inters, v)
 }
 
-func (tars *TicketAutomationRuleSelect) sqlScan(ctx context.Context, root *TicketAutomationRuleQuery, v any) error {
+func (_s *TicketAutomationRuleSelect) sqlScan(ctx context.Context, root *TicketAutomationRuleQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(tars.fns))
-	for _, fn := range tars.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*tars.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (tars *TicketAutomationRuleSelect) sqlScan(ctx context.Context, root *Ticke
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := tars.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

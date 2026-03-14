@@ -30,44 +30,44 @@ type RootCauseAnalysisQuery struct {
 }
 
 // Where adds a new predicate for the RootCauseAnalysisQuery builder.
-func (rcaq *RootCauseAnalysisQuery) Where(ps ...predicate.RootCauseAnalysis) *RootCauseAnalysisQuery {
-	rcaq.predicates = append(rcaq.predicates, ps...)
-	return rcaq
+func (_q *RootCauseAnalysisQuery) Where(ps ...predicate.RootCauseAnalysis) *RootCauseAnalysisQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (rcaq *RootCauseAnalysisQuery) Limit(limit int) *RootCauseAnalysisQuery {
-	rcaq.ctx.Limit = &limit
-	return rcaq
+func (_q *RootCauseAnalysisQuery) Limit(limit int) *RootCauseAnalysisQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (rcaq *RootCauseAnalysisQuery) Offset(offset int) *RootCauseAnalysisQuery {
-	rcaq.ctx.Offset = &offset
-	return rcaq
+func (_q *RootCauseAnalysisQuery) Offset(offset int) *RootCauseAnalysisQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (rcaq *RootCauseAnalysisQuery) Unique(unique bool) *RootCauseAnalysisQuery {
-	rcaq.ctx.Unique = &unique
-	return rcaq
+func (_q *RootCauseAnalysisQuery) Unique(unique bool) *RootCauseAnalysisQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (rcaq *RootCauseAnalysisQuery) Order(o ...rootcauseanalysis.OrderOption) *RootCauseAnalysisQuery {
-	rcaq.order = append(rcaq.order, o...)
-	return rcaq
+func (_q *RootCauseAnalysisQuery) Order(o ...rootcauseanalysis.OrderOption) *RootCauseAnalysisQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryTicket chains the current query on the "ticket" edge.
-func (rcaq *RootCauseAnalysisQuery) QueryTicket() *TicketQuery {
-	query := (&TicketClient{config: rcaq.config}).Query()
+func (_q *RootCauseAnalysisQuery) QueryTicket() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := rcaq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := rcaq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -76,7 +76,7 @@ func (rcaq *RootCauseAnalysisQuery) QueryTicket() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, rootcauseanalysis.TicketTable, rootcauseanalysis.TicketColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(rcaq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -84,8 +84,8 @@ func (rcaq *RootCauseAnalysisQuery) QueryTicket() *TicketQuery {
 
 // First returns the first RootCauseAnalysis entity from the query.
 // Returns a *NotFoundError when no RootCauseAnalysis was found.
-func (rcaq *RootCauseAnalysisQuery) First(ctx context.Context) (*RootCauseAnalysis, error) {
-	nodes, err := rcaq.Limit(1).All(setContextOp(ctx, rcaq.ctx, ent.OpQueryFirst))
+func (_q *RootCauseAnalysisQuery) First(ctx context.Context) (*RootCauseAnalysis, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (rcaq *RootCauseAnalysisQuery) First(ctx context.Context) (*RootCauseAnalys
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) FirstX(ctx context.Context) *RootCauseAnalysis {
-	node, err := rcaq.First(ctx)
+func (_q *RootCauseAnalysisQuery) FirstX(ctx context.Context) *RootCauseAnalysis {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -106,9 +106,9 @@ func (rcaq *RootCauseAnalysisQuery) FirstX(ctx context.Context) *RootCauseAnalys
 
 // FirstID returns the first RootCauseAnalysis ID from the query.
 // Returns a *NotFoundError when no RootCauseAnalysis ID was found.
-func (rcaq *RootCauseAnalysisQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *RootCauseAnalysisQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = rcaq.Limit(1).IDs(setContextOp(ctx, rcaq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -119,8 +119,8 @@ func (rcaq *RootCauseAnalysisQuery) FirstID(ctx context.Context) (id int, err er
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) FirstIDX(ctx context.Context) int {
-	id, err := rcaq.FirstID(ctx)
+func (_q *RootCauseAnalysisQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -130,8 +130,8 @@ func (rcaq *RootCauseAnalysisQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single RootCauseAnalysis entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one RootCauseAnalysis entity is found.
 // Returns a *NotFoundError when no RootCauseAnalysis entities are found.
-func (rcaq *RootCauseAnalysisQuery) Only(ctx context.Context) (*RootCauseAnalysis, error) {
-	nodes, err := rcaq.Limit(2).All(setContextOp(ctx, rcaq.ctx, ent.OpQueryOnly))
+func (_q *RootCauseAnalysisQuery) Only(ctx context.Context) (*RootCauseAnalysis, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +146,8 @@ func (rcaq *RootCauseAnalysisQuery) Only(ctx context.Context) (*RootCauseAnalysi
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) OnlyX(ctx context.Context) *RootCauseAnalysis {
-	node, err := rcaq.Only(ctx)
+func (_q *RootCauseAnalysisQuery) OnlyX(ctx context.Context) *RootCauseAnalysis {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -157,9 +157,9 @@ func (rcaq *RootCauseAnalysisQuery) OnlyX(ctx context.Context) *RootCauseAnalysi
 // OnlyID is like Only, but returns the only RootCauseAnalysis ID in the query.
 // Returns a *NotSingularError when more than one RootCauseAnalysis ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (rcaq *RootCauseAnalysisQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *RootCauseAnalysisQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = rcaq.Limit(2).IDs(setContextOp(ctx, rcaq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -174,8 +174,8 @@ func (rcaq *RootCauseAnalysisQuery) OnlyID(ctx context.Context) (id int, err err
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) OnlyIDX(ctx context.Context) int {
-	id, err := rcaq.OnlyID(ctx)
+func (_q *RootCauseAnalysisQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -183,18 +183,18 @@ func (rcaq *RootCauseAnalysisQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of RootCauseAnalyses.
-func (rcaq *RootCauseAnalysisQuery) All(ctx context.Context) ([]*RootCauseAnalysis, error) {
-	ctx = setContextOp(ctx, rcaq.ctx, ent.OpQueryAll)
-	if err := rcaq.prepareQuery(ctx); err != nil {
+func (_q *RootCauseAnalysisQuery) All(ctx context.Context) ([]*RootCauseAnalysis, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*RootCauseAnalysis, *RootCauseAnalysisQuery]()
-	return withInterceptors[[]*RootCauseAnalysis](ctx, rcaq, qr, rcaq.inters)
+	return withInterceptors[[]*RootCauseAnalysis](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) AllX(ctx context.Context) []*RootCauseAnalysis {
-	nodes, err := rcaq.All(ctx)
+func (_q *RootCauseAnalysisQuery) AllX(ctx context.Context) []*RootCauseAnalysis {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -202,20 +202,20 @@ func (rcaq *RootCauseAnalysisQuery) AllX(ctx context.Context) []*RootCauseAnalys
 }
 
 // IDs executes the query and returns a list of RootCauseAnalysis IDs.
-func (rcaq *RootCauseAnalysisQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if rcaq.ctx.Unique == nil && rcaq.path != nil {
-		rcaq.Unique(true)
+func (_q *RootCauseAnalysisQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, rcaq.ctx, ent.OpQueryIDs)
-	if err = rcaq.Select(rootcauseanalysis.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(rootcauseanalysis.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) IDsX(ctx context.Context) []int {
-	ids, err := rcaq.IDs(ctx)
+func (_q *RootCauseAnalysisQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -223,17 +223,17 @@ func (rcaq *RootCauseAnalysisQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (rcaq *RootCauseAnalysisQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, rcaq.ctx, ent.OpQueryCount)
-	if err := rcaq.prepareQuery(ctx); err != nil {
+func (_q *RootCauseAnalysisQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, rcaq, querierCount[*RootCauseAnalysisQuery](), rcaq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*RootCauseAnalysisQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) CountX(ctx context.Context) int {
-	count, err := rcaq.Count(ctx)
+func (_q *RootCauseAnalysisQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -241,9 +241,9 @@ func (rcaq *RootCauseAnalysisQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (rcaq *RootCauseAnalysisQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, rcaq.ctx, ent.OpQueryExist)
-	switch _, err := rcaq.FirstID(ctx); {
+func (_q *RootCauseAnalysisQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -254,8 +254,8 @@ func (rcaq *RootCauseAnalysisQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (rcaq *RootCauseAnalysisQuery) ExistX(ctx context.Context) bool {
-	exist, err := rcaq.Exist(ctx)
+func (_q *RootCauseAnalysisQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -264,32 +264,32 @@ func (rcaq *RootCauseAnalysisQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the RootCauseAnalysisQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (rcaq *RootCauseAnalysisQuery) Clone() *RootCauseAnalysisQuery {
-	if rcaq == nil {
+func (_q *RootCauseAnalysisQuery) Clone() *RootCauseAnalysisQuery {
+	if _q == nil {
 		return nil
 	}
 	return &RootCauseAnalysisQuery{
-		config:     rcaq.config,
-		ctx:        rcaq.ctx.Clone(),
-		order:      append([]rootcauseanalysis.OrderOption{}, rcaq.order...),
-		inters:     append([]Interceptor{}, rcaq.inters...),
-		predicates: append([]predicate.RootCauseAnalysis{}, rcaq.predicates...),
-		withTicket: rcaq.withTicket.Clone(),
+		config:     _q.config,
+		ctx:        _q.ctx.Clone(),
+		order:      append([]rootcauseanalysis.OrderOption{}, _q.order...),
+		inters:     append([]Interceptor{}, _q.inters...),
+		predicates: append([]predicate.RootCauseAnalysis{}, _q.predicates...),
+		withTicket: _q.withTicket.Clone(),
 		// clone intermediate query.
-		sql:  rcaq.sql.Clone(),
-		path: rcaq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithTicket tells the query-builder to eager-load the nodes that are connected to
 // the "ticket" edge. The optional arguments are used to configure the query builder of the edge.
-func (rcaq *RootCauseAnalysisQuery) WithTicket(opts ...func(*TicketQuery)) *RootCauseAnalysisQuery {
-	query := (&TicketClient{config: rcaq.config}).Query()
+func (_q *RootCauseAnalysisQuery) WithTicket(opts ...func(*TicketQuery)) *RootCauseAnalysisQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	rcaq.withTicket = query
-	return rcaq
+	_q.withTicket = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -306,10 +306,10 @@ func (rcaq *RootCauseAnalysisQuery) WithTicket(opts ...func(*TicketQuery)) *Root
 //		GroupBy(rootcauseanalysis.FieldTicketID).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (rcaq *RootCauseAnalysisQuery) GroupBy(field string, fields ...string) *RootCauseAnalysisGroupBy {
-	rcaq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &RootCauseAnalysisGroupBy{build: rcaq}
-	grbuild.flds = &rcaq.ctx.Fields
+func (_q *RootCauseAnalysisQuery) GroupBy(field string, fields ...string) *RootCauseAnalysisGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &RootCauseAnalysisGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = rootcauseanalysis.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -327,58 +327,58 @@ func (rcaq *RootCauseAnalysisQuery) GroupBy(field string, fields ...string) *Roo
 //	client.RootCauseAnalysis.Query().
 //		Select(rootcauseanalysis.FieldTicketID).
 //		Scan(ctx, &v)
-func (rcaq *RootCauseAnalysisQuery) Select(fields ...string) *RootCauseAnalysisSelect {
-	rcaq.ctx.Fields = append(rcaq.ctx.Fields, fields...)
-	sbuild := &RootCauseAnalysisSelect{RootCauseAnalysisQuery: rcaq}
+func (_q *RootCauseAnalysisQuery) Select(fields ...string) *RootCauseAnalysisSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &RootCauseAnalysisSelect{RootCauseAnalysisQuery: _q}
 	sbuild.label = rootcauseanalysis.Label
-	sbuild.flds, sbuild.scan = &rcaq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a RootCauseAnalysisSelect configured with the given aggregations.
-func (rcaq *RootCauseAnalysisQuery) Aggregate(fns ...AggregateFunc) *RootCauseAnalysisSelect {
-	return rcaq.Select().Aggregate(fns...)
+func (_q *RootCauseAnalysisQuery) Aggregate(fns ...AggregateFunc) *RootCauseAnalysisSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (rcaq *RootCauseAnalysisQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range rcaq.inters {
+func (_q *RootCauseAnalysisQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, rcaq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range rcaq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !rootcauseanalysis.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if rcaq.path != nil {
-		prev, err := rcaq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		rcaq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (rcaq *RootCauseAnalysisQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*RootCauseAnalysis, error) {
+func (_q *RootCauseAnalysisQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*RootCauseAnalysis, error) {
 	var (
 		nodes       = []*RootCauseAnalysis{}
-		_spec       = rcaq.querySpec()
+		_spec       = _q.querySpec()
 		loadedTypes = [1]bool{
-			rcaq.withTicket != nil,
+			_q.withTicket != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*RootCauseAnalysis).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &RootCauseAnalysis{config: rcaq.config}
+		node := &RootCauseAnalysis{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -386,14 +386,14 @@ func (rcaq *RootCauseAnalysisQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, rcaq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := rcaq.withTicket; query != nil {
-		if err := rcaq.loadTicket(ctx, query, nodes, nil,
+	if query := _q.withTicket; query != nil {
+		if err := _q.loadTicket(ctx, query, nodes, nil,
 			func(n *RootCauseAnalysis, e *Ticket) { n.Edges.Ticket = e }); err != nil {
 			return nil, err
 		}
@@ -401,7 +401,7 @@ func (rcaq *RootCauseAnalysisQuery) sqlAll(ctx context.Context, hooks ...queryHo
 	return nodes, nil
 }
 
-func (rcaq *RootCauseAnalysisQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*RootCauseAnalysis, init func(*RootCauseAnalysis), assign func(*RootCauseAnalysis, *Ticket)) error {
+func (_q *RootCauseAnalysisQuery) loadTicket(ctx context.Context, query *TicketQuery, nodes []*RootCauseAnalysis, init func(*RootCauseAnalysis), assign func(*RootCauseAnalysis, *Ticket)) error {
 	ids := make([]int, 0, len(nodes))
 	nodeids := make(map[int][]*RootCauseAnalysis)
 	for i := range nodes {
@@ -431,24 +431,24 @@ func (rcaq *RootCauseAnalysisQuery) loadTicket(ctx context.Context, query *Ticke
 	return nil
 }
 
-func (rcaq *RootCauseAnalysisQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := rcaq.querySpec()
-	_spec.Node.Columns = rcaq.ctx.Fields
-	if len(rcaq.ctx.Fields) > 0 {
-		_spec.Unique = rcaq.ctx.Unique != nil && *rcaq.ctx.Unique
+func (_q *RootCauseAnalysisQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, rcaq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (rcaq *RootCauseAnalysisQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *RootCauseAnalysisQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(rootcauseanalysis.Table, rootcauseanalysis.Columns, sqlgraph.NewFieldSpec(rootcauseanalysis.FieldID, field.TypeInt))
-	_spec.From = rcaq.sql
-	if unique := rcaq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if rcaq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := rcaq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, rootcauseanalysis.FieldID)
 		for i := range fields {
@@ -456,24 +456,24 @@ func (rcaq *RootCauseAnalysisQuery) querySpec() *sqlgraph.QuerySpec {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
-		if rcaq.withTicket != nil {
+		if _q.withTicket != nil {
 			_spec.Node.AddColumnOnce(rootcauseanalysis.FieldTicketID)
 		}
 	}
-	if ps := rcaq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := rcaq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := rcaq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := rcaq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -483,33 +483,33 @@ func (rcaq *RootCauseAnalysisQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (rcaq *RootCauseAnalysisQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(rcaq.driver.Dialect())
+func (_q *RootCauseAnalysisQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(rootcauseanalysis.Table)
-	columns := rcaq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = rootcauseanalysis.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if rcaq.sql != nil {
-		selector = rcaq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if rcaq.ctx.Unique != nil && *rcaq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range rcaq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range rcaq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := rcaq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := rcaq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -522,41 +522,41 @@ type RootCauseAnalysisGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (rcagb *RootCauseAnalysisGroupBy) Aggregate(fns ...AggregateFunc) *RootCauseAnalysisGroupBy {
-	rcagb.fns = append(rcagb.fns, fns...)
-	return rcagb
+func (_g *RootCauseAnalysisGroupBy) Aggregate(fns ...AggregateFunc) *RootCauseAnalysisGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (rcagb *RootCauseAnalysisGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, rcagb.build.ctx, ent.OpQueryGroupBy)
-	if err := rcagb.build.prepareQuery(ctx); err != nil {
+func (_g *RootCauseAnalysisGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*RootCauseAnalysisQuery, *RootCauseAnalysisGroupBy](ctx, rcagb.build, rcagb, rcagb.build.inters, v)
+	return scanWithInterceptors[*RootCauseAnalysisQuery, *RootCauseAnalysisGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (rcagb *RootCauseAnalysisGroupBy) sqlScan(ctx context.Context, root *RootCauseAnalysisQuery, v any) error {
+func (_g *RootCauseAnalysisGroupBy) sqlScan(ctx context.Context, root *RootCauseAnalysisQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(rcagb.fns))
-	for _, fn := range rcagb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*rcagb.flds)+len(rcagb.fns))
-		for _, f := range *rcagb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*rcagb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := rcagb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -570,27 +570,27 @@ type RootCauseAnalysisSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (rcas *RootCauseAnalysisSelect) Aggregate(fns ...AggregateFunc) *RootCauseAnalysisSelect {
-	rcas.fns = append(rcas.fns, fns...)
-	return rcas
+func (_s *RootCauseAnalysisSelect) Aggregate(fns ...AggregateFunc) *RootCauseAnalysisSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (rcas *RootCauseAnalysisSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, rcas.ctx, ent.OpQuerySelect)
-	if err := rcas.prepareQuery(ctx); err != nil {
+func (_s *RootCauseAnalysisSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*RootCauseAnalysisQuery, *RootCauseAnalysisSelect](ctx, rcas.RootCauseAnalysisQuery, rcas, rcas.inters, v)
+	return scanWithInterceptors[*RootCauseAnalysisQuery, *RootCauseAnalysisSelect](ctx, _s.RootCauseAnalysisQuery, _s, _s.inters, v)
 }
 
-func (rcas *RootCauseAnalysisSelect) sqlScan(ctx context.Context, root *RootCauseAnalysisQuery, v any) error {
+func (_s *RootCauseAnalysisSelect) sqlScan(ctx context.Context, root *RootCauseAnalysisQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(rcas.fns))
-	for _, fn := range rcas.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*rcas.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -598,7 +598,7 @@ func (rcas *RootCauseAnalysisSelect) sqlScan(ctx context.Context, root *RootCaus
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := rcas.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

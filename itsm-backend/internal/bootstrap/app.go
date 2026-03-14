@@ -75,7 +75,16 @@ func NewApplication() *Application {
 
 	// 初始化业务服务层
 	incidentService := service.NewIncidentService(client, sugar)
-	ticketService := service.NewTicketService(client, sugar)
+
+	// 初始化 Redis 序列服务（用于工单编号生成）
+	sequenceService := service.NewSequenceService(
+		cfg.Redis.Host,
+		cfg.Redis.Port,
+		cfg.Redis.Password,
+		cfg.Redis.DB,
+		sugar,
+	)
+	ticketService := service.NewTicketServiceWithSequence(client, sugar, sequenceService)
 
 	// MSP 服务初始化
 	mspAllocationService := service.NewMSPAllocationService(client, sugar)

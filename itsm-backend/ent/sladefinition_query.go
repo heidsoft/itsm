@@ -38,44 +38,44 @@ type SLADefinitionQuery struct {
 }
 
 // Where adds a new predicate for the SLADefinitionQuery builder.
-func (sdq *SLADefinitionQuery) Where(ps ...predicate.SLADefinition) *SLADefinitionQuery {
-	sdq.predicates = append(sdq.predicates, ps...)
-	return sdq
+func (_q *SLADefinitionQuery) Where(ps ...predicate.SLADefinition) *SLADefinitionQuery {
+	_q.predicates = append(_q.predicates, ps...)
+	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (sdq *SLADefinitionQuery) Limit(limit int) *SLADefinitionQuery {
-	sdq.ctx.Limit = &limit
-	return sdq
+func (_q *SLADefinitionQuery) Limit(limit int) *SLADefinitionQuery {
+	_q.ctx.Limit = &limit
+	return _q
 }
 
 // Offset to start from.
-func (sdq *SLADefinitionQuery) Offset(offset int) *SLADefinitionQuery {
-	sdq.ctx.Offset = &offset
-	return sdq
+func (_q *SLADefinitionQuery) Offset(offset int) *SLADefinitionQuery {
+	_q.ctx.Offset = &offset
+	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (sdq *SLADefinitionQuery) Unique(unique bool) *SLADefinitionQuery {
-	sdq.ctx.Unique = &unique
-	return sdq
+func (_q *SLADefinitionQuery) Unique(unique bool) *SLADefinitionQuery {
+	_q.ctx.Unique = &unique
+	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (sdq *SLADefinitionQuery) Order(o ...sladefinition.OrderOption) *SLADefinitionQuery {
-	sdq.order = append(sdq.order, o...)
-	return sdq
+func (_q *SLADefinitionQuery) Order(o ...sladefinition.OrderOption) *SLADefinitionQuery {
+	_q.order = append(_q.order, o...)
+	return _q
 }
 
 // QueryViolations chains the current query on the "violations" edge.
-func (sdq *SLADefinitionQuery) QueryViolations() *SLAViolationQuery {
-	query := (&SLAViolationClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) QueryViolations() *SLAViolationQuery {
+	query := (&SLAViolationClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -84,20 +84,20 @@ func (sdq *SLADefinitionQuery) QueryViolations() *SLAViolationQuery {
 			sqlgraph.To(slaviolation.Table, slaviolation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.ViolationsTable, sladefinition.ViolationsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryMetrics chains the current query on the "metrics" edge.
-func (sdq *SLADefinitionQuery) QueryMetrics() *SLAMetricQuery {
-	query := (&SLAMetricClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) QueryMetrics() *SLAMetricQuery {
+	query := (&SLAMetricClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -106,20 +106,20 @@ func (sdq *SLADefinitionQuery) QueryMetrics() *SLAMetricQuery {
 			sqlgraph.To(slametric.Table, slametric.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.MetricsTable, sladefinition.MetricsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryTickets chains the current query on the "tickets" edge.
-func (sdq *SLADefinitionQuery) QueryTickets() *TicketQuery {
-	query := (&TicketClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) QueryTickets() *TicketQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -128,20 +128,20 @@ func (sdq *SLADefinitionQuery) QueryTickets() *TicketQuery {
 			sqlgraph.To(ticket.Table, ticket.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.TicketsTable, sladefinition.TicketsColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
 }
 
 // QueryAlertRules chains the current query on the "alert_rules" edge.
-func (sdq *SLADefinitionQuery) QueryAlertRules() *SLAAlertRuleQuery {
-	query := (&SLAAlertRuleClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) QueryAlertRules() *SLAAlertRuleQuery {
+	query := (&SLAAlertRuleClient{config: _q.config}).Query()
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
-		if err := sdq.prepareQuery(ctx); err != nil {
+		if err := _q.prepareQuery(ctx); err != nil {
 			return nil, err
 		}
-		selector := sdq.sqlQuery(ctx)
+		selector := _q.sqlQuery(ctx)
 		if err := selector.Err(); err != nil {
 			return nil, err
 		}
@@ -150,7 +150,7 @@ func (sdq *SLADefinitionQuery) QueryAlertRules() *SLAAlertRuleQuery {
 			sqlgraph.To(slaalertrule.Table, slaalertrule.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, sladefinition.AlertRulesTable, sladefinition.AlertRulesColumn),
 		)
-		fromU = sqlgraph.SetNeighbors(sdq.driver.Dialect(), step)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
 	}
 	return query
@@ -158,8 +158,8 @@ func (sdq *SLADefinitionQuery) QueryAlertRules() *SLAAlertRuleQuery {
 
 // First returns the first SLADefinition entity from the query.
 // Returns a *NotFoundError when no SLADefinition was found.
-func (sdq *SLADefinitionQuery) First(ctx context.Context) (*SLADefinition, error) {
-	nodes, err := sdq.Limit(1).All(setContextOp(ctx, sdq.ctx, ent.OpQueryFirst))
+func (_q *SLADefinitionQuery) First(ctx context.Context) (*SLADefinition, error) {
+	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
@@ -170,8 +170,8 @@ func (sdq *SLADefinitionQuery) First(ctx context.Context) (*SLADefinition, error
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) FirstX(ctx context.Context) *SLADefinition {
-	node, err := sdq.First(ctx)
+func (_q *SLADefinitionQuery) FirstX(ctx context.Context) *SLADefinition {
+	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -180,9 +180,9 @@ func (sdq *SLADefinitionQuery) FirstX(ctx context.Context) *SLADefinition {
 
 // FirstID returns the first SLADefinition ID from the query.
 // Returns a *NotFoundError when no SLADefinition ID was found.
-func (sdq *SLADefinitionQuery) FirstID(ctx context.Context) (id int, err error) {
+func (_q *SLADefinitionQuery) FirstID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sdq.Limit(1).IDs(setContextOp(ctx, sdq.ctx, ent.OpQueryFirstID)); err != nil {
+	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
@@ -193,8 +193,8 @@ func (sdq *SLADefinitionQuery) FirstID(ctx context.Context) (id int, err error) 
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) FirstIDX(ctx context.Context) int {
-	id, err := sdq.FirstID(ctx)
+func (_q *SLADefinitionQuery) FirstIDX(ctx context.Context) int {
+	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
 	}
@@ -204,8 +204,8 @@ func (sdq *SLADefinitionQuery) FirstIDX(ctx context.Context) int {
 // Only returns a single SLADefinition entity found by the query, ensuring it only returns one.
 // Returns a *NotSingularError when more than one SLADefinition entity is found.
 // Returns a *NotFoundError when no SLADefinition entities are found.
-func (sdq *SLADefinitionQuery) Only(ctx context.Context) (*SLADefinition, error) {
-	nodes, err := sdq.Limit(2).All(setContextOp(ctx, sdq.ctx, ent.OpQueryOnly))
+func (_q *SLADefinitionQuery) Only(ctx context.Context) (*SLADefinition, error) {
+	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
 	}
@@ -220,8 +220,8 @@ func (sdq *SLADefinitionQuery) Only(ctx context.Context) (*SLADefinition, error)
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) OnlyX(ctx context.Context) *SLADefinition {
-	node, err := sdq.Only(ctx)
+func (_q *SLADefinitionQuery) OnlyX(ctx context.Context) *SLADefinition {
+	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -231,9 +231,9 @@ func (sdq *SLADefinitionQuery) OnlyX(ctx context.Context) *SLADefinition {
 // OnlyID is like Only, but returns the only SLADefinition ID in the query.
 // Returns a *NotSingularError when more than one SLADefinition ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (sdq *SLADefinitionQuery) OnlyID(ctx context.Context) (id int, err error) {
+func (_q *SLADefinitionQuery) OnlyID(ctx context.Context) (id int, err error) {
 	var ids []int
-	if ids, err = sdq.Limit(2).IDs(setContextOp(ctx, sdq.ctx, ent.OpQueryOnlyID)); err != nil {
+	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
 	}
 	switch len(ids) {
@@ -248,8 +248,8 @@ func (sdq *SLADefinitionQuery) OnlyID(ctx context.Context) (id int, err error) {
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) OnlyIDX(ctx context.Context) int {
-	id, err := sdq.OnlyID(ctx)
+func (_q *SLADefinitionQuery) OnlyIDX(ctx context.Context) int {
+	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -257,18 +257,18 @@ func (sdq *SLADefinitionQuery) OnlyIDX(ctx context.Context) int {
 }
 
 // All executes the query and returns a list of SLADefinitions.
-func (sdq *SLADefinitionQuery) All(ctx context.Context) ([]*SLADefinition, error) {
-	ctx = setContextOp(ctx, sdq.ctx, ent.OpQueryAll)
-	if err := sdq.prepareQuery(ctx); err != nil {
+func (_q *SLADefinitionQuery) All(ctx context.Context) ([]*SLADefinition, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
 	qr := querierAll[[]*SLADefinition, *SLADefinitionQuery]()
-	return withInterceptors[[]*SLADefinition](ctx, sdq, qr, sdq.inters)
+	return withInterceptors[[]*SLADefinition](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) AllX(ctx context.Context) []*SLADefinition {
-	nodes, err := sdq.All(ctx)
+func (_q *SLADefinitionQuery) AllX(ctx context.Context) []*SLADefinition {
+	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -276,20 +276,20 @@ func (sdq *SLADefinitionQuery) AllX(ctx context.Context) []*SLADefinition {
 }
 
 // IDs executes the query and returns a list of SLADefinition IDs.
-func (sdq *SLADefinitionQuery) IDs(ctx context.Context) (ids []int, err error) {
-	if sdq.ctx.Unique == nil && sdq.path != nil {
-		sdq.Unique(true)
+func (_q *SLADefinitionQuery) IDs(ctx context.Context) (ids []int, err error) {
+	if _q.ctx.Unique == nil && _q.path != nil {
+		_q.Unique(true)
 	}
-	ctx = setContextOp(ctx, sdq.ctx, ent.OpQueryIDs)
-	if err = sdq.Select(sladefinition.FieldID).Scan(ctx, &ids); err != nil {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
+	if err = _q.Select(sladefinition.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) IDsX(ctx context.Context) []int {
-	ids, err := sdq.IDs(ctx)
+func (_q *SLADefinitionQuery) IDsX(ctx context.Context) []int {
+	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -297,17 +297,17 @@ func (sdq *SLADefinitionQuery) IDsX(ctx context.Context) []int {
 }
 
 // Count returns the count of the given query.
-func (sdq *SLADefinitionQuery) Count(ctx context.Context) (int, error) {
-	ctx = setContextOp(ctx, sdq.ctx, ent.OpQueryCount)
-	if err := sdq.prepareQuery(ctx); err != nil {
+func (_q *SLADefinitionQuery) Count(ctx context.Context) (int, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
+	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, sdq, querierCount[*SLADefinitionQuery](), sdq.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*SLADefinitionQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) CountX(ctx context.Context) int {
-	count, err := sdq.Count(ctx)
+func (_q *SLADefinitionQuery) CountX(ctx context.Context) int {
+	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -315,9 +315,9 @@ func (sdq *SLADefinitionQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (sdq *SLADefinitionQuery) Exist(ctx context.Context) (bool, error) {
-	ctx = setContextOp(ctx, sdq.ctx, ent.OpQueryExist)
-	switch _, err := sdq.FirstID(ctx); {
+func (_q *SLADefinitionQuery) Exist(ctx context.Context) (bool, error) {
+	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
+	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
 		return false, nil
 	case err != nil:
@@ -328,8 +328,8 @@ func (sdq *SLADefinitionQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (sdq *SLADefinitionQuery) ExistX(ctx context.Context) bool {
-	exist, err := sdq.Exist(ctx)
+func (_q *SLADefinitionQuery) ExistX(ctx context.Context) bool {
+	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -338,68 +338,68 @@ func (sdq *SLADefinitionQuery) ExistX(ctx context.Context) bool {
 
 // Clone returns a duplicate of the SLADefinitionQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (sdq *SLADefinitionQuery) Clone() *SLADefinitionQuery {
-	if sdq == nil {
+func (_q *SLADefinitionQuery) Clone() *SLADefinitionQuery {
+	if _q == nil {
 		return nil
 	}
 	return &SLADefinitionQuery{
-		config:         sdq.config,
-		ctx:            sdq.ctx.Clone(),
-		order:          append([]sladefinition.OrderOption{}, sdq.order...),
-		inters:         append([]Interceptor{}, sdq.inters...),
-		predicates:     append([]predicate.SLADefinition{}, sdq.predicates...),
-		withViolations: sdq.withViolations.Clone(),
-		withMetrics:    sdq.withMetrics.Clone(),
-		withTickets:    sdq.withTickets.Clone(),
-		withAlertRules: sdq.withAlertRules.Clone(),
+		config:         _q.config,
+		ctx:            _q.ctx.Clone(),
+		order:          append([]sladefinition.OrderOption{}, _q.order...),
+		inters:         append([]Interceptor{}, _q.inters...),
+		predicates:     append([]predicate.SLADefinition{}, _q.predicates...),
+		withViolations: _q.withViolations.Clone(),
+		withMetrics:    _q.withMetrics.Clone(),
+		withTickets:    _q.withTickets.Clone(),
+		withAlertRules: _q.withAlertRules.Clone(),
 		// clone intermediate query.
-		sql:  sdq.sql.Clone(),
-		path: sdq.path,
+		sql:  _q.sql.Clone(),
+		path: _q.path,
 	}
 }
 
 // WithViolations tells the query-builder to eager-load the nodes that are connected to
 // the "violations" edge. The optional arguments are used to configure the query builder of the edge.
-func (sdq *SLADefinitionQuery) WithViolations(opts ...func(*SLAViolationQuery)) *SLADefinitionQuery {
-	query := (&SLAViolationClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) WithViolations(opts ...func(*SLAViolationQuery)) *SLADefinitionQuery {
+	query := (&SLAViolationClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sdq.withViolations = query
-	return sdq
+	_q.withViolations = query
+	return _q
 }
 
 // WithMetrics tells the query-builder to eager-load the nodes that are connected to
 // the "metrics" edge. The optional arguments are used to configure the query builder of the edge.
-func (sdq *SLADefinitionQuery) WithMetrics(opts ...func(*SLAMetricQuery)) *SLADefinitionQuery {
-	query := (&SLAMetricClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) WithMetrics(opts ...func(*SLAMetricQuery)) *SLADefinitionQuery {
+	query := (&SLAMetricClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sdq.withMetrics = query
-	return sdq
+	_q.withMetrics = query
+	return _q
 }
 
 // WithTickets tells the query-builder to eager-load the nodes that are connected to
 // the "tickets" edge. The optional arguments are used to configure the query builder of the edge.
-func (sdq *SLADefinitionQuery) WithTickets(opts ...func(*TicketQuery)) *SLADefinitionQuery {
-	query := (&TicketClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) WithTickets(opts ...func(*TicketQuery)) *SLADefinitionQuery {
+	query := (&TicketClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sdq.withTickets = query
-	return sdq
+	_q.withTickets = query
+	return _q
 }
 
 // WithAlertRules tells the query-builder to eager-load the nodes that are connected to
 // the "alert_rules" edge. The optional arguments are used to configure the query builder of the edge.
-func (sdq *SLADefinitionQuery) WithAlertRules(opts ...func(*SLAAlertRuleQuery)) *SLADefinitionQuery {
-	query := (&SLAAlertRuleClient{config: sdq.config}).Query()
+func (_q *SLADefinitionQuery) WithAlertRules(opts ...func(*SLAAlertRuleQuery)) *SLADefinitionQuery {
+	query := (&SLAAlertRuleClient{config: _q.config}).Query()
 	for _, opt := range opts {
 		opt(query)
 	}
-	sdq.withAlertRules = query
-	return sdq
+	_q.withAlertRules = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -416,10 +416,10 @@ func (sdq *SLADefinitionQuery) WithAlertRules(opts ...func(*SLAAlertRuleQuery)) 
 //		GroupBy(sladefinition.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (sdq *SLADefinitionQuery) GroupBy(field string, fields ...string) *SLADefinitionGroupBy {
-	sdq.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &SLADefinitionGroupBy{build: sdq}
-	grbuild.flds = &sdq.ctx.Fields
+func (_q *SLADefinitionQuery) GroupBy(field string, fields ...string) *SLADefinitionGroupBy {
+	_q.ctx.Fields = append([]string{field}, fields...)
+	grbuild := &SLADefinitionGroupBy{build: _q}
+	grbuild.flds = &_q.ctx.Fields
 	grbuild.label = sladefinition.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
@@ -437,55 +437,55 @@ func (sdq *SLADefinitionQuery) GroupBy(field string, fields ...string) *SLADefin
 //	client.SLADefinition.Query().
 //		Select(sladefinition.FieldName).
 //		Scan(ctx, &v)
-func (sdq *SLADefinitionQuery) Select(fields ...string) *SLADefinitionSelect {
-	sdq.ctx.Fields = append(sdq.ctx.Fields, fields...)
-	sbuild := &SLADefinitionSelect{SLADefinitionQuery: sdq}
+func (_q *SLADefinitionQuery) Select(fields ...string) *SLADefinitionSelect {
+	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
+	sbuild := &SLADefinitionSelect{SLADefinitionQuery: _q}
 	sbuild.label = sladefinition.Label
-	sbuild.flds, sbuild.scan = &sdq.ctx.Fields, sbuild.Scan
+	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
 // Aggregate returns a SLADefinitionSelect configured with the given aggregations.
-func (sdq *SLADefinitionQuery) Aggregate(fns ...AggregateFunc) *SLADefinitionSelect {
-	return sdq.Select().Aggregate(fns...)
+func (_q *SLADefinitionQuery) Aggregate(fns ...AggregateFunc) *SLADefinitionSelect {
+	return _q.Select().Aggregate(fns...)
 }
 
-func (sdq *SLADefinitionQuery) prepareQuery(ctx context.Context) error {
-	for _, inter := range sdq.inters {
+func (_q *SLADefinitionQuery) prepareQuery(ctx context.Context) error {
+	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
 		}
 		if trv, ok := inter.(Traverser); ok {
-			if err := trv.Traverse(ctx, sdq); err != nil {
+			if err := trv.Traverse(ctx, _q); err != nil {
 				return err
 			}
 		}
 	}
-	for _, f := range sdq.ctx.Fields {
+	for _, f := range _q.ctx.Fields {
 		if !sladefinition.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
-	if sdq.path != nil {
-		prev, err := sdq.path(ctx)
+	if _q.path != nil {
+		prev, err := _q.path(ctx)
 		if err != nil {
 			return err
 		}
-		sdq.sql = prev
+		_q.sql = prev
 	}
 	return nil
 }
 
-func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLADefinition, error) {
+func (_q *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*SLADefinition, error) {
 	var (
 		nodes       = []*SLADefinition{}
-		withFKs     = sdq.withFKs
-		_spec       = sdq.querySpec()
+		withFKs     = _q.withFKs
+		_spec       = _q.querySpec()
 		loadedTypes = [4]bool{
-			sdq.withViolations != nil,
-			sdq.withMetrics != nil,
-			sdq.withTickets != nil,
-			sdq.withAlertRules != nil,
+			_q.withViolations != nil,
+			_q.withMetrics != nil,
+			_q.withTickets != nil,
+			_q.withAlertRules != nil,
 		}
 	)
 	if withFKs {
@@ -495,7 +495,7 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 		return (*SLADefinition).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &SLADefinition{config: sdq.config}
+		node := &SLADefinition{config: _q.config}
 		nodes = append(nodes, node)
 		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
@@ -503,35 +503,35 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	for i := range hooks {
 		hooks[i](ctx, _spec)
 	}
-	if err := sqlgraph.QueryNodes(ctx, sdq.driver, _spec); err != nil {
+	if err := sqlgraph.QueryNodes(ctx, _q.driver, _spec); err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
-	if query := sdq.withViolations; query != nil {
-		if err := sdq.loadViolations(ctx, query, nodes,
+	if query := _q.withViolations; query != nil {
+		if err := _q.loadViolations(ctx, query, nodes,
 			func(n *SLADefinition) { n.Edges.Violations = []*SLAViolation{} },
 			func(n *SLADefinition, e *SLAViolation) { n.Edges.Violations = append(n.Edges.Violations, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := sdq.withMetrics; query != nil {
-		if err := sdq.loadMetrics(ctx, query, nodes,
+	if query := _q.withMetrics; query != nil {
+		if err := _q.loadMetrics(ctx, query, nodes,
 			func(n *SLADefinition) { n.Edges.Metrics = []*SLAMetric{} },
 			func(n *SLADefinition, e *SLAMetric) { n.Edges.Metrics = append(n.Edges.Metrics, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := sdq.withTickets; query != nil {
-		if err := sdq.loadTickets(ctx, query, nodes,
+	if query := _q.withTickets; query != nil {
+		if err := _q.loadTickets(ctx, query, nodes,
 			func(n *SLADefinition) { n.Edges.Tickets = []*Ticket{} },
 			func(n *SLADefinition, e *Ticket) { n.Edges.Tickets = append(n.Edges.Tickets, e) }); err != nil {
 			return nil, err
 		}
 	}
-	if query := sdq.withAlertRules; query != nil {
-		if err := sdq.loadAlertRules(ctx, query, nodes,
+	if query := _q.withAlertRules; query != nil {
+		if err := _q.loadAlertRules(ctx, query, nodes,
 			func(n *SLADefinition) { n.Edges.AlertRules = []*SLAAlertRule{} },
 			func(n *SLADefinition, e *SLAAlertRule) { n.Edges.AlertRules = append(n.Edges.AlertRules, e) }); err != nil {
 			return nil, err
@@ -540,7 +540,7 @@ func (sdq *SLADefinitionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	return nodes, nil
 }
 
-func (sdq *SLADefinitionQuery) loadViolations(ctx context.Context, query *SLAViolationQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAViolation)) error {
+func (_q *SLADefinitionQuery) loadViolations(ctx context.Context, query *SLAViolationQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAViolation)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SLADefinition)
 	for i := range nodes {
@@ -570,7 +570,7 @@ func (sdq *SLADefinitionQuery) loadViolations(ctx context.Context, query *SLAVio
 	}
 	return nil
 }
-func (sdq *SLADefinitionQuery) loadMetrics(ctx context.Context, query *SLAMetricQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAMetric)) error {
+func (_q *SLADefinitionQuery) loadMetrics(ctx context.Context, query *SLAMetricQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAMetric)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SLADefinition)
 	for i := range nodes {
@@ -600,7 +600,7 @@ func (sdq *SLADefinitionQuery) loadMetrics(ctx context.Context, query *SLAMetric
 	}
 	return nil
 }
-func (sdq *SLADefinitionQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *Ticket)) error {
+func (_q *SLADefinitionQuery) loadTickets(ctx context.Context, query *TicketQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *Ticket)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SLADefinition)
 	for i := range nodes {
@@ -631,7 +631,7 @@ func (sdq *SLADefinitionQuery) loadTickets(ctx context.Context, query *TicketQue
 	}
 	return nil
 }
-func (sdq *SLADefinitionQuery) loadAlertRules(ctx context.Context, query *SLAAlertRuleQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAAlertRule)) error {
+func (_q *SLADefinitionQuery) loadAlertRules(ctx context.Context, query *SLAAlertRuleQuery, nodes []*SLADefinition, init func(*SLADefinition), assign func(*SLADefinition, *SLAAlertRule)) error {
 	fks := make([]driver.Value, 0, len(nodes))
 	nodeids := make(map[int]*SLADefinition)
 	for i := range nodes {
@@ -662,24 +662,24 @@ func (sdq *SLADefinitionQuery) loadAlertRules(ctx context.Context, query *SLAAle
 	return nil
 }
 
-func (sdq *SLADefinitionQuery) sqlCount(ctx context.Context) (int, error) {
-	_spec := sdq.querySpec()
-	_spec.Node.Columns = sdq.ctx.Fields
-	if len(sdq.ctx.Fields) > 0 {
-		_spec.Unique = sdq.ctx.Unique != nil && *sdq.ctx.Unique
+func (_q *SLADefinitionQuery) sqlCount(ctx context.Context) (int, error) {
+	_spec := _q.querySpec()
+	_spec.Node.Columns = _q.ctx.Fields
+	if len(_q.ctx.Fields) > 0 {
+		_spec.Unique = _q.ctx.Unique != nil && *_q.ctx.Unique
 	}
-	return sqlgraph.CountNodes(ctx, sdq.driver, _spec)
+	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (sdq *SLADefinitionQuery) querySpec() *sqlgraph.QuerySpec {
+func (_q *SLADefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 	_spec := sqlgraph.NewQuerySpec(sladefinition.Table, sladefinition.Columns, sqlgraph.NewFieldSpec(sladefinition.FieldID, field.TypeInt))
-	_spec.From = sdq.sql
-	if unique := sdq.ctx.Unique; unique != nil {
+	_spec.From = _q.sql
+	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
-	} else if sdq.path != nil {
+	} else if _q.path != nil {
 		_spec.Unique = true
 	}
-	if fields := sdq.ctx.Fields; len(fields) > 0 {
+	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, sladefinition.FieldID)
 		for i := range fields {
@@ -688,20 +688,20 @@ func (sdq *SLADefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 	}
-	if ps := sdq.predicates; len(ps) > 0 {
+	if ps := _q.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if limit := sdq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		_spec.Limit = *limit
 	}
-	if offset := sdq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		_spec.Offset = *offset
 	}
-	if ps := sdq.order; len(ps) > 0 {
+	if ps := _q.order; len(ps) > 0 {
 		_spec.Order = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
@@ -711,33 +711,33 @@ func (sdq *SLADefinitionQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (sdq *SLADefinitionQuery) sqlQuery(ctx context.Context) *sql.Selector {
-	builder := sql.Dialect(sdq.driver.Dialect())
+func (_q *SLADefinitionQuery) sqlQuery(ctx context.Context) *sql.Selector {
+	builder := sql.Dialect(_q.driver.Dialect())
 	t1 := builder.Table(sladefinition.Table)
-	columns := sdq.ctx.Fields
+	columns := _q.ctx.Fields
 	if len(columns) == 0 {
 		columns = sladefinition.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
-	if sdq.sql != nil {
-		selector = sdq.sql
+	if _q.sql != nil {
+		selector = _q.sql
 		selector.Select(selector.Columns(columns...)...)
 	}
-	if sdq.ctx.Unique != nil && *sdq.ctx.Unique {
+	if _q.ctx.Unique != nil && *_q.ctx.Unique {
 		selector.Distinct()
 	}
-	for _, p := range sdq.predicates {
+	for _, p := range _q.predicates {
 		p(selector)
 	}
-	for _, p := range sdq.order {
+	for _, p := range _q.order {
 		p(selector)
 	}
-	if offset := sdq.ctx.Offset; offset != nil {
+	if offset := _q.ctx.Offset; offset != nil {
 		// limit is mandatory for offset clause. We start
 		// with default value, and override it below if needed.
 		selector.Offset(*offset).Limit(math.MaxInt32)
 	}
-	if limit := sdq.ctx.Limit; limit != nil {
+	if limit := _q.ctx.Limit; limit != nil {
 		selector.Limit(*limit)
 	}
 	return selector
@@ -750,41 +750,41 @@ type SLADefinitionGroupBy struct {
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (sdgb *SLADefinitionGroupBy) Aggregate(fns ...AggregateFunc) *SLADefinitionGroupBy {
-	sdgb.fns = append(sdgb.fns, fns...)
-	return sdgb
+func (_g *SLADefinitionGroupBy) Aggregate(fns ...AggregateFunc) *SLADefinitionGroupBy {
+	_g.fns = append(_g.fns, fns...)
+	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sdgb *SLADefinitionGroupBy) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sdgb.build.ctx, ent.OpQueryGroupBy)
-	if err := sdgb.build.prepareQuery(ctx); err != nil {
+func (_g *SLADefinitionGroupBy) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
+	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLADefinitionQuery, *SLADefinitionGroupBy](ctx, sdgb.build, sdgb, sdgb.build.inters, v)
+	return scanWithInterceptors[*SLADefinitionQuery, *SLADefinitionGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (sdgb *SLADefinitionGroupBy) sqlScan(ctx context.Context, root *SLADefinitionQuery, v any) error {
+func (_g *SLADefinitionGroupBy) sqlScan(ctx context.Context, root *SLADefinitionQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
-	aggregation := make([]string, 0, len(sdgb.fns))
-	for _, fn := range sdgb.fns {
+	aggregation := make([]string, 0, len(_g.fns))
+	for _, fn := range _g.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
 	if len(selector.SelectedColumns()) == 0 {
-		columns := make([]string, 0, len(*sdgb.flds)+len(sdgb.fns))
-		for _, f := range *sdgb.flds {
+		columns := make([]string, 0, len(*_g.flds)+len(_g.fns))
+		for _, f := range *_g.flds {
 			columns = append(columns, selector.C(f))
 		}
 		columns = append(columns, aggregation...)
 		selector.Select(columns...)
 	}
-	selector.GroupBy(selector.Columns(*sdgb.flds...)...)
+	selector.GroupBy(selector.Columns(*_g.flds...)...)
 	if err := selector.Err(); err != nil {
 		return err
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sdgb.build.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _g.build.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()
@@ -798,27 +798,27 @@ type SLADefinitionSelect struct {
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (sds *SLADefinitionSelect) Aggregate(fns ...AggregateFunc) *SLADefinitionSelect {
-	sds.fns = append(sds.fns, fns...)
-	return sds
+func (_s *SLADefinitionSelect) Aggregate(fns ...AggregateFunc) *SLADefinitionSelect {
+	_s.fns = append(_s.fns, fns...)
+	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (sds *SLADefinitionSelect) Scan(ctx context.Context, v any) error {
-	ctx = setContextOp(ctx, sds.ctx, ent.OpQuerySelect)
-	if err := sds.prepareQuery(ctx); err != nil {
+func (_s *SLADefinitionSelect) Scan(ctx context.Context, v any) error {
+	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
+	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*SLADefinitionQuery, *SLADefinitionSelect](ctx, sds.SLADefinitionQuery, sds, sds.inters, v)
+	return scanWithInterceptors[*SLADefinitionQuery, *SLADefinitionSelect](ctx, _s.SLADefinitionQuery, _s, _s.inters, v)
 }
 
-func (sds *SLADefinitionSelect) sqlScan(ctx context.Context, root *SLADefinitionQuery, v any) error {
+func (_s *SLADefinitionSelect) sqlScan(ctx context.Context, root *SLADefinitionQuery, v any) error {
 	selector := root.sqlQuery(ctx)
-	aggregation := make([]string, 0, len(sds.fns))
-	for _, fn := range sds.fns {
+	aggregation := make([]string, 0, len(_s.fns))
+	for _, fn := range _s.fns {
 		aggregation = append(aggregation, fn(selector))
 	}
-	switch n := len(*sds.selector.flds); {
+	switch n := len(*_s.selector.flds); {
 	case n == 0 && len(aggregation) > 0:
 		selector.Select(aggregation...)
 	case n != 0 && len(aggregation) > 0:
@@ -826,7 +826,7 @@ func (sds *SLADefinitionSelect) sqlScan(ctx context.Context, root *SLADefinition
 	}
 	rows := &sql.Rows{}
 	query, args := selector.Query()
-	if err := sds.driver.Query(ctx, query, args, rows); err != nil {
+	if err := _s.driver.Query(ctx, query, args, rows); err != nil {
 		return err
 	}
 	defer rows.Close()

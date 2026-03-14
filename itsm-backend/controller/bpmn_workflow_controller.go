@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"net/http"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -53,6 +53,7 @@ func (c *BPMNWorkflowController) RegisterRoutes(r *gin.RouterGroup) {
 		bpmn.GET("/tasks", c.ListUserTasks)
 		bpmn.GET("/tasks/:id", c.GetTask)
 		bpmn.PUT("/tasks/:id/assign", c.AssignTask)
+		bpmn.PUT("/tasks/:id/claim", c.ClaimTask)
 		bpmn.PUT("/tasks/:id/complete", c.CompleteTask)
 		bpmn.PUT("/tasks/:id/cancel", c.CancelTask)
 		bpmn.PUT("/tasks/:id/variables", c.SetTaskVariables)
@@ -136,7 +137,7 @@ func (c *BPMNWorkflowController) ListProcessDefinitions(ctx *gin.Context) {
 	}
 
 	// 使用统一响应格式
-	listResponse := common.NewListResponse(definitions, common.NewPaginationResponse(total, int64(req.Page), int64(req.PageSize)))
+	listResponse := common.NewListResponse(definitions, common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)))
 	common.Success(ctx, listResponse)
 }
 
@@ -362,7 +363,7 @@ func (c *BPMNWorkflowController) ListProcessInstances(ctx *gin.Context) {
 	}
 
 	// 使用统一响应格式
-	listResponse := common.NewListResponse(instances, common.NewPaginationResponse(total, int64(req.Page), int64(req.PageSize)))
+	listResponse := common.NewListResponse(instances, common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)))
 	common.Success(ctx, listResponse)
 }
 
@@ -493,7 +494,7 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 	}
 
 	// 使用统一响应格式
-	listResponse := common.NewListResponse(tasks, common.NewPaginationResponse(total, int64(req.Page), int64(req.PageSize)))
+	listResponse := common.NewListResponse(tasks, common.NewPaginationResponse(int(req.Page), int(req.PageSize), int64(total)))
 	common.Success(ctx, listResponse)
 }
 
@@ -501,7 +502,16 @@ func (c *BPMNWorkflowController) ListUserTasks(ctx *gin.Context) {
 func (c *BPMNWorkflowController) GetTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
 
-	task, err := c.processEngine.TaskService().GetTask(ctx, taskID)
+	// 先尝试解析为数字ID（数据库自增ID）
+	id, err := strconv.Atoi(taskID)
+	var task interface{}
+	if err == nil {
+		// 数字ID，使用GetTaskByID
+		task, err = c.processEngine.TaskService().GetTaskByID(ctx, id)
+	} else {
+		// 字符串ID（BPMN标准task_id），使用GetTask
+		task, err = c.processEngine.TaskService().GetTask(ctx, taskID)
+	}
 	if err != nil {
 		common.NotFound(ctx, "任务不存在: "+err.Error())
 		return
@@ -531,6 +541,43 @@ func (c *BPMNWorkflowController) AssignTask(ctx *gin.Context) {
 	common.SuccessWithMessage(ctx, "任务分配成功", nil)
 }
 
+// ClaimTask 认领任务
+func (c *BPMNWorkflowController) ClaimTask(ctx *gin.Context) {
+	taskID := ctx.Param("id")
+
+	// 从上下文获取用户ID
+	userID, exists := ctx.Get("user_id")
+	if !exists {
+		common.AuthFailed(ctx, "未授权访问")
+		return
+	}
+
+	var req struct {
+		UserID int `json:"user_id"`
+	}
+	// 如果请求中提供了user_id则使用，否则使用当前登录用户
+	if err := ctx.ShouldBindJSON(&req); err == nil && req.UserID > 0 {
+		userID = req.UserID
+	}
+
+	// 尝试解析为数字ID
+	id, err := strconv.Atoi(taskID)
+	var claimErr error
+	if err == nil {
+		// 数字ID
+		claimErr = c.processEngine.TaskService().ClaimTaskByID(ctx, id, userID.(int))
+	} else {
+		// 字符串ID，使用ClaimTask
+		claimErr = c.processEngine.TaskService().ClaimTask(ctx, taskID, fmt.Sprintf("%d", userID))
+	}
+	if claimErr != nil {
+		common.InternalError(ctx, "认领任务失败: "+claimErr.Error())
+		return
+	}
+
+	common.SuccessWithMessage(ctx, "任务认领成功", nil)
+}
+
 // CompleteTask 完成任务
 func (c *BPMNWorkflowController) CompleteTask(ctx *gin.Context) {
 	taskID := ctx.Param("id")
@@ -543,7 +590,15 @@ func (c *BPMNWorkflowController) CompleteTask(ctx *gin.Context) {
 		return
 	}
 
-	err := c.processEngine.TaskService().CompleteTask(ctx, taskID, req.Variables)
+	// 尝试解析为数字ID
+	id, err := strconv.Atoi(taskID)
+	if err == nil {
+		// 数字ID，使用CompleteTaskByID
+		err = c.processEngine.TaskService().CompleteTaskByID(ctx, id, req.Variables)
+	} else {
+		// 字符串ID，使用原来的CompleteTask
+		err = c.processEngine.TaskService().CompleteTask(ctx, taskID, req.Variables)
+	}
 	if err != nil {
 		common.InternalError(ctx, "完成任务失败: "+err.Error())
 		return
@@ -683,7 +738,6 @@ func (c *BPMNWorkflowController) ActivateVersion(ctx *gin.Context) {
 	}
 
 	common.Success(ctx, nil)
-	})
 }
 
 // RollbackVersion 回滚到指定版本

@@ -39,7 +39,7 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
                   : log.action === 'delete'
                     ? 'red'
                     : 'gray',
-            children: (
+            content: (
               <div>
                 <Space>
                   <Tag
@@ -57,6 +57,11 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
                   </Tag>
                   <Text>{log.resource}</Text>
                 </Space>
+                {log.description && (
+                  <div>
+                    <Text>{log.description}</Text>
+                  </div>
+                )}
                 <div>
                   <Text type="secondary">
                     {log.path} - {log.Method} - {log.StatusCode}
@@ -64,6 +69,7 @@ export const CIChangeHistoryTab: React.FC<CIChangeHistoryTabProps> = ({
                 </div>
                 <div>
                   <Text type="secondary">
+                    {log.updated_by && `操作人: ${log.updated_by} - `}
                     {dayjs(log.created_at || log.updated_at).format('YYYY-MM-DD HH:mm:ss')}
                   </Text>
                 </div>

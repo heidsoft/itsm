@@ -23,161 +23,161 @@ type WorkflowInstanceCreate struct {
 }
 
 // SetStatus sets the "status" field.
-func (wic *WorkflowInstanceCreate) SetStatus(s string) *WorkflowInstanceCreate {
-	wic.mutation.SetStatus(s)
-	return wic
+func (_c *WorkflowInstanceCreate) SetStatus(v string) *WorkflowInstanceCreate {
+	_c.mutation.SetStatus(v)
+	return _c
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (wic *WorkflowInstanceCreate) SetNillableStatus(s *string) *WorkflowInstanceCreate {
-	if s != nil {
-		wic.SetStatus(*s)
+func (_c *WorkflowInstanceCreate) SetNillableStatus(v *string) *WorkflowInstanceCreate {
+	if v != nil {
+		_c.SetStatus(*v)
 	}
-	return wic
+	return _c
 }
 
 // SetCurrentStep sets the "current_step" field.
-func (wic *WorkflowInstanceCreate) SetCurrentStep(s string) *WorkflowInstanceCreate {
-	wic.mutation.SetCurrentStep(s)
-	return wic
+func (_c *WorkflowInstanceCreate) SetCurrentStep(v string) *WorkflowInstanceCreate {
+	_c.mutation.SetCurrentStep(v)
+	return _c
 }
 
 // SetNillableCurrentStep sets the "current_step" field if the given value is not nil.
-func (wic *WorkflowInstanceCreate) SetNillableCurrentStep(s *string) *WorkflowInstanceCreate {
-	if s != nil {
-		wic.SetCurrentStep(*s)
+func (_c *WorkflowInstanceCreate) SetNillableCurrentStep(v *string) *WorkflowInstanceCreate {
+	if v != nil {
+		_c.SetCurrentStep(*v)
 	}
-	return wic
+	return _c
 }
 
 // SetContext sets the "context" field.
-func (wic *WorkflowInstanceCreate) SetContext(u []uint8) *WorkflowInstanceCreate {
-	wic.mutation.SetContext(u)
-	return wic
+func (_c *WorkflowInstanceCreate) SetContext(v []uint8) *WorkflowInstanceCreate {
+	_c.mutation.SetContext(v)
+	return _c
 }
 
 // SetWorkflowID sets the "workflow_id" field.
-func (wic *WorkflowInstanceCreate) SetWorkflowID(i int) *WorkflowInstanceCreate {
-	wic.mutation.SetWorkflowID(i)
-	return wic
+func (_c *WorkflowInstanceCreate) SetWorkflowID(v int) *WorkflowInstanceCreate {
+	_c.mutation.SetWorkflowID(v)
+	return _c
 }
 
 // SetEntityID sets the "entity_id" field.
-func (wic *WorkflowInstanceCreate) SetEntityID(i int) *WorkflowInstanceCreate {
-	wic.mutation.SetEntityID(i)
-	return wic
+func (_c *WorkflowInstanceCreate) SetEntityID(v int) *WorkflowInstanceCreate {
+	_c.mutation.SetEntityID(v)
+	return _c
 }
 
 // SetEntityType sets the "entity_type" field.
-func (wic *WorkflowInstanceCreate) SetEntityType(s string) *WorkflowInstanceCreate {
-	wic.mutation.SetEntityType(s)
-	return wic
+func (_c *WorkflowInstanceCreate) SetEntityType(v string) *WorkflowInstanceCreate {
+	_c.mutation.SetEntityType(v)
+	return _c
 }
 
 // SetNillableEntityType sets the "entity_type" field if the given value is not nil.
-func (wic *WorkflowInstanceCreate) SetNillableEntityType(s *string) *WorkflowInstanceCreate {
-	if s != nil {
-		wic.SetEntityType(*s)
+func (_c *WorkflowInstanceCreate) SetNillableEntityType(v *string) *WorkflowInstanceCreate {
+	if v != nil {
+		_c.SetEntityType(*v)
 	}
-	return wic
+	return _c
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (wic *WorkflowInstanceCreate) SetTenantID(i int) *WorkflowInstanceCreate {
-	wic.mutation.SetTenantID(i)
-	return wic
+func (_c *WorkflowInstanceCreate) SetTenantID(v int) *WorkflowInstanceCreate {
+	_c.mutation.SetTenantID(v)
+	return _c
 }
 
 // SetStartedAt sets the "started_at" field.
-func (wic *WorkflowInstanceCreate) SetStartedAt(t time.Time) *WorkflowInstanceCreate {
-	wic.mutation.SetStartedAt(t)
-	return wic
+func (_c *WorkflowInstanceCreate) SetStartedAt(v time.Time) *WorkflowInstanceCreate {
+	_c.mutation.SetStartedAt(v)
+	return _c
 }
 
 // SetNillableStartedAt sets the "started_at" field if the given value is not nil.
-func (wic *WorkflowInstanceCreate) SetNillableStartedAt(t *time.Time) *WorkflowInstanceCreate {
-	if t != nil {
-		wic.SetStartedAt(*t)
+func (_c *WorkflowInstanceCreate) SetNillableStartedAt(v *time.Time) *WorkflowInstanceCreate {
+	if v != nil {
+		_c.SetStartedAt(*v)
 	}
-	return wic
+	return _c
 }
 
 // SetCompletedAt sets the "completed_at" field.
-func (wic *WorkflowInstanceCreate) SetCompletedAt(t time.Time) *WorkflowInstanceCreate {
-	wic.mutation.SetCompletedAt(t)
-	return wic
+func (_c *WorkflowInstanceCreate) SetCompletedAt(v time.Time) *WorkflowInstanceCreate {
+	_c.mutation.SetCompletedAt(v)
+	return _c
 }
 
 // SetNillableCompletedAt sets the "completed_at" field if the given value is not nil.
-func (wic *WorkflowInstanceCreate) SetNillableCompletedAt(t *time.Time) *WorkflowInstanceCreate {
-	if t != nil {
-		wic.SetCompletedAt(*t)
+func (_c *WorkflowInstanceCreate) SetNillableCompletedAt(v *time.Time) *WorkflowInstanceCreate {
+	if v != nil {
+		_c.SetCompletedAt(*v)
 	}
-	return wic
+	return _c
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (wic *WorkflowInstanceCreate) SetCreatedAt(t time.Time) *WorkflowInstanceCreate {
-	wic.mutation.SetCreatedAt(t)
-	return wic
+func (_c *WorkflowInstanceCreate) SetCreatedAt(v time.Time) *WorkflowInstanceCreate {
+	_c.mutation.SetCreatedAt(v)
+	return _c
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (wic *WorkflowInstanceCreate) SetNillableCreatedAt(t *time.Time) *WorkflowInstanceCreate {
-	if t != nil {
-		wic.SetCreatedAt(*t)
+func (_c *WorkflowInstanceCreate) SetNillableCreatedAt(v *time.Time) *WorkflowInstanceCreate {
+	if v != nil {
+		_c.SetCreatedAt(*v)
 	}
-	return wic
+	return _c
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (wic *WorkflowInstanceCreate) SetUpdatedAt(t time.Time) *WorkflowInstanceCreate {
-	wic.mutation.SetUpdatedAt(t)
-	return wic
+func (_c *WorkflowInstanceCreate) SetUpdatedAt(v time.Time) *WorkflowInstanceCreate {
+	_c.mutation.SetUpdatedAt(v)
+	return _c
 }
 
 // SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
-func (wic *WorkflowInstanceCreate) SetNillableUpdatedAt(t *time.Time) *WorkflowInstanceCreate {
-	if t != nil {
-		wic.SetUpdatedAt(*t)
+func (_c *WorkflowInstanceCreate) SetNillableUpdatedAt(v *time.Time) *WorkflowInstanceCreate {
+	if v != nil {
+		_c.SetUpdatedAt(*v)
 	}
-	return wic
+	return _c
 }
 
 // SetWorkflow sets the "workflow" edge to the Workflow entity.
-func (wic *WorkflowInstanceCreate) SetWorkflow(w *Workflow) *WorkflowInstanceCreate {
-	return wic.SetWorkflowID(w.ID)
+func (_c *WorkflowInstanceCreate) SetWorkflow(v *Workflow) *WorkflowInstanceCreate {
+	return _c.SetWorkflowID(v.ID)
 }
 
 // AddWorkflowTaskIDs adds the "workflow_tasks" edge to the WorkflowTask entity by IDs.
-func (wic *WorkflowInstanceCreate) AddWorkflowTaskIDs(ids ...int) *WorkflowInstanceCreate {
-	wic.mutation.AddWorkflowTaskIDs(ids...)
-	return wic
+func (_c *WorkflowInstanceCreate) AddWorkflowTaskIDs(ids ...int) *WorkflowInstanceCreate {
+	_c.mutation.AddWorkflowTaskIDs(ids...)
+	return _c
 }
 
 // AddWorkflowTasks adds the "workflow_tasks" edges to the WorkflowTask entity.
-func (wic *WorkflowInstanceCreate) AddWorkflowTasks(w ...*WorkflowTask) *WorkflowInstanceCreate {
-	ids := make([]int, len(w))
-	for i := range w {
-		ids[i] = w[i].ID
+func (_c *WorkflowInstanceCreate) AddWorkflowTasks(v ...*WorkflowTask) *WorkflowInstanceCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
 	}
-	return wic.AddWorkflowTaskIDs(ids...)
+	return _c.AddWorkflowTaskIDs(ids...)
 }
 
 // Mutation returns the WorkflowInstanceMutation object of the builder.
-func (wic *WorkflowInstanceCreate) Mutation() *WorkflowInstanceMutation {
-	return wic.mutation
+func (_c *WorkflowInstanceCreate) Mutation() *WorkflowInstanceMutation {
+	return _c.mutation
 }
 
 // Save creates the WorkflowInstance in the database.
-func (wic *WorkflowInstanceCreate) Save(ctx context.Context) (*WorkflowInstance, error) {
-	wic.defaults()
-	return withHooks(ctx, wic.sqlSave, wic.mutation, wic.hooks)
+func (_c *WorkflowInstanceCreate) Save(ctx context.Context) (*WorkflowInstance, error) {
+	_c.defaults()
+	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (wic *WorkflowInstanceCreate) SaveX(ctx context.Context) *WorkflowInstance {
-	v, err := wic.Save(ctx)
+func (_c *WorkflowInstanceCreate) SaveX(ctx context.Context) *WorkflowInstance {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -185,95 +185,95 @@ func (wic *WorkflowInstanceCreate) SaveX(ctx context.Context) *WorkflowInstance 
 }
 
 // Exec executes the query.
-func (wic *WorkflowInstanceCreate) Exec(ctx context.Context) error {
-	_, err := wic.Save(ctx)
+func (_c *WorkflowInstanceCreate) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wic *WorkflowInstanceCreate) ExecX(ctx context.Context) {
-	if err := wic.Exec(ctx); err != nil {
+func (_c *WorkflowInstanceCreate) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (wic *WorkflowInstanceCreate) defaults() {
-	if _, ok := wic.mutation.Status(); !ok {
+func (_c *WorkflowInstanceCreate) defaults() {
+	if _, ok := _c.mutation.Status(); !ok {
 		v := workflowinstance.DefaultStatus
-		wic.mutation.SetStatus(v)
+		_c.mutation.SetStatus(v)
 	}
-	if _, ok := wic.mutation.EntityType(); !ok {
+	if _, ok := _c.mutation.EntityType(); !ok {
 		v := workflowinstance.DefaultEntityType
-		wic.mutation.SetEntityType(v)
+		_c.mutation.SetEntityType(v)
 	}
-	if _, ok := wic.mutation.StartedAt(); !ok {
+	if _, ok := _c.mutation.StartedAt(); !ok {
 		v := workflowinstance.DefaultStartedAt()
-		wic.mutation.SetStartedAt(v)
+		_c.mutation.SetStartedAt(v)
 	}
-	if _, ok := wic.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := workflowinstance.DefaultCreatedAt()
-		wic.mutation.SetCreatedAt(v)
+		_c.mutation.SetCreatedAt(v)
 	}
-	if _, ok := wic.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		v := workflowinstance.DefaultUpdatedAt()
-		wic.mutation.SetUpdatedAt(v)
+		_c.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (wic *WorkflowInstanceCreate) check() error {
-	if _, ok := wic.mutation.Status(); !ok {
+func (_c *WorkflowInstanceCreate) check() error {
+	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "WorkflowInstance.status"`)}
 	}
-	if _, ok := wic.mutation.WorkflowID(); !ok {
+	if _, ok := _c.mutation.WorkflowID(); !ok {
 		return &ValidationError{Name: "workflow_id", err: errors.New(`ent: missing required field "WorkflowInstance.workflow_id"`)}
 	}
-	if v, ok := wic.mutation.WorkflowID(); ok {
+	if v, ok := _c.mutation.WorkflowID(); ok {
 		if err := workflowinstance.WorkflowIDValidator(v); err != nil {
 			return &ValidationError{Name: "workflow_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowInstance.workflow_id": %w`, err)}
 		}
 	}
-	if _, ok := wic.mutation.EntityID(); !ok {
+	if _, ok := _c.mutation.EntityID(); !ok {
 		return &ValidationError{Name: "entity_id", err: errors.New(`ent: missing required field "WorkflowInstance.entity_id"`)}
 	}
-	if v, ok := wic.mutation.EntityID(); ok {
+	if v, ok := _c.mutation.EntityID(); ok {
 		if err := workflowinstance.EntityIDValidator(v); err != nil {
 			return &ValidationError{Name: "entity_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowInstance.entity_id": %w`, err)}
 		}
 	}
-	if _, ok := wic.mutation.EntityType(); !ok {
+	if _, ok := _c.mutation.EntityType(); !ok {
 		return &ValidationError{Name: "entity_type", err: errors.New(`ent: missing required field "WorkflowInstance.entity_type"`)}
 	}
-	if _, ok := wic.mutation.TenantID(); !ok {
+	if _, ok := _c.mutation.TenantID(); !ok {
 		return &ValidationError{Name: "tenant_id", err: errors.New(`ent: missing required field "WorkflowInstance.tenant_id"`)}
 	}
-	if v, ok := wic.mutation.TenantID(); ok {
+	if v, ok := _c.mutation.TenantID(); ok {
 		if err := workflowinstance.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "WorkflowInstance.tenant_id": %w`, err)}
 		}
 	}
-	if _, ok := wic.mutation.StartedAt(); !ok {
+	if _, ok := _c.mutation.StartedAt(); !ok {
 		return &ValidationError{Name: "started_at", err: errors.New(`ent: missing required field "WorkflowInstance.started_at"`)}
 	}
-	if _, ok := wic.mutation.CreatedAt(); !ok {
+	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "WorkflowInstance.created_at"`)}
 	}
-	if _, ok := wic.mutation.UpdatedAt(); !ok {
+	if _, ok := _c.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "WorkflowInstance.updated_at"`)}
 	}
-	if len(wic.mutation.WorkflowIDs()) == 0 {
+	if len(_c.mutation.WorkflowIDs()) == 0 {
 		return &ValidationError{Name: "workflow", err: errors.New(`ent: missing required edge "WorkflowInstance.workflow"`)}
 	}
 	return nil
 }
 
-func (wic *WorkflowInstanceCreate) sqlSave(ctx context.Context) (*WorkflowInstance, error) {
-	if err := wic.check(); err != nil {
+func (_c *WorkflowInstanceCreate) sqlSave(ctx context.Context) (*WorkflowInstance, error) {
+	if err := _c.check(); err != nil {
 		return nil, err
 	}
-	_node, _spec := wic.createSpec()
-	if err := sqlgraph.CreateNode(ctx, wic.driver, _spec); err != nil {
+	_node, _spec := _c.createSpec()
+	if err := sqlgraph.CreateNode(ctx, _c.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{msg: err.Error(), wrap: err}
 		}
@@ -281,57 +281,57 @@ func (wic *WorkflowInstanceCreate) sqlSave(ctx context.Context) (*WorkflowInstan
 	}
 	id := _spec.ID.Value.(int64)
 	_node.ID = int(id)
-	wic.mutation.id = &_node.ID
-	wic.mutation.done = true
+	_c.mutation.id = &_node.ID
+	_c.mutation.done = true
 	return _node, nil
 }
 
-func (wic *WorkflowInstanceCreate) createSpec() (*WorkflowInstance, *sqlgraph.CreateSpec) {
+func (_c *WorkflowInstanceCreate) createSpec() (*WorkflowInstance, *sqlgraph.CreateSpec) {
 	var (
-		_node = &WorkflowInstance{config: wic.config}
+		_node = &WorkflowInstance{config: _c.config}
 		_spec = sqlgraph.NewCreateSpec(workflowinstance.Table, sqlgraph.NewFieldSpec(workflowinstance.FieldID, field.TypeInt))
 	)
-	if value, ok := wic.mutation.Status(); ok {
+	if value, ok := _c.mutation.Status(); ok {
 		_spec.SetField(workflowinstance.FieldStatus, field.TypeString, value)
 		_node.Status = value
 	}
-	if value, ok := wic.mutation.CurrentStep(); ok {
+	if value, ok := _c.mutation.CurrentStep(); ok {
 		_spec.SetField(workflowinstance.FieldCurrentStep, field.TypeString, value)
 		_node.CurrentStep = value
 	}
-	if value, ok := wic.mutation.Context(); ok {
+	if value, ok := _c.mutation.Context(); ok {
 		_spec.SetField(workflowinstance.FieldContext, field.TypeJSON, value)
 		_node.Context = value
 	}
-	if value, ok := wic.mutation.EntityID(); ok {
+	if value, ok := _c.mutation.EntityID(); ok {
 		_spec.SetField(workflowinstance.FieldEntityID, field.TypeInt, value)
 		_node.EntityID = value
 	}
-	if value, ok := wic.mutation.EntityType(); ok {
+	if value, ok := _c.mutation.EntityType(); ok {
 		_spec.SetField(workflowinstance.FieldEntityType, field.TypeString, value)
 		_node.EntityType = value
 	}
-	if value, ok := wic.mutation.TenantID(); ok {
+	if value, ok := _c.mutation.TenantID(); ok {
 		_spec.SetField(workflowinstance.FieldTenantID, field.TypeInt, value)
 		_node.TenantID = value
 	}
-	if value, ok := wic.mutation.StartedAt(); ok {
+	if value, ok := _c.mutation.StartedAt(); ok {
 		_spec.SetField(workflowinstance.FieldStartedAt, field.TypeTime, value)
 		_node.StartedAt = value
 	}
-	if value, ok := wic.mutation.CompletedAt(); ok {
+	if value, ok := _c.mutation.CompletedAt(); ok {
 		_spec.SetField(workflowinstance.FieldCompletedAt, field.TypeTime, value)
 		_node.CompletedAt = value
 	}
-	if value, ok := wic.mutation.CreatedAt(); ok {
+	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(workflowinstance.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
 	}
-	if value, ok := wic.mutation.UpdatedAt(); ok {
+	if value, ok := _c.mutation.UpdatedAt(); ok {
 		_spec.SetField(workflowinstance.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
-	if nodes := wic.mutation.WorkflowIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.WorkflowIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
 			Inverse: true,
@@ -348,7 +348,7 @@ func (wic *WorkflowInstanceCreate) createSpec() (*WorkflowInstance, *sqlgraph.Cr
 		_node.WorkflowID = nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := wic.mutation.WorkflowTasksIDs(); len(nodes) > 0 {
+	if nodes := _c.mutation.WorkflowTasksIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
@@ -375,16 +375,16 @@ type WorkflowInstanceCreateBulk struct {
 }
 
 // Save creates the WorkflowInstance entities in the database.
-func (wicb *WorkflowInstanceCreateBulk) Save(ctx context.Context) ([]*WorkflowInstance, error) {
-	if wicb.err != nil {
-		return nil, wicb.err
+func (_c *WorkflowInstanceCreateBulk) Save(ctx context.Context) ([]*WorkflowInstance, error) {
+	if _c.err != nil {
+		return nil, _c.err
 	}
-	specs := make([]*sqlgraph.CreateSpec, len(wicb.builders))
-	nodes := make([]*WorkflowInstance, len(wicb.builders))
-	mutators := make([]Mutator, len(wicb.builders))
-	for i := range wicb.builders {
+	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
+	nodes := make([]*WorkflowInstance, len(_c.builders))
+	mutators := make([]Mutator, len(_c.builders))
+	for i := range _c.builders {
 		func(i int, root context.Context) {
-			builder := wicb.builders[i]
+			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*WorkflowInstanceMutation)
@@ -398,11 +398,11 @@ func (wicb *WorkflowInstanceCreateBulk) Save(ctx context.Context) ([]*WorkflowIn
 				var err error
 				nodes[i], specs[i] = builder.createSpec()
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, wicb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, _c.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, wicb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, _c.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{msg: err.Error(), wrap: err}
 						}
@@ -426,7 +426,7 @@ func (wicb *WorkflowInstanceCreateBulk) Save(ctx context.Context) ([]*WorkflowIn
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, wicb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, _c.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -434,8 +434,8 @@ func (wicb *WorkflowInstanceCreateBulk) Save(ctx context.Context) ([]*WorkflowIn
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (wicb *WorkflowInstanceCreateBulk) SaveX(ctx context.Context) []*WorkflowInstance {
-	v, err := wicb.Save(ctx)
+func (_c *WorkflowInstanceCreateBulk) SaveX(ctx context.Context) []*WorkflowInstance {
+	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -443,14 +443,14 @@ func (wicb *WorkflowInstanceCreateBulk) SaveX(ctx context.Context) []*WorkflowIn
 }
 
 // Exec executes the query.
-func (wicb *WorkflowInstanceCreateBulk) Exec(ctx context.Context) error {
-	_, err := wicb.Save(ctx)
+func (_c *WorkflowInstanceCreateBulk) Exec(ctx context.Context) error {
+	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (wicb *WorkflowInstanceCreateBulk) ExecX(ctx context.Context) {
-	if err := wicb.Exec(ctx); err != nil {
+func (_c *WorkflowInstanceCreateBulk) ExecX(ctx context.Context) {
+	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

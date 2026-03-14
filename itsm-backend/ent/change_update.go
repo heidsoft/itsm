@@ -24,394 +24,394 @@ type ChangeUpdate struct {
 }
 
 // Where appends a list predicates to the ChangeUpdate builder.
-func (cu *ChangeUpdate) Where(ps ...predicate.Change) *ChangeUpdate {
-	cu.mutation.Where(ps...)
-	return cu
+func (_u *ChangeUpdate) Where(ps ...predicate.Change) *ChangeUpdate {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // SetTitle sets the "title" field.
-func (cu *ChangeUpdate) SetTitle(s string) *ChangeUpdate {
-	cu.mutation.SetTitle(s)
-	return cu
+func (_u *ChangeUpdate) SetTitle(v string) *ChangeUpdate {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableTitle(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetTitle(*s)
+func (_u *ChangeUpdate) SetNillableTitle(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (cu *ChangeUpdate) SetDescription(s string) *ChangeUpdate {
-	cu.mutation.SetDescription(s)
-	return cu
+func (_u *ChangeUpdate) SetDescription(v string) *ChangeUpdate {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableDescription(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetDescription(*s)
+func (_u *ChangeUpdate) SetNillableDescription(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (cu *ChangeUpdate) ClearDescription() *ChangeUpdate {
-	cu.mutation.ClearDescription()
-	return cu
+func (_u *ChangeUpdate) ClearDescription() *ChangeUpdate {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetJustification sets the "justification" field.
-func (cu *ChangeUpdate) SetJustification(s string) *ChangeUpdate {
-	cu.mutation.SetJustification(s)
-	return cu
+func (_u *ChangeUpdate) SetJustification(v string) *ChangeUpdate {
+	_u.mutation.SetJustification(v)
+	return _u
 }
 
 // SetNillableJustification sets the "justification" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableJustification(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetJustification(*s)
+func (_u *ChangeUpdate) SetNillableJustification(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetJustification(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearJustification clears the value of the "justification" field.
-func (cu *ChangeUpdate) ClearJustification() *ChangeUpdate {
-	cu.mutation.ClearJustification()
-	return cu
+func (_u *ChangeUpdate) ClearJustification() *ChangeUpdate {
+	_u.mutation.ClearJustification()
+	return _u
 }
 
 // SetType sets the "type" field.
-func (cu *ChangeUpdate) SetType(s string) *ChangeUpdate {
-	cu.mutation.SetType(s)
-	return cu
+func (_u *ChangeUpdate) SetType(v string) *ChangeUpdate {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableType(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetType(*s)
+func (_u *ChangeUpdate) SetNillableType(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (cu *ChangeUpdate) SetStatus(s string) *ChangeUpdate {
-	cu.mutation.SetStatus(s)
-	return cu
+func (_u *ChangeUpdate) SetStatus(v string) *ChangeUpdate {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableStatus(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetStatus(*s)
+func (_u *ChangeUpdate) SetNillableStatus(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (cu *ChangeUpdate) SetPriority(s string) *ChangeUpdate {
-	cu.mutation.SetPriority(s)
-	return cu
+func (_u *ChangeUpdate) SetPriority(v string) *ChangeUpdate {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillablePriority(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetPriority(*s)
+func (_u *ChangeUpdate) SetNillablePriority(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetImpactScope sets the "impact_scope" field.
-func (cu *ChangeUpdate) SetImpactScope(s string) *ChangeUpdate {
-	cu.mutation.SetImpactScope(s)
-	return cu
+func (_u *ChangeUpdate) SetImpactScope(v string) *ChangeUpdate {
+	_u.mutation.SetImpactScope(v)
+	return _u
 }
 
 // SetNillableImpactScope sets the "impact_scope" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableImpactScope(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetImpactScope(*s)
+func (_u *ChangeUpdate) SetNillableImpactScope(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetImpactScope(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetRiskLevel sets the "risk_level" field.
-func (cu *ChangeUpdate) SetRiskLevel(s string) *ChangeUpdate {
-	cu.mutation.SetRiskLevel(s)
-	return cu
+func (_u *ChangeUpdate) SetRiskLevel(v string) *ChangeUpdate {
+	_u.mutation.SetRiskLevel(v)
+	return _u
 }
 
 // SetNillableRiskLevel sets the "risk_level" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableRiskLevel(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetRiskLevel(*s)
+func (_u *ChangeUpdate) SetNillableRiskLevel(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetRiskLevel(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (cu *ChangeUpdate) SetAssigneeID(i int) *ChangeUpdate {
-	cu.mutation.ResetAssigneeID()
-	cu.mutation.SetAssigneeID(i)
-	return cu
+func (_u *ChangeUpdate) SetAssigneeID(v int) *ChangeUpdate {
+	_u.mutation.ResetAssigneeID()
+	_u.mutation.SetAssigneeID(v)
+	return _u
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableAssigneeID(i *int) *ChangeUpdate {
-	if i != nil {
-		cu.SetAssigneeID(*i)
+func (_u *ChangeUpdate) SetNillableAssigneeID(v *int) *ChangeUpdate {
+	if v != nil {
+		_u.SetAssigneeID(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddAssigneeID adds i to the "assignee_id" field.
-func (cu *ChangeUpdate) AddAssigneeID(i int) *ChangeUpdate {
-	cu.mutation.AddAssigneeID(i)
-	return cu
+// AddAssigneeID adds value to the "assignee_id" field.
+func (_u *ChangeUpdate) AddAssigneeID(v int) *ChangeUpdate {
+	_u.mutation.AddAssigneeID(v)
+	return _u
 }
 
 // ClearAssigneeID clears the value of the "assignee_id" field.
-func (cu *ChangeUpdate) ClearAssigneeID() *ChangeUpdate {
-	cu.mutation.ClearAssigneeID()
-	return cu
+func (_u *ChangeUpdate) ClearAssigneeID() *ChangeUpdate {
+	_u.mutation.ClearAssigneeID()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (cu *ChangeUpdate) SetCreatedBy(i int) *ChangeUpdate {
-	cu.mutation.ResetCreatedBy()
-	cu.mutation.SetCreatedBy(i)
-	return cu
+func (_u *ChangeUpdate) SetCreatedBy(v int) *ChangeUpdate {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableCreatedBy(i *int) *ChangeUpdate {
-	if i != nil {
-		cu.SetCreatedBy(*i)
+func (_u *ChangeUpdate) SetNillableCreatedBy(v *int) *ChangeUpdate {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (cu *ChangeUpdate) AddCreatedBy(i int) *ChangeUpdate {
-	cu.mutation.AddCreatedBy(i)
-	return cu
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ChangeUpdate) AddCreatedBy(v int) *ChangeUpdate {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cu *ChangeUpdate) SetTenantID(i int) *ChangeUpdate {
-	cu.mutation.ResetTenantID()
-	cu.mutation.SetTenantID(i)
-	return cu
+func (_u *ChangeUpdate) SetTenantID(v int) *ChangeUpdate {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableTenantID(i *int) *ChangeUpdate {
-	if i != nil {
-		cu.SetTenantID(*i)
+func (_u *ChangeUpdate) SetNillableTenantID(v *int) *ChangeUpdate {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cu
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cu *ChangeUpdate) AddTenantID(i int) *ChangeUpdate {
-	cu.mutation.AddTenantID(i)
-	return cu
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ChangeUpdate) AddTenantID(v int) *ChangeUpdate {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetPlannedStartDate sets the "planned_start_date" field.
-func (cu *ChangeUpdate) SetPlannedStartDate(t time.Time) *ChangeUpdate {
-	cu.mutation.SetPlannedStartDate(t)
-	return cu
+func (_u *ChangeUpdate) SetPlannedStartDate(v time.Time) *ChangeUpdate {
+	_u.mutation.SetPlannedStartDate(v)
+	return _u
 }
 
 // SetNillablePlannedStartDate sets the "planned_start_date" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillablePlannedStartDate(t *time.Time) *ChangeUpdate {
-	if t != nil {
-		cu.SetPlannedStartDate(*t)
+func (_u *ChangeUpdate) SetNillablePlannedStartDate(v *time.Time) *ChangeUpdate {
+	if v != nil {
+		_u.SetPlannedStartDate(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearPlannedStartDate clears the value of the "planned_start_date" field.
-func (cu *ChangeUpdate) ClearPlannedStartDate() *ChangeUpdate {
-	cu.mutation.ClearPlannedStartDate()
-	return cu
+func (_u *ChangeUpdate) ClearPlannedStartDate() *ChangeUpdate {
+	_u.mutation.ClearPlannedStartDate()
+	return _u
 }
 
 // SetPlannedEndDate sets the "planned_end_date" field.
-func (cu *ChangeUpdate) SetPlannedEndDate(t time.Time) *ChangeUpdate {
-	cu.mutation.SetPlannedEndDate(t)
-	return cu
+func (_u *ChangeUpdate) SetPlannedEndDate(v time.Time) *ChangeUpdate {
+	_u.mutation.SetPlannedEndDate(v)
+	return _u
 }
 
 // SetNillablePlannedEndDate sets the "planned_end_date" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillablePlannedEndDate(t *time.Time) *ChangeUpdate {
-	if t != nil {
-		cu.SetPlannedEndDate(*t)
+func (_u *ChangeUpdate) SetNillablePlannedEndDate(v *time.Time) *ChangeUpdate {
+	if v != nil {
+		_u.SetPlannedEndDate(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearPlannedEndDate clears the value of the "planned_end_date" field.
-func (cu *ChangeUpdate) ClearPlannedEndDate() *ChangeUpdate {
-	cu.mutation.ClearPlannedEndDate()
-	return cu
+func (_u *ChangeUpdate) ClearPlannedEndDate() *ChangeUpdate {
+	_u.mutation.ClearPlannedEndDate()
+	return _u
 }
 
 // SetActualStartDate sets the "actual_start_date" field.
-func (cu *ChangeUpdate) SetActualStartDate(t time.Time) *ChangeUpdate {
-	cu.mutation.SetActualStartDate(t)
-	return cu
+func (_u *ChangeUpdate) SetActualStartDate(v time.Time) *ChangeUpdate {
+	_u.mutation.SetActualStartDate(v)
+	return _u
 }
 
 // SetNillableActualStartDate sets the "actual_start_date" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableActualStartDate(t *time.Time) *ChangeUpdate {
-	if t != nil {
-		cu.SetActualStartDate(*t)
+func (_u *ChangeUpdate) SetNillableActualStartDate(v *time.Time) *ChangeUpdate {
+	if v != nil {
+		_u.SetActualStartDate(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearActualStartDate clears the value of the "actual_start_date" field.
-func (cu *ChangeUpdate) ClearActualStartDate() *ChangeUpdate {
-	cu.mutation.ClearActualStartDate()
-	return cu
+func (_u *ChangeUpdate) ClearActualStartDate() *ChangeUpdate {
+	_u.mutation.ClearActualStartDate()
+	return _u
 }
 
 // SetActualEndDate sets the "actual_end_date" field.
-func (cu *ChangeUpdate) SetActualEndDate(t time.Time) *ChangeUpdate {
-	cu.mutation.SetActualEndDate(t)
-	return cu
+func (_u *ChangeUpdate) SetActualEndDate(v time.Time) *ChangeUpdate {
+	_u.mutation.SetActualEndDate(v)
+	return _u
 }
 
 // SetNillableActualEndDate sets the "actual_end_date" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableActualEndDate(t *time.Time) *ChangeUpdate {
-	if t != nil {
-		cu.SetActualEndDate(*t)
+func (_u *ChangeUpdate) SetNillableActualEndDate(v *time.Time) *ChangeUpdate {
+	if v != nil {
+		_u.SetActualEndDate(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearActualEndDate clears the value of the "actual_end_date" field.
-func (cu *ChangeUpdate) ClearActualEndDate() *ChangeUpdate {
-	cu.mutation.ClearActualEndDate()
-	return cu
+func (_u *ChangeUpdate) ClearActualEndDate() *ChangeUpdate {
+	_u.mutation.ClearActualEndDate()
+	return _u
 }
 
 // SetImplementationPlan sets the "implementation_plan" field.
-func (cu *ChangeUpdate) SetImplementationPlan(s string) *ChangeUpdate {
-	cu.mutation.SetImplementationPlan(s)
-	return cu
+func (_u *ChangeUpdate) SetImplementationPlan(v string) *ChangeUpdate {
+	_u.mutation.SetImplementationPlan(v)
+	return _u
 }
 
 // SetNillableImplementationPlan sets the "implementation_plan" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableImplementationPlan(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetImplementationPlan(*s)
+func (_u *ChangeUpdate) SetNillableImplementationPlan(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetImplementationPlan(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearImplementationPlan clears the value of the "implementation_plan" field.
-func (cu *ChangeUpdate) ClearImplementationPlan() *ChangeUpdate {
-	cu.mutation.ClearImplementationPlan()
-	return cu
+func (_u *ChangeUpdate) ClearImplementationPlan() *ChangeUpdate {
+	_u.mutation.ClearImplementationPlan()
+	return _u
 }
 
 // SetRollbackPlan sets the "rollback_plan" field.
-func (cu *ChangeUpdate) SetRollbackPlan(s string) *ChangeUpdate {
-	cu.mutation.SetRollbackPlan(s)
-	return cu
+func (_u *ChangeUpdate) SetRollbackPlan(v string) *ChangeUpdate {
+	_u.mutation.SetRollbackPlan(v)
+	return _u
 }
 
 // SetNillableRollbackPlan sets the "rollback_plan" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableRollbackPlan(s *string) *ChangeUpdate {
-	if s != nil {
-		cu.SetRollbackPlan(*s)
+func (_u *ChangeUpdate) SetNillableRollbackPlan(v *string) *ChangeUpdate {
+	if v != nil {
+		_u.SetRollbackPlan(*v)
 	}
-	return cu
+	return _u
 }
 
 // ClearRollbackPlan clears the value of the "rollback_plan" field.
-func (cu *ChangeUpdate) ClearRollbackPlan() *ChangeUpdate {
-	cu.mutation.ClearRollbackPlan()
-	return cu
+func (_u *ChangeUpdate) ClearRollbackPlan() *ChangeUpdate {
+	_u.mutation.ClearRollbackPlan()
+	return _u
 }
 
 // SetAffectedCis sets the "affected_cis" field.
-func (cu *ChangeUpdate) SetAffectedCis(s []string) *ChangeUpdate {
-	cu.mutation.SetAffectedCis(s)
-	return cu
+func (_u *ChangeUpdate) SetAffectedCis(v []string) *ChangeUpdate {
+	_u.mutation.SetAffectedCis(v)
+	return _u
 }
 
-// AppendAffectedCis appends s to the "affected_cis" field.
-func (cu *ChangeUpdate) AppendAffectedCis(s []string) *ChangeUpdate {
-	cu.mutation.AppendAffectedCis(s)
-	return cu
+// AppendAffectedCis appends value to the "affected_cis" field.
+func (_u *ChangeUpdate) AppendAffectedCis(v []string) *ChangeUpdate {
+	_u.mutation.AppendAffectedCis(v)
+	return _u
 }
 
 // ClearAffectedCis clears the value of the "affected_cis" field.
-func (cu *ChangeUpdate) ClearAffectedCis() *ChangeUpdate {
-	cu.mutation.ClearAffectedCis()
-	return cu
+func (_u *ChangeUpdate) ClearAffectedCis() *ChangeUpdate {
+	_u.mutation.ClearAffectedCis()
+	return _u
 }
 
 // SetRelatedTickets sets the "related_tickets" field.
-func (cu *ChangeUpdate) SetRelatedTickets(s []string) *ChangeUpdate {
-	cu.mutation.SetRelatedTickets(s)
-	return cu
+func (_u *ChangeUpdate) SetRelatedTickets(v []string) *ChangeUpdate {
+	_u.mutation.SetRelatedTickets(v)
+	return _u
 }
 
-// AppendRelatedTickets appends s to the "related_tickets" field.
-func (cu *ChangeUpdate) AppendRelatedTickets(s []string) *ChangeUpdate {
-	cu.mutation.AppendRelatedTickets(s)
-	return cu
+// AppendRelatedTickets appends value to the "related_tickets" field.
+func (_u *ChangeUpdate) AppendRelatedTickets(v []string) *ChangeUpdate {
+	_u.mutation.AppendRelatedTickets(v)
+	return _u
 }
 
 // ClearRelatedTickets clears the value of the "related_tickets" field.
-func (cu *ChangeUpdate) ClearRelatedTickets() *ChangeUpdate {
-	cu.mutation.ClearRelatedTickets()
-	return cu
+func (_u *ChangeUpdate) ClearRelatedTickets() *ChangeUpdate {
+	_u.mutation.ClearRelatedTickets()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cu *ChangeUpdate) SetCreatedAt(t time.Time) *ChangeUpdate {
-	cu.mutation.SetCreatedAt(t)
-	return cu
+func (_u *ChangeUpdate) SetCreatedAt(v time.Time) *ChangeUpdate {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cu *ChangeUpdate) SetNillableCreatedAt(t *time.Time) *ChangeUpdate {
-	if t != nil {
-		cu.SetCreatedAt(*t)
+func (_u *ChangeUpdate) SetNillableCreatedAt(v *time.Time) *ChangeUpdate {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cu
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cu *ChangeUpdate) SetUpdatedAt(t time.Time) *ChangeUpdate {
-	cu.mutation.SetUpdatedAt(t)
-	return cu
+func (_u *ChangeUpdate) SetUpdatedAt(v time.Time) *ChangeUpdate {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ChangeMutation object of the builder.
-func (cu *ChangeUpdate) Mutation() *ChangeMutation {
-	return cu.mutation
+func (_u *ChangeUpdate) Mutation() *ChangeMutation {
+	return _u.mutation
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
-func (cu *ChangeUpdate) Save(ctx context.Context) (int, error) {
-	cu.defaults()
-	return withHooks(ctx, cu.sqlSave, cu.mutation, cu.hooks)
+func (_u *ChangeUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cu *ChangeUpdate) SaveX(ctx context.Context) int {
-	affected, err := cu.Save(ctx)
+func (_u *ChangeUpdate) SaveX(ctx context.Context) int {
+	affected, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -419,39 +419,39 @@ func (cu *ChangeUpdate) SaveX(ctx context.Context) int {
 }
 
 // Exec executes the query.
-func (cu *ChangeUpdate) Exec(ctx context.Context) error {
-	_, err := cu.Save(ctx)
+func (_u *ChangeUpdate) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cu *ChangeUpdate) ExecX(ctx context.Context) {
-	if err := cu.Exec(ctx); err != nil {
+func (_u *ChangeUpdate) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cu *ChangeUpdate) defaults() {
-	if _, ok := cu.mutation.UpdatedAt(); !ok {
+func (_u *ChangeUpdate) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := change.UpdateDefaultUpdatedAt()
-		cu.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cu *ChangeUpdate) check() error {
-	if v, ok := cu.mutation.Title(); ok {
+func (_u *ChangeUpdate) check() error {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := change.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Change.title": %w`, err)}
 		}
 	}
-	if v, ok := cu.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := change.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Change.created_by": %w`, err)}
 		}
 	}
-	if v, ok := cu.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := change.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Change.tenant_id": %w`, err)}
 		}
@@ -459,134 +459,134 @@ func (cu *ChangeUpdate) check() error {
 	return nil
 }
 
-func (cu *ChangeUpdate) sqlSave(ctx context.Context) (n int, err error) {
-	if err := cu.check(); err != nil {
-		return n, err
+func (_u *ChangeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
+	if err := _u.check(); err != nil {
+		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(change.Table, change.Columns, sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt))
-	if ps := cu.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cu.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(change.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(change.FieldDescription, field.TypeString, value)
 	}
-	if cu.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(change.FieldDescription, field.TypeString)
 	}
-	if value, ok := cu.mutation.Justification(); ok {
+	if value, ok := _u.mutation.Justification(); ok {
 		_spec.SetField(change.FieldJustification, field.TypeString, value)
 	}
-	if cu.mutation.JustificationCleared() {
+	if _u.mutation.JustificationCleared() {
 		_spec.ClearField(change.FieldJustification, field.TypeString)
 	}
-	if value, ok := cu.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(change.FieldType, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(change.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(change.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.ImpactScope(); ok {
+	if value, ok := _u.mutation.ImpactScope(); ok {
 		_spec.SetField(change.FieldImpactScope, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.RiskLevel(); ok {
+	if value, ok := _u.mutation.RiskLevel(); ok {
 		_spec.SetField(change.FieldRiskLevel, field.TypeString, value)
 	}
-	if value, ok := cu.mutation.AssigneeID(); ok {
+	if value, ok := _u.mutation.AssigneeID(); ok {
 		_spec.SetField(change.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.AddedAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedAssigneeID(); ok {
 		_spec.AddField(change.FieldAssigneeID, field.TypeInt, value)
 	}
-	if cu.mutation.AssigneeIDCleared() {
+	if _u.mutation.AssigneeIDCleared() {
 		_spec.ClearField(change.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := cu.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(change.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(change.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(change.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(change.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cu.mutation.PlannedStartDate(); ok {
+	if value, ok := _u.mutation.PlannedStartDate(); ok {
 		_spec.SetField(change.FieldPlannedStartDate, field.TypeTime, value)
 	}
-	if cu.mutation.PlannedStartDateCleared() {
+	if _u.mutation.PlannedStartDateCleared() {
 		_spec.ClearField(change.FieldPlannedStartDate, field.TypeTime)
 	}
-	if value, ok := cu.mutation.PlannedEndDate(); ok {
+	if value, ok := _u.mutation.PlannedEndDate(); ok {
 		_spec.SetField(change.FieldPlannedEndDate, field.TypeTime, value)
 	}
-	if cu.mutation.PlannedEndDateCleared() {
+	if _u.mutation.PlannedEndDateCleared() {
 		_spec.ClearField(change.FieldPlannedEndDate, field.TypeTime)
 	}
-	if value, ok := cu.mutation.ActualStartDate(); ok {
+	if value, ok := _u.mutation.ActualStartDate(); ok {
 		_spec.SetField(change.FieldActualStartDate, field.TypeTime, value)
 	}
-	if cu.mutation.ActualStartDateCleared() {
+	if _u.mutation.ActualStartDateCleared() {
 		_spec.ClearField(change.FieldActualStartDate, field.TypeTime)
 	}
-	if value, ok := cu.mutation.ActualEndDate(); ok {
+	if value, ok := _u.mutation.ActualEndDate(); ok {
 		_spec.SetField(change.FieldActualEndDate, field.TypeTime, value)
 	}
-	if cu.mutation.ActualEndDateCleared() {
+	if _u.mutation.ActualEndDateCleared() {
 		_spec.ClearField(change.FieldActualEndDate, field.TypeTime)
 	}
-	if value, ok := cu.mutation.ImplementationPlan(); ok {
+	if value, ok := _u.mutation.ImplementationPlan(); ok {
 		_spec.SetField(change.FieldImplementationPlan, field.TypeString, value)
 	}
-	if cu.mutation.ImplementationPlanCleared() {
+	if _u.mutation.ImplementationPlanCleared() {
 		_spec.ClearField(change.FieldImplementationPlan, field.TypeString)
 	}
-	if value, ok := cu.mutation.RollbackPlan(); ok {
+	if value, ok := _u.mutation.RollbackPlan(); ok {
 		_spec.SetField(change.FieldRollbackPlan, field.TypeString, value)
 	}
-	if cu.mutation.RollbackPlanCleared() {
+	if _u.mutation.RollbackPlanCleared() {
 		_spec.ClearField(change.FieldRollbackPlan, field.TypeString)
 	}
-	if value, ok := cu.mutation.AffectedCis(); ok {
+	if value, ok := _u.mutation.AffectedCis(); ok {
 		_spec.SetField(change.FieldAffectedCis, field.TypeJSON, value)
 	}
-	if value, ok := cu.mutation.AppendedAffectedCis(); ok {
+	if value, ok := _u.mutation.AppendedAffectedCis(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, change.FieldAffectedCis, value)
 		})
 	}
-	if cu.mutation.AffectedCisCleared() {
+	if _u.mutation.AffectedCisCleared() {
 		_spec.ClearField(change.FieldAffectedCis, field.TypeJSON)
 	}
-	if value, ok := cu.mutation.RelatedTickets(); ok {
+	if value, ok := _u.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)
 	}
-	if value, ok := cu.mutation.AppendedRelatedTickets(); ok {
+	if value, ok := _u.mutation.AppendedRelatedTickets(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, change.FieldRelatedTickets, value)
 		})
 	}
-	if cu.mutation.RelatedTicketsCleared() {
+	if _u.mutation.RelatedTicketsCleared() {
 		_spec.ClearField(change.FieldRelatedTickets, field.TypeJSON)
 	}
-	if value, ok := cu.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(change.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cu.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
 	}
-	if n, err = sqlgraph.UpdateNodes(ctx, cu.driver, _spec); err != nil {
+	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{change.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -594,8 +594,8 @@ func (cu *ChangeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		return 0, err
 	}
-	cu.mutation.done = true
-	return n, nil
+	_u.mutation.done = true
+	return _node, nil
 }
 
 // ChangeUpdateOne is the builder for updating a single Change entity.
@@ -607,401 +607,401 @@ type ChangeUpdateOne struct {
 }
 
 // SetTitle sets the "title" field.
-func (cuo *ChangeUpdateOne) SetTitle(s string) *ChangeUpdateOne {
-	cuo.mutation.SetTitle(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetTitle(v string) *ChangeUpdateOne {
+	_u.mutation.SetTitle(v)
+	return _u
 }
 
 // SetNillableTitle sets the "title" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableTitle(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetTitle(*s)
+func (_u *ChangeUpdateOne) SetNillableTitle(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetTitle(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetDescription sets the "description" field.
-func (cuo *ChangeUpdateOne) SetDescription(s string) *ChangeUpdateOne {
-	cuo.mutation.SetDescription(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetDescription(v string) *ChangeUpdateOne {
+	_u.mutation.SetDescription(v)
+	return _u
 }
 
 // SetNillableDescription sets the "description" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableDescription(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetDescription(*s)
+func (_u *ChangeUpdateOne) SetNillableDescription(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetDescription(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearDescription clears the value of the "description" field.
-func (cuo *ChangeUpdateOne) ClearDescription() *ChangeUpdateOne {
-	cuo.mutation.ClearDescription()
-	return cuo
+func (_u *ChangeUpdateOne) ClearDescription() *ChangeUpdateOne {
+	_u.mutation.ClearDescription()
+	return _u
 }
 
 // SetJustification sets the "justification" field.
-func (cuo *ChangeUpdateOne) SetJustification(s string) *ChangeUpdateOne {
-	cuo.mutation.SetJustification(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetJustification(v string) *ChangeUpdateOne {
+	_u.mutation.SetJustification(v)
+	return _u
 }
 
 // SetNillableJustification sets the "justification" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableJustification(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetJustification(*s)
+func (_u *ChangeUpdateOne) SetNillableJustification(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetJustification(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearJustification clears the value of the "justification" field.
-func (cuo *ChangeUpdateOne) ClearJustification() *ChangeUpdateOne {
-	cuo.mutation.ClearJustification()
-	return cuo
+func (_u *ChangeUpdateOne) ClearJustification() *ChangeUpdateOne {
+	_u.mutation.ClearJustification()
+	return _u
 }
 
 // SetType sets the "type" field.
-func (cuo *ChangeUpdateOne) SetType(s string) *ChangeUpdateOne {
-	cuo.mutation.SetType(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetType(v string) *ChangeUpdateOne {
+	_u.mutation.SetType(v)
+	return _u
 }
 
 // SetNillableType sets the "type" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableType(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetType(*s)
+func (_u *ChangeUpdateOne) SetNillableType(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetType(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetStatus sets the "status" field.
-func (cuo *ChangeUpdateOne) SetStatus(s string) *ChangeUpdateOne {
-	cuo.mutation.SetStatus(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetStatus(v string) *ChangeUpdateOne {
+	_u.mutation.SetStatus(v)
+	return _u
 }
 
 // SetNillableStatus sets the "status" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableStatus(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetStatus(*s)
+func (_u *ChangeUpdateOne) SetNillableStatus(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetStatus(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetPriority sets the "priority" field.
-func (cuo *ChangeUpdateOne) SetPriority(s string) *ChangeUpdateOne {
-	cuo.mutation.SetPriority(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetPriority(v string) *ChangeUpdateOne {
+	_u.mutation.SetPriority(v)
+	return _u
 }
 
 // SetNillablePriority sets the "priority" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillablePriority(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetPriority(*s)
+func (_u *ChangeUpdateOne) SetNillablePriority(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetPriority(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetImpactScope sets the "impact_scope" field.
-func (cuo *ChangeUpdateOne) SetImpactScope(s string) *ChangeUpdateOne {
-	cuo.mutation.SetImpactScope(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetImpactScope(v string) *ChangeUpdateOne {
+	_u.mutation.SetImpactScope(v)
+	return _u
 }
 
 // SetNillableImpactScope sets the "impact_scope" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableImpactScope(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetImpactScope(*s)
+func (_u *ChangeUpdateOne) SetNillableImpactScope(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetImpactScope(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetRiskLevel sets the "risk_level" field.
-func (cuo *ChangeUpdateOne) SetRiskLevel(s string) *ChangeUpdateOne {
-	cuo.mutation.SetRiskLevel(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetRiskLevel(v string) *ChangeUpdateOne {
+	_u.mutation.SetRiskLevel(v)
+	return _u
 }
 
 // SetNillableRiskLevel sets the "risk_level" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableRiskLevel(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetRiskLevel(*s)
+func (_u *ChangeUpdateOne) SetNillableRiskLevel(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetRiskLevel(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetAssigneeID sets the "assignee_id" field.
-func (cuo *ChangeUpdateOne) SetAssigneeID(i int) *ChangeUpdateOne {
-	cuo.mutation.ResetAssigneeID()
-	cuo.mutation.SetAssigneeID(i)
-	return cuo
+func (_u *ChangeUpdateOne) SetAssigneeID(v int) *ChangeUpdateOne {
+	_u.mutation.ResetAssigneeID()
+	_u.mutation.SetAssigneeID(v)
+	return _u
 }
 
 // SetNillableAssigneeID sets the "assignee_id" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableAssigneeID(i *int) *ChangeUpdateOne {
-	if i != nil {
-		cuo.SetAssigneeID(*i)
+func (_u *ChangeUpdateOne) SetNillableAssigneeID(v *int) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetAssigneeID(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddAssigneeID adds i to the "assignee_id" field.
-func (cuo *ChangeUpdateOne) AddAssigneeID(i int) *ChangeUpdateOne {
-	cuo.mutation.AddAssigneeID(i)
-	return cuo
+// AddAssigneeID adds value to the "assignee_id" field.
+func (_u *ChangeUpdateOne) AddAssigneeID(v int) *ChangeUpdateOne {
+	_u.mutation.AddAssigneeID(v)
+	return _u
 }
 
 // ClearAssigneeID clears the value of the "assignee_id" field.
-func (cuo *ChangeUpdateOne) ClearAssigneeID() *ChangeUpdateOne {
-	cuo.mutation.ClearAssigneeID()
-	return cuo
+func (_u *ChangeUpdateOne) ClearAssigneeID() *ChangeUpdateOne {
+	_u.mutation.ClearAssigneeID()
+	return _u
 }
 
 // SetCreatedBy sets the "created_by" field.
-func (cuo *ChangeUpdateOne) SetCreatedBy(i int) *ChangeUpdateOne {
-	cuo.mutation.ResetCreatedBy()
-	cuo.mutation.SetCreatedBy(i)
-	return cuo
+func (_u *ChangeUpdateOne) SetCreatedBy(v int) *ChangeUpdateOne {
+	_u.mutation.ResetCreatedBy()
+	_u.mutation.SetCreatedBy(v)
+	return _u
 }
 
 // SetNillableCreatedBy sets the "created_by" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableCreatedBy(i *int) *ChangeUpdateOne {
-	if i != nil {
-		cuo.SetCreatedBy(*i)
+func (_u *ChangeUpdateOne) SetNillableCreatedBy(v *int) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetCreatedBy(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddCreatedBy adds i to the "created_by" field.
-func (cuo *ChangeUpdateOne) AddCreatedBy(i int) *ChangeUpdateOne {
-	cuo.mutation.AddCreatedBy(i)
-	return cuo
+// AddCreatedBy adds value to the "created_by" field.
+func (_u *ChangeUpdateOne) AddCreatedBy(v int) *ChangeUpdateOne {
+	_u.mutation.AddCreatedBy(v)
+	return _u
 }
 
 // SetTenantID sets the "tenant_id" field.
-func (cuo *ChangeUpdateOne) SetTenantID(i int) *ChangeUpdateOne {
-	cuo.mutation.ResetTenantID()
-	cuo.mutation.SetTenantID(i)
-	return cuo
+func (_u *ChangeUpdateOne) SetTenantID(v int) *ChangeUpdateOne {
+	_u.mutation.ResetTenantID()
+	_u.mutation.SetTenantID(v)
+	return _u
 }
 
 // SetNillableTenantID sets the "tenant_id" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableTenantID(i *int) *ChangeUpdateOne {
-	if i != nil {
-		cuo.SetTenantID(*i)
+func (_u *ChangeUpdateOne) SetNillableTenantID(v *int) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetTenantID(*v)
 	}
-	return cuo
+	return _u
 }
 
-// AddTenantID adds i to the "tenant_id" field.
-func (cuo *ChangeUpdateOne) AddTenantID(i int) *ChangeUpdateOne {
-	cuo.mutation.AddTenantID(i)
-	return cuo
+// AddTenantID adds value to the "tenant_id" field.
+func (_u *ChangeUpdateOne) AddTenantID(v int) *ChangeUpdateOne {
+	_u.mutation.AddTenantID(v)
+	return _u
 }
 
 // SetPlannedStartDate sets the "planned_start_date" field.
-func (cuo *ChangeUpdateOne) SetPlannedStartDate(t time.Time) *ChangeUpdateOne {
-	cuo.mutation.SetPlannedStartDate(t)
-	return cuo
+func (_u *ChangeUpdateOne) SetPlannedStartDate(v time.Time) *ChangeUpdateOne {
+	_u.mutation.SetPlannedStartDate(v)
+	return _u
 }
 
 // SetNillablePlannedStartDate sets the "planned_start_date" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillablePlannedStartDate(t *time.Time) *ChangeUpdateOne {
-	if t != nil {
-		cuo.SetPlannedStartDate(*t)
+func (_u *ChangeUpdateOne) SetNillablePlannedStartDate(v *time.Time) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetPlannedStartDate(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearPlannedStartDate clears the value of the "planned_start_date" field.
-func (cuo *ChangeUpdateOne) ClearPlannedStartDate() *ChangeUpdateOne {
-	cuo.mutation.ClearPlannedStartDate()
-	return cuo
+func (_u *ChangeUpdateOne) ClearPlannedStartDate() *ChangeUpdateOne {
+	_u.mutation.ClearPlannedStartDate()
+	return _u
 }
 
 // SetPlannedEndDate sets the "planned_end_date" field.
-func (cuo *ChangeUpdateOne) SetPlannedEndDate(t time.Time) *ChangeUpdateOne {
-	cuo.mutation.SetPlannedEndDate(t)
-	return cuo
+func (_u *ChangeUpdateOne) SetPlannedEndDate(v time.Time) *ChangeUpdateOne {
+	_u.mutation.SetPlannedEndDate(v)
+	return _u
 }
 
 // SetNillablePlannedEndDate sets the "planned_end_date" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillablePlannedEndDate(t *time.Time) *ChangeUpdateOne {
-	if t != nil {
-		cuo.SetPlannedEndDate(*t)
+func (_u *ChangeUpdateOne) SetNillablePlannedEndDate(v *time.Time) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetPlannedEndDate(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearPlannedEndDate clears the value of the "planned_end_date" field.
-func (cuo *ChangeUpdateOne) ClearPlannedEndDate() *ChangeUpdateOne {
-	cuo.mutation.ClearPlannedEndDate()
-	return cuo
+func (_u *ChangeUpdateOne) ClearPlannedEndDate() *ChangeUpdateOne {
+	_u.mutation.ClearPlannedEndDate()
+	return _u
 }
 
 // SetActualStartDate sets the "actual_start_date" field.
-func (cuo *ChangeUpdateOne) SetActualStartDate(t time.Time) *ChangeUpdateOne {
-	cuo.mutation.SetActualStartDate(t)
-	return cuo
+func (_u *ChangeUpdateOne) SetActualStartDate(v time.Time) *ChangeUpdateOne {
+	_u.mutation.SetActualStartDate(v)
+	return _u
 }
 
 // SetNillableActualStartDate sets the "actual_start_date" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableActualStartDate(t *time.Time) *ChangeUpdateOne {
-	if t != nil {
-		cuo.SetActualStartDate(*t)
+func (_u *ChangeUpdateOne) SetNillableActualStartDate(v *time.Time) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetActualStartDate(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearActualStartDate clears the value of the "actual_start_date" field.
-func (cuo *ChangeUpdateOne) ClearActualStartDate() *ChangeUpdateOne {
-	cuo.mutation.ClearActualStartDate()
-	return cuo
+func (_u *ChangeUpdateOne) ClearActualStartDate() *ChangeUpdateOne {
+	_u.mutation.ClearActualStartDate()
+	return _u
 }
 
 // SetActualEndDate sets the "actual_end_date" field.
-func (cuo *ChangeUpdateOne) SetActualEndDate(t time.Time) *ChangeUpdateOne {
-	cuo.mutation.SetActualEndDate(t)
-	return cuo
+func (_u *ChangeUpdateOne) SetActualEndDate(v time.Time) *ChangeUpdateOne {
+	_u.mutation.SetActualEndDate(v)
+	return _u
 }
 
 // SetNillableActualEndDate sets the "actual_end_date" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableActualEndDate(t *time.Time) *ChangeUpdateOne {
-	if t != nil {
-		cuo.SetActualEndDate(*t)
+func (_u *ChangeUpdateOne) SetNillableActualEndDate(v *time.Time) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetActualEndDate(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearActualEndDate clears the value of the "actual_end_date" field.
-func (cuo *ChangeUpdateOne) ClearActualEndDate() *ChangeUpdateOne {
-	cuo.mutation.ClearActualEndDate()
-	return cuo
+func (_u *ChangeUpdateOne) ClearActualEndDate() *ChangeUpdateOne {
+	_u.mutation.ClearActualEndDate()
+	return _u
 }
 
 // SetImplementationPlan sets the "implementation_plan" field.
-func (cuo *ChangeUpdateOne) SetImplementationPlan(s string) *ChangeUpdateOne {
-	cuo.mutation.SetImplementationPlan(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetImplementationPlan(v string) *ChangeUpdateOne {
+	_u.mutation.SetImplementationPlan(v)
+	return _u
 }
 
 // SetNillableImplementationPlan sets the "implementation_plan" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableImplementationPlan(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetImplementationPlan(*s)
+func (_u *ChangeUpdateOne) SetNillableImplementationPlan(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetImplementationPlan(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearImplementationPlan clears the value of the "implementation_plan" field.
-func (cuo *ChangeUpdateOne) ClearImplementationPlan() *ChangeUpdateOne {
-	cuo.mutation.ClearImplementationPlan()
-	return cuo
+func (_u *ChangeUpdateOne) ClearImplementationPlan() *ChangeUpdateOne {
+	_u.mutation.ClearImplementationPlan()
+	return _u
 }
 
 // SetRollbackPlan sets the "rollback_plan" field.
-func (cuo *ChangeUpdateOne) SetRollbackPlan(s string) *ChangeUpdateOne {
-	cuo.mutation.SetRollbackPlan(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetRollbackPlan(v string) *ChangeUpdateOne {
+	_u.mutation.SetRollbackPlan(v)
+	return _u
 }
 
 // SetNillableRollbackPlan sets the "rollback_plan" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableRollbackPlan(s *string) *ChangeUpdateOne {
-	if s != nil {
-		cuo.SetRollbackPlan(*s)
+func (_u *ChangeUpdateOne) SetNillableRollbackPlan(v *string) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetRollbackPlan(*v)
 	}
-	return cuo
+	return _u
 }
 
 // ClearRollbackPlan clears the value of the "rollback_plan" field.
-func (cuo *ChangeUpdateOne) ClearRollbackPlan() *ChangeUpdateOne {
-	cuo.mutation.ClearRollbackPlan()
-	return cuo
+func (_u *ChangeUpdateOne) ClearRollbackPlan() *ChangeUpdateOne {
+	_u.mutation.ClearRollbackPlan()
+	return _u
 }
 
 // SetAffectedCis sets the "affected_cis" field.
-func (cuo *ChangeUpdateOne) SetAffectedCis(s []string) *ChangeUpdateOne {
-	cuo.mutation.SetAffectedCis(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetAffectedCis(v []string) *ChangeUpdateOne {
+	_u.mutation.SetAffectedCis(v)
+	return _u
 }
 
-// AppendAffectedCis appends s to the "affected_cis" field.
-func (cuo *ChangeUpdateOne) AppendAffectedCis(s []string) *ChangeUpdateOne {
-	cuo.mutation.AppendAffectedCis(s)
-	return cuo
+// AppendAffectedCis appends value to the "affected_cis" field.
+func (_u *ChangeUpdateOne) AppendAffectedCis(v []string) *ChangeUpdateOne {
+	_u.mutation.AppendAffectedCis(v)
+	return _u
 }
 
 // ClearAffectedCis clears the value of the "affected_cis" field.
-func (cuo *ChangeUpdateOne) ClearAffectedCis() *ChangeUpdateOne {
-	cuo.mutation.ClearAffectedCis()
-	return cuo
+func (_u *ChangeUpdateOne) ClearAffectedCis() *ChangeUpdateOne {
+	_u.mutation.ClearAffectedCis()
+	return _u
 }
 
 // SetRelatedTickets sets the "related_tickets" field.
-func (cuo *ChangeUpdateOne) SetRelatedTickets(s []string) *ChangeUpdateOne {
-	cuo.mutation.SetRelatedTickets(s)
-	return cuo
+func (_u *ChangeUpdateOne) SetRelatedTickets(v []string) *ChangeUpdateOne {
+	_u.mutation.SetRelatedTickets(v)
+	return _u
 }
 
-// AppendRelatedTickets appends s to the "related_tickets" field.
-func (cuo *ChangeUpdateOne) AppendRelatedTickets(s []string) *ChangeUpdateOne {
-	cuo.mutation.AppendRelatedTickets(s)
-	return cuo
+// AppendRelatedTickets appends value to the "related_tickets" field.
+func (_u *ChangeUpdateOne) AppendRelatedTickets(v []string) *ChangeUpdateOne {
+	_u.mutation.AppendRelatedTickets(v)
+	return _u
 }
 
 // ClearRelatedTickets clears the value of the "related_tickets" field.
-func (cuo *ChangeUpdateOne) ClearRelatedTickets() *ChangeUpdateOne {
-	cuo.mutation.ClearRelatedTickets()
-	return cuo
+func (_u *ChangeUpdateOne) ClearRelatedTickets() *ChangeUpdateOne {
+	_u.mutation.ClearRelatedTickets()
+	return _u
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (cuo *ChangeUpdateOne) SetCreatedAt(t time.Time) *ChangeUpdateOne {
-	cuo.mutation.SetCreatedAt(t)
-	return cuo
+func (_u *ChangeUpdateOne) SetCreatedAt(v time.Time) *ChangeUpdateOne {
+	_u.mutation.SetCreatedAt(v)
+	return _u
 }
 
 // SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (cuo *ChangeUpdateOne) SetNillableCreatedAt(t *time.Time) *ChangeUpdateOne {
-	if t != nil {
-		cuo.SetCreatedAt(*t)
+func (_u *ChangeUpdateOne) SetNillableCreatedAt(v *time.Time) *ChangeUpdateOne {
+	if v != nil {
+		_u.SetCreatedAt(*v)
 	}
-	return cuo
+	return _u
 }
 
 // SetUpdatedAt sets the "updated_at" field.
-func (cuo *ChangeUpdateOne) SetUpdatedAt(t time.Time) *ChangeUpdateOne {
-	cuo.mutation.SetUpdatedAt(t)
-	return cuo
+func (_u *ChangeUpdateOne) SetUpdatedAt(v time.Time) *ChangeUpdateOne {
+	_u.mutation.SetUpdatedAt(v)
+	return _u
 }
 
 // Mutation returns the ChangeMutation object of the builder.
-func (cuo *ChangeUpdateOne) Mutation() *ChangeMutation {
-	return cuo.mutation
+func (_u *ChangeUpdateOne) Mutation() *ChangeMutation {
+	return _u.mutation
 }
 
 // Where appends a list predicates to the ChangeUpdate builder.
-func (cuo *ChangeUpdateOne) Where(ps ...predicate.Change) *ChangeUpdateOne {
-	cuo.mutation.Where(ps...)
-	return cuo
+func (_u *ChangeUpdateOne) Where(ps ...predicate.Change) *ChangeUpdateOne {
+	_u.mutation.Where(ps...)
+	return _u
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
-func (cuo *ChangeUpdateOne) Select(field string, fields ...string) *ChangeUpdateOne {
-	cuo.fields = append([]string{field}, fields...)
-	return cuo
+func (_u *ChangeUpdateOne) Select(field string, fields ...string) *ChangeUpdateOne {
+	_u.fields = append([]string{field}, fields...)
+	return _u
 }
 
 // Save executes the query and returns the updated Change entity.
-func (cuo *ChangeUpdateOne) Save(ctx context.Context) (*Change, error) {
-	cuo.defaults()
-	return withHooks(ctx, cuo.sqlSave, cuo.mutation, cuo.hooks)
+func (_u *ChangeUpdateOne) Save(ctx context.Context) (*Change, error) {
+	_u.defaults()
+	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (cuo *ChangeUpdateOne) SaveX(ctx context.Context) *Change {
-	node, err := cuo.Save(ctx)
+func (_u *ChangeUpdateOne) SaveX(ctx context.Context) *Change {
+	node, err := _u.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -1009,39 +1009,39 @@ func (cuo *ChangeUpdateOne) SaveX(ctx context.Context) *Change {
 }
 
 // Exec executes the query on the entity.
-func (cuo *ChangeUpdateOne) Exec(ctx context.Context) error {
-	_, err := cuo.Save(ctx)
+func (_u *ChangeUpdateOne) Exec(ctx context.Context) error {
+	_, err := _u.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (cuo *ChangeUpdateOne) ExecX(ctx context.Context) {
-	if err := cuo.Exec(ctx); err != nil {
+func (_u *ChangeUpdateOne) ExecX(ctx context.Context) {
+	if err := _u.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (cuo *ChangeUpdateOne) defaults() {
-	if _, ok := cuo.mutation.UpdatedAt(); !ok {
+func (_u *ChangeUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdatedAt(); !ok {
 		v := change.UpdateDefaultUpdatedAt()
-		cuo.mutation.SetUpdatedAt(v)
+		_u.mutation.SetUpdatedAt(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (cuo *ChangeUpdateOne) check() error {
-	if v, ok := cuo.mutation.Title(); ok {
+func (_u *ChangeUpdateOne) check() error {
+	if v, ok := _u.mutation.Title(); ok {
 		if err := change.TitleValidator(v); err != nil {
 			return &ValidationError{Name: "title", err: fmt.Errorf(`ent: validator failed for field "Change.title": %w`, err)}
 		}
 	}
-	if v, ok := cuo.mutation.CreatedBy(); ok {
+	if v, ok := _u.mutation.CreatedBy(); ok {
 		if err := change.CreatedByValidator(v); err != nil {
 			return &ValidationError{Name: "created_by", err: fmt.Errorf(`ent: validator failed for field "Change.created_by": %w`, err)}
 		}
 	}
-	if v, ok := cuo.mutation.TenantID(); ok {
+	if v, ok := _u.mutation.TenantID(); ok {
 		if err := change.TenantIDValidator(v); err != nil {
 			return &ValidationError{Name: "tenant_id", err: fmt.Errorf(`ent: validator failed for field "Change.tenant_id": %w`, err)}
 		}
@@ -1049,17 +1049,17 @@ func (cuo *ChangeUpdateOne) check() error {
 	return nil
 }
 
-func (cuo *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err error) {
-	if err := cuo.check(); err != nil {
+func (_u *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err error) {
+	if err := _u.check(); err != nil {
 		return _node, err
 	}
 	_spec := sqlgraph.NewUpdateSpec(change.Table, change.Columns, sqlgraph.NewFieldSpec(change.FieldID, field.TypeInt))
-	id, ok := cuo.mutation.ID()
+	id, ok := _u.mutation.ID()
 	if !ok {
 		return nil, &ValidationError{Name: "id", err: errors.New(`ent: missing "Change.id" for update`)}
 	}
 	_spec.Node.ID.Value = id
-	if fields := cuo.fields; len(fields) > 0 {
+	if fields := _u.fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
 		_spec.Node.Columns = append(_spec.Node.Columns, change.FieldID)
 		for _, f := range fields {
@@ -1071,132 +1071,132 @@ func (cuo *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err err
 			}
 		}
 	}
-	if ps := cuo.mutation.predicates; len(ps) > 0 {
+	if ps := _u.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
 			}
 		}
 	}
-	if value, ok := cuo.mutation.Title(); ok {
+	if value, ok := _u.mutation.Title(); ok {
 		_spec.SetField(change.FieldTitle, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.Description(); ok {
+	if value, ok := _u.mutation.Description(); ok {
 		_spec.SetField(change.FieldDescription, field.TypeString, value)
 	}
-	if cuo.mutation.DescriptionCleared() {
+	if _u.mutation.DescriptionCleared() {
 		_spec.ClearField(change.FieldDescription, field.TypeString)
 	}
-	if value, ok := cuo.mutation.Justification(); ok {
+	if value, ok := _u.mutation.Justification(); ok {
 		_spec.SetField(change.FieldJustification, field.TypeString, value)
 	}
-	if cuo.mutation.JustificationCleared() {
+	if _u.mutation.JustificationCleared() {
 		_spec.ClearField(change.FieldJustification, field.TypeString)
 	}
-	if value, ok := cuo.mutation.GetType(); ok {
+	if value, ok := _u.mutation.GetType(); ok {
 		_spec.SetField(change.FieldType, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.Status(); ok {
+	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(change.FieldStatus, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.Priority(); ok {
+	if value, ok := _u.mutation.Priority(); ok {
 		_spec.SetField(change.FieldPriority, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.ImpactScope(); ok {
+	if value, ok := _u.mutation.ImpactScope(); ok {
 		_spec.SetField(change.FieldImpactScope, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.RiskLevel(); ok {
+	if value, ok := _u.mutation.RiskLevel(); ok {
 		_spec.SetField(change.FieldRiskLevel, field.TypeString, value)
 	}
-	if value, ok := cuo.mutation.AssigneeID(); ok {
+	if value, ok := _u.mutation.AssigneeID(); ok {
 		_spec.SetField(change.FieldAssigneeID, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.AddedAssigneeID(); ok {
+	if value, ok := _u.mutation.AddedAssigneeID(); ok {
 		_spec.AddField(change.FieldAssigneeID, field.TypeInt, value)
 	}
-	if cuo.mutation.AssigneeIDCleared() {
+	if _u.mutation.AssigneeIDCleared() {
 		_spec.ClearField(change.FieldAssigneeID, field.TypeInt)
 	}
-	if value, ok := cuo.mutation.CreatedBy(); ok {
+	if value, ok := _u.mutation.CreatedBy(); ok {
 		_spec.SetField(change.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.AddedCreatedBy(); ok {
+	if value, ok := _u.mutation.AddedCreatedBy(); ok {
 		_spec.AddField(change.FieldCreatedBy, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.TenantID(); ok {
+	if value, ok := _u.mutation.TenantID(); ok {
 		_spec.SetField(change.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.AddedTenantID(); ok {
+	if value, ok := _u.mutation.AddedTenantID(); ok {
 		_spec.AddField(change.FieldTenantID, field.TypeInt, value)
 	}
-	if value, ok := cuo.mutation.PlannedStartDate(); ok {
+	if value, ok := _u.mutation.PlannedStartDate(); ok {
 		_spec.SetField(change.FieldPlannedStartDate, field.TypeTime, value)
 	}
-	if cuo.mutation.PlannedStartDateCleared() {
+	if _u.mutation.PlannedStartDateCleared() {
 		_spec.ClearField(change.FieldPlannedStartDate, field.TypeTime)
 	}
-	if value, ok := cuo.mutation.PlannedEndDate(); ok {
+	if value, ok := _u.mutation.PlannedEndDate(); ok {
 		_spec.SetField(change.FieldPlannedEndDate, field.TypeTime, value)
 	}
-	if cuo.mutation.PlannedEndDateCleared() {
+	if _u.mutation.PlannedEndDateCleared() {
 		_spec.ClearField(change.FieldPlannedEndDate, field.TypeTime)
 	}
-	if value, ok := cuo.mutation.ActualStartDate(); ok {
+	if value, ok := _u.mutation.ActualStartDate(); ok {
 		_spec.SetField(change.FieldActualStartDate, field.TypeTime, value)
 	}
-	if cuo.mutation.ActualStartDateCleared() {
+	if _u.mutation.ActualStartDateCleared() {
 		_spec.ClearField(change.FieldActualStartDate, field.TypeTime)
 	}
-	if value, ok := cuo.mutation.ActualEndDate(); ok {
+	if value, ok := _u.mutation.ActualEndDate(); ok {
 		_spec.SetField(change.FieldActualEndDate, field.TypeTime, value)
 	}
-	if cuo.mutation.ActualEndDateCleared() {
+	if _u.mutation.ActualEndDateCleared() {
 		_spec.ClearField(change.FieldActualEndDate, field.TypeTime)
 	}
-	if value, ok := cuo.mutation.ImplementationPlan(); ok {
+	if value, ok := _u.mutation.ImplementationPlan(); ok {
 		_spec.SetField(change.FieldImplementationPlan, field.TypeString, value)
 	}
-	if cuo.mutation.ImplementationPlanCleared() {
+	if _u.mutation.ImplementationPlanCleared() {
 		_spec.ClearField(change.FieldImplementationPlan, field.TypeString)
 	}
-	if value, ok := cuo.mutation.RollbackPlan(); ok {
+	if value, ok := _u.mutation.RollbackPlan(); ok {
 		_spec.SetField(change.FieldRollbackPlan, field.TypeString, value)
 	}
-	if cuo.mutation.RollbackPlanCleared() {
+	if _u.mutation.RollbackPlanCleared() {
 		_spec.ClearField(change.FieldRollbackPlan, field.TypeString)
 	}
-	if value, ok := cuo.mutation.AffectedCis(); ok {
+	if value, ok := _u.mutation.AffectedCis(); ok {
 		_spec.SetField(change.FieldAffectedCis, field.TypeJSON, value)
 	}
-	if value, ok := cuo.mutation.AppendedAffectedCis(); ok {
+	if value, ok := _u.mutation.AppendedAffectedCis(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, change.FieldAffectedCis, value)
 		})
 	}
-	if cuo.mutation.AffectedCisCleared() {
+	if _u.mutation.AffectedCisCleared() {
 		_spec.ClearField(change.FieldAffectedCis, field.TypeJSON)
 	}
-	if value, ok := cuo.mutation.RelatedTickets(); ok {
+	if value, ok := _u.mutation.RelatedTickets(); ok {
 		_spec.SetField(change.FieldRelatedTickets, field.TypeJSON, value)
 	}
-	if value, ok := cuo.mutation.AppendedRelatedTickets(); ok {
+	if value, ok := _u.mutation.AppendedRelatedTickets(); ok {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, change.FieldRelatedTickets, value)
 		})
 	}
-	if cuo.mutation.RelatedTicketsCleared() {
+	if _u.mutation.RelatedTicketsCleared() {
 		_spec.ClearField(change.FieldRelatedTickets, field.TypeJSON)
 	}
-	if value, ok := cuo.mutation.CreatedAt(); ok {
+	if value, ok := _u.mutation.CreatedAt(); ok {
 		_spec.SetField(change.FieldCreatedAt, field.TypeTime, value)
 	}
-	if value, ok := cuo.mutation.UpdatedAt(); ok {
+	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(change.FieldUpdatedAt, field.TypeTime, value)
 	}
-	_node = &Change{config: cuo.config}
+	_node = &Change{config: _u.config}
 	_spec.Assign = _node.assignValues
 	_spec.ScanValues = _node.scanValues
-	if err = sqlgraph.UpdateNode(ctx, cuo.driver, _spec); err != nil {
+	if err = sqlgraph.UpdateNode(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{change.Label}
 		} else if sqlgraph.IsConstraintError(err) {
@@ -1204,6 +1204,6 @@ func (cuo *ChangeUpdateOne) sqlSave(ctx context.Context) (_node *Change, err err
 		}
 		return nil, err
 	}
-	cuo.mutation.done = true
+	_u.mutation.done = true
 	return _node, nil
 }

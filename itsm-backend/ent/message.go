@@ -74,7 +74,7 @@ func (*Message) scanValues(columns []string) ([]any, error) {
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Message fields.
-func (m *Message) assignValues(columns []string, values []any) error {
+func (_m *Message) assignValues(columns []string, values []any) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
@@ -85,39 +85,39 @@ func (m *Message) assignValues(columns []string, values []any) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			m.ID = int(value.Int64)
+			_m.ID = int(value.Int64)
 		case message.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				m.CreatedAt = value.Time
+				_m.CreatedAt = value.Time
 			}
 		case message.FieldConversationID:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field conversation_id", values[i])
 			} else if value.Valid {
-				m.ConversationID = int(value.Int64)
+				_m.ConversationID = int(value.Int64)
 			}
 		case message.FieldRole:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field role", values[i])
 			} else if value.Valid {
-				m.Role = value.String
+				_m.Role = value.String
 			}
 		case message.FieldContent:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field content", values[i])
 			} else if value.Valid {
-				m.Content = value.String
+				_m.Content = value.String
 			}
 		case message.FieldRequestID:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field request_id", values[i])
 			} else if value.Valid {
-				m.RequestID = value.String
+				_m.RequestID = value.String
 			}
 		default:
-			m.selectValues.Set(columns[i], values[i])
+			_m.selectValues.Set(columns[i], values[i])
 		}
 	}
 	return nil
@@ -125,52 +125,52 @@ func (m *Message) assignValues(columns []string, values []any) error {
 
 // Value returns the ent.Value that was dynamically selected and assigned to the Message.
 // This includes values selected through modifiers, order, etc.
-func (m *Message) Value(name string) (ent.Value, error) {
-	return m.selectValues.Get(name)
+func (_m *Message) Value(name string) (ent.Value, error) {
+	return _m.selectValues.Get(name)
 }
 
 // QueryConversation queries the "conversation" edge of the Message entity.
-func (m *Message) QueryConversation() *ConversationQuery {
-	return NewMessageClient(m.config).QueryConversation(m)
+func (_m *Message) QueryConversation() *ConversationQuery {
+	return NewMessageClient(_m.config).QueryConversation(_m)
 }
 
 // Update returns a builder for updating this Message.
 // Note that you need to call Message.Unwrap() before calling this method if this Message
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (m *Message) Update() *MessageUpdateOne {
-	return NewMessageClient(m.config).UpdateOne(m)
+func (_m *Message) Update() *MessageUpdateOne {
+	return NewMessageClient(_m.config).UpdateOne(_m)
 }
 
 // Unwrap unwraps the Message entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (m *Message) Unwrap() *Message {
-	_tx, ok := m.config.driver.(*txDriver)
+func (_m *Message) Unwrap() *Message {
+	_tx, ok := _m.config.driver.(*txDriver)
 	if !ok {
 		panic("ent: Message is not a transactional entity")
 	}
-	m.config.driver = _tx.drv
-	return m
+	_m.config.driver = _tx.drv
+	return _m
 }
 
 // String implements the fmt.Stringer.
-func (m *Message) String() string {
+func (_m *Message) String() string {
 	var builder strings.Builder
 	builder.WriteString("Message(")
-	builder.WriteString(fmt.Sprintf("id=%v, ", m.ID))
+	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("created_at=")
-	builder.WriteString(m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("conversation_id=")
-	builder.WriteString(fmt.Sprintf("%v", m.ConversationID))
+	builder.WriteString(fmt.Sprintf("%v", _m.ConversationID))
 	builder.WriteString(", ")
 	builder.WriteString("role=")
-	builder.WriteString(m.Role)
+	builder.WriteString(_m.Role)
 	builder.WriteString(", ")
 	builder.WriteString("content=")
-	builder.WriteString(m.Content)
+	builder.WriteString(_m.Content)
 	builder.WriteString(", ")
 	builder.WriteString("request_id=")
-	builder.WriteString(m.RequestID)
+	builder.WriteString(_m.RequestID)
 	builder.WriteByte(')')
 	return builder.String()
 }
